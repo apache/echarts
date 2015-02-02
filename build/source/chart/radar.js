@@ -405,8 +405,14 @@ define('echarts/chart/radar', [
                     this.option
                 ], 'axisLabel');
                 if (axisLabel.show) {
+                    var textStyle = this.deepQuery([
+                        axisLabel,
+                        item,
+                        this.option
+                    ], 'textStyle');
                     style = {};
-                    style.textFont = this.getFont();
+                    style.textFont = this.getFont(textStyle);
+                    style.color = textStyle.color;
                     style = zrUtil.merge(style, axisLabel);
                     style.lineWidth = style.width;
                     vector = __ecIndicator[i].vector;

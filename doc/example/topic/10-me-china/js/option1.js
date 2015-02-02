@@ -63,7 +63,12 @@ function option1 (curSelected) {
                 _name: 'GDP',
                 type:'bar',
                 markLine: {
-                    symbol : ['arrow','none'],symbolSize : [4, 2],itemStyle : {normal: {lineStyle: {color:'orange'},borderColor:'orange',label:{position:'left',formatter:function(a,b,c){return Math.round(c)},textStyle:{color:"orange"}}}},
+                    symbol : ['arrow','none'],symbolSize : [4, 2],itemStyle : {normal: {
+                        lineStyle: {color:'orange'},
+                        borderColor:'orange',
+                        label:{position:'left',formatter:function(params){return Math.round(params.value)},
+                        textStyle:{color:"orange"}
+                    }}},
                     data : [
                         {type : 'average', name : '平均值'}
                     ]

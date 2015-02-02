@@ -545,7 +545,9 @@ var optionMap = {
         var labelFromatter = {
             normal : {
                 label : {
-                    formatter : function (a,b,c){return 100 - c + '%'},
+                    formatter : function (params){
+                        return 100 - params.value + '%'
+                    },
                     textStyle: {
                         baseline : 'top'
                     }
@@ -596,7 +598,9 @@ var optionMap = {
                                 itemStyle : {
                                     normal : {
                                         label : {
-                                            formatter : function (a,b,c){return 'other\n' + c + '%\n'},
+                                            formatter : function (params){
+                                                return 'other\n' + params.value + '%\n'
+                                            },
                                             textStyle: {
                                                 baseline : 'middle'
                                             }
@@ -840,11 +844,11 @@ var optionMap = {
         ],
         yAxis : [
             {
-                type : 'value',
-                scale:true,
+                type: 'value',
+                scale: true,
                 splitNumber: 9,
                 boundaryGap: [0.05, 0.05],
-                splitArea : {show : true}
+                splitArea: {show : true}
             },
             {
                 type : 'value',
@@ -898,8 +902,8 @@ var optionMap = {
                             label : {
                                 show:true,
                                 position:'top',
-                                formatter: function (a,b,v) {
-                                    return Math.round(v/10000) + ' 万'
+                                formatter: function (params) {
+                                    return Math.round(params.value/10000) + ' 万'
                                 }
                             }
                         }
@@ -916,8 +920,8 @@ var optionMap = {
                             color:'#1e90ff',
                             label : {
                                 show:true,
-                                formatter: function (a,b,v) {
-                                    return Math.round(v/10000) + ' 万'
+                                formatter: function (params) {
+                                    return Math.round(params.value/10000) + ' 万'
                                 }
                             }
                         }
@@ -1358,7 +1362,7 @@ var optionMap = {
                     {category:2, name: '比尔-盖茨',value : 9},
                     {category:2, name: '乔纳森-艾夫',value : 4},
                     {category:2, name: '蒂姆-库克',value : 4},
-                    {category:2, name: '龙-韦恩',value : 1}
+                    {category:2, name: '龙-韦恩',value : 1},
                 ],
                 links : [
                     {source : 1, target : 0, weight : 1},

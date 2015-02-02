@@ -85,7 +85,7 @@ option = {
                 }
             },
             axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
-                show: false,
+                show: true,
                 // formatter: null,
                 textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
                     color: '#ccc'
@@ -194,8 +194,8 @@ option = {
                             },
                             label: {
                                 show: true,
-                                formatter:function(seriesName, indicatorName, value) {
-                                    return value;
+                                formatter:function(params) {
+                                    return params.value;
                                 }
                             },
                             areaStyle: {

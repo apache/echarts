@@ -198,8 +198,8 @@ function option3 (name) {
                         label : {
                             show : true,
                             position: 'left',
-                            formatter: function (a,b,c) {
-                                return b + ' : ' + (-c);
+                            formatter: function (params) {
+                                return params.name + ' : ' + (-params.value);
                             }
                         }
                     }

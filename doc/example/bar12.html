@@ -109,7 +109,7 @@ option = {
             name:'ECharts1 - 2k数据',
             type:'bar',
             xAxisIndex:1,
-            itemStyle: {normal: {color:'rgba(193,35,43,0.5)', label:{show:true,formatter:function(a,b,c){return c>0 ? (c +'\n'):'';}}}},
+            itemStyle: {normal: {color:'rgba(193,35,43,0.5)', label:{show:true,formatter:function(p){return p.value > 0 ? (p.value +'\n'):'';}}}},
             data:[96,224,164,124,0]
         },
         {
@@ -123,7 +123,7 @@ option = {
             name:'ECharts1 - 20w数据',
             type:'bar',
             xAxisIndex:1,
-            itemStyle: {normal: {color:'rgba(252,206,16,0.5)', label:{show:true,formatter:function(a,b,c){return c>0 ? (c +'+'):'';}}}},
+            itemStyle: {normal: {color:'rgba(252,206,16,0.5)', label:{show:true,formatter:function(p){return p.value > 0 ? (p.value +'+'):'';}}}},
             data:[3000,3000,2817,3000,0]
         }
     ]

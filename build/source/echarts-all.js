@@ -24250,7 +24250,16 @@ define('zrender/zrender', [
             ], 'itemStyle.' + status + '.label.formatter');
             if (formatter) {
                 if (typeof formatter === 'function') {
-                    return formatter.call(this.myChart, serie.name, data.name, data.value, percent);
+                    return formatter.call(this.myChart, {
+                        seriesIndex: seriesIndex,
+                        seriesName: serie.name || '',
+                        series: serie,
+                        dataIndex: dataIndex,
+                        data: data,
+                        name: data.name,
+                        value: data.value,
+                        percent: percent
+                    });
                 } else if (typeof formatter === 'string') {
                     formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}').replace('{d}', '{d0}');
                     formatter = formatter.replace('{a0}', serie.name).replace('{b0}', data.name).replace('{c0}', data.value).replace('{d0}', percent);
@@ -24985,8 +24994,14 @@ define('zrender/zrender', [
                     this.option
                 ], 'axisLabel');
                 if (axisLabel.show) {
+                    var textStyle = this.deepQuery([
+                        axisLabel,
+                        item,
+                        this.option
+                    ], 'textStyle');
                     style = {};
-                    style.textFont = this.getFont();
+                    style.textFont = this.getFont(textStyle);
+                    style.color = textStyle.color;
                     style = zrUtil.merge(style, axisLabel);
                     style.lineWidth = style.width;
                     vector = __ecIndicator[i].vector;
@@ -45497,7 +45512,15 @@ define('zrender/zrender', [
             ], 'itemStyle.' + status + '.label.formatter');
             if (formatter) {
                 if (typeof formatter === 'function') {
-                    return formatter.call(this.myChart, serie.name, data.name, data.value);
+                    return formatter.call(this.myChart, {
+                        seriesIndex: seriesIndex,
+                        seriesName: serie.name || '',
+                        series: serie,
+                        dataIndex: dataIndex,
+                        data: data,
+                        name: data.name,
+                        value: data.value
+                    });
                 } else if (typeof formatter === 'string') {
                     formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}').replace('{a0}', serie.name).replace('{b0}', data.name).replace('{c0}', data.value);
                     return formatter;
