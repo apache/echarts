@@ -580,9 +580,15 @@ define(function (require) {
                 if (typeof formatter === 'function') {
                     return formatter.call(
                         this.myChart,
-                        serie.name,
-                        data.name,
-                        data.value
+                        {
+                            seriesIndex: seriesIndex,
+                            seriesName: serie.name || '',
+                            series: serie,
+                            dataIndex: dataIndex,
+                            data: data,
+                            name: data.name,
+                            value: data.value
+                        }
                     );
                 }
                 else if (typeof formatter === 'string') {
