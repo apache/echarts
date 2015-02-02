@@ -114,10 +114,10 @@ option = {
                     label : {
                         show: true, 
                         position: 'top',
-                        formatter: function (a, b, c) {
+                        formatter: function (params) {
                             for (var i = 0, l = option.xAxis[0].data.length; i < l; i++) {
-                                if (option.xAxis[0].data[i] == b) {
-                                    return option.series[0].data[i] + c;
+                                if (option.xAxis[0].data[i] == params.name) {
+                                    return option.series[0].data[i] + params.value;
                                 }
                             }
                         },

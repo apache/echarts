@@ -57,7 +57,9 @@ var labelTop = {
 var labelFromatter = {
     normal : {
         label : {
-            formatter : function (a,b,c){return 100 - c + '%'},
+            formatter : function (params){
+                return 100 - params.value + '%'
+            },
             textStyle: {
                 baseline : 'top'
             }
@@ -108,7 +110,9 @@ option = {
                         itemStyle : {
                             normal : {
                                 label : {
-                                    formatter : function (a,b,c){return 'other\n' + c + '%\n'},
+                                    formatter : function (params){
+                                        return 'other\n' + params.value + '%\n'
+                                    },
                                     textStyle: {
                                         baseline : 'middle'
                                     }

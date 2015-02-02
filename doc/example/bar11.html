@@ -121,7 +121,9 @@ option = {
                                 barBorderColor:'orange',
                                 label:{
                                     position:'left',
-                                    formatter:function(a,b,c){return Math.round(c)},
+                                    formatter:function(params){
+                                        return Math.round(params.value);
+                                    },
                                     textStyle:{color:'orange'}
                                 }
                             }

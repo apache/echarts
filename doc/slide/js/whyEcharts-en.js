@@ -900,8 +900,8 @@ var optionMap = {
                             label : {
                                 show:true,
                                 position:'top',
-                                formatter: function (a,b,v) {
-                                    return (v/1000000).toFixed(1) + ' M'
+                                formatter: function (params) {
+                                    return (params.value/1000000).toFixed(1) + ' M'
                                 }
                             }
                         }
@@ -918,8 +918,8 @@ var optionMap = {
                             color:'#1e90ff',
                             label : {
                                 show:true,
-                                formatter: function (a,b,v) {
-                                    return (v/1000000).toFixed(1) + ' M'
+                                formatter: function (params) {
+                                    return (params.value/1000000).toFixed(1) + ' M'
                                 }
                             }
                         }
