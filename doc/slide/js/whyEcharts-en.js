@@ -1362,7 +1362,7 @@ var optionMap = {
                     {category:2, name: 'Bill Gates',value : 9},
                     {category:2, name: 'Jonathan Ive',value : 4},
                     {category:2, name: 'Tim Cook',value : 4},
-                    {category:2, name: 'Long Wayne',value : 1},
+                    {category:2, name: 'Long Wayne',value : 1}
                 ],
                 links : [
                     {source : 1, target : 0, weight : 1},

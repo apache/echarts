@@ -1358,7 +1358,7 @@ var optionMap = {
                     {category:2, name: '比尔-盖茨',value : 9},
                     {category:2, name: '乔纳森-艾夫',value : 4},
                     {category:2, name: '蒂姆-库克',value : 4},
-                    {category:2, name: '龙-韦恩',value : 1},
+                    {category:2, name: '龙-韦恩',value : 1}
                 ],
                 links : [
                     {source : 1, target : 0, weight : 1},

@@ -22,8 +22,8 @@
 
 <body>
     <div class="page">
-        <div id="p-up" class="page-up disabled">《 上一页</div>
-        <div id="p-down" class="page-down">下一页 》</div>
+        <div id="p-up" class="page-up disabled">《 Last</div>
+        <div id="p-down" class="page-down">Next 》</div>
     </div>
     <div id="content">
         <section class="section active" style="left:0" id="first">
@@ -33,7 +33,7 @@
         </section>
 
         <section class="section">
-            <h1 style="padding:20px 0">业界已经有多如牛毛的图表库了！</h1>
+            <h1 style="padding:20px 0">Innumerable charts library!</h1>
             <hr/>
             <h2 style="padding:20px 0">
                 Why <strong style="color:#9acd32">ECharts</strong> ?
@@ -41,15 +41,18 @@
         </section>  
         
         <section class="section">
-            <h1 style="padding:20px 0">深度数据互动可视化</h1>
+            <h1 style="padding:20px 0">Data Interactive Visualization</h1>
             <p class="fragment">
-                <small>打破单纯的视觉呈现，拥有<strong>互动图形用户界面（GUI）</strong>的数据可视化。数据呈现<strong>不仅是诉说</strong>，而是允许用户对所呈现数据进行<strong>挖掘、整合</strong>，让可视化成为<strong>辅助人们进行视觉化思考</strong>的方式。
-            </small>
+                <small>
+                    <br/>Data visualization with an <strong>interactive graphical user interface (GUI)</strong>. 
+                    Data's visual presentation is <strong>not only for statement</strong>, bug also for <strong>data mining, integration</strong> to the data presented. 
+                    Make data visualization to be a way of people's <strong>visual thinking</strong>.
+                </small>
             </p>
             <br/>
             <hr>
             <p style="padding:20px 0">
-                <small>让我们看看<a href="http://ecomfe.github.io/echarts/" target="_blank">ECharts</a>为此目标做了什么？</small>
+                <small>Let's find out what <a href="http://ecomfe.github.io/echarts/" target="_blank">ECharts</a> has done for this purpose?</small>
             </p>
         </section>
 
@@ -105,7 +108,7 @@
         <section class="section">
             <h4>ECharts VS Excel</h4>
             <p class="fragment">
-                <small>虽说Excel输出的图表毫无交互性可言，但其丰富的图表类型和配置项，简单易用，无疑是最常用的制作数据统计的工具。那看看ECharts和Excel都支持哪些图表类型？</small>
+                <small>Although those chart provided by Excel have no interaction at all, but its rich chart type and configuration, easy to use, Excel is the most commonly data statistics tools.</small>
             </p>
             <div>
                 <table style="margin-top:20px;">
@@ -113,21 +116,21 @@
                         <tr><th>#</th><th>ECharts</th><th>Excel</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>柱状图</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>条形图</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>折线图</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>面积图</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>散点图</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>气泡图</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>K线图</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>饼图</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>环形图</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>雷达图</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>力导布局图</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>和弦图</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>曲面图</td><td class='error'>No</td><td>Yes</td></tr>
-                        <tr><td>地图</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>事件河流图</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Histogram</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Bar</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Line</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Area</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Scatter</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Bubble</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>K</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Pie</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Doughnut</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Radar</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Force</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Chord</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Surface</td><td class='error'>No</td><td>Yes</td></tr>
+                        <tr><td>Map</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>EventRiver</td><td>Yes</td><td class='error'>No</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -136,10 +139,10 @@
         <section class="section">
             <h4>ECharts VS Highcharts (1)</h4>
             <p class="fragment">
-                <small>业界有无数js图表库，不乏优秀的代表，如chartjs，amCharts，FusionCharts，flot，gRaphaël等等。有的是免费甚至开源的，有的则是商业的，百度一下就能找到他们。</small>
+                 <small>The industry has countless JS chart, many outstanding representative, like chartjs, FusionCharts, amCharts, flot, RGraph, jqPlot, gRaphaël etc. Some are free and even open source, while others are commercial, you can find them easily.</small>
                 <br/>
-                <small>无法跟他们一一对比，在这选择了知名度很高的Highcharts，一个优秀，成熟的商业图表库。
-                    <br/>先看看ECharts和Highcharts都支持哪些图表类型？
+                <small>Unable to compare with them all, let's choose Highcharts, an excellent, mature business chart library which is widely known in the world.
+                    <br/>First about the <strong>charts type</strong>?
                 </small>
             </p>
             <div>
@@ -148,17 +151,17 @@
                         <tr><th>#</th><th>ECharts</th><th>Highcharts</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>柱状图（条形图）</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>折线图（面积图）</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>饼图（环形图）</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>散点图（气泡图）</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>雷达图</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>K线图</td><td>Yes</td><td class='success'>Highstock</td></tr>
-                        <tr><td>力导布局图</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>和弦图</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>地图</td><td>Yes</td><td class='success'>Highmap</td></tr>
-                        <tr><td>事件河流图</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>特色图表（如仪表盘）</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Histogram（Bar）</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Line（Area）</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Pie（Doughnut）</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Scatter（Bubble）</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Radar</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>K</td><td>Yes</td><td class='success'>Highstock</td></tr>
+                        <tr><td>Force</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Chord</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Map</td><td>Yes</td><td class='success'>Highmap</td></tr>
+                        <tr><td>EventRiver</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Special（Gauge, Funnel）</td><td>Yes</td><td>Yes</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -167,7 +170,7 @@
         <section class="section">
             <h4>ECharts VS Highcharts (2)</h4>
             <p class="fragment">
-                <small>再来看看ECharts和Highcharts都有哪些特性？</small>
+                <small>Let's look at the <strong>features</strong>?</small>
             </p>
             <div>
                 <table style="width:105%">
@@ -175,18 +178,18 @@
                         <tr><th>#</th><th>ECharts</th><th>Highcharts</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>拖拽重计算</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>数据视图</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>动态类型切换</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>值域漫游</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>大规模散点</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>炫光特效</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>多图联动</td><td>Yes</td><td class='error'>No</td></tr>
-                        <tr><td>数据区域缩放</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>图例开关</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>多维度堆积</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>混搭</td><td>Yes</td><td>Yes</td></tr>
-                        <tr><td>图片导出</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Drag-Recalculate</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Data View</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Magic Switch</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Scale Roaming</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Large-scale Data</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Glare Effect</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Linkage</td><td>Yes</td><td class='error'>No</td></tr>
+                        <tr><td>Space Zoom</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Legend Switch</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Multi-dimensional Stacking</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Mixed Charts</td><td>Yes</td><td>Yes</td></tr>
+                        <tr><td>Image Export</td><td>Yes</td><td>Yes</td></tr>
                         <tr>
                             <td>License<br/>&amp;<br/>Pricing</td>
                             <td class='success'>Baidu<br/><a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">BSD</a><br/>Free</td>
@@ -198,32 +201,31 @@
         </section>
 
         <section class="section">
-            <h4>这就是ECharts</h4>
+            <h4>This is ECharts</h4>
             <p class="fragment">
-                <small>我们只是尽我们所能为你呈现数据<span style="color:#f50">真实</span>的一面，</small>
+                <small>We just try our best to show the <span style="color:#f50">real</span> data for you,</small>
             </p>
             <p class="fragment">
-                <small>并且提供了一些直观、易用的交互方式以方便你对所展现数据进行<span style="color:#f50">挖掘、提取、修正或整合</span>，<br/><strong>（拖拽重计算、数据视图）</strong></small>
+                <small>and provides an intuitive, easy-to-use interactive way to help you to deal with <span style="color:#f50">data mining, extraction, correction or consolidation</span>, <br/><strong>（Drag-Recalculate, Data View）</strong></small>
             </p>
             <p class="fragment">
-                <small>让你可以更加<span style="color:#f50">专注</span>于你所关心地方，无论是系列选择、区域缩放还是数值筛选，<br/><strong>（图例开关、数据区域缩放、值域漫游）</strong></small>
+                <small>so that you can <span style="color:#f50">focus on</span> what you care about,<br/><strong>（Legend Switch, Space Zoom, Scale Roaming）</strong></small>
             </p>
             <p class="fragment">
-                <small>让你可以有<span style="color:#f50">不同的方式解读同样的数据</span>。<br/><strong>（动态类型切换，多维度堆积，多图联动，混搭）</strong></small>
+                <small>have <span style="color:#f50">different interpretation</span> to the same data in different ways.<br/><strong>（Magic Switch, Multi-dimensional Stacking, Linkage, Mixed Charts）</strong></small>
             </p>
-            <hr/>
             <div class="fragment">
+                <hr/>
                 <p>
-                    <small><strong>重新定义数据图表的时候到了</strong>，浏览ECharts所输出的图表，你不再只是个“读者”，你可以参与其中。
-                        <br/><br/>这就是<a href="http://ecomfe.github.io/echarts/" target="_blank" sdtyle="margin:0">ECharts</a>，我们正在打造的一个拥有<strong>互动图形用户界面（GUI）</strong>的数据可视化工具。</small>
+                    <small><strong>Time to re-define the chart</strong>, browse the charts outputed by ECharts, you no longer just a "reader", you can participate. This is <a href="http://ecomfe.github.io/echarts/" target="_blank">ECharts</a>, an powerfull data visualizaiont tool with interactive graphical user interface.</small>
             </p>
             </div>
         </section>
 
         <section class="section">
-            <h4>致谢</h4>
+            <h4>Acknowledgement</h4>
             <p class="fragment"><small>
-                <a href="http://ecomfe.github.io/echarts/" target="_blank">ECharts</a>的发展离不开他们的卓越贡献：<br/>
+                <a href="http://ecomfe.github.io/echarts/" target="_blank">ECharts</a> cann't grow up without their excellent contributions :<br/>
                 <a href="http://weibo.com/kenerlinfeng" target="_blank">@Kener-林峰</a>
                 <a href="http://weibo.com/pissang" target="_blank">@pissang</a>
                 <a href="http://weibo.com/errorrik" target="_blank">@errorrik</a>
@@ -234,7 +236,7 @@
                 <a href="http://weibo.com/loutongbing" target="_blank">@娄同兵</a>
             </small></p><br/>
             <p class="fragment">
-                <small>以及他们的摇旗呐喊、推波助澜、煽风点火...<br/>
+                <small>With their encouragement and support :<br/>
                 <a href="http://weibo.com/taiyun" target="_blank">@cloud_wei</a>
                 <a href="http://weibo.com/u/2042635201" target="_blank">@李湛lizhan</a>
                 <a href="http://weibo.com/wfsr" target="_blank">@i我佛山人</a>
@@ -242,14 +244,14 @@
                 <a href="http://weibo.com/zhouyummy" target="_blank">@Yummy_zhou</a>
             </small></p><br/>
             <p class="fragment">
-                <small>还有，能得到你们的支持，真好...<br/>
+                <small>Also, it's nice being with you...<br/>
                 <a href="http://weibo.com/u/2006785117" target="_blank">@财财某</a>
                 <a href="http://weibo.com/shenhaolaoshi" target="_blank">@沈浩老师</a>
                 <a href="http://weibo.com/cosname" target="_blank">@统计之都</a>
                 <a href="http://weibo.com/u/1494921451" target="_blank">@大数据文摘</a>
             </small></p><br/>
             <p class="fragment">
-                <small>当然，我们期待你的<a href="https://github.com/ecomfe/echarts" target="_blank">加入</a>~</small>
+                <small>Finally, you'd be welcome to <a href="https://github.com/ecomfe/echarts" target="_blank">join us</a>~</small>
             </p>
         </section>
 
@@ -264,6 +266,6 @@
             
         </section>
     </div>
-    <script src="./js/why-echarts-m.js"></script>
+    <script src="./js/why-echarts-m-en.js"></script>
 </body>
 </html>

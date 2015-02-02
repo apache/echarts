@@ -308,8 +308,8 @@ var placeList = [
 var optionMap = {
     calculable : {
         title: {
-            text: '【拖拽重计算】',
-            subtext: '试试把你关心的数据图形拖拽到一起'
+            text: 'Drag-Recalculate',
+            subtext: 'Try to drag the desired items together.'
         },
         tooltip : {
             trigger: 'item',
@@ -330,7 +330,7 @@ var optionMap = {
         calculable : true,
         series : [
             {
-                name:'浏览器占比',
+                name:'Browser proportion',
                 type:'pie',
                 center: ['50%', '65%'],     // 默认全局居中
                 data:[
@@ -347,15 +347,15 @@ var optionMap = {
     },
     magicType : {
         title: {
-            text: '【动态类型切换】',
-            subtext: '切换图表类型会让您对这份数据有更多的解读'
+            text: 'Magic Switch',
+            subtext: 'More interpretation of this same data.'
         },
         tooltip : {
             trigger: 'axis'
         },
         legend: {
             y: 60,
-            data:['意向','预购','成交']
+            data:['Intent','Preorder','Deal']
         },
         toolbox: {
             show : true,
@@ -375,7 +375,7 @@ var optionMap = {
             {
                 type : 'category',
                 boundaryGap : true,
-                data : ['周一','周二','周三','周四','周五','周六','周日']
+                data : ['Mon','Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
             }
         ],
         yAxis : [
@@ -385,21 +385,21 @@ var optionMap = {
         ],
         series : [
             {
-                name:'意向',
+                name:'Intent',
                 type:'bar',
                 smooth:true,
                 itemStyle: {normal: {areaStyle: {type: 'default'}}},
                 data:[1320, 1132, 601, 234, 120, 90, 20]
             },
             {
-                name:'预购',
+                name:'Preorder',
                 type:'bar',
                 smooth:true,
                 itemStyle: {normal: {areaStyle: {type: 'default'}}},
                 data:[30, 182, 434, 791, 390, 30, 10]
             },
             {
-                name:'成交',
+                name:'Deal',
                 type:'bar',
                 smooth:true,
                 itemStyle: {normal: {areaStyle: {type: 'default'}}},
@@ -409,8 +409,8 @@ var optionMap = {
     },
     dataRange : {
         title : {
-            text: '【值域漫游】',
-            subtext: '聚焦到你所关心的数值上'
+            text: 'Scale Roaming',
+            subtext: 'Focus on the interested data.'
         },
         tooltip : {
             trigger: 'item'
@@ -419,7 +419,7 @@ var optionMap = {
             min: 0,
             max: 55000,
             x: 'left',
-            text:['高','低'],           // 文本，默认为数值文本
+            text:['High','Low'],           // 文本，默认为数值文本
             color:[ 'red', 'yellow'],//颜色 
             calculable : true,
             realtime: false
@@ -435,7 +435,7 @@ var optionMap = {
         },
         series : [
             {
-                name: '2011全国GDP',
+                name: '2011 GDP of China',
                 type: 'map',
                 mapType: 'china',
                 itemStyle:{
@@ -480,15 +480,15 @@ var optionMap = {
     },
     dataZoom : {
         title : {
-            text: '【数据区域缩放】',
-            subtext: '聚焦到你所关心的数据上'
+            text: 'Space Zoom',
+            subtext: 'Focus on the interested data.'
         },
         tooltip : {
             trigger: 'axis',
             formatter: function (params) {
                 var res = params[0].seriesName + ' ' + params[0].name;
-                res += '<br/>  开盘 : ' + params[0].value[0] + '  最高 : ' + params[0].value[3];
-                res += '<br/>  收盘 : ' + params[0].value[1] + '  最低 : ' + params[0].value[2];
+                res += '<br/>  Opening : ' + params[0].value[0] + '  Highest : ' + params[0].value[3];
+                res += '<br/>  Close : ' + params[0].value[1] + '  Lowest : ' + params[0].value[2];
                 return res;
             }
         },
@@ -526,7 +526,7 @@ var optionMap = {
         ],
         series : [
             {
-                name:'上证指数',
+                name:'Shanghai Stock Index',
                 type:'k',
                 data: kData
             }
@@ -542,8 +542,8 @@ var optionMap = {
             {
                 title : {
                     x:'right',
-                    text: '【百搭时间轴】',
-                    subtext: '时间维度的拓展    '
+                    text: 'Mixed Timeline',
+                    subtext: 'Expand the dimension of time.'
                 },
                 tooltip : {
                     trigger: 'item',
@@ -580,7 +580,7 @@ var optionMap = {
                 },
                 series : [
                     {
-                        name:'浏览器（数据纯属虚构）',
+                        name:'Browser proportion',
                         type:'pie',
                         center: ['45%', '50%'],
                         radius: '50%',
@@ -597,7 +597,7 @@ var optionMap = {
             {
                 series : [
                     {
-                        name:'浏览器（数据纯属虚构）',
+                        name:'Browser proportion',
                         type:'pie',
                         data:[
                             {value: 3 * 128 + 80,  name:'Chrome'},
@@ -612,7 +612,7 @@ var optionMap = {
             {
                 series : [
                     {
-                        name:'浏览器（数据纯属虚构）',
+                        name:'Browser proportion',
                         type:'pie',
                         data:[
                             {value: 5 * 128 + 80,  name:'Chrome'},
@@ -627,7 +627,7 @@ var optionMap = {
             {
                 series : [
                     {
-                        name:'浏览器（数据纯属虚构）',
+                        name:'Browser proportion',
                         type:'pie',
                         data:[
                             {value: 7 * 128 + 80,  name:'Chrome'},
@@ -642,7 +642,7 @@ var optionMap = {
             {
                 series : [
                     {
-                        name:'浏览器（数据纯属虚构）',
+                        name:'Browser proportion',
                         type:'pie',
                         data:[
                             {value: 14 * 128 + 80,  name:'Chrome'},
@@ -658,8 +658,8 @@ var optionMap = {
     },
     scatter : {
         title : {
-            text: '【大规模散点】',
-            subtext: '现代浏览器就足以展现百万级数据'
+            text: 'Large-scale',
+            subtext: 'We can show 200,000 data in one second.'
         },
         tooltip : {
             trigger: 'item'
@@ -738,8 +738,8 @@ var optionMap = {
     },
     force : {
         title : {
-            text: '【力导向布局】',
-            subtext: '复杂关系网络的最美呈现'
+            text: 'Force-directed layout',
+            subtext: 'Elegant display of networks.'
         },
         tooltip : {
             trigger: 'item',
@@ -755,7 +755,7 @@ var optionMap = {
         legend: {
             x:'left',
             y:'bottom',
-            data:['家人','朋友']
+            data:['Family','Friends']
         },
         series : [
             {
@@ -771,7 +771,7 @@ var optionMap = {
                         }
                     },
                     {
-                        name: '家人',
+                        name: 'Family',
                         itemStyle: {
                             normal: {
                                 color : '#87cdfa'
@@ -779,7 +779,7 @@ var optionMap = {
                         }
                     },
                     {
-                        name:'朋友',
+                        name:'Friends',
                         itemStyle: {
                             normal: {
                                 color : '#9acd32'
@@ -820,17 +820,17 @@ var optionMap = {
                 minRadius: 5,
                 maxRadius: 10,
                 nodes:[
-                    {category:0, name: '乔布斯', value : 10},
-                    {category:1, name: '丽萨-乔布斯',value : 2},
-                    {category:1, name: '保罗-乔布斯',value : 3},
-                    {category:1, name: '克拉拉-乔布斯',value : 3},
-                    {category:1, name: '劳伦-鲍威尔',value : 7},
-                    {category:2, name: '史蒂夫-沃兹尼艾克',value : 5},
-                    {category:2, name: '奥巴马',value : 8},
-                    {category:2, name: '比尔-盖茨',value : 9},
-                    {category:2, name: '乔纳森-艾夫',value : 4},
-                    {category:2, name: '蒂姆-库克',value : 4},
-                    {category:2, name: '龙-韦恩',value : 1},
+                    {category:0, name: 'Steve Jobs', value : 10},
+                    {category:1, name: 'Lisa Jobs',value : 2},
+                    {category:1, name: 'Paul Jobs',value : 3},
+                    {category:1, name: 'Clara Jobs',value : 3},
+                    {category:1, name: 'Laurene Powell',value : 7},
+                    {category:2, name: 'Steven Wozniak',value : 5},
+                    {category:2, name: 'Obama',value : 8},
+                    {category:2, name: 'Bill Gates',value : 9},
+                    {category:2, name: 'Jonathan Ive',value : 4},
+                    {category:2, name: 'Tim Cook',value : 4},
+                    {category:2, name: 'Long Wayne',value : 1}
                 ],
                 links : [
                     {source : 1, target : 0, weight : 1},
@@ -857,8 +857,8 @@ var optionMap = {
     },
     gauge :{
         title : {
-            text: '【商业BI】',
-            subtext: '显示关键性能指标以辅助于绩效管理'
+            text: 'BI Component',
+            subtext: 'Show the key indicators for performance management.'
         },
         color : [
             'rgba(255, 69, 0, 0.5)',
@@ -873,7 +873,7 @@ var optionMap = {
         },
         series : [
             {
-                name:'业务指标',
+                name:'Key',
                 type:'gauge',
                 center : ['50%', '60%'],    // 默认全局居中
                 radius : '80%',
@@ -924,14 +924,14 @@ var optionMap = {
                         fontWeight: 'bolder'
                     }
                 },
-                data:[{value: 85, name: '完成率'}]
+                data:[{value: 85, name: 'Completion\nRate'}]
             }
         ]
     },
     funnel :{
         title : {
-            text: '【商业BI】',
-            subtext: '漏斗图在营销分析中广泛使用'
+            text: 'BI Component',
+            subtext: 'Funnel plot is widely used in marketing analysis.'
         },
         color : [
             'rgba(255, 69, 0, 0.5)',
@@ -946,18 +946,18 @@ var optionMap = {
         },
         legend: {
             y: 'bottom',
-            data : ['展现','点击','访问','','咨询','订单']
+            data : ['view','click','visit','', 'consult','order']
         },
         series : [
             {
-                name:'预期',
+                name:'Expect',
                 type:'funnel',
                 y: 60,
-                x2: 70,
+                x2: 80,
                 itemStyle: {
                     normal: {
                         label: {
-                            formatter: '{b}预期'
+                            formatter: '{b} Expect'
                         },
                         labelLine: {
                             show : false
@@ -966,23 +966,23 @@ var optionMap = {
                     emphasis: {
                         label: {
                             position:'inside',
-                            formatter: '{b}预期 : {c}%'
+                            formatter: '{b} Expect : {c}%'
                         }
                     }
                 },
                 data:[
-                    {value:60, name:'访问'},
-                    {value:40, name:'咨询'},
-                    {value:20, name:'订单'},
-                    {value:80, name:'点击'},
-                    {value:100, name:'展现'}
+                    {value:60, name:'visit'},
+                    {value:40, name:'consult'},
+                    {value:20, name:'order'},
+                    {value:80, name:'click'},
+                    {value:100, name:'view'}
                 ]
             },
             {
-                name:'实际',
+                name:'Actual',
                 type:'funnel',
                 y: 60,
-                x2: 70,
+                x2: 80,
                 maxSize: '80%',
                 itemStyle: {
                     normal: {
@@ -999,16 +999,16 @@ var optionMap = {
                     emphasis: {
                         label: {
                             position:'inside',
-                            formatter: '{b}实际 : {c}%'
+                            formatter: '{b} Actual : {c}%'
                         }
                     }
                 },
                 data:[
-                    {value:30, name:'访问'},
-                    {value:10, name:'咨询'},
-                    {value:5, name:'订单'},
-                    {value:50, name:'点击'},
-                    {value:80, name:'展现'}
+                    {value:30, name:'visit'},
+                    {value:10, name:'consult'},
+                    {value:5, name:'order'},
+                    {value:50, name:'click'},
+                    {value:80, name:'view'}
                 ]
             }
         ]
@@ -1039,24 +1039,24 @@ var optionMap = {
         var option = {
             backgroundColor:'#fff',
             title : {
-                text: '【混搭】',
-                subtext: '尽情发挥你的天马行空的创意',
+                text: 'Mixed Charts',
+                subtext: 'Show the best mashup to your data.',
                 x: 'center'
             },
             legend: {
-                data:['销量', '占比'],
+                data:['Sale', 'Percentage'],
                 y: 50,
                 selectedMode: false
             },
             tooltip : {
                 trigger: 'item',
                 formatter: function(params){
-                    if (params.seriesName == '占比') {
-                        return '总量 : ' + total + '<br/>'
+                    if (params.seriesName == 'Percentage') {
+                        return 'Sale : ' + total + '<br/>'
                                + params.name + ' : ' + params.value + '<br/>'
-                               + '占比 : ' +  params.percent + '%';
+                               + 'Percentage : ' +  params.percent + '%';
                     }
-                    else if (params.name != '占位'){
+                    else if (params.name != 'Percentage'){
                         update(params);
                         return params.seriesName + '<br/>'
                                + params.name + ' : ' + params.value;
@@ -1083,7 +1083,7 @@ var optionMap = {
                     type : 'category',
                     boundaryGap : false,
                     show : false,
-                    data : ['占位','周一','周二','周三','周四','周五','周六','周日','占位']
+                    data : ['placeHolder','Mon','Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun','placeHolder']
                 }
             ],
             yAxis : [
@@ -1096,7 +1096,7 @@ var optionMap = {
             animation: false,
             series : [
                 {
-                    name:'销量',
+                    name:'Sale',
                     type:'line',
                     symbol: 'emptyCircle',
                     symbolSize: 6,
@@ -1106,7 +1106,7 @@ var optionMap = {
                     data: dataArray
                 },
                 {
-                    name:'遮罩',
+                    name:'placeHolder',
                     type:'pie',
                     tooltip: {show:false},
                     radius : [100, 600],
@@ -1115,11 +1115,11 @@ var optionMap = {
                         emphasis: {color:'rgba(0,0,0,0)'}
                     },
                     data:[
-                      {value:100, name:'直接访问'}
+                      {value:100, name:'placeHolder'}
                     ]
                 },
                 {
-                    name:'占比',
+                    name:'Percentage',
                     type:'pie',
                     clickable: false,
                     clockWise: true,
@@ -1140,7 +1140,7 @@ var optionMap = {
                           }}
                       },
                       {
-                          name:'其他',
+                          name:'Other',
                           tooltip: {show:false},
                           itemStyle: {normal: {color: '#fff',label:{show:false},labelLine:{show:false}}}
                       }
@@ -1183,8 +1183,8 @@ var optionMap = {
     })(),
     effect2:  {
         title : {
-            text: '【特效】',
-            subtext: '轻松实现百度迁徙数据可视化特效'
+            text: 'Glare Effect',
+            subtext: 'Ability to attract the eye.'
         },
         color: ['gold','aqua','lime'],
         tooltip : {
@@ -1193,11 +1193,11 @@ var optionMap = {
         },
         legend: {
             y: 'bottom',
-            data:['北京', '上海', '广州'],
+            data:['Beijing', 'Shanghai', 'Guangzhou'],
             selectedMode: 'single',
             selected:{
-                '上海' : false,
-                '广州' : false
+                'Shanghai' : false,
+                'Guangzhou' : false
             }
         },
         toolbox: {
@@ -1410,7 +1410,7 @@ var optionMap = {
                 }
             },
             {
-                name: '北京',
+                name: 'Beijing',
                 type: 'map',
                 mapType: 'china',
                 data:[],
@@ -1477,7 +1477,7 @@ var optionMap = {
                 }
             },
             {
-                name: '上海',
+                name: 'Shanghai',
                 type: 'map',
                 mapType: 'china',
                 data:[],
@@ -1544,7 +1544,7 @@ var optionMap = {
                 }
             },
             {
-                name: '广州',
+                name: 'Guangzhou',
                 type: 'map',
                 mapType: 'china',
                 data:[],
@@ -1614,8 +1614,8 @@ var optionMap = {
     },
     effect3:{
         title : {
-            text: '【特效】',
-            subtext: '大规模炫光特效'
+            text: 'Glare Effect',
+            subtext: 'Ability to attract the eye'
         },
         color: [
             'rgba(250, 250, 210, 0.8)',
@@ -1624,7 +1624,7 @@ var optionMap = {
         ],
         legend: {
             y:'bottom',
-            data:['强','中','弱']
+            data:['high','middle','low']
         },
         toolbox: {
             show : true,
@@ -1639,7 +1639,7 @@ var optionMap = {
         },
         series : [
             {
-                name: '弱',
+                name: 'low',
                 type: 'map',
                 mapType: 'china',
                 itemStyle:{
@@ -1678,7 +1678,7 @@ var optionMap = {
                 }
             },
             {
-                name: '中',
+                name: 'middle',
                 type: 'map',
                 mapType: 'china',
                 data : [],
@@ -1708,7 +1708,7 @@ var optionMap = {
                 }
             },
             {
-                name: '强',
+                name: 'high',
                 type: 'map',
                 mapType: 'china',
                 hoverable: false,
@@ -1800,17 +1800,17 @@ function bindPageHandler() {
 function pageHandler() {
     var upOrdown = $(this)[0].className;
     if (upOrdown == 'page-down') {
-        if ($(this).html() == '再看一次') {
+        if ($(this).html() == 'Again') {
             window.location.reload();
             return;
         }
         if (!$('.active').removeClass('active').css('left', '-100%')
                          .next().addClass('active').css('left', 0).next()[0]
         ) {
-            $(this).html('再看一次');
+            $(this).html('Again');
         }
         else {
-            $(this).html('下一页');
+            $(this).html('Next 》');
         }
         $(this).prev().removeClass('disabled');
     }
@@ -1818,7 +1818,7 @@ function pageHandler() {
         !$('.active').removeClass('active').css('left', '100%')
                      .prev().addClass('active').css('left', 0).prev()[0]
         && $(this).addClass('disabled');
-        $(this).next().removeClass('disabled').html('下一页');
+        $(this).next().removeClass('disabled').html('Next 》');
     }
     initChart();
 }
