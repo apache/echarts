@@ -138,7 +138,7 @@ $('#footer')[0].innerHTML =
                     + '<li><a href="http://tushuo.baidu.com/" target="_blank">Baidu 图说</a></li>'
                     + '<li><a href="http://echarts.baidu.com/x/doc/index.html" target="_blank">ECharts-X</a></li>'
                     + '<li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>'
-                    + '<li><a href="https://github.com/pissang/qtek" target="_blank">qtek</a></li>'
+                    + '<li><a href="https://github.com/pissang/qtek" target="_blank">QTEK</a></li>'
                 + '</ul>'
             + '</div>'
             + '<div class="col-md-3">'
