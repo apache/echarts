@@ -1,0 +1,58 @@
+* { margin: 0; padding: 0;}
+body { font: 1.5em "Microsoft Yahei",verdana;}
+
+.page {
+    z-index: 100;
+    position: fixed;
+    bottom: 0;
+    height: 40px;
+    width: 100%;
+    line-height: 30px;
+    text-align: center;
+    color: #666;
+    border-top: 1px solid #ccc;
+    padding-top:2px;
+    font-size:0.51em;
+}
+.page .page-down-center {
+    /*width: 100%;*/
+}
+.page .page-up, .page .page-down {
+    width: 48%;
+    height: 35px;
+    margin-top:4px;
+    display: inline-block;
+    -webkit-tap-highlight-color: #fff;
+}
+.page .disabled {
+    color: #ccc;
+}
+
+#content {
+    position: relative;
+    overflow: hidden;
+}
+.fragment {
+    padding:10px;
+    text-align: left;
+}
+p.fragment a {
+    line-height: 20px;
+    margin-right: 5px;
+    text-decoration: none;
+}
+.section {
+    position: absolute; overflow: hidden; text-align:center;
+    left:100%; top:0; z-index: 10; margin-top: 10px; font-size:0.51em;
+    transition: left 0.5s; 
+}
+.section table {
+    width:95%;
+}
+.main {
+    width: 96%;
+    margin-left:2%;
+}
+@media (orientation : portrait) {
+    
+}
