@@ -40,7 +40,19 @@ body p {
 .navbar-default .navbar-nav > li > a:hover {
     background-color: #eee;
 }
-
+.carousel-caption.ecx-link {
+    bottom: 20px;
+}
+.carousel-caption.ecx-link a {
+    font-size:14px;
+    height: 30px;
+    display: block;
+    color:#999;
+}
+.carousel-caption.ecx-link a:hover {
+    color:#eee;
+    text-decoration: none;
+}
 
 blockquote {
     border-width:0;
