@@ -679,12 +679,17 @@ define(function (require) {
             var boundaryGap = item.boundaryGap;
             var splitNumber = item.splitNumber;
             var scale = item.scale;
+            var opts;
 
             var smartSteps = require('../util/smartSteps');
             for (var i = 0; i < len ; i ++ ) {
                 if (typeof indicator[i].max == 'number') {
                     max = indicator[i].max;
                     min = indicator[i].min || 0;
+                    opts = {
+                        max: max,
+                        min: min
+                    };
                 }
                 else {
                     var value = this._findValue(
@@ -701,7 +706,7 @@ define(function (require) {
                 if (!scale && min <= 0 && max <= 0) {
                     max = 0;
                 }
-                var stepOpt = smartSteps(min, max, splitNumber);
+                var stepOpt = smartSteps(min, max, splitNumber, opts);
 
                 __ecIndicator[i].value = {
                     min: stepOpt.min,
