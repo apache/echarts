@@ -94,6 +94,7 @@ $('#head')[0].innerHTML =
                 + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.zip"> echarts-' + version + ' (from Baidu)</a></li>'
                 + '<li><a href="https://github.com/ecomfe/echarts/archive/' + version + '.zip"> echarts-' + version + ' (from GitHub)</a></li>'
                 + '<li><a href="http://echarts.baidu.com/build/echarts-m-1.0.0.zip"> echarts-m-1.0.0 (beta)</a></li>'
+                + '<li><a href="http://echarts.baidu.com/x/build/echarts-x-0.1.0.zip"> echarts-x-0.1.0 </a></li>'
                 + '<li class="divider"></li>'
                 + (enVersion 
                     ? '<li><a href="http://ecomfe.github.io/echarts/doc/changelog-en.html">Changelog</a></li>'
@@ -136,7 +137,7 @@ $('#footer')[0].innerHTML =
                 + '<p>' + (enVersion ? 'Link' : 'ECharts团队出品') + '</p>'
                 + '<ul>'
                     + '<li><a href="http://tushuo.baidu.com/" target="_blank">Baidu 图说</a></li>'
-                    + '<li><a href="http://echarts.baidu.com/x/doc/index.html" target="_blank">ECharts-X</a></li>'
+                    + '<li><a href="' + (enVersion ? "http://ecomfe.github.io/echarts-x" : 'http://echarts.baidu.com/x/doc') + '" target="_blank">ECharts-X</a></li>'
                     + '<li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>'
                     + '<li><a href="https://github.com/pissang/qtek" target="_blank">QTEK</a></li>'
                 + '</ul>'
