@@ -69,7 +69,9 @@ option = {
                 normal : {
                     label : {
                         position : 'inner',
-                        formatter : function (a,b,c,d) {return (d - 0).toFixed(0) + '%'}
+                        formatter : function (params) {                         
+                          return (params.percent - 0).toFixed(0) + '%'
+                        }
                     },
                     labelLine : {
                         show : false
