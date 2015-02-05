@@ -5469,6 +5469,8 @@ define('zrender/zrender', [
             var y = zrEvent.getY(this._event);
             if (this.deepQuery(queryTarget, 'tooltip.axisPointer.show') && this.component.grid) {
                 this._styleAxisPointer([serie], this.component.grid.getX(), y, this.component.grid.getXend(), y, 0, x, y);
+            } else {
+                this._hide();
             }
             if (showContent === false || !this.option.tooltip.showContent) {
                 return;

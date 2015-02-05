@@ -3977,6 +3977,8 @@ define('zrender/zrender', [
             var y = zrEvent.getY(this._event);
             if (this.deepQuery(queryTarget, 'tooltip.axisPointer.show') && this.component.grid) {
                 this._styleAxisPointer([serie], this.component.grid.getX(), y, this.component.grid.getXend(), y, 0, x, y);
+            } else {
+                this._hide();
             }
             if (showContent === false || !this.option.tooltip.showContent) {
                 return;
@@ -25303,11 +25305,16 @@ define('zrender/zrender', [
             var boundaryGap = item.boundaryGap;
             var splitNumber = item.splitNumber;
             var scale = item.scale;
+            var opts;
             var smartSteps = require('../util/smartSteps');
             for (var i = 0; i < len; i++) {
                 if (typeof indicator[i].max == 'number') {
                     max = indicator[i].max;
                     min = indicator[i].min || 0;
+                    opts = {
+                        max: max,
+                        min: min
+                    };
                 } else {
                     var value = this._findValue(data, i, splitNumber, boundaryGap);
                     min = value.min;
@@ -25319,7 +25326,7 @@ define('zrender/zrender', [
                 if (!scale && min <= 0 && max <= 0) {
                     max = 0;
                 }
-                var stepOpt = smartSteps(min, max, splitNumber);
+                var stepOpt = smartSteps(min, max, splitNumber, opts);
                 __ecIndicator[i].value = {
                     min: stepOpt.min,
                     max: stepOpt.max,
