@@ -1359,8 +1359,8 @@ define(function (require) {
         },
 
         _textFormat : function(valueStart, valueEnd) {
-            valueStart = valueStart.toFixed(this.dataRangeOption.precision);
-            valueEnd = valueEnd != null ? valueEnd.toFixed(this.dataRangeOption.precision) : '';
+            valueStart = (+valueStart).toFixed(this.dataRangeOption.precision);
+            valueEnd = valueEnd != null ? (+valueEnd).toFixed(this.dataRangeOption.precision) : '';
             if (this.dataRangeOption.formatter) {
                 if (typeof this.dataRangeOption.formatter == 'string') {
                     return this.dataRangeOption.formatter.replace('{value}', valueStart)

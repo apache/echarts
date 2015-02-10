@@ -239,7 +239,7 @@ define(function (require) {
                                     valueData[mapType][name].value == null
                                     && (valueData[mapType][name].value = 0);
                                     
-                                    valueData[mapType][name].value +=  data[j].value;
+                                    valueData[mapType][name].value +=  (+data[j].value);
                                 }
                             }
                             //索引有该区域的系列样式
