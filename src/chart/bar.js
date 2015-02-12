@@ -740,42 +740,49 @@ define(function (require) {
             barShape.highlightStyle.textColor = barShape.highlightStyle.color;
             
             barShape = this.addLabel(barShape, serie, data, name, orient);
-            var textPosition = barShapeStyle.textPosition;
-            if (textPosition === 'insideLeft'
-                || textPosition === 'insideRight'
-                || textPosition === 'insideTop'
-                || textPosition === 'insideBottom'
-            ) {
-                var gap = 5;
-                switch (textPosition) {
-                    case 'insideLeft':
-                        barShapeStyle.textX = barShapeStyle.x + gap;
-                        barShapeStyle.textY = barShapeStyle.y + barShapeStyle.height / 2;
-                        barShapeStyle.textAlign = 'left';
-                        barShapeStyle.textBaseline = 'middle';
-                        break;
-                    case 'insideRight':
-                        barShapeStyle.textX = barShapeStyle.x + barShapeStyle.width - gap;
-                        barShapeStyle.textY = barShapeStyle.y + barShapeStyle.height / 2;
-                        barShapeStyle.textAlign = 'right';
-                        barShapeStyle.textBaseline = 'middle';
-                        break;
-                    case 'insideTop':
-                        barShapeStyle.textX = barShapeStyle.x + barShapeStyle.width / 2;
-                        barShapeStyle.textY = barShapeStyle.y + gap / 2;
-                        barShapeStyle.textAlign = 'center';
-                        barShapeStyle.textBaseline = 'top';
-                        break;
-                    case 'insideBottom':
-                        barShapeStyle.textX = barShapeStyle.x + barShapeStyle.width / 2;
-                        barShapeStyle.textY = barShapeStyle.y + barShapeStyle.height - gap / 2;
-                        barShapeStyle.textAlign = 'center';
-                        barShapeStyle.textBaseline = 'bottom';
-                        break;
+            var barShapeStyleList = [                    // normal emphasis都需要检查
+                barShapeStyle,
+                barShape.highlightStyle
+            ];
+            for (var i = 0, l = barShapeStyleList.length; i < l; i++) {
+                var textPosition = barShapeStyleList[i].textPosition;
+                if (textPosition === 'insideLeft'
+                    || textPosition === 'insideRight'
+                    || textPosition === 'insideTop'
+                    || textPosition === 'insideBottom'
+                ) {
+                    var gap = 5;
+                    switch (textPosition) {
+                        case 'insideLeft':
+                            barShapeStyleList[i].textX = barShapeStyle.x + gap;
+                            barShapeStyleList[i].textY = barShapeStyle.y + barShapeStyle.height / 2;
+                            barShapeStyleList[i].textAlign = 'left';
+                            barShapeStyleList[i].textBaseline = 'middle';
+                            break;
+                        case 'insideRight':
+                            barShapeStyleList[i].textX = barShapeStyle.x + barShapeStyle.width - gap;
+                            barShapeStyleList[i].textY = barShapeStyle.y + barShapeStyle.height / 2;
+                            barShapeStyleList[i].textAlign = 'right';
+                            barShapeStyleList[i].textBaseline = 'middle';
+                            break;
+                        case 'insideTop':
+                            barShapeStyleList[i].textX = barShapeStyle.x + barShapeStyle.width / 2;
+                            barShapeStyleList[i].textY = barShapeStyle.y + gap / 2;
+                            barShapeStyleList[i].textAlign = 'center';
+                            barShapeStyleList[i].textBaseline = 'top';
+                            break;
+                        case 'insideBottom':
+                            barShapeStyleList[i].textX = barShapeStyle.x + barShapeStyle.width / 2;
+                            barShapeStyleList[i].textY = barShapeStyle.y + barShapeStyle.height - gap / 2;
+                            barShapeStyleList[i].textAlign = 'center';
+                            barShapeStyleList[i].textBaseline = 'bottom';
+                            break;
+                    }
+                    barShapeStyleList[i].textPosition = 'specific';
+                    barShapeStyleList[i].textColor = barShapeStyleList[i].textColor || '#fff';
                 }
-                barShapeStyle.textPosition = 'specific';
-                barShapeStyle.textColor = barShapeStyle.textColor || '#fff';
             }
+            
 
             if (this.deepQuery([data, serie, this.option],'calculable')) {
                 this.setCalculable(barShape);
