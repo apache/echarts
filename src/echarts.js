@@ -626,8 +626,6 @@ define(function (require) {
                     return false;   // 存在任意数据则为非空数据
                 }
             }
-            // 空数据
-            this.clear();
             var loadOption = (this._option && this._option.noDataLoadingOption)
                 || this._themeConfig.noDataLoadingOption
                 || ecConfig.noDataLoadingOption
@@ -639,6 +637,8 @@ define(function (require) {
                             || this._themeConfig.noDataEffect
                             || ecConfig.noDataEffect
                 };
+            // 空数据
+            this.clear();
             this.showLoading(loadOption);
             return true;
         },
