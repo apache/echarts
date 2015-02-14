@@ -4,19 +4,10 @@
 
 define(function () {
     return function (x, y) {
-        var originPos = this.getTansform(x, y);
+        var originPos = this.transformCoordToLocal(x, y);
         x = originPos[0];
         y = originPos[1];
 
-        // 快速预判并保留判断矩形
-        var rect = this.style.__rect;
-        if (!rect) {
-            rect = this.style.__rect = this.getRect(this.style);
-        }
-
-        return x >= rect.x
-            && x <= (rect.x + rect.width)
-            && y >= rect.y
-            && y <= (rect.y + rect.height);
+        return this.isCoverRect(x, y);
     };
 });

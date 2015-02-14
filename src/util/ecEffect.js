@@ -10,6 +10,7 @@ define(function (require) {
     
     var CircleShape = require('zrender/shape/Circle');
     var ImageShape = require('zrender/shape/Image');
+    var curveTool = require('zrender/tool/curve');
     var IconShape = require('../util/shape/Icon');
     var SymbolShape = require('../util/shape/Symbol');
     
@@ -204,9 +205,10 @@ define(function (require) {
     
     function line(zr, effectList, shape, zlevel) {
         var effect = shape.effect;
-        var color = effect.color || shape.style.strokeColor || shape.style.color;
-        var shadowColor = effect.shadowColor || shape.style.strokeColor || color;
-        var size = shape.style.lineWidth * effect.scaleSize;
+        var shapeStyle = shape.style;
+        var color = effect.color || shapeStyle.strokeColor || shapeStyle.color;
+        var shadowColor = effect.shadowColor || shapeStyle.strokeColor || color;
+        var size = shapeStyle.lineWidth * effect.scaleSize;
         var shadowBlur = typeof effect.shadowBlur != 'undefined'
                          ? effect.shadowBlur : size;
                      
@@ -250,60 +252,49 @@ define(function (require) {
         effectList.push(effectShape);
         zr.addShape(effectShape);
         
-        effectShape.style.x = shape.style.xStart - offset;
-        effectShape.style.y = shape.style.yStart - offset;
-        var distance = (shape.style.xStart - shape.style.xEnd) 
-                            * (shape.style.xStart - shape.style.xEnd)
-                        +
-                       (shape.style.yStart - shape.style.yEnd) 
-                            * (shape.style.yStart - shape.style.yEnd);
+        var x0 = shapeStyle.xStart - offset;
+        var y0 = shapeStyle.yStart - offset;
+        var x2 = shapeStyle.xEnd - offset;
+        var y2 = shapeStyle.yEnd - offset;
+        effectShape.style.x = x0;
+        effectShape.style.y = y0;
+
+        var distance = (x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0);
         var duration = Math.round(Math.sqrt(Math.round(
-                           distance * effect.period * effect.period
-                       )));
-        if (!shape.style.smooth) {
-            // 直线
-            zr.animate(effectShape.id, 'style', effect.loop)
-                .when(
-                    duration,
-                    {
-                        x : shape._x - offset,
-                        y : shape._y - offset
-                    }
-                )
-                .done(function() {
-                    shape.effect.show = false;
-                    zr.delShape(effectShape.id);
+            distance * effect.period * effect.period
+        )));
+        var effectDone = function () {
+            shape.effect.show = false;
+            zr.delShape(effectShape.id);   
+        }
+        if (shape.style.curveness > 0) {
+            var x1 = shapeStyle.cpX1 - offset;
+            var y1 = shapeStyle.cpY1 - offset;
+            var obj = { p: 0 };
+            zr.animation.animate(effectShape, { loop: effect.loop })
+                .when(duration, { p: 1 })
+                .during(function (target, t) {
+                    effectShape.style.x = curveTool.quadraticAt(
+                        x0, x1, x2, t
+                    );
+                    effectShape.style.y = curveTool.quadraticAt(
+                        y0, y1, y2, t
+                    );
+                    // Manually trigger refreshing
+                    effectShape.modSelf();
+                    zr.refreshNextFrame();
                 })
+                .done(effectDone)
                 .start();
         }
         else {
-            // 曲线
-            var pointList = shape.style.pointList || shape.getPointList(shape.style);
-            var len = pointList.length;
-            duration = Math.round(duration / len);
-            var deferred = zr.animate(effectShape.id, 'style', effect.loop);
-            var step = Math.ceil(len / 8);
-            for (var j = 0; j < len - step; j+= step) {
-                deferred.when(
-                    duration * (j + 1),
-                    {
-                        x : pointList[j][0] - offset,
-                        y : pointList[j][1] - offset
-                    }
-                );
-            }
-            deferred.when(
-                duration * len,
-                {
-                    x : pointList[len - 1][0] - offset,
-                    y : pointList[len - 1][1] - offset
-                }
-            );
-            deferred.done(function() {
-                shape.effect.show = false;
-                zr.delShape(effectShape.id);
-            });
-            deferred.start('spline');
+            zr.animate(effectShape.id, 'style', effect.loop)
+                .when(duration, {
+                    x: x2,
+                    y: y2
+                })
+                .done(effectDone)
+                .start();
         }
     }
 

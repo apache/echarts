@@ -7,6 +7,7 @@
  */
 define(function (require) {
     var zrUtil = require('zrender/tool/util');
+    var curveTool = require('zrender/tool/curve');
     
     /**
      * 折线型动画
@@ -550,59 +551,78 @@ define(function (require) {
      * @param {tring} easing
      */
     function markline(zr, oldShape, newShape, duration, easing) {
-        if (!newShape.style.smooth) {
-            newShape.style.pointList = !oldShape
-                ? [
-                    [newShape.style.xStart, newShape.style.yStart],
-                    [newShape.style.xStart, newShape.style.yStart]
-                ]
-                : oldShape.style.pointList;
-            zr.addShape(newShape);
-            newShape._animating = true;
+        easing = easing || 'QuinticOut';
+        newShape._animating = true;
+        zr.addShape(newShape);
+        var newShapeStyle = newShape.style;
+
+        var animationDone = function () {
+            newShape._animating = false;
+        }
+        if (oldShape) {
+            var oldShapeStyle = oldShape.style;
             zr.animate(newShape.id, 'style')
-                .when(
-                    duration,
-                    {
-                        pointList : [
-                            [
-                                newShape.style.xStart,
-                                newShape.style.yStart
-                            ],
-                            [
-                                newShape._x || 0, newShape._y || 0
-                            ]
-                        ]
-                    }
-                )
-                .done(function() {
-                    newShape._animating = false;
+                .when(0, {
+                    xStart: oldShapeStyle.xStart,
+                    yStart: oldShapeStyle.yStart,
+                    xEnd: oldShapeStyle.xEnd,
+                    yEnd: oldShapeStyle.yEnd,
+                    cpX1: oldShapeStyle.cpX1 || 0,
+                    cpY1: oldShapeStyle.cpY1 || 0
                 })
-                .start(easing || 'QuinticOut');
+                .when(duration, {
+                    xStart: newShapeStyle.xStart,
+                    yStart: newShapeStyle.yStart,
+                    xEnd: newShapeStyle.xEnd,
+                    yEnd: newShapeStyle.yEnd,
+                    cpX1: newShapeStyle.cpX1 || 0,
+                    cpY1: newShapeStyle.cpY1 || 0
+                })
+                .done(animationDone)
+                .start(easing);
         }
         else {
-            // 曲线动画
-            if (!oldShape) {
-                // 新增
-                newShape.style.pointListLength = 1;
-                zr.addShape(newShape);
-                newShape._animating = true;
-                newShape.style.pointList = newShape.style.pointList 
-                                           || newShape.getPointList(newShape.style);
-                zr.animate(newShape.id, 'style')
-                    .when(
-                        duration,
-                        {
-                            pointListLength : newShape.style.pointList.length
-                        }
-                    )
-                    .done(function() {
-                        newShape._animating = false;
+            var x0 = newShapeStyle.xStart;
+            var y0 = newShapeStyle.yStart;
+            var x2 = newShapeStyle.xEnd;
+            var y2 = newShapeStyle.yEnd;
+            if (newShapeStyle.curveness > 0) {
+                newShape.updatePoints(newShapeStyle);
+                var obj = { p: 0 };
+                var x1 = newShapeStyle.cpX1;
+                var y1 = newShapeStyle.cpY1;
+                var newXArr = [];
+                var newYArr = [];
+                var subdivide = curveTool.quadraticSubdivide;
+                zr.animation.animate(obj)
+                    .when(duration, { p: 1 })
+                    .during(function () {
+                        // Calculate subdivided curve
+                        subdivide(x0, x1, x2, obj.p, newXArr);
+                        subdivide(y0, y1, y2, obj.p, newYArr);
+                        newShapeStyle.cpX1 = newXArr[1];
+                        newShapeStyle.cpY1 = newYArr[1];
+                        newShapeStyle.xEnd = newXArr[2];
+                        newShapeStyle.yEnd = newYArr[2];
+                        // Manually trigger refreshing
+                        newShape.modSelf();
+                        zr.refreshNextFrame();
                     })
-                    .start(easing || 'QuinticOut');
+                    .done(animationDone)
+                    .start(easing);
             }
             else {
-                // 过渡
-                zr.addShape(newShape);
+                zr.animate(newShape.id, 'style')
+                    .when(0, {
+                        xEnd: x0,
+                        yEnd: y0
+                    })
+                    .when(duration, {
+                        xEnd: x2,
+                        yEnd: y2
+                    })
+                    .done(animationDone)
+                    .start(easing);
             }
         }
     }

@@ -833,132 +833,130 @@ define(function (require) {
         /**
          * 标线多级控制构造
          */
-        _markLine: function (seriesIndex, mlOption) {
-            var serie = this.series[seriesIndex];
-            var component = this.component;
-            zrUtil.merge(
-                zrUtil.merge(
-                    mlOption,
-                    zrUtil.clone(this.ecTheme.markLine || {})
-                ),
-                zrUtil.clone(ecConfig.markLine)
-            );
+        _markLine: (function () {
+            function normalizeOptionValue(mlOption, key) {
+                mlOption[key] = mlOption[key] instanceof Array
+                          ? mlOption[key].length > 1 
+                            ? mlOption[key] 
+                            : [mlOption[key][0], mlOption[key][0]]
+                          : [mlOption[key], mlOption[key]];
+            }
 
-            // 标准化一些同时支持Array和String的参数
-            mlOption.symbol = mlOption.symbol instanceof Array
-                      ? mlOption.symbol.length > 1 
-                        ? mlOption.symbol 
-                        : [mlOption.symbol[0], mlOption.symbol[0]]
-                      : [mlOption.symbol, mlOption.symbol];
-            mlOption.symbolSize = mlOption.symbolSize instanceof Array
-                      ? mlOption.symbolSize.length > 1 
-                        ? mlOption.symbolSize 
-                        : [mlOption.symbolSize[0], mlOption.symbolSize[0]]
-                      : [mlOption.symbolSize, mlOption.symbolSize];
-            mlOption.symbolRotate = mlOption.symbolRotate instanceof Array
-                      ? mlOption.symbolRotate.length > 1 
-                        ? mlOption.symbolRotate 
-                        : [mlOption.symbolRotate[0], mlOption.symbolRotate[0]]
-                      : [mlOption.symbolRotate, mlOption.symbolRotate];
-            
-            mlOption.name = serie.name;
-                   
-            var pList = [];
-            var data = mlOption.data;
-            var itemShape;
-            
-            var dataRange = component.dataRange;
-            var legend = component.legend;
-            var color;
-            var value;
-            var queryTarget;
-            var nColor;
-            var eColor;
-            var effect;
-            var zrWidth = this.zr.getWidth();
-            var zrHeight = this.zr.getHeight();
-            var mergeData;
-            for (var i = 0, l = data.length; i < l; i++) {
-                var mlData = data[i];
-                if (mlData[0].x == null
-                    || mlData[0].y == null
-                    || mlData[1].x == null
-                    || mlData[1].y == null
-                ) {
-                    continue;
-                }
-                    
-                color = legend ? legend.getColor(serie.name) : this.zr.getColor(seriesIndex);
+            return function (seriesIndex, mlOption) {
+                var serie = this.series[seriesIndex];
+                var component = this.component;
+                zrUtil.merge(
+                    zrUtil.merge(
+                        mlOption,
+                        zrUtil.clone(this.ecTheme.markLine || {})
+                    ),
+                    zrUtil.clone(ecConfig.markLine)
+                );
+
+                // 标准化一些同时支持Array和String的参数
+                normalizeOptionValue(mlOption, 'symbol');
+                normalizeOptionValue(mlOption, 'symbolSize');
+                normalizeOptionValue(mlOption, 'symbolRotate');
                 
-                // 组装一个mergeData
-                mergeData = this.deepMerge(mlData);
-                value = mergeData.value != null ? mergeData.value : '';
-                // 值域
-                if (dataRange) {
-                    color = isNaN(value) ? color : dataRange.getColor(value);
-                    
-                    queryTarget = [mergeData, mlOption];
-                    nColor = this.deepQuery(queryTarget, 'itemStyle.normal.color')
-                             || color;
-                    eColor = this.deepQuery(queryTarget, 'itemStyle.emphasis.color')
-                             || nColor;
-                    // 有值域，并且值域返回null且用户没有自己定义颜色，则隐藏这个mark
-                    if (nColor == null && eColor == null) {
+                mlOption.name = serie.name;
+                       
+                var pList = [];
+                var data = mlOption.data;
+                var itemShape;
+                
+                var dataRange = component.dataRange;
+                var legend = component.legend;
+                var color;
+                var value;
+                var queryTarget;
+                var nColor;
+                var eColor;
+                var effect;
+                var zrWidth = this.zr.getWidth();
+                var zrHeight = this.zr.getHeight();
+                var mergeData;
+                for (var i = 0, l = data.length; i < l; i++) {
+                    var mlData = data[i];
+                    if (mlData[0].x == null
+                        || mlData[0].y == null
+                        || mlData[1].x == null
+                        || mlData[1].y == null
+                    ) {
                         continue;
                     }
+                        
+                    color = legend ? legend.getColor(serie.name) : this.zr.getColor(seriesIndex);
+                    
+                    // 组装一个mergeData
+                    mergeData = this.deepMerge(mlData);
+                    value = mergeData.value != null ? mergeData.value : '';
+                    // 值域
+                    if (dataRange) {
+                        color = isNaN(value) ? color : dataRange.getColor(value);
+                        
+                        queryTarget = [mergeData, mlOption];
+                        nColor = this.deepQuery(queryTarget, 'itemStyle.normal.color')
+                                 || color;
+                        eColor = this.deepQuery(queryTarget, 'itemStyle.emphasis.color')
+                                 || nColor;
+                        // 有值域，并且值域返回null且用户没有自己定义颜色，则隐藏这个mark
+                        if (nColor == null && eColor == null) {
+                            continue;
+                        }
+                    }
+                    
+                    // 标准化一些参数
+                    mlData[0].tooltip = mergeData.tooltip
+                                        || mlOption.tooltip
+                                        || {trigger:'item'}; // tooltip.trigger指定为item
+                    mlData[0].name = mlData[0].name != null ? mlData[0].name : '';
+                    mlData[1].name = mlData[1].name != null ? mlData[1].name : '';
+                    mlData[0].value = value;
+                    
+                    itemShape = this.getLineMarkShape(
+                        mlOption,                   // markLine
+                        seriesIndex,
+                        mlData,                    // 数据
+                        i,
+                        this.parsePercent(mlData[0].x, zrWidth),   // 坐标
+                        this.parsePercent(mlData[0].y, zrHeight),  // 坐标
+                        this.parsePercent(mlData[1].x, zrWidth),   // 坐标
+                        this.parsePercent(mlData[1].y, zrHeight),  // 坐标
+                        color                       // 默认symbol和color
+                    );
+                    itemShape._mark = 'line';
+                    
+                    effect = this.deepMerge(
+                        [mergeData, mlOption],
+                        'effect'
+                    );
+                    if (effect.show) {
+                        itemShape.effect = effect;
+                    }
+                    
+                    if (serie.type === ecConfig.CHART_TYPE_MAP) {
+                        itemShape._geo = [
+                            this.getMarkGeo(mlData[0]),
+                            this.getMarkGeo(mlData[1])
+                        ];
+                    }
+                    
+                    // 重新pack一下数据
+                    ecData.pack(
+                        itemShape,
+                        serie, seriesIndex,
+                        mlData[0], i,
+                        mlData[0].name 
+                            // 不要帮我代码规范
+                            + (mlData[1].name !== '' ? (' > ' + mlData[1].name) : ''),
+                        value
+                    );
+                    pList.push(itemShape);
                 }
-                
-                // 标准化一些参数
-                mlData[0].tooltip = mergeData.tooltip
-                                    || mlOption.tooltip
-                                    || {trigger:'item'}; // tooltip.trigger指定为item
-                mlData[0].name = mlData[0].name != null ? mlData[0].name : '';
-                mlData[1].name = mlData[1].name != null ? mlData[1].name : '';
-                mlData[0].value = value;
-                
-                itemShape = this.getLineMarkShape(
-                    mlOption,                   // markLine
-                    seriesIndex,
-                    mlData,                    // 数据
-                    i,
-                    this.parsePercent(mlData[0].x, zrWidth),   // 坐标
-                    this.parsePercent(mlData[0].y, zrHeight),  // 坐标
-                    this.parsePercent(mlData[1].x, zrWidth),   // 坐标
-                    this.parsePercent(mlData[1].y, zrHeight),  // 坐标
-                    color                       // 默认symbol和color
-                );
-                itemShape._mark = 'line';
-                
-                effect = this.deepMerge(
-                    [mergeData, mlOption],
-                    'effect'
-                );
-                if (effect.show) {
-                    itemShape.effect = effect;
-                }
-                
-                if (serie.type === ecConfig.CHART_TYPE_MAP) {
-                    itemShape._geo = [
-                        this.getMarkGeo(mlData[0]),
-                        this.getMarkGeo(mlData[1])
-                    ];
-                }
-                
-                // 重新pack一下数据
-                ecData.pack(
-                    itemShape,
-                    serie, seriesIndex,
-                    mlData[0], i,
-                    mlData[0].name 
-                        // 不要帮我代码规范
-                        + (mlData[1].name !== '' ? (' > ' + mlData[1].name) : ''),
-                    value
-                );
-                pList.push(itemShape);
-            }
-            //console.log(pList);
-            return pList;
-        },
+                //console.log(pList);
+                return pList;
+            };
+        })(),
         
         getMarkCoord: function () {
             // 无转换位置
@@ -1161,12 +1159,14 @@ define(function (require) {
                                ? emphasis.borderWidth
                                : (nBorderWidth + 2);
             }
-            
+            var curveness = this.deepQuery(queryTarget, 'smoothRadian');
+            if (! this.deepQuery(queryTarget, 'smooth')) {
+                curveness = 0;
+            }
             var itemShape = new MarkLineShape({
                 style: {
-                    smooth: this.deepQuery([data[0], data[1], mlOption], 'smooth') ? 'spline' : false,
-                    smoothRadian: this.deepQuery([data[0], data[1], mlOption], 'smoothRadian'),
-                    symbol: symbol, 
+                    curveness: curveness,
+                    symbol: symbol,
                     symbolSize: symbolSize,
                     symbolRotate: symbolRotate,
                     // data: [data[0].name,data[1].name],
