@@ -1123,47 +1123,49 @@ define(function (require) {
                     
                     this.clearEffectShape(true);
                     for (var i = 0, l = this.shapeList.length; i < l; i++) {
-                        if(this.shapeList[i]._mapType == mapType) {
-                            this.shapeList[i].position[0] = transform.left;
-                            this.shapeList[i].position[1] = transform.top;
-                            if (this.shapeList[i].type == 'path' 
-                                || this.shapeList[i].type == 'symbol'
-                                || this.shapeList[i].type == 'circle'
-                                || this.shapeList[i].type == 'rectangle'
-                                || this.shapeList[i].type == 'polygon'
-                                || this.shapeList[i].type == 'line'
-                                || this.shapeList[i].type == 'ellipse'
+                        var shape = this.shapeList[i];
+                        if(shape._mapType == mapType) {
+                            var shapeType = shape.type;
+                            var shapeStyle = shape.style;
+                            shape.position[0] = transform.left;
+                            shape.position[1] = transform.top;
+                            if (shapeType == 'path' 
+                                || shapeType == 'symbol'
+                                || shapeType == 'circle'
+                                || shapeType == 'rectangle'
+                                || shapeType == 'polygon'
+                                || shapeType == 'line'
+                                || shapeType == 'ellipse'
                             ) {
-                                this.shapeList[i].scale[0] *= delta;
-                                this.shapeList[i].scale[1] *= delta;
+                                shape.scale[0] *= delta;
+                                shape.scale[1] *= delta;
                             }
-                            else if (this.shapeList[i].type == 'mark-line') {
-                                this.shapeList[i].style.pointListLength = undefined;
-                                this.shapeList[i].style.pointList = false;
-                                geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo[0]);
-                                this.shapeList[i].style.xStart = geoAndPos[0];
-                                this.shapeList[i].style.yStart = geoAndPos[1];
-                                geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo[1]);
-                                this.shapeList[i]._x = this.shapeList[i].style.xEnd = geoAndPos[0];
-                                this.shapeList[i]._y = this.shapeList[i].style.yEnd = geoAndPos[1];
+                            else if (shapeType == 'mark-line') {
+                                geoAndPos = this.geo2pos(mapType, shape._geo[0]);
+                                shapeStyle.xStart = geoAndPos[0];
+                                shapeStyle.yStart = geoAndPos[1];
+                                geoAndPos = this.geo2pos(mapType, shape._geo[1]);
+                                shapeStyle.xEnd = geoAndPos[0];
+                                shapeStyle.yEnd = geoAndPos[1];
+                                shape.updatePoints(shapeStyle);
                             }
-                            else if (this.shapeList[i].type == 'icon'
-                                     || this.shapeList[i].type == 'image'
+                            else if (shapeType == 'icon'
+                                     || shapeType == 'image'
                             ) {
-                                geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo);
-                                this.shapeList[i].style.x = this.shapeList[i].style._x =
-                                    geoAndPos[0] - this.shapeList[i].style.width / 2;
-                                this.shapeList[i].style.y = this.shapeList[i].style._y =
-                                    geoAndPos[1] - this.shapeList[i].style.height / 2;
+                                geoAndPos = this.geo2pos(mapType, shape._geo);
+                                shapeStyle.x = shapeStyle._x =
+                                    geoAndPos[0] - shapeStyle.width / 2;
+                                shapeStyle.y = shapeStyle._y =
+                                    geoAndPos[1] - shapeStyle.height / 2;
                             }
                             else {
-                                geoAndPos = this.geo2pos(mapType, this.shapeList[i]._geo);
-                                this.shapeList[i].style.x = geoAndPos[0];
-                                this.shapeList[i].style.y = geoAndPos[1];
-                                if (this.shapeList[i].type == 'text') {
-                                    this.shapeList[i]._style.x = this.shapeList[i].highlightStyle.x
+                                geoAndPos = this.geo2pos(mapType, shape._geo);
+                                shapeStyle.x = geoAndPos[0];
+                                shapeStyle.y = geoAndPos[1];
+                                if (shapeType == 'text') {
+                                    shape._style.x = shape.highlightStyle.x
                                                                = geoAndPos[0];
-                                    this.shapeList[i]._style.y = this.shapeList[i].highlightStyle.y
+                                    shape._style.y = shape.highlightStyle.y
                                                                = geoAndPos[1];
                                 }
                             }
