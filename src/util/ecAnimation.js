@@ -604,9 +604,7 @@ define(function (require) {
                         newShapeStyle.cpY1 = newYArr[1];
                         newShapeStyle.xEnd = newXArr[2];
                         newShapeStyle.yEnd = newYArr[2];
-                        // Manually trigger refreshing
-                        newShape.modSelf();
-                        zr.refreshNextFrame();
+                        zr.modShape(newShape);
                     })
                     .done(animationDone)
                     .start(easing);

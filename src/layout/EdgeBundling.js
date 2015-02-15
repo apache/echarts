@@ -154,20 +154,16 @@ define(function (require) {
                             newEdge.push(group.mp1);
                             newEdge.unshift(edge.getStartPoint());
                             newEdge.push(edge.getEndPoint());
-                            newEdges.push(newEdge);
+                            newEdges.push({
+                                points: newEdge,
+                                rawEdge: edge.edge
+                            });
                         }
                     }
                 }
             };
 
             buildNewEdges(res.groups);
-
-            for (var i = 0; i < newEdges.length; i++) {
-                newEdges[i] = {
-                    points: newEdges[i],
-                    rawEdge: rawEdges[i]
-                }
-            }
 
             return newEdges;
         },

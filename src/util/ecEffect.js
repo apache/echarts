@@ -280,9 +280,7 @@ define(function (require) {
                     effectShape.style.y = curveTool.quadraticAt(
                         y0, y1, y2, t
                     );
-                    // Manually trigger refreshing
-                    effectShape.modSelf();
-                    zr.refreshNextFrame();
+                    zr.modShape(effectShape);
                 })
                 .done(effectDone)
                 .start();
