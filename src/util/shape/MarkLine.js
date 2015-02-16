@@ -222,20 +222,8 @@ define(function (require) {
          * @param {Object} style
          */
         getRect : function (style) {
-            if (style.__rect) {
-                return style.__rect;
-            }
-
-            var lineWidth = style.lineWidth || 1;
-            style.__rect = {
-                x : Math.min(style.xStart, style.xEnd) - lineWidth,
-                y : Math.min(style.yStart, style.yEnd) - lineWidth,
-                width : Math.abs(style.xStart - style.xEnd)
-                        + lineWidth,
-                height : Math.abs(style.yStart - style.yEnd)
-                         + lineWidth
-            };
-
+            style.curveness > 0 ? curveInstance.getRect(style)
+                : lineInstance.getRect(style);
             return style.__rect;
         },
 
@@ -247,9 +235,9 @@ define(function (require) {
             // 快速预判并保留判断矩形
             if (this.isCoverRect(x, y)) {
                 // 矩形内
-                return this.style.curveness == 0
-                       ? area.isInside(lineInstance, this.style, x, y)
-                       : area.isInside(curveInstance, this.style, x, y);
+                return this.style.curveness > 0
+                       ? area.isInside(curveInstance, this.style, x, y)
+                       : area.isInside(lineInstance, this.style, x, y);
             }
 
             return false;
