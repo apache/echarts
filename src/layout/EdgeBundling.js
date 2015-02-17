@@ -15,7 +15,7 @@ define(function (require) {
     var v2Dist = vec2.dist;
     var v2Copy = vec2.copy;
 
-    function sqaredDistance(a, b) {
+    function squaredDistance(a, b) {
         a = a.array;
         b = b.array;
 
@@ -96,7 +96,7 @@ define(function (require) {
     function EdgeBundling() {
         this.maxNearestEdge = 6;
         this.maxTurningAngle = Math.PI / 4;
-        this.maxIteration = 10;
+        this.maxIteration = 20;
     }
 
     EdgeBundling.prototype = {
@@ -195,7 +195,7 @@ define(function (require) {
                 }
                 tree.nearestN(
                     edge, this.maxNearestEdge,
-                    sqaredDistance, nearests
+                    squaredDistance, nearests
                 );
                 var maxSavedInk = 0;
                 var mostSavingInkEdge = null;

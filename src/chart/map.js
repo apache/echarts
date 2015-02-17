@@ -1141,13 +1141,21 @@ define(function (require) {
                                 shape.scale[1] *= delta;
                             }
                             else if (shapeType == 'mark-line') {
-                                geoAndPos = this.geo2pos(mapType, shape._geo[0]);
-                                shapeStyle.xStart = geoAndPos[0];
-                                shapeStyle.yStart = geoAndPos[1];
-                                geoAndPos = this.geo2pos(mapType, shape._geo[1]);
-                                shapeStyle.xEnd = geoAndPos[0];
-                                shapeStyle.yEnd = geoAndPos[1];
-                                shape.updatePoints(shapeStyle);
+                                shapeStyle.xStart *= delta;
+                                shapeStyle.yStart *= delta;
+                                shapeStyle.xEnd *= delta;
+                                shapeStyle.yEnd *= delta;
+                                if (shapeStyle.cpX1 != null) {
+                                    shapeStyle.cpX1 *= delta;
+                                    shapeStyle.cpY1 *= delta;
+                                }
+                            }
+                            else if (shapeType == 'polyline') {
+                                for (var i = 0; i < shapeStyle.pointList.length; i++) {
+                                    var point = shapeStyle.pointList[i];
+                                    point[0] *= delta;
+                                    point[1] *= delta;
+                                }
                             }
                             else if (shapeType == 'icon'
                                      || shapeType == 'image'
