@@ -13,6 +13,7 @@ define(function (require) {
     var curveTool = require('zrender/tool/curve');
     var IconShape = require('../util/shape/Icon');
     var SymbolShape = require('../util/shape/Symbol');
+    var ShapeBundle = require('zrender/shape/ShapeBundle');
     
     var canvasSupported = require('zrender/tool/env').canvasSupported;
     
@@ -203,7 +204,7 @@ define(function (require) {
         }
     }
     
-    function line(zr, effectList, shape, zlevel) {
+    function line(zr, effectList, shape, zlevel, isLarge) {
         var effect = shape.effect;
         var shapeStyle = shape.style;
         var color = effect.color || shapeStyle.strokeColor || shapeStyle.color;
@@ -211,7 +212,7 @@ define(function (require) {
         var size = shapeStyle.lineWidth * effect.scaleSize;
         var shadowBlur = typeof effect.shadowBlur != 'undefined'
                          ? effect.shadowBlur : size;
-                     
+
         var effectShape = new CircleShape({
             zlevel : zlevel,
             style : {
@@ -222,36 +223,31 @@ define(function (require) {
                 shadowColor : shadowColor,
                 shadowBlur : shadowBlur
             },
-            draggable : false,
             hoverable : false
         });
-        
-        var offset;
-        if (canvasSupported) {  // 提高性能，换成image
-            effectShape.style.image = zr.shapeToImage(
-                effectShape, 
+
+        var offset = 0;
+        if (canvasSupported && ! isLarge) {  // 提高性能，换成image
+            var zlevel = effectShape.zlevel;
+            effectShape = zr.shapeToImage(
+                effectShape,
                 (size + shadowBlur) * 2,
                 (size + shadowBlur) * 2
-            ).style.image;
-            effectShape = new ImageShape({
-                zlevel : effectShape.zlevel,
-                style : effectShape.style,
-                draggable : false,
-                hoverable : false
-            });
+            );
+            effectShape.zlevel = zlevel;
+            effectShape.hoverable = false;
+
             offset = shadowBlur;
         }
-        else {
-            offset = 0;
+
+        if (! isLarge) {
+            ecData.clone(shape, effectShape);
+            // 改变坐标， 不能移到前面
+            effectShape.position = shape.position;
+            effectList.push(effectShape);
+            zr.addShape(effectShape);
         }
-        
-        ecData.clone(shape, effectShape);
-        
-        // 改变坐标， 不能移到前面
-        effectShape.position = shape.position;
-        effectList.push(effectShape);
-        zr.addShape(effectShape);
-        
+
         var x0 = shapeStyle.xStart - offset;
         var y0 = shapeStyle.yStart - offset;
         var x2 = shapeStyle.xEnd - offset;
@@ -264,14 +260,16 @@ define(function (require) {
             distance * effect.period * effect.period
         )));
         var effectDone = function () {
-            shape.effect.show = false;
-            zr.delShape(effectShape.id);   
+            if (! isLarge) {
+                shape.effect.show = false;
+                zr.delShape(effectShape.id);   
+            }
         }
         if (shape.style.curveness > 0) {
             var x1 = shapeStyle.cpX1 - offset;
             var y1 = shapeStyle.cpY1 - offset;
             var obj = { p: 0 };
-            zr.animation.animate(effectShape, { loop: effect.loop })
+            effectShape.effectAnimator = zr.animation.animate(effectShape, { loop: effect.loop })
                 .when(duration, { p: 1 })
                 .during(function (target, t) {
                     effectShape.style.x = curveTool.quadraticAt(
@@ -280,25 +278,79 @@ define(function (require) {
                     effectShape.style.y = curveTool.quadraticAt(
                         y0, y1, y2, t
                     );
-                    zr.modShape(effectShape);
+                    if (! isLarge) {
+                        zr.modShape(effectShape);
+                    }
                 })
                 .done(effectDone)
                 .start();
         }
         else {
-            zr.animate(effectShape.id, 'style', effect.loop)
+            // 不用 zr.animate，因为在用 ShapeBundle 的时候单个 effectShape 不会
+            // 被加到 zrender 中
+            effectShape.effectAnimator = zr.animation.animate(effectShape.style, { loop: effect.loop })
                 .when(duration, {
                     x: x2,
                     y: y2
                 })
+                .during(function () {
+                    if (! isLarge) {
+                        zr.modShape(effectShape);
+                    }
+                })
                 .done(effectDone)
                 .start();
+        }
+        effectShape.effectAnimator.duration = duration;
+        return effectShape;
+    }
+
+    function largeLine(zr, effectList, shape, zlevel) {
+        var effectShape = new ShapeBundle({
+            style: {
+                shapeList: []
+            },
+            zlevel: zlevel,
+            hoverable: false
+        });
+        var shapeList = shape.style.shapeList;
+        var effect = shape.effect;
+        effectShape.position = shape.position;
+
+        var longestAnimator = null;
+        var maxDuration = 0;
+        for (var i = 0; i < shapeList.length; i++) {
+            shapeList[i].effect = effect;
+            var singleEffectShape = line(zr, null, shapeList[i], zlevel, true);
+            var singleEffectAnimator = singleEffectShape.effectAnimator;
+            effectShape.style.shapeList.push(singleEffectShape);
+            if (singleEffectAnimator.duration > maxDuration) {
+                maxDuration = singleEffectAnimator.duration;
+                longestAnimator = singleEffectAnimator;
+            }
+            if (i === 0) {
+                effectShape.style.color = singleEffectShape.style.color;
+                effectShape.style.shadowBlur = singleEffectShape.style.shadowBlur;
+                effectShape.style.shadowColor = singleEffectShape.style.shadowColor;
+            }
+        }
+        effectList.push(effectShape);
+        zr.addShape(effectShape);
+        if (longestAnimator) {
+            longestAnimator.during(function () {
+                zr.modShape(effectShape);
+            })
+            .done(function () {
+                shape.effect.show = false;
+                zr.delShape(effectShape.id);   
+            });
         }
     }
 
     return {
         point : point,
         largePoint : largePoint,
-        line : line
+        line : line,
+        largeLine: largeLine
     };
 });

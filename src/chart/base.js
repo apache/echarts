@@ -12,6 +12,7 @@ define(function (require) {
     var MarkLineShape = require('../util/shape/MarkLine');
     var SymbolShape = require('../util/shape/Symbol');
     var PolylineShape = require('zrender/shape/Polyline');
+    var ShapeBundle = require('zrender/shape/ShapeBundle');
     
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
@@ -56,7 +57,7 @@ define(function (require) {
                 highlightStyle.strokeColor = self.ecTheme.calculableColor
                                              || ecConfig.calculableColor;
                 highlightStyle.lineWidth = calculableShape.type === 'icon' ? 30 : 10;
-                
+
                 self.zr.addHoverShape(calculableShape);
                 
                 setTimeout(function (){
@@ -709,21 +710,52 @@ define(function (require) {
             
             var shapeList = this._markLine(seriesIndex, markLine);
 
-            for (var i = 0, l = shapeList.length; i < l; i++) {
-                var tarShape = shapeList[i];
-                tarShape.zlevel = this.getZlevelBase();
-                tarShape.z = this.getZBase() + 1;
-                for (var key in attachStyle) {
-                    tarShape[key] = zrUtil.clone(attachStyle[key]);
+            var isLarge = markLine.large;
+
+            if (isLarge) {
+                var shapeBundle = new ShapeBundle({
+                    style: {
+                        shapeList: shapeList
+                    }
+                });
+                var firstShape = shapeList[0];
+                if (firstShape) {
+                    zrUtil.merge(shapeBundle.style, firstShape.style);
+                    zrUtil.merge(shapeBundle.highlightStyle = {}, firstShape.highlightStyle);
+                    shapeBundle.style.brushType = 'stroke';
+                    shapeBundle.zlevel = this.getZlevelBase();
+                    shapeBundle.z = this.getZBase() + 1;
+                    shapeBundle.hoverable = false;
+                    for (var key in attachStyle) {
+                        shapeBundle[key] = zrUtil.clone(attachStyle[key]);
+                    }
                 }
-                this.shapeList.push(tarShape);
+                this.shapeList.push(shapeBundle);
+                this.zr.addShape(shapeBundle);
+
+                shapeBundle._mark = 'largeLine';
+                var effect = markLine.effect;
+                if (effect.show) {
+                    shapeBundle.effect = effect;
+                }
             }
-            // 个别特殊图表需要自己addShape
-            if (this.type === ecConfig.CHART_TYPE_FORCE
-                || this.type === ecConfig.CHART_TYPE_CHORD
-            ) {
+            else {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
-                    this.zr.addShape(shapeList[i]);
+                    var tarShape = shapeList[i];
+                    tarShape.zlevel = this.getZlevelBase();
+                    tarShape.z = this.getZBase() + 1;
+                    for (var key in attachStyle) {
+                        tarShape[key] = zrUtil.clone(attachStyle[key]);
+                    }
+                    this.shapeList.push(tarShape);
+                }
+                // 个别特殊图表需要自己addShape
+                if (this.type === ecConfig.CHART_TYPE_FORCE
+                    || this.type === ecConfig.CHART_TYPE_CHORD
+                ) {
+                    for (var i = 0, l = shapeList.length; i < l; i++) {
+                        this.zr.addShape(shapeList[i]);
+                    }
                 }
             }
         },
@@ -758,7 +790,7 @@ define(function (require) {
             var effect;
             var zrWidth = this.zr.getWidth();
             var zrHeight = this.zr.getHeight();
-            
+
             if (!mpOption.large) {
                 for (var i = 0, l = data.length; i < l; i++) {
                     if (data[i].x == null || data[i].y == null) {
@@ -955,6 +987,7 @@ define(function (require) {
                     );
                     if (effect.show) {
                         itemShape.effect = effect;
+                        itemShape.effect.large = mlOption.large;
                     }
                     
                     if (serie.type === ecConfig.CHART_TYPE_MAP) {
@@ -976,6 +1009,7 @@ define(function (require) {
                     );
                     shapeList.push(itemShape);
                 }
+
                 return shapeList;
             };
         })(),
@@ -1189,7 +1223,6 @@ define(function (require) {
             var ShapeCtor = bundling ? PolylineShape : MarkLineShape;
             var itemShape = new ShapeCtor({
                 style: {
-                    curveness: smoothness,
                     symbol: symbol,
                     symbolSize: symbolSize,
                     symbolRotate: symbolRotate,
@@ -1250,8 +1283,8 @@ define(function (require) {
                 shapeStyle.yStart = points[0][1];
                 shapeStyle.xEnd = points[1][0];
                 shapeStyle.yEnd = points[1][1];
+                shapeStyle.curveness = smoothness;
                 itemShape.updatePoints(itemShape.style);
-                itemShape.updatePoints(itemShape.highlightStyle);
             }
             
             itemShape = this.addLabel(
@@ -1529,26 +1562,26 @@ define(function (require) {
          * 标注动画
          * @param {number} duration 时长
          * @param {string=} easing 缓动效果
-         * @param {Array=} addShapeList 指定特效对象，不指定默认使用this.shapeList
+         * @param {Array=} shapeList 指定特效对象，不指定默认使用this.shapeList
          */
-        animationMark: function (duration , easing, addShapeList) {
-            var shapeList = addShapeList || this.shapeList;
+        animationMark: function (duration , easing, shapeList) {
+            var shapeList = shapeList || this.shapeList;
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 if (!shapeList[i]._mark) {
                     continue;
                 }
                 this._animateMod(false, shapeList[i], duration, easing, 0, true);
             }
-            this.animationEffect(addShapeList);
+            this.animationEffect(shapeList);
         },
 
         /**
          * 特效动画
-         * @param {Array=} addShapeList 指定特效对象，不知道默认使用this.shapeList
+         * @param {Array=} shapeList 指定特效对象，不知道默认使用this.shapeList
          */
-        animationEffect: function (addShapeList) {
-            !addShapeList && this.clearEffectShape();
-            var shapeList = addShapeList || this.shapeList;
+        animationEffect: function (shapeList) {
+            !shapeList && this.clearEffectShape();
+            shapeList = shapeList || this.shapeList;
             if (shapeList == null) {
                 return;
             }
