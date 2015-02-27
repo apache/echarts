@@ -1607,12 +1607,20 @@ define(function (require) {
         },
         
         clearEffectShape: function (clearMotionBlur) {
-            if (this.zr && this.effectList && this.effectList.length > 0) {
+            var effectList = this.effectList;
+            if (this.zr && effectList && effectList.length > 0) {
                 clearMotionBlur && this.zr.modLayer(
                     ecConfig.EFFECT_ZLEVEL, 
                     { motionBlur: false }
                 );
-                this.zr.delShape(this.effectList);
+                this.zr.delShape(effectList);
+
+                // 手动清除不会被 zr 自动清除的动画控制器
+                for (var i = 0; i < effectList.length; i++) {
+                    if (effectList[i].effectAnimator) {
+                        effectList[i].effectAnimator.stop();
+                    }
+                }
             }
             this.effectList = [];
         },

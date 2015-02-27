@@ -387,33 +387,52 @@ define(function (require) {
         var effect = shape.effect;
         effectShape.position = shape.position;
 
-        var longestAnimator = null;
         var maxDuration = 0;
+        var subEffectAnimators = [];
         for (var i = 0; i < shapeList.length; i++) {
             shapeList[i].effect = effect;
-            var singleEffectShape = line(zr, null, shapeList[i], zlevel, true);
-            var singleEffectAnimator = singleEffectShape.effectAnimator;
-            effectShape.style.shapeList.push(singleEffectShape);
-            if (singleEffectAnimator.duration > maxDuration) {
-                maxDuration = singleEffectAnimator.duration;
-                longestAnimator = singleEffectAnimator;
+            var subEffectShape = line(zr, null, shapeList[i], zlevel, true);
+            var subEffectAnimator = subEffectShape.effectAnimator;
+            effectShape.style.shapeList.push(subEffectShape);
+            if (subEffectAnimator.duration > maxDuration) {
+                maxDuration = subEffectAnimator.duration;
             }
             if (i === 0) {
-                effectShape.style.color = singleEffectShape.style.color;
-                effectShape.style.shadowBlur = singleEffectShape.style.shadowBlur;
-                effectShape.style.shadowColor = singleEffectShape.style.shadowColor;
+                effectShape.style.color = subEffectShape.style.color;
+                effectShape.style.shadowBlur = subEffectShape.style.shadowBlur;
+                effectShape.style.shadowColor = subEffectShape.style.shadowColor;
             }
+            subEffectAnimators.push(subEffectAnimator);
         }
         effectList.push(effectShape);
         zr.addShape(effectShape);
-        if (longestAnimator) {
-            longestAnimator.during(function () {
-                zr.modShape(effectShape);
-            })
-            .done(function () {
-                shape.effect.show = false;
-                zr.delShape(effectShape.id);   
-            });
+
+        var clearAllAnimators = function () {
+            for (var i = 0; i < subEffectAnimators.length; i++) {
+                subEffectAnimators[i].stop();
+            }
+        }
+        if (maxDuration) {
+            effectShape.__dummy = 0;
+            // Proxy animator
+            var animator = zr.animate(effectShape.id, '', effect.loop)
+                .when(maxDuration, {
+                    __dummy: 1
+                })
+                .during(function () {
+                    zr.modShape(effectShape);
+                })
+                .done(function () {
+                    shape.effect.show = false;
+                    zr.delShape(effectShape.id);
+                })
+                .start();
+            var oldStop = animator.stop;
+
+            animator.stop = function () {
+                clearAllAnimators();
+                oldStop.call(this);
+            }
         }
     }
 
