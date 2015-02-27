@@ -14,6 +14,8 @@ define(function (require) {
     var IconShape = require('../util/shape/Icon');
     var SymbolShape = require('../util/shape/Symbol');
     var ShapeBundle = require('zrender/shape/ShapeBundle');
+    var Polyline = require('zrender/shape/Polyline');
+    var vec2 = require('zrender/tool/vector');
 
     var canvasSupported = require('zrender/tool/env').canvasSupported;
     
@@ -248,60 +250,128 @@ define(function (require) {
             zr.addShape(effectShape);
         }
 
-        var x0 = shapeStyle.xStart - offset;
-        var y0 = shapeStyle.yStart - offset;
-        var x2 = shapeStyle.xEnd - offset;
-        var y2 = shapeStyle.yEnd - offset;
-        effectShape.style.x = x0;
-        effectShape.style.y = y0;
-
-        var distance = (x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0);
-        var duration = Math.round(Math.sqrt(Math.round(
-            distance * effect.period * effect.period
-        )));
         var effectDone = function () {
             if (! isLarge) {
                 shape.effect.show = false;
                 zr.delShape(effectShape.id);   
             }
+            effectShape.effectAnimator = null;
         }
-        if (shape.style.curveness > 0) {
-            var x1 = shapeStyle.cpX1 - offset;
-            var y1 = shapeStyle.cpY1 - offset;
+
+        if (shape instanceof Polyline) {
+            var distanceList = [0];
+            var totalDist = 0;
+            var pointList = shapeStyle.pointList;
+            var controlPointList = shapeStyle.controlPointList;
+            for (var i = 1; i < pointList.length; i++) {
+                if (controlPointList) {
+                    var cp1 = controlPointList[(i - 1) * 2];
+                    var cp2 = controlPointList[(i - 1) * 2 + 1];
+                    totalDist += vec2.dist(pointList[i - 1], cp1)
+                         + vec2.dist(cp1, cp2)
+                         + vec2.dist(cp2, pointList[i]);
+                }
+                else {
+                    totalDist += vec2.dist(pointList[i - 1], pointList[i]);
+                }
+                distanceList.push(totalDist);
+            }
             var obj = { p: 0 };
-            effectShape.effectAnimator = zr.animation.animate(effectShape, { loop: effect.loop })
-                .when(duration, { p: 1 })
-                .during(function (target, t) {
-                    effectShape.style.x = curveTool.quadraticAt(
-                        x0, x1, x2, t
-                    );
-                    effectShape.style.y = curveTool.quadraticAt(
-                        y0, y1, y2, t
-                    );
-                    if (! isLarge) {
-                        zr.modShape(effectShape);
+            var animator = zr.animation.animate(obj, { loop: effect.loop })
+
+            for (var i = 0; i < distanceList.length; i++) {
+                animator.when(distanceList[i] * effect.period, { p: i });
+            }
+            animator.during(function () {
+                var i = Math.floor(obj.p);
+                var x, y;
+                if (i == pointList.length - 1) {
+                    x = pointList[i][0];
+                    y = pointList[i][1];
+                }
+                else {
+                    var t = obj.p - i;
+                    var p0 = pointList[i];
+                    var p1 = pointList[i + 1];
+                    if (controlPointList) {
+                        var cp1 = controlPointList[i * 2];
+                        var cp2 = controlPointList[i * 2 + 1];
+                        x = curveTool.cubicAt(
+                            p0[0], cp1[0], cp2[0], p1[0], t
+                        );
+                        y = curveTool.cubicAt(
+                            p0[1], cp1[1], cp2[1], p1[1], t
+                        );
                     }
-                })
-                .done(effectDone)
-                .start();
+                    else {
+                        x = (p1[0] - p0[0]) * t + p0[0];
+                        y = (p1[1] - p0[1]) * t + p0[1];   
+                    }
+                }
+                effectShape.style.x = x;
+                effectShape.style.y = y;
+                if (! isLarge) {
+                    zr.modShape(effectShape);
+                }
+            })
+            .done(effectDone)
+            .start();
+
+            animator.duration = totalDist * effect.period;
+
+            effectShape.effectAnimator = animator;
         }
         else {
-            // 不用 zr.animate，因为在用 ShapeBundle 的时候单个 effectShape 不会
-            // 被加到 zrender 中
-            effectShape.effectAnimator = zr.animation.animate(effectShape.style, { loop: effect.loop })
-                .when(duration, {
-                    x: x2,
-                    y: y2
-                })
-                .during(function () {
-                    if (! isLarge) {
-                        zr.modShape(effectShape);
-                    }
-                })
-                .done(effectDone)
-                .start();
+            var x0 = shapeStyle.xStart - offset;
+            var y0 = shapeStyle.yStart - offset;
+            var x2 = shapeStyle.xEnd - offset;
+            var y2 = shapeStyle.yEnd - offset;
+            effectShape.style.x = x0;
+            effectShape.style.y = y0;
+
+            var distance = (x2 - x0) * (x2 - x0) + (y2 - y0) * (y2 - y0);
+            var duration = Math.round(Math.sqrt(Math.round(
+                distance * effect.period * effect.period
+            )));
+
+            if (shape.style.curveness > 0) {
+                var x1 = shapeStyle.cpX1 - offset;
+                var y1 = shapeStyle.cpY1 - offset;
+                var obj = { p: 0 };
+                effectShape.effectAnimator = zr.animation.animate(effectShape, { loop: effect.loop })
+                    .when(duration, { p: 1 })
+                    .during(function (target, t) {
+                        effectShape.style.x = curveTool.quadraticAt(
+                            x0, x1, x2, t
+                        );
+                        effectShape.style.y = curveTool.quadraticAt(
+                            y0, y1, y2, t
+                        );
+                        if (! isLarge) {
+                            zr.modShape(effectShape);
+                        }
+                    })
+                    .done(effectDone)
+                    .start();
+            }
+            else {
+                // 不用 zr.animate，因为在用 ShapeBundle 的时候单个 effectShape 不会
+                // 被加到 zrender 中
+                effectShape.effectAnimator = zr.animation.animate(effectShape.style, { loop: effect.loop })
+                    .when(duration, {
+                        x: x2,
+                        y: y2
+                    })
+                    .during(function () {
+                        if (! isLarge) {
+                            zr.modShape(effectShape);
+                        }
+                    })
+                    .done(effectDone)
+                    .start();
+            }
+            effectShape.effectAnimator.duration = duration;
         }
-        effectShape.effectAnimator.duration = duration;
         return effectShape;
     }
 
