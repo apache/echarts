@@ -123,11 +123,21 @@ define(function (require) {
             // Get new edges
             var newEdges = [];
 
+            function pointApproxEqual(p0, p1) {
+                // Use Float32Array may affect the precision
+                return v2DistSquare(p0, p1) < 1e-10;
+            }
             // Clone all points to make sure all points in edge will not reference to the same array
-            function cloneEdgePoints(edgePoints) {
+            // And clean the duplicate points
+            function cleanEdgePoints(edgePoints) {
+                var res = [];
+                var off = 0;
                 for (var i = 0; i < edgePoints.length; i++) {
-                    edgePoints[i] = v2Clone(edgePoints[i]);
+                    if (! (off > 0 && pointApproxEqual(edgePoints[i], res[off - 1]))) {
+                        res[off++] = v2Clone(edgePoints[i]);
+                    }
                 }
+                return res;
             }
 
             var buildNewEdges = function (groups, fromEdgePoints) {
@@ -163,9 +173,8 @@ define(function (require) {
                             newEdgePoints.push(group.mp1);
                             newEdgePoints.unshift(edge.getStartPoint());
                             newEdgePoints.push(edge.getEndPoint());
-                            cloneEdgePoints(newEdgePoints);
                             newEdges.push({
-                                points: newEdgePoints,
+                                points: cleanEdgePoints(newEdgePoints),
                                 rawEdge: edge.edge
                             });
                         }
