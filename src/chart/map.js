@@ -1061,7 +1061,15 @@ define(function (require) {
             if (this.shapeList.length <= 0) {
                 return;
             }
-            
+
+            for (var i = 0, l = this.shapeList.length; i < l; i++) {
+                var shape = this.shapeList[i];
+                // If any shape is still animating
+                if (shape.__animating) {
+                    return;
+                }
+            }
+
             var event = params.event;
             var mx = zrEvent.getX(event);
             var my = zrEvent.getY(event);
@@ -1169,10 +1177,10 @@ define(function (require) {
                                 shape.scale[1] *= delta;
                             }
                             else if (shapeType == 'mark-line') {
-                                scaleMarkline(shapeType, delta);
+                                scaleMarkline(shapeStyle, delta);
                             }
                             else if (shapeType == 'polyline') {
-                                scalePolyline(shapeType, delta);
+                                scalePolyline(shapeStyle, delta);
                             }
                             else if (shapeType == 'shape-bundle') {
                                 for (var j = 0; j < shapeStyle.shapeList.length; j++) {
