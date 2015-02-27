@@ -86,7 +86,7 @@ option = {
         roam: true,
         markLine: {
             effect: {
-                color: 'rgba(204, 246, 255, 0.2)',
+                color: 'rgba(204, 246, 255, 0.09)',
                 show: true,
                 period: 40
             },
@@ -100,7 +100,7 @@ option = {
             itemStyle: {
                 normal: {
                     lineStyle: {
-                        color: 'rgba(2, 166, 253, 0.06)',
+                        color: 'rgba(2, 166, 253, 0.05)',
                         type: 'solid',
                         width: 0.5,
                         opacity: 0.2
@@ -135,7 +135,7 @@ $.ajax({
     success: function(data) {
         option.series[0].markLine.data = data.allLine.sort(function (a, b) {
             return b.num - a.num
-        }).slice(0, 1000).map(function (line) {
+        }).slice(0, 3000).map(function (line) {
             return [{
                 geoCoord: getGeoCoord(line.start)   
             }, {
