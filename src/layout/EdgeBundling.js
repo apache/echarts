@@ -129,13 +129,17 @@ define(function (require) {
             }
             // Clone all points to make sure all points in edge will not reference to the same array
             // And clean the duplicate points
-            function cleanEdgePoints(edgePoints) {
+            function cleanEdgePoints(edgePoints, rawEdgePoints) {
                 var res = [];
                 var off = 0;
                 for (var i = 0; i < edgePoints.length; i++) {
                     if (! (off > 0 && pointApproxEqual(edgePoints[i], res[off - 1]))) {
                         res[off++] = v2Clone(edgePoints[i]);
                     }
+                }
+                // Edge has been reversed
+                if (rawEdgePoints[0] && !pointApproxEqual(res[0], rawEdgePoints[0])) {
+                    res = res.reverse();
                 }
                 return res;
             }
@@ -174,7 +178,7 @@ define(function (require) {
                             newEdgePoints.unshift(edge.getStartPoint());
                             newEdgePoints.push(edge.getEndPoint());
                             newEdges.push({
-                                points: cleanEdgePoints(newEdgePoints),
+                                points: cleanEdgePoints(newEdgePoints, edge.edge.points),
                                 rawEdge: edge.edge
                             });
                         }
