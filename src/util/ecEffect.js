@@ -14,7 +14,7 @@ define(function (require) {
     var IconShape = require('../util/shape/Icon');
     var SymbolShape = require('../util/shape/Symbol');
     var ShapeBundle = require('zrender/shape/ShapeBundle');
-    
+
     var canvasSupported = require('zrender/tool/env').canvasSupported;
     
     function point(zr, effectList, shape, zlevel) {

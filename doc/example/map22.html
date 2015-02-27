@@ -83,13 +83,15 @@ option = {
         data: [{}],
         hoverable: false,
         clickable: false,
+        roam: true,
         markLine: {
             effect: {
-                show: true
+                show: false
             },
             bundling: {
                 enable: true
             },
+            large: true,
             smooth: true,
             smoothness: 0.2,
             symbol: ['none', 'none'],
@@ -131,7 +133,7 @@ $.ajax({
     success: function(data) {
         option.series[0].markLine.data = data.allLine.sort(function (a, b) {
             return b.num - a.num
-        }).slice(0, 1500).map(function (line) {
+        }).slice(0, 3000).map(function (line) {
             return [{
                 geoCoord: getGeoCoord(line.start)   
             }, {

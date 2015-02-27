@@ -66,6 +66,12 @@ define(function (require) {
                 duration,
                 { pointList: newPointList }
             )
+            .during(function () {
+                // Updating bezier points
+                if (newShape.updateControlPoints) {
+                    newShape.updateControlPoints(newShape.style);
+                }
+            })
             .done(function() {
                 newShape._animating = false;
             })

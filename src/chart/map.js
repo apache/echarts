@@ -1077,7 +1077,35 @@ define(function (require) {
                     mapTypeControl[mapType] = true;
                 }
             }
-            
+
+            function scalePolyline(shapeStyle, delta) {
+                for (var i = 0; i < shapeStyle.pointList.length; i++) {
+                    var point = shapeStyle.pointList[i];
+                    point[0] *= delta;
+                    point[1] *= delta;
+                }
+                //If smoothness > 0
+                var controlPointList = shapeStyle.controlPointList;
+                if (controlPointList) {
+                    for (var i = 0; i < controlPointList.length; i++) {
+                        var point = controlPointList[i];
+                        point[0] *= delta;
+                        point[1] *= delta;
+                    }
+                }
+            }
+
+            function scaleMarkline(shapeStyle, delta) {
+                shapeStyle.xStart *= delta;
+                shapeStyle.yStart *= delta;
+                shapeStyle.xEnd *= delta;
+                shapeStyle.yEnd *= delta;
+                if (shapeStyle.cpX1 != null) {
+                    shapeStyle.cpX1 *= delta;
+                    shapeStyle.cpY1 *= delta;
+                }
+            }
+
             var haveScale = false;
             for (mapType in mapTypeControl) {
                 if (mapTypeControl[mapType]) {
@@ -1141,20 +1169,20 @@ define(function (require) {
                                 shape.scale[1] *= delta;
                             }
                             else if (shapeType == 'mark-line') {
-                                shapeStyle.xStart *= delta;
-                                shapeStyle.yStart *= delta;
-                                shapeStyle.xEnd *= delta;
-                                shapeStyle.yEnd *= delta;
-                                if (shapeStyle.cpX1 != null) {
-                                    shapeStyle.cpX1 *= delta;
-                                    shapeStyle.cpY1 *= delta;
-                                }
+                                scaleMarkline(shapeType, delta);
                             }
                             else if (shapeType == 'polyline') {
-                                for (var i = 0; i < shapeStyle.pointList.length; i++) {
-                                    var point = shapeStyle.pointList[i];
-                                    point[0] *= delta;
-                                    point[1] *= delta;
+                                scalePolyline(shapeType, delta);
+                            }
+                            else if (shapeType == 'shape-bundle') {
+                                for (var j = 0; j < shapeStyle.shapeList.length; j++) {
+                                    var subShape = shapeStyle.shapeList[j];
+                                    if (subShape.type == 'mark-line') {
+                                        scaleMarkline(subShape.style, delta);
+                                    }
+                                    else if (subShape.type == 'polyline') {
+                                        scalePolyline(subShape.style, delta);
+                                    }
                                 }
                             }
                             else if (shapeType == 'icon'
@@ -1178,7 +1206,7 @@ define(function (require) {
                                 }
                             }
                             
-                            this.zr.modShape(this.shapeList[i].id);
+                            this.zr.modShape(shape.id);
                         }
                     }
                 }
