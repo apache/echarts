@@ -810,8 +810,9 @@ define(function (require) {
         /**
          * 动态数据增加动画 
          */
-        addDataAnimation: function (params) {
+        addDataAnimation: function (params, done) {
             var series = this.series;
+            var self = this;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
                 aniMap[params[i][0]] = params[i];
@@ -823,6 +824,15 @@ define(function (require) {
             var seriesIndex;
             var pointList;
             var isHorizontal; // 是否横向布局， isHorizontal;
+
+            var aniCount = 0;
+            function animationDone() {
+                aniCount--;
+                if (aniCount === 0) {
+                    done && done();
+                }
+            }
+
             for (var i = this.shapeList.length - 1; i >= 0; i--) {
                 seriesIndex = this.shapeList[i]._seriesIndex;
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
@@ -860,16 +870,9 @@ define(function (require) {
                             }
                             isHorizontal ? (x = -dx, y = 0) : (x = 0, y = dy);
                         }
+                        this.shapeList[i].style.controlPointList = null;
                         
-                        this.zr.modShape(
-                            this.shapeList[i].id, 
-                            {
-                                style: {
-                                    pointList: this.shapeList[i].style.pointList
-                                }
-                            },
-                            true
-                        );
+                        this.zr.modShape(this.shapeList[i]);
                     }
                     else {
                         // 拐点动画
@@ -890,13 +893,25 @@ define(function (require) {
                         }
                     }
                     this.shapeList[i].position = [0, 0];
+
+                    aniCount++;
                     this.zr.animate(this.shapeList[i].id, '')
                         .when(
                             this.query(this.option, 'animationDurationUpdate'),
                             { position: [ x, y ] }
                         )
+                        .during(function (target) {
+                            // 强制更新曲线控制点
+                            target.style.controlPointList = null;
+                        })
+                        .done(animationDone)
                         .start();
                 }
+            }
+
+            // 没有动画
+            if (!aniCount) {
+                animationDone();
             }
         }
     };

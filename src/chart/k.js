@@ -466,7 +466,7 @@ define(function (require) {
         /**
          * 动画设定
          */
-        addDataAnimation: function (params) {
+        addDataAnimation: function (params, done) {
             var series = this.series;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
@@ -478,6 +478,15 @@ define(function (require) {
             var serie;
             var seriesIndex;
             var dataIndex;
+
+            var aniCount = 0;
+            function animationDone() {
+                aniCount--;
+                if (aniCount === 0) {
+                    done && done();
+                }
+            }
+
              for (var i = 0, l = this.shapeList.length; i < l; i++) {
                 seriesIndex = this.shapeList[i]._seriesIndex;
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
@@ -502,14 +511,21 @@ define(function (require) {
                              ).getGap();
                         x = aniMap[seriesIndex][2] ? dx : -dx;
                         y = 0;
+                        aniCount++;
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
                                 this.query(this.option, 'animationDurationUpdate'),
                                 { position: [ x, y ] }
                             )
+                            .done(animationDone)
                             .start();
                     }
                 }
+            }
+            
+            // 没有动画
+            if (!aniCount) {
+                animationDone();
             }
         }
     };

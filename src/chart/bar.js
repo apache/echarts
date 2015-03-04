@@ -872,7 +872,7 @@ define(function (require) {
         /**
          * 动态数据增加动画 
          */
-        addDataAnimation: function (params) {
+        addDataAnimation: function (params, done) {
             var series = this.series;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
@@ -885,6 +885,14 @@ define(function (require) {
             var serie;
             var seriesIndex;
             var dataIndex;
+
+            var aniCount = 0;
+            function animationDone() {
+                aniCount--;
+                if (aniCount === 0) {
+                    done && done();
+                }
+            }
             for (var i = this.shapeList.length - 1; i >= 0; i--) {
                 seriesIndex = ecData.get(this.shapeList[i], 'seriesIndex');
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
@@ -916,14 +924,22 @@ define(function (require) {
                             y = 0;
                         }
                         this.shapeList[i].position = [0, 0];
+
+                        aniCount++;
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
                                 this.query(this.option, 'animationDurationUpdate'),
                                 { position: [x, y] }
                             )
+                            .done(animationDone)
                             .start();
                     }
                 }
+            }
+            
+            // 没有动画
+            if (!aniCount) {
+                animationDone();
             }
         }
     };
