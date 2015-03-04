@@ -613,6 +613,7 @@ define(function (require) {
 
         _noDataCheck: function(magicOption) {
             var series = magicOption.series;
+            this._zr.hideLoading();
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type == ecConfig.CHART_TYPE_MAP
                     || (series[i].data && series[i].data.length > 0)
