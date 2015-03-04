@@ -103,6 +103,10 @@ define(function(require) {
     };
 
     ForceLayout.prototype.init = function (graph, useWorker) {
+        if (this._layoutWorker) {
+            this._layoutWorker.terminate();
+            this._layoutWorker = null;
+        }
         if (workerUrl && useWorker) {
             try {
                 if (!this._layoutWorker) {
@@ -121,10 +125,6 @@ define(function(require) {
         else {
             if (!this._layout) {
                 this._layout = new ForceLayoutWorker();
-            }
-            if (this._layoutWorker) {
-                this._layoutWorker.terminate();
-                this._layoutWorker = null;
             }
         }
 
