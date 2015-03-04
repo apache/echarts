@@ -44,6 +44,7 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
+
 option = {
     title : {
         text: 'webkit内核依赖',
@@ -103,25 +104,43 @@ option = {
         orient : 'vertical',
         x : 'left'
     },
-    series : (function (){
-        // If data have been loaded
-        if (webkitDepData) {
-            //webkitDepData has been required and defined in webkit-dep.js
-            webkitDepData.minRadius = 5;
-            webkitDepData.maxRadius = 8;
-            webkitDepData.gravity = 1.1;
-            webkitDepData.scaling = 1.1;
-            webkitDepData.steps = 20;
-            webkitDepData.large = true;
-            webkitDepData.useWorker = true;
-            webkitDepData.coolDown = 0.995;
-            webkitDepData.ribbonType = false;
-            return [webkitDepData];
-        } else {
-            return [];
-        }
-    })()
+    noDataEffect: 'none',
+    series :[{
+        //FIXME No data
+        type: 'force',
+    }],
 };
+$.ajax({
+    url: 'data/webkit-dep.json',
+    dataType: 'json',
+    success: function (data) {
+        option.series[0] = {
+            type: 'force',
+            name: 'webkit-dep',
+            itemStyle: {
+                normal : {
+                    linkStyle : {
+                        opacity : 0.5
+                    }
+                }
+            },
+            categories: data.categories,
+            nodes: data.nodes,
+            links: data.links,
+            minRadius: 5,
+            maxRadius: 8,
+            gravity: 1.1,
+            scaling: 1.1,
+            steps: 20,
+            large: true,
+            useWorker: true,
+            coolDown: 0.995,
+            ribbonType: false,
+        };
+
+        myChart.setOption(option);
+    }
+});
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->
@@ -146,28 +165,6 @@ option = {
     <script src="../asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
-    <script type="text/javascript">
-        var webkitDepData;
-        require(['webkit-dep'], function (wd) {
-            webkitDepData = wd;
-            //webkitDepData has been required and defined in webkit-dep.js
-            webkitDepData.minRadius = 5;
-            webkitDepData.maxRadius = 8;
-            webkitDepData.density = 1.1;
-            webkitDepData.attractiveness = 1.1;
-            webkitDepData.itemStyle = {
-                normal : {
-                    linkStyle : {
-                        opacity : 0.5
-                    }
-                }
-            }
-            // Echarts have been loaded
-            if (typeof(echarts) !== 'undefined') {
-                refresh();
-            }
-        })
-    </script>
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>

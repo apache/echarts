@@ -103,21 +103,21 @@ option = {
         orient : 'vertical',
         x : 'left'
     },
-    series : (function (){
-        // If data have been loaded
-        if (webkitDepData) {
-            //webkitDepData has been required and defined in webkit-dep.js
-            webkitDepData.type = 'chord';
-            webkitDepData.ribbonType = false;
-            for (var i = 0; i < webkitDepData.nodes.length; i++) {
-                webkitDepData.nodes[i].value = null;
-            }
-            for (var i = 0; i < webkitDepData.links.length; i++) {
-                webkitDepData.links[i].weight = 1;
-            }
-            webkitDepData.minRadius = 2;
-            webkitDepData.maxRadius = 10;
-            webkitDepData.itemStyle = {
+    noDataEffect: 'none',
+    series :[{
+        //FIXME No data
+        type: 'force',
+    }],
+};
+$.ajax({
+    url: 'data/webkit-dep.json',
+    dataType: 'json',
+    success: function (data) {
+        option.series[0] = {
+            type: 'chord',
+            ribbonType: false,
+            name: 'webkit-dep',
+            itemStyle: {
                 normal: {
                     label: {
                         show: true,
@@ -127,13 +127,23 @@ option = {
                         opacity: 0.2
                     }
                 }
-            };
-            return [webkitDepData];
-        } else {
-            return [];
-        }
-    })()
-};
+            },
+            categories: data.categories,
+            nodes: data.nodes,
+            links: data.links,
+            minRadius: 2,
+            maxRadius: 10,
+            gravity: 1.1,
+            scaling: 1.1,
+            steps: 20,
+            large: true,
+            useWorker: true,
+            coolDown: 0.995
+        };
+
+        myChart.setOption(option);
+    }
+});
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->
@@ -158,28 +168,6 @@ option = {
     <script src="../asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
     <script src="../asset/js/bootstrap.min.js"></script>
-    <script type="text/javascript">
-        var webkitDepData;
-        require(['webkit-dep'], function (wd) {
-            webkitDepData = wd;
-            //webkitDepData has been required and defined in webkit-dep.js
-            webkitDepData.minRadius = 5;
-            webkitDepData.maxRadius = 8;
-            webkitDepData.density = 1.1;
-            webkitDepData.attractiveness = 1.1;
-            webkitDepData.itemStyle = {
-                normal : {
-                    linkStyle : {
-                        opacity : 0.5
-                    }
-                }
-            }
-            // Echarts have been loaded
-            if (typeof(echarts) !== 'undefined') {
-                refresh();
-            }
-        })
-    </script>
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>

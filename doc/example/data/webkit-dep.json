@@ -1,4 +1,4 @@
-define({
+{
     "type": "force",
     "categories": [
         {
@@ -5753,4 +5753,4 @@ define({
             "target": 94
         }
     ]
-})
+}

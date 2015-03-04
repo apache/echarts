@@ -132,6 +132,7 @@ function getGeoCoord (name) {
 
 $.ajax({
     url: 'data/migration.json',
+    dataType: 'json',
     success: function(data) {
         option.series[0].markLine.data = data.allLine.sort(function (a, b) {
             return b.num - a.num
