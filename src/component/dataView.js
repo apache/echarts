@@ -98,10 +98,6 @@ define(function (require) {
                               + (lang[0] || this._lang[0])
                               + '</p>';
 
-            this._textArea.style.cssText =
-                'display:block;margin:0 0 8px 0;padding:4px 6px;overflow:auto;'
-                + 'width:' + (this._zrWidth - 15) + 'px;'
-                + 'height:' + (this._zrHeight - 100) + 'px;';
             var customContent = this.query(
                 this.option, 'toolbox.feature.dataView.optionToContent'
             );
@@ -109,8 +105,16 @@ define(function (require) {
                 this._textArea.value = this._optionToContent();
             }
             else {
-                this._textArea.value = customContent(this.option);
+                // innerHTML the custom optionToContent;
+                this._textArea = document.createElement('div');
+                this._textArea.innerHTML = customContent(this.option);
             }
+
+            this._textArea.style.cssText =
+                'display:block;margin:0 0 8px 0;padding:4px 6px;overflow:auto;'
+                + 'width:100%;'
+                + 'height:' + (this._zrHeight - 100) + 'px;';
+
             this._tDom.appendChild(this._textArea);
 
             this._buttonClose.style.cssText = 'float:right;padding:1px 6px;';
@@ -130,14 +134,16 @@ define(function (require) {
                 this._buttonRefresh.onclick = function (){
                     self._save();
                 };
-                this._tDom.appendChild(this._buttonRefresh);
                 this._textArea.readOnly = false;
                 this._textArea.style.cursor = 'default';
             }
             else {
+                this._buttonRefresh.style.cssText =
+                    'display:none';
                 this._textArea.readOnly = true;
                 this._textArea.style.cursor = 'text';
             }
+            this._tDom.appendChild(this._buttonRefresh);
 
             this._sizeCssText = 'width:' + this._zrWidth + 'px;'
                            + 'height:' + this._zrHeight + 'px;'
@@ -226,12 +232,11 @@ define(function (require) {
         },
 
         _save : function () {
-            var text = this._textArea.value;
             var customContent = this.query(
                 this.option, 'toolbox.feature.dataView.contentToOption'
             );
             if (typeof customContent != 'function') {
-                text = text.split('\n');
+                var text = this._textArea.value.split('\n');
                 var content = [];
                 for (var i = 0, l = text.length; i < l; i++) {
                     text[i] = this._trim(text[i]);
@@ -242,7 +247,8 @@ define(function (require) {
                 this._contentToOption(content);
             }
             else {
-                customContent(text, this.option);
+                // return the textArea dom for custom contentToOption
+                customContent(this._textArea, this.option);
             }
 
             this.hide();
@@ -395,7 +401,7 @@ define(function (require) {
                 this._tDom.style.cssText = this._gCssText + this._sizeCssText;
                 this._textArea.style.cssText = 'display:block;margin:0 0 8px 0;'
                                         + 'padding:4px 6px;overflow:auto;'
-                                        + 'width:' + (this._zrWidth - 15) + 'px;'
+                                        + 'width:100%;'
                                         + 'height:' + (this._zrHeight - 100) + 'px;';
             }
         },
