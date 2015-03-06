@@ -1049,17 +1049,20 @@ define(function (require) {
                 'itemStyle.emphasis'
             );
             var nBorderWidth = normal.borderWidth != null
-                       ? normal.borderWidth
-                       : (normal.lineStyle && normal.lineStyle.width);
+                               ? normal.borderWidth
+                               : (normal.lineStyle && normal.lineStyle.width);
             if (nBorderWidth == null) {
                 nBorderWidth = symbol.match('empty') ? 2 : 0;
             }
             var eBorderWidth = emphasis.borderWidth != null
-                       ? emphasis.borderWidth
-                       : (emphasis.lineStyle && emphasis.lineStyle.width);
+                               ? emphasis.borderWidth
+                               : (emphasis.lineStyle && emphasis.lineStyle.width);
             if (eBorderWidth == null) {
                 eBorderWidth = nBorderWidth + 2;
             }
+
+            var nColor = this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data);
+            var eColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data);
             
             var itemShape = new IconShape({
                 style: {
@@ -1070,22 +1073,20 @@ define(function (require) {
                     height: symbolSize * 2,
                     brushType: 'both',
                     color: symbol.match('empty') 
-                            ? emptyColor 
-                            : (this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
-                               || color),
-                    strokeColor: normal.borderColor 
-                              || this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
-                              || color,
+                           ? emptyColor 
+                           : (nColor || color),
+                    strokeColor: normal.borderColor || nColor || color,
                     lineWidth: nBorderWidth
                 },
                 highlightStyle: {
                     color: symbol.match('empty') 
-                            ? emptyColor 
-                            : this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data),
+                           ? emptyColor 
+                           : (eColor || nColor || color),
                     strokeColor: emphasis.borderColor 
-                              || normal.borderColor
-                              || this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
-                              || color,
+                                 || normal.borderColor
+                                 || eColor
+                                 || nColor
+                                 || color,
                     lineWidth: eBorderWidth
                 },
                 clickable: this.deepQuery(queryTarget, 'clickable')
