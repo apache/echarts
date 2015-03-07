@@ -29,7 +29,6 @@ define(function (require) {
         endAngle: -45,
         min: 0,                     // 最小值
         max: 100,                   // 最大值
-        precision: 0,               // 小数精度，默认为0，无小数点
         splitNumber: 10,            // 分割段数，默认为10
         axisLine: {            // 坐标轴线
             show: true,        // 默认显示，属性show控制显示与否
