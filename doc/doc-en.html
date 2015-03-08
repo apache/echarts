@@ -1565,7 +1565,6 @@ require(['echarts'], function (ec){
                             <td> 0.4 </td>
                             <td> The duration in seconds of the animated transition. If you want the tooltip to follow the mouse as it moves across a point or chart, setting showDelay to 0 is the key, but setting transitionDuration to 0 can also make a difference in interactive experiences. </td>
                         </tr>
-
                         <tr>
                             <td> <b>{boolean}</b> enterable </td>
                             <td> false </td>
@@ -4100,14 +4099,16 @@ geoCoord : {
     position:'outer'
 }                           </pre></td>
                             <td> line, column, candlestick, scatter, pie, map, force, markPoint, markLine</td>
-                            <td> In pie, displayed on the outside by default. labelLine.length controls the label's distance from the pie. In map, the location of labels cannot be specified. 
-                                 <br/> position can be specified in line, column, candlestick, scatter. See below.
+                            <td> In pie, displayed on the outside by default. labelLine.length controls the label's distance from the pie.
+                                <br/>In funnel, displayed on the right by default. labelLine.length controls the label's distance from the funnel.
+                                <br/>In map, the location of labels cannot be specified. 
+                                <br/> position can be specified in line, column, candlestick, scatter. See below.
                             </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> labelLine </td>
                             <td> {show: true} </td>
-                            <td> pie </td>
+                            <td> pie, funnel </td>
                             <td> the visual guide of labels in pie. Defaults to show. </td>
                         </tr>
                     </table>
@@ -4128,6 +4129,7 @@ geoCoord : {
                             <td> 'outer' | null</td>
                             <td> the position to show label. Cannot be specified in maps. 
                                  <br/>In pie, valid values are: 'outer' | 'inner';
+                                 <br/>In funnel, valid value are: 'inner' | 'left' | 'right' (default)，
                                  <br/>In line, column, candlestick and scatter, the default value is 'top' (for vertical layout) or 'right' (for horizontal layout). Can also be one of: 'inside' | 'left' | 'bottom';
                                  <br/>In column, other possible values are: 'insideLeft' | 'insideRight' | 'insideTop' | 'insideBottom'.
                             </td>
@@ -4165,12 +4167,12 @@ geoCoord : {
                         <tr>
                             <td> <b>{boolean}</b> show </td>
                             <td> true </td>
-                            <td> Specifies whether to show pie's labelLine. Valid values are: true (show) | false (hide). </td>
+                            <td> Specifies whether to show labelLine. Valid values are: true (show) | false (hide). </td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> length </td>
                             <td> 40 </td>
-                            <td> length of the line. Starts from the outer edge. Can be negative. </td>
+                            <td> length of the line. Starts from the outer edge. Can be negative. In funnel, length can be 'auto'</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>

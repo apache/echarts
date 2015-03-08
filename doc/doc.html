@@ -4098,16 +4098,18 @@ geoCoord : {
     show: true,
     position:'outer'
 }                           </pre></td>
-                            <td> 折线图，柱形图，K线图，散点图，饼图 ，地图，力导向，markPoint，markLine</td>
-                            <td> 标签，饼图默认显示在外部，离饼图距离由labelLine.length决定，地图标签不可指定位置
-                                 <br/> 折线图，柱形图，K线图，散点图可指定position见下
+                            <td> 折线图，柱形图，K线图，散点图，饼图 ，地图，力导向，漏斗图，markPoint，markLine</td>
+                            <td> 标签，饼图默认显示在外部，离饼图距离由labelLine.length决定，
+                                <br/>漏斗图默认显示在右侧，离图形距离由labelLine.length决定
+                                <br/>地图标签不可指定位置，
+                                <br/> 折线图，柱形图，K线图，散点图可指定position见下
                             </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> labelLine </td>
                             <td> {show: true} </td>
-                            <td> 饼图 </td>
-                            <td> 饼图标签视觉引导线，默认显示 </td>
+                            <td> 饼图，漏斗图</td>
+                            <td> 标签视觉引导线，默认显示 </td>
                         </tr>
                     </table>
                     <P> 其中标签label属性为对象，其包含：</P>
@@ -4127,6 +4129,7 @@ geoCoord : {
                             <td> 'outer' | null</td>
                             <td> 标签显示位置，地图标签不可指定位置
                                  <br/>饼图可选为：'outer'（外部） | 'inner'（内部），
+                                 <br/>漏斗图可选为：'inner'（内部）| 'left' | 'right'（默认），
                                  <br/>折线图，柱形图，K线图，散点图默认根据布局自适应为'top'或者'right'，可选的还有：'inside' | 'left' | 'bottom'
                                  <br/>柱形图可选的还有，'insideLeft' | 'insideRight' | 'insideTop' | 'insideBottom'
                             </td>
@@ -4154,7 +4157,7 @@ geoCoord : {
                             <td> 标签的文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                     </table>
-                    <P> 其中饼图标签视觉引导线labelLine属性为对象，其包含：</P>
+                    <P> 其中标签视觉引导线labelLine属性为对象，其包含：</P>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名称 </th>
@@ -4169,7 +4172,7 @@ geoCoord : {
                         <tr>
                             <td> <b>{number}</b> length </td>
                             <td> 40 </td>
-                            <td> 线长 ，从外圆边缘起计算，可为负值</td>
+                            <td> 线长 ，从图形外边缘起计算，可为负值。漏斗图支持'auto'</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
