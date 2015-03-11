@@ -627,6 +627,8 @@ define(function (require) {
                 var source = gEdge.node1;
                 var target = gEdge.node2;
 
+                var otherEdge = graph.getEdge(target, source);
+
                 var queryTarget = this._getEdgeQueryTarget(serie, link);
                 var linkType = this.deepQuery(queryTarget, 'type');
                 // TODO 暂时只有线段支持箭头
@@ -647,6 +649,12 @@ define(function (require) {
                     zlevel: this.getZlevelBase(),
                     z: this.getZBase()
                 });
+
+                if (otherEdge && otherEdge.shape) {
+                    // 偏移一定位置放置双向边重叠
+                    linkShape.style.offset = 4;
+                    otherEdge.shape.style.offset = 4;
+                }
 
                 zrUtil.merge(
                     linkShape.style,
@@ -733,34 +741,45 @@ define(function (require) {
 
         _updateLinkShapes: function() {
             var v = vec2.create();
+            var n = vec2.create();
+            var p1 = vec2.create();
+            var p2 = vec2.create();
             var edges = this._graph.edges;
             for (var i = 0, len = edges.length; i < len; i++) {
                 var edge = edges[i];
                 var sourceShape = edge.node1.shape;
                 var targetShape = edge.node2.shape;
 
-                var p1 = sourceShape.position;
-                var p2 = targetShape.position;
+                vec2.copy(p1, sourceShape.position);
+                vec2.copy(p2, targetShape.position);
 
-                edge.shape.style.xStart = p1[0];
-                edge.shape.style.yStart = p1[1];
-                edge.shape.style.xEnd = p2[0];
-                edge.shape.style.yEnd = p2[1];
+                var edgeShapeStyle = edge.shape.style;
 
-                if (edge.shape.type === 'bezier-curve') {
-                    edge.shape.style.cpX1 = (p1[0] + p2[0]) / 2 - (p2[1] - p1[1]) / 4;
-                    edge.shape.style.cpY1 = (p1[1] + p2[1]) / 2 - (p1[0] - p2[0]) / 4;
+                vec2.sub(v, p1, p2);
+                vec2.normalize(v, v);
+
+                if (edgeShapeStyle.offset) {
+                    n[0] = v[1];
+                    n[1] = - v[0];
+
+                    vec2.scaleAndAdd(p1, p1, n, edgeShapeStyle.offset);
+                    vec2.scaleAndAdd(p2, p2, n, edgeShapeStyle.offset);
                 }
+                else if (edge.shape.type === 'bezier-curve') {
+                    edgeShapeStyle.cpX1 = (p1[0] + p2[0]) / 2 - (p2[1] - p1[1]) / 4;
+                    edgeShapeStyle.cpY1 = (p1[1] + p2[1]) / 2 - (p1[0] - p2[0]) / 4;
+                }
+
+                edgeShapeStyle.xStart = p1[0];
+                edgeShapeStyle.yStart = p1[1];
+                edgeShapeStyle.xEnd = p2[0];
+                edgeShapeStyle.yEnd = p2[1];
 
                 edge.shape.modSelf();
 
                 if (edge.shape._symbolShape) {
                     var symbolShape = edge.shape._symbolShape;
-                    vec2.copy(symbolShape.position, targetShape.position);
-
-                    vec2.sub(v, sourceShape.position, targetShape.position);
-                    vec2.normalize(v, v);
-
+                    vec2.copy(symbolShape.position, p2);
                     vec2.scaleAndAdd(
                         symbolShape.position, symbolShape.position,
                         v, targetShape.style.width / 2 + 2
