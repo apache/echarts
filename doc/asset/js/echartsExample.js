@@ -125,7 +125,7 @@ function needMap() {
 }
 
 var echarts;
-var developMode = false;
+var developMode = true;
 
 if (developMode) {
     window.esl = null;
@@ -163,8 +163,8 @@ if (developMode) {
                     },
                     {
                         name: 'zrender',
-                        //location: 'http://ecomfe.github.io/zrender/src',
-                        location: '../../../zrender/src',
+                        location: 'http://ecomfe.github.io/zrender/src',
+                        //location: '../../../zrender/src',
                         main: 'zrender'
                     }
                 ]
@@ -206,6 +206,7 @@ function launchExample() {
             'echarts/chart/gauge',
             'echarts/chart/funnel',
             'echarts/chart/eventRiver',
+            'echarts/chart/venn',
             needMap() ? 'echarts/chart/map' : 'echarts'
         ],
         requireCallback
