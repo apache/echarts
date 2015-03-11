@@ -591,7 +591,7 @@ define(function (require) {
                 }
                 else {
                     // eventRiver
-                    oriData = this.series[i].eventList;
+                    oriData = this.series[i].data;
                     for (var j = 0, k = oriData.length; j < k; j++) {
                         var evolution = oriData[j].evolution;
                         for (var m = 0, n = evolution.length; m < n; m++) {
