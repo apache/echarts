@@ -1646,7 +1646,7 @@ require(['echarts'], function (ec){
                                         <li><b>force, chord</b> : 
                                             <ul>
                                                 <li>node : a (series name)，b (node name)，c (node value), d (node index), e</li>
-                                                <li>link : a (series name)，b (link name, default bigEndNodeName-smallEndNodeName)，c(link weight), d(name or index of big end node), e(name or index of small end node)</li>
+                                                <li>link : a (series name)，b (link name, default bigEndNodeName-smallEndNodeName)，c(link.value), d(name or index of big end node), e(name or index of small end node)</li>
                                             </ul>
                                         </li>
                                     </ul>
@@ -3885,19 +3885,44 @@ geoCoord : {
                             <td> angles by which the start and end markLine symbols rotate, same as series' <a href="#Series">symbolRotate</a>. </td>
                         </tr>
                         <tr>
+                            <td> <b>boolean</b> large</td>
+                            <td> false </td>
+                            <td>
+                                If enable optimization for large scale markline. Large scale means line number >= 2k.
+                                <br />Optimization will batch lines drawing. Lines of series will force to have same style. And symbols of two end of line will be ignore.
+                            </td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean}</b> smooth </td>
                             <td> false </td>
                             <td> smoothed line, while smooth is true, lineStyle.type can not be dashed.</td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> smoothRadian </td>
+                            <td> <b>{number}</b> smoothness </td>
                             <td> 0.2 </td>
-                            <td> radian of the smoothed line.</td>
+                            <td> Line smoothness. Only available when smooth is true</td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> precision </td>
                             <td> 2 </td>
                             <td> precision, use for the average markLine.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> bundling </td>
+                            <td> 
+<pre>{
+    enable: false,
+    maxTurningAngle: 45
+}</pre>
+                            </td>
+                            <td>
+                                Edge Bundling
+                                <br />
+                                <br />enable: If enable edge bundling.
+                                <br />maxTurningAngle: Max turning angle of bundled edge, ranges from 0 degree to 90 degree.
+                                <br />
+                                <br />Tip：Edge bundling use algorithm from "Multilevel Agglomerative Edge Bundling for Visualizing Large Graphs"
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> effect </td>
@@ -3911,6 +3936,7 @@ geoCoord : {
     shadowBlur : null
 }                           </pre></td>
                             <td> glow effect for markLine symbol: 
+                                <br />
                                 <br/>show: specifies whether to show. Defaults to false.  
                                 <br/>loop: specifies whether to play the animation in a loop. Defaults to true. 
                                 <br/>period: animation period. No units. The larger the value, the slower. Defaults to 15. 

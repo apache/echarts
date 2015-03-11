@@ -1646,7 +1646,7 @@ require(['echarts'], function (ec){
                                         <li><b>力导向图, 和弦图</b> : 
                                             <ul>
                                                 <li>节点 : a（系列名称），b（节点名称），c（节点值）, d(节点类目索引)</li>
-                                                <li>边 : a（系列名称），b（边名称，默认为大端节点名称-小端节点名称），c（边权重）, d(大端节点 name 或者 index), e(小端节点 name 或者 index)</li>
+                                                <li>边 : a（系列名称），b（边名称，默认为大端节点名称-小端节点名称），c（link.value）, d(大端节点 name 或者 index), e(小端节点 name 或者 index)</li>
                                             </ul>
                                         </li>
                                     </ul>
@@ -3885,12 +3885,20 @@ geoCoord : {
                             <td> 标线起始和结束的symbol旋转控制，同series中的<a href="#Series">symbolRotate</a> </td>
                         </tr>
                         <tr>
+                            <td> <b>boolean</b> large</td>
+                            <td> false </td>
+                            <td>
+                                是否启用大规模标线模式，默认关闭。
+                                <br />大规模标线模式下会优化标线绘制，同个系列的的所有标线都会使用同一种样式，并且忽略标线两端 symbol 的绘制。
+                            </td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean}</b> smooth </td>
                             <td> false </td>
                             <td> 平滑曲线显示，smooth为true时lineStyle不支持虚线</td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> smoothRadian </td>
+                            <td> <b>{number}</b> smoothness </td>
                             <td> 0.2 </td>
                             <td> 平滑曲线弧度，smooth为true时有效，指定平滑曲线弧度</td>
                         </tr>
@@ -3898,6 +3906,22 @@ geoCoord : {
                             <td> <b>{number}</b> precision </td>
                             <td> 2 </td>
                             <td> 小数精度，使用开箱即用的均线markLine时有效</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> bundling </td>
+                            <td> 
+<pre>{
+    enable: false,
+    maxTurningAngle: 45
+}</pre>
+                            </td>
+                            <td>
+                                边捆绑：
+                                <br />enable 是否使用边捆绑，默认关闭
+                                <br />maxTurningAngle 边捆绑算法参数，可选 [0, 90] 的角度，配置捆绑后的边最大拐角, 默认为 45 度
+                                <br />
+                                <br />注：捆绑算法使用 Multilevel Agglomerative Edge Bundling for Visualizing Large Graphs
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> effect </td>
