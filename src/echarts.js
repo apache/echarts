@@ -27,9 +27,9 @@ define(function (require) {
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     
-    self.version = '2.2.0';
+    self.version = '2.2.1';
     self.dependencies = {
-        zrender: '2.0.7'
+        zrender: '2.0.8'
     };
     /**
      * 入口方法 
