@@ -11,6 +11,8 @@ define(function (require) {
     var IconShape = require('../util/shape/Icon');
     var MarkLineShape = require('../util/shape/MarkLine');
     var SymbolShape = require('../util/shape/Symbol');
+    var PolylineShape = require('zrender/shape/Polyline');
+    var ShapeBundle = require('zrender/shape/ShapeBundle');
     
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
@@ -18,9 +20,15 @@ define(function (require) {
     var ecEffect = require('../util/ecEffect');
     var accMath = require('../util/accMath');
     var ComponentBase = require('../component/base');
+    var EdgeBundling = require('../layout/EdgeBundling');
 
     var zrUtil = require('zrender/tool/util');
     var zrArea = require('zrender/tool/area');
+
+    // Some utility functions
+    function isCoordAvailable(coord) {
+        return coord.x != null && coord.y != null;
+    }
     
     function Base(ecTheme, messageCenter, zr, option, myChart) {
 
@@ -49,7 +57,7 @@ define(function (require) {
                 highlightStyle.strokeColor = self.ecTheme.calculableColor
                                              || ecConfig.calculableColor;
                 highlightStyle.lineWidth = calculableShape.type === 'icon' ? 30 : 10;
-                
+
                 self.zr.addHoverShape(calculableShape);
                 
                 setTimeout(function (){
@@ -694,29 +702,60 @@ define(function (require) {
                     // 不在显示区域内
                     continue;
                 }
-                markLine.data[i][0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
-                markLine.data[i][0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
-                markLine.data[i][1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
-                markLine.data[i][1].y = mlData[1].y != null ? mlData[1].y : pos[1][1];
+                mlData[0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
+                mlData[0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
+                mlData[1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
+                mlData[1].y = mlData[1].y != null ? mlData[1].y : pos[1][1];
             }
             
             var shapeList = this._markLine(seriesIndex, markLine);
-            
-            for (var i = 0, l = shapeList.length; i < l; i++) {
-                var tarShape = shapeList[i];
-                tarShape.zlevel = this.getZlevelBase();
-                tarShape.z = this.getZBase() + 1;
-                for (var key in attachStyle) {
-                    tarShape[key] = zrUtil.clone(attachStyle[key]);
+
+            var isLarge = markLine.large;
+
+            if (isLarge) {
+                var shapeBundle = new ShapeBundle({
+                    style: {
+                        shapeList: shapeList
+                    }
+                });
+                var firstShape = shapeList[0];
+                if (firstShape) {
+                    zrUtil.merge(shapeBundle.style, firstShape.style);
+                    zrUtil.merge(shapeBundle.highlightStyle = {}, firstShape.highlightStyle);
+                    shapeBundle.style.brushType = 'stroke';
+                    shapeBundle.zlevel = this.getZlevelBase();
+                    shapeBundle.z = this.getZBase() + 1;
+                    shapeBundle.hoverable = false;
+                    for (var key in attachStyle) {
+                        shapeBundle[key] = zrUtil.clone(attachStyle[key]);
+                    }
                 }
-                this.shapeList.push(tarShape);
+                this.shapeList.push(shapeBundle);
+                this.zr.addShape(shapeBundle);
+
+                shapeBundle._mark = 'largeLine';
+                var effect = markLine.effect;
+                if (effect.show) {
+                    shapeBundle.effect = effect;
+                }
             }
-            // 个别特殊图表需要自己addShape
-            if (this.type === ecConfig.CHART_TYPE_FORCE
-                || this.type === ecConfig.CHART_TYPE_CHORD
-            ) {
+            else {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
-                    this.zr.addShape(shapeList[i]);
+                    var tarShape = shapeList[i];
+                    tarShape.zlevel = this.getZlevelBase();
+                    tarShape.z = this.getZBase() + 1;
+                    for (var key in attachStyle) {
+                        tarShape[key] = zrUtil.clone(attachStyle[key]);
+                    }
+                    this.shapeList.push(tarShape);
+                }
+                // 个别特殊图表需要自己addShape
+                if (this.type === ecConfig.CHART_TYPE_FORCE
+                    || this.type === ecConfig.CHART_TYPE_CHORD
+                ) {
+                    for (var i = 0, l = shapeList.length; i < l; i++) {
+                        this.zr.addShape(shapeList[i]);
+                    }
                 }
             }
         },
@@ -751,7 +790,7 @@ define(function (require) {
             var effect;
             var zrWidth = this.zr.getWidth();
             var zrHeight = this.zr.getHeight();
-            
+
             if (!mpOption.large) {
                 for (var i = 0, l = data.length; i < l; i++) {
                     if (data[i].x == null || data[i].y == null) {
@@ -785,7 +824,7 @@ define(function (require) {
                                       || {trigger:'item'}; // tooltip.trigger指定为item
                     data[i].name = data[i].name != null ? data[i].name : '';
                     data[i].value = value;
-                    
+
                     // 复用getSymbolShape
                     itemShape = this.getSymbolShape(
                         mpOption, seriesIndex,      // 系列 
@@ -823,7 +862,7 @@ define(function (require) {
             }
             else {
                 // 大规模MarkPoint
-                itemShape = this.getLargeMarkPoingShape(seriesIndex, mpOption);
+                itemShape = this.getLargeMarkPointShape(seriesIndex, mpOption);
                 itemShape._mark = 'largePoint';
                 itemShape && pList.push(itemShape);
             }
@@ -833,132 +872,148 @@ define(function (require) {
         /**
          * 标线多级控制构造
          */
-        _markLine: function (seriesIndex, mlOption) {
-            var serie = this.series[seriesIndex];
-            var component = this.component;
-            zrUtil.merge(
-                zrUtil.merge(
-                    mlOption,
-                    zrUtil.clone(this.ecTheme.markLine || {})
-                ),
-                zrUtil.clone(ecConfig.markLine)
-            );
+        _markLine: (function () {
+            function normalizeOptionValue(mlOption, key) {
+                mlOption[key] = mlOption[key] instanceof Array
+                          ? mlOption[key].length > 1 
+                            ? mlOption[key] 
+                            : [mlOption[key][0], mlOption[key][0]]
+                          : [mlOption[key], mlOption[key]];
+            }
 
-            // 标准化一些同时支持Array和String的参数
-            mlOption.symbol = mlOption.symbol instanceof Array
-                      ? mlOption.symbol.length > 1 
-                        ? mlOption.symbol 
-                        : [mlOption.symbol[0], mlOption.symbol[0]]
-                      : [mlOption.symbol, mlOption.symbol];
-            mlOption.symbolSize = mlOption.symbolSize instanceof Array
-                      ? mlOption.symbolSize.length > 1 
-                        ? mlOption.symbolSize 
-                        : [mlOption.symbolSize[0], mlOption.symbolSize[0]]
-                      : [mlOption.symbolSize, mlOption.symbolSize];
-            mlOption.symbolRotate = mlOption.symbolRotate instanceof Array
-                      ? mlOption.symbolRotate.length > 1 
-                        ? mlOption.symbolRotate 
-                        : [mlOption.symbolRotate[0], mlOption.symbolRotate[0]]
-                      : [mlOption.symbolRotate, mlOption.symbolRotate];
-            
-            mlOption.name = serie.name;
-                   
-            var pList = [];
-            var data = mlOption.data;
-            var itemShape;
-            
-            var dataRange = component.dataRange;
-            var legend = component.legend;
-            var color;
-            var value;
-            var queryTarget;
-            var nColor;
-            var eColor;
-            var effect;
-            var zrWidth = this.zr.getWidth();
-            var zrHeight = this.zr.getHeight();
-            var mergeData;
-            for (var i = 0, l = data.length; i < l; i++) {
-                var mlData = data[i];
-                if (mlData[0].x == null
-                    || mlData[0].y == null
-                    || mlData[1].x == null
-                    || mlData[1].y == null
-                ) {
-                    continue;
-                }
-                    
-                color = legend ? legend.getColor(serie.name) : this.zr.getColor(seriesIndex);
-                
-                // 组装一个mergeData
-                mergeData = this.deepMerge(mlData);
-                value = mergeData.value != null ? mergeData.value : '';
-                // 值域
-                if (dataRange) {
-                    color = isNaN(value) ? color : dataRange.getColor(value);
-                    
-                    queryTarget = [mergeData, mlOption];
-                    nColor = this.deepQuery(queryTarget, 'itemStyle.normal.color')
-                             || color;
-                    eColor = this.deepQuery(queryTarget, 'itemStyle.emphasis.color')
-                             || nColor;
-                    // 有值域，并且值域返回null且用户没有自己定义颜色，则隐藏这个mark
-                    if (nColor == null && eColor == null) {
-                        continue;
+            return function (seriesIndex, mlOption) {
+                var serie = this.series[seriesIndex];
+                var component = this.component;
+                var dataRange = component.dataRange;
+                var legend = component.legend;
+
+                zrUtil.merge(
+                    zrUtil.merge(
+                        mlOption,
+                        zrUtil.clone(this.ecTheme.markLine || {})
+                    ),
+                    zrUtil.clone(ecConfig.markLine)
+                );
+
+                var defaultColor = legend ? legend.getColor(serie.name)
+                    : this.zr.getColor(seriesIndex);
+
+                // 标准化一些同时支持Array和String的参数
+                normalizeOptionValue(mlOption, 'symbol');
+                normalizeOptionValue(mlOption, 'symbolSize');
+                normalizeOptionValue(mlOption, 'symbolRotate');
+
+                // Normalize and filter data
+                var data = mlOption.data;
+                var edges = [];
+                var zrWidth = this.zr.getWidth();
+                var zrHeight = this.zr.getHeight();
+                for (var i = 0; i < data.length; i++) {
+                    var mlData = data[i];
+                    if (isCoordAvailable(mlData[0])
+                        && isCoordAvailable(mlData[1])
+                    ) {
+                        // 组装一个mergeData
+                        var mergeData = this.deepMerge(mlData);
+                        var queryTarget = [mergeData, mlOption];
+                        var color = defaultColor;
+                        var value = mergeData.value != null ? mergeData.value : '';
+                        // 值域
+                        if (dataRange) {
+                            color = isNaN(value) ? color : dataRange.getColor(value);
+
+                            var nColor = this.deepQuery(queryTarget, 'itemStyle.normal.color')
+                                     || color;
+                            var eColor = this.deepQuery(queryTarget, 'itemStyle.emphasis.color')
+                                     || nColor;
+                            // 有值域，并且值域返回null且用户没有自己定义颜色，则隐藏这个mark
+                            if (nColor == null && eColor == null) {
+                                continue;
+                            }
+                        }
+                        // 标准化一些参数
+                        mlData[0].tooltip = mergeData.tooltip
+                                            || mlOption.tooltip
+                                            || {trigger:'item'}; // tooltip.trigger指定为item
+                        mlData[0].name = mlData[0].name || '';
+                        mlData[1].name = mlData[1].name || '';
+                        mlData[0].value = value;
+
+                        edges.push({
+                            points: [
+                                [this.parsePercent(mlData[0].x, zrWidth),
+                                this.parsePercent(mlData[0].y, zrHeight)],
+                                [this.parsePercent(mlData[1].x, zrWidth),
+                                this.parsePercent(mlData[1].y, zrHeight)]
+                            ],
+                            rawData: mlData,
+                            color: color
+                        });
                     }
                 }
-                
-                // 标准化一些参数
-                mlData[0].tooltip = mergeData.tooltip
-                                    || mlOption.tooltip
-                                    || {trigger:'item'}; // tooltip.trigger指定为item
-                mlData[0].name = mlData[0].name != null ? mlData[0].name : '';
-                mlData[1].name = mlData[1].name != null ? mlData[1].name : '';
-                mlData[0].value = value;
-                
-                itemShape = this.getLineMarkShape(
-                    mlOption,                   // markLine
-                    seriesIndex,
-                    mlData,                    // 数据
-                    i,
-                    this.parsePercent(mlData[0].x, zrWidth),   // 坐标
-                    this.parsePercent(mlData[0].y, zrHeight),  // 坐标
-                    this.parsePercent(mlData[1].x, zrWidth),   // 坐标
-                    this.parsePercent(mlData[1].y, zrHeight),  // 坐标
-                    color                       // 默认symbol和color
-                );
-                itemShape._mark = 'line';
-                
-                effect = this.deepMerge(
-                    [mergeData, mlOption],
-                    'effect'
-                );
-                if (effect.show) {
-                    itemShape.effect = effect;
+
+                var enableBundling = this.query(mlOption, 'bundling.enable');
+                if (enableBundling) {
+                    var edgeBundling = new EdgeBundling();
+                    edgeBundling.maxTurningAngle = this.query(
+                        mlOption, 'bundling.maxTurningAngle'
+                    ) / 180 * Math.PI;
+                    edges = edgeBundling.run(edges);
                 }
-                
-                if (serie.type === ecConfig.CHART_TYPE_MAP) {
-                    itemShape._geo = [
-                        this.getMarkGeo(mlData[0]),
-                        this.getMarkGeo(mlData[1])
-                    ];
+
+                mlOption.name = serie.name;
+  
+                var shapeList = [];
+
+                for (var i = 0, l = edges.length; i < l; i++) {
+                    var edge = edges[i];
+                    var rawEdge = edge.rawEdge || edge; 
+                    var mlData = rawEdge.rawData;
+                    var value = mlData.value != null ? mlData.value : '';
+
+                    var itemShape = this.getMarkLineShape(
+                        mlOption,
+                        seriesIndex,
+                        mlData,
+                        i,
+                        edge.points,
+                        enableBundling,
+                        rawEdge.color
+                    );
+                    itemShape._mark = 'line';
+                    
+                    var effect = this.deepMerge(
+                        [mlData[0], mlData[1], mlOption],
+                        'effect'
+                    );
+                    if (effect.show) {
+                        itemShape.effect = effect;
+                        itemShape.effect.large = mlOption.large;
+                    }
+                    
+                    if (serie.type === ecConfig.CHART_TYPE_MAP) {
+                        itemShape._geo = [
+                            this.getMarkGeo(mlData[0]),
+                            this.getMarkGeo(mlData[1])
+                        ];
+                    }
+                    
+                    // 重新pack一下数据
+                    ecData.pack(
+                        itemShape,
+                        serie, seriesIndex,
+                        mlData[0], i,
+                        mlData[0].name 
+                            // 不要帮我代码规范
+                            + (mlData[1].name !== '' ? (' > ' + mlData[1].name) : ''),
+                        value
+                    );
+                    shapeList.push(itemShape);
                 }
-                
-                // 重新pack一下数据
-                ecData.pack(
-                    itemShape,
-                    serie, seriesIndex,
-                    mlData[0], i,
-                    mlData[0].name 
-                        // 不要帮我代码规范
-                        + (mlData[1].name !== '' ? (' > ' + mlData[1].name) : ''),
-                    value
-                );
-                pList.push(itemShape);
-            }
-            //console.log(pList);
-            return pList;
-        },
+
+                return shapeList;
+            };
+        })(),
         
         getMarkCoord: function () {
             // 无转换位置
@@ -995,17 +1050,20 @@ define(function (require) {
                 'itemStyle.emphasis'
             );
             var nBorderWidth = normal.borderWidth != null
-                       ? normal.borderWidth
-                       : (normal.lineStyle && normal.lineStyle.width);
+                               ? normal.borderWidth
+                               : (normal.lineStyle && normal.lineStyle.width);
             if (nBorderWidth == null) {
                 nBorderWidth = symbol.match('empty') ? 2 : 0;
             }
             var eBorderWidth = emphasis.borderWidth != null
-                       ? emphasis.borderWidth
-                       : (emphasis.lineStyle && emphasis.lineStyle.width);
+                               ? emphasis.borderWidth
+                               : (emphasis.lineStyle && emphasis.lineStyle.width);
             if (eBorderWidth == null) {
                 eBorderWidth = nBorderWidth + 2;
             }
+
+            var nColor = this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data);
+            var eColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data);
             
             var itemShape = new IconShape({
                 style: {
@@ -1016,22 +1074,20 @@ define(function (require) {
                     height: symbolSize * 2,
                     brushType: 'both',
                     color: symbol.match('empty') 
-                            ? emptyColor 
-                            : (this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
-                               || color),
-                    strokeColor: normal.borderColor 
-                              || this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
-                              || color,
+                           ? emptyColor 
+                           : (nColor || color),
+                    strokeColor: normal.borderColor || nColor || color,
                     lineWidth: nBorderWidth
                 },
                 highlightStyle: {
                     color: symbol.match('empty') 
-                            ? emptyColor 
-                            : this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data),
+                           ? emptyColor 
+                           : (eColor || nColor || color),
                     strokeColor: emphasis.borderColor 
-                              || normal.borderColor
-                              || this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data)
-                              || color,
+                                 || normal.borderColor
+                                 || eColor
+                                 || nColor
+                                 || color,
                     lineWidth: eBorderWidth
                 },
                 clickable: this.deepQuery(queryTarget, 'clickable')
@@ -1105,24 +1161,24 @@ define(function (require) {
         /**
          * 标线构造器 
          */
-        getLineMarkShape: function (
+        getMarkLineShape: function (
             mlOption,               // 系列 
             seriesIndex,            // 系列索引
             data,                   // 数据
             dataIndex,              // 数据索引
-            xStart, yStart,         // 坐标
-            xEnd, yEnd,             // 坐标
+            points,                 // 坐标点
+            bundling,               // 是否边捆绑过
             color                   // 默认color，来自legend或dataRange全局分配
         ) {
             var value0 = data[0].value != null ? data[0].value : '-';
             var value1 = data[1].value != null ? data[1].value : '-';
             var symbol = [
-                this.query(data[0], 'symbol') || mlOption.symbol[0],
-                this.query(data[1], 'symbol') || mlOption.symbol[1]
+                data[0].symbol || mlOption.symbol[0],
+                data[1].symbol || mlOption.symbol[1]
             ];
             var symbolSize = [
-                this.query(data[0], 'symbolSize') || mlOption.symbolSize[0],
-                this.query(data[1], 'symbolSize') || mlOption.symbolSize[1]
+                data[0].symbolSize || mlOption.symbolSize[0],
+                data[1].symbolSize || mlOption.symbolSize[1]
             ];
             symbolSize[0] = typeof symbolSize[0] === 'function'
                             ? symbolSize[0](value0)
@@ -1135,7 +1191,7 @@ define(function (require) {
                 this.query(data[1], 'symbolRotate') || mlOption.symbolRotate[1]
             ];
             //console.log(symbol, symbolSize, symbolRotate);
-            
+
             var queryTarget = [data[0], data[1], mlOption];
             var normal = this.deepMerge(
                 queryTarget,
@@ -1161,19 +1217,18 @@ define(function (require) {
                                ? emphasis.borderWidth
                                : (nBorderWidth + 2);
             }
-            
-            var itemShape = new MarkLineShape({
+            var smoothness = this.deepQuery(queryTarget, 'smoothness');
+            if (! this.deepQuery(queryTarget, 'smooth')) {
+                smoothness = 0;
+            }
+
+            var ShapeCtor = bundling ? PolylineShape : MarkLineShape;
+            var itemShape = new ShapeCtor({
                 style: {
-                    smooth: this.deepQuery([data[0], data[1], mlOption], 'smooth') ? 'spline' : false,
-                    smoothRadian: this.deepQuery([data[0], data[1], mlOption], 'smoothRadian'),
-                    symbol: symbol, 
+                    symbol: symbol,
                     symbolSize: symbolSize,
                     symbolRotate: symbolRotate,
                     // data: [data[0].name,data[1].name],
-                    xStart: xStart,
-                    yStart: yStart,         // 坐标
-                    xEnd: xEnd,
-                    yEnd: yEnd,             // 坐标
                     brushType: 'both',
                     lineType: nlineStyle.type,
                     shadowColor: nlineStyle.shadowColor
@@ -1220,6 +1275,19 @@ define(function (require) {
                 },
                 clickable: this.deepQuery(queryTarget, 'clickable')
             });
+            var shapeStyle = itemShape.style;
+            if (bundling) {
+                shapeStyle.pointList = points;
+                shapeStyle.smooth = smoothness;
+            }
+            else {
+                shapeStyle.xStart = points[0][0];
+                shapeStyle.yStart = points[0][1];
+                shapeStyle.xEnd = points[1][0];
+                shapeStyle.yEnd = points[1][1];
+                shapeStyle.curveness = smoothness;
+                itemShape.updatePoints(itemShape.style);
+            }
             
             itemShape = this.addLabel(
                 itemShape, 
@@ -1227,17 +1295,14 @@ define(function (require) {
                 data[0], 
                 data[0].name + ' : ' + data[1].name
             );
-            
-           itemShape._x = xEnd;
-           itemShape._y = yEnd;
-            
+
             return itemShape;
         },
         
         /**
          * 大规模标注构造器 
          */
-        getLargeMarkPoingShape: function(seriesIndex, mpOption) {
+        getLargeMarkPointShape: function(seriesIndex, mpOption) {
             var serie = this.series[seriesIndex];
             var component = this.component;
             var data = mpOption.data;
@@ -1499,26 +1564,26 @@ define(function (require) {
          * 标注动画
          * @param {number} duration 时长
          * @param {string=} easing 缓动效果
-         * @param {Array=} addShapeList 指定特效对象，不指定默认使用this.shapeList
+         * @param {Array=} shapeList 指定特效对象，不指定默认使用this.shapeList
          */
-        animationMark: function (duration , easing, addShapeList) {
-            var shapeList = addShapeList || this.shapeList;
+        animationMark: function (duration , easing, shapeList) {
+            var shapeList = shapeList || this.shapeList;
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 if (!shapeList[i]._mark) {
                     continue;
                 }
                 this._animateMod(false, shapeList[i], duration, easing, 0, true);
             }
-            this.animationEffect(addShapeList);
+            this.animationEffect(shapeList);
         },
 
         /**
          * 特效动画
-         * @param {Array=} addShapeList 指定特效对象，不知道默认使用this.shapeList
+         * @param {Array=} shapeList 指定特效对象，不知道默认使用this.shapeList
          */
-        animationEffect: function (addShapeList) {
-            !addShapeList && this.clearEffectShape();
-            var shapeList = addShapeList || this.shapeList;
+        animationEffect: function (shapeList) {
+            !shapeList && this.clearEffectShape();
+            shapeList = shapeList || this.shapeList;
             if (shapeList == null) {
                 return;
             }
@@ -1544,12 +1609,20 @@ define(function (require) {
         },
         
         clearEffectShape: function (clearMotionBlur) {
-            if (this.zr && this.effectList && this.effectList.length > 0) {
+            var effectList = this.effectList;
+            if (this.zr && effectList && effectList.length > 0) {
                 clearMotionBlur && this.zr.modLayer(
                     ecConfig.EFFECT_ZLEVEL, 
                     { motionBlur: false }
                 );
-                this.zr.delShape(this.effectList);
+                this.zr.delShape(effectList);
+
+                // 手动清除不会被 zr 自动清除的动画控制器
+                for (var i = 0; i < effectList.length; i++) {
+                    if (effectList[i].effectAnimator) {
+                        effectList[i].effectAnimator.stop();
+                    }
+                }
             }
             this.effectList = [];
         },

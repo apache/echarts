@@ -35,11 +35,25 @@ define(function (require) {
                     width: 1,
                     color: '#ff3200',   // 阳线边框颜色
                     color0: '#00aa11'   // 阴线边框颜色
+                },
+                label: {
+                    show: false
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+                    //           'inside'|'left'|'right'|'top'|'bottom'
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                 }
             },
             emphasis: {
                 // color: 各异,
-                // color0: 各异
+                // color0: 各异,
+                label: {
+                    show: false
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+                    //           'inside'|'left'|'right'|'top'|'bottom'
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                }
             }
         }
     };
@@ -397,15 +411,15 @@ define(function (require) {
             eColor, eLinewidth, eLineColor
         ) {
             var series = this.series;
+            var serie = series[seriesIndex];
+            var data = serie.data[dataIndex];
+            var queryTarget = [data, serie];
+
             var itemShape = {
                 zlevel: this.getZlevelBase(),
                 z: this.getZBase(),
-                clickable: this.deepQuery(
-                    [series[seriesIndex].data[dataIndex], series[seriesIndex]], 'clickable'
-                ),
-                hoverable: this.deepQuery(
-                    [series[seriesIndex].data[dataIndex], series[seriesIndex]], 'hoverable'
-                ),
+                clickable: this.deepQuery(queryTarget, 'clickable'),
+                hoverable: this.deepQuery(queryTarget, 'hoverable'),
                 style: {
                     x: x,
                     y: [y0, y1, y2, y3],
@@ -422,14 +436,18 @@ define(function (require) {
                 },
                 _seriesIndex: seriesIndex
             };
+
+            itemShape = this.addLabel(itemShape, serie, data, name);
+            
             ecData.pack(
                 itemShape,
-                series[seriesIndex], seriesIndex,
-                series[seriesIndex].data[dataIndex], dataIndex,
+                serie, seriesIndex,
+                data, dataIndex,
                 name
             );
             
             itemShape = new CandleShape(itemShape);
+            
             return itemShape;
         },
 
@@ -466,7 +484,7 @@ define(function (require) {
         /**
          * 动画设定
          */
-        addDataAnimation: function (params) {
+        addDataAnimation: function (params, done) {
             var series = this.series;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
@@ -478,6 +496,15 @@ define(function (require) {
             var serie;
             var seriesIndex;
             var dataIndex;
+
+            var aniCount = 0;
+            function animationDone() {
+                aniCount--;
+                if (aniCount === 0) {
+                    done && done();
+                }
+            }
+
              for (var i = 0, l = this.shapeList.length; i < l; i++) {
                 seriesIndex = this.shapeList[i]._seriesIndex;
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
@@ -502,14 +529,21 @@ define(function (require) {
                              ).getGap();
                         x = aniMap[seriesIndex][2] ? dx : -dx;
                         y = 0;
+                        aniCount++;
                         this.zr.animate(this.shapeList[i].id, '')
                             .when(
                                 this.query(this.option, 'animationDurationUpdate'),
                                 { position: [ x, y ] }
                             )
+                            .done(animationDone)
                             .start();
                     }
                 }
+            }
+            
+            // 没有动画
+            if (!aniCount) {
+                animationDone();
             }
         }
     };

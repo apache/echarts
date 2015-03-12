@@ -1072,6 +1072,9 @@ define(function (require) {
                     0, x, y
                 );
             }
+            else {
+                this._hide();
+            }
             
             // don't modify, just false, showContent == undefined == true
             if (showContent === false || !this.option.tooltip.showContent) {

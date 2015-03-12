@@ -15,7 +15,7 @@ var theme = {
             color: '#27727B'          // 主标题文字颜色
         }
     },
-    
+
     // 值域
     dataRange: {
         x:'right',
@@ -139,7 +139,7 @@ var theme = {
         symbol: 'circle',  // 拐点图形类型
         symbolSize: 3.5           // 拐点图形大小
     },
-    
+
     // K线图默认参数
     k: {
         itemStyle: {
@@ -154,10 +154,10 @@ var theme = {
             }
         }
     },
-    
+
     // 散点图默认参数
     scatter: {
-        itemdStyle: {
+        itemStyle: {
             normal: {
                 borderWidth:1,
                 borderColor:'rgba(200,200,200,0.5)'
@@ -202,7 +202,7 @@ var theme = {
             }
         }
     },
-    
+
     force : {
         itemStyle: {
             normal: {
@@ -244,7 +244,7 @@ var theme = {
         axisLine: {            // 坐标轴线
             show: true,        // 默认显示，属性show控制显示与否
             lineStyle: {       // 属性lineStyle控制线条样式
-                color: [[0.2, '#B5C334'],[0.8, '#27727B'],[1, '#C1232B']], 
+                color: [[0.2, '#B5C334'],[0.8, '#27727B'],[1, '#C1232B']],
                 width: '40%'
             }
         },
@@ -287,7 +287,7 @@ var theme = {
             }
         }
     },
-    
+
     textStyle: {
         fontFamily: '微软雅黑, Arial, Verdana, sans-serif'
     }

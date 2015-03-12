@@ -102,7 +102,7 @@ define(function() {
             // 标线起始和结束的symbol旋转控制
             //symbolRotate: null,
             //smooth: false,
-            smoothRadian: 0.2,    // 平滑弧度
+            smoothness: 0.2,    // 平滑度
             precision: 2,
             effect: {
                 show: false,
@@ -112,6 +112,12 @@ define(function() {
                 // color: 'gold',
                 // shadowColor: 'rgba(255,215,0,0.8)',
                 // shadowBlur: lineWidth * 2    // 炫光模糊，默认等于scaleSize计算所得
+            },
+            // 边捆绑
+            bundling: {
+                enable: false,
+                // [0, 90]
+                maxTurningAngle: 45
             },
             itemStyle: {
                 normal: {

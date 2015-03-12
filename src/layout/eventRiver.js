@@ -31,17 +31,17 @@ define(function(require) {
         
         // step 0. calculate event importance and sort descending
         for (var i = 0; i < series.length; i++) {
-            for (var j = 0; j < series[i].eventList.length; j++) {
-                if (series[i].eventList[j].weight == null) {
-                    series[i].eventList[j].weight = 1;
+            for (var j = 0; j < series[i].data.length; j++) {
+                if (series[i].data[j].weight == null) {
+                    series[i].data[j].weight = 1;
                 }
                 var importance = 0;
-                for (var k = 0; k < series[i].eventList[j].evolution.length; k++) {
-                    importance += series[i].eventList[j].evolution[k].valueScale;
+                for (var k = 0; k < series[i].data[j].evolution.length; k++) {
+                    importance += series[i].data[j].evolution[k].valueScale;
                 }
-                series[i].eventList[j].importance = importance * series[i].eventList[j].weight;
+                series[i].data[j].importance = importance * series[i].data[j].weight;
             }
-            series[i].eventList.sort(importanceSort);
+            series[i].data.sort(importanceSort);
         }
         
         // step 1. 计算每个group的重要值importance，并按递减顺序排序
@@ -50,8 +50,8 @@ define(function(require) {
                 series[i].weight = 1;
             }
             var importance = 0;
-            for (var j = 0; j < series[i].eventList.length; j++) {
-                importance += series[i].eventList[j].weight;
+            for (var j = 0; j < series[i].data.length; j++) {
+                importance += series[i].data[j].weight;
             }
             series[i].importance = importance * series[i].weight;
         }
@@ -63,9 +63,9 @@ define(function(require) {
         var minTime = Number.MAX_VALUE;
         var maxTime = 0;
         for (var i = 0; i < series.length; i++) {
-            for (var j = 0; j < series[i].eventList.length; j++) {
-                for (var k = 0; k < series[i].eventList[j].evolution.length; k++) {
-                    var time = series[i].eventList[j].evolution[k].timeScale;
+            for (var j = 0; j < series[i].data.length; j++) {
+                for (var k = 0; k < series[i].data[j].evolution.length; k++) {
+                    var time = series[i].data[j].evolution[k].timeScale;
                     minTime = Math.min(minTime, time);
                     maxTime = Math.max(maxTime, time);
                 }
@@ -79,13 +79,13 @@ define(function(require) {
 
         var totalMaxY = 0;
         for (var i = 0; i < series.length; i++) {
-            for (var j = 0; j < series[i].eventList.length; j++) {
-                var e = series[i].eventList[j];
+            for (var j = 0; j < series[i].data.length; j++) {
+                var e = series[i].data[j];
                 e.time = [];
                 e.value = [];
-                for (var k = 0; k < series[i].eventList[j].evolution.length; k++) {
-                    e.time.push(series[i].eventList[j].evolution[k].timeScale);
-                    e.value.push(series[i].eventList[j].evolution[k].valueScale);
+                for (var k = 0; k < series[i].data[j].evolution.length; k++) {
+                    e.time.push(series[i].data[j].evolution[k].timeScale);
+                    e.value.push(series[i].data[j].evolution[k].valueScale);
                 }
 
                 var mxIndex = indexOf(e.value, Math.max.apply(Math, e.value));
@@ -129,7 +129,7 @@ define(function(require) {
         var yScale = (area.height - space) / maxY;
         for (var i = 0; i < series.length; i++) {
             series[i].y = series[i].y * yScale + yBase;
-            var eventList = series[i].eventList;
+            var eventList = series[i].data;
             for (var j = 0; j < eventList.length; j++) {
                 eventList[j].y = eventList[j].y * yScale + yBase;
                 var evolutionList = eventList[j].evolution;

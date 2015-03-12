@@ -387,7 +387,7 @@ define(function (require) {
             var max = serie.max;
             var minSize = number.parsePercent(serie.minSize, location.width);
             var maxSize = number.parsePercent(serie.maxSize, location.width);
-            return value * (maxSize - minSize) / (max - min);
+            return (value - min) * (maxSize - minSize) / (max - min) + minSize;
         },
         
         /**

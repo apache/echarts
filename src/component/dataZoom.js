@@ -890,23 +890,26 @@ define(function (require) {
          * 获取当前定位 
          */
         _getDetail : function () {
-            var key = this.zoomOption.orient == 'horizontal' ? 'xAxis' : 'yAxis';
-            var target = this._originalData[key];
-            for (var idx in target) {
-                var data = target[idx];
-                if (data == null) {
-                    continue;
+            var key = ['xAxis', 'yAxis'];
+            for (var i = 0, l = key.length; i < l; i++) {
+                var target = this._originalData[key[i]];
+                for (var idx in target) {
+                    var data = target[idx];
+                    if (data == null) {
+                        continue;
+                    }
+                    var length = data.length;
+                    var start = Math.floor(this._zoom.start / 100 * length);
+                    var end = Math.ceil(this._zoom.end / 100 * length);
+                    end -= end > 0 ? 1 : 0;
+                    return {
+                        start : this.getDataFromOption(data[start]),
+                        end : this.getDataFromOption(data[end])
+                    };
                 }
-                var length = data.length;
-                var start = Math.floor(this._zoom.start / 100 * length);
-                var end = Math.ceil(this._zoom.end / 100 * length);
-                end -= end > 0 ? 1 : 0;
-                return {
-                    start : this.getDataFromOption(data[start]),
-                    end : this.getDataFromOption(data[end])
-                };
             }
-            
+
+            key = this.zoomOption.orient == 'horizontal' ? 'xAxis' : 'yAxis';
             var seriesIndex = this._zoom.seriesIndex[0];
             var axisIndex = this.option.series[seriesIndex][key + 'Index'] || 0;
             var axisType = this.option[key][axisIndex].type;

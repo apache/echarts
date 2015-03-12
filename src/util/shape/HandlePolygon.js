@@ -27,7 +27,7 @@ define(function (require) {
             );
         },
         isCover : function (x, y) {
-            var originPos = this.getTansform(x, y);
+            var originPos = this.transformCoordToLocal(x, y);
             x = originPos[0];
             y = originPos[1];
 

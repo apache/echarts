@@ -48,6 +48,29 @@
         <span>[+]新增 [-]删除 [^]升级 [#]修复 【】重要</span>
         <div class="row-fluid">
             <div>
+                <h3>2.2.1<small> (2015-03-11) </small></h3>
+                <ul>
+                    <li>【^】 [markLine] 曲线优化改用贝塞尔曲线绘制，smoothRadian 配置名改为 smoothness </li>
+                    <li>【^】 [markLine] 支持使用 large 配置项启用大规模标线优化，示例查看 <a href="./example/map22.html">百度迁徙2015</a></li>
+                    <li>【^】 [markLine] 支持边捆绑, bundling，示例查看 <a href="./example/map22.html">百度迁徙2015</a></li>
+                    <li>【^】 dataView 个性化配置增强, 详见 <a href="https://github.com/ecomfe/echarts/issues/1316">#1316 »</a></li>
+                    <li>[^] [force] 双向边偏移防止重叠，support <a href="https://github.com/ecomfe/echarts/issues/1344">#1344 »</a></li>
+                    <li>[^] [eventRiver] eventList 配置项名统一为 data。 </li>
+                    <li>[#] [funnel] 修复 min/max size bug。</li>
+                    <li>[-] [gauge] 去掉 precision 配置项。</li>
+                    <li>[^] symbol 颜色配置优化。</li>
+                    <li>[#] 修复横纵坐标轴互换时使用 dataZoom 报错。Fix <a href="https://github.com/ecomfe/echarts/issues/1320">#1320 »</a></li>
+                    <li>[^] [k] K线图支持 label 配置项</li>
+                    <li>[#] [force] 修复使用 worker 时切换 legend 报错。Fix <a href="https://github.com/ecomfe/echarts/issues/1319">#1319 »</a></li>
+                    <li>[#] [bar] 修复柱状图设置 position 为 insideTop 时鼠标移过文字消失 bug。Fix <a href="https://github.com/ecomfe/echarts/issues/1257">#1257 »</a></li>
+                    <li>[#] 修复 noDataLoadingOption 配置不生效 bug。Fix <a href="https://github.com/ecomfe/echarts/issues/1269">#1269 »</a></li>
+                    <li>[^] 极坐标(polar) 标签支持 formatter</li>
+                    <li>[^] 雷达图 smartSteps 增加最大最小参数 </li>
+                    <li>[^] tooltip 增加 enterable 配置项</li>
+                    <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.8+</li>
+                </ul>
+            </div>
+            <div>
                 <h3>2.2.0<small>（2015-01-30）</small></h3>
                 <img src="./asset/img/why-echarts-m-cn.png"  alt="Why Echarts?" style="float:right;width:180px;margin-right:30px;"/>
                 <ul>
