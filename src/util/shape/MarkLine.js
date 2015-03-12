@@ -115,9 +115,11 @@ define(function (require) {
                     ctx.lineTo(style.xEnd, style.yEnd);
                 }
                 else {
+                    var dashLength = (style.lineWidth || 1) 
+                        * (style.lineType == 'dashed' ? 5 : 1);
                     dashedLineTo(
                         ctx, style.xStart, style.yStart,
-                        style.xEnd, style.yEnd
+                        style.xEnd, style.yEnd, dashLength
                     );
                 }
             }
