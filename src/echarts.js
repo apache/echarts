@@ -1166,7 +1166,7 @@ define(function (require) {
                 if (chartAnimationCount === 0) {
                     animationDone();
                 }
-            }
+            };
             for (var i = 0, l = chartList.length; i < l; i++) {
                 if (magicOption.addDataAnimation && chartList[i].addDataAnimation) {
                     chartAnimationCount++;
@@ -1195,7 +1195,7 @@ define(function (require) {
                     {option: magicOption},
                     self
                 );
-            };
+            }
             
             if (!magicOption.addDataAnimation) {
                 setTimeout(animationDone, 0);

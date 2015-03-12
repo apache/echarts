@@ -256,7 +256,7 @@ define(function (require) {
                 zr.delShape(effectShape.id);   
             }
             effectShape.effectAnimator = null;
-        }
+        };
 
         if (shape instanceof Polyline) {
             var distanceList = [0];
@@ -277,7 +277,7 @@ define(function (require) {
                 distanceList.push(totalDist);
             }
             var obj = { p: 0 };
-            var animator = zr.animation.animate(obj, { loop: effect.loop })
+            var animator = zr.animation.animate(obj, { loop: effect.loop });
 
             for (var i = 0; i < distanceList.length; i++) {
                 animator.when(distanceList[i] * effect.period, { p: i });
@@ -337,7 +337,6 @@ define(function (require) {
             if (shape.style.curveness > 0) {
                 var x1 = shapeStyle.cpX1 - offset;
                 var y1 = shapeStyle.cpY1 - offset;
-                var obj = { p: 0 };
                 effectShape.effectAnimator = zr.animation.animate(effectShape, { loop: effect.loop })
                     .when(duration, { p: 1 })
                     .during(function (target, t) {
@@ -411,7 +410,7 @@ define(function (require) {
             for (var i = 0; i < subEffectAnimators.length; i++) {
                 subEffectAnimators[i].stop();
             }
-        }
+        };
         if (maxDuration) {
             effectShape.__dummy = 0;
             // Proxy animator
@@ -432,7 +431,7 @@ define(function (require) {
             animator.stop = function () {
                 clearAllAnimators();
                 oldStop.call(this);
-            }
+            };
         }
     }
 

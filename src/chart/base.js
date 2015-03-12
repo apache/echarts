@@ -27,7 +27,7 @@ define(function (require) {
 
     // Some utility functions
     function isCoordAvailable(coord) {
-        return coord.x != null && coord.y != null
+        return coord.x != null && coord.y != null;
     }
     
     function Base(ecTheme, messageCenter, zr, option, myChart) {
@@ -915,9 +915,9 @@ define(function (require) {
                     ) {
                         // 组装一个mergeData
                         var mergeData = this.deepMerge(mlData);
-                        var value = mergeData.value != null ? mergeData.value : '';
                         var queryTarget = [mergeData, mlOption];
                         var color = defaultColor;
+                        var value = mergeData.value != null ? mergeData.value : '';
                         // 值域
                         if (dataRange) {
                             color = isNaN(value) ? color : dataRange.getColor(value);
@@ -969,6 +969,7 @@ define(function (require) {
                     var edge = edges[i];
                     var rawEdge = edge.rawEdge || edge; 
                     var mlData = rawEdge.rawData;
+                    var value = mlData.value != null ? mlData.value : '';
 
                     var itemShape = this.getMarkLineShape(
                         mlOption,

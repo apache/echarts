@@ -27,10 +27,8 @@ define(function (require) {
     var CurveShape = require('zrender/shape/BezierCurve');
     var curveInstance = new CurveShape({});
 
-    var matrix = require('zrender/tool/matrix');
     var area = require('zrender/tool/area');
     var dashedLineTo = require('zrender/shape/util/dashedLineTo');
-    var smoothSpline = require('zrender/shape/util/smoothSpline');
     var zrUtil = require('zrender/tool/util');
     var curveTool = require('zrender/tool/curve');
 
@@ -90,8 +88,6 @@ define(function (require) {
          * @param {Object} style 样式
          */
         buildPath : function (ctx, style) {
-            var lineWidth = style.lineWidth || 1;
-
             var lineType = style.lineType || 'solid';
 
             ctx.moveTo(style.xStart, style.yStart);
@@ -177,7 +173,7 @@ define(function (require) {
             rotate = rotate / 180 * Math.PI;
 
             if (symbol == 'arrow' && rotate === 0) {
-                if (curveness == 0) {
+                if (curveness === 0) {
                     var sign = idx === 0 ? -1 : 1; 
                     rotate = Math.PI / 2 + Math.atan2(
                         sign * (y2 - y0), sign * (x2 - x0)

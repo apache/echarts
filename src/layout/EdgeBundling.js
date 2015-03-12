@@ -34,7 +34,7 @@ define(function (require) {
         ];
 
         this.group = group;
-    };
+    }
 
     function Edge(edge) {
         var points = edge.points;
@@ -251,8 +251,9 @@ define(function (require) {
                 }
                 if (mostSavingInkEdge) {
                     totalSavedInk += maxSavedInk;
+                    var group;
                     if (! mostSavingInkEdge.group) {
-                        var group = new BundledEdgeGroup();
+                        group = new BundledEdgeGroup();
                         groups.push(group);
                         group.addEdge(mostSavingInkEdge);
                     }
@@ -277,7 +278,7 @@ define(function (require) {
                 groups: groups,
                 edges: edges,
                 savedInk: totalSavedInk
-            }
+            };
         },
 
         _calculateEdgeEdgeInk: (function () {
@@ -360,7 +361,7 @@ define(function (require) {
                 this._limitTurningAngle(
                     endPointSet, cp1, cp0, mp1
                 );
-            }
+            };
         })(),
 
         _limitTurningAngle: (function () {
@@ -408,7 +409,7 @@ define(function (require) {
                 }
             };
         })()
-    }
+    };
 
     return EdgeBundling;
 });

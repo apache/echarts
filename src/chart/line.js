@@ -812,7 +812,6 @@ define(function (require) {
          */
         addDataAnimation: function (params, done) {
             var series = this.series;
-            var self = this;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
                 aniMap[params[i][0]] = params[i];
@@ -831,6 +830,10 @@ define(function (require) {
                 if (aniCount === 0) {
                     done && done();
                 }
+            }
+            function animationDuring(target) {
+                // 强制更新曲线控制点
+                target.style.controlPointList = null;
             }
 
             for (var i = this.shapeList.length - 1; i >= 0; i--) {
@@ -900,10 +903,7 @@ define(function (require) {
                             this.query(this.option, 'animationDurationUpdate'),
                             { position: [ x, y ] }
                         )
-                        .during(function (target) {
-                            // 强制更新曲线控制点
-                            target.style.controlPointList = null;
-                        })
+                        .during(animationDuring)
                         .done(animationDone)
                         .start();
                 }

@@ -564,70 +564,46 @@ define(function (require) {
 
         var animationDone = function () {
             newShape.__animating = false;
-        }
-        if (oldShape) {
-            var oldShapeStyle = oldShape.style;
-            zr.animate(newShape.id, 'style')
-                .when(0, {
-                    xStart: oldShapeStyle.xStart,
-                    yStart: oldShapeStyle.yStart,
-                    xEnd: oldShapeStyle.xEnd,
-                    yEnd: oldShapeStyle.yEnd,
-                    cpX1: oldShapeStyle.cpX1 || 0,
-                    cpY1: oldShapeStyle.cpY1 || 0
-                })
-                .when(duration, {
-                    xStart: newShapeStyle.xStart,
-                    yStart: newShapeStyle.yStart,
-                    xEnd: newShapeStyle.xEnd,
-                    yEnd: newShapeStyle.yEnd,
-                    cpX1: newShapeStyle.cpX1 || 0,
-                    cpY1: newShapeStyle.cpY1 || 0
+        };
+        var x0 = newShapeStyle.xStart;
+        var y0 = newShapeStyle.yStart;
+        var x2 = newShapeStyle.xEnd;
+        var y2 = newShapeStyle.yEnd;
+        if (newShapeStyle.curveness > 0) {
+            newShape.updatePoints(newShapeStyle);
+            var obj = { p: 0 };
+            var x1 = newShapeStyle.cpX1;
+            var y1 = newShapeStyle.cpY1;
+            var newXArr = [];
+            var newYArr = [];
+            var subdivide = curveTool.quadraticSubdivide;
+            zr.animation.animate(obj)
+                .when(duration, { p: 1 })
+                .during(function () {
+                    // Calculate subdivided curve
+                    subdivide(x0, x1, x2, obj.p, newXArr);
+                    subdivide(y0, y1, y2, obj.p, newYArr);
+                    newShapeStyle.cpX1 = newXArr[1];
+                    newShapeStyle.cpY1 = newYArr[1];
+                    newShapeStyle.xEnd = newXArr[2];
+                    newShapeStyle.yEnd = newYArr[2];
+                    zr.modShape(newShape);
                 })
                 .done(animationDone)
                 .start(easing);
         }
         else {
-            var x0 = newShapeStyle.xStart;
-            var y0 = newShapeStyle.yStart;
-            var x2 = newShapeStyle.xEnd;
-            var y2 = newShapeStyle.yEnd;
-            if (newShapeStyle.curveness > 0) {
-                newShape.updatePoints(newShapeStyle);
-                var obj = { p: 0 };
-                var x1 = newShapeStyle.cpX1;
-                var y1 = newShapeStyle.cpY1;
-                var newXArr = [];
-                var newYArr = [];
-                var subdivide = curveTool.quadraticSubdivide;
-                zr.animation.animate(obj)
-                    .when(duration, { p: 1 })
-                    .during(function () {
-                        // Calculate subdivided curve
-                        subdivide(x0, x1, x2, obj.p, newXArr);
-                        subdivide(y0, y1, y2, obj.p, newYArr);
-                        newShapeStyle.cpX1 = newXArr[1];
-                        newShapeStyle.cpY1 = newYArr[1];
-                        newShapeStyle.xEnd = newXArr[2];
-                        newShapeStyle.yEnd = newYArr[2];
-                        zr.modShape(newShape);
-                    })
-                    .done(animationDone)
-                    .start(easing);
-            }
-            else {
-                zr.animate(newShape.id, 'style')
-                    .when(0, {
-                        xEnd: x0,
-                        yEnd: y0
-                    })
-                    .when(duration, {
-                        xEnd: x2,
-                        yEnd: y2
-                    })
-                    .done(animationDone)
-                    .start(easing);
-            }
+            zr.animate(newShape.id, 'style')
+                .when(0, {
+                    xEnd: x0,
+                    yEnd: y0
+                })
+                .when(duration, {
+                    xEnd: x2,
+                    yEnd: y2
+                })
+                .done(animationDone)
+                .start(easing);
         }
     }
 
