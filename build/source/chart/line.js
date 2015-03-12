@@ -582,7 +582,7 @@ define('echarts/chart/line', [
                 }
             }
         },
-        addDataAnimation: function (params) {
+        addDataAnimation: function (params, done) {
             var series = this.series;
             var aniMap = {};
             for (var i = 0, l = params.length; i < l; i++) {
@@ -595,6 +595,16 @@ define('echarts/chart/line', [
             var seriesIndex;
             var pointList;
             var isHorizontal;
+            var aniCount = 0;
+            function animationDone() {
+                aniCount--;
+                if (aniCount === 0) {
+                    done && done();
+                }
+            }
+            function animationDuring(target) {
+                target.style.controlPointList = null;
+            }
             for (var i = this.shapeList.length - 1; i >= 0; i--) {
                 seriesIndex = this.shapeList[i]._seriesIndex;
                 if (aniMap[seriesIndex] && !aniMap[seriesIndex][3]) {
@@ -621,7 +631,8 @@ define('echarts/chart/line', [
                             }
                             isHorizontal ? (x = -dx, y = 0) : (x = 0, y = dy);
                         }
-                        this.zr.modShape(this.shapeList[i].id, { style: { pointList: this.shapeList[i].style.pointList } }, true);
+                        this.shapeList[i].style.controlPointList = null;
+                        this.zr.modShape(this.shapeList[i]);
                     } else {
                         if (aniMap[seriesIndex][2] && this.shapeList[i]._dataIndex === series[seriesIndex].data.length - 1) {
                             this.zr.delShape(this.shapeList[i].id);
@@ -635,13 +646,17 @@ define('echarts/chart/line', [
                         0,
                         0
                     ];
+                    aniCount++;
                     this.zr.animate(this.shapeList[i].id, '').when(this.query(this.option, 'animationDurationUpdate'), {
                         position: [
                             x,
                             y
                         ]
-                    }).start();
+                    }).during(animationDuring).done(animationDone).start();
                 }
+            }
+            if (!aniCount) {
+                animationDone();
             }
         }
     };

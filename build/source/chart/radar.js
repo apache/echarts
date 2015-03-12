@@ -410,6 +410,10 @@ define('echarts/chart/radar', [
                         item,
                         this.option
                     ], 'textStyle');
+                    var formatter = this.deepQuery([
+                        axisLabel,
+                        item
+                    ], 'formatter');
                     style = {};
                     style.textFont = this.getFont(textStyle);
                     style.color = textStyle.color;
@@ -426,7 +430,14 @@ define('echarts/chart/radar', [
                     for (var j = 1; j <= splitNumber; j += interval + 1) {
                         newStyle = zrUtil.merge({}, style);
                         text = accMath.accAdd(value.min, accMath.accMul(value.step, j));
-                        newStyle.text = this.numAddCommas(text);
+                        if (typeof formatter === 'function') {
+                            text = formatter(text);
+                        } else if (typeof formatter === 'string') {
+                            text = formatter.replace('{a}', '{a0}').replace('{a0}', text);
+                        } else {
+                            text = this.numAddCommas(text);
+                        }
+                        newStyle.text = text;
                         newStyle.x = j * vector[0] / splitNumber + Math.cos(theta) * offset + center[0];
                         newStyle.y = j * vector[1] / splitNumber + Math.sin(theta) * offset + center[1];
                         this.shapeList.push(new TextShape({

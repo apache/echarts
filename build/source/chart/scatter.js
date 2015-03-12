@@ -1462,8 +1462,8 @@ define('echarts/chart/scatter', [
             }
         },
         _textFormat: function (valueStart, valueEnd) {
-            valueStart = valueStart.toFixed(this.dataRangeOption.precision);
-            valueEnd = valueEnd != null ? valueEnd.toFixed(this.dataRangeOption.precision) : '';
+            valueStart = (+valueStart).toFixed(this.dataRangeOption.precision);
+            valueEnd = valueEnd != null ? (+valueEnd).toFixed(this.dataRangeOption.precision) : '';
             if (this.dataRangeOption.formatter) {
                 if (typeof this.dataRangeOption.formatter == 'string') {
                     return this.dataRangeOption.formatter.replace('{value}', valueStart).replace('{value2}', valueEnd);
@@ -1572,7 +1572,7 @@ define('echarts/chart/scatter', [
             PolygonShape.prototype.buildPath(ctx, style);
         },
         isCover: function (x, y) {
-            var originPos = this.getTansform(x, y);
+            var originPos = this.transformCoordToLocal(x, y);
             x = originPos[0];
             y = originPos[1];
             var rect = this.style.rect;
