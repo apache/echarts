@@ -231,17 +231,22 @@ define(function (require) {
                         for (var j = 0, k = data.length; j < k; j++) {
                             name = this._nameChange(mapType, data[j].name);
                             valueData[mapType][name] = valueData[mapType][name] 
-                                                       || {seriesIndex : []};
+                                                       || {
+                                                           seriesIndex : [],
+                                                           valueMap: {}
+                                                       };
                             for (var key in data[j]) {
                                 if (key != 'value') {
                                     valueData[mapType][name][key] = 
                                         data[j][key];
                                 }
                                 else if (!isNaN(data[j].value)) {
+                                    // value
                                     valueData[mapType][name].value == null
                                     && (valueData[mapType][name].value = 0);
                                     
-                                    valueData[mapType][name].value +=  (+data[j].value);
+                                    valueData[mapType][name].value += (+data[j].value);
+                                    valueData[mapType][name].valueMap[i] = +data[j].value;
                                 }
                             }
                             //索引有该区域的系列样式
@@ -756,7 +761,10 @@ define(function (require) {
                     value = data.value;
                 }
                 else {
-                    data = '-';
+                    data = {
+                        name: name,
+                        value: '-'
+                    };
                     seriesName = '';
                     queryTarget = [];
                     for (var key in mapSeries) {
