@@ -179,10 +179,12 @@ define(function (require) {
                         && zrUtil.merge(this._scaleLimitMap[mapType], series[i].scaleLimit, true);
                     
                     this._roamMap[mapType] = series[i].roam || this._roamMap[mapType];
-                    
-                    this._hoverLinkMap[mapType] = series[i].dataRangeHoverLink
-                                                  || this._hoverLinkMap[mapType];
-                    
+
+                    if (this._hoverLinkMap[mapType] == null || this._hoverLinkMap[mapType]) {
+                        // false 1票否决
+                        this._hoverLinkMap[mapType] = series[i].dataRangeHoverLink; 
+                    }
+
                     this._nameMap[mapType] = this._nameMap[mapType] || {};
                     series[i].nameMap
                         && zrUtil.merge(this._nameMap[mapType], series[i].nameMap, true);
