@@ -616,7 +616,7 @@ define(function (require) {
         },
 
         isCover : function (x, y) {
-            var originPos = this.getTansform(x, y);
+            var originPos = this.transformCoordToLocal(x, y);
             x = originPos[0];
             y = originPos[1];
 
@@ -627,17 +627,10 @@ define(function (require) {
             }
             // 提高交互体验，太小的图形包围盒四向扩大4px
             var delta = (rect.height < 8 || rect.width < 8 ) ? 4 : 0;
-            if (x >= rect.x - delta
+            return x >= rect.x - delta
                 && x <= (rect.x + rect.width + delta)
                 && y >= rect.y - delta
-                && y <= (rect.y + rect.height + delta)
-            ) {
-                // 矩形内
-                return true;
-            }
-            else {
-                return false;
-            }
+                && y <= (rect.y + rect.height + delta);
         }
     };
 

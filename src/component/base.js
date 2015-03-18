@@ -37,7 +37,7 @@ define(function (require) {
                            : (ecData.get(self.shapeList[i], 'series') || {}).name;
                     if (name == targetName 
                         && !self.shapeList[i].invisible 
-                        && !self.shapeList[i]._animating
+                        && !self.shapeList[i].__animating
                     ) {
                         self.zr.addHoverShape(self.shapeList[i]);
                     }

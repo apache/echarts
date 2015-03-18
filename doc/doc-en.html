@@ -1566,6 +1566,11 @@ require(['echarts'], function (ec){
                             <td> The duration in seconds of the animated transition. If you want the tooltip to follow the mouse as it moves across a point or chart, setting showDelay to 0 is the key, but setting transitionDuration to 0 can also make a difference in interactive experiences. </td>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> enterable </td>
+                            <td> false </td>
+                            <td> Specifies whether to let the mouse go into the tip dom, default to false. Let it be true if you need interaction like link | button etc. </td>
+                        </tr>
+                        <tr>
                             <td> <b>{color}</b> backgroundColor </td>
                             <td> 'rgba(0,0,0,0.7)' </td>
                             <td> The background color for the tooltip. Defaults to a black color (opacity to 30%). </td>
@@ -1641,7 +1646,7 @@ require(['echarts'], function (ec){
                                         <li><b>force, chord</b> : 
                                             <ul>
                                                 <li>node : a (series name)，b (node name)，c (node value), d (node index), e</li>
-                                                <li>link : a (series name)，b (link name, default bigEndNodeName-smallEndNodeName)，c(link weight), d(name or index of big end node), e(name or index of small end node)</li>
+                                                <li>link : a (series name)，b (link name, default bigEndNodeName-smallEndNodeName)，c(link.value), d(name or index of big end node), e(name or index of small end node)</li>
                                             </ul>
                                         </li>
                                     </ul>
@@ -2738,11 +2743,13 @@ indicator : [
                         <tr>
                             <td> <b>{number}</b> zlevel </td>
                             <td> 0 </td>
+                            <td> universal </td>
                             <td> The first grade cascading control. Every zlevel will be allocated to a independent canvas, charts and components with the same zlevel will be rendered in the same canvas. The higher zlevel the closer to the top. More canvas dom will need more memory and performance, so never set too many zlevel. Most of the time, the second grade cascading control 'z' is recommended.</td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> z </td>
                             <td> 2 </td>
+                            <td> universal </td>
                             <td> The second grade cascading control, In the same canvas (zlevel), the higher z the closer to the top.</td>
                         </tr>
                         <tr>
@@ -3352,14 +3359,9 @@ indicator : [
                             <td> The specified maximum value. </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> precision </td>
-                            <td> 0 </td>
-                            <td> Decimal precision. Defaults to 0 (no decimal point). </td>
-                        </tr>
-                        <tr>
                             <td> <b>{number}</b> splitNumber </td>
                             <td> 10 </td>
-                            <td> The number of segments. Defaults to 5. Linear gradients when set to 0. when calculable is true, it is equally split into 100 parts by default. </td>
+                            <td> The number of segments. Defaults to 10. </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisLine </td>
@@ -3594,7 +3596,7 @@ indicator : [
                             <td> Specifies the weight of this event's series. </td>
                         </tr>
                         <tr>
-                            <td> <b>{Array}</b> eventList </td>
+                            <td> <b>{Array}</b> data </td>
                             <td> [] </td>
                             <td> Event list, every item in the array is an object {}, as:
                                 <table cellspacing="0" class="ADoc_table full">
@@ -3883,19 +3885,44 @@ geoCoord : {
                             <td> angles by which the start and end markLine symbols rotate, same as series' <a href="#Series">symbolRotate</a>. </td>
                         </tr>
                         <tr>
+                            <td> <b>boolean</b> large</td>
+                            <td> false </td>
+                            <td>
+                                If enable optimization for large scale markline. Large scale means line number >= 2k.
+                                <br />Optimization will batch lines drawing. Lines of series will force to have same style. And symbols of two end of line will be ignore.
+                            </td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean}</b> smooth </td>
                             <td> false </td>
                             <td> smoothed line, while smooth is true, lineStyle.type can not be dashed.</td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> smoothRadian </td>
+                            <td> <b>{number}</b> smoothness </td>
                             <td> 0.2 </td>
-                            <td> radian of the smoothed line.</td>
+                            <td> Line smoothness. Only available when smooth is true</td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> precision </td>
                             <td> 2 </td>
                             <td> precision, use for the average markLine.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> bundling </td>
+                            <td> 
+<pre>{
+    enable: false,
+    maxTurningAngle: 45
+}</pre>
+                            </td>
+                            <td>
+                                Edge Bundling
+                                <br />
+                                <br />enable: If enable edge bundling.
+                                <br />maxTurningAngle: Max turning angle of bundled edge, ranges from 0 degree to 90 degree.
+                                <br />
+                                <br />Tip：Edge bundling use algorithm from "Multilevel Agglomerative Edge Bundling for Visualizing Large Graphs"
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> effect </td>
@@ -3909,6 +3936,7 @@ geoCoord : {
     shadowBlur : null
 }                           </pre></td>
                             <td> glow effect for markLine symbol: 
+                                <br />
                                 <br/>show: specifies whether to show. Defaults to false.  
                                 <br/>loop: specifies whether to play the animation in a loop. Defaults to true. 
                                 <br/>period: animation period. No units. The larger the value, the slower. Defaults to 15. 
@@ -4033,7 +4061,7 @@ geoCoord : {
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
                             <td> varying according to chart types </td>
-                            <td> line, candlestick, map, markLine</td>
+                            <td> line, candlestick, markLine</td>
                             <td> line style, see <a href="#LineStyle" title="">lineStyle</a>.</td>
                         </tr>
                         <tr>
@@ -4063,13 +4091,13 @@ geoCoord : {
                         <tr>
                             <td> <b>{string}</b> borderColor </td>
                             <td> varying </td>
-                            <td> line (symbol), scatter (symbole), pie, markPoint</td>
+                            <td> line (symbol), scatter (symbole), pie, map, markPoint</td>
                             <td> color of border. </td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> borderWidth </td>
                             <td> varying </td>
-                            <td> line (symbol), scatter (symbole), pie, markPoint</td>
+                            <td> line (symbol), scatter (symbole), pie, map, markPoint</td>
                             <td> width of column border, in px. </td>
                         </tr>
                         <tr>
@@ -4097,14 +4125,16 @@ geoCoord : {
     position:'outer'
 }                           </pre></td>
                             <td> line, column, candlestick, scatter, pie, map, force, markPoint, markLine</td>
-                            <td> In pie, displayed on the outside by default. labelLine.length controls the label's distance from the pie. In map, the location of labels cannot be specified. 
-                                 <br/> position can be specified in line, column, candlestick, scatter. See below.
+                            <td> In pie, displayed on the outside by default. labelLine.length controls the label's distance from the pie.
+                                <br/>In funnel, displayed on the right by default. labelLine.length controls the label's distance from the funnel.
+                                <br/>In map, the location of labels cannot be specified. 
+                                <br/> position can be specified in line, column, candlestick, scatter. See below.
                             </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> labelLine </td>
                             <td> {show: true} </td>
-                            <td> pie </td>
+                            <td> pie, funnel </td>
                             <td> the visual guide of labels in pie. Defaults to show. </td>
                         </tr>
                     </table>
@@ -4125,6 +4155,7 @@ geoCoord : {
                             <td> 'outer' | null</td>
                             <td> the position to show label. Cannot be specified in maps. 
                                  <br/>In pie, valid values are: 'outer' | 'inner';
+                                 <br/>In funnel, valid value are: 'inner' | 'left' | 'right' (default)，
                                  <br/>In line, column, candlestick and scatter, the default value is 'top' (for vertical layout) or 'right' (for horizontal layout). Can also be one of: 'inside' | 'left' | 'bottom';
                                  <br/>In column, other possible values are: 'insideLeft' | 'insideRight' | 'insideTop' | 'insideBottom'.
                             </td>
@@ -4162,12 +4193,12 @@ geoCoord : {
                         <tr>
                             <td> <b>{boolean}</b> show </td>
                             <td> true </td>
-                            <td> Specifies whether to show pie's labelLine. Valid values are: true (show) | false (hide). </td>
+                            <td> Specifies whether to show labelLine. Valid values are: true (show) | false (hide). </td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> length </td>
                             <td> 40 </td>
-                            <td> length of the line. Starts from the outer edge. Can be negative. </td>
+                            <td> length of the line. Starts from the outer edge. Can be negative. In funnel, length can be 'auto'</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>

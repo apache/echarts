@@ -35,7 +35,6 @@ define('echarts/chart/gauge', [
         endAngle: -45,
         min: 0,
         max: 100,
-        precision: 0,
         splitNumber: 10,
         axisLine: {
             show: true,

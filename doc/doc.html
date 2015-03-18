@@ -1566,6 +1566,11 @@ require(['echarts'], function (ec){
                             <td> 动画变换时长，单位s，如果你希望tooltip的跟随实时响应，showDelay设置为0是关键，同时transitionDuration设0也会有交互体验上的差别。 </td>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> enterable </td>
+                            <td> false </td>
+                            <td> 鼠标是否可进入详情气泡中，默认为false，如需详情内交互，如添加链接，按钮，可设置为true。 </td>
+                        </tr>
+                        <tr>
                             <td> <b>{color}</b> backgroundColor </td>
                             <td> 'rgba(0,0,0,0.7)' </td>
                             <td> 提示背景颜色，默认为透明度为0.7的黑色 </td>
@@ -1641,7 +1646,7 @@ require(['echarts'], function (ec){
                                         <li><b>力导向图, 和弦图</b> : 
                                             <ul>
                                                 <li>节点 : a（系列名称），b（节点名称），c（节点值）, d(节点类目索引)</li>
-                                                <li>边 : a（系列名称），b（边名称，默认为大端节点名称-小端节点名称），c（边权重）, d(大端节点 name 或者 index), e(小端节点 name 或者 index)</li>
+                                                <li>边 : a（系列名称），b（边名称，默认为大端节点名称-小端节点名称），c（link.value）, d(大端节点 name 或者 index), e(小端节点 name 或者 index)</li>
                                             </ul>
                                         </li>
                                     </ul>
@@ -2738,11 +2743,13 @@ indicator : [
                         <tr>
                             <td> <b>{number}</b> zlevel </td>
                             <td> 0 </td>
+                            <td> 通用 </td>
                             <td> 一级层叠控制。每一个不同的zlevel将产生一个独立的canvas，相同zlevel的组件或图标将在同一个canvas上渲染。zlevel越高越靠顶层，canvas对象增多会消耗更多的内存和性能，并不建议设置过多的zlevel，大部分情况可以通过二级层叠控制z实现层叠控制。</td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> z </td>
                             <td> 2 </td>
+                            <td> 通用 </td>
                             <td> 二级层叠控制，同一个canvas（相同zlevel）上z越高约靠顶层。 </td>
                         </tr>
                         <tr>
@@ -3352,14 +3359,9 @@ indicator : [
                             <td> 指定的最大值</td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> precision </td>
-                            <td> 0 </td>
-                            <td> 小数精度，默认为0，无小数点</td>
-                        </tr>
-                        <tr>
                             <td> <b>{number}</b> splitNumber </td>
                             <td> 10 </td>
-                            <td> 分割段数，默认为5，为0时为线性渐变，calculable为true是默认均分100份 </td>
+                            <td> 分割段数，默认为10</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisLine </td>
@@ -3594,7 +3596,7 @@ indicator : [
                             <td> 该事件类别的权重 </td>
                         </tr>
                         <tr>
-                            <td> <b>{Array}</b> eventList </td>
+                            <td> <b>{Array}</b> data </td>
                             <td> [] </td>
                             <td> 事件列表，每一个数组项为Object {}，内容如下：
                                 <table cellspacing="0" class="ADoc_table full">
@@ -3883,12 +3885,20 @@ geoCoord : {
                             <td> 标线起始和结束的symbol旋转控制，同series中的<a href="#Series">symbolRotate</a> </td>
                         </tr>
                         <tr>
+                            <td> <b>boolean</b> large</td>
+                            <td> false </td>
+                            <td>
+                                是否启用大规模标线模式，默认关闭。
+                                <br />大规模标线模式下会优化标线绘制，同个系列的的所有标线都会使用同一种样式，并且忽略标线两端 symbol 的绘制。
+                            </td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean}</b> smooth </td>
                             <td> false </td>
                             <td> 平滑曲线显示，smooth为true时lineStyle不支持虚线</td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> smoothRadian </td>
+                            <td> <b>{number}</b> smoothness </td>
                             <td> 0.2 </td>
                             <td> 平滑曲线弧度，smooth为true时有效，指定平滑曲线弧度</td>
                         </tr>
@@ -3896,6 +3906,22 @@ geoCoord : {
                             <td> <b>{number}</b> precision </td>
                             <td> 2 </td>
                             <td> 小数精度，使用开箱即用的均线markLine时有效</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> bundling </td>
+                            <td> 
+<pre>{
+    enable: false,
+    maxTurningAngle: 45
+}</pre>
+                            </td>
+                            <td>
+                                边捆绑：
+                                <br />enable 是否使用边捆绑，默认关闭
+                                <br />maxTurningAngle 边捆绑算法参数，可选 [0, 90] 的角度，配置捆绑后的边最大拐角, 默认为 45 度
+                                <br />
+                                <br />注：捆绑算法使用 Multilevel Agglomerative Edge Bundling for Visualizing Large Graphs
+                            </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> effect </td>
@@ -4033,7 +4059,7 @@ geoCoord : {
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>
                             <td> 图表各异 </td>
-                            <td> 折线图，K线图 ，地图，markLine</td>
+                            <td> 折线图，K线图，markLine</td>
                             <td> 线条样式，详见<a href="#LineStyle" title="">lineStyle</a></td>
                         </tr>
                         <tr>
@@ -4063,13 +4089,13 @@ geoCoord : {
                         <tr>
                             <td> <b>{string}</b> borderColor </td>
                             <td> 各异 </td>
-                            <td> 折线图（symbol），散点图（symbole），饼图，markPoint</td>
+                            <td> 折线图（symbol），散点图（symbole），饼图，地图，markPoint</td>
                             <td> 边框颜色 </td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> borderWidth </td>
                             <td> 各异 </td>
-                            <td> 折线图（symbol），散点图（symbole），饼图，markPoint</td>
+                            <td> 折线图（symbol），散点图（symbole），饼图，地图，markPoint</td>
                             <td> 边框线宽，单位px </td>
                         </tr>
                         <tr>
@@ -4096,16 +4122,18 @@ geoCoord : {
     show: true,
     position:'outer'
 }                           </pre></td>
-                            <td> 折线图，柱形图，K线图，散点图，饼图 ，地图，力导向，markPoint，markLine</td>
-                            <td> 标签，饼图默认显示在外部，离饼图距离由labelLine.length决定，地图标签不可指定位置
-                                 <br/> 折线图，柱形图，K线图，散点图可指定position见下
+                            <td> 折线图，柱形图，K线图，散点图，饼图 ，地图，力导向，漏斗图，markPoint，markLine</td>
+                            <td> 标签，饼图默认显示在外部，离饼图距离由labelLine.length决定，
+                                <br/>漏斗图默认显示在右侧，离图形距离由labelLine.length决定
+                                <br/>地图标签不可指定位置，
+                                <br/> 折线图，柱形图，K线图，散点图可指定position见下
                             </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> labelLine </td>
                             <td> {show: true} </td>
-                            <td> 饼图 </td>
-                            <td> 饼图标签视觉引导线，默认显示 </td>
+                            <td> 饼图，漏斗图</td>
+                            <td> 标签视觉引导线，默认显示 </td>
                         </tr>
                     </table>
                     <P> 其中标签label属性为对象，其包含：</P>
@@ -4125,6 +4153,7 @@ geoCoord : {
                             <td> 'outer' | null</td>
                             <td> 标签显示位置，地图标签不可指定位置
                                  <br/>饼图可选为：'outer'（外部） | 'inner'（内部），
+                                 <br/>漏斗图可选为：'inner'（内部）| 'left' | 'right'（默认），
                                  <br/>折线图，柱形图，K线图，散点图默认根据布局自适应为'top'或者'right'，可选的还有：'inside' | 'left' | 'bottom'
                                  <br/>柱形图可选的还有，'insideLeft' | 'insideRight' | 'insideTop' | 'insideBottom'
                             </td>
@@ -4152,7 +4181,7 @@ geoCoord : {
                             <td> 标签的文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
                     </table>
-                    <P> 其中饼图标签视觉引导线labelLine属性为对象，其包含：</P>
+                    <P> 其中标签视觉引导线labelLine属性为对象，其包含：</P>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th> 名称 </th>
@@ -4167,7 +4196,7 @@ geoCoord : {
                         <tr>
                             <td> <b>{number}</b> length </td>
                             <td> 40 </td>
-                            <td> 线长 ，从外圆边缘起计算，可为负值</td>
+                            <td> 线长 ，从图形外边缘起计算，可为负值。漏斗图支持'auto'</td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> lineStyle </td>

@@ -894,13 +894,21 @@ define(function (require) {
         /**
          * 动态数据增加动画 
          */
-        addDataAnimation: function (params) {
+        addDataAnimation: function (params, done) {
             var series = this.series;
             var aniMap = {}; // seriesIndex索引参数
             for (var i = 0, l = params.length; i < l; i++) {
                 aniMap[params[i][0]] = params[i];
             }
             
+            var aniCount = 0;
+            function animationDone() {
+                aniCount--;
+                if (aniCount === 0) {
+                    done && done();
+                }
+            }
+
             // 构建新的饼图匹配差异做动画
             var sectorMap = {};
             var textMap = {};
@@ -974,6 +982,7 @@ define(function (require) {
                     }
                     if (backupShapeList[i].type === 'sector') {
                         if (targeSector != 'delete') {
+                            aniCount++;
                             // 原有扇形
                             this.zr.animate(backupShapeList[i].id, 'style')
                                 .when(
@@ -983,9 +992,11 @@ define(function (require) {
                                         endAngle: targeSector.style.endAngle
                                     }
                                 )
+                                .done(animationDone)
                                 .start();
                         }
                         else {
+                            aniCount++;
                             // 删除的扇形
                             this.zr.animate(backupShapeList[i].id, 'style')
                                 .when(
@@ -994,6 +1005,7 @@ define(function (require) {
                                     ? { startAngle: backupShapeList[i].style.startAngle }
                                     : { endAngle: backupShapeList[i].style.endAngle }
                                 )
+                                .done(animationDone)
                                 .start();
                         }
                     }
@@ -1008,6 +1020,7 @@ define(function (require) {
                             // 懒得新建变量了，借用一下
                             switch (backupShapeList[i].type) {
                                 case 'text':
+                                    aniCount++;
                                     targeSector = textMap[key];
                                     this.zr.animate(backupShapeList[i].id, 'style')
                                         .when(
@@ -1017,9 +1030,11 @@ define(function (require) {
                                                 y :targeSector.style.y
                                             }
                                         )
+                                        .done(animationDone)
                                         .start();
                                     break;
                                 case 'polyline':
+                                    aniCount++;
                                     targeSector = lineMap[key];
                                     this.zr.animate(backupShapeList[i].id, 'style')
                                         .when(
@@ -1028,6 +1043,7 @@ define(function (require) {
                                                 pointList:targeSector.style.pointList
                                             }
                                         )
+                                        .done(animationDone)
                                         .start();
                                     break;
                             }
@@ -1037,6 +1053,11 @@ define(function (require) {
                 }
             }
             this.shapeList = backupShapeList;
+
+            // 没有动画
+            if (!aniCount) {
+                animationDone();
+            }
         },
 
         onclick: function (param) {

@@ -122,8 +122,8 @@ define(function (require) {
              for (var i = 0, iLen = series.length; i < iLen; i++) {
                  if (series[i].type === this.type) {
                      xAxis = this.component.xAxis.getAxis(series[i].xAxisIndex || 0);
-                     for (var j = 0, jLen = series[i].eventList.length; j < jLen; j++) {
-                         evolutionList = series[i].eventList[j].evolution;
+                     for (var j = 0, jLen = series[i].data.length; j < jLen; j++) {
+                         evolutionList = series[i].data[j].evolution;
                          for (var k = 0, kLen = evolutionList.length; k < kLen; k++) {
                              evolutionList[k].timeScale = xAxis.getCoord(
                                  ecDate.getNewDate(evolutionList[k].time) - 0
@@ -147,8 +147,8 @@ define(function (require) {
              for (var i = 0; i < series.length; i++) {
                  var serieName = series[i].name || '';
                  if (series[i].type === this.type && this.selectedMap[serieName]) {
-                     for (var j = 0; j < series[i].eventList.length; j++) {
-                         this._drawEventBubble(series[i].eventList[j], i, j);
+                     for (var j = 0; j < series[i].data.length; j++) {
+                         this._drawEventBubble(series[i].data[j], i, j);
                      }
                  }
              }
@@ -161,7 +161,7 @@ define(function (require) {
              var series = this.series;
              var serie = series[seriesIndex];
              var serieName = serie.name || '';
-             var data = serie.eventList[dataIndex];
+             var data = serie.data[dataIndex];
              var queryTarget = [data, serie];
 
              var legend = this.component.legend;
@@ -211,8 +211,8 @@ define(function (require) {
              ecData.pack(
                  eventBubbleShape,
                  series[seriesIndex], seriesIndex,
-                 series[seriesIndex].eventList[dataIndex], dataIndex,
-                 series[seriesIndex].eventList[dataIndex].name
+                 series[seriesIndex].data[dataIndex], dataIndex,
+                 series[seriesIndex].data[dataIndex].name
              );
              this.shapeList.push(eventBubbleShape);
          },
@@ -292,7 +292,6 @@ define(function (require) {
             this.backupShapeList();
             this._buildShape();
          }
-
      };
 
      zrUtil.inherits(EventRiver, ChartBase);

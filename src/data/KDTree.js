@@ -14,7 +14,7 @@ define(function (require) {
         this.axis = axis;
 
         this.data = data;
-    };
+    }
 
     /**
      * @constructor
@@ -174,7 +174,7 @@ define(function (require) {
         for (var i = 0; i < N; i++) {
             // Allocate
             if (!nearestNList[i]) {
-                nearestNList[i] = {}
+                nearestNList[i] = {};
             }
             nearestNList[i].dist = 0;
             nearestNList[i].node = null;
@@ -241,7 +241,7 @@ define(function (require) {
         output.length = found;
 
         return output;
-    }
+    };
 
     return KDTree;
 });

@@ -86,8 +86,8 @@ define('echarts/chart/eventRiver', [
             for (var i = 0, iLen = series.length; i < iLen; i++) {
                 if (series[i].type === this.type) {
                     xAxis = this.component.xAxis.getAxis(series[i].xAxisIndex || 0);
-                    for (var j = 0, jLen = series[i].eventList.length; j < jLen; j++) {
-                        evolutionList = series[i].eventList[j].evolution;
+                    for (var j = 0, jLen = series[i].data.length; j < jLen; j++) {
+                        evolutionList = series[i].data[j].evolution;
                         for (var k = 0, kLen = evolutionList.length; k < kLen; k++) {
                             evolutionList[k].timeScale = xAxis.getCoord(ecDate.getNewDate(evolutionList[k].time) - 0);
                             evolutionList[k].valueScale = Math.pow(evolutionList[k].value, 0.8);
@@ -102,8 +102,8 @@ define('echarts/chart/eventRiver', [
             for (var i = 0; i < series.length; i++) {
                 var serieName = series[i].name || '';
                 if (series[i].type === this.type && this.selectedMap[serieName]) {
-                    for (var j = 0; j < series[i].eventList.length; j++) {
-                        this._drawEventBubble(series[i].eventList[j], i, j);
+                    for (var j = 0; j < series[i].data.length; j++) {
+                        this._drawEventBubble(series[i].data[j], i, j);
                     }
                 }
             }
@@ -112,7 +112,7 @@ define('echarts/chart/eventRiver', [
             var series = this.series;
             var serie = series[seriesIndex];
             var serieName = serie.name || '';
-            var data = serie.eventList[dataIndex];
+            var data = serie.data[dataIndex];
             var queryTarget = [
                 data,
                 serie
@@ -147,7 +147,7 @@ define('echarts/chart/eventRiver', [
             };
             eventBubbleShape = new PolygonShape(eventBubbleShape);
             this.addLabel(eventBubbleShape, serie, data, oneEvent.name);
-            ecData.pack(eventBubbleShape, series[seriesIndex], seriesIndex, series[seriesIndex].eventList[dataIndex], dataIndex, series[seriesIndex].eventList[dataIndex].name);
+            ecData.pack(eventBubbleShape, series[seriesIndex], seriesIndex, series[seriesIndex].data[dataIndex], dataIndex, series[seriesIndex].data[dataIndex].name);
             this.shapeList.push(eventBubbleShape);
         },
         _calculateControlPoints: function (oneEvent) {
@@ -238,25 +238,25 @@ define('echarts/chart/eventRiver', [
             return -1;
         }
         for (var i = 0; i < series.length; i++) {
-            for (var j = 0; j < series[i].eventList.length; j++) {
-                if (series[i].eventList[j].weight == null) {
-                    series[i].eventList[j].weight = 1;
+            for (var j = 0; j < series[i].data.length; j++) {
+                if (series[i].data[j].weight == null) {
+                    series[i].data[j].weight = 1;
                 }
                 var importance = 0;
-                for (var k = 0; k < series[i].eventList[j].evolution.length; k++) {
-                    importance += series[i].eventList[j].evolution[k].valueScale;
+                for (var k = 0; k < series[i].data[j].evolution.length; k++) {
+                    importance += series[i].data[j].evolution[k].valueScale;
                 }
-                series[i].eventList[j].importance = importance * series[i].eventList[j].weight;
+                series[i].data[j].importance = importance * series[i].data[j].weight;
             }
-            series[i].eventList.sort(importanceSort);
+            series[i].data.sort(importanceSort);
         }
         for (var i = 0; i < series.length; i++) {
             if (series[i].weight == null) {
                 series[i].weight = 1;
             }
             var importance = 0;
-            for (var j = 0; j < series[i].eventList.length; j++) {
-                importance += series[i].eventList[j].weight;
+            for (var j = 0; j < series[i].data.length; j++) {
+                importance += series[i].data[j].weight;
             }
             series[i].importance = importance * series[i].weight;
         }
@@ -264,9 +264,9 @@ define('echarts/chart/eventRiver', [
         var minTime = Number.MAX_VALUE;
         var maxTime = 0;
         for (var i = 0; i < series.length; i++) {
-            for (var j = 0; j < series[i].eventList.length; j++) {
-                for (var k = 0; k < series[i].eventList[j].evolution.length; k++) {
-                    var time = series[i].eventList[j].evolution[k].timeScale;
+            for (var j = 0; j < series[i].data.length; j++) {
+                for (var k = 0; k < series[i].data[j].evolution.length; k++) {
+                    var time = series[i].data[j].evolution[k].timeScale;
                     minTime = Math.min(minTime, time);
                     maxTime = Math.max(maxTime, time);
                 }
@@ -275,13 +275,13 @@ define('echarts/chart/eventRiver', [
         var root = segmentTreeBuild(Math.floor(minTime), Math.ceil(maxTime));
         var totalMaxY = 0;
         for (var i = 0; i < series.length; i++) {
-            for (var j = 0; j < series[i].eventList.length; j++) {
-                var e = series[i].eventList[j];
+            for (var j = 0; j < series[i].data.length; j++) {
+                var e = series[i].data[j];
                 e.time = [];
                 e.value = [];
-                for (var k = 0; k < series[i].eventList[j].evolution.length; k++) {
-                    e.time.push(series[i].eventList[j].evolution[k].timeScale);
-                    e.value.push(series[i].eventList[j].evolution[k].valueScale);
+                for (var k = 0; k < series[i].data[j].evolution.length; k++) {
+                    e.time.push(series[i].data[j].evolution[k].timeScale);
+                    e.value.push(series[i].data[j].evolution[k].valueScale);
                 }
                 var mxIndex = indexOf(e.value, Math.max.apply(Math, e.value));
                 var maxY = segmentTreeQuery(root, e.time[mxIndex], e.time[mxIndex + 1]);
@@ -312,7 +312,7 @@ define('echarts/chart/eventRiver', [
         var yScale = (area.height - space) / maxY;
         for (var i = 0; i < series.length; i++) {
             series[i].y = series[i].y * yScale + yBase;
-            var eventList = series[i].eventList;
+            var eventList = series[i].data;
             for (var j = 0; j < eventList.length; j++) {
                 eventList[j].y = eventList[j].y * yScale + yBase;
                 var evolutionList = eventList[j].evolution;
