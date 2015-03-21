@@ -497,16 +497,16 @@ define(function (require) {
                             for (var j = 0, k = singlePL.length; j < k; j++) {
                                 data = serie.data[singlePL[j][2]];
                                 if (this.deepQuery([data, serie, this.option], 'calculable') // 可计算
-                                    || this.deepQuery([data, serie], 'showAllSymbol')        // 全显示
-                                    || (categoryAxis.type === 'categoryAxis'                 // 主轴非空
+                                    || this.deepQuery([data, serie], 'showAllSymbol')       // 全显示
+                                    || (categoryAxis.type === 'categoryAxis'                   // 主轴非空
                                         && categoryAxis.isMainAxis(singlePL[j][2])
                                         && this.deepQuery([data, serie], 'symbol') != 'none'
                                        )
                                 ) {
-                                    this.shapeList.push(this._getSymbol(
+                                    this.shapeList.push(this._getSymbol(//
                                         seriesIndex,
-                                        singlePL[j][2], // dataIndex
-                                        singlePL[j][3], // name
+                                        singlePL[j][2], // dataIndex (纵坐标值)
+                                        singlePL[j][3], // name   (横坐标值)
                                         singlePL[j][0], // x
                                         singlePL[j][1], // y
                                         orient
@@ -516,7 +516,7 @@ define(function (require) {
                         }
                         else {
                             // 大数据模式截取pointList
-                            singlePL = this._getLargePointList(orient, singlePL);
+                            singlePL = this._getLargePointList(orient, singlePL);//singlePL seriesPL
                         }
                         
                         // 折线图
@@ -639,11 +639,24 @@ define(function (require) {
             }
             else {
                 return orient === 'horizontal'
-                       ? (Math.abs(singlePL[0][0] - singlePL[1][0]) < 0.5)
+                       ? (Math.abs(singlePL[0][0] - singlePL[1][0]) < 0.5) //数值越大，可绘制的原始点数越少 2000  数值越小可绘制的原始点数越多
                        : (Math.abs(singlePL[0][1] - singlePL[1][1]) < 0.5);
             }
         },
-        
+        getMaxPoint:function(singlePL){
+            var max=0,tmpY,iMax;
+            for (var j = 0, k = singlePL.length; j < k; j++) {
+                tmpY = singlePL[j];
+                if(tmpY>max){
+                    max = tmpY;
+                    iMax = j;
+                }
+            }
+            if(max == singlePL[0] && max == singlePL[1]){//证明所有的Y值都是一样的，没有所谓的最大值
+                return null;
+            }
+            return iMax;
+        },
         /**
          * 大规模pointList优化 
          */
@@ -655,12 +668,30 @@ define(function (require) {
             else {
                 total = this.component.grid.getHeight();
             }
-            
+
+            var idx = this.getMaxPoint(this.series[0].data); //i 第几条曲线
+
             var len = singlePL.length;
-            var newList = [];
+            var newList = [],newId,bExist=false;
             for (var i = 0; i < total; i++) {
-                newList[i] = singlePL[Math.floor(len / total * i)];
+                newId = Math.floor(len / total * i);
+                newList[i] = singlePL[newId];
+                if(newId == idx){
+                    bExist = true;
+                }
             }
+
+            if(idx){//存在需要保留的最大值点
+                if(!bExist){//在抽希过程中未被保留下来
+                    //取出最高点的原始点x
+                    var ori = singlePL[idx];
+                    //最高点插入新数组的位置
+                    var pos = Math.floor(idx*total/singlePL.length);
+                    newList.splice(pos,0,ori);//数组中插入元素 不覆盖抽希后该位置的点 // 拼接函数(索引位置, 要删除元素的数量, 元素)
+                }
+            }
+
+
             return newList;
         },
         
@@ -958,6 +989,7 @@ define(function (require) {
             ctx.lineTo(x2 + 5, y2 + dy);
             ctx.moveTo(x2 + style.width - 5, y2 + dy);
             ctx.lineTo(x2 + style.width, y2 + dy);
+
             var self = this;
             symbol(
                 ctx,
