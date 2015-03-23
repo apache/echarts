@@ -874,7 +874,8 @@ define(function (require) {
             opt.itemStyle.emphasis.label.textStyle = this.getTextStyle(
                 opt.itemStyle.emphasis.label.textStyle
             );
-
+            this.z = opt.z;
+            this.zlevel = opt.zlevel;
             return opt;
         },
 

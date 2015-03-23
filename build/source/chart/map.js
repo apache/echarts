@@ -144,7 +144,9 @@ define('echarts/chart/map', [
                     this._scaleLimitMap[mapType] = this._scaleLimitMap[mapType] || {};
                     series[i].scaleLimit && zrUtil.merge(this._scaleLimitMap[mapType], series[i].scaleLimit, true);
                     this._roamMap[mapType] = series[i].roam || this._roamMap[mapType];
-                    this._hoverLinkMap[mapType] = series[i].dataRangeHoverLink || this._hoverLinkMap[mapType];
+                    if (this._hoverLinkMap[mapType] == null || this._hoverLinkMap[mapType]) {
+                        this._hoverLinkMap[mapType] = series[i].dataRangeHoverLink;
+                    }
                     this._nameMap[mapType] = this._nameMap[mapType] || {};
                     series[i].nameMap && zrUtil.merge(this._nameMap[mapType], series[i].nameMap, true);
                     this._activeMapType[mapType] = true;
@@ -172,13 +174,17 @@ define('echarts/chart/map', [
                         data = series[i].data;
                         for (var j = 0, k = data.length; j < k; j++) {
                             name = this._nameChange(mapType, data[j].name);
-                            valueData[mapType][name] = valueData[mapType][name] || { seriesIndex: [] };
+                            valueData[mapType][name] = valueData[mapType][name] || {
+                                seriesIndex: [],
+                                valueMap: {}
+                            };
                             for (var key in data[j]) {
                                 if (key != 'value') {
                                     valueData[mapType][name][key] = data[j][key];
                                 } else if (!isNaN(data[j].value)) {
                                     valueData[mapType][name].value == null && (valueData[mapType][name].value = 0);
                                     valueData[mapType][name].value += +data[j].value;
+                                    valueData[mapType][name].valueMap[i] = +data[j].value;
                                 }
                             }
                             valueData[mapType][name].seriesIndex.push(i);
@@ -510,7 +516,10 @@ define('echarts/chart/map', [
                     }
                     value = data.value;
                 } else {
-                    data = '-';
+                    data = {
+                        name: name,
+                        value: '-'
+                    };
                     seriesName = '';
                     queryTarget = [];
                     for (var key in mapSeries) {

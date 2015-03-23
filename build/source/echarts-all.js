@@ -1829,7 +1829,10 @@ define('zrender/zrender', [
                 animatingElements.push(el);
             }
             var animator = this.animation.animate(target, { loop: loop }).done(function () {
-                animators.splice(el.__animators.indexOf(animator), 1);
+                var idx = util.indexOf(el.__animators, animator);
+                if (idx >= 0) {
+                    animators.splice(idx, 1);
+                }
                 if (animators.length === 0) {
                     var idx = util.indexOf(animatingElements, el);
                     animatingElements.splice(idx, 1);
@@ -1850,7 +1853,10 @@ define('zrender/zrender', [
             }
             if (len > 0) {
                 var animatingElements = this.animatingElements;
-                animatingElements.splice(animatingElements.indexOf(el), 1);
+                var idx = util.indexOf(animatingElements, el);
+                if (idx >= 0) {
+                    animatingElements.splice(idx, 1);
+                }
             }
             animators.length = 0;
         }
@@ -11722,7 +11728,7 @@ define('zrender/zrender', [
                 var y_ = curve.quadraticAt(y0, y1, y2, t);
                 for (var i = 0; i < nRoots; i++) {
                     var x_ = curve.quadraticAt(x0, x1, x2, roots[i]);
-                    if (x_ > x) {
+                    if (x_ < x) {
                         continue;
                     }
                     if (roots[i] < t) {
@@ -11734,7 +11740,7 @@ define('zrender/zrender', [
                 return w;
             } else {
                 var x_ = curve.quadraticAt(x0, x1, x2, roots[0]);
-                if (x_ > x) {
+                if (x_ < x) {
                     return 0;
                 }
                 return y2 < y0 ? 1 : -1;
@@ -12900,7 +12906,9 @@ define('zrender/zrender', [
     };
     Group.prototype.removeChild = function (child) {
         var idx = util.indexOf(this._children, child);
-        this._children.splice(idx, 1);
+        if (idx >= 0) {
+            this._children.splice(idx, 1);
+        }
         child.parent = null;
         if (this._storage) {
             this._storage.delFromMap(child.id);
@@ -13736,10 +13744,10 @@ define('zrender/zrender', [
                 if (pos == null || pos[0] == null || pos[1] == null) {
                     continue;
                 }
-                mlData[0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
-                mlData[0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
-                mlData[1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
-                mlData[1].y = mlData[1].y != null ? mlData[1].y : pos[1][1];
+                markLine.data[i][0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
+                markLine.data[i][0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
+                markLine.data[i][1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
+                markLine.data[i][1].y = mlData[1].y != null ? mlData[1].y : pos[1][1];
             }
             var shapeList = this._markLine(seriesIndex, markLine);
             var isLarge = markLine.large;
@@ -15052,7 +15060,8 @@ define('zrender/zrender', [
                 if (lineType == 'solid') {
                     ctx.lineTo(style.xEnd, style.yEnd);
                 } else {
-                    dashedLineTo(ctx, style.xStart, style.yStart, style.xEnd, style.yEnd);
+                    var dashLength = (style.lineWidth || 1) * (style.lineType == 'dashed' ? 5 : 1);
+                    dashedLineTo(ctx, style.xStart, style.yStart, style.xEnd, style.yEnd, dashLength);
                 }
             }
         },
@@ -16129,6 +16138,9 @@ define('zrender/zrender', [
     Base.prototype = {
         canvasSupported: require('zrender/tool/env').canvasSupported,
         _getZ: function (zWhat) {
+            if (this[zWhat] != null) {
+                return this[zWhat];
+            }
             var opt = this.ecTheme[this.type];
             if (opt && opt[zWhat] != null) {
                 return opt[zWhat];
@@ -16146,7 +16158,10 @@ define('zrender/zrender', [
             return this._getZ('z');
         },
         reformOption: function (opt) {
-            return zrUtil.merge(zrUtil.merge(opt || {}, zrUtil.clone(this.ecTheme[this.type] || {})), zrUtil.clone(ecConfig[this.type] || {}));
+            opt = zrUtil.merge(zrUtil.merge(opt || {}, zrUtil.clone(this.ecTheme[this.type] || {})), zrUtil.clone(ecConfig[this.type] || {}));
+            this.z = opt.z;
+            this.zlevel = opt.zlevel;
+            return opt;
         },
         reformCssArray: function (p) {
             if (p instanceof Array) {
@@ -21384,6 +21399,7 @@ define('zrender/zrender', [
         legendHoverLink: true,
         xAxisIndex: 0,
         yAxisIndex: 0,
+        dataFilter: 'nearest',
         itemStyle: {
             normal: {
                 label: { show: false },
@@ -21749,7 +21765,7 @@ define('zrender/zrender', [
                                 }
                             }
                         } else {
-                            singlePL = this._getLargePointList(orient, singlePL);
+                            singlePL = this._getLargePointList(orient, singlePL, serie.dataFilter);
                         }
                         var polylineShape = new PolylineShape({
                             zlevel: this.getZlevelBase(),
@@ -21838,7 +21854,7 @@ define('zrender/zrender', [
                 return orient === 'horizontal' ? Math.abs(singlePL[0][0] - singlePL[1][0]) < 0.5 : Math.abs(singlePL[0][1] - singlePL[1][1]) < 0.5;
             }
         },
-        _getLargePointList: function (orient, singlePL) {
+        _getLargePointList: function (orient, singlePL, filter) {
             var total;
             if (orient === 'horizontal') {
                 total = this.component.grid.getWidth();
@@ -21847,8 +21863,62 @@ define('zrender/zrender', [
             }
             var len = singlePL.length;
             var newList = [];
+            if (typeof filter != 'function') {
+                switch (filter) {
+                case 'min':
+                    filter = function (arr) {
+                        return Math.max.apply(null, arr);
+                    };
+                    break;
+                case 'max':
+                    filter = function (arr) {
+                        return Math.min.apply(null, arr);
+                    };
+                    break;
+                case 'average':
+                    filter = function (arr) {
+                        var total = 0;
+                        for (var i = 0; i < arr.length; i++) {
+                            total += arr[i];
+                        }
+                        return total / arr.length;
+                    };
+                    break;
+                default:
+                    filter = function (arr) {
+                        return arr[0];
+                    };
+                }
+            }
+            var windowData = [];
             for (var i = 0; i < total; i++) {
-                newList[i] = singlePL[Math.floor(len / total * i)];
+                var idx0 = Math.floor(len / total * i);
+                var idx1 = Math.min(Math.floor(len / total * (i + 1)), len);
+                if (idx1 <= idx0) {
+                    continue;
+                }
+                for (var j = idx0; j < idx1; j++) {
+                    windowData[j - idx0] = orient === 'horizontal' ? singlePL[j][1] : singlePL[j][0];
+                }
+                windowData.length = idx1 - idx0;
+                var filteredVal = filter(windowData);
+                var nearestIdx = -1;
+                var minDist = Infinity;
+                for (var j = idx0; j < idx1; j++) {
+                    var val = orient === 'horizontal' ? singlePL[j][1] : singlePL[j][0];
+                    var dist = Math.abs(val - filteredVal);
+                    if (dist < minDist) {
+                        nearestIdx = j;
+                        minDist = dist;
+                    }
+                }
+                var newItem = singlePL[nearestIdx].slice();
+                if (orient === 'horizontal') {
+                    newItem[1] = filteredVal;
+                } else {
+                    newItem[0] = filteredVal;
+                }
+                newList.push(newItem);
             }
             return newList;
         },
@@ -25244,6 +25314,8 @@ define('zrender/zrender', [
             opt = _merge(_merge(opt || {}, zrUtil.clone(this.ecTheme.pie || {})), zrUtil.clone(ecConfig.pie));
             opt.itemStyle.normal.label.textStyle = this.getTextStyle(opt.itemStyle.normal.label.textStyle);
             opt.itemStyle.emphasis.label.textStyle = this.getTextStyle(opt.itemStyle.emphasis.label.textStyle);
+            this.z = opt.z;
+            this.zlevel = opt.zlevel;
             return opt;
         },
         refresh: function (newOption) {
@@ -27186,6 +27258,8 @@ define('zrender/zrender', [
             var _merge = zrUtil.merge;
             opt = _merge(_merge(opt || {}, this.ecTheme.chord), ecConfig.chord);
             opt.itemStyle.normal.label.textStyle = this.getTextStyle(opt.itemStyle.normal.label.textStyle);
+            this.z = opt.z;
+            this.zlevel = opt.zlevel;
         }
     };
     zrUtil.inherits(Chord, ChartBase);
@@ -29180,7 +29254,9 @@ define('zrender/zrender', [
                     this._scaleLimitMap[mapType] = this._scaleLimitMap[mapType] || {};
                     series[i].scaleLimit && zrUtil.merge(this._scaleLimitMap[mapType], series[i].scaleLimit, true);
                     this._roamMap[mapType] = series[i].roam || this._roamMap[mapType];
-                    this._hoverLinkMap[mapType] = series[i].dataRangeHoverLink || this._hoverLinkMap[mapType];
+                    if (this._hoverLinkMap[mapType] == null || this._hoverLinkMap[mapType]) {
+                        this._hoverLinkMap[mapType] = series[i].dataRangeHoverLink;
+                    }
                     this._nameMap[mapType] = this._nameMap[mapType] || {};
                     series[i].nameMap && zrUtil.merge(this._nameMap[mapType], series[i].nameMap, true);
                     this._activeMapType[mapType] = true;
@@ -29208,13 +29284,17 @@ define('zrender/zrender', [
                         data = series[i].data;
                         for (var j = 0, k = data.length; j < k; j++) {
                             name = this._nameChange(mapType, data[j].name);
-                            valueData[mapType][name] = valueData[mapType][name] || { seriesIndex: [] };
+                            valueData[mapType][name] = valueData[mapType][name] || {
+                                seriesIndex: [],
+                                valueMap: {}
+                            };
                             for (var key in data[j]) {
                                 if (key != 'value') {
                                     valueData[mapType][name][key] = data[j][key];
                                 } else if (!isNaN(data[j].value)) {
                                     valueData[mapType][name].value == null && (valueData[mapType][name].value = 0);
                                     valueData[mapType][name].value += +data[j].value;
+                                    valueData[mapType][name].valueMap[i] = +data[j].value;
                                 }
                             }
                             valueData[mapType][name].seriesIndex.push(i);
@@ -29546,7 +29626,10 @@ define('zrender/zrender', [
                     }
                     value = data.value;
                 } else {
-                    data = '-';
+                    data = {
+                        name: name,
+                        value: '-'
+                    };
                     seriesName = '';
                     queryTarget = [];
                     for (var key in mapSeries) {
