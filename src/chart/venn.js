@@ -347,33 +347,26 @@ define(function (require) {
             x, y, r
         ) {
             var serie = this.series[0];
-            var data = serie.itemStyle;
-            
-            // serie里有默认配置，放心大胆的用！
-            var itemStyle = zrUtil.merge(
-                    zrUtil.clone(data.itemStyle) || {},
-                    serie.itemStyle
-                );
+            var itemStyle = serie.itemStyle;
             var status = 'normal';
             // label配置
-            var textStyle = {};
-
+            var labelControl = itemStyle[status].label;
+            var textStyle = labelControl.textStyle || {};
             var text = this.getLabelText(seriesIndex, dataIndex, status);
             var textFont = this.getFont(textStyle);
-            var textAlign;
             var textColor = defaultColor;
-            textAlign = 'left';
+            // 求出label的纵坐标
+            var textSize = textStyle.fontSize || 12;
 
             var textShape = {
                 zlevel: ecConfig.venn.zlevel + 1,
                 style: {
                     x: x,
-                    y: y - r - 10,
+                    y: y - r - textSize,
                     color: textStyle.color || textColor,
                     text: text,
-                    textAlign: textStyle.align || textAlign,
-                    textBaseline: textStyle.baseline || 'middle',
-                    textFont: textFont
+                    textFont: textFont,
+                    textAlign: 'center'
                 }
             };
 

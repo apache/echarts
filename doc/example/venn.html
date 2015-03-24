@@ -64,7 +64,22 @@ option = {
             itemStyle: {
                 normal: {
                     label: {
-                        show: false
+                        show: true,
+                        textStyle: {
+                            fontFamily: 'Arial, Verdana, sans-serif',
+                            fontSize: 16,
+                            fontStyle: 'italic',
+                            fontWeight: 'bolder'
+                        }
+                    },
+                    labelLine: {
+                        show: false,
+                        length: 10,
+                        lineStyle: {
+                            // color: 各异,
+                            width: 1,
+                            type: 'solid'
+                        }
                     }
                 },
                 emphasis: {
