@@ -73,6 +73,7 @@ function launchExample() {
             'echarts/chart/map',
             'echarts/chart/gauge',
             'echarts/chart/funnel',
+            'echarts/chart/venn',
             'echarts/chart/eventRiver'
         ],
         requireCallback
