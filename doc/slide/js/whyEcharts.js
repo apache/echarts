@@ -28,9 +28,6 @@ if (developMode) {
         function loadedListener() {
             // for develop
             require.config({
-                paths : {
-                    webkitDep : '../../doc/example/webkit-dep'
-                },
                 packages: [
                     {
                         name: 'echarts',
@@ -53,8 +50,7 @@ else {
     // for echarts online home page
     require.config({
         paths:{ 
-            echarts: '../../doc/example/www/js',
-            webkitDep : '../../doc/example/webkit-dep'
+            echarts: '../../doc/example/www/js'
         }
     });
     launchExample();
@@ -93,12 +89,30 @@ function launchExample() {
         return;
     }
 
+    var http = function (url, onsuccess, onerror) {
+        var xhr = window.XMLHttpRequest
+            ? new XMLHttpRequest()
+            : new ActiveXObject('Microsoft.XMLHTTP');
+        xhr.open('GET', url, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4) {
+                if (xhr.status >= 200 && xhr.status < 300 || xhr.status === 304) {
+                    onsuccess && onsuccess(xhr.responseText);
+                } else {
+                    onerror && onerror();
+                }
+                xhr.onreadystatechange = new Function();
+                xhr = null;
+            }
+        };
+        xhr.send(null);
+    }
+
     // 按需加载
     isExampleLaunched = 1;
     require(
         [
             'echarts',
-            'webkitDep',
             'echarts/chart/line',
             'echarts/chart/bar',
             'echarts/chart/scatter',
@@ -111,31 +125,40 @@ function launchExample() {
             'echarts/chart/gauge',
             'echarts/chart/funnel'
         ],
-        function (ec, wd) {
+        function (ec) {
             echarts = ec;
-            webkitDepData = wd;
-            webkitDepData.minRadius = 5;
-            webkitDepData.maxRadius = 8;
-            webkitDepData.density = 1.1;
-            webkitDepData.attractiveness = 1.3;
-            webkitDepData.itemStyle = {
-                normal : {
-                    linkStyle : {
-                        opacity : 0.6
+
+            http('../../doc/example/data/webkit-dep.json', function (data) {
+                data = JSON.parse(data);
+
+                optionMap.force2.series[0] = {
+                    minRadius: 5,
+                    maxRadius: 8,
+                    gravity: 1.1,
+                    scaling: 1.1,
+                    coolDown: 0.999,
+                    categories: data.categories,
+                    nodes: data.nodes,
+                    links: data.links,
+                    itemStyle: {
+                        normal : {
+                            linkStyle : {
+                                opacity : 0.6
+                            }
+                        }
                     }
+                };
+                optionMap.force2.color = ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
+                        '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
+                        '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
+                        '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'];
+                if (typeof curEvent != 'undefined') {
+                    clearTimeout(showChartTimer);
+                    getCurParams();
+                    showChart()
+                    //showChartTimer = setTimeout(showChart, 500);
                 }
-            }
-            optionMap.force2.series[0] = webkitDepData;
-            optionMap.force2.color = ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
-                    '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
-                    '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
-                    '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'];
-            if (typeof curEvent != 'undefined') {
-                clearTimeout(showChartTimer);
-                getCurParams();
-                showChart()
-                //showChartTimer = setTimeout(showChart, 500);
-            }
+            });
         }
     );
 }
