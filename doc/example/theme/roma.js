@@ -16,7 +16,7 @@ define({
                 color0: '#001852',      
                 lineStyle: {
                     width: 1,
-                    color: '#f5e8c8',   
+                    color: '#f5e8c8',
                     color0: '#b8d2c7'   
                 }
             }
@@ -116,6 +116,48 @@ define({
                 },
                 nodeStyle : {},
                 linkStyle : {}
+            }
+        }
+    },
+
+    gauge : {
+        axisLine: {            // 坐标轴线
+            show: true,        // 默认显示，属性show控制显示与否
+            lineStyle: {       // 属性lineStyle控制线条样式
+                color: [[0.2, '#E01F54'],[0.8, '#b8d2c7'],[1, '#001852']], 
+                width: 8
+            }
+        },
+        axisTick: {            // 坐标轴小标记
+            splitNumber: 10,   // 每份split细分多少段
+            length :12,        // 属性length控制线长
+            lineStyle: {       // 属性lineStyle控制线条样式
+                color: 'auto'
+            }
+        },
+        axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                color: 'auto'
+            }
+        },
+        splitLine: {           // 分隔线
+            length : 18,         // 属性length控制线长
+            lineStyle: {       // 属性lineStyle（详见lineStyle）控制线条样式
+                color: 'auto'
+            }
+        },
+        pointer : {
+            length : '90%',
+            color : 'auto'
+        },
+        title : {
+            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                color: '#333'
+            }
+        },
+        detail : {
+            textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
+                color: 'auto'
             }
         }
     }
