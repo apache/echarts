@@ -73,11 +73,8 @@ function launchExample() {
             'echarts/chart/map',
             'echarts/chart/gauge',
             'echarts/chart/funnel',
-<<<<<<< HEAD
             'echarts/chart/venn',
-=======
             'echarts/chart/treemap',
->>>>>>> treemap
             'echarts/chart/eventRiver'
         ],
         requireCallback

@@ -14,11 +14,8 @@ define(function() {
         CHART_TYPE_SCATTER: 'scatter',
         CHART_TYPE_PIE: 'pie',
         CHART_TYPE_RADAR: 'radar',
-<<<<<<< HEAD
         CHART_TYPE_VENN: 'venn',
-=======
         CHART_TYPE_TREEMAP: 'treemap',
->>>>>>> treemap
         CHART_TYPE_MAP: 'map',
         CHART_TYPE_K: 'k',
         CHART_TYPE_ISLAND: 'island',

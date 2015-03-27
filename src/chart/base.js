@@ -1474,6 +1474,7 @@ define(function (require) {
         _getAnimationKey: function(shape) {
             if (this.type != ecConfig.CHART_TYPE_MAP
                 && this.type != ecConfig.CHART_TYPE_TREEMAP
+                && this.type != ecConfig.CHART_TYPE_VENN
                 ) {
                 return ecData.get(shape, 'seriesIndex') + '_'
                        + ecData.get(shape, 'dataIndex')
