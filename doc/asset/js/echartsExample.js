@@ -206,7 +206,11 @@ function launchExample() {
             'echarts/chart/gauge',
             'echarts/chart/funnel',
             'echarts/chart/eventRiver',
+<<<<<<< HEAD
             'echarts/chart/venn',
+=======
+            'echarts/chart/treemap',
+>>>>>>> treemap
             needMap() ? 'echarts/chart/map' : 'echarts'
         ],
         requireCallback

@@ -702,10 +702,10 @@ define(function (require) {
                     // 不在显示区域内
                     continue;
                 }
-                mlData[0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
-                mlData[0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
-                mlData[1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
-                mlData[1].y = mlData[1].y != null ? mlData[1].y : pos[1][1];
+                markLine.data[i][0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
+                markLine.data[i][0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
+                markLine.data[i][1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
+                markLine.data[i][1].y = mlData[1].y != null ? mlData[1].y : pos[1][1];
             }
             
             var shapeList = this._markLine(seriesIndex, markLine);
@@ -1472,7 +1472,9 @@ define(function (require) {
         },
         
         _getAnimationKey: function(shape) {
-            if (this.type != ecConfig.CHART_TYPE_MAP) {
+            if (this.type != ecConfig.CHART_TYPE_MAP
+                && this.type != ecConfig.CHART_TYPE_TREEMAP
+                ) {
                 return ecData.get(shape, 'seriesIndex') + '_'
                        + ecData.get(shape, 'dataIndex')
                        + (shape._mark ? shape._mark : '')

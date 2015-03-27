@@ -179,10 +179,12 @@ define(function (require) {
                         && zrUtil.merge(this._scaleLimitMap[mapType], series[i].scaleLimit, true);
                     
                     this._roamMap[mapType] = series[i].roam || this._roamMap[mapType];
-                    
-                    this._hoverLinkMap[mapType] = series[i].dataRangeHoverLink
-                                                  || this._hoverLinkMap[mapType];
-                    
+
+                    if (this._hoverLinkMap[mapType] == null || this._hoverLinkMap[mapType]) {
+                        // false 1票否决
+                        this._hoverLinkMap[mapType] = series[i].dataRangeHoverLink; 
+                    }
+
                     this._nameMap[mapType] = this._nameMap[mapType] || {};
                     series[i].nameMap
                         && zrUtil.merge(this._nameMap[mapType], series[i].nameMap, true);
@@ -229,17 +231,22 @@ define(function (require) {
                         for (var j = 0, k = data.length; j < k; j++) {
                             name = this._nameChange(mapType, data[j].name);
                             valueData[mapType][name] = valueData[mapType][name] 
-                                                       || {seriesIndex : []};
+                                                       || {
+                                                           seriesIndex : [],
+                                                           valueMap: {}
+                                                       };
                             for (var key in data[j]) {
                                 if (key != 'value') {
                                     valueData[mapType][name][key] = 
                                         data[j][key];
                                 }
                                 else if (!isNaN(data[j].value)) {
+                                    // value
                                     valueData[mapType][name].value == null
                                     && (valueData[mapType][name].value = 0);
                                     
-                                    valueData[mapType][name].value +=  (+data[j].value);
+                                    valueData[mapType][name].value += (+data[j].value);
+                                    valueData[mapType][name].valueMap[i] = +data[j].value;
                                 }
                             }
                             //索引有该区域的系列样式
@@ -754,7 +761,10 @@ define(function (require) {
                     value = data.value;
                 }
                 else {
-                    data = '-';
+                    data = {
+                        name: name,
+                        value: '-'
+                    };
                     seriesName = '';
                     queryTarget = [];
                     for (var key in mapSeries) {

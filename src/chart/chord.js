@@ -1080,6 +1080,8 @@ define(function (require) {
             opt.itemStyle.normal.label.textStyle = this.getTextStyle(
                 opt.itemStyle.normal.label.textStyle
             );
+            this.z = opt.z;
+            this.zlevel = opt.zlevel;
         }
     };
     

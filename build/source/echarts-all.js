@@ -1829,7 +1829,10 @@ define('zrender/zrender', [
                 animatingElements.push(el);
             }
             var animator = this.animation.animate(target, { loop: loop }).done(function () {
-                animators.splice(el.__animators.indexOf(animator), 1);
+                var idx = util.indexOf(el.__animators, animator);
+                if (idx >= 0) {
+                    animators.splice(idx, 1);
+                }
                 if (animators.length === 0) {
                     var idx = util.indexOf(animatingElements, el);
                     animatingElements.splice(idx, 1);
@@ -1850,7 +1853,10 @@ define('zrender/zrender', [
             }
             if (len > 0) {
                 var animatingElements = this.animatingElements;
-                animatingElements.splice(animatingElements.indexOf(el), 1);
+                var idx = util.indexOf(animatingElements, el);
+                if (idx >= 0) {
+                    animatingElements.splice(idx, 1);
+                }
             }
             animators.length = 0;
         }
@@ -12900,7 +12906,9 @@ define('zrender/zrender', [
     };
     Group.prototype.removeChild = function (child) {
         var idx = util.indexOf(this._children, child);
-        this._children.splice(idx, 1);
+        if (idx >= 0) {
+            this._children.splice(idx, 1);
+        }
         child.parent = null;
         if (this._storage) {
             this._storage.delFromMap(child.id);
@@ -13736,10 +13744,10 @@ define('zrender/zrender', [
                 if (pos == null || pos[0] == null || pos[1] == null) {
                     continue;
                 }
-                mlData[0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
-                mlData[0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
-                mlData[1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
-                mlData[1].y = mlData[1].y != null ? mlData[1].y : pos[1][1];
+                markLine.data[i][0].x = mlData[0].x != null ? mlData[0].x : pos[0][0];
+                markLine.data[i][0].y = mlData[0].y != null ? mlData[0].y : pos[0][1];
+                markLine.data[i][1].x = mlData[1].x != null ? mlData[1].x : pos[1][0];
+                markLine.data[i][1].y = mlData[1].y != null ? mlData[1].y : pos[1][1];
             }
             var shapeList = this._markLine(seriesIndex, markLine);
             var isLarge = markLine.large;
@@ -15052,7 +15060,8 @@ define('zrender/zrender', [
                 if (lineType == 'solid') {
                     ctx.lineTo(style.xEnd, style.yEnd);
                 } else {
-                    dashedLineTo(ctx, style.xStart, style.yStart, style.xEnd, style.yEnd);
+                    var dashLength = (style.lineWidth || 1) * (style.lineType == 'dashed' ? 5 : 1);
+                    dashedLineTo(ctx, style.xStart, style.yStart, style.xEnd, style.yEnd, dashLength);
                 }
             }
         },
