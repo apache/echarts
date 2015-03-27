@@ -159,6 +159,7 @@ function launchExample() {
             'echarts/chart/map',
             'echarts/chart/gauge',
             'echarts/chart/funnel',
+            'echarts/chart/treemap',
             'echarts/chart/eventRiver'
         ],
         requireCallback

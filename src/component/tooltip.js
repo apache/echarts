@@ -1483,6 +1483,7 @@ define(function (require) {
                     case ecConfig.CHART_TYPE_LINE :
                     case ecConfig.CHART_TYPE_BAR :
                     case ecConfig.CHART_TYPE_K :
+                    case ecConfig.CHART_TYPE_TREEMAP :
                         if (this.component.xAxis == null 
                             || this.component.yAxis == null
                             || serie.data.length <= dataIndex
@@ -1551,6 +1552,7 @@ define(function (require) {
                     case ecConfig.CHART_TYPE_LINE :
                     case ecConfig.CHART_TYPE_BAR :
                     case ecConfig.CHART_TYPE_K :
+                    case ecConfig.CHART_TYPE_TREEMAP :
                     case ecConfig.CHART_TYPE_SCATTER :
                         var dataIndex = params.dataIndex;
                         for (var i = 0, l = shapeList.length; i < l; i++) {

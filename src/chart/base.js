@@ -1472,7 +1472,9 @@ define(function (require) {
         },
         
         _getAnimationKey: function(shape) {
-            if (this.type != ecConfig.CHART_TYPE_MAP) {
+            if (this.type != ecConfig.CHART_TYPE_MAP
+                && this.type != ecConfig.CHART_TYPE_TREEMAP
+                ) {
                 return ecData.get(shape, 'seriesIndex') + '_'
                        + ecData.get(shape, 'dataIndex')
                        + (shape._mark ? shape._mark : '')
