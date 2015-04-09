@@ -8,12 +8,9 @@
 define(function (require) {
     var ChartBase = require('./base');
     // 图形依赖
-
-    var TextShape = require('zrender/shape/Text');
+    var toolArea = require('zrender/tool/area');
     // 图形依赖
     var RectangleShape = require('zrender/shape/Rectangle');
-    var PathShape = require('zrender/shape/Path');
-
     // 布局依赖
     var TreeMapLayout = require('../layout/TreeMap');
 
@@ -22,7 +19,8 @@ define(function (require) {
     ecConfig.treemap = {
         zlevel: 0,                  // 一级层叠
         z: 1,                       // 二级层叠
-        calculable: false
+        calculable: false,
+        clickable: true
     };
 
     var ecData = require('../util/ecData');
@@ -173,8 +171,9 @@ define(function (require) {
             var rectangleShape =
             {
                 zlevel: this.getZlevelBase(),
-                z: 1,
+                z: this.getZBase(),
                 hoverable: true,
+                clickable: true,
                 style: $.extend({
                     x: x,
                     y: y,
@@ -208,10 +207,11 @@ define(function (require) {
             var marginY = 12;
             var marginX = 5;
             var fontSize = 13;
-            var lineWidth = text.length * 13;
-            var lineHeight = 13;
-            if (marginX + lineWidth > rectangleWidth
-                || marginY + lineHeight > rectangleHeight) {
+            var textFont = fontSize + 'px Arial';
+            var textWidth = toolArea.getTextWidth(text, textFont);
+            var textHeight = toolArea.getTextHeight(text, textFont);
+            if (marginX + textWidth > rectangleWidth
+                || marginY + textHeight > rectangleHeight) {
                 return {};
             }
             var style = {
@@ -220,7 +220,7 @@ define(function (require) {
                 text: text,
                 textPosition: 'specific',
                 textColor: '#777',
-                textFont: fontSize + 'px Arial'
+                textFont: textFont
             };
             return style;
         },
