@@ -79,23 +79,23 @@ define(function (require) {
             }
             var treeMapLayout = new TreeMapLayout(
                 {
-                    areaArr: areaArr,
+                    areas: areaArr,
                     x0: this.x0,
                     y0: this.y0,
                     width0: this.width0,
-                    height0: this.height0
-                   
+                    height0: this.height0           
                 }
             );
-            var locationArr = treeMapLayout.rectangleList
+            var locationArr = treeMapLayout.rectangleList;
             for (var k = 0; k < locationArr.length; k++) {
                 var item = locationArr[k];
+                var color = this.data[k].color || this.zr.getColor(k);
                 this._buildItem(
                     item.x,
                     item.y,
                     item.width,
                     item.height,
-                    this.zr.getColor(k),
+                    color,
                     k
                 )
             };
@@ -118,7 +118,8 @@ define(function (require) {
                 y,
                 width,
                 height,
-                color
+                color,
+                this.data[index].name
             );
             // todo
             ecData.pack(
@@ -128,16 +129,6 @@ define(function (require) {
                 series[0].data[index].name
             );
             this.shapeList.push(rectangle);
-            var label = this.getLabel(
-                rectangle.style.height,
-                rectangle.style.width,
-                rectangle.style.x,
-                rectangle.style.y,
-                this.data[index].name
-            );
-            if (label) {
-                this.shapeList.push(label);
-            }
         },
 
         /**
@@ -154,7 +145,8 @@ define(function (require) {
             y,
             width,
             height,
-            color
+            color,
+            text
         ) {
             var serie = this.series[0];
             var data = this.data;
@@ -167,22 +159,32 @@ define(function (require) {
                 queryTarget,
                 'itemStyle.emphasis'
             ) || {};
-
+            var textStyle = this.getLabel(
+                x,
+                y,
+                width,
+                height,
+                text
+            );
             var emphasisColor = this.getItemStyleColor(emphasis.color, 0, 0, data)
                 || color;
+            var borderWidth = normal.borderWidth || 0;
+            var borderColor = normal.borderColor || color;
             var rectangleShape =
             {
-                zlevel: 1,
+                zlevel: this.getZlevelBase(),
                 z: 1,
                 hoverable: true,
-                style: {
+                style: $.extend({
                     x: x,
                     y: y,
                     width: width,
                     height: height,
                     brushType: 'both',
-                    color: color
-                },
+                    color: color,
+                    lineWidth: borderWidth,
+                    strokeColor: borderColor
+                }, textStyle),
                 highlightStyle: {
                     color: emphasisColor,
                     lineWidth: emphasis.borderWidth,
@@ -194,39 +196,35 @@ define(function (require) {
 
         },
         getLabel: function (
-            rectangleHeight,
-            rectangleWidth,
             rectangleX,
             rectangleY,
+            rectangleWidth,
+            rectangleHeight,
             text
         ) {
             if (!this.series[0].itemStyle.normal.label.show) {
-                return false;
+                return {};
             }
             var marginY = 12;
             var marginX = 5;
             var fontSize = 13;
             var lineWidth = text.length * 13;
-            var lineHeight = text.length * 13;
+            var lineHeight = 13;
             if (marginX + lineWidth > rectangleWidth
                 || marginY + lineHeight > rectangleHeight) {
-                return false;
+                return {};
             }
-            var textShape = {
-                zlevel: 2,
-                hoverable: false,
-                style: {
-                    x: rectangleX + marginX,
-                    y: rectangleY + marginY,
-                    text: text,
-                    textAlign: 'left',
-                    color: '#777',
-                    textFont: fontSize + 'px Arial'
-                }
-
+            var style = {
+                textX: rectangleX + marginX,
+                textY: rectangleY + marginY,
+                text: text,
+                textPosition: 'specific',
+                textColor: '#777',
+                textFont: fontSize + 'px Arial'
             };
-            return new TextShape(textShape);
+            return style;
         },
+
         /**
          * 刷新
          */

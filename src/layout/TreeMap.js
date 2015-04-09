@@ -9,7 +9,7 @@ define(function (require) {
         // 包含子矩形坐标与宽高的数组
         this.rectangleList = [];
         /**
-         * areaArr 每个子矩形面积
+         * areas 每个子矩形面积
          * x0 父矩形横坐标
          * y0 父矩形横坐标
          * width0 父矩形宽
@@ -22,11 +22,11 @@ define(function (require) {
             height: opts.height0
         };
         this.squarify(
-            opts.areaArr,
+            opts.areas,
             row
         );
     }
-    TreeMapLayout.prototype.squarify = function (areaArr, row) {
+    TreeMapLayout.prototype.squarify = function (areas, row) {
         var layoutDirection = 'VERTICAL';
         var width = row.width;
         var height = row.height;
@@ -37,7 +37,7 @@ define(function (require) {
         }
         // 把考虑方向与位置的因素剥离出来，只考虑怎么排列，运行完毕之后再修正
         var shapeArr = this.getShapeListInAbstractRow(
-            areaArr, width, height
+            areas, width, height
         );
         // 首先换算出虚拟的x、y坐标
         for (var i = 0; i < shapeArr.length; i++) {
@@ -86,7 +86,7 @@ define(function (require) {
             };
         }
         // 下一步的矩形数组要剔除已经填充过的矩形
-        var nextAreaArr = areaArr.slice(shapeArr.length);
+        var nextAreaArr = areas.slice(shapeArr.length);
         if (nextAreaArr.length === 0) {
             return;
         }
@@ -98,12 +98,12 @@ define(function (require) {
         }
     };
     TreeMapLayout.prototype.getShapeListInAbstractRow = function (
-        areaArr,
+        areas,
         width,
         height
     ) {
         // 如果只剩下一个了，直接返回
-        if (areaArr.length === 1) {
+        if (areas.length === 1) {
             return [
                 {
                     width: width,
@@ -113,15 +113,15 @@ define(function (require) {
         }
         // 填充进入的个数，从填充一个开始到填充所有小矩形，
         // 纵横比最优时break并保留结果
-        for (var count = 1; count < areaArr.length; count++) {
+        for (var count = 1; count < areas.length; count++) {
 
             var shapeArr0 = this.placeFixedNumberRectangles(
-                areaArr.slice(0, count),
+                areas.slice(0, count),
                 width,
                 height
             );
             var shapeArr1 = this.placeFixedNumberRectangles(
-                areaArr.slice(0, count + 1),
+                areas.slice(0, count + 1),
                 width,
                 height
             );
