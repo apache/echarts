@@ -14,7 +14,6 @@ define(function() {
         CHART_TYPE_SCATTER: 'scatter',
         CHART_TYPE_PIE: 'pie',
         CHART_TYPE_RADAR: 'radar',
-        CHART_TYPE_VENN: 'venn',
         CHART_TYPE_MAP: 'map',
         CHART_TYPE_K: 'k',
         CHART_TYPE_ISLAND: 'island',
@@ -39,12 +38,13 @@ define(function() {
         COMPONENT_TYPE_Y_AXIS: 'yAxis',
         COMPONENT_TYPE_AXIS_CATEGORY: 'categoryAxis',
         COMPONENT_TYPE_AXIS_VALUE: 'valueAxis',
+        COMPONENT_TYPE_AXIS_LOG: 'logAxis', /* Zoomdata, Ievgenii */
         COMPONENT_TYPE_TIMELINE: 'timeline',
         COMPONENT_TYPE_ROAMCONTROLLER: 'roamController',
 
         // 全图默认背景
         backgroundColor: 'rgba(0,0,0,0)',
-        
+
         // 默认色板
         color: ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
                 '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
@@ -71,7 +71,7 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: 各异，
-                    // borderColor: 各异,        // 标注边线颜色，优先于color 
+                    // borderColor: 各异,        // 标注边线颜色，优先于color
                     borderWidth: 2,             // 标注边线线宽，单位px，默认为1
                     label: {
                         show: true,
@@ -93,7 +93,7 @@ define(function() {
                 }
             }
         },
-        
+
         markLine: {
             clickable: true,
             // 标线起始和结束的symbol介绍类型，如果都一样，可以直接传string
@@ -123,7 +123,7 @@ define(function() {
             itemStyle: {
                 normal: {
                     // color: 各异,               // 标线主色，线色，symbol主色
-                    // borderColor: 随color,     // 标线symbol边框颜色，优先于color 
+                    // borderColor: 随color,     // 标线symbol边框颜色，优先于color
                     borderWidth: 1.5,           // 标线symbol边框线宽，单位px，默认为2
                     label: {
                         show: true,
