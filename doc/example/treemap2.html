@@ -41,7 +41,7 @@
 option = {
     title : {
         text: '手机占有率',
-        subtext: '最少配置例子'
+        subtext: '复杂配置例子'
     },
     tooltip : {
         trigger: 'item',
@@ -56,7 +56,6 @@ option = {
             saveAsImage : {show: true}
         }
     },
-    calculable : false,
     series : [
         {
             name:'矩形图',
@@ -65,44 +64,117 @@ option = {
                 normal: {
                     label: {
                         show: true,
-                        formatter: "{b}"
+                        formatter: "{b}: {c}"
                     },
-                    borderWidth: 1
+                    borderWidth: 1,
+                    borderColor: '#ccc'
                 },
                 emphasis: {
                     label: {
                         show: true
-                    }
+                    },
+                    color: '#cc99cc',
+                    borderWidth: 3,
+                    borderColor: '#996699'
                 }
             },
             data:[
                 {
                     name: '魅族',
-                    value: 6
+                    value: 6,
+                    itemStyle: {
+                        normal: {
+                            label: {
+                                show: true,
+                                formatter : "{b}最多，值为{c}",
+                                textStyle: {
+                                    color: '#ccc',
+                                    fontSize: 16
+                                }
+                            },
+                            color: '#ccff99',
+                            borderWidth: 1
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                formatter : "{b}: {c}",
+                                textStyle: {
+                                    color: 'red',
+                                    fontSize: 18
+                                }
+                            },
+                            color: '#cc9999',
+                            borderWidth: 3,
+                            borderColor: '#999999'
+                        }
+                    }
                 },
                 {
                     name: '小米',
-                    value: 6
+                    value: 6,
+                    itemStyle: {
+                        normal: {
+                            color: '#99ccff',
+                        }
+                    }
                 },
                 {
                     name: '苹果',
-                    value: 4
+                    value: 4,
+                    itemStyle: {
+                        normal: {
+                            color: '#9999cc',
+                        }
+                    }
                 },
                 {
                     name: '三星',
-                    value: 3
+                    value: 3,
+                    itemStyle: {
+                        normal: {
+                            color: '#99cccc',
+                        }
+                    }
                 },
                 {
                     name: '华为',
-                    value: 2
+                    value: 2,
+                    itemStyle: {
+                        normal: {
+                            color: '#ccffcc',
+                        }
+                    }
                 },
                 {
                     name: '联想',
-                    value: 2
+                    value: 2,
+                    itemStyle: {
+                        normal: {
+                            color: '#ccccff',
+                        }
+                    }
                 },
                 {
                     name: '中兴',
-                    value: 1
+                    value: 1,
+                    itemStyle: {
+                        normal: {
+                            label: {
+                                show: true,
+                                formatter: "{b}: {c}",
+                            },
+                            borderWidth: 3
+                        },
+                        emphasis: {
+                            label: {
+                                show: true
+                            },
+                            color: '#cc9999',
+                            borderWidth: 3,
+                            borderColor: '#999999'
+                        }
+                    }
                 }
             ]
         }

@@ -11,6 +11,7 @@ define(function (require) {
     var toolArea = require('zrender/tool/area');
     // 图形依赖
     var RectangleShape = require('zrender/shape/Rectangle');
+    var TextShape = require('zrender/shape/Text');
     // 布局依赖
     var TreeMapLayout = require('../layout/TreeMap');
 
@@ -87,16 +88,15 @@ define(function (require) {
             var locationArr = treeMapLayout.rectangleList;
             for (var k = 0; k < locationArr.length; k++) {
                 var item = locationArr[k];
-                var color = this.data[k].color || this.zr.getColor(k);
+                // var color = this.data[k].color || this.zr.getColor(k);
                 this._buildItem(
                     item.x,
                     item.y,
                     item.width,
                     item.height,
-                    color,
                     k
-                )
-            };
+                );
+            }
         },
 
         /**
@@ -107,7 +107,6 @@ define(function (require) {
             y,
             width,
             height,
-            color,
             index
         ) {
             var series = this.series;
@@ -116,8 +115,8 @@ define(function (require) {
                 y,
                 width,
                 height,
-                color,
-                this.data[index].name
+                this.data[index].name,
+                index
             );
             // todo
             ecData.pack(
@@ -143,11 +142,11 @@ define(function (require) {
             y,
             width,
             height,
-            color,
-            text
+            text,
+            index
         ) {
             var serie = this.series[0];
-            var data = this.data;
+            var data = this.data[index];
             var queryTarget = [data, serie];
             var normal = this.deepMerge(
                 queryTarget,
@@ -157,17 +156,18 @@ define(function (require) {
                 queryTarget,
                 'itemStyle.emphasis'
             ) || {};
-            var textStyle = this.getLabel(
+            var color = normal.color || this.zr.getColor(index);
+            var emphasisColor = emphasis.color || this.zr.getColor(index);
+            var borderWidth = normal.borderWidth || 0;
+            var borderColor = normal.borderColor || '#ccc';
+            var textShape = this.getLabel(
                 x,
                 y,
                 width,
                 height,
-                text
+                this.data[index].name,
+                index
             );
-            var emphasisColor = this.getItemStyleColor(emphasis.color, 0, 0, data)
-                || color;
-            var borderWidth = normal.borderWidth || 0;
-            var borderColor = normal.borderColor || color;
             var rectangleShape =
             {
                 zlevel: this.getZlevelBase(),
@@ -183,12 +183,12 @@ define(function (require) {
                     color: color,
                     lineWidth: borderWidth,
                     strokeColor: borderColor
-                }, textStyle),
-                highlightStyle: {
+                }, textShape.style),
+                highlightStyle: $.extend({
                     color: emphasisColor,
                     lineWidth: emphasis.borderWidth,
                     strokeColor: emphasis.borderColor
-                }
+                }, textShape.highlightStyle)
             };
 
             return new RectangleShape(rectangleShape);
@@ -199,7 +199,8 @@ define(function (require) {
             rectangleY,
             rectangleWidth,
             rectangleHeight,
-            text
+            text,
+            index
         ) {
             if (!this.series[0].itemStyle.normal.label.show) {
                 return {};
@@ -214,15 +215,48 @@ define(function (require) {
                 || marginY + textHeight > rectangleHeight) {
                 return {};
             }
-            var style = {
-                textX: rectangleX + marginX,
-                textY: rectangleY + marginY,
-                text: text,
-                textPosition: 'specific',
-                textColor: '#777',
-                textFont: textFont
+            var data = this.data[index];
+
+            // 用label方法写title
+            var textShape = {
+                zlevel: this.getZlevelBase() + 1,
+                z: this.getZBase() + 1,
+                hoverable: false,
+                style: {
+                    x: rectangleX + marginX,
+                    y: rectangleY + marginY,
+                    text: text,
+                    textColor: '#777',
+                    textFont: textFont
+                },
+                highlightStyle: {
+                    text: text
+                }
             };
-            return style;
+            textShape = {
+                style: {
+                    text: text
+                },
+                highlightStyle: {
+                    text: text
+                }
+            };
+            textShape = this.addLabel(
+                textShape,
+                this.series[0],
+                data,
+                text
+            );
+            textShape.style.textPosition = 'specific';
+            textShape.style.textX = rectangleX + marginX;
+            textShape.style.textY = rectangleY + marginY;
+            textShape.style.textColor = textShape.style.textColor || '#777';
+
+            textShape.highlightStyle.textPosition = 'specific';
+            textShape.highlightStyle.textX = rectangleX + marginX;
+            textShape.highlightStyle.textY = rectangleY + marginY;
+            textShape.highlightStyle.textColor = textShape.highlightStyle.textColor || '#777';
+            return textShape;
         },
 
         /**

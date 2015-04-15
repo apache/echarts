@@ -41,7 +41,7 @@
 option = {
     title : {
         text: '手机占有率',
-        subtext: '各个数据的集合'
+        subtext: '数据下钻例子'
     },
     tooltip : {
         trigger: 'item',
@@ -64,12 +64,16 @@ option = {
             itemStyle: {
                 normal: {
                     label: {
-                        show: true
+                        show: true,
+                        formatter: "{b}"
                     },
                     borderWidth: 1,
                     borderColor: '#ccc'
                 },
                 emphasis: {
+                    label: {
+                        show: true
+                    },
                     color: '#cc99cc',
                     borderWidth: 3,
                     borderColor: '#996699'
@@ -78,34 +82,58 @@ option = {
             data:[
                 {
                     name: '魅族',
-                    color: '#ccff99',
+                    itemStyle: {
+                        normal: {
+                            color: '#ccff99',
+                        }
+                    },
                     value: 6,
                     children: [
                         {
                             name: 'MX4',
-                            color: '#ccccff',
+                            itemStyle: {
+                                normal: {
+                                    color: '#ccccff',
+                                }
+                            },
                             value: 6
                         },
                         {
                             name: 'MX3',
-                            color: '#99ccff',
+                            itemStyle: {
+                                normal: {
+                                    color: '#99ccff',
+                                }
+                            },
                             value: 6
                         },
                         {
                             name: '魅蓝note',
-                            color: '#9999cc',
+                            itemStyle: {
+                                normal: {
+                                    color: '#9999cc',
+                                }
+                            },
                             value: 4
                         },
                         {
                             name: 'MX4 pro',
-                            color: '#99cccc',
+                            itemStyle: {
+                                normal: {
+                                    color: '#99cccc',
+                                }
+                            },
                             value: 3
                         }
                     ]
                 },
                 {
                     name: '小米',
-                    color: '#99ccff',
+                    itemStyle: {
+                        normal: {
+                            color: '#99ccff',
+                        }
+                    },
                     value: 6,
                     children: [
                         {
@@ -127,57 +155,71 @@ option = {
                 },
                 {
                     name: '苹果',
-                    color: '#9999cc',
+                    itemStyle: {
+                        normal: {
+                            color: '#9999cc',
+                        }
+                    },
                     value: 4
                 },
                 {
                     name: '三星',
-                    color: '#99cccc',
+                    itemStyle: {
+                        normal: {
+                            color: '#99cccc',
+                        }
+                    },
                     value: 3
                 },
                 {
                     name: '华为',
-                    color: '#ccffcc',
+                    itemStyle: {
+                        normal: {
+                            color: '#ccffcc',
+                        }
+                    },
                     value: 2
                 },
                 {
                     name: '联想',
-                    color: '#ccccff',
+                    itemStyle: {
+                        normal: {
+                            color: '#ccccff',
+                        }
+                    },
                     value: 2
                 },
                 {
                     name: '中兴',
-                    color: '#ffffcc',
+                    itemStyle: {
+                        normal: {
+                            color: '#ffffcc',
+                        }
+                    },
                     value: 1,
                     children: [
                         {
                             name: 'V5',
-                            color: '#ccccff',
                             value: 16
                         },
                         {
                             name: '努比亚',
-                            color: '#ccffcc',
                             value: 6
                         },
                         {
                             name: '功能机',
-                            color: '#9999cc',
                             value: 4
                         },
                         {
                             name: '青漾',
-                            color: '#99cccc',
                             value: 4
                         },
                         {
                             name: '星星',
-                            color: '#ccffff',
                             value: 4
                         },
                         {
                             name: '儿童机',
-                            color: '#99ccff',
                             value: 1
                         }
                     ]
