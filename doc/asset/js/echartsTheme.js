@@ -37,6 +37,12 @@ function refreshAll() {
     }
 }
 
+function download() {
+    if (theme) {
+        window.open('theme/' + theme + '.js');
+    }
+}
+
 var hash = window.location.hash.replace('#','') || 'infographic';
 if ($('[name=theme-select]').val(hash).val() != hash) {
     $('[name=theme-select]').val('infographic');

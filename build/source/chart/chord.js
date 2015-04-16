@@ -827,6 +827,8 @@ define('echarts/chart/chord', [
             var _merge = zrUtil.merge;
             opt = _merge(_merge(opt || {}, this.ecTheme.chord), ecConfig.chord);
             opt.itemStyle.normal.label.textStyle = this.getTextStyle(opt.itemStyle.normal.label.textStyle);
+            this.z = opt.z;
+            this.zlevel = opt.zlevel;
         }
     };
     zrUtil.inherits(Chord, ChartBase);

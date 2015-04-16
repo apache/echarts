@@ -31,6 +31,10 @@ if (themeSelector) {
         + '<option name="red">red</option>'
         + '<option name="gray">gray</option>'
         + '<option name="helianthus">helianthus</option>'
+        + '<option name="roma">roma</option>'
+        + '<option name="mint">mint</option>'
+        + '<option name="macarons2">macarons2</option>'
+        + '<option name="sakura">sakura</option>'
         + '<option name="default">default</option>'
     );
     $(themeSelector).on('change', function(){
@@ -163,7 +167,7 @@ if (developMode) {
                     },
                     {
                         name: 'zrender',
-                        //location: 'http://ecomfe.github.io/zrender/src',
+                        // location: 'http://ecomfe.github.io/zrender/src',
                         location: '../../../zrender/src',
                         main: 'zrender'
                     }
