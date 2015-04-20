@@ -41,7 +41,7 @@ define(function (require) {
     }
     
     Venn.prototype = {
-        type : ecConfig.CHART_TYPE_RADAR,
+        type : ecConfig.CHART_TYPE_VENN,
         /**
          * 绘制图形
          */
@@ -323,7 +323,7 @@ define(function (require) {
                     brushType: 'fill',
                     opacity: 1,
                     color: defaultColor
-                },
+                }                ,
                 highlightStyle: {
                     color: emphasisColor,
                     lineWidth: emphasis.borderWidth,

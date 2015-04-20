@@ -210,6 +210,8 @@ function launchExample() {
             'echarts/chart/gauge',
             'echarts/chart/funnel',
             'echarts/chart/eventRiver',
+            'echarts/chart/venn',
+            'echarts/chart/treemap',
             needMap() ? 'echarts/chart/map' : 'echarts'
         ],
         requireCallback
