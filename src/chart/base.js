@@ -381,8 +381,8 @@ define(function (require) {
                     if (iconShape) {
                         // 回调legend，换一个更形象的icon
                         var style = iconShape.style;
-                        if (this.type == style.iconType||ecConfig.CHART_TYPE_LINE) {
-                            style.iconType = 'legendLineIcon';
+                        if (this.type == ecConfig.CHART_TYPE_LINE) {
+                            style.iconType = style.iconType||'legendLineIcon';
                             style.symbol =  this._sIndex2ShapeMap[seriesArray[i]];
                         }
                         else if (serie.itemStyle.normal.barBorderWidth > 0) {
