@@ -375,7 +375,17 @@ define('echarts/chart/force', [
                     shape.style.color = category ? this.getColor(category.name) : this.getColor(node.id);
                 }
                 shape.style.iconType = this.deepQuery(queryTarget, 'symbol');
-                shape.style.width = shape.style.height = (this.deepQuery(queryTarget, 'symbolSize') || 0) * 2;
+                
+                ////////////xiayang edit by 20150421 start//////////
+                var _symbolSize = this.deepQuery(queryTarget, 'symbolSize') || 0;
+                if( isNaN( _symbolSize ) && _symbolSize.length == 2) {
+                	shape.style.width = _symbolSize[0] * 2;
+                	shape.style.height = _symbolSize[1] * 2;
+                } else {
+                	shape.style.width = shape.style.height = _symbolSize * 2;
+                } 
+                //////////xiayang edit by 20150421 end//////////
+                
                 if (shape.style.iconType.match('image')) {
                     shape.style.image = shape.style.iconType.replace(new RegExp('^image:\\/\\/'), '');
                     shape = new ImageShape({
