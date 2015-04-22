@@ -414,18 +414,19 @@ define(function (require) {
 
             this._steps = serie.steps || 1;
 
-            this._layout.center = this.parseCenter(this.zr, serie.center);
-            this._layout.width = this.parsePercent(serie.size, this.zr.getWidth());
-            this._layout.height = this.parsePercent(serie.size, this.zr.getHeight());
+            var layout = this._layout;
+            layout.center = this.parseCenter(this.zr, serie.center);
+            layout.width = this.parsePercent(serie.size, this.zr.getWidth());
+            layout.height = this.parsePercent(serie.size, this.zr.getHeight());
 
-            this._layout.large = serie.large;
-            this._layout.scaling = serie.scaling;
-            this._layout.ratioScaling = serie.ratioScaling;
-            this._layout.gravity = serie.gravity;
-            this._layout.temperature = 1;
-            this._layout.coolDown = serie.coolDown;
-            this._layout.preventNodeEdgeOverlap = serie.preventOverlap;
-            this._layout.preventNodeOverlap = serie.preventOverlap;
+            layout.large = serie.large;
+            layout.scaling = serie.scaling;
+            layout.ratioScaling = serie.ratioScaling;
+            layout.gravity = serie.gravity;
+            layout.temperature = 1;
+            layout.coolDown = serie.coolDown;
+            layout.preventNodeEdgeOverlap = serie.preventOverlap;
+            layout.preventNodeOverlap = serie.preventOverlap;
 
             // 将值映射到minRadius-maxRadius的范围上
             var min = Infinity; var max = -Infinity;
@@ -537,9 +538,13 @@ define(function (require) {
                 }
 
                 shape.style.iconType = this.deepQuery(queryTarget, 'symbol');
+                var symbolSize = this.deepQuery(queryTarget, 'symbolSize') || 0;
+                if (typeof symbolSize === 'number') {
+                    symbolSize = [symbolSize, symbolSize];
+                }
                 // 强制设定节点大小，否则默认映射到 minRadius 到 maxRadius 后的值
-                shape.style.width = shape.style.height
-                    = (this.deepQuery(queryTarget, 'symbolSize') || 0) * 2;
+                shape.style.width = symbolSize[0] * 2;
+                shape.style.height = symbolSize[1] * 2;
 
                 if (shape.style.iconType.match('image')) {
                     shape.style.image = shape.style.iconType.replace(
