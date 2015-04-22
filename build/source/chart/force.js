@@ -382,7 +382,7 @@ define('echarts/chart/force', [
                 	shape.style.width = _symbolSize[0] * 2;
                 	shape.style.height = _symbolSize[1] * 2;
                 } else {
-                	shape.style.width = shape.style.height = (this.deepQuery(queryTarget, 'symbolSize') || 0) * 2;
+                	shape.style.width = shape.style.height = _symbolSize * 2;
                 } 
                 //////////xiayang edit by 20150421 end//////////
                 
