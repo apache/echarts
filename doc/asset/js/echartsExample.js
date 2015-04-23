@@ -129,7 +129,7 @@ function needMap() {
 }
 
 var echarts;
-var developMode = true;
+var developMode = false;
 
 if (developMode) {
     window.esl = null;
@@ -167,8 +167,8 @@ if (developMode) {
                     },
                     {
                         name: 'zrender',
-                        location: 'http://ecomfe.github.io/zrender/src',
-                        // location: '../../../zrender/src',
+                        // location: 'http://ecomfe.github.io/zrender/src',
+                        location: '../../../zrender/src',
                         main: 'zrender'
                     }
                 ]
