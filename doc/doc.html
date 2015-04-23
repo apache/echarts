@@ -2923,6 +2923,13 @@ indicator : [
                             <td> 平滑曲线显示，smooth为true时lineStyle不支持虚线</td>
                         </tr>
                         <tr>
+                            <td> <b>{boolean}</b> dataFilter </td>
+                            <td> 'nearst' </td>
+                            <td> 折线图 </td>
+                            <td> ECharts 会在折线图的数据数量大于实际显示的像素宽度（高度）的时候会启用优化，对显示在一个像素宽度内的数据做筛选，该选项是指明数据筛选的策略。<br /><br />
+                                可选 'nearest', 'min', 'max', 'average'。或者是使用自定义的筛选函数</td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean}</b> large </td>
                             <td> false </td>
                             <td> 散点图  </td>

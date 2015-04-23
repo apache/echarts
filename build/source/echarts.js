@@ -13220,7 +13220,7 @@ define('zrender/zrender', [
                 var y_ = curve.quadraticAt(y0, y1, y2, t);
                 for (var i = 0; i < nRoots; i++) {
                     var x_ = curve.quadraticAt(x0, x1, x2, roots[i]);
-                    if (x_ > x) {
+                    if (x_ < x) {
                         continue;
                     }
                     if (roots[i] < t) {
@@ -13232,7 +13232,7 @@ define('zrender/zrender', [
                 return w;
             } else {
                 var x_ = curve.quadraticAt(x0, x1, x2, roots[0]);
-                if (x_ > x) {
+                if (x_ < x) {
                     return 0;
                 }
                 return y2 < y0 ? 1 : -1;
@@ -17630,6 +17630,9 @@ define('zrender/zrender', [
     Base.prototype = {
         canvasSupported: require('zrender/tool/env').canvasSupported,
         _getZ: function (zWhat) {
+            if (this[zWhat] != null) {
+                return this[zWhat];
+            }
             var opt = this.ecTheme[this.type];
             if (opt && opt[zWhat] != null) {
                 return opt[zWhat];
@@ -17647,7 +17650,10 @@ define('zrender/zrender', [
             return this._getZ('z');
         },
         reformOption: function (opt) {
-            return zrUtil.merge(zrUtil.merge(opt || {}, zrUtil.clone(this.ecTheme[this.type] || {})), zrUtil.clone(ecConfig[this.type] || {}));
+            opt = zrUtil.merge(zrUtil.merge(opt || {}, zrUtil.clone(this.ecTheme[this.type] || {})), zrUtil.clone(ecConfig[this.type] || {}));
+            this.z = opt.z;
+            this.zlevel = opt.zlevel;
+            return opt;
         },
         reformCssArray: function (p) {
             if (p instanceof Array) {

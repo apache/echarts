@@ -2,6 +2,8 @@ ECharts
 =======
 百度 (中文) : http://echarts.baidu.com
 
+在线视频教程：http://study.163.com/course/courseMain.htm?courseId=1016007
+
 Why ECharts (中文) : http://echarts.baidu.com/doc/slide/whyEcharts.html
 
 Github pages (English) : http://ecomfe.github.io/echarts/index-en.html

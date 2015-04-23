@@ -28,6 +28,7 @@ define('echarts/chart/line', [
         legendHoverLink: true,
         xAxisIndex: 0,
         yAxisIndex: 0,
+        dataFilter: 'nearest',
         itemStyle: {
             normal: {
                 label: { show: false },
@@ -393,7 +394,7 @@ define('echarts/chart/line', [
                                 }
                             }
                         } else {
-                            singlePL = this._getLargePointList(orient, singlePL);
+                            singlePL = this._getLargePointList(orient, singlePL, serie.dataFilter);
                         }
                         var polylineShape = new PolylineShape({
                             zlevel: this.getZlevelBase(),
@@ -482,7 +483,7 @@ define('echarts/chart/line', [
                 return orient === 'horizontal' ? Math.abs(singlePL[0][0] - singlePL[1][0]) < 0.5 : Math.abs(singlePL[0][1] - singlePL[1][1]) < 0.5;
             }
         },
-        _getLargePointList: function (orient, singlePL) {
+        _getLargePointList: function (orient, singlePL, filter) {
             var total;
             if (orient === 'horizontal') {
                 total = this.component.grid.getWidth();
@@ -491,8 +492,62 @@ define('echarts/chart/line', [
             }
             var len = singlePL.length;
             var newList = [];
+            if (typeof filter != 'function') {
+                switch (filter) {
+                case 'min':
+                    filter = function (arr) {
+                        return Math.max.apply(null, arr);
+                    };
+                    break;
+                case 'max':
+                    filter = function (arr) {
+                        return Math.min.apply(null, arr);
+                    };
+                    break;
+                case 'average':
+                    filter = function (arr) {
+                        var total = 0;
+                        for (var i = 0; i < arr.length; i++) {
+                            total += arr[i];
+                        }
+                        return total / arr.length;
+                    };
+                    break;
+                default:
+                    filter = function (arr) {
+                        return arr[0];
+                    };
+                }
+            }
+            var windowData = [];
             for (var i = 0; i < total; i++) {
-                newList[i] = singlePL[Math.floor(len / total * i)];
+                var idx0 = Math.floor(len / total * i);
+                var idx1 = Math.min(Math.floor(len / total * (i + 1)), len);
+                if (idx1 <= idx0) {
+                    continue;
+                }
+                for (var j = idx0; j < idx1; j++) {
+                    windowData[j - idx0] = orient === 'horizontal' ? singlePL[j][1] : singlePL[j][0];
+                }
+                windowData.length = idx1 - idx0;
+                var filteredVal = filter(windowData);
+                var nearestIdx = -1;
+                var minDist = Infinity;
+                for (var j = idx0; j < idx1; j++) {
+                    var val = orient === 'horizontal' ? singlePL[j][1] : singlePL[j][0];
+                    var dist = Math.abs(val - filteredVal);
+                    if (dist < minDist) {
+                        nearestIdx = j;
+                        minDist = dist;
+                    }
+                }
+                var newItem = singlePL[nearestIdx].slice();
+                if (orient === 'horizontal') {
+                    newItem[1] = filteredVal;
+                } else {
+                    newItem[0] = filteredVal;
+                }
+                newList.push(newItem);
             }
             return newList;
         },

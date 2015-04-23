@@ -569,6 +569,8 @@ define('echarts/chart/pie', [
             opt = _merge(_merge(opt || {}, zrUtil.clone(this.ecTheme.pie || {})), zrUtil.clone(ecConfig.pie));
             opt.itemStyle.normal.label.textStyle = this.getTextStyle(opt.itemStyle.normal.label.textStyle);
             opt.itemStyle.emphasis.label.textStyle = this.getTextStyle(opt.itemStyle.emphasis.label.textStyle);
+            this.z = opt.z;
+            this.zlevel = opt.zlevel;
             return opt;
         },
         refresh: function (newOption) {
