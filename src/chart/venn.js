@@ -95,14 +95,12 @@ define(function (require) {
             var y = this.zr.getHeight() / 2;
             this._buildItem(
                 0, 0,
-                data[0].color || this.zr.getColor(0),
                 x0,
                 y,
                 r0
             );
             this._buildItem(
                 0, 1,
-                data[1].color || this.zr.getColor(1),
                 x1,
                 y,
                 r1
@@ -132,8 +130,7 @@ define(function (require) {
                     rightLargeArcFlag = 1;
                 }
                 this._buildCoincideItem(
-                    2, 2,
-                    data[2].color || this.zr.getColor(2),
+                    2,
                     x0 + xLeft,
                     y - h,
                     y + h,
@@ -203,13 +200,13 @@ define(function (require) {
          * 构建单个圆及指标
          */
         _buildItem : function (
-            seriesIndex, dataIndex, defaultColor,
+            seriesIndex, dataIndex,
             x, y, r
         ) {
             var series = this.series;
 
             var circle = this.getCircle(
-                    seriesIndex, dataIndex, defaultColor,
+                    dataIndex,
                     x, y, r
                 );
             ecData.pack(
@@ -223,7 +220,7 @@ define(function (require) {
             if (series[0].itemStyle.normal.label.show) {
                 // 文本标签
                 var label = this.getLabel(
-                        seriesIndex, dataIndex, defaultColor,
+                        dataIndex,
                         x, y, r
                     );
                 ecData.pack(
@@ -237,7 +234,7 @@ define(function (require) {
         },
 
         _buildCoincideItem : function (
-            seriesIndex, dataIndex, defaultColor,
+            dataIndex,
             x, y0, y1, r0, r1, rightLargeArcFlag, leftLargeArcFlag
         ) {
             var series = this.series;
@@ -254,15 +251,14 @@ define(function (require) {
                 queryTarget,
                 'itemStyle.emphasis'
             ) || {};
-
-            var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data)
-                || defaultColor;
+            var normalColor = normal.color || this.zr.getColor(dataIndex);
+            var emphasisColor = emphasis.color || this.zr.getColor(dataIndex);
 
             var path = 'M' + x + ',' + y0
                        + 'A' + r0 + ',' + r0 + ',0,' + rightLargeArcFlag + ',1,' + x + ',' + y1
                        + 'A' + r1 + ',' + r1 + ',0,' + leftLargeArcFlag + ',1,' + x + ',' + y0;
             var style = {
-                color: defaultColor,
+                color: normalColor,
                 // path: rx ry x-axis-rotation large-arc-flag sweep-flag x y
                 path: path
             };
@@ -293,7 +289,7 @@ define(function (require) {
          * 构建圆形
          */
         getCircle : function (
-            seriesIndex, dataIndex, defaultColor,
+            dataIndex,
             x, y, r
         ) {
             var serie = this.series[0];
@@ -309,9 +305,8 @@ define(function (require) {
                 queryTarget,
                 'itemStyle.emphasis'
             ) || {};
-
-            var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data)
-                || defaultColor;
+            var normalColor = normal.color || this.zr.getColor(dataIndex);
+            var emphasisColor = emphasis.color || this.zr.getColor(dataIndex);
 
             var circle = {
                 zlevel: this.getZlevelBase(),
@@ -322,8 +317,8 @@ define(function (require) {
                     r: r,
                     brushType: 'fill',
                     opacity: 1,
-                    color: defaultColor
-                }                ,
+                    color: normalColor
+                },
                 highlightStyle: {
                     color: emphasisColor,
                     lineWidth: emphasis.borderWidth,
@@ -343,18 +338,26 @@ define(function (require) {
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
         getLabel : function (
-            seriesIndex, dataIndex, defaultColor,
+            dataIndex,
             x, y, r
         ) {
             var serie = this.series[0];
             var itemStyle = serie.itemStyle;
+            var data = this.data[dataIndex];
+            var queryTarget = [data, serie];
+
+            // 多级控制
+            var normal = this.deepMerge(
+                queryTarget,
+                'itemStyle.normal'
+            ) || {};
             var status = 'normal';
             // label配置
             var labelControl = itemStyle[status].label;
             var textStyle = labelControl.textStyle || {};
-            var text = this.getLabelText(seriesIndex, dataIndex, status);
+            var text = this.getLabelText(dataIndex, status);
             var textFont = this.getFont(textStyle);
-            var textColor = defaultColor;
+            var textColor = normal.color || this.zr.getColor(dataIndex);
             // 求出label的纵坐标
             var textSize = textStyle.fontSize || 12;
 
@@ -376,7 +379,7 @@ define(function (require) {
         /**
          * 根据lable.format计算label text
          */
-        getLabelText : function (seriesIndex, dataIndex, status) {
+        getLabelText : function (dataIndex, status) {
             var series = this.series;
             var serie = series[0];
             var data = serie.data[dataIndex];

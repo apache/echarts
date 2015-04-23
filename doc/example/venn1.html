@@ -41,7 +41,7 @@
 option = {
     title : {
         text: '访问 vs 咨询',
-        subtext: '各个数据的集合'
+        subtext: '配置的例子'
     },
     tooltip : {
         trigger: 'item',
@@ -89,9 +89,41 @@ option = {
                 }
             },
             data:[
-                {value:100, name:'访问'},
-                {value:50, name:'咨询'},
-                {value:20, name:'公共'}
+                {
+                    value:100, 
+                    name:'访问',
+                    itemStyle: {
+                        normal: {
+                            color: '#99cccc'
+                        },
+                        emphasis: {
+                            color: '#2ec7c0',
+                            borderWidth: 3,
+                            borderColor: '#ffffcc'
+                        }
+                    }   
+                },
+                {
+                    value:50, 
+                    name:'咨询',
+                    itemStyle: {
+                        normal: {
+                            color: '#99ccff'
+                        }
+                    }  
+                },
+                {
+                    value:20, 
+                    name:'公共',
+                    itemStyle: {
+                        normal: {
+                            color: '#9999cc'
+                        },
+                        emphasis: {
+                            color: '#ccffcc'
+                        }
+                    }  
+                }
             ]
         }
     ]
