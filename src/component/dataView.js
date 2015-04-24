@@ -36,7 +36,7 @@ define(function (require) {
     
         this._tDom.className = 'echarts-dataview';
         this.hide();
-        this.dom.firstChild.appendChild(this._tDom);
+        this.dom.children[0].appendChild(this._tDom);
 
         if (window.addEventListener) {
             this._tDom.addEventListener('click', this._stop);
@@ -443,7 +443,7 @@ define(function (require) {
             this._buttonRefresh = null;
             this._buttonClose = null;
 
-            this.dom.firstChild.removeChild(this._tDom);
+            this.dom.children[0].removeChild(this._tDom);
             this._tDom = null;
         }
     };

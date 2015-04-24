@@ -786,7 +786,7 @@ define(function (require) {
                     img.style.position = 'absolute';
                     img.style.left = 0;
                     img.style.top = 0;
-                    this.dom.firstChild.appendChild(img);
+                    this.dom.children[0].appendChild(img);
                 }
                 this.un();
                 this._zr.un();
