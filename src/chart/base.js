@@ -1039,6 +1039,9 @@ define(function (require) {
             symbolSize = typeof symbolSize === 'function'
                          ? symbolSize(value)
                          : symbolSize;
+            if (typeof symbolSize === 'number') {
+                symbolSize = [symbolSize, symbolSize];
+            }
             var symbolRotate = this.deepQuery(queryTarget, 'symbolRotate');
             
             var normal = this.deepMerge(
@@ -1065,13 +1068,15 @@ define(function (require) {
             var nColor = this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data);
             var eColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data);
             
+            var width = symbolSize[0];
+            var height = symbolSize[1];
             var itemShape = new IconShape({
                 style: {
                     iconType: symbol.replace('empty', '').toLowerCase(),
-                    x: x - symbolSize,
-                    y: y - symbolSize,
-                    width: symbolSize * 2,
-                    height: symbolSize * 2,
+                    x: x - width,
+                    y: y - height,
+                    width: width * 2,
+                    height: height * 2,
                     brushType: 'both',
                     color: symbol.match('empty') 
                            ? emptyColor 
