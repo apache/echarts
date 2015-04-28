@@ -1,252 +1,353 @@
 /**
- * Echarts, Zoomdata 2012-2015
+ * Echarts, logarithmic axis reform
  *
- * @author Ievgenii (@Ievgeny, ievgeny@zoomdata.com)
- *
+ * @author sushuang (sushuang@baidu.com),
+ *         Ievgenii (@Ievgeny, ievgeny@zoomdata.com)
  */
 
-/**
- * @function    smartLogSteps
- * @param       {Number}    min             Minimum
- * @param       {Number}    max             Maximum
- * @param       {Object}    [opts]          Configurable options
- * @param       {Number}     opts.base      Logarithmic base
- * @param       {Boolean}    opts.positive  Logarithmic sign
- * @param       {Boolean}    opts.minLocked Locked min value
- * @param       {Boolean}    opts.maxLocked Locked max value
- * @param       {Boolean}    opts.type      Axis type main/detailed
- * @return      {Object}    {min:           New min,
- *                           max:           New max,
- *                           secs:          Sections amount,
- *                           pnts:          [Array of data points]
- *                           log_pnts:      [Array of logarithmic values of data points]
- *                           positive:      Type of data set (Positive/Negative/Mixed)
- *                           base:          Logarithmic base
- *                           precision:     Coefficient on which logarithm data should be
- *                                          multiplied to obtain data in real min/max borders
- *                           methods:       Set of logarithmic methods}
- */
-define(function() {
+define(function(require) {
 
+    // Reference
+    var zrUtil = require('zrender/tool/util');
+    var Mt = Math;
+    var mathLog = Mt.log;
+    var mathPow = Mt.pow;
+    var mathAbs = Mt.abs;
+    var mathCeil = Mt.ceil;
+    var mathFloor = Mt.floor;
+
+    // Constant
+    var LOG_BASE = Mt.E; // It is not necessary to specify log base,
+                         // because log(logBase, x) = ln(x) / ln(logBase),
+                         // thus final result (axis tick location) is only determined by ln(x).
+    var LN10 = Mt.LN10;
+    var LN2 = Mt.LN2;
+    var LN2D10 = LN2 / LN10;
+    var EPSILON = 1e-9;
+    var DEFAULT_SPLIT_NUMBER = 5;
+    var MIN_BASE_10_SPLIT_NUMBER = 2;
+
+    // Static variable
+    var logPositive;
     var custOpts;
-    var custBase;
-    var positive;
-    var minLocked;
-    var maxLocked;
-    var type;
-    var newMin;
-    var newMax;
-
-    var MT          = Math;
-    var MATH_ROUND  = MT.round;
-    var MATH_FLOOR  = MT.floor;
-    var MATH_CEIL   = MT.ceil;
-    var MATH_ABS    = MT.abs;
-    var MATH_LOG      = MT.log;
-    var MATH_POW      = MT.pow;
-
-    function log(x) {
-        return (positive ? MATH_LOG(x < 0 ? 0 : x) : -MATH_LOG(x > 0 ? 0 : -x)) / MATH_LOG(custBase);
-    }
-    function pow(x) {
-        return positive ? MATh_POW(custBase, x) : -MATH_POW(custBase, -x);
-    }
-    function isint(x) { return x === MATH_FLOOR(x); }
-    function logConverter(arr) { return (domain = arr.map(Number)).map(log); }
+    var splitNumber;
+    var logMappingOffset;
+    var absMin;
+    var absMax;
+    var outputMethods;
+    var tickList;
 
     /**
-     * Main function. Return data object with values for axis building
-     * @param min
-     * @param max
-     * @param opts
-     * @returns {*}
+     * Test cases:
+     * [2, 4, 8, 16, 32, 64, 128]
+     * [2, 4, 8, 16, '-', 64, 128]
+     * [2, 4, 8, 16, 32, 64]
+     * [2, 4, 8, 16, 32]
+     * [0.00000256, 0.0016, 0.04, 0.2]
+     * [0.1, 1, 10, 100, 1000, 10000, 100000, 1000000] splitNumber: 3
+     * [1331, 3434, 500, 1, 1212, 4]
+     * [0.14, 2, 45, 1001, 200, 0.33, 10001]
+     * [0.00001, 0.00005]
+     * [0.00001, 0.00005] boundaryGap: [0.2, 0.4]
+     * [0.001, 2, -45, 1001, 200, 0.33, 10000]
+     * [0.00000001, 0.00000012]
+     * [0.000000000000001]
+     * [0.00000001, 0.00000001]
+     * [3, 3]
+     * [12, -3, 47, 19]
+     * [12, -3, 47, 19] logPositive: false
+     * [-2, -4, -8, -16, -32, -64, -128]
+     * [-2, -4, -8, -16, -32, -64]
+     * [2, 4, 8, 16, 32] boundaryGap: [0.2, 0.4]
+     * []
+     * [0]
+     * [10, 10, 10]
+     * [0.00003, 0.00003, 0.00003]
+     * [0.00001, 0.00001, 0.00001]
+     * [-0.00001, -0.00001, -0.00001]
+     * ['-', '-']
+     * ['-', 10]
      */
-    function smartLogSteps(min, max, opts) {
-        custOpts  = opts || {};
-        custBase  = opts.base || 10;
-        positive  = opts.positive || true;
-        minLocked = opts.minLocked || false;
-        maxLocked = opts.maxLocked || false;
-        newMin = noNull(min, positive);
-        newMax = noNull(max, positive);
-        type = opts.type || 'detailed';
 
-        try {
-            positive = setSign(newMin, newMax);
-        } catch(e) {
-            console.log(e);
+    /**
+     * Main function. Return data object with values for axis building.
+     *
+     * @public
+     * @param {Object} [opts] Configurable options
+     * @param {number} opts.dataMin data Minimum
+     * @param {number} opts.dataMax data Maximum
+     * @param {number=} opts.logPositive Logarithmic sign. If not specified, it will be auto-detected.
+     * @param {number=} opts.splitNumber Number of sections perfered.
+     * @return {Object} {
+     *                      dataMin: New min,
+     *                      dataMax: New max,
+     *                      tickList: [Array of tick data]
+     *                      logPositive: Type of data sign
+     *                      methods: [Set of logarithmic methods]
+     *                  }
+     */
+    function smartLogSteps(opts) {
+        clearStaticVariables();
+        custOpts = opts || {};
+
+        reformSetting();
+        makeTicksList();
+
+        outputMethods = zrUtil.merge({}, makeOutputMethods(logPositive, logMappingOffset));
+
+        return [
+            makeResult(),
+            clearStaticVariables()
+        ][0];
+    }
+
+    /**
+     * All of static variables must be clear here.
+     */
+    function clearStaticVariables() {
+        outputMethods = logPositive = custOpts = logMappingOffset =
+        absMin = absMax = splitNumber = tickList = null;
+    }
+
+    /**
+     * Determine sign (logPositive, negative) of data set, if not specified.
+     * Reform min and max of data.
+     */
+    function reformSetting() {
+        splitNumber = custOpts.splitNumber;
+        splitNumber == null && (splitNumber = DEFAULT_SPLIT_NUMBER);
+
+        var dataMin = parseFloat(custOpts.dataMin);
+        var dataMax = parseFloat(custOpts.dataMax);
+
+        if (!isFinite(dataMin) && !isFinite(dataMax)) {
+            dataMin = dataMax = 1;
+        }
+        else if (!isFinite(dataMin)) {
+            dataMin = dataMax;
+        }
+        else if (!isFinite(dataMax)) {
+            dataMax = dataMin;
+        }
+        else if (dataMin > dataMax) {
+            dataMax = [dataMin, dataMin = dataMax][0]; // Exchange min, max.
         }
 
-        return coreCalc(newMin, newMax);
+        logPositive = custOpts.logPositive;
+        // If not specified, determine sign by data.
+        if (logPositive == null) {
+            // LogPositive is false when dataMax <= 0 && dataMin < 0.
+            // LogPositive is true when dataMin >= 0.
+            // LogPositive is true when dataMax >= 0 && dataMin < 0 (singular points may exists)
+            logPositive = dataMax > 0 || dataMin === 0;
+        }
+
+        // Set absMin and absMax, which must be greater than 0.
+        absMin = logPositive ? dataMin : -dataMax;
+        absMax = logPositive ? dataMax : -dataMin;
+        // FIXME
+        // If there is any data item less then zero, it is suppose to be igonred and min should be re-calculated.
+        // But it is difficult to do that in current code stucture.
+        // So refactor of xxAxis.js is desired.
+        absMin < EPSILON && (absMin = EPSILON);
+        absMax < EPSILON && (absMax = EPSILON);
     }
 
     /**
-     * Determine sign of data set (positive, negative, mixed)
-     * @param min
-     * @param max
-     * @returns {boolean}
+     * Make tick list.
      */
-    function setSign(min, max) {
-        if (min > max) {max = [min, min = max][0];}
-        if (min >= 0) { return true; }
-        if (min < 0 && max < 0) { return false; }
-        throw "invalid limits";
-    }
+    function makeTicksList() {
+        tickList = [];
 
-    /**
-     * Since logarithm of 0 === Infinity we need to avoid this situation
-     * @param value
-     * @param isPositive
-     * @returns {*}
-     */
-    function noNull(value, isPositive) {
-        if (isPositive && value === 0) {return 1}
-        if (!isPositive && value === 0) {return -1}
-        return value;
-    }
+        // Estimate max exponent and min exponent
+        var maxDataLog10 = fixAccurate(mathLog(absMax) / LN10);
+        var minDataLog10 = fixAccurate(mathLog(absMin) / LN10);
+        var maxExpon10 = mathCeil(maxDataLog10);
+        var minExpon10 = mathFloor(minDataLog10);
+        var spanExpon10 = maxExpon10 - minExpon10;
+        var spanDataLog10 = maxDataLog10 - minDataLog10;
 
-    /**
-     * Build an array of objects. Each object contains amount
-     * of corresponding shares (n/logBase, n/(logBase*i), ..., end: n < 1)
-     * and digits (1, logBase, logBase^2, ..., logBase^n)
-     * @param number
-     * @param digit
-     * @param container
-     * @returns {*}
-     */
-    function div(number, digit, container) {
-        container.push({digit: digit, number: number%custBase });
-        if (number/custBase < 1) return container;
-        return div(number/custBase, digit*custBase, container);
-    }
+        !(
+            spanExpon10 <= MIN_BASE_10_SPLIT_NUMBER
+            && splitNumber > MIN_BASE_10_SPLIT_NUMBER
+        )
+            ? base10Analysis() : detailAnalysis();
 
-    /**
-     * Main data set calculation function. Calculate main and extended domains
-     * @param min
-     * @param max
-     * @returns {*}
-     */
-    function coreCalc(min, max) {
-        var mainDomain     = [];
-        var extendedDomain = [];
-        var lastDigit;
-        var lastNumber;
-        var digits = div(newMax, 1, []);
 
-        lastDigit = digits[digits.length-1].digit;
-        lastNumber = digits[digits.length-1].number;
+        // In this situation, only plot base-10 ticks.
+        // Base-10 ticks: 10^h (i.e. 0.01, 0.1, 1, 10, 100, ...)
+        function base10Analysis() {
+            if (spanExpon10 < splitNumber) {
+                splitNumber = spanExpon10;
+            }
+            // Suppose:
+            //      spanExpon10 > splitNumber
+            //      stepExpon10 := floor(spanExpon10 / splitNumber)
+            //      splitNumberFloat := spanExpon10 / stepExpon10
+            // There are tow expressions which are identically-true:
+            //      splitNumberFloat - splitNumber <= 1
+            //      stepExpon10 * ceil(splitNumberFloat) - spanExpon10 <= stepExpon10
+            // So we can calculate as follows:
+            var stepExpon10 = mathFloor(fixAccurate(spanExpon10 / splitNumber));
 
-        if (Math.ceil(lastNumber*custBase) >= lastDigit) // Add one more object to guarantee all data in range
-            digits.push({digit: lastDigit*custBase, number: Math.ceil(lastNumber)});
+            // Put the plot in the middle of the min, max.
+            var splitNumberAdjust = mathCeil(fixAccurate(spanExpon10 / stepExpon10));
+            var spanExpon10Adjust = stepExpon10 * splitNumberAdjust;
+            var halfDiff10 = (spanExpon10Adjust - spanDataLog10) / 2;
+            var minExpon10Adjust = mathFloor(fixAccurate(minDataLog10 - halfDiff10));
 
-        lastDigit = digits[digits.length-1].digit;
-        lastNumber = digits[digits.length-1].number;
+            // Build logMapping offset
+            logMappingOffset = -minExpon10Adjust * LN10;
 
-        mainDomain = digits.map(function(elem) { return elem.digit; });
-        if (max > lastDigit) // Add pseudo digit to guarantee all data in mainDomain
-            mainDomain.push(lastDigit * Math.ceil(lastNumber));
-
-        setMin(newMin, mainDomain); // Fit min border to ranges
-        setMax(newMax, mainDomain); // Fit max border to ranges
-
-        for (var i = 0; i < mainDomain.length; i++) { // Calculate extended domain
-            var digitSet = div(mainDomain[i], 1, []);
-            var increment = digitSet[digitSet.length - 1].digit;
-
-            for (var j = mainDomain[i]; j < mainDomain[i+1]; j += increment) {
-                if (j > mainDomain[i]) { // If first value%base !== 0 next tick value should be calculated accordingly
-                    var next = div(j, 1, []);
-                    var num = Math.floor(next[next.length - 1].number) * increment;
-                    extendedDomain.push(num);
-                } else {
-                    extendedDomain.push(j); // First value should be placed without changes
-                }
+            // Build tickList
+            for (var n = minExpon10Adjust; n - stepExpon10 < maxDataLog10; n += stepExpon10) {
+                tickList.push(mathPow(10, n));
             }
         }
-        extendedDomain.push(mainDomain[mainDomain.length-1]); // Add last value from main domain
 
-        return makeResult(mainDomain, extendedDomain);
-    }
+        // In this situation, base-2|10 ticks are used to make detailed split.
+        // Base-2|10 ticks: 10^h * 2^k (i.e. 0.1, 0.2, 0.4, 0.8, 1, 2, 4, 8, 10, 20, 40, 80),
+        // where k in [0, 1, 2].
+        // Because LN2 * 3 < LN10 and LN2 * 4 > LN10, k should be less than 3.
+        // And when k === 3, the tick is too close to that of k === 0, which looks weird. So we dont use 3.
+        function detailAnalysis() {
+            // Find max exponent and min exponent.
+            // Calculate base on 3-hexadecimal (0, 1, 2, 10, 11, 12, 20).
+            var minDecimal = toDecimalFrom4Hex(minExpon10, 0);
+            var endDecimal = minDecimal + 2;
+            while (
+                minDecimal < endDecimal
+                && toH(minDecimal + 1) + toK(minDecimal + 1) * LN2D10 < minDataLog10
+            ) {
+                minDecimal++;
+            }
+            var maxDecimal = toDecimalFrom4Hex(maxExpon10, 0);
+            var endDecimal = maxDecimal - 2; // maxDecimal is greater than 4
+            while (
+                maxDecimal > endDecimal
+                && toH(maxDecimal - 1) + toK(maxDecimal - 1) * LN2D10 > maxDataLog10
+            ) {
+                maxDecimal--;
+            }
 
-    /**
-     * Set min domain value (dependent on minLocked option)
-     * @param min
-     * @param domain
-     */
-    function setMin(min, domain) {
-        if (!minLocked) return;
+            // Build logMapping offset
+            logMappingOffset = -(toH(minDecimal) * LN10 + toK(minDecimal) * LN2);
 
-        for (var f = 0; f < domain.length;) {
-            if (domain[f] < min) {
-                domain.splice(f, 1);
-            } else {
-                f++;
+            // Build logMapping tickList
+            for (var i = minDecimal; i <= maxDecimal; i++) {
+                var h = toH(i);
+                var k = toK(i);
+                tickList.push(mathPow(10, h) * mathPow(2, k));
+                // FIXME
+                // 小数的显示
             }
         }
-        if (domain[0] !== min) domain.unshift(min.toFixed(2) - 0);
-    }
 
-    /**
-     * Set max domain value (dependent on maxLocked option)
-     * @param max
-     * @param domain
-     */
-    function setMax(max, domain) {
-        if (!maxLocked) return;
-
-        for (var f = 0; f < domain.length;) {
-            if (domain[f] > max) {
-                domain.splice(f, 1);
-            } else {
-                f++;
-            }
+        // Convert to decimal number from 4-hexadecimal number,
+        // where h, k means: if there is a 4-hexadecimal numer 23, then h is 2, k is 3.
+        // h can be any integer (notice: h can be greater than 10 or less than 0),
+        // and k belongs to [0, 1, 2, 3].
+        function toDecimalFrom4Hex(h, k) {
+            return h * 3 + k;
         }
-        if (domain[domain.length-1] !== max) domain.push(max.toFixed(2) - 0);
+
+        function toK(decimal) {
+            return decimal - toH(decimal) * 3; // Can not calculate by '%'
+        }
+
+        function toH(decimal) {
+            return mathFloor(fixAccurate(decimal / 3));
+        }
     }
 
     /**
-     * Calculate coefficient on which logarithmic data should be multiplied
-     * to obtain values n real [min, max] range
-     * @param domain
-     * @param max
-     * @returns {number}
+     * Make result
      */
-    function precisionCoef(domain, max) {
-        var logMax = Math.max.apply(Math, logConverter(domain));
+    function makeResult() {
+        var resultTickList = [];
+        for (var i = 0, len = tickList.length; i < len; i++) {
+            resultTickList[i] = formatNumber((logPositive ? 1 : -1) * tickList[i]);
+        }
+        !logPositive && resultTickList.reverse();
 
-        return max / logMax;
-    }
+        var logMapping = outputMethods.logMapping;
+        var newDataMin = logMapping(resultTickList[0]);
+        var newDataMax = logMapping(resultTickList[resultTickList.length - 1]);
 
-    /**
-     * Generate result object for return
-     * @param mainDomain
-     * @param extendedDomain
-     * @returns {{min: number, max: number, secs: *, pnts: *, log_pnts: *, positive: *, base: *, precision: number, methods: {log: Function}}}
-     */
-    function makeResult(mainDomain, extendedDomain) {
-        var rMin      = log(mainDomain[0]);
-        var rMax      = log(mainDomain[mainDomain.length-1]);
-        var rSecs     = type === 'detailed' ? extendedDomain.length : mainDomain.length;
-        var rPnts     = type === 'detailed' ? extendedDomain : mainDomain;
-        var rLogPnts  = type === 'detailed' ? logConverter(extendedDomain) : logConverter(mainDomain);
-        var precision = precisionCoef(mainDomain, newMax);
-        var methods   = {
-            log: function(x, base, positive) {
-                return (positive ? Math.log(x < 0 ? 0 : x) : -Math.log(x > 0 ? 0 : -x)) / Math.log(base);
-            }
-        };
+        if (newDataMin === newDataMax) {
+            newDataMin -= 1;
+            newDataMax += 1;
+        }
 
         return {
-            min:       rMin,
-            max:       rMax,
-            secs:      rSecs,
-            pnts:      rPnts,
-            log_pnts:  rLogPnts,
-            positive:  positive,
-            base:      custBase,
-            precision: precision,
-            methods:   methods
-        }
+            // FIXME
+            // tickList.length 为0的情况
+            dataMin: newDataMin,
+            dataMax: newDataMax,
+            tickList: resultTickList,
+            logPositive: logPositive,
+            methods: zrUtil.merge({}, outputMethods)
+        };
+    }
+
+    /**
+     * Make calculate methods.
+     * logPositive and logMappingOffset should be fixed in the scope of the methods.
+     */
+    function makeOutputMethods(logPositive, logMappingOffset) {
+        return {
+            logMapping: function (x) {
+                if (x == null || isNaN(x) || !isFinite(x)) {
+                    return x;
+                }
+                x = parseFloat(x); // to number
+                if (!isFinite(x)) {
+                    x = EPSILON;
+                }
+                else if (logPositive && x < EPSILON) {
+                    // FIXME
+                    // It is suppose to be ignore, but not be set to EPSILON. See comments above.
+                    x = EPSILON;
+                }
+                else if (!logPositive && x > -EPSILON) {
+                    x = -EPSILON;
+                }
+                x = mathAbs(x);
+                return (logPositive ? 1 : -1) * (mathLog(x) + logMappingOffset);
+            },
+            powMapping: function (x) {
+                if (x == null || isNaN(x) || !isFinite(x)) {
+                    return x;
+                }
+                x = parseFloat(x); // to number
+                if (!isFinite(x)) {
+                    x = EPSILON;
+                }
+                return logPositive
+                    ? mathPow(LOG_BASE, x - logMappingOffset)
+                    : -mathPow(LOG_BASE, -x + logMappingOffset);
+            }
+        };
+    }
+
+    /**
+     * For example, Math.log(1000) / Math.LN10 get the result of 2.9999999999999996, rather than 3.
+     * This method trys to fix it.
+     * (accMath.div can not fix this problem yet.)
+     */
+    function fixAccurate(result) {
+        return +Number(+result).toFixed(14);
+    }
+
+    /**
+     * Avoid show float number like '1e-9', '-1e-10', ...
+     * @return {string}
+     */
+    function formatNumber(num) {
+        // FIXME
+        // I think we should not do this here, but in valueAxis.js
+        // So refector is desired.
+        return Number(num).toFixed(15).replace(/\.?0*$/, '');
     }
 
     return smartLogSteps;

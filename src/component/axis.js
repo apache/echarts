@@ -30,7 +30,6 @@ define(function (require) {
      * @param {Object} option 图表选项
      *     @param {string=} option.xAxis.type 坐标轴类型，横轴默认为类目型'category'
      *     @param {string=} option.yAxis.type 坐标轴类型，纵轴默认为类目型'value'
-     *     @param {string=} option.yAxis.type 坐标轴类型，纵轴默认为类目型'log'
      * @param {Object} component 组件
      * @param {string} axisType 横走or纵轴
      */
@@ -305,44 +304,16 @@ define(function (require) {
                     );
                 }
                 else if (axisOption && axisOption[i]) {
-                    /* Zoomdata, Ievgenii */
-                    switch(axisOption[i].type) {
-                        case 'category':
-                            this._axisList[i] =
-                                new CategoryAxis(
-                                    this.ecTheme, this.messageCenter, this.zr,
-                                    axisOption[i], this.myChart, this.axisBase
-                                );
-                        break;
-                        case 'value':
-                            this._axisList[i] =
-                                new ValueAxis(
-                                    this.ecTheme, this.messageCenter, this.zr,
-                                    axisOption[i], this.myChart, this.axisBase,
-                                    this.series
-                                );
-                        break;
-                        case 'logarithm':
-                            this._axisList[i] =
-                                new LogAxis(
-                                    this.ecTheme, this.messageCenter, this.zr,
-                                    axisOption[i], this.myChart, this.axisBase,
-                                    this.series
-                                );
-                        break;
-                    }
-
-                    /*this._axisList[i] =  axisOption[i].type === 'category'
-                                         ? new CategoryAxis(
-                                               this.ecTheme, this.messageCenter, this.zr,
-                                               axisOption[i], this.myChart, this.axisBase
-                                           )
-                                         : new ValueAxis(
-                                               this.ecTheme, this.messageCenter, this.zr,
-                                               axisOption[i], this.myChart, this.axisBase,
-                                               this.series
-                                           );*/
-
+                    this._axisList[i] = axisOption[i].type === 'category'
+                        ? new CategoryAxis(
+                               this.ecTheme, this.messageCenter, this.zr,
+                               axisOption[i], this.myChart, this.axisBase
+                           )
+                        : new ValueAxis(
+                               this.ecTheme, this.messageCenter, this.zr,
+                               axisOption[i], this.myChart, this.axisBase,
+                               this.series
+                        );
                 }
             }
         },
