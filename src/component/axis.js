@@ -15,14 +15,14 @@
  */
 define(function (require) {
     var Base = require('./base');
-    
+
     var LineShape = require('zrender/shape/Line');
-    
+
     var ecConfig = require('../config');
     var ecData = require('../util/ecData');
     var zrUtil = require('zrender/tool/util');
     var zrColor = require('zrender/tool/color');
-    
+
     /**
      * 构造函数
      * @param {Object} messageCenter echart消息中心
@@ -35,13 +35,13 @@ define(function (require) {
      */
     function Axis(ecTheme, messageCenter, zr, option, myChart, axisType) {
         Base.call(this, ecTheme, messageCenter, zr, option, myChart);
-        
+
         this.axisType = axisType;
         this._axisList = [];
-        
+
         this.refresh(option);
     }
-    
+
     Axis.prototype = {
         type: ecConfig.COMPONENT_TYPE_AXIS,
         axisBase: {
@@ -110,28 +110,28 @@ define(function (require) {
                     }
                 }
                 style.strokeColor = this.option.axisLine.lineStyle.color;
-                
+
                 style.lineWidth = lineWidth;
                 // 亚像素优化
                 if (this.isHorizontal()) {
                     // 横向布局，优化y
-                    style.yStart 
-                        = style.yEnd 
+                    style.yStart
+                        = style.yEnd
                         = this.subPixelOptimize(style.yEnd, lineWidth);
                 }
                 else {
                     // 纵向布局，优化x
-                    style.xStart 
-                        = style.xEnd 
+                    style.xStart
+                        = style.xEnd
                         = this.subPixelOptimize(style.xEnd, lineWidth);
                 }
-                
+
                 style.lineType = this.option.axisLine.lineStyle.type;
-                
+
                 axShape = new LineShape(axShape);
                 this.shapeList.push(axShape);
             },
-            
+
             _axisLabelClickable: function(clickable, axShape) {
                 if (clickable) {
                     ecData.pack(
@@ -149,7 +149,7 @@ define(function (require) {
                     return axShape;
                 }
             },
-            
+
             refixAxisShape: function(zeroX, zeroY) {
                 if (!this.option.axisLine.onZero) {
                     return;
@@ -159,15 +159,15 @@ define(function (require) {
                     // 横向布局调整纵向y
                     for (var i = 0, l = this.shapeList.length; i < l; i++) {
                         if (this.shapeList[i]._axisShape === 'axisLine') {
-                            this.shapeList[i].style.yStart 
-                                = this.shapeList[i].style.yEnd 
+                            this.shapeList[i].style.yStart
+                                = this.shapeList[i].style.yEnd
                                 = this.subPixelOptimize(
                                     zeroY, this.shapeList[i].stylelineWidth
                                 );
                             this.zr.modShape(this.shapeList[i].id);
                         }
                         else if (this.shapeList[i]._axisShape === 'axisTick') {
-                            tickLength = this.shapeList[i].style.yEnd 
+                            tickLength = this.shapeList[i].style.yEnd
                                          - this.shapeList[i].style.yStart;
                             this.shapeList[i].style.yStart = zeroY - tickLength;
                             this.shapeList[i].style.yEnd = zeroY;
@@ -179,15 +179,15 @@ define(function (require) {
                     // 纵向布局调整横向x
                     for (var i = 0, l = this.shapeList.length; i < l; i++) {
                         if (this.shapeList[i]._axisShape === 'axisLine') {
-                            this.shapeList[i].style.xStart 
-                                = this.shapeList[i].style.xEnd 
+                            this.shapeList[i].style.xStart
+                                = this.shapeList[i].style.xEnd
                                 = this.subPixelOptimize(
                                     zeroX, this.shapeList[i].stylelineWidth
                                 );
                             this.zr.modShape(this.shapeList[i].id);
                         }
                         else if (this.shapeList[i]._axisShape === 'axisTick') {
-                            tickLength = this.shapeList[i].style.xEnd 
+                            tickLength = this.shapeList[i].style.xEnd
                                          - this.shapeList[i].style.xStart;
                             this.shapeList[i].style.xStart = zeroX;
                             this.shapeList[i].style.xEnd = zeroX + tickLength;
@@ -196,11 +196,11 @@ define(function (require) {
                     }
                 }
             },
-            
+
             getPosition: function () {
                 return this.option.position;
             },
-            
+
             isHorizontal: function() {
                 return this.option.position === 'bottom' || this.option.position === 'top';
             }
@@ -265,7 +265,7 @@ define(function (require) {
 
             return opt;
         },
-        
+
         /**
          * 刷新
          */
@@ -283,7 +283,7 @@ define(function (require) {
                 }
                 this.series = newOption.series;
             }
-    
+
             var CategoryAxis = require('./categoryAxis');
             var ValueAxis = require('./valueAxis');
             var len = Math.max((axisOption && axisOption.length || 0), this._axisList.length);
@@ -295,7 +295,7 @@ define(function (require) {
                     this._axisList[i].dispose && this._axisList[i].dispose();
                     this._axisList[i] = false;
                 }
-                
+
                 if (this._axisList[i]) {
                     this._axisList[i].refresh && this._axisList[i].refresh(
                         axisOption ? axisOption[i] : false,
@@ -303,17 +303,16 @@ define(function (require) {
                     );
                 }
                 else if (axisOption && axisOption[i]) {
-                    this._axisList[i] =  axisOption[i].type === 'category'
-                                         ? new CategoryAxis(
-                                               this.ecTheme, this.messageCenter, this.zr,
-                                               axisOption[i], this.myChart, this.axisBase
-                                           )
-                                         : new ValueAxis(
-                                               this.ecTheme, this.messageCenter, this.zr,
-                                               axisOption[i], this.myChart, this.axisBase,
-                                               this.series
-                                           );
-                    
+                    this._axisList[i] = axisOption[i].type === 'category'
+                        ? new CategoryAxis(
+                               this.ecTheme, this.messageCenter, this.zr,
+                               axisOption[i], this.myChart, this.axisBase
+                           )
+                        : new ValueAxis(
+                               this.ecTheme, this.messageCenter, this.zr,
+                               axisOption[i], this.myChart, this.axisBase,
+                               this.series
+                        );
                 }
             }
         },
@@ -326,6 +325,10 @@ define(function (require) {
             return this._axisList[idx];
         },
 
+        getAxisCount: function () {
+            return this._axisList.length;
+        },
+
         clear: function () {
             for (var i = 0, l = this._axisList.length; i < l; i++) {
                 this._axisList[i].dispose && this._axisList[i].dispose();
@@ -333,10 +336,10 @@ define(function (require) {
             this._axisList = [];
         }
     };
-    
+
     zrUtil.inherits(Axis, Base);
-    
+
     require('../component').define('axis', Axis);
-     
+
     return Axis;
 });
