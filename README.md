@@ -99,7 +99,7 @@ ECharts提供了多图联动的能力（connect），能做的可不仅仅是鼠
 ### 炫光特效
 我们知道，很多时候我们需要一些吸引眼球的能力。
 
-ECharts支持标注标线的<a href="echarts.baidu.com/doc/example/map12.html" target="_blank">炫光特效</a>，特别用在地图上轻松实现<a href="echarts.baidu.com/doc/example/map11.html" target="_blank">百度迁徙数据可视化特效</a>
+ECharts支持标注标线的<a href="http://echarts.baidu.com/doc/example/map12.html" target="_blank">炫光特效</a>，特别用在地图上轻松实现<a href="http://echarts.baidu.com/doc/example/map11.html" target="_blank">百度迁徙数据可视化特效</a>
 
 ![ECharts 数据区域选择](doc/asset/img/effect.gif)
 
