@@ -311,6 +311,14 @@
                             <td> evnetRiver </td>
                             <td> EventRiver is commonly used to display multiple events with time attribute, the evolution of events can be shown by time sequence.</td>
                         </tr>
+                        <tr>
+                            <td> treemap </td>
+                            <td> Treemap is commonly used to display a tree structure. And treemaps are very effective when size is the most important feature to be displayed..</td>
+                        </tr>
+                        <tr>
+                            <td> venn </td>
+                            <td> Venn shows all possible logical relations between a finite collection of different sets.</td>
+                        </tr>
                     </table>
                     <h3>Chart Types<a name="Chart-Types"> </a></h3>
                     <P> The charting library includes basic single chart type and combination chart type. </P>
@@ -2891,10 +2899,10 @@ indicator : [
                             </td>
                         </tr>
                         <tr>
-                            <td> <b>{number | Function} </b>symbolSize </td>
+                            <td> <b>{number | Array | Function} </b>symbolSize </td>
                             <td> 2 | 4</td>
                             <td> line (2), scatter(4) </td>
-                            <td> size of the symbol. When "calculable" is enabled, it's recommended to increase symbolSize for better interactive experience. When implementing a bubble chart, symbolSize should be a Function, and the bubble size depends on the return value of the method, the parameter passed in is the current data item (value array). </td>
+                            <td> size of the symbol. It is usually a number. But if you use an image as symbol. To prevent stretching of image caused by same width and height, you can use an array as symbolSize which first element is width and the second is height. When "calculable" is enabled, it's recommended to increase symbolSize for better interactive experience. When implementing a bubble chart, symbolSize should be a Function, and the bubble size depends on the return value of the method, the parameter passed in is the current data item (value array). </td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> symbolRotate </td>
@@ -3015,7 +3023,7 @@ indicator : [
                             <td> same as <a href="#SeriesCartesian" title="">series (Cartesian). </a></td>
                         </tr>
                         <tr>
-                            <td> <b>{number | Function} </b>symbolSize </td>
+                            <td> <b>{number | Array | Function} </b>symbolSize </td>
                             <td> 2 </td>
                             <td> same as <a href="#SeriesCartesian" title="">series (Cartesian). </a></td>
                         </tr>
@@ -3204,7 +3212,7 @@ indicator : [
                             <td> as <a href="#SeriesCartesian" title="">series (Cartesian)</a></td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> symbolSize </td>
+                            <td> <b>{number | Array}</b> symbolSize </td>
                             <td></td>
                             <td> size of the node. </td>
                         </tr>
@@ -3879,7 +3887,7 @@ indicator : [
                             <td> the symbol of markPoint, same as series' <a href="#Series">symbol</a>. </td>
                         </tr>
                         <tr>
-                            <td> <b>{number | Function} </b> symbolSize </td>
+                            <td> <b>{number | Array | Function} </b> symbolSize </td>
                             <td> 10 </td>
                             <td> the size of markPoint symbol, same as series' <a href="#Series">symbolSize</a>. </td>
                         </tr>
@@ -4743,7 +4751,7 @@ geoCoord : {
                             <td> See <a href="#SeriesCartesian" title="">series (Cartesian)</a></td>
                         </tr>
                         <tr>
-                            <td> {number} symbolSize </td>
+                            <td> {number | Array} symbolSize </td>
                             <td></td>
                             <td> Size of symbol </td>
                         </tr>
@@ -4787,7 +4795,7 @@ geoCoord : {
                             <td> See <a href="#SeriesCartesian" title="">series (Cartesian)</a></td>
                         </tr>
                         <tr>
-                            <td> {number} symbolSize </td>
+                            <td> {number | Array} symbolSize </td>
                             <td></td>
                             <td> Size of symbol </td>
                         </tr>
