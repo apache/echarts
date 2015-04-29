@@ -50,7 +50,7 @@ option = {
    },
    legend: {
        x: 'left',
-       data: ["2的指数", "3的指数"]
+       data: ["2的指数"]
    },
    xAxis: [
        {
@@ -63,7 +63,14 @@ option = {
    yAxis: [
        {
            type: "log",
-           name: "y"
+           logLabelBase: 2,
+           name: "y",
+           axisLabel: {
+                margin: '25',
+                textStyle: {
+                    align: 'left'
+                }
+           }
        }
    ],
     toolbox: {
@@ -87,16 +94,9 @@ option = {
    calculable: true,
    series: [
        {
-           name: "3的指数",
-           type: "line",
-           data: [1, 3, 9, 27, 81, 247, 741, 2223, 6669]
-
-       },
-       {
            name: "2的指数",
            type: "line",
-           data: [1, 2, 4, 8, 16, 32, 64, 128, 256]
-
+           data: [-2, -4, -8, -16, -32, -64, -128]
        }
    ]
 };
@@ -110,9 +110,9 @@ option = {
                     <span class="text-primary">切换主题</span>
                     <select id="theme-select"></select>
                     &nbsp;&nbsp;&nbsp;
-                    <a target="_blank" href="./line10.html">axisLabel指数形式显示</a>
+                    <a target="_blank" href="./line9.html">axisLabel普通形式显示</a>
                     &nbsp;&nbsp;&nbsp;
-                    <a target="_blank" href="./line11.html">负值log数轴</a>
+                    <a target="_blank" href="./line10.html">axisLabel指数形式显示</a>
 
                     <span id='wrong-message' style="color:red"></span>
                 </div>

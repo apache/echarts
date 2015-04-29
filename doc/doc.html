@@ -2332,6 +2332,12 @@ require(['echarts'], function (ec){
                             <td> 分割段数，不指定时根据min、max算法调整</td>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> logLabelBase </td>
+                            <td> null </td>
+                            <td> value </td>
+                            <td> axis.type === 'log'时生效。指定时，axisLabel显示为指数形式，如指定为4时，axisLabel可显示为4²、4³。不指定时，显示为普通形式，如 1,000,000 </td>
+                        </tr>
+                        <tr>
                             <td> <b>{Object}</b> logPositive </td>
                             <td> null </td>
                             <td> value </td>

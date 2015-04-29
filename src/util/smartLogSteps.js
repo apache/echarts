@@ -8,7 +8,7 @@
 define(function(require) {
 
     // Reference
-    var zrUtil = require('zrender/tool/util');
+    var number = require('./number');
     var Mt = Math;
     var mathLog = Mt.log;
     var mathPow = Mt.pow;
@@ -26,20 +26,40 @@ define(function(require) {
     var EPSILON = 1e-9;
     var DEFAULT_SPLIT_NUMBER = 5;
     var MIN_BASE_10_SPLIT_NUMBER = 2;
+    var SUPERSCRIPTS = {
+        '0': '⁰',
+        '1': '¹',
+        '2': '²',
+        '3': '³',
+        '4': '⁴',
+        '5': '⁵',
+        '6': '⁶',
+        '7': '⁷',
+        '8': '⁸',
+        '9': '⁹',
+        '-': '⁻'
+    };
 
     // Static variable
     var logPositive;
+    var logLabelBase;
+    var logLabelMode; // enumeration:
+                      // 'plain' (i.e. axis labels are shown like 10000)
+                      // 'exponent' (i.e. axis labels are shown like 10²)
+    var lnBase;
     var custOpts;
     var splitNumber;
     var logMappingOffset;
     var absMin;
     var absMax;
-    var dataMappingMethods;
     var tickList;
 
     /**
      * Test cases:
      * [2, 4, 8, 16, 32, 64, 128]
+     * [0.01, 0.1, 10, 100, 1000] logLabelBase: 3
+     * [0.01, 0.1, 10, 100, 1000] logLabelBase: -12
+     * [-2, -4, -8, -16, -32, -64, -128] logLabelBase: 3
      * [2, 4, 8, 16, '-', 64, 128]
      * [2, 4, 8, 16, 32, 64]
      * [2, 4, 8, 16, 32]
@@ -67,6 +87,8 @@ define(function(require) {
      * [-0.00001, -0.00001, -0.00001]
      * ['-', '-']
      * ['-', 10]
+     * logarithmic axis in scatter (try dataZoom)
+     * logarithmic axis width dataZoom component (try xAxis and yAxis)
      */
 
     /**
@@ -77,6 +99,8 @@ define(function(require) {
      * @param {number} opts.dataMin data Minimum
      * @param {number} opts.dataMax data Maximum
      * @param {number=} opts.logPositive Logarithmic sign. If not specified, it will be auto-detected.
+     * @param {number=} opts.logLabelBase Logaithmic base in axis label.
+     *                                    If not specified, it will be set to 10 (and use 2 for detail)
      * @param {number=} opts.splitNumber Number of sections perfered.
      * @return {Object} {
      *                      dataMin: New min,
@@ -93,8 +117,6 @@ define(function(require) {
         reformSetting();
         makeTicksList();
 
-        dataMappingMethods = zrUtil.merge({}, makeDataMappingMethods(logPositive, logMappingOffset));
-
         return [
             makeResult(),
             clearStaticVariables()
@@ -105,8 +127,8 @@ define(function(require) {
      * All of static variables must be clear here.
      */
     function clearStaticVariables() {
-        dataMappingMethods = logPositive = custOpts = logMappingOffset =
-        absMin = absMax = splitNumber = tickList = null;
+        logPositive = custOpts = logMappingOffset = lnBase =
+        absMin = absMax = splitNumber = tickList = logLabelBase = logLabelMode = null;
     }
 
     /**
@@ -114,9 +136,27 @@ define(function(require) {
      * Reform min and max of data.
      */
     function reformSetting() {
+        // Settings of log label base
+        logLabelBase = custOpts.logLabelBase;
+        if (logLabelBase == null) {
+            logLabelMode = 'plain';
+            logLabelBase = 10;
+            lnBase = LN10;
+        }
+        else {
+            logLabelBase = +logLabelBase;
+            if (logLabelBase < 1) { // log base less than 1 is not supported.
+                logLabelBase = 10;
+            }
+            logLabelMode = 'exponent';
+            lnBase = mathLog(logLabelBase);
+        }
+
+        // Settings of split number
         splitNumber = custOpts.splitNumber;
         splitNumber == null && (splitNumber = DEFAULT_SPLIT_NUMBER);
 
+        // Setting of data min and max
         var dataMin = parseFloat(custOpts.dataMin);
         var dataMax = parseFloat(custOpts.dataMax);
 
@@ -133,6 +173,7 @@ define(function(require) {
             dataMax = [dataMin, dataMin = dataMax][0]; // Exchange min, max.
         }
 
+        // Settings of log positive
         logPositive = custOpts.logPositive;
         // If not specified, determine sign by data.
         if (logPositive == null) {
@@ -142,7 +183,7 @@ define(function(require) {
             logPositive = dataMax > 0 || dataMin === 0;
         }
 
-        // Set absMin and absMax, which must be greater than 0.
+        // Settings of absMin and absMax, which must be greater than 0.
         absMin = logPositive ? dataMin : -dataMax;
         absMax = logPositive ? dataMax : -dataMin;
         // FIXME
@@ -160,72 +201,81 @@ define(function(require) {
         tickList = [];
 
         // Estimate max exponent and min exponent
-        var maxDataLog10 = fixAccurate(mathLog(absMax) / LN10);
-        var minDataLog10 = fixAccurate(mathLog(absMin) / LN10);
-        var maxExpon10 = mathCeil(maxDataLog10);
-        var minExpon10 = mathFloor(minDataLog10);
-        var spanExpon10 = maxExpon10 - minExpon10;
-        var spanDataLog10 = maxDataLog10 - minDataLog10;
+        var maxDataLog = fixAccurate(mathLog(absMax) / lnBase);
+        var minDataLog = fixAccurate(mathLog(absMin) / lnBase);
+        var maxExpon = mathCeil(maxDataLog);
+        var minExpon = mathFloor(minDataLog);
+        var spanExpon = maxExpon - minExpon;
+        var spanDataLog = maxDataLog - minDataLog;
 
-        !(
-            spanExpon10 <= MIN_BASE_10_SPLIT_NUMBER
-            && splitNumber > MIN_BASE_10_SPLIT_NUMBER
-        )
-            ? base10Analysis() : detailAnalysis();
+        if (logLabelMode === 'exponent') {
+            baseAnalysis();
+        }
+        else { // logLabelMode === 'plain', we will self-adapter
+            !(
+                spanExpon <= MIN_BASE_10_SPLIT_NUMBER
+                && splitNumber > MIN_BASE_10_SPLIT_NUMBER
+            )
+                ? baseAnalysis() : detailAnalysis();
+        }
 
-
-        // In this situation, only plot base-10 ticks.
+        // In this situation, only draw base-10 ticks.
         // Base-10 ticks: 10^h (i.e. 0.01, 0.1, 1, 10, 100, ...)
-        function base10Analysis() {
-            if (spanExpon10 < splitNumber) {
-                splitNumber = spanExpon10;
+        function baseAnalysis() {
+            if (spanExpon < splitNumber) {
+                splitNumber = spanExpon;
             }
             // Suppose:
-            //      spanExpon10 > splitNumber
-            //      stepExpon10 := floor(spanExpon10 / splitNumber)
-            //      splitNumberFloat := spanExpon10 / stepExpon10
+            //      spanExpon > splitNumber
+            //      stepExpon := floor(spanExpon / splitNumber)
+            //      splitNumberFloat := spanExpon / stepExpon
             // There are tow expressions which are identically-true:
             //      splitNumberFloat - splitNumber <= 1
-            //      stepExpon10 * ceil(splitNumberFloat) - spanExpon10 <= stepExpon10
+            //      stepExpon * ceil(splitNumberFloat) - spanExpon <= stepExpon
             // So we can calculate as follows:
-            var stepExpon10 = mathFloor(fixAccurate(spanExpon10 / splitNumber));
+            var stepExpon = mathFloor(fixAccurate(spanExpon / splitNumber));
 
             // Put the plot in the middle of the min, max.
-            var splitNumberAdjust = mathCeil(fixAccurate(spanExpon10 / stepExpon10));
-            var spanExpon10Adjust = stepExpon10 * splitNumberAdjust;
-            var halfDiff10 = (spanExpon10Adjust - spanDataLog10) / 2;
-            var minExpon10Adjust = mathFloor(fixAccurate(minDataLog10 - halfDiff10));
+            var splitNumberAdjust = mathCeil(fixAccurate(spanExpon / stepExpon));
+            var spanExponAdjust = stepExpon * splitNumberAdjust;
+            var halfDiff = (spanExponAdjust - spanDataLog) / 2;
+            var minExponAdjust = mathFloor(fixAccurate(minDataLog - halfDiff));
+
+            if (aroundZero(minExponAdjust - minDataLog)) {
+                minExponAdjust -= 1;
+            }
 
             // Build logMapping offset
-            logMappingOffset = -minExpon10Adjust * LN10;
+            logMappingOffset = -minExponAdjust * lnBase;
 
             // Build tickList
-            for (var n = minExpon10Adjust; n - stepExpon10 < maxDataLog10; n += stepExpon10) {
-                tickList.push(mathPow(10, n));
+            for (var n = minExponAdjust; n - stepExpon <= maxDataLog; n += stepExpon) {
+                tickList.push(mathPow(logLabelBase, n));
             }
         }
 
         // In this situation, base-2|10 ticks are used to make detailed split.
-        // Base-2|10 ticks: 10^h * 2^k (i.e. 0.1, 0.2, 0.4, 0.8, 1, 2, 4, 8, 10, 20, 40, 80),
+        // Base-2|10 ticks: 10^h * 2^k (i.e. 0.1, 0.2, 0.4, 1, 2, 4, 10, 20, 40),
         // where k in [0, 1, 2].
         // Because LN2 * 3 < LN10 and LN2 * 4 > LN10, k should be less than 3.
-        // And when k === 3, the tick is too close to that of k === 0, which looks weird. So we dont use 3.
+        // And when k === 3, the tick is too close to that of k === 0, which looks weird.
+        // So we do not use 3.
         function detailAnalysis() {
             // Find max exponent and min exponent.
             // Calculate base on 3-hexadecimal (0, 1, 2, 10, 11, 12, 20).
-            var minDecimal = toDecimalFrom4Hex(minExpon10, 0);
+            var minDecimal = toDecimalFrom4Hex(minExpon, 0);
             var endDecimal = minDecimal + 2;
             while (
                 minDecimal < endDecimal
-                && toH(minDecimal + 1) + toK(minDecimal + 1) * LN2D10 < minDataLog10
+                && toH(minDecimal + 1) + toK(minDecimal + 1) * LN2D10 < minDataLog
             ) {
                 minDecimal++;
             }
-            var maxDecimal = toDecimalFrom4Hex(maxExpon10, 0);
+            var maxDecimal = toDecimalFrom4Hex(maxExpon, 0);
             var endDecimal = maxDecimal - 2; // maxDecimal is greater than 4
             while (
                 maxDecimal > endDecimal
-                && toH(maxDecimal - 1) + toK(maxDecimal - 1) * LN2D10 > maxDataLog10
+                && toH(maxDecimal - 1) + toK(maxDecimal - 1) * LN2D10 > maxDataLog
             ) {
                 maxDecimal--;
             }
@@ -238,8 +288,6 @@ define(function(require) {
                 var h = toH(i);
                 var k = toK(i);
                 tickList.push(mathPow(10, h) * mathPow(2, k));
-                // FIXME
-                // 小数的显示
             }
         }
 
@@ -266,11 +314,13 @@ define(function(require) {
     function makeResult() {
         var resultTickList = [];
         for (var i = 0, len = tickList.length; i < len; i++) {
-            resultTickList[i] = formatNumber((logPositive ? 1 : -1) * tickList[i]);
+            resultTickList[i] = (logPositive ? 1 : -1) * tickList[i];
         }
         !logPositive && resultTickList.reverse();
 
+        var dataMappingMethods = makeDataMappingMethods();
         var value2Coord = dataMappingMethods.value2Coord;
+
         var newDataMin = value2Coord(resultTickList[0]);
         var newDataMax = value2Coord(resultTickList[resultTickList.length - 1]);
 
@@ -280,21 +330,54 @@ define(function(require) {
         }
 
         return {
-            // FIXME
-            // tickList.length 为0的情况
             dataMin: newDataMin,
             dataMax: newDataMax,
             tickList: resultTickList,
             logPositive: logPositive,
-            dataMappingMethods: zrUtil.merge({}, dataMappingMethods)
+            labelFormatter: makeLabelFormatter(),
+            dataMappingMethods: dataMappingMethods
         };
     }
 
     /**
-     * Make calculate methods.
-     * logPositive and logMappingOffset should be fixed in the scope of the methods.
+     * Make axis label formatter.
      */
-    function makeDataMappingMethods(logPositive, logMappingOffset) {
+    function makeLabelFormatter() {
+        if (logLabelMode === 'exponent') { // For label style like 3⁴.
+            // Static variables should be fixed in the scope of the methods.
+            var myLogLabelBase = logLabelBase;
+            var myLnBase = lnBase;
+
+            return function (value) {
+                if (!isFinite(parseFloat(value))) {
+                    return '';
+                }
+                var sign = '';
+                if (value < 0) {
+                    value = -value;
+                    sign = '-';
+                }
+                return sign + myLogLabelBase + makeSuperscriptExponent(mathLog(value) / myLnBase);
+            };
+        }
+        else {
+            return function (value) { // Normal style like 0.001, 10,000,0
+                if (!isFinite(parseFloat(value))) {
+                    return '';
+                }
+                return number.addCommas(formatNumber(value));
+            };
+        }
+    }
+
+    /**
+     * Make calculate methods.
+     */
+    function makeDataMappingMethods() {
+        // Static variables should be fixed in the scope of the methods.
+        var myLogPositive = logPositive;
+        var myLogMappingOffset = logMappingOffset;
+
         return {
             value2Coord: function (x) {
                 if (x == null || isNaN(x) || !isFinite(x)) {
@@ -304,16 +387,16 @@ define(function(require) {
                 if (!isFinite(x)) {
                     x = EPSILON;
                 }
-                else if (logPositive && x < EPSILON) {
+                else if (myLogPositive && x < EPSILON) {
                     // FIXME
                     // It is suppose to be ignore, but not be set to EPSILON. See comments above.
                     x = EPSILON;
                 }
-                else if (!logPositive && x > -EPSILON) {
+                else if (!myLogPositive && x > -EPSILON) {
                     x = -EPSILON;
                 }
                 x = mathAbs(x);
-                return (logPositive ? 1 : -1) * (mathLog(x) + logMappingOffset);
+                return (myLogPositive ? 1 : -1) * (mathLog(x) + myLogMappingOffset);
             },
             coord2Value: function (x) {
                 if (x == null || isNaN(x) || !isFinite(x)) {
@@ -323,9 +406,9 @@ define(function(require) {
                 if (!isFinite(x)) {
                     x = EPSILON;
                 }
-                return logPositive
-                    ? mathPow(LOG_BASE, x - logMappingOffset)
-                    : -mathPow(LOG_BASE, -x + logMappingOffset);
+                return myLogPositive
+                    ? mathPow(LOG_BASE, x - myLogMappingOffset)
+                    : -mathPow(LOG_BASE, -x + myLogMappingOffset);
             }
         };
     }
@@ -344,10 +427,28 @@ define(function(require) {
      * @return {string}
      */
     function formatNumber(num) {
-        // FIXME
-        // I think we should not do this here, but in valueAxis.js
-        // So refector is desired.
         return Number(num).toFixed(15).replace(/\.?0*$/, '');
+    }
+
+    /**
+     * Make superscript exponent
+     */
+    function makeSuperscriptExponent(exponent) {
+        exponent = formatNumber(Math.round(exponent)); // Do not support float superscript.
+                                                       // (because I can not find superscript style of '.')
+        var result = [];
+        for (var i = 0, len = exponent.length; i < len; i++) {
+            var cha = exponent.charAt(i);
+            result.push(SUPERSCRIPTS[cha] || '');
+        }
+        return result.join('');
+    }
+
+    /**
+     * Decide whether near zero
+     */
+    function aroundZero(val) {
+        return val > -EPSILON && val < EPSILON;
     }
 
     return smartLogSteps;
