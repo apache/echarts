@@ -41,7 +41,7 @@
 option = {
     title : {
         text: '手机占有率',
-        subtext: '数据下钻例子'
+        subtext: '数据下钻例子，虚构数据'
     },
     tooltip : {
         trigger: 'item',
@@ -81,13 +81,86 @@ option = {
             },
             data:[
                 {
+                    name: '三星',
+                    itemStyle: {
+                        normal: {
+                            color: '#99cccc',
+                        }
+                    },
+                    value: 6,
+                    children: [
+                        {
+                            name: 'Galaxy S4',
+                            value: 2
+                        },
+                        {
+                            name: 'Galaxy S5',
+                            value: 3
+                        },
+                        {
+                            name: 'Galaxy S6',
+                            value: 3
+                        },
+                        {
+                            name: 'Galaxy Tab',
+                            value: 1
+                        }
+                    ]
+                },
+                {
+                    name: '小米',
+                    itemStyle: {
+                        normal: {
+                            color: '#99ccff',
+                        }
+                    },
+                    value: 4,
+                    children: [
+                        {
+                            name: '小米3',
+                            value: 6
+                        },
+                        {
+                            name: '小米4',
+                            value: 6
+                        },
+                        {
+                            name: '红米',
+                            value: 4
+                        }
+                    ]
+                },
+                {
+                    name: '苹果',
+                    itemStyle: {
+                        normal: {
+                            color: '#9999cc',
+                        }
+                    },
+                    value: 4,
+                    children: [
+                        {
+                            name: 'iPhone 5s',
+                            value: 6
+                        },
+                        {
+                            name: 'iPhone 6',
+                            value: 3
+                        },
+                        {
+                            name: 'iPhone 6+',
+                            value: 3
+                        }
+                    ]
+                },
+                {
                     name: '魅族',
                     itemStyle: {
                         normal: {
                             color: '#ccff99',
                         }
                     },
-                    value: 6,
+                    value: 1,
                     children: [
                         {
                             name: 'MX4',
@@ -126,50 +199,6 @@ option = {
                             value: 3
                         }
                     ]
-                },
-                {
-                    name: '小米',
-                    itemStyle: {
-                        normal: {
-                            color: '#99ccff',
-                        }
-                    },
-                    value: 6,
-                    children: [
-                        {
-                            name: '小米3',
-                            color: '#ccccff',
-                            value: 6
-                        },
-                        {
-                            name: '小米4',
-                            color: '#99ccff',
-                            value: 6
-                        },
-                        {
-                            name: '红米',
-                            color: '#9999cc',
-                            value: 4
-                        }
-                    ]
-                },
-                {
-                    name: '苹果',
-                    itemStyle: {
-                        normal: {
-                            color: '#9999cc',
-                        }
-                    },
-                    value: 4
-                },
-                {
-                    name: '三星',
-                    itemStyle: {
-                        normal: {
-                            color: '#99cccc',
-                        }
-                    },
-                    value: 3
                 },
                 {
                     name: '华为',
