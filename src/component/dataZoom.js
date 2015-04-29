@@ -310,6 +310,7 @@ define(function (require) {
             }
         },
 
+        // 不止是scatter，双数值轴也使用此方法
         _calculScatterMap : function (seriesIndex) {
             this._zoom.scatterMap = this._zoom.scatterMap || {};
             this._zoom.scatterMap[seriesIndex] = this._zoom.scatterMap[seriesIndex] || {};
@@ -776,6 +777,7 @@ define(function (require) {
                     length = data.length;
                     start = Math.floor(this._zoom.start / 100 * length);
                     end = Math.ceil(this._zoom.end / 100 * length);
+
                     if (!(this.getDataFromOption(data[0]) instanceof Array)
                         || this.option[key][idx].type == ecConfig.CHART_TYPE_K
                     ) {
@@ -783,6 +785,7 @@ define(function (require) {
                     }
                     else {
                         // 散点图，双数值轴折线图柱形图特殊处理
+                        // axis.data[0]不会是Array，所以axis的情况不会走进这个分支
                         this._setScale();
                         this.option[key][idx].data = this._synScatterData(idx, data);
                     }
@@ -800,40 +803,6 @@ define(function (require) {
 
             //this.zoomOption.start = this._zoom.start;
             //this.zoomOption.end = this._zoom.end;
-        },
-
-        /**
-         * Zoomdata, Ievgenii
-         * Calculate correct limits in case of logarithmic scales
-         *
-         * @param xStart
-         * @param xEnd
-         * @param yStart
-         * @param yEnd
-         * @returns {*[]}
-         * @private
-         */
-        _setLimits: function(xStart, xEnd, yStart, yEnd) {
-            var xAxis = this.component.xAxis;
-            var yAxis = this.component.yAxis;
-
-            for (var i = 0, axis, logMethods, len = xAxis.getAxisCount(); i < len; i++) {
-                axis = xAxis.getAxis(i);
-                if (axis.option.type === 'log' && (logMethods = axis._logMethods)) {
-                    xStart = logMethods.powMapping(xStart);
-                    xEnd = logMethods.powMapping(xEnd);
-                }
-            }
-
-            for (var i = 0, axis, logMethods, len = yAxis.getAxisCount(); i < len; i++) {
-                axis = yAxis.getAxis(i);
-                if (axis.option.type === 'log' && (logMethods = axis._logMethods)) {
-                    yStart = logMethods.powMapping(yStart);
-                    yEnd = logMethods.powMapping(yEnd);
-                }
-            }
-
-            return [xStart, xEnd, yStart, yEnd];
         },
 
         _synScatterData : function (seriesIndex, data) {
@@ -871,11 +840,15 @@ define(function (require) {
                 yEnd = this._zoom.end / 100 * total + scale.y.min;
             }
 
-            var limits = this._setLimits(xStart, xEnd, yStart, yEnd);
-            xStart = limits[0];
-            xEnd = limits[1];
-            yStart = limits[2];
-            yEnd = limits[3];
+            var dataMappingMethods;
+            if (dataMappingMethods = scale.x.dataMappingMethods) {
+                xStart = dataMappingMethods.coord2Value(xStart);
+                xEnd = dataMappingMethods.coord2Value(xEnd);
+            }
+            if (dataMappingMethods = scale.y.dataMappingMethods) {
+                yStart = dataMappingMethods.coord2Value(yStart);
+                yEnd = dataMappingMethods.coord2Value(yEnd);
+            }
 
             // console.log(xStart,xEnd,yStart,yEnd);
 

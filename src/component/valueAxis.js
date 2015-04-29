@@ -778,7 +778,8 @@ define(function (require) {
             this._min = stepOpt.dataMin;
             this._max = stepOpt.dataMax;
             this._valueList = stepOpt.tickList;
-            this._logMethods = stepOpt.methods;
+            // {value2Coord: {Function}, coord2Value: {Function}}
+            this._dataMappingMethods = stepOpt.dataMappingMethods;
 
             this._reformLabelData();
         },
@@ -819,9 +820,12 @@ define(function (require) {
 
         getExtremum: function () {
             this._calculateValue();
+            var dataMappingMethods = this._dataMappingMethods;
             return {
                 min: this._min,
-                max: this._max
+                max: this._max,
+                dataMappingMethods: dataMappingMethods
+                    ? zrUtil.merge({}, dataMappingMethods) : null
             };
         },
 
@@ -846,8 +850,8 @@ define(function (require) {
 
         // 根据值换算位置
         getCoord: function (value) {
-            if (this.option.type === 'log') {
-                value = this._logMethods.logMapping(value);
+            if (this._dataMappingMethods) {
+                value = this._dataMappingMethods.value2Coord(value);
             }
 
             value = value < this._min ? this._min : value;
@@ -913,8 +917,8 @@ define(function (require) {
                            * (this._max - this._min);
             }
 
-            if (this.option.type === 'log') {
-                result = this._logMethods.powMapping(result);
+            if (this._dataMappingMethods) {
+                result = this._dataMappingMethods.coord2Value(result);
             }
 
             return result.toFixed(2) - 0;

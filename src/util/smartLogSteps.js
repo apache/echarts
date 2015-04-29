@@ -34,7 +34,7 @@ define(function(require) {
     var logMappingOffset;
     var absMin;
     var absMax;
-    var outputMethods;
+    var dataMappingMethods;
     var tickList;
 
     /**
@@ -83,7 +83,7 @@ define(function(require) {
      *                      dataMax: New max,
      *                      tickList: [Array of tick data]
      *                      logPositive: Type of data sign
-     *                      methods: [Set of logarithmic methods]
+     *                      dataMappingMethods: [Set of logarithmic methods]
      *                  }
      */
     function smartLogSteps(opts) {
@@ -93,7 +93,7 @@ define(function(require) {
         reformSetting();
         makeTicksList();
 
-        outputMethods = zrUtil.merge({}, makeOutputMethods(logPositive, logMappingOffset));
+        dataMappingMethods = zrUtil.merge({}, makeDataMappingMethods(logPositive, logMappingOffset));
 
         return [
             makeResult(),
@@ -105,7 +105,7 @@ define(function(require) {
      * All of static variables must be clear here.
      */
     function clearStaticVariables() {
-        outputMethods = logPositive = custOpts = logMappingOffset =
+        dataMappingMethods = logPositive = custOpts = logMappingOffset =
         absMin = absMax = splitNumber = tickList = null;
     }
 
@@ -270,9 +270,9 @@ define(function(require) {
         }
         !logPositive && resultTickList.reverse();
 
-        var logMapping = outputMethods.logMapping;
-        var newDataMin = logMapping(resultTickList[0]);
-        var newDataMax = logMapping(resultTickList[resultTickList.length - 1]);
+        var value2Coord = dataMappingMethods.value2Coord;
+        var newDataMin = value2Coord(resultTickList[0]);
+        var newDataMax = value2Coord(resultTickList[resultTickList.length - 1]);
 
         if (newDataMin === newDataMax) {
             newDataMin -= 1;
@@ -286,7 +286,7 @@ define(function(require) {
             dataMax: newDataMax,
             tickList: resultTickList,
             logPositive: logPositive,
-            methods: zrUtil.merge({}, outputMethods)
+            dataMappingMethods: zrUtil.merge({}, dataMappingMethods)
         };
     }
 
@@ -294,9 +294,9 @@ define(function(require) {
      * Make calculate methods.
      * logPositive and logMappingOffset should be fixed in the scope of the methods.
      */
-    function makeOutputMethods(logPositive, logMappingOffset) {
+    function makeDataMappingMethods(logPositive, logMappingOffset) {
         return {
-            logMapping: function (x) {
+            value2Coord: function (x) {
                 if (x == null || isNaN(x) || !isFinite(x)) {
                     return x;
                 }
@@ -315,7 +315,7 @@ define(function(require) {
                 x = mathAbs(x);
                 return (logPositive ? 1 : -1) * (mathLog(x) + logMappingOffset);
             },
-            powMapping: function (x) {
+            coord2Value: function (x) {
                 if (x == null || isNaN(x) || !isFinite(x)) {
                     return x;
                 }

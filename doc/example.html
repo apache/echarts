@@ -73,8 +73,8 @@
         }
         #chartsTypeNav ul li {
             transition: background-color 0.3s;
-            -moz-transition: background-color 0.3s; 
-            -webkit-transition: background-color 0.3s; 
+            -moz-transition: background-color 0.3s;
+            -webkit-transition: background-color 0.3s;
             -o-transition: background-color 0.3s;
             padding-left:10px;
         }
@@ -155,6 +155,10 @@
                             <li data-thumb="asset/img/example/cache.png">
                               <a href="example/line.html"><img src="asset/img/example/cache.png">
                               <span><strong>折线图</strong><br/>多级控制，个性化，填充、线条、拐点样式等</span></a>
+                            </li><!--/li-->
+                            <li data-thumb="asset/img/example/cache.png">
+                              <a href="example/line9.html"><img src="asset/img/example/cache.png">
+                              <span><strong>对数轴</strong><br/>log数轴</span></a>
                             </li><!--/li-->
                           </ul>
                         </div>
@@ -796,7 +800,7 @@
       for (var i = 0, l = section.length; i < l; i++) {
           loadImage(i);
       }
-      
+
     var chartsTypeNav = document.getElementById('chartsTypeNav');
     function _scroll() {
         var navHeight = chartsTypeNav.offsetHeight;
@@ -815,7 +819,7 @@
             // 未见footer
             chartsTypeNav.style.marginTop = 'auto';
         }
-        
+
         var len = offsetList.length;
         if (scrollHeight > offsetList[len - 3].offsetTop) {
                 navDom[len - 2].style.backgroundColor = '#3E98C5';
@@ -840,7 +844,7 @@
         offsetList = [];
         $('h3').each(function(idx, dom){
             offsetList[idx] = {
-                name : dom.childNodes[1].name, 
+                name : dom.childNodes[1].name,
                 offsetTop : dom.childNodes[1].offsetTop
             };
         });
@@ -850,7 +854,7 @@
         })
         setTimeout(_scroll, 500);
     }
-    
+
     function scroll2Pos (idx) {
         return function() {
             $("body,html").animate(
