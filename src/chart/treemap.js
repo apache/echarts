@@ -250,12 +250,12 @@ define(function (require) {
             textShape.style.textPosition = 'specific';
             textShape.style.textX = rectangleX + marginX;
             textShape.style.textY = rectangleY + marginY;
-            textShape.style.textColor = textShape.style.textColor || '#777';
+            textShape.style.textColor = textShape.style.textColor || '#000';
 
             textShape.highlightStyle.textPosition = 'specific';
             textShape.highlightStyle.textX = rectangleX + marginX;
             textShape.highlightStyle.textY = rectangleY + marginY;
-            textShape.highlightStyle.textColor = textShape.highlightStyle.textColor || '#777';
+            textShape.highlightStyle.textColor = textShape.highlightStyle.textColor || '#000';
             return textShape;
         },
 
