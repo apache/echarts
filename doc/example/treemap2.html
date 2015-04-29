@@ -40,8 +40,8 @@
                     <textarea id="code" name="code">
 option = {
     title : {
-        text: '访问 vs 咨询',
-        subtext: '各个数据的集合'
+        text: '手机占有率',
+        subtext: '复杂配置例子'
     },
     tooltip : {
         trigger: 'item',
@@ -56,42 +56,126 @@ option = {
             saveAsImage : {show: true}
         }
     },
-    calculable : false,
     series : [
         {
-            name:'韦恩图',
-            type:'venn',
+            name:'矩形图',
+            type:'treemap',
             itemStyle: {
                 normal: {
                     label: {
                         show: true,
-                        textStyle: {
-                            fontFamily: 'Arial, Verdana, sans-serif',
-                            fontSize: 16,
-                            fontStyle: 'italic',
-                            fontWeight: 'bolder'
-                        }
+                        formatter: "{b}: {c}"
                     },
-                    labelLine: {
-                        show: false,
-                        length: 10,
-                        lineStyle: {
-                            // color: 各异,
-                            width: 1,
-                            type: 'solid'
-                        }
-                    }
+                    borderWidth: 1,
+                    borderColor: '#ccc'
                 },
                 emphasis: {
+                    label: {
+                        show: true
+                    },
                     color: '#cc99cc',
                     borderWidth: 3,
                     borderColor: '#996699'
                 }
             },
             data:[
-                {value:100, name:'访问'},
-                {value:50, name:'咨询'},
-                {value:20, name:'公共'}
+                {
+                    name: '魅族',
+                    value: 6,
+                    itemStyle: {
+                        normal: {
+                            label: {
+                                show: true,
+                                formatter : "{b}最多，值为{c}",
+                                textStyle: {
+                                    color: '#ccc',
+                                    fontSize: 16
+                                }
+                            },
+                            color: '#ccff99',
+                            borderWidth: 1
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                formatter : "{b}: {c}",
+                                textStyle: {
+                                    color: 'red',
+                                    fontSize: 18
+                                }
+                            },
+                            color: '#cc9999',
+                            borderWidth: 3,
+                            borderColor: '#999999'
+                        }
+                    }
+                },
+                {
+                    name: '小米',
+                    value: 6,
+                    itemStyle: {
+                        normal: {
+                            color: '#99ccff',
+                        }
+                    }
+                },
+                {
+                    name: '苹果',
+                    value: 4,
+                    itemStyle: {
+                        normal: {
+                            color: '#9999cc',
+                        }
+                    }
+                },
+                {
+                    name: '三星',
+                    value: 3,
+                    itemStyle: {
+                        normal: {
+                            color: '#99cccc',
+                        }
+                    }
+                },
+                {
+                    name: '华为',
+                    value: 2,
+                    itemStyle: {
+                        normal: {
+                            color: '#ccffcc',
+                        }
+                    }
+                },
+                {
+                    name: '联想',
+                    value: 2,
+                    itemStyle: {
+                        normal: {
+                            color: '#ccccff',
+                        }
+                    }
+                },
+                {
+                    name: '中兴',
+                    value: 1,
+                    itemStyle: {
+                        normal: {
+                            label: {
+                                show: true,
+                                formatter: "{b}: {c}",
+                            },
+                            borderWidth: 3
+                        },
+                        emphasis: {
+                            label: {
+                                show: true
+                            },
+                            color: '#cc9999',
+                            borderWidth: 3,
+                            borderColor: '#999999'
+                        }
+                    }
+                }
             ]
         }
     ]

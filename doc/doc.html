@@ -55,6 +55,8 @@
                                 <li><a href="#Gauge">gauge</a></li>
                                 <li><a href="#Funnel">funnel</a></li>
                                 <li><a href="#eventRiver">eventRiver</a></li>
+                                <li><a href="#treemap">treemap</a></li>
+                                <li><a href="#venn">venn</a></li>
                             </ul>
                             <li><a href="#引入ECharts">引入ECharts</a></li>
                             <ul>
@@ -69,7 +71,7 @@
                             <ul>
                                 <li><a href="#Option">option</a></li>
                                 <li><a href="#Timeline">timeline</a></li>
-                                <li><a href="#Title">title</a></li>                                
+                                <li><a href="#Title">title</a></li>
                                 <li><a href="#Toolbox">toolbox</a></li>
                                 <li><a href="#Tooltip">tooltip</a></li>
                                 <li><a href="#Legend">legend</a></li>
@@ -100,6 +102,8 @@
                                     <li><a href="#SeriesGauge">series（仪表盘）</a></li>
                                     <li><a href="#SeriesFunnel">series（漏斗图）</a></li>
                                     <li><a href="#SeriesEventRiver">series（事件河流图）</a></li>
+                                    <li><a href="#SeriesTreemap">series（矩形式树状结构图）</a></li>
+                                    <li><a href="#SeriesVenn">series（维恩图）</a></li>
                                     <li><a href="#SeriesData">data</a></li>
                                     <li><a href="#SeriesMarkPoint">markPoint</a></li>
                                     <ul>
@@ -356,7 +360,7 @@
                             <td><img src="./asset/img/example/scatter2.png" title="" alt="气泡图"/></td>
                         </tr>
                     </table>
-                    
+
                     <h4>单图表类型：k<a name="K"> </a></h4>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
@@ -393,7 +397,7 @@
                             <td><img src="./asset/img/example/radar2.png" title="" alt="填充雷达图"/></td>
                         </tr>
                     </table>
-                    
+
                     <h4>单图表类型：chord<a name="Chord"> </a></h4>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
@@ -404,7 +408,7 @@
                             <td><img src="./asset/img/example/chord2.png" title="" alt="和弦图"/></td>
                         </tr>
                     </table>
-                    
+
                     <h4>单图表类型：force<a name="Force"> </a></h4>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
@@ -416,7 +420,7 @@
                             <td><img src="./asset/img/example/webkit-dep.png" title="" alt="力导向布局图"/></td>
                         </tr>
                     </table>
-                    
+
                     <h4>单图表类型：map<a name="Map"> </a></h4>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
@@ -463,7 +467,7 @@
                             <td><img src="./asset/img/example/funnel3.png" title="" alt="漏斗图"/></td>
                         </tr>
                     </table>
-                    
+
                     <h4>单图表类型：eventRiver<a name="eventRiver"> </a></h4>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
@@ -474,10 +478,30 @@
                             <td><img src="./asset/img/example/eventRiver2.png" title="" alt="事件河流图"/></td>
                         </tr>
                     </table>
-                    
+
+                    <h4>矩形式树状结构图：treemap<a name="treemap"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th colspan=3> 矩形式树状结构图 </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/treemap.png" title="" alt="矩形式树状结构图"/></td>
+                        </tr>
+                    </table>
+
+                    <h4>韦恩图类型：venn<a name="venn"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th colspan=3> 韦恩图类型 </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/venn.png" title="" alt="韦恩图"/></td>
+                        </tr>
+                    </table>
+
                     <h3>引入ECharts<a name="引入ECharts"> </a></h3>
                     <p>echarts提供多种引入方式，请根据你的项目类型选择合适的方式：</p>
-                    
+
                     <h3>模块化包引入<a name="引入ECharts1"> </a></h3>
                     <P>如果你熟悉模块化开发，你的项目本身就是模块化且遵循AMD规范的，那引入echarts将很简单，使用一个符合AMD规范的模块加载器，如<a href="https://github.com/ecomfe/esl" target="_blank">esl.js</a>，只需要配置好packages路径指向src即可，你将享受到图表的按需加载等最大的灵活性，由于echarts依赖底层zrender，你需要同时下载<a href="https://github.com/ecomfe/zrender" target="_blank">zrender</a>到本地，可参考<a href="example/demo.html" target="_blank">demo</a>，你需要配置如下。</p>
                     <p>需要注意的是，包引入提供了开发阶段最大的灵活性，但并不适合直接上线，减少请求的文件数量是前端性能优化中最基本但很重要的规则，务必在上线时做文件的连接压缩。</P>
@@ -487,7 +511,7 @@ require.config({
     packages: [
         {
             name: 'echarts',
-            location: '../../src',      
+            location: '../../src',
             main: 'echarts'
         },
         {
@@ -499,7 +523,7 @@ require.config({
 });
 </pre>
                     </div>
-                    
+
                     <h3>模块化单文件引入（<b>推荐</b>）<a name="引入ECharts2"> </a></h3>
                     <P>如果你使用模块化开发但并没有自己的打包合并环境，或者说你不希望在你的项目里引入第三方库的源文件，我们建议你使用单文件引入，同模块化包引入一样，你需要熟悉模块化开发。</p>
                     <p>自2.1.8起，我们为echarts开发了专门的合并压缩工具<a href="https://github.com/ecomfe/echarts-optimizer" target="_blank">echarts-optimizer</a>。如你所发现的，build文件夹下已经包含了由<a href="https://github.com/ecomfe/echarts-optimizer" target="_blank">echarts-optimizer</a>生成的单文件：</P>
@@ -620,7 +644,7 @@ require.config({
                         <li>source/echarts-all.js : 未压缩，全图表，包含world，china以及34个省市级地图数据，可用于调试</li>
                     </ul>
                     <p>详见<a href="./start.html" target="_blank" style="margin-right: 50px;">入门教程 ( Getting started ) »</a></p>
-                        
+
                     <h3>自定义构建echarts单文件<a name="自定义构建echarts单文件"></a></h3>
                     <p>详见 echarts-optimizer 安装使用说明：<a href="https://github.com/ecomfe/echarts-optimizer/blob/master/README.md" target="_blank">README.md</a></p>
 
@@ -649,7 +673,7 @@ require(
     [
         'echarts',
         'echarts/chart/pie'
-    ], 
+    ],
     function (ec) {
         var myChart = ec.init(document.getElementById('main'));
         myChart.setOption({...});
@@ -695,7 +719,7 @@ require(['echarts'], function (ec){
         {                // option1
             title : {...},
             series : [...]
-        },  
+        },
         {...},           // option2
         ...
     ]
@@ -929,7 +953,7 @@ require(['echarts'], function (ec){
                                 <a href="#AnimationEasing" title="">animationEasing</a>）
                             </td>
                         </tr>
-                        
+
                         <tr class='bgRed'>
                             <td> <b>{Object}</b> timeline </td>
                             <td> 时间轴（详见<a href="#Timeline" title="">timeline</a>），每个图表最多仅有一个时间轴控件 </td>
@@ -953,7 +977,7 @@ require(['echarts'], function (ec){
                         <tr class='bgRed'>
                             <td> <b>{Object}</b> dataRange </td>
                             <td> 值域选择（详见<a href="#DataRange" title="">dataRange</a>）,值域范围 </td>
-                        </tr>                        
+                        </tr>
                         <tr class='bgRed'>
                             <td> <b>{Object}</b> dataZoom </td>
                             <td> 数据区域缩放（详见<a href="#DataZoom" title="">dataZoom</a>）,数据展现范围选择 </td>
@@ -979,7 +1003,7 @@ require(['echarts'], function (ec){
                             <td> 驱动图表生成的数据内容（详见<a href="#Series" title="">series</a>），数组中每一项代表一个系列的特殊选项及数据 </td>
                         </tr>
                     </table>
-                    
+
 
                     <h4>timeline<a name="Timeline"> </a></h4>
                     <P> 时间轴，每个图表最多仅有一个时间轴控件，try <a href="./example/bar11.html" target="_blank">bar »</a>、<a href="./example/scatter4.html" target="_blank">scatter »</a>、<a href="./example/pie7.html" target="_blank">pie »</a>、<a href="./example/map14.html" target="_blank">map »</a></P>
@@ -1249,7 +1273,7 @@ require(['echarts'], function (ec){
                             <td> null </td>
                             <td> 水平对齐方式，默认根据x设置自动调整，可选为： left' | 'right' | 'center</td>
                         </tr>
-                        
+
                         <tr>
                             <td> <b>{color}</b> backgroundColor </td>
                             <td> 'rgba(0,0,0,0)' </td>
@@ -1275,7 +1299,7 @@ require(['echarts'], function (ec){
                             <td> 5 </td>
                             <td> 主副标题纵向间隔，单位px，默认为10</td>
                         </tr>
-                        
+
                         <tr>
                             <td> <b>{Object}</b> textStyle </td>
                             <td><pre>{
@@ -1292,7 +1316,7 @@ require(['echarts'], function (ec){
 }                           </pre> </td>
                             <td> 副标题文本样式（详见<a href="#TextStyle" title="">textStyle</a>） </td>
                         </tr>
-                        
+
                     </table>
                     <p><img src="./asset/img/doc/title.png" title="" alt="标题"/></P>
 
@@ -1451,9 +1475,9 @@ require(['echarts'], function (ec){
         show : false,
         title : '保存为图片',
         type : 'png',
-        lang : ['点击保存'] 
+        lang : ['点击保存']
     }
-} 
+}
                               </pre></td>
                             <td> 启用功能，目前支持feature见下，工具箱自定义功能回调处理，见<a href="example/toolbox.html" target="_blank">try this »</a>
                             <p><img src="./asset/img/doc/toolbox.png" title="" alt="工具箱"/></P>
@@ -1499,7 +1523,7 @@ require(['echarts'], function (ec){
                             </td>
                         </tr>
                     </table>
-                    
+
 
                     <h4>tooltip<a name="Tooltip"> </a></h4>
                     <P> 提示框，鼠标悬浮交互时的信息提示。<a href="example/tooltip.html" target="_blank">try this »</a></P>
@@ -1643,7 +1667,7 @@ require(['echarts'], function (ec){
                                         <li><b>散点图（气泡）图</b> : a（系列名称），b（数据名称），c（数值数组）, d（无）</li>
                                         <li><b>地图</b> : a（系列名称），b（区域名称），c（合并数值）, d（无）</li>
                                         <li><b>饼图</b>、<b>雷达图</b>、<b>仪表盘</b>、<b>漏斗图</b>: a（系列名称），b（数据项名称），c（数值）, d（饼图：百分比 | 雷达图：指标名称）</li>
-                                        <li><b>力导向图, 和弦图</b> : 
+                                        <li><b>力导向图, 和弦图</b> :
                                             <ul>
                                                 <li>节点 : a（系列名称），b（节点名称），c（节点值）, d(节点类目索引)</li>
                                                 <li>边 : a（系列名称），b（边名称，默认为大端节点名称-小端节点名称），c（link.value）, d(大端节点 name 或者 index), e(小端节点 name 或者 index)</li>
@@ -1658,7 +1682,7 @@ require(['echarts'], function (ec){
                             <ul>
                                 <li>&lt;Array&gt; params : 数组内容同模板变量，<pre>[
     {
-        
+
         seriesIndex: 0,
         seriesName: '一周销量',
         name: '周一',
@@ -2131,7 +2155,7 @@ require(['echarts'], function (ec){
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/roamController.png" title="" alt="缩放漫游组件"/></P>
-                    
+
                     <h4>grid<a name="Grid"> </a></h4>
                     <P> 直角坐标系内绘图网格</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -2225,7 +2249,7 @@ require(['echarts'], function (ec){
                         </tr>
                         <tr>
                             <td> <b>{string}</b> type </td>
-                            <td> 'category' | 'value' | 'time' </td>
+                            <td> 'category' | 'value' | 'time' | 'log' </td>
                             <td> 通用 </td>
                             <td> 坐标轴类型，横轴默认为类目型'category'，纵轴默认为数值型'value' </td>
                         </tr>
@@ -2306,6 +2330,12 @@ require(['echarts'], function (ec){
                             <td> null </td>
                             <td> 数值型，时间型 </td>
                             <td> 分割段数，不指定时根据min、max算法调整</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> logPositive </td>
+                            <td> null </td>
+                            <td> value </td>
+                            <td> axis.type === 'log'时生效。指明是否使用反向log数轴（从而支持value为负值）。默认自适应，即如果value全为负值，则logPositive自动设为false，否则为true。 </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisLine </td>
@@ -2426,8 +2456,8 @@ require(['echarts'], function (ec){
                             <td> 'auto' </td>
                             <td> 类目型 </td>
                             <td> 小标记显示挑选间隔，默认为'auto'，可选为：
-                                 <br/>'auto'（随axisLabel，自动隐藏显示不下的） | 0（全部显示） | 
-                                 <br/><b>{number}</b>（用户指定选择间隔） 
+                                 <br/>'auto'（随axisLabel，自动隐藏显示不下的） | 0（全部显示） |
+                                 <br/><b>{number}</b>（用户指定选择间隔）
                                  <br/><b>{function}</b>函数回调，传递参数[index，data[index]]，返回true显示，返回false隐藏
                              </td>
                         </tr>
@@ -2480,7 +2510,7 @@ require(['echarts'], function (ec){
                             <td> 'auto' </td>
                             <td> 类目型 </td>
                             <td> 标签显示挑选间隔，默认为'auto'，可选为：
-                                <br/>'auto'（自动隐藏显示不下的） | 0（全部显示） | 
+                                <br/>'auto'（自动隐藏显示不下的） | 0（全部显示） |
                                 <br/><b>{number}</b>（用户指定选择间隔）
                                 <br/><b>{function}</b>函数回调，传递参数[index，data[index]]，返回true显示，返回false隐藏
                             </td>
@@ -2758,7 +2788,7 @@ indicator : [
                             <td> 通用 </td>
                             <td> 图表类型，必要参数！如为空或不支持类型，则该系列数据不被显示。可选为：
                                 <br/>'line'（折线图） | 'bar'（柱状图） | 'scatter'（散点图） | 'k'（K线图）
-                                <br/> 'pie'（饼图） | 'radar'（雷达图） | 'chord'（和弦图） | 'force'（力导向布局图） | 'map'（地图） 
+                                <br/> 'pie'（饼图） | 'radar'（雷达图） | 'chord'（和弦图） | 'force'（力导向布局图） | 'map'（地图）
                             </td>
                         </tr>
                         <tr>
@@ -3342,7 +3372,7 @@ indicator : [
                         <tr>
                             <td> <b>{number | Array}</b> radius </td>
                             <td> [0, '75%'] </td>
-                            <td> 半径，支持绝对值（px）和百分比，百分比计算比，min(width, height) / 2 * 75%， 
+                            <td> 半径，支持绝对值（px）和百分比，百分比计算比，min(width, height) / 2 * 75%，
                                  <br/>传数组实现环形图，[内半径，外半径] </td>
                         </tr>
                         <tr>
@@ -3379,23 +3409,23 @@ indicator : [
             [0.2, '#228b22'],
             [0.8, '#48b'],
             [1, '#ff4500']
-        ], 
+        ],
         width: 30
     }
 }                           </pre> </td>
                             <td> 坐标轴线，默认显示
                                 <br/><br/>属性show控制显示与否，
                                 <br/><br/>属性lineStyle（详见<a href="#LineStyle" title="">lineStyle</a>）控制线条样式，
-                                <br/><br/>比较特殊的是这里的lineStyle.color是一个二维数组，用于把仪表盘轴线分成若干份， 
+                                <br/><br/>比较特殊的是这里的lineStyle.color是一个二维数组，用于把仪表盘轴线分成若干份，
                                 <br/><br/>并且可以给每一份指定具体的颜色，格式为:[[百分比, 颜色值], [...]]
                             </td>
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> axisTick </td>
                             <td><pre>{
-    show: true, 
-    splitNumber: 5, 
-    length :8, 
+    show: true,
+    splitNumber: 5,
+    length :8,
     lineStyle: {
         color: '#eee',
         width: 1,
@@ -3427,8 +3457,8 @@ indicator : [
                             <td> <b>{Object}</b> splitLine </td>
                             <td><pre>{
     show: true,
-    length :30, 
-    lineStyle: { 
+    length :30,
+    lineStyle: {
         color: '#eee',
         width: 2,
         type: 'solid'
@@ -3675,6 +3705,103 @@ indicator : [
                         </tr>
                     </table>
 
+                    <h5>series（矩形式树状结构图）<a name="SeriesTreemap"> </a></h5>
+                    <P> 驱动图表生成的数据内容数组，数组中每一项为一个系列的选项及数据：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> itemStyle </td>
+                            <td> {} </td>
+                            <td>参见<a href="#ItemStyle" title="">itemStyle</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> data </td>
+                            <td> [] </td>
+                            <td> 数据列表，每一个数组项为Object {}，内容如下：
+                                <table cellspacing="0" class="ADoc_table full">
+                                    <tr>
+                                        <th> 名称 </th>
+                                        <th> 默认值 </th>
+                                        <th> 描述 </th>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{string}</b> name </td>
+                                        <td> null </td>
+                                        <td> 数据名称 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{Number}</b> value </td>
+                                        <td> null </td>
+                                        <td> 数据值 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{Object}</b> itemStyle </td>
+                                        <td> {} </td>
+                                        <td>
+                                            参见
+                                            <a href="#ItemStyle" title="">
+                                                itemStyle
+                                            </a>
+                                            ，权重最高
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h5>series（维恩图）<a name="SeriesVenn"> </a></h5>
+                    <P> 驱动图表生成的数据内容数组，数组中每一项为一个系列的选项及数据：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> itemStyle </td>
+                            <td> {} </td>
+                            <td>参见<a href="#ItemStyle" title="">itemStyle</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> data </td>
+                            <td> [] </td>
+                            <td> 数据列表，长度为3，前两项分别表示两个集合，第三项表示交集。每一个数组项为Object {}，内容如下：
+                                <table cellspacing="0" class="ADoc_table full">
+                                    <tr>
+                                        <th> 名称 </th>
+                                        <th> 默认值 </th>
+                                        <th> 描述 </th>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{string}</b> name </td>
+                                        <td> null </td>
+                                        <td> 数据名称 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{Number}</b> value </td>
+                                        <td> null </td>
+                                        <td> 数据值 </td>
+                                    </tr>
+                                    <tr>
+                                        <td> <b>{Object}</b> itemStyle </td>
+                                        <td> {} </td>
+                                        <td>
+                                            参见
+                                            <a href="#ItemStyle" title="">
+                                                itemStyle
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+
                     <h5>series.data<a name="SeriesData"> </a></h5>
                     <P> 系列中的数据内容数组，折线图以及柱状图时数组长度等于所使用类目轴文本标签数组<a href="#AxisData" title="">axis.data</a>的长度，并且他们间是一一对应的。数组项通常为数值，如:</P>
                     <div class="code">
@@ -3696,7 +3823,7 @@ indicator : [
     ..., 10, 23
 ]
 </pre>
-                    </div>                        
+                    </div>
                     <P> 当图表类型为scatter（散点图或气泡图）时，其数值设置比较特殊，他的横纵坐标轴都可能为数值型，并且气泡图时需要指定气泡大小，所以scatter型图表设置为：</P>
                     <div class="code">
                         <pre>[
@@ -3746,7 +3873,7 @@ indicator : [
 ]
 </pre>
                     </div>
-                    
+
                     <h5>series.markPoint<a name="SeriesMarkPoint"> </a></h5>
                     <P> 系列中的数据标注内容</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -3822,7 +3949,7 @@ indicator : [
                             <td> 标注图形数据，见下 </td>
                         </tr>
                     </table>
-                    
+
                     <h5>series.markPoint.data<a name="SeriesMarkPointData"> </a></h5>
                     <P> 标注的数据内容数组，最直接的数据项可直接指定标注位置（x，y）以及相关名称（name）和值（value），在饼图、雷达图、力导、和弦图中基本如下:</P>
                     <div class="code">
@@ -3916,7 +4043,7 @@ geoCoord : {
                         </tr>
                         <tr>
                             <td> <b>{Object}</b> bundling </td>
-                            <td> 
+                            <td>
 <pre>{
     enable: false,
     maxTurningAngle: 45
@@ -3968,17 +4095,17 @@ geoCoord : {
                             <td> 标线图形数据，见下 </td>
                         </tr>
                     </table>
-                    
+
                     <h5>series.markLine.data<a name="SeriesMarkLineData"> </a></h5>
                     <P> 标线的数据内容数组，最直接的数据项可直接指定标线起始和结束位置（x，y）以及相关名称（name）和值（value），在饼图、雷达图、力导、和弦图中基本如下:</P>
                     <div class="code">
                         <pre>data : [
     [
-        {name: '标线1起点', value: 100, x: 50, y: 20}, 
+        {name: '标线1起点', value: 100, x: 50, y: 20},
         {name: '标线1终点', x: 150, y: 120}
     ],
     [
-        {name: '标线2起点', value: 200, x: 30, y: 80}, 
+        {name: '标线2起点', value: 200, x: 30, y: 80},
         {name: '标线2终点', x: 270, y: 190}
     ],
     ...
@@ -4004,15 +4131,15 @@ geoCoord : {
     {type : 'max', name: '自定义名字'},    // 最大值水平线或垂直线
     {type : 'min', name: '自定义名字'},    // 最小值水平线或垂直线
     {type : 'average', name: '自定义名字'},// 平均值水平线或垂直线
-    
+
     // 最小值指向最大值的连线
     [
         {type : 'min', name: '自定义名字'},
         {type : 'max', name: '自定义名字'}
     ],
-    
+
     // 散点图中存在两个数值型坐标，默认用纵轴值计算特殊点，可以通过valueIndex:0指定为横轴特殊点
-    {type : 'max', name: '自定义名字', valueIndex:0} 
+    {type : 'max', name: '自定义名字', valueIndex:0}
 ]</pre>
                     <P> 标线数据比较特殊也最为常用的地图上，除了直接位置定位外，如果希望基于地理坐标标线，并且能够随地图漫游缩放，需要为markLine提供一份geoCoord，如下</P>
                     <div class="code">
@@ -4540,28 +4667,28 @@ geoCoord : {
                     <P>
                         <b>{color}</b> null，全图默认背景，默认为null，同'rgba(0,0,0,0)'
                     </P>
-                    
+
                     <h4>color<a name="Color"> </a></h4>
                     <P>
                         <b>{Array}</b> [
-                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'#ff7f50', '#87cefa', '#da70d6', '#32cd32', '#6495ed', 
-                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'#ff69b4', '#ba55d3', '#cd5c5c', '#ffa500', '#40e0d0', 
-                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'#1e90ff', '#ff6347', '#7b68ee', '#00fa9a', '#ffd700', 
+                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'#ff7f50', '#87cefa', '#da70d6', '#32cd32', '#6495ed',
+                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'#ff69b4', '#ba55d3', '#cd5c5c', '#ffa500', '#40e0d0',
+                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'#1e90ff', '#ff6347', '#7b68ee', '#00fa9a', '#ffd700',
                         <br/>&nbsp;&nbsp;&nbsp;&nbsp;'#6b8e23', '#ff00ff', '#3cb371', '#b8860b', '#30e0e0'
                         <br/>]，默认颜色序列，循环使用
                     </P>
-                    
+
                     <h4>symbolList<a name="SymbolList"> </a></h4>
                     <P>
                         <b>{Array}</b> [
-                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'circle', 'rectangle', 'triangle', 'diamond', 
+                        <br/>&nbsp;&nbsp;&nbsp;&nbsp;'circle', 'rectangle', 'triangle', 'diamond',
                         <br/>&nbsp;&nbsp;&nbsp;&nbsp;'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
                         <br/>]，默认标志图形类型列表，循环使用
                     </P>
-                                
+
                     <h4>renderAsImage<a name="RenderAsImage"> </a></h4>
                     <P> {boolean | string} false，非IE8-支持渲染为图片，可设为true或指定图片格式（png | jpeg），渲染为图片后实例依然可用（如setOption，resize等），但各种交互失效</P>
-                    
+
                     <h4>calculable<a name="Calculable"> </a></h4>
                     <P> <b>{boolean}</b> false，是否启用拖拽重计算特性，默认关闭</P>
 
@@ -4582,7 +4709,7 @@ geoCoord : {
 
                     <h4>addDataAnimation<a name="AddDataAnimation"> </a></h4>
                     <P> <b>{boolean}</b> true，是否启用动态数据接口动画效果，默认开启，建议IE8-关闭</P>
-                    
+
                     <h4>animationThreshold<a name="AnimationThreshold"> </a></h4>
                     <P> <b>{number}</b> 2500，动画元素阀值，产生的图形原素超过2500不出动画，建议IE8-关闭</P>
 
@@ -4789,10 +4916,10 @@ option.series = [
                     <h3>附录：组件和图表的实例接口<a name="附录组件图表实例接口"> </a></h3>
                     <p>为了实现更高级的功能和需求定制，ECharts团队做了个艰难的决定，开放组件和图表实例接口。这些组件和图表实例都被挂载到init所得到的实例上（如myChart），分别存放在chart和component下，如可以通过myChart.chart.map得到当前地图实例并可以读取并调用里面的各种属性和方法。</p>
                     <p><b style="color:red">【重要】</b>请注意，ECharts接口基于数据驱动设计，这些实例并不为开放准备，虽然你可以无限制的访问，甚至动态的覆盖重写，但这可能会导致图表无法正常工作或随着版本升级无法得到兼容，所以我们仅列出如下部分方法和属性作为使用上的参考（或者说限制），我们会尽最大的努力去保证这些方法或属性的稳定和向下兼容，并且保证在出现无法兼容的更新时在changelog上通告。如果你使用了并不出现在下述文档中的方法或属性将得不到这份保证，请谅解。</p>
-                    
+
                     <h4>组件实例接口<a name="附录组件实例接口"> </a></h3>
                     <p>ECharts包含组件有：timeline、title、legend、dataRange、toolbox、tooltip、dataZoom、grid、xAxis、yAxis、polar</p>
-                    
+
                     <h4>timeline<a name="TimelineInterface"> </a></h4>
                     <P>时间轴，每个图表最多仅有一个时间轴。可使用的属性和方法有：</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -4871,7 +4998,7 @@ option.series = [
                             <td> 隐藏提示框。<br/>参数：无<br/> 返回：null</td>
                         </tr>
                     </table>
-                    
+
                     <h4>legend<a name="LegendInterface"> </a></h4>
                     <P>图例，每个图表最多仅有一个图例。可使用的属性和方法有：</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -4913,7 +5040,7 @@ option.series = [
                                  <br/>参数：<b>{string}</b> name （名称），<b>{boolean}</b> status 状态<br/> 返回：null</td>
                         </tr>
                     </table>
-                    
+
                     <h4>dataRange<a name="DataRangeInterface"> </a></h4>
                     <P>值域选择，每个图表最多仅有一个值域控件。可使用的属性和方法有：</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -4955,7 +5082,7 @@ option.series = [
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/dataZoom.png" title="" alt="数据区域缩放"/></P>
-                    
+
                     <h4>grid<a name="GridInterface"> </a></h4>
                     <P>直角坐标系内绘图网格。可使用的属性和方法有：</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -5006,7 +5133,7 @@ option.series = [
                         </tr>
                     </table>
                     <p><img src="./asset/img/doc/grid.jpg" title="" alt="绘图网格"/></P>
-                    
+
                     <h4>xAxis/yAxis<a name="AxisInterface"> </a></h4>
                     <P>横纵坐标轴。可使用的属性和方法有：</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -5021,7 +5148,7 @@ option.series = [
                             <td> 获取传入index的坐标轴实例，存在最多上下左右4条坐标轴，坐标轴可以为类目轴或数值轴，获取坐标轴实例和可用的坐标轴方法见下节<br/>参数：<b>{number}</b> 0/1 （坐标轴index）<br/> 返回：{categoryAxis | valueAxis} 指定index的坐标轴实例，可以是类目轴或数值轴</td>
                         </tr>
                     </table>
-                    
+
                     <h4>categoryAxis<a name="CategoryAxisInterface"> </a></h4>
                     <P>类目轴。可使用的属性和方法有：</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -5056,7 +5183,7 @@ option.series = [
                             <td> 根据类目轴名称换算类目轴数据索引<br/>参数：<b>{string}</b> name （名字）<br/> 返回：<b>{number}</b> 索引，重名类目值返回第一个匹配的</td>
                         </tr>
                     </table>
-                    
+
                     <h4>valueAxis<a name="ValueAxisInterface"> </a></h4>
                     <P>数值轴。可使用的属性和方法有：</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -5081,7 +5208,7 @@ option.series = [
                             <td> 返回当前坐标轴的极值<br/>参数：null，<br/> 返回：<b>{Object}</b> {min:{number}, max:{number}}</td>
                         </tr>
                     </table>
-                    
+
                     <h4>polar<a name="PolarInterface"> </a></h4>
                     <P>极坐标。可使用的属性和方法有：</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -5101,10 +5228,10 @@ option.series = [
                             <td> 获取每个指标上某个value对应的坐标，单位px<br/>参数：<b>{number}</b> polarIndex （极坐标索引）, <b>{number}</b> indicatorIndex （指标索引）, <b>{number}</b> value （数值）<br/> 返回：<b>{Array}</b> [x, y] 坐标值</td>
                         </tr>
                     </table>
-                    
+
                     <h4>图表实例接口<a name="附录图表实例接口"> </a></h3>
                     <p>ECharts支持的图表有：line、bar、scatter、k、pie、radar、chord、force、map</p>
-                    
+
                     <h4>map<a name="MapInterface"> </a></h4>
                     <P>地图。可使用的属性和方法有：</P>
                     <table cellspacing="0" class="ADoc_table full">
@@ -5129,7 +5256,7 @@ option.series = [
                             <td> 平面坐标转经纬度，单位px<br/>参数：<b>{string}</b> mapType （地图类型）, <b>{Array}</b> [x, y] （坐标值 ）<br/> 返回：<b>{Array}</b> [ew,ns] 经纬度</td>
                         </tr>
                     </table>
-                    
+
                     <h3>附录：一个直观的事例<a name="附录一个直观的事例"> </a></h3>
                     <p>查看更多实例 <a href="example.html" target="_blank">example</a>，或者使用这个<a href="example/demo.html" target="_blank">demo</a> 或 <a href="example/www/index.html" target="_blank">ECharts单一文件引入</a>作为你的模板</p>
                     <div class="code" style="margin-bottom: 25px;">
@@ -5211,7 +5338,7 @@ myChart.dispose();
 
     <!-- FOOTER -->
     <footer id="footer"></footer>
-    
+
     <script src="./asset/js/jquery.min.js"></script>
     <script type="text/javascript" src="./asset/js/echartsHome.js"></script>
     <script src="./asset/js/bootstrap.min.js"></script>
