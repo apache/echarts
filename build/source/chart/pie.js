@@ -722,7 +722,7 @@ define('echarts/chart/pie', [
                         target.style._hasSelected = false;
                         this._selected[seriesIndex][dataIndex] = false;
                     }
-                    this.zr.modShape(target.id, target);
+                    this.zr.modShape(target.id);
                 } else if (this.shapeList[i].style._hasSelected && this._selectedMode === 'single') {
                     seriesIndex = ecData.get(this.shapeList[i], 'seriesIndex');
                     dataIndex = ecData.get(this.shapeList[i], 'dataIndex');
@@ -730,7 +730,7 @@ define('echarts/chart/pie', [
                     this.shapeList[i].style.y = this.shapeList[i].style._y;
                     this.shapeList[i].style._hasSelected = false;
                     this._selected[seriesIndex][dataIndex] = false;
-                    this.zr.modShape(this.shapeList[i].id, this.shapeList[i]);
+                    this.zr.modShape(this.shapeList[i].id);
                 }
             }
             this.messageCenter.dispatch(ecConfig.EVENT.PIE_SELECTED, param.event, {

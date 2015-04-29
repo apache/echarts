@@ -163,7 +163,7 @@ define('echarts/echarts', [
     var _idBase = new Date() - 0;
     var _instances = {};
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
-    self.version = '2.2.1';
+    self.version = '2.2.2';
     self.dependencies = { zrender: '2.0.8' };
     self.init = function (dom, theme) {
         var zrender = require('zrender');
@@ -1214,6 +1214,8 @@ define('echarts/echarts', [
         CHART_TYPE_SCATTER: 'scatter',
         CHART_TYPE_PIE: 'pie',
         CHART_TYPE_RADAR: 'radar',
+        CHART_TYPE_VENN: 'venn',
+        CHART_TYPE_TREEMAP: 'treemap',
         CHART_TYPE_MAP: 'map',
         CHART_TYPE_K: 'k',
         CHART_TYPE_ISLAND: 'island',
@@ -4343,6 +4345,7 @@ define('zrender/zrender', [
                 case ecConfig.CHART_TYPE_LINE:
                 case ecConfig.CHART_TYPE_BAR:
                 case ecConfig.CHART_TYPE_K:
+                case ecConfig.CHART_TYPE_TREEMAP:
                     if (this.component.xAxis == null || this.component.yAxis == null || serie.data.length <= dataIndex) {
                         return;
                     }
@@ -4382,6 +4385,7 @@ define('zrender/zrender', [
                 case ecConfig.CHART_TYPE_LINE:
                 case ecConfig.CHART_TYPE_BAR:
                 case ecConfig.CHART_TYPE_K:
+                case ecConfig.CHART_TYPE_TREEMAP:
                 case ecConfig.CHART_TYPE_SCATTER:
                     var dataIndex = params.dataIndex;
                     for (var i = 0, l = shapeList.length; i < l; i++) {
@@ -4872,7 +4876,7 @@ define('zrender/zrender', [
                         dataIndex: -1
                     };
                 }
-                if (series[i].type === ecConfig.CHART_TYPE_PIE || series[i].type === ecConfig.CHART_TYPE_RADAR || series[i].type === ecConfig.CHART_TYPE_CHORD || series[i].type === ecConfig.CHART_TYPE_FORCE || series[i].type === ecConfig.CHART_TYPE_FUNNEL) {
+                if (series[i].type === ecConfig.CHART_TYPE_PIE || series[i].type === ecConfig.CHART_TYPE_RADAR || series[i].type === ecConfig.CHART_TYPE_CHORD || series[i].type === ecConfig.CHART_TYPE_FORCE || series[i].type === ecConfig.CHART_TYPE_FUNNEL || series[i].type === ecConfig.CHART_TYPE_TREEMAP) {
                     data = series[i].categories || series[i].data || series[i].nodes;
                     for (var j = 0, k = data.length; j < k; j++) {
                         if (data[j].name === name) {
@@ -4929,6 +4933,8 @@ define('zrender/zrender', [
                 itemShape.highlightStyle.lineWidth = 3;
                 break;
             case 'radar':
+            case 'venn':
+            case 'treemap':
             case 'scatter':
                 itemShape.highlightStyle.lineWidth = 3;
                 break;
@@ -13967,6 +13973,12 @@ define('zrender/zrender', [
             symbol = this.deepQuery(queryTarget, 'symbol') || symbol;
             var symbolSize = this.deepQuery(queryTarget, 'symbolSize');
             symbolSize = typeof symbolSize === 'function' ? symbolSize(value) : symbolSize;
+            if (typeof symbolSize === 'number') {
+                symbolSize = [
+                    symbolSize,
+                    symbolSize
+                ];
+            }
             var symbolRotate = this.deepQuery(queryTarget, 'symbolRotate');
             var normal = this.deepMerge(queryTarget, 'itemStyle.normal');
             var emphasis = this.deepMerge(queryTarget, 'itemStyle.emphasis');
@@ -13980,13 +13992,15 @@ define('zrender/zrender', [
             }
             var nColor = this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data);
             var eColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data);
+            var width = symbolSize[0];
+            var height = symbolSize[1];
             var itemShape = new IconShape({
                 style: {
                     iconType: symbol.replace('empty', '').toLowerCase(),
-                    x: x - symbolSize,
-                    y: y - symbolSize,
-                    width: symbolSize * 2,
-                    height: symbolSize * 2,
+                    x: x - width,
+                    y: y - height,
+                    width: width * 2,
+                    height: height * 2,
                     brushType: 'both',
                     color: symbol.match('empty') ? emptyColor : nColor || color,
                     strokeColor: normal.borderColor || nColor || color,
@@ -14247,7 +14261,7 @@ define('zrender/zrender', [
             }
         },
         _getAnimationKey: function (shape) {
-            if (this.type != ecConfig.CHART_TYPE_MAP) {
+            if (this.type != ecConfig.CHART_TYPE_MAP && this.type != ecConfig.CHART_TYPE_TREEMAP && this.type != ecConfig.CHART_TYPE_VENN) {
                 return ecData.get(shape, 'seriesIndex') + '_' + ecData.get(shape, 'dataIndex') + (shape._mark ? shape._mark : '') + (this.type === ecConfig.CHART_TYPE_RADAR ? ecData.get(shape, 'special') : '');
             } else {
                 return ecData.get(shape, 'seriesIndex') + '_' + ecData.get(shape, 'dataIndex') + (shape._mark ? shape._mark : 'undefined');
@@ -15532,7 +15546,7 @@ define('zrender/zrender', [
             }).done(function () {
                 newShape.__animating = false;
             }).start(easing);
-            zr.animate(newShape.id, '').when(Math.round(duration / 3 * 2), {
+            zr.animate(newShape.id, '').when(duration, {
                 rotation: [
                     0,
                     x,
@@ -18560,6 +18574,9 @@ define('zrender/zrender', [
         getAxis: function (idx) {
             return this._axisList[idx];
         },
+        getAxisCount: function () {
+            return this._axisList.length;
+        },
         clear: function () {
             for (var i = 0, l = this._axisList.length; i < l; i++) {
                 this._axisList[i].dispose && this._axisList[i].dispose();
@@ -19285,6 +19302,15 @@ define('zrender/zrender', [
                 total = scale.y.max - scale.y.min;
                 yStart = this._zoom.start / 100 * total + scale.y.min;
                 yEnd = this._zoom.end / 100 * total + scale.y.min;
+            }
+            var dataMappingMethods;
+            if (dataMappingMethods = scale.x.dataMappingMethods) {
+                xStart = dataMappingMethods.coord2Value(xStart);
+                xEnd = dataMappingMethods.coord2Value(xEnd);
+            }
+            if (dataMappingMethods = scale.y.dataMappingMethods) {
+                yStart = dataMappingMethods.coord2Value(yStart);
+                yEnd = dataMappingMethods.coord2Value(yEnd);
             }
             var value;
             for (var i = 0, l = data.length; i < l; i++) {
@@ -20119,6 +20145,7 @@ define('zrender/zrender', [
     'zrender/tool/util',
     '../util/smartSteps',
     '../util/accMath',
+    '../util/smartLogSteps',
     '../component'
 ], function (require) {
     var Base = require('./base');
@@ -20511,9 +20538,13 @@ define('zrender/zrender', [
                         }
                     }
                 }
+                var boundaryGap = this.option.type !== 'log' ? this.option.boundaryGap : [
+                    0,
+                    0
+                ];
                 var gap = Math.abs(this._max - this._min);
-                this._min = isNaN(this.option.min - 0) ? this._min - Math.abs(gap * this.option.boundaryGap[0]) : this.option.min - 0;
-                this._max = isNaN(this.option.max - 0) ? this._max + Math.abs(gap * this.option.boundaryGap[1]) : this.option.max - 0;
+                this._min = isNaN(this.option.min - 0) ? this._min - Math.abs(gap * boundaryGap[0]) : this.option.min - 0;
+                this._max = isNaN(this.option.max - 0) ? this._max + Math.abs(gap * boundaryGap[1]) : this.option.max - 0;
                 if (this._min === this._max) {
                     if (this._max === 0) {
                         this._max = 1;
@@ -20523,12 +20554,24 @@ define('zrender/zrender', [
                         this._max = this._max / this.option.splitNumber != null ? this.option.splitNumber : 5;
                     }
                 }
-                this.option.type != 'time' ? this._reformValue(this.option.scale) : this._reformTimeValue();
+                if (this.option.type === 'time') {
+                    this._reformTimeValue();
+                } else if (this.option.type === 'log') {
+                    this._reformLogValue();
+                } else {
+                    this._reformValue(this.option.scale);
+                }
             } else {
                 this._hasData = true;
                 this._min = this.option.min - 0;
                 this._max = this.option.max - 0;
-                this.option.type != 'time' ? this._customerValue() : this._reformTimeValue();
+                if (this.option.type === 'time') {
+                    this._reformTimeValue();
+                } else if (this.option.type === 'log') {
+                    this._reformLogValue();
+                } else {
+                    this._customerValue();
+                }
             }
         },
         _calculSum: function (data, i) {
@@ -20664,7 +20707,11 @@ define('zrender/zrender', [
                 curValue = ecDate.getNewDate(curValue - -gapValue);
             }
             this._valueList.push(ecDate.getNewDate(this._max));
-            this._reformLabelData(formatter);
+            this._reformLabelData(function (formatterStr) {
+                return function (value) {
+                    return ecDate.format(formatterStr, value);
+                };
+            }(formatter));
         },
         _customerValue: function () {
             var accMath = require('../util/accMath');
@@ -20676,32 +20723,45 @@ define('zrender/zrender', [
             }
             this._reformLabelData();
         },
-        _reformLabelData: function (timeFormatter) {
+        _reformLogValue: function () {
+            var thisOption = this.option;
+            var result = require('../util/smartLogSteps')({
+                dataMin: this._min,
+                dataMax: this._max,
+                logPositive: thisOption.logPositive,
+                logLabelBase: thisOption.logLabelBase,
+                splitNumber: thisOption.splitNumber
+            });
+            this._min = result.dataMin;
+            this._max = result.dataMax;
+            this._valueList = result.tickList;
+            this._dataMappingMethods = result.dataMappingMethods;
+            this._reformLabelData(result.labelFormatter);
+        },
+        _reformLabelData: function (innerFormatter) {
             this._valueLabel = [];
             var formatter = this.option.axisLabel.formatter;
             if (formatter) {
                 for (var i = 0, l = this._valueList.length; i < l; i++) {
                     if (typeof formatter === 'function') {
-                        this._valueLabel.push(timeFormatter ? formatter.call(this.myChart, this._valueList[i], timeFormatter) : formatter.call(this.myChart, this._valueList[i]));
+                        this._valueLabel.push(innerFormatter ? formatter.call(this.myChart, this._valueList[i], innerFormatter) : formatter.call(this.myChart, this._valueList[i]));
                     } else if (typeof formatter === 'string') {
-                        this._valueLabel.push(timeFormatter ? ecDate.format(formatter, this._valueList[i]) : formatter.replace('{value}', this._valueList[i]));
+                        this._valueLabel.push(innerFormatter ? ecDate.format(formatter, this._valueList[i]) : formatter.replace('{value}', this._valueList[i]));
                     }
-                }
-            } else if (timeFormatter) {
-                for (var i = 0, l = this._valueList.length; i < l; i++) {
-                    this._valueLabel.push(ecDate.format(timeFormatter, this._valueList[i]));
                 }
             } else {
                 for (var i = 0, l = this._valueList.length; i < l; i++) {
-                    this._valueLabel.push(this.numAddCommas(this._valueList[i]));
+                    this._valueLabel.push(innerFormatter ? innerFormatter(this._valueList[i]) : this.numAddCommas(this._valueList[i]));
                 }
             }
         },
         getExtremum: function () {
             this._calculateValue();
+            var dataMappingMethods = this._dataMappingMethods;
             return {
                 min: this._min,
-                max: this._max
+                max: this._max,
+                dataMappingMethods: dataMappingMethods ? zrUtil.merge({}, dataMappingMethods) : null
             };
         },
         refresh: function (newOption, newSeries) {
@@ -20716,6 +20776,9 @@ define('zrender/zrender', [
             }
         },
         getCoord: function (value) {
+            if (this._dataMappingMethods) {
+                value = this._dataMappingMethods.value2Coord(value);
+            }
             value = value < this._min ? this._min : value;
             value = value > this._max ? this._max : value;
             var result;
@@ -20743,6 +20806,9 @@ define('zrender/zrender', [
                 coord = coord < this.grid.getX() ? this.grid.getX() : coord;
                 coord = coord > this.grid.getXend() ? this.grid.getXend() : coord;
                 result = this._min + (coord - this.grid.getX()) / this.grid.getWidth() * (this._max - this._min);
+            }
+            if (this._dataMappingMethods) {
+                result = this._dataMappingMethods.coord2Value(result);
             }
             return result.toFixed(2) - 0;
         },
@@ -21369,6 +21435,254 @@ define('zrender/zrender', [
         return makeResult(expMin.c, expMax.c, reference.secs, expSpan.e);
     }
     return smartSteps;
+});define('echarts/util/smartLogSteps', [
+    'require',
+    './number'
+], function (require) {
+    var number = require('./number');
+    var Mt = Math;
+    var mathLog = Mt.log;
+    var mathPow = Mt.pow;
+    var mathAbs = Mt.abs;
+    var mathCeil = Mt.ceil;
+    var mathFloor = Mt.floor;
+    var LOG_BASE = Mt.E;
+    var LN10 = Mt.LN10;
+    var LN2 = Mt.LN2;
+    var LN2D10 = LN2 / LN10;
+    var EPSILON = 1e-9;
+    var DEFAULT_SPLIT_NUMBER = 5;
+    var MIN_BASE_10_SPLIT_NUMBER = 2;
+    var SUPERSCRIPTS = {
+        '0': '⁰',
+        '1': '¹',
+        '2': '²',
+        '3': '³',
+        '4': '⁴',
+        '5': '⁵',
+        '6': '⁶',
+        '7': '⁷',
+        '8': '⁸',
+        '9': '⁹',
+        '-': '⁻'
+    };
+    var logPositive;
+    var logLabelBase;
+    var logLabelMode;
+    var lnBase;
+    var custOpts;
+    var splitNumber;
+    var logMappingOffset;
+    var absMin;
+    var absMax;
+    var tickList;
+    function smartLogSteps(opts) {
+        clearStaticVariables();
+        custOpts = opts || {};
+        reformSetting();
+        makeTicksList();
+        return [
+            makeResult(),
+            clearStaticVariables()
+        ][0];
+    }
+    function clearStaticVariables() {
+        logPositive = custOpts = logMappingOffset = lnBase = absMin = absMax = splitNumber = tickList = logLabelBase = logLabelMode = null;
+    }
+    function reformSetting() {
+        logLabelBase = custOpts.logLabelBase;
+        if (logLabelBase == null) {
+            logLabelMode = 'plain';
+            logLabelBase = 10;
+            lnBase = LN10;
+        } else {
+            logLabelBase = +logLabelBase;
+            if (logLabelBase < 1) {
+                logLabelBase = 10;
+            }
+            logLabelMode = 'exponent';
+            lnBase = mathLog(logLabelBase);
+        }
+        splitNumber = custOpts.splitNumber;
+        splitNumber == null && (splitNumber = DEFAULT_SPLIT_NUMBER);
+        var dataMin = parseFloat(custOpts.dataMin);
+        var dataMax = parseFloat(custOpts.dataMax);
+        if (!isFinite(dataMin) && !isFinite(dataMax)) {
+            dataMin = dataMax = 1;
+        } else if (!isFinite(dataMin)) {
+            dataMin = dataMax;
+        } else if (!isFinite(dataMax)) {
+            dataMax = dataMin;
+        } else if (dataMin > dataMax) {
+            dataMax = [
+                dataMin,
+                dataMin = dataMax
+            ][0];
+        }
+        logPositive = custOpts.logPositive;
+        if (logPositive == null) {
+            logPositive = dataMax > 0 || dataMin === 0;
+        }
+        absMin = logPositive ? dataMin : -dataMax;
+        absMax = logPositive ? dataMax : -dataMin;
+        absMin < EPSILON && (absMin = EPSILON);
+        absMax < EPSILON && (absMax = EPSILON);
+    }
+    function makeTicksList() {
+        tickList = [];
+        var maxDataLog = fixAccurate(mathLog(absMax) / lnBase);
+        var minDataLog = fixAccurate(mathLog(absMin) / lnBase);
+        var maxExpon = mathCeil(maxDataLog);
+        var minExpon = mathFloor(minDataLog);
+        var spanExpon = maxExpon - minExpon;
+        var spanDataLog = maxDataLog - minDataLog;
+        if (logLabelMode === 'exponent') {
+            baseAnalysis();
+        } else {
+            !(spanExpon <= MIN_BASE_10_SPLIT_NUMBER && splitNumber > MIN_BASE_10_SPLIT_NUMBER) ? baseAnalysis() : detailAnalysis();
+        }
+        function baseAnalysis() {
+            if (spanExpon < splitNumber) {
+                splitNumber = spanExpon;
+            }
+            var stepExpon = mathFloor(fixAccurate(spanExpon / splitNumber));
+            var splitNumberAdjust = mathCeil(fixAccurate(spanExpon / stepExpon));
+            var spanExponAdjust = stepExpon * splitNumberAdjust;
+            var halfDiff = (spanExponAdjust - spanDataLog) / 2;
+            var minExponAdjust = mathFloor(fixAccurate(minDataLog - halfDiff));
+            if (aroundZero(minExponAdjust - minDataLog)) {
+                minExponAdjust -= 1;
+            }
+            logMappingOffset = -minExponAdjust * lnBase;
+            for (var n = minExponAdjust; n - stepExpon <= maxDataLog; n += stepExpon) {
+                tickList.push(mathPow(logLabelBase, n));
+            }
+        }
+        function detailAnalysis() {
+            var minDecimal = toDecimalFrom4Hex(minExpon, 0);
+            var endDecimal = minDecimal + 2;
+            while (minDecimal < endDecimal && toH(minDecimal + 1) + toK(minDecimal + 1) * LN2D10 < minDataLog) {
+                minDecimal++;
+            }
+            var maxDecimal = toDecimalFrom4Hex(maxExpon, 0);
+            var endDecimal = maxDecimal - 2;
+            while (maxDecimal > endDecimal && toH(maxDecimal - 1) + toK(maxDecimal - 1) * LN2D10 > maxDataLog) {
+                maxDecimal--;
+            }
+            logMappingOffset = -(toH(minDecimal) * LN10 + toK(minDecimal) * LN2);
+            for (var i = minDecimal; i <= maxDecimal; i++) {
+                var h = toH(i);
+                var k = toK(i);
+                tickList.push(mathPow(10, h) * mathPow(2, k));
+            }
+        }
+        function toDecimalFrom4Hex(h, k) {
+            return h * 3 + k;
+        }
+        function toK(decimal) {
+            return decimal - toH(decimal) * 3;
+        }
+        function toH(decimal) {
+            return mathFloor(fixAccurate(decimal / 3));
+        }
+    }
+    function makeResult() {
+        var resultTickList = [];
+        for (var i = 0, len = tickList.length; i < len; i++) {
+            resultTickList[i] = (logPositive ? 1 : -1) * tickList[i];
+        }
+        !logPositive && resultTickList.reverse();
+        var dataMappingMethods = makeDataMappingMethods();
+        var value2Coord = dataMappingMethods.value2Coord;
+        var newDataMin = value2Coord(resultTickList[0]);
+        var newDataMax = value2Coord(resultTickList[resultTickList.length - 1]);
+        if (newDataMin === newDataMax) {
+            newDataMin -= 1;
+            newDataMax += 1;
+        }
+        return {
+            dataMin: newDataMin,
+            dataMax: newDataMax,
+            tickList: resultTickList,
+            logPositive: logPositive,
+            labelFormatter: makeLabelFormatter(),
+            dataMappingMethods: dataMappingMethods
+        };
+    }
+    function makeLabelFormatter() {
+        if (logLabelMode === 'exponent') {
+            var myLogLabelBase = logLabelBase;
+            var myLnBase = lnBase;
+            return function (value) {
+                if (!isFinite(parseFloat(value))) {
+                    return '';
+                }
+                var sign = '';
+                if (value < 0) {
+                    value = -value;
+                    sign = '-';
+                }
+                return sign + myLogLabelBase + makeSuperscriptExponent(mathLog(value) / myLnBase);
+            };
+        } else {
+            return function (value) {
+                if (!isFinite(parseFloat(value))) {
+                    return '';
+                }
+                return number.addCommas(formatNumber(value));
+            };
+        }
+    }
+    function makeDataMappingMethods() {
+        var myLogPositive = logPositive;
+        var myLogMappingOffset = logMappingOffset;
+        return {
+            value2Coord: function (x) {
+                if (x == null || isNaN(x) || !isFinite(x)) {
+                    return x;
+                }
+                x = parseFloat(x);
+                if (!isFinite(x)) {
+                    x = EPSILON;
+                } else if (myLogPositive && x < EPSILON) {
+                    x = EPSILON;
+                } else if (!myLogPositive && x > -EPSILON) {
+                    x = -EPSILON;
+                }
+                x = mathAbs(x);
+                return (myLogPositive ? 1 : -1) * (mathLog(x) + myLogMappingOffset);
+            },
+            coord2Value: function (x) {
+                if (x == null || isNaN(x) || !isFinite(x)) {
+                    return x;
+                }
+                x = parseFloat(x);
+                if (!isFinite(x)) {
+                    x = EPSILON;
+                }
+                return myLogPositive ? mathPow(LOG_BASE, x - myLogMappingOffset) : -mathPow(LOG_BASE, -x + myLogMappingOffset);
+            }
+        };
+    }
+    function fixAccurate(result) {
+        return +Number(+result).toFixed(14);
+    }
+    function formatNumber(num) {
+        return Number(num).toFixed(15).replace(/\.?0*$/, '');
+    }
+    function makeSuperscriptExponent(exponent) {
+        exponent = formatNumber(Math.round(exponent));
+        var result = [];
+        for (var i = 0, len = exponent.length; i < len; i++) {
+            var cha = exponent.charAt(i);
+            result.push(SUPERSCRIPTS[cha] || '');
+        }
+        return result.join('');
+    }
+    function aroundZero(val) {
+        return val > -EPSILON && val < EPSILON;
+    }
+    return smartLogSteps;
 });define('echarts/chart/line', [
     'require',
     './base',
@@ -25467,7 +25781,7 @@ define('zrender/zrender', [
                         target.style._hasSelected = false;
                         this._selected[seriesIndex][dataIndex] = false;
                     }
-                    this.zr.modShape(target.id, target);
+                    this.zr.modShape(target.id);
                 } else if (this.shapeList[i].style._hasSelected && this._selectedMode === 'single') {
                     seriesIndex = ecData.get(this.shapeList[i], 'seriesIndex');
                     dataIndex = ecData.get(this.shapeList[i], 'dataIndex');
@@ -25475,7 +25789,7 @@ define('zrender/zrender', [
                     this.shapeList[i].style.y = this.shapeList[i].style._y;
                     this.shapeList[i].style._hasSelected = false;
                     this._selected[seriesIndex][dataIndex] = false;
-                    this.zr.modShape(this.shapeList[i].id, this.shapeList[i]);
+                    this.zr.modShape(this.shapeList[i].id);
                 }
             }
             this.messageCenter.dispatch(ecConfig.EVENT.PIE_SELECTED, param.event, {
@@ -27963,17 +28277,18 @@ define('zrender/zrender', [
             var minRadius = this.query(serie, 'minRadius');
             var maxRadius = this.query(serie, 'maxRadius');
             this._steps = serie.steps || 1;
-            this._layout.center = this.parseCenter(this.zr, serie.center);
-            this._layout.width = this.parsePercent(serie.size, this.zr.getWidth());
-            this._layout.height = this.parsePercent(serie.size, this.zr.getHeight());
-            this._layout.large = serie.large;
-            this._layout.scaling = serie.scaling;
-            this._layout.ratioScaling = serie.ratioScaling;
-            this._layout.gravity = serie.gravity;
-            this._layout.temperature = 1;
-            this._layout.coolDown = serie.coolDown;
-            this._layout.preventNodeEdgeOverlap = serie.preventOverlap;
-            this._layout.preventNodeOverlap = serie.preventOverlap;
+            var layout = this._layout;
+            layout.center = this.parseCenter(this.zr, serie.center);
+            layout.width = this.parsePercent(serie.size, this.zr.getWidth());
+            layout.height = this.parsePercent(serie.size, this.zr.getHeight());
+            layout.large = serie.large;
+            layout.scaling = serie.scaling;
+            layout.ratioScaling = serie.ratioScaling;
+            layout.gravity = serie.gravity;
+            layout.temperature = 1;
+            layout.coolDown = serie.coolDown;
+            layout.preventNodeEdgeOverlap = serie.preventOverlap;
+            layout.preventNodeOverlap = serie.preventOverlap;
             var min = Infinity;
             var max = -Infinity;
             for (var i = 0; i < len; i++) {
@@ -28061,7 +28376,15 @@ define('zrender/zrender', [
                     shape.style.color = category ? this.getColor(category.name) : this.getColor(node.id);
                 }
                 shape.style.iconType = this.deepQuery(queryTarget, 'symbol');
-                shape.style.width = shape.style.height = (this.deepQuery(queryTarget, 'symbolSize') || 0) * 2;
+                var symbolSize = this.deepQuery(queryTarget, 'symbolSize') || 0;
+                if (typeof symbolSize === 'number') {
+                    symbolSize = [
+                        symbolSize,
+                        symbolSize
+                    ];
+                }
+                shape.style.width = symbolSize[0] * 2;
+                shape.style.height = symbolSize[1] * 2;
                 if (shape.style.iconType.match('image')) {
                     shape.style.image = shape.style.iconType.replace(new RegExp('^image:\\/\\/'), '');
                     shape = new ImageShape({
@@ -46939,6 +47262,517 @@ define('zrender/zrender', [
         }
     }
     return eventRiverLayout;
+});define('echarts/chart/venn', [
+    'require',
+    './base',
+    'zrender/shape/Text',
+    'zrender/shape/Circle',
+    'zrender/shape/Path',
+    '../config',
+    '../util/ecData',
+    'zrender/tool/util',
+    '../chart'
+], function (require) {
+    var ChartBase = require('./base');
+    var TextShape = require('zrender/shape/Text');
+    var CircleShape = require('zrender/shape/Circle');
+    var PathShape = require('zrender/shape/Path');
+    var ecConfig = require('../config');
+    ecConfig.venn = {
+        zlevel: 0,
+        z: 1,
+        calculable: false
+    };
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    function Venn(ecTheme, messageCenter, zr, option, myChart) {
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
+        this.refresh(option);
+    }
+    Venn.prototype = {
+        type: ecConfig.CHART_TYPE_VENN,
+        _buildShape: function () {
+            this.selectedMap = {};
+            this._symbol = this.option.symbolList;
+            this._queryTarget;
+            this._dropBoxList = [];
+            this._vennDataCounter = 0;
+            var series = this.series;
+            this.data = series[0].data;
+            this._buildVenn(this.data);
+            this.addShapeList();
+        },
+        _buildVenn: function (data) {
+            var r0;
+            var r1;
+            if (data[0].value > data[1].value) {
+                r0 = this.zr.getHeight() / 3;
+                r1 = r0 * Math.sqrt(data[1].value) / Math.sqrt(data[0].value);
+            } else {
+                r1 = this.zr.getHeight() / 3;
+                r0 = r1 * Math.sqrt(data[0].value) / Math.sqrt(data[1].value);
+            }
+            var x0 = this.zr.getWidth() / 2 - r0;
+            var coincideLengthAnchor = (r0 + r1) / 2 * Math.sqrt(data[2].value) / Math.sqrt((data[0].value + data[1].value) / 2);
+            var coincideLength = r0 + r1;
+            if (data[2].value !== 0) {
+                coincideLength = this._getCoincideLength(data[0].value, data[1].value, data[2].value, r0, r1, coincideLengthAnchor, Math.abs(r0 - r1), r0 + r1);
+            }
+            var x1 = x0 + coincideLength;
+            var y = this.zr.getHeight() / 2;
+            this._buildItem(0, 0, x0, y, r0);
+            this._buildItem(0, 1, x1, y, r1);
+            if (data[2].value !== 0 && data[2].value !== data[0].value && data[2].value !== data[1].value) {
+                var xLeft = (r0 * r0 - r1 * r1) / (2 * coincideLength) + coincideLength / 2;
+                var xRight = coincideLength / 2 - (r0 * r0 - r1 * r1) / (2 * coincideLength);
+                var h = Math.sqrt(r0 * r0 - xLeft * xLeft);
+                var rightLargeArcFlag = 0;
+                var leftLargeArcFlag = 0;
+                if (data[0].value > data[1].value && x1 < x0 + xLeft) {
+                    leftLargeArcFlag = 1;
+                }
+                if (data[0].value < data[1].value && x1 < x0 + xRight) {
+                    rightLargeArcFlag = 1;
+                }
+                this._buildCoincideItem(2, x0 + xLeft, y - h, y + h, r0, r1, rightLargeArcFlag, leftLargeArcFlag);
+            }
+        },
+        _getCoincideLength: function (value0, value1, value2, r0, r1, coincideLengthAnchor, coincideLengthAnchorMin, coincideLengthAnchorMax) {
+            var x = (r0 * r0 - r1 * r1) / (2 * coincideLengthAnchor) + coincideLengthAnchor / 2;
+            var y = coincideLengthAnchor / 2 - (r0 * r0 - r1 * r1) / (2 * coincideLengthAnchor);
+            var alfa = Math.acos(x / r0);
+            var beta = Math.acos(y / r1);
+            var area0 = r0 * r0 * Math.PI;
+            var area2 = alfa * r0 * r0 - x * r0 * Math.sin(alfa) + beta * r1 * r1 - y * r1 * Math.sin(beta);
+            var scaleAnchor = area2 / area0;
+            var scale = value2 / value0;
+            var approximateValue = Math.abs(scaleAnchor / scale);
+            if (approximateValue > 0.999 && approximateValue < 1.001) {
+                return coincideLengthAnchor;
+            } else if (approximateValue <= 0.999) {
+                coincideLengthAnchorMax = coincideLengthAnchor;
+                coincideLengthAnchor = (coincideLengthAnchor + coincideLengthAnchorMin) / 2;
+                return this._getCoincideLength(value0, value1, value2, r0, r1, coincideLengthAnchor, coincideLengthAnchorMin, coincideLengthAnchorMax);
+            } else {
+                coincideLengthAnchorMin = coincideLengthAnchor;
+                coincideLengthAnchor = (coincideLengthAnchor + coincideLengthAnchorMax) / 2;
+                return this._getCoincideLength(value0, value1, value2, r0, r1, coincideLengthAnchor, coincideLengthAnchorMin, coincideLengthAnchorMax);
+            }
+        },
+        _buildItem: function (seriesIndex, dataIndex, x, y, r) {
+            var series = this.series;
+            var circle = this.getCircle(dataIndex, x, y, r);
+            ecData.pack(circle, series[0], seriesIndex, series[0].data[dataIndex], dataIndex, series[0].data[dataIndex].name);
+            this.shapeList.push(circle);
+            if (series[0].itemStyle.normal.label.show) {
+                var label = this.getLabel(dataIndex, x, y, r);
+                ecData.pack(label, series[0], seriesIndex, series[0].data[dataIndex], dataIndex, series[0].data[dataIndex].name);
+                this.shapeList.push(label);
+            }
+        },
+        _buildCoincideItem: function (dataIndex, x, y0, y1, r0, r1, rightLargeArcFlag, leftLargeArcFlag) {
+            var series = this.series;
+            var serie = series[0];
+            var data = this.data[dataIndex];
+            var queryTarget = [
+                data,
+                serie
+            ];
+            var normal = this.deepMerge(queryTarget, 'itemStyle.normal') || {};
+            var emphasis = this.deepMerge(queryTarget, 'itemStyle.emphasis') || {};
+            var normalColor = normal.color || this.zr.getColor(dataIndex);
+            var emphasisColor = emphasis.color || this.zr.getColor(dataIndex);
+            var path = 'M' + x + ',' + y0 + 'A' + r0 + ',' + r0 + ',0,' + rightLargeArcFlag + ',1,' + x + ',' + y1 + 'A' + r1 + ',' + r1 + ',0,' + leftLargeArcFlag + ',1,' + x + ',' + y0;
+            var style = {
+                color: normalColor,
+                path: path
+            };
+            var shape = {
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
+                style: style,
+                highlightStyle: {
+                    color: emphasisColor,
+                    lineWidth: emphasis.borderWidth,
+                    strokeColor: emphasis.borderColor
+                }
+            };
+            shape = new PathShape(shape);
+            if (shape.buildPathArray) {
+                shape.style.pathArray = shape.buildPathArray(style.path);
+            }
+            ecData.pack(shape, series[0], 0, series[0].data[dataIndex], dataIndex, series[0].data[dataIndex].name);
+            this.shapeList.push(shape);
+        },
+        getCircle: function (dataIndex, x, y, r) {
+            var serie = this.series[0];
+            var data = this.data[dataIndex];
+            var queryTarget = [
+                data,
+                serie
+            ];
+            var normal = this.deepMerge(queryTarget, 'itemStyle.normal') || {};
+            var emphasis = this.deepMerge(queryTarget, 'itemStyle.emphasis') || {};
+            var normalColor = normal.color || this.zr.getColor(dataIndex);
+            var emphasisColor = emphasis.color || this.zr.getColor(dataIndex);
+            var circle = {
+                zlevel: this.getZlevelBase(),
+                clickable: true,
+                style: {
+                    x: x,
+                    y: y,
+                    r: r,
+                    brushType: 'fill',
+                    opacity: 1,
+                    color: normalColor
+                },
+                highlightStyle: {
+                    color: emphasisColor,
+                    lineWidth: emphasis.borderWidth,
+                    strokeColor: emphasis.borderColor
+                }
+            };
+            if (this.deepQuery([
+                    data,
+                    serie,
+                    this.option
+                ], 'calculable')) {
+                this.setCalculable(circle);
+                circle.draggable = true;
+            }
+            return new CircleShape(circle);
+        },
+        getLabel: function (dataIndex, x, y, r) {
+            var serie = this.series[0];
+            var itemStyle = serie.itemStyle;
+            var data = this.data[dataIndex];
+            var queryTarget = [
+                data,
+                serie
+            ];
+            var normal = this.deepMerge(queryTarget, 'itemStyle.normal') || {};
+            var status = 'normal';
+            var labelControl = itemStyle[status].label;
+            var textStyle = labelControl.textStyle || {};
+            var text = this.getLabelText(dataIndex, status);
+            var textFont = this.getFont(textStyle);
+            var textColor = normal.color || this.zr.getColor(dataIndex);
+            var textSize = textStyle.fontSize || 12;
+            var textShape = {
+                zlevel: ecConfig.venn.zlevel + 1,
+                style: {
+                    x: x,
+                    y: y - r - textSize,
+                    color: textStyle.color || textColor,
+                    text: text,
+                    textFont: textFont,
+                    textAlign: 'center'
+                }
+            };
+            return new TextShape(textShape);
+        },
+        getLabelText: function (dataIndex, status) {
+            var series = this.series;
+            var serie = series[0];
+            var data = serie.data[dataIndex];
+            var formatter = this.deepQuery([
+                data,
+                serie
+            ], 'itemStyle.' + status + '.label.formatter');
+            if (formatter) {
+                if (typeof formatter == 'function') {
+                    return formatter(serie.name, data.name, data.value);
+                } else if (typeof formatter == 'string') {
+                    formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}');
+                    formatter = formatter.replace('{a0}', serie.name).replace('{b0}', data.name).replace('{c0}', data.value);
+                    return formatter;
+                }
+            } else {
+                return data.name;
+            }
+        },
+        refresh: function (newOption) {
+            if (newOption) {
+                this.option = newOption;
+                this.series = newOption.series;
+            }
+            this._buildShape();
+        }
+    };
+    zrUtil.inherits(Venn, ChartBase);
+    require('../chart').define('venn', Venn);
+    return Venn;
+});define('echarts/chart/treemap', [
+    'require',
+    './base',
+    'zrender/tool/area',
+    'zrender/shape/Rectangle',
+    'zrender/shape/Text',
+    '../layout/TreeMap',
+    '../config',
+    '../util/ecData',
+    'zrender/tool/util',
+    '../chart'
+], function (require) {
+    var ChartBase = require('./base');
+    var toolArea = require('zrender/tool/area');
+    var RectangleShape = require('zrender/shape/Rectangle');
+    var TextShape = require('zrender/shape/Text');
+    var TreeMapLayout = require('../layout/TreeMap');
+    var ecConfig = require('../config');
+    ecConfig.treemap = {
+        zlevel: 0,
+        z: 1,
+        calculable: false,
+        clickable: true
+    };
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    function Treemap(ecTheme, messageCenter, zr, option, myChart) {
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
+        this.refresh(option);
+    }
+    Treemap.prototype = {
+        type: ecConfig.CHART_TYPE_TREEMAP,
+        _buildShape: function () {
+            var series = this.series;
+            this.data = series[0].data;
+            this.x0 = 100;
+            this.y0 = 50;
+            this.width0 = 500;
+            this.height0 = 300;
+            this._buildTreemap(this.data);
+            this.addShapeList();
+        },
+        _buildTreemap: function (data) {
+            var area0 = this.width0 * this.height0;
+            var sum = 0;
+            var areaArr = [];
+            for (var i = 0; i < data.length; i++) {
+                sum += data[i].value;
+            }
+            for (var j = 0; j < data.length; j++) {
+                areaArr.push(data[j].value * area0 / sum);
+            }
+            var treeMapLayout = new TreeMapLayout({
+                areas: areaArr,
+                x0: this.x0,
+                y0: this.y0,
+                width0: this.width0,
+                height0: this.height0
+            });
+            var locationArr = treeMapLayout.rectangleList;
+            for (var k = 0; k < locationArr.length; k++) {
+                var item = locationArr[k];
+                this._buildItem(item.x, item.y, item.width, item.height, k);
+            }
+        },
+        _buildItem: function (x, y, width, height, index) {
+            var series = this.series;
+            var rectangle = this.getRectangle(x, y, width, height, this.data[index].name, index);
+            ecData.pack(rectangle, series[0], 0, series[0].data[index], 0, series[0].data[index].name);
+            this.shapeList.push(rectangle);
+        },
+        getRectangle: function (x, y, width, height, text, index) {
+            var serie = this.series[0];
+            var data = this.data[index];
+            var queryTarget = [
+                data,
+                serie
+            ];
+            var normal = this.deepMerge(queryTarget, 'itemStyle.normal') || {};
+            var emphasis = this.deepMerge(queryTarget, 'itemStyle.emphasis') || {};
+            var color = normal.color || this.zr.getColor(index);
+            var emphasisColor = emphasis.color || this.zr.getColor(index);
+            var borderWidth = normal.borderWidth || 0;
+            var borderColor = normal.borderColor || '#ccc';
+            var textShape = this.getLabel(x, y, width, height, this.data[index].name, index);
+            var rectangleShape = {
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
+                hoverable: true,
+                clickable: true,
+                style: $.extend({
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: height,
+                    brushType: 'both',
+                    color: color,
+                    lineWidth: borderWidth,
+                    strokeColor: borderColor
+                }, textShape.style),
+                highlightStyle: $.extend({
+                    color: emphasisColor,
+                    lineWidth: emphasis.borderWidth,
+                    strokeColor: emphasis.borderColor
+                }, textShape.highlightStyle)
+            };
+            return new RectangleShape(rectangleShape);
+        },
+        getLabel: function (rectangleX, rectangleY, rectangleWidth, rectangleHeight, text, index) {
+            if (!this.series[0].itemStyle.normal.label.show) {
+                return {};
+            }
+            var marginY = 12;
+            var marginX = 5;
+            var fontSize = 13;
+            var textFont = fontSize + 'px Arial';
+            var textWidth = toolArea.getTextWidth(text, textFont);
+            var textHeight = toolArea.getTextHeight(text, textFont);
+            if (marginX + textWidth > rectangleWidth || marginY + textHeight > rectangleHeight) {
+                return {};
+            }
+            var data = this.data[index];
+            var textShape = {
+                zlevel: this.getZlevelBase() + 1,
+                z: this.getZBase() + 1,
+                hoverable: false,
+                style: {
+                    x: rectangleX + marginX,
+                    y: rectangleY + marginY,
+                    text: text,
+                    textColor: '#777',
+                    textFont: textFont
+                },
+                highlightStyle: { text: text }
+            };
+            textShape = {
+                style: { text: text },
+                highlightStyle: { text: text }
+            };
+            textShape = this.addLabel(textShape, this.series[0], data, text);
+            textShape.style.textPosition = 'specific';
+            textShape.style.textX = rectangleX + marginX;
+            textShape.style.textY = rectangleY + marginY;
+            textShape.style.textColor = textShape.style.textColor || '#000';
+            textShape.highlightStyle.textPosition = 'specific';
+            textShape.highlightStyle.textX = rectangleX + marginX;
+            textShape.highlightStyle.textY = rectangleY + marginY;
+            textShape.highlightStyle.textColor = textShape.highlightStyle.textColor || '#000';
+            return textShape;
+        },
+        refresh: function (newOption) {
+            if (newOption) {
+                this.option = newOption;
+                this.series = newOption.series;
+            }
+            this._buildShape();
+        }
+    };
+    zrUtil.inherits(Treemap, ChartBase);
+    require('../chart').define('treemap', Treemap);
+    return Treemap;
+});define('echarts/layout/TreeMap', ['require'], function (require) {
+    function TreeMapLayout(opts) {
+        this.rectangleList = [];
+        var row = {
+            x: opts.x0,
+            y: opts.y0,
+            width: opts.width0,
+            height: opts.height0
+        };
+        this.squarify(opts.areas, row);
+    }
+    TreeMapLayout.prototype.squarify = function (areas, row) {
+        var layoutDirection = 'VERTICAL';
+        var width = row.width;
+        var height = row.height;
+        if (row.width < row.height) {
+            layoutDirection = 'HORIZONTAL';
+            width = row.height;
+            height = row.width;
+        }
+        var shapeArr = this.getShapeListInAbstractRow(areas, width, height);
+        for (var i = 0; i < shapeArr.length; i++) {
+            shapeArr[i].x = 0;
+            shapeArr[i].y = 0;
+            for (var j = 0; j < i; j++) {
+                shapeArr[i].y += shapeArr[j].height;
+            }
+        }
+        var nextRow = {};
+        if (layoutDirection == 'VERTICAL') {
+            for (var k = 0; k < shapeArr.length; k++) {
+                this.rectangleList.push({
+                    x: shapeArr[k].x + row.x,
+                    y: shapeArr[k].y + row.y,
+                    width: shapeArr[k].width,
+                    height: shapeArr[k].height
+                });
+            }
+            nextRow = {
+                x: shapeArr[0].width + row.x,
+                y: row.y,
+                width: row.width - shapeArr[0].width,
+                height: row.height
+            };
+        } else {
+            for (var l = 0; l < shapeArr.length; l++) {
+                this.rectangleList.push({
+                    x: shapeArr[l].y + row.x,
+                    y: shapeArr[l].x + row.y,
+                    width: shapeArr[l].height,
+                    height: shapeArr[l].width
+                });
+            }
+            nextRow = {
+                x: row.x,
+                y: row.y + shapeArr[0].width,
+                width: row.width,
+                height: row.height - shapeArr[0].width
+            };
+        }
+        var nextAreaArr = areas.slice(shapeArr.length);
+        if (nextAreaArr.length === 0) {
+            return;
+        } else {
+            this.squarify(nextAreaArr, nextRow);
+        }
+    };
+    TreeMapLayout.prototype.getShapeListInAbstractRow = function (areas, width, height) {
+        if (areas.length === 1) {
+            return [{
+                    width: width,
+                    height: height
+                }];
+        }
+        for (var count = 1; count < areas.length; count++) {
+            var shapeArr0 = this.placeFixedNumberRectangles(areas.slice(0, count), width, height);
+            var shapeArr1 = this.placeFixedNumberRectangles(areas.slice(0, count + 1), width, height);
+            if (this.isFirstBetter(shapeArr0, shapeArr1)) {
+                return shapeArr0;
+            }
+        }
+    };
+    TreeMapLayout.prototype.placeFixedNumberRectangles = function (areaSubArr, width, height) {
+        var count = areaSubArr.length;
+        var shapeArr = [];
+        var sum = 0;
+        for (var i = 0; i < areaSubArr.length; i++) {
+            sum += areaSubArr[i];
+        }
+        var cellWidth = sum / height;
+        for (var j = 0; j < count; j++) {
+            var cellHeight = height * areaSubArr[j] / sum;
+            shapeArr.push({
+                width: cellWidth,
+                height: cellHeight
+            });
+        }
+        return shapeArr;
+    };
+    TreeMapLayout.prototype.isFirstBetter = function (shapeArr0, shapeArr1) {
+        var ratio0 = shapeArr0[0].height / shapeArr0[0].width;
+        ratio0 = ratio0 > 1 ? 1 / ratio0 : ratio0;
+        var ratio1 = shapeArr1[0].height / shapeArr1[0].width;
+        ratio1 = ratio1 > 1 ? 1 / ratio1 : ratio1;
+        if (Math.abs(ratio0 - 1) <= Math.abs(ratio1 - 1)) {
+            return true;
+        }
+        return false;
+    };
+    return TreeMapLayout;
 });
 var zrender = require('zrender');
 zrender.tool = {
@@ -46988,6 +47822,10 @@ require("echarts/chart/gauge");
 require("echarts/chart/funnel");
 
 require("echarts/chart/eventRiver");
+
+require("echarts/chart/venn");
+
+require("echarts/chart/treemap");
 
 _global['echarts'] = echarts;
 _global['zrender'] = zrender;
