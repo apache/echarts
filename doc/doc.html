@@ -2905,10 +2905,10 @@ indicator : [
                             </td>
                         </tr>
                         <tr>
-                            <td> <b>{number | Function} </b>symbolSize </td>
+                            <td> <b>{number | Function | Array} </b>symbolSize </td>
                             <td> 2 | 4</td>
                             <td> 折线图 (2)，散点图(4) </td>
-                            <td> 标志图形大小，可计算特性启用情况建议增大以提高交互体验。实现气泡图时symbolSize需为Function，气泡大小取决于该方法返回值，传入参数为当前数据项（value数组）</td>
+                            <td> 标志图形大小，可计算特性启用情况建议增大以提高交互体验。可以是单个值，如果在 symbol 为图片的时候想要分别设置宽高防止图片被拉伸，可以使用数组，其中数组第一个值是高，第二个值是宽。 实现气泡图时symbolSize需为Function，气泡大小取决于该方法返回值，传入参数为当前数据项（value数组）。</td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> symbolRotate </td>
@@ -3029,7 +3029,7 @@ indicator : [
                             <td> 同<a href="#SeriesCartesian" title="">series（直角系）</a></td>
                         </tr>
                         <tr>
-                            <td> <b>{number | Function} </b>symbolSize </td>
+                            <td> <b>{number | Function | Array} </b>symbolSize </td>
                             <td> 2 </td>
                             <td> 同<a href="#SeriesCartesian" title="">series（直角系）</a></td>
                         </tr>
@@ -3218,7 +3218,7 @@ indicator : [
                             <td> 同<a href="#SeriesCartesian" title="">series（直角系）</a></td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> symbolSize </td>
+                            <td> <b>{number|Array}</b> symbolSize </td>
                             <td></td>
                             <td> 节点的大小 </td>
                         </tr>
@@ -3893,7 +3893,7 @@ indicator : [
                             <td> 标注类型，同series中的<a href="#Series">symbol</a> </td>
                         </tr>
                         <tr>
-                            <td> <b>{number | Function} </b> symbolSize </td>
+                            <td> <b>{number | Array | Function} </b> symbolSize </td>
                             <td> 10 </td>
                             <td> 标注大小，同series中的<a href="#Series">symbolSize</a> </td>
                         </tr>
@@ -4755,7 +4755,7 @@ geoCoord : {
                             <td> 同<a href="#SeriesCartesian" title="">series（直角系）</a></td>
                         </tr>
                         <tr>
-                            <td> {number} symbolSize </td>
+                            <td> {number|Array} symbolSize </td>
                             <td></td>
                             <td> 所有该类目的节点的大小 </td>
                         </tr>
@@ -4799,7 +4799,7 @@ geoCoord : {
                             <td> 同<a href="#SeriesCartesian" title="">series（直角系）</a></td>
                         </tr>
                         <tr>
-                            <td> {number} symbolSize </td>
+                            <td> {number|Array} symbolSize </td>
                             <td></td>
                             <td> 强制指定节点的大小 </td>
                         </tr>
