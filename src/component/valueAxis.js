@@ -514,13 +514,15 @@ define(function (require) {
                 }
 
                 // console.log(this._min,this._max,'vvvvv111111',this.option.type)
+                // log情况暂时禁用boundaryGap。
+                var boundaryGap = this.option.type !== 'log' ? this.option.boundaryGap : [0, 0];
                 var gap = Math.abs(this._max - this._min);
                 this._min = isNaN(this.option.min - 0)
-                       ? (this._min - Math.abs(gap * this.option.boundaryGap[0]))
+                       ? (this._min - Math.abs(gap * boundaryGap[0]))
                        : (this.option.min - 0);    // 指定min忽略boundaryGay[0]
 
                 this._max = isNaN(this.option.max - 0)
-                       ? (this._max + Math.abs(gap * this.option.boundaryGap[1]))
+                       ? (this._max + Math.abs(gap * boundaryGap[1]))
                        : (this.option.max - 0);    // 指定max忽略boundaryGay[1]
                 if (this._min === this._max) {
                     if (this._max === 0) {
@@ -750,7 +752,11 @@ define(function (require) {
             }
             this._valueList.push(ecDate.getNewDate(this._max));
 
-            this._reformLabelData(formatter);
+            this._reformLabelData((function (formatterStr) {
+                return function (value) {
+                    return ecDate.format(formatterStr, value);
+                };
+            })(formatter));
         },
 
         _customerValue: function () {
@@ -767,53 +773,52 @@ define(function (require) {
 
         _reformLogValue: function() {
             // log数轴本质就是缩放，相当于默认this.option.scale === true，所以不修正_min和_max到0。
-
-            var stepOpt = require('../util/smartLogSteps')({
+            var thisOption = this.option;
+            var result = require('../util/smartLogSteps')({
                 dataMin: this._min,
                 dataMax: this._max,
-                logPositive: this.option.logPositive,
-                splitNumber: this.option.splitNumber
+                logPositive: thisOption.logPositive,
+                logLabelBase: thisOption.logLabelBase,
+                splitNumber: thisOption.splitNumber
             });
 
-            this._min = stepOpt.dataMin;
-            this._max = stepOpt.dataMax;
-            this._valueList = stepOpt.tickList;
+            this._min = result.dataMin;
+            this._max = result.dataMax;
+            this._valueList = result.tickList;
             // {value2Coord: {Function}, coord2Value: {Function}}
-            this._dataMappingMethods = stepOpt.dataMappingMethods;
+            this._dataMappingMethods = result.dataMappingMethods;
 
-            this._reformLabelData();
+            this._reformLabelData(result.labelFormatter);
         },
 
-        _reformLabelData: function (timeFormatter) {
+        _reformLabelData: function (innerFormatter) {
             this._valueLabel = [];
             var formatter = this.option.axisLabel.formatter;
             if (formatter) {
                 for (var i = 0, l = this._valueList.length; i < l; i++) {
                     if (typeof formatter === 'function') {
                         this._valueLabel.push(
-                            timeFormatter
-                                ? formatter.call(this.myChart, this._valueList[i], timeFormatter)
+                            innerFormatter
+                                ? formatter.call(this.myChart, this._valueList[i], innerFormatter)
                                 : formatter.call(this.myChart, this._valueList[i])
                         );
                     }
                     else if (typeof formatter === 'string') {
                         this._valueLabel.push(
-                            timeFormatter
+                            innerFormatter
                                 ? ecDate.format(formatter, this._valueList[i])
                                 : formatter.replace('{value}',this._valueList[i])
                         );
                     }
                 }
             }
-            else if (timeFormatter) {
-                for (var i = 0, l = this._valueList.length; i < l; i++) {
-                    this._valueLabel.push(ecDate.format(timeFormatter, this._valueList[i]));
-                }
-            }
             else {
-                // 每三位默认加,格式化
                 for (var i = 0, l = this._valueList.length; i < l; i++) {
-                    this._valueLabel.push(this.numAddCommas(this._valueList[i]));
+                    this._valueLabel.push(
+                        innerFormatter
+                            ? innerFormatter(this._valueList[i])
+                            : this.numAddCommas(this._valueList[i]) // 每三位默认加,格式化
+                    );
                 }
             }
         },

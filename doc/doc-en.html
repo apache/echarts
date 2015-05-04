@@ -482,8 +482,29 @@
                             <th colspan=3> eventRiver </th>
                         </tr>
                         <tr>
-                            <td><img src="./asset/img/example/eventRiver1.png" title="" alt="事件河流图"/></td>
-                            <td><img src="./asset/img/example/eventRiver2.png" title="" alt="事件河流图"/></td>
+                            <td><img src="./asset/img/example/eventRiver1.png" title="" alt="eventRiver"/></td>
+                            <td><img src="./asset/img/example/eventRiver2.png" title="" alt="eventRiver"/></td>
+                        </tr>
+                    </table>
+
+                    <h4>single chart type：treemap<a name="treemap"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th colspan=2> Treemap </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/treemap.png" title="" alt="Treemap"/></td>
+                            <td><img src="./asset/img/example/treemap1.png" title="" alt="Treemap"/></td>
+                        </tr>
+                    </table>
+
+                    <h4>single chart type：venn<a name="venn"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th colspan=1> Venn </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/venn.png" title="" alt="Venn"/></td>
                         </tr>
                     </table>
 
@@ -2326,6 +2347,12 @@ require(['echarts'], function (ec){
                             <td> This option works when axis.type === 'log'. If set to false, negative value is supported. It is self-adapting by default, which means that if all of the data is negative, logPositive will be set to false, otherwise true. </td>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> logLabelBase </td>
+                            <td> null </td>
+                            <td> value </td>
+                            <td> This option works when axis.type === 'log'. If specified, axisLabel is drawn as exponent style. For example, when logLabelBase = 4, axisLabel is drawn like 4², 4³. If not specified, axisLabel is drawn like 1,000,000 as usual. </td>
+                        </tr>
+                        <tr>
                             <td> <b>{Object}</b> axisLine </td>
                             <td> varying </td>
                             <td> universal </td>
@@ -3730,7 +3757,7 @@ indicator : [
                                         <td> <b>{Object}</b> itemStyle </td>
                                         <td> {} </td>
                                         <td>
-                                            see 
+                                            see
                                             <a href="#ItemStyle" title="">
                                                 itemStyle
                                             </a>
@@ -3779,7 +3806,7 @@ indicator : [
                                         <td> <b>{Object}</b> itemStyle </td>
                                         <td> {} </td>
                                         <td>
-                                            see 
+                                            see
                                             <a href="#ItemStyle" title="">
                                                 itemStyle
                                             </a>

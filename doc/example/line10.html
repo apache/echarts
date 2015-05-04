@@ -63,7 +63,15 @@ option = {
    yAxis: [
        {
            type: "log",
-           name: "y"
+           logLabelBase: 3,
+           splitNumber: 3,
+           name: "y",
+           axisLabel: {
+                margin: '25',
+                textStyle: {
+                    align: 'left'
+                }
+           }
        }
    ],
     toolbox: {
@@ -110,7 +118,7 @@ option = {
                     <span class="text-primary">切换主题</span>
                     <select id="theme-select"></select>
                     &nbsp;&nbsp;&nbsp;
-                    <a target="_blank" href="./line10.html">axisLabel指数形式显示</a>
+                    <a target="_blank" href="./line9.html">axisLabel普通形式显示</a>
                     &nbsp;&nbsp;&nbsp;
                     <a target="_blank" href="./line11.html">负值log数轴</a>
 
