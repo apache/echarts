@@ -568,7 +568,8 @@ define(function (require) {
             }
 
             function collideRects(a, maxBounds) {
-                return a.x >= maxBounds.row[a.y].start
+                return maxBounds.row[a.y] && maxBounds.cloumn[a.x]
+                    && a.x >= maxBounds.row[a.y].start
                     && a.x <= maxBounds.row[a.y].end
                     && a.y >= maxBounds.cloumn[a.x].start
                     && a.y <= maxBounds.cloumn[a.x].end;
