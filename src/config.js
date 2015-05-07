@@ -24,6 +24,7 @@ define(function() {
         CHART_TYPE_GAUGE: 'gauge',
         CHART_TYPE_FUNNEL: 'funnel',
         CHART_TYPE_EVENTRIVER: 'eventRiver',
+        CHART_TYPE_WORDCLOUD: 'wordCloud',
 
         // 组件类型
         COMPONENT_TYPE_TITLE: 'title',

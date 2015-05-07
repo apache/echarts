@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="kener.linfeng@gmail.com">
+    <title>ECharts · Example</title>
+
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+
+    <link href="../asset/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/carousel.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="./www/js/echarts.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
+
+    <div class="container-fluid">
+        <div class="row-fluid example">
+            <div id="sidebar-code" class="col-md-4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+    tooltip: {
+        show: true
+    },
+    series: [{
+        type: 'wordCloud',
+        size: [250, 250],
+        textRotation : [0, 45, 90],
+        textPadding: 0,
+        data: [
+            {
+                'name': "中石油",
+                'value': 55545,
+                itemStyle: {
+                    normal: {
+                        color: 'black'
+                    }
+                }
+            },
+            {
+                'name': "中石油加油卡",
+                'value': 6181
+            },
+            {
+                'name': "中石油官网",
+                'value': 4386
+            },
+            {
+                'name': "中石油涨停",
+                'value': 4055
+            },
+            {
+                'name': "中石油股票",
+                'value': 2467
+            },
+            {
+                'name': "中石油招聘",
+                'value': 2244
+            },
+            {
+                'name': "中石油邮箱",
+                'value': 1898
+            },
+            {
+                'name': "中石油人才招聘网",
+                'value': 1484
+            },
+            {
+                'name': "中石油加油站",
+                'value': 1112
+            },
+            {
+                'name': "中石油招标网",
+                'value': 965
+            },
+            {
+                'name': "中石油招聘网",
+                'value': 847
+            },
+            {
+                'name': "中石油管道局",
+                'value': 582
+            },
+            {
+                'name': "中石油股价",
+                'value': 555
+            },
+            {
+                'name': "中石油股票行情",
+                'value': 550
+            },
+            {
+                'name': "中石油市值",
+                'value': 462
+            },
+            {
+                'name': "中石油 中石化",
+                'value': 366
+            },
+            {
+                'name': "中石油邮箱登陆",
+                'value': 360
+            },
+            {
+                'name': "中石油加油卡查询",
+                'value': 282
+            },
+            {
+                'name': "中石油加油卡优惠",
+                'value': 273
+            },
+            {
+                'name': "中石油校园招聘",
+                'value': 265
+            }
+        ]
+    }]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="col-md-8">
+                <div id="main" class="main"></div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        
+        </div><!--/.fluid-container-->
+
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
+    <script src="../asset/js/bootstrap.min.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>
