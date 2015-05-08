@@ -173,7 +173,10 @@ define(function(require) {
         var tree = new Tree(id);
         var rootNode = tree.root;
         // Root node
-        rootNode.data = { name: id };
+        rootNode.data = {
+            name: id,
+            children: data
+        };
 
         function buildHierarchy(dataNode, parentNode) {
             var node = new TreeNode(dataNode.name, dataNode);

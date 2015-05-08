@@ -12,8 +12,11 @@ define(function (require) {
     // 图形依赖
     var RectangleShape = require('zrender/shape/Rectangle');
     var TextShape = require('zrender/shape/Text');
+    var LineShape = require('zrender/shape/Line');
     // 布局依赖
     var TreeMapLayout = require('../layout/TreeMap');
+    // 数据依赖
+    var Tree = require('../data/Tree');
 
     var ecConfig = require('../config');
     // 维恩图默认参数
@@ -21,10 +24,26 @@ define(function (require) {
         zlevel: 0,                  // 一级层叠
         z: 1,                       // 二级层叠
         calculable: false,
-        clickable: true
+        clickable: true,
+        center: ['50%', '50%'],
+        size: ['80%', '80%'],
+        itemStyle: {
+            normal: {
+                // color: 各异,
+                label: {
+                    show: true,
+                    textStyle: '#000'      // 默认使用全局文本样式，详见TEXTSTYLE
+                },
+                borderWidth: 1,
+                borderColor: '#ccc'
+            },
+            emphasis: {}
+        }
     };
 
     var ecData = require('../util/ecData');
+    var zrConfig = require('zrender/config');
+    var zrEvent = require('zrender/tool/event');
     var zrUtil = require('zrender/tool/util');
 
     /**
@@ -40,32 +59,32 @@ define(function (require) {
         // 图表基类
         ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         this.refresh(option);
+        var self = this;
+        self._onclick = function (params) {
+            return self.__onclick(params);
+        };
+        self.zr.on(zrConfig.EVENT.CLICK, self._onclick);
     }
-    
     Treemap.prototype = {
         type : ecConfig.CHART_TYPE_TREEMAP,
-        /**
-         * 绘制图形
-         */
-        _buildShape : function () {
-            var series = this.series;
-            // this.data = series[0].data;
-            this.data = series[0].data;
-            this.x0 = 100;
-            this.y0 = 50;
-            this.width0 = 500;
-            this.height0 = 300;
-            
-            this._buildTreemap(this.data);
-            this.addShapeList();
-        },
         /**
          * 构建单个
          *
          * @param {Object} data 数据
          */
-        _buildTreemap : function (data) {
-            var area0 = this.width0 * this.height0; // 计算总面积
+        _buildTreemap : function (
+            data
+        ) {
+            this.data = data;
+            var serie = this.serie;
+            var itemStyle = this.serie.itemStyle;
+            var treemapWidth = this.parsePercent(serie.size[0], this.zr.getWidth()) || 400;
+            var treemapHeight = this.parsePercent(serie.size[1], this.zr.getHeight()) || 500;
+            var center = this.parseCenter(this.zr, serie.center);
+            var treemapX = center[0] -  treemapWidth * 0.5;
+            var treemapY = center[1] -  treemapHeight * 0.5;
+
+            var treemapArea = treemapWidth * treemapHeight; // 计算总面积
             // 遍历数组，通过value与area0计算实际面积area
             var sum = 0;
             var areaArr = [];
@@ -73,36 +92,58 @@ define(function (require) {
                 sum += data[i].value;
             }
             for (var j = 0; j < data.length; j++) {
-                // data[j].area =  data[j].value * sum / area0;
-                areaArr.push(data[j].value * area0 / sum);
+                areaArr.push(data[j].value * treemapArea / sum);
             }
             var treeMapLayout = new TreeMapLayout(
                 {
                     areas: areaArr,
-                    x0: this.x0,
-                    y0: this.y0,
-                    width0: this.width0,
-                    height0: this.height0           
+                    x0: treemapX,
+                    y0: treemapY,
+                    width0: treemapWidth,
+                    height0: treemapHeight
                 }
             );
             var locationArr = treeMapLayout.rectangleList;
             for (var k = 0; k < locationArr.length; k++) {
                 var item = locationArr[k];
-                // var color = this.data[k].color || this.zr.getColor(k);
+                var queryTarget = [data[k].itemStyle, itemStyle];
+                var itemStyleMerged = this.deepMerge(queryTarget) || {};
+                if (!itemStyleMerged.normal.color) {
+                    itemStyleMerged.normal.color = this.zr.getColor(k);
+                }
+                if (!itemStyleMerged.emphasis.color) {
+                    itemStyleMerged.emphasis.color = itemStyleMerged.normal.color;
+                }
                 this._buildItem(
+                    data,
+                    itemStyleMerged,
                     item.x,
                     item.y,
                     item.width,
                     item.height,
                     k
                 );
+                // 绘制二级节点
+                if (data[k].children) {
+                    this._buildChildrenTreemap(
+                        data[k].children,
+                        itemStyleMerged,
+                        item.width,
+                        item.height,
+                        item.x,
+                        item.y
+                    );
+                }
             }
+            this.addShapeList();
         },
 
         /**
          * 构建单个item
          */
         _buildItem : function (
+            data,
+            itemStyle,
             x,
             y,
             width,
@@ -111,19 +152,20 @@ define(function (require) {
         ) {
             var series = this.series;
             var rectangle = this.getRectangle(
+                data,
+                itemStyle,
                 x,
                 y,
                 width,
                 height,
-                this.data[index].name,
                 index
             );
             // todo
             ecData.pack(
                 rectangle,
                 series[0], 0,
-                series[0].data[index], 0,
-                series[0].data[index].name
+                data[index], 0,
+                data[index].name
             );
             this.shapeList.push(rectangle);
         },
@@ -138,41 +180,30 @@ define(function (require) {
          * @return {Object} 返回一个矩形
          */
         getRectangle : function (
+            data,
+            itemStyle,
             x,
             y,
             width,
             height,
-            text,
             index
         ) {
-            var serie = this.series[0];
-            var data = this.data[index];
-            var queryTarget = [data, serie];
-            var normal = this.deepMerge(
-                queryTarget,
-                'itemStyle.normal'
-            ) || {};
-            var emphasis = this.deepMerge(
-                queryTarget,
-                'itemStyle.emphasis'
-            ) || {};
-            var color = normal.color || this.zr.getColor(index);
-            var emphasisColor = emphasis.color || this.zr.getColor(index);
-            var borderWidth = normal.borderWidth || 0;
-            var borderColor = normal.borderColor || '#ccc';
+            var emphasis = itemStyle.emphasis;
+            var normal = itemStyle.normal;
             var textShape = this.getLabel(
+                data,
                 x,
                 y,
                 width,
                 height,
-                this.data[index].name,
+                data[index].name,
                 index
             );
-            var rectangleShape =
-            {
+            var hoverable = this.option.hoverable;
+            var rectangleShape = {
                 zlevel: this.getZlevelBase(),
                 z: this.getZBase(),
-                hoverable: true,
+                hoverable: hoverable,
                 clickable: true,
                 style: $.extend({
                     x: x,
@@ -180,21 +211,21 @@ define(function (require) {
                     width: width,
                     height: height,
                     brushType: 'both',
-                    color: color,
-                    lineWidth: borderWidth,
-                    strokeColor: borderColor
-                }, textShape.style),
+                    color: normal.color,
+                    lineWidth: normal.borderWidth,
+                    strokeColor: normal.borderColor
+                }, textShape.style), // ),
                 highlightStyle: $.extend({
-                    color: emphasisColor,
+                    color: emphasis.color,
                     lineWidth: emphasis.borderWidth,
                     strokeColor: emphasis.borderColor
-                }, textShape.highlightStyle)
+                }, textShape.highlightStyle) // textShape.highlightStyle)
             };
-
             return new RectangleShape(rectangleShape);
 
         },
         getLabel: function (
+            data,
             rectangleX,
             rectangleY,
             rectangleWidth,
@@ -215,7 +246,6 @@ define(function (require) {
                 || marginY + textHeight > rectangleHeight) {
                 return {};
             }
-            var data = this.data[index];
 
             // 用label方法写title
             var textShape = {
@@ -226,8 +256,7 @@ define(function (require) {
                     x: rectangleX + marginX,
                     y: rectangleY + marginY,
                     text: text,
-                    textColor: '#777',
-                    textFont: textFont
+                    textColor: '#777'
                 },
                 highlightStyle: {
                     text: text
@@ -244,7 +273,7 @@ define(function (require) {
             textShape = this.addLabel(
                 textShape,
                 this.series[0],
-                data,
+                data[index],
                 text
             );
             textShape.style.textPosition = 'specific';
@@ -258,17 +287,170 @@ define(function (require) {
             textShape.highlightStyle.textColor = textShape.highlightStyle.textColor || '#000';
             return textShape;
         },
+        /*
+         * 构建子级矩形图，这里用线表示不再画矩形
+         *
+         * @param {Object} data 数据
+         * @param {number} treemapWidth treemap容器宽度
+         * @param {number} treemapHeight treemap容器高度
+         * @param {number} treemapX treemap容器起始坐标
+         * @param {number} treemapY treemap容器起始坐标
+         * @return
+        */
+        _buildChildrenTreemap : function (
+            data,
+            itemStyle,
+            treemapWidth,
+            treemapHeight,
+            treemapX,
+            treemapY
+        ) {
+            var treemapArea = treemapWidth * treemapHeight; // 计算总面积
+            // 遍历数组，通过value与area0计算实际面积area
+            var sum = 0;
+            var areaArr = [];
+            for (var i = 0; i < data.length; i++) {
+                sum += data[i].value;
+            }
+            for (var j = 0; j < data.length; j++) {
+                areaArr.push(data[j].value * treemapArea / sum);
+            }
+            var treeMapLayout = new TreeMapLayout(
+                {
+                    areas: areaArr,
+                    x0: treemapX,
+                    y0: treemapY,
+                    width0: treemapWidth,
+                    height0: treemapHeight
+                }
+            );
+            var lineWidth = itemStyle.normal.childBorderWidth || 1;
+            var lineColor = itemStyle.normal.childBorderColor || '#777';
+            var locationArr = treeMapLayout.rectangleList;
+            for (var k = 0; k < locationArr.length; k++) {
+                var item = locationArr[k];
+                var lines = [];
+                // 容器边框不能重复画
+                // 上边
+                if (treemapY.toFixed(2) !== item.y.toFixed(2)) {
+                    lines.push(this.getLine(
+                        item.x,
+                        item.y,
+                        item.x + item.width,
+                        item.y,
+                        lineWidth,
+                        lineColor
+                    ));
+                }
+                // 左边
+                if (treemapX.toFixed(2) !== item.x.toFixed(2)) {
+                    lines.push(this.getLine(
+                        item.x,
+                        item.y,
+                        item.x,
+                        item.y + item.height,
+                        lineWidth,
+                        lineColor
+                    ));
+                }
+                // 下边
+                if ((treemapY + treemapHeight).toFixed(2) !== (item.y + item.height).toFixed(2)) {
+                    lines.push(this.getLine(
+                        item.x,
+                        item.y + item.height,
+                        item.x + item.width,
+                        item.y + item.height,
+                        lineWidth,
+                        lineColor
+                    ));
+                }
+                // 右边
+                if ((treemapX + treemapWidth).toFixed(2) !== (item.x + item.width).toFixed(2)) {
+                    lines.push(this.getLine(
+                        item.x + item.width,
+                        item.y,
+                        item.x + item.width,
+                        item.y + item.height,
+                        lineWidth,
+                        lineColor
+                    ));
+                }
+                for (var l = 0; l < lines.length; l++) {
+                    ecData.pack(
+                        lines[l],
+                        this.series[0], 0,
+                        data[k], 0,
+                        data[k].name
+                    );
+                    this.shapeList.push(lines[l]);
+                }
+            }
+        },
+        /*
+         * 构建线段
+         * @param {number} xStart 开始坐标
+         * @param {number} yStart 开始坐标
+         * @param {number} xEnd 结束坐标
+         * @param {number} yEnd 结束坐标
+         * @param {number} lineWidth 线宽
+         * @param {number} lineColor 颜色
+         * @return {Object} 返回一个线段
+         */
+        getLine : function (
+            xStart,
+            yStart,
+            xEnd,
+            yEnd,
+            lineWidth,
+            lineColor
+        ) {
+            var lineShape = {
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
+                hoverable: false,
+                style: {
+                    xStart: xStart,
+                    yStart: yStart,
+                    xEnd: xEnd,
+                    yEnd: yEnd,
+                    lineWidth: lineWidth,
+                    strokeColor: lineColor
+                }
+            };
+            return new LineShape(lineShape);
 
+        },
+        __onclick : function (params) {
+            // 点击空白处，返回上一层
+            if (!params.target) {
+                var rootNode = this.tree.getNodeById(this.rootId);
+                // 不是第一层才返回上层
+                if (this.rootId !== 'root') {
+                    this.rootId = rootNode.parent.id;
+                    this._buildTreemap(rootNode.parent.data.children);
+                }
+            }
+            else if (params.target.type === 'rectangle') {
+                var subTree = this.tree.getSubTree(params.target._echartsData._name);
+                this.rootId = subTree.root.id;
+                // 有子节点才下钻
+                if (subTree.root.children.length) {
+                    this._buildTreemap(subTree.root.data.children);
+                }
+            }
+            return;
+        },
         /**
          * 刷新
          */
-        refresh : function (newOption) {
-            if (newOption) {
-                this.option = newOption;
-                this.series = newOption.series;
-            }
-
-            this._buildShape();
+        refresh: function () {
+            this.clear();
+            var queryTarget = [this.series[0], ecConfig.treemap];
+            this.serie = this.serie || this.deepMerge(queryTarget) || {};
+            this.tree = this.tree || Tree.fromOptionData('root', this.serie.data);
+            this.data = this.data || this.serie.data;
+            this.rootId = this.rootId || 'root';
+            this._buildTreemap(this.data);
         }
     };
 
