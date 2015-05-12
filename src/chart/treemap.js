@@ -174,21 +174,29 @@ define(function (require) {
                 z: this.getZBase(),
                 hoverable: true,
                 clickable: true,
-                style: $.extend({
-                    x: x,
-                    y: y,
-                    width: width,
-                    height: height,
-                    brushType: 'both',
-                    color: color,
-                    lineWidth: borderWidth,
-                    strokeColor: borderColor
-                }, textShape.style),
-                highlightStyle: $.extend({
-                    color: emphasisColor,
-                    lineWidth: emphasis.borderWidth,
-                    strokeColor: emphasis.borderColor
-                }, textShape.highlightStyle)
+                style: zrUtil.merge(
+                    {
+                        x: x,
+                        y: y,
+                        width: width,
+                        height: height,
+                        brushType: 'both',
+                        color: color,
+                        lineWidth: borderWidth,
+                        strokeColor: borderColor
+                    },
+                    textShape.style,
+                    true
+                ),
+                highlightStyle: zrUtil.merge(
+                    {
+                        color: emphasisColor,
+                        lineWidth: emphasis.borderWidth,
+                        strokeColor: emphasis.borderColor
+                    }, 
+                    textShape.highlightStyle,
+                    true
+                )
             };
 
             return new RectangleShape(rectangleShape);
