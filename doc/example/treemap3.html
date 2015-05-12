@@ -41,7 +41,7 @@
 option = {
     title : {
         text: '手机占有率',
-        subtext: '虚构数据'
+        subtext: '数据下钻例子，虚构数据'
     },
     tooltip : {
         trigger: 'item',
@@ -56,74 +56,44 @@ option = {
             saveAsImage : {show: true}
         }
     },
+    calculable : false,
     hoverable : true,
     series : [
         {
             name:'矩形图',
             type:'treemap',
+            center: ['40%', '50%'],
+            size: ['50%', '80%'],
             itemStyle: {
                 normal: {
                     label: {
                         show: true,
-                        formatter: "{b}: {c}",
-                        textStyle: {
-                            color: '#00ffdd',
-                            fontFamily: 'Times New Roman",Georgia,Serif',
-                            fontSize: 20,
-                            fontStyle: 'italic',
-                            fontWeight:  'bolder'
-                        }
+                        formatter: "{b}"
                     },
                     borderWidth: 1,
-                    borderColor: '#000'
+                    borderColor: '#ccc',
+                    childBorderWidth: 1,
+                    childBorderColor: '#fff'
                 },
                 emphasis: {
                     label: {
-                        show: true,
-                        textStyle: {
-                            color: '#0000ff',
-                            fontFamily: 'Times New Roman",Georgia,Serif',
-                            fontSize: 18,
-                            fontStyle: 'normal',
-                            fontWeight:  'bold'
-                        }
+                        show: true
                     },
                     color: '#cc99cc',
                     borderWidth: 3,
                     borderColor: '#996699'
                 }
+
             },
             data:[
                 {
                     name: '三星',
-                    value: 6,
                     itemStyle: {
                         normal: {
-                            label: {
-                                show: true,
-                                formatter : "{b}最多",
-                                textStyle: {
-                                    color: '#ccc',
-                                    fontSize: 16
-                                }
-                            },
-                            color: '#ccff99',
-                            borderWidth: 1
-                        },
-                        emphasis: {
-                            label: {
-                                show: true,
-                                formatter : "{b}-{c}",
-                                textStyle: {
-                                    color: 'red',
-                                    fontSize: 18
-                                }
-                            },
-                            color: '#cc9999',
-                            borderWidth: 3,
-                            borderColor: '#999999'
+                            color: '#99cccc',
                         }
                     },
+                    value: 6,
                     children: [
                         {
                             name: 'S4',
@@ -159,79 +129,75 @@ option = {
                 },
                 {
                     name: '小米',
-                    value: 4,
                     itemStyle: {
                         normal: {
                             color: '#99ccff',
-                        },
-                        emphasis: {
-                            label: {
-                                show: false
-                            }
                         }
-                    }
+                    },
+                    value: 4
                 },
                 {
                     name: '苹果',
-                    value: 4,
                     itemStyle: {
                         normal: {
                             color: '#9999cc',
                         }
-                    }
+                    },
+                    value: 4
                 },
                 {
                     name: '魅族',
-                    value: 3,
                     itemStyle: {
                         normal: {
-                            color: '#99cccc',
+                            color: '#ccff99',
                         }
-                    }
+                    },
+                    value: 3
                 },
                 {
                     name: '华为',
-                    value: 2,
                     itemStyle: {
                         normal: {
                             color: '#ccffcc',
                         }
-                    }
+                    },
+                    value: 2
                 },
                 {
                     name: '联想',
-                    value: 2,
                     itemStyle: {
                         normal: {
                             color: '#ccccff',
                         }
-                    }
+                    },
+                    value: 2
                 },
                 {
                     name: '中兴',
-                    value: 1,
                     itemStyle: {
                         normal: {
-                            label: {
-                                show: true,
-                                formatter: "{b}: {c}",
-                            },
-                            borderWidth: 3
-                        },
-                        emphasis: {
-                            label: {
-                                show: true
-                            },
-                            color: '#cc9999',
-                            borderWidth: 3,
-                            borderColor: '#999999'
+                            color: '#ffffcc',
+                            childBorderWidth: 2,
+                            childBorderColor: '#000'
                         }
-                    }
+                    },
+                    value: 1,
+                    children: [
+                        {
+                            name: '努比亚',
+                            value: 6
+                        },
+                        {
+                            name: '大星星',
+                            value: 5
+                        }
+                    ]
                 }
             ]
         }
     ]
 };
+
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->
@@ -259,3 +225,4 @@ option = {
     <script src="../asset/js/echartsExample.js"></script>
 </body>
 </html>
+
