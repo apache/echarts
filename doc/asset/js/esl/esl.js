@@ -803,7 +803,7 @@ var esl;
         if (typeof ids === 'string') {
             modTryInvokeFactory(ids);
             if (!modIs(ids, MODULE_DEFINED)) {
-                throw new Error('[MODULE_MISS]"' + ids + '" is not exists!');
+                throw new Error('[MODULE_MISS]"' + ids + '" does not exist!');
             }
 
             return modGetModuleExports(ids);
