@@ -32,12 +32,25 @@ define(function (require) {
                 // color: 各异,
                 label: {
                     show: true,
-                    textStyle: '#000'      // 默认使用全局文本样式，详见TEXTSTYLE
+                    textStyle: {
+                        x: 5,
+                        y: 12,
+                        align: 'left',
+                        color: '#000',
+                        fontFamily: 'Arial',
+                        fontSize: 13,
+                        fontStyle: 'normal',
+                        fontWeight: 'normal'
+                    }
                 },
                 borderWidth: 1,
-                borderColor: '#ccc'
+                borderColor: '#ccc',
+                childBorderWidth: 1,
+                childBorderColor: '#ccc'
             },
-            emphasis: {}
+            emphasis: {
+
+            }
         }
     };
 
@@ -107,7 +120,7 @@ define(function (require) {
             for (var k = 0; k < locationArr.length; k++) {
                 var item = locationArr[k];
                 var queryTarget = [data[k].itemStyle, itemStyle];
-                var itemStyleMerged = this.deepMerge(queryTarget) || {};
+                var itemStyleMerged = this.deepMerge(queryTarget);
                 if (!itemStyleMerged.normal.color) {
                     itemStyleMerged.normal.color = this.zr.getColor(k);
                 }
@@ -172,14 +185,15 @@ define(function (require) {
 
         /**
          * 构建矩形
+         * @param {Object} data 数据
+         * @param {Object} itemStyle 合并后的样式
          * @param {number} x 矩形横坐标
-         * @param {number} y 矩形横坐标
+         * @param {number} y 矩形纵坐标
          * @param {number} width 矩形宽
          * @param {number} height 矩形高
-         * @param {String} color 颜色
          * @return {Object} 返回一个矩形
          */
-        getRectangle : function (
+        getRectangle: function (
             data,
             itemStyle,
             x,
@@ -191,13 +205,13 @@ define(function (require) {
             var emphasis = itemStyle.emphasis;
             var normal = itemStyle.normal;
             var textShape = this.getLabel(
-                data,
+                itemStyle,
                 x,
                 y,
                 width,
                 height,
                 data[index].name,
-                index
+                data[index].value
             );
             var hoverable = this.option.hoverable;
             var rectangleShape = {
@@ -205,87 +219,134 @@ define(function (require) {
                 z: this.getZBase(),
                 hoverable: hoverable,
                 clickable: true,
-                style: $.extend({
-                    x: x,
-                    y: y,
-                    width: width,
-                    height: height,
-                    brushType: 'both',
-                    color: normal.color,
-                    lineWidth: normal.borderWidth,
-                    strokeColor: normal.borderColor
-                }, textShape.style), // ),
-                highlightStyle: $.extend({
-                    color: emphasis.color,
-                    lineWidth: emphasis.borderWidth,
-                    strokeColor: emphasis.borderColor
-                }, textShape.highlightStyle) // textShape.highlightStyle)
+                style: zrUtil.merge(
+                    {
+                        x: x,
+                        y: y,
+                        width: width,
+                        height: height,
+                        brushType: 'both',
+                        color: normal.color,
+                        lineWidth: normal.borderWidth,
+                        strokeColor: normal.borderColor
+                    },
+                    textShape.style,
+                    true
+                ),
+                highlightStyle: zrUtil.merge(
+                    {
+                        color: emphasis.color,
+                        lineWidth: emphasis.borderWidth,
+                        strokeColor: emphasis.borderColor
+                    },
+                    textShape.highlightStyle,
+                    true
+                )
             };
             return new RectangleShape(rectangleShape);
 
         },
+        /**
+         * 获取label样式
+         * @param {Object} itemStyle 合并后的样式
+         * @param {number} rectangleX 矩形横坐标
+         * @param {number} rectangleY 矩形纵坐标
+         * @param {number} rectangleWidth 矩形宽
+         * @param {number} rectangleHeight 矩形高
+         * @param {string} name 数据名称
+         * @param {number} value 数据值
+         * @return {Object} 返回label的样式
+         */
         getLabel: function (
-            data,
+            itemStyle,
             rectangleX,
             rectangleY,
             rectangleWidth,
             rectangleHeight,
-            text,
-            index
+            name,
+            value
         ) {
-            if (!this.series[0].itemStyle.normal.label.show) {
-                return {};
-            }
-            var marginY = 12;
-            var marginX = 5;
-            var fontSize = 13;
-            var textFont = fontSize + 'px Arial';
+            var normalTextStyle = itemStyle.normal.label.textStyle;
+            var queryTarget = [itemStyle.emphasis.label.textStyle, normalTextStyle];
+            var emphasisTextStyle = this.deepMerge(queryTarget);
+
+            var formatter = itemStyle.normal.label.formatter;
+            var text = this.getLabelText(name, value, formatter);
+            var textFont = this.getFont(normalTextStyle);
             var textWidth = toolArea.getTextWidth(text, textFont);
             var textHeight = toolArea.getTextHeight(text, textFont);
-            if (marginX + textWidth > rectangleWidth
-                || marginY + textHeight > rectangleHeight) {
-                return {};
+
+            var emphasisFormatter = this.deepQuery(
+                [itemStyle.emphasis, itemStyle.normal],
+                'label.formatter'
+            );
+            var emphasisText = this.getLabelText(name, value, emphasisFormatter);
+            var emphasisTextFont = this.getFont(emphasisTextStyle);
+            var emphasisTextWidth = toolArea.getTextWidth(text, emphasisTextFont);
+            var emphasisTextHeight = toolArea.getTextHeight(text, emphasisTextFont);
+            if (!itemStyle.normal.label.show) {
+                text = '';
+            }
+            else if (normalTextStyle.x + textWidth > rectangleWidth
+                || normalTextStyle.y + textHeight > rectangleHeight) {
+                text = '';
+            }
+
+            if (!itemStyle.emphasis.label.show) {
+                emphasisText = '';
+            }
+            else if (emphasisTextStyle.x + emphasisTextWidth > rectangleWidth
+                || emphasisTextStyle.y + emphasisTextHeight > rectangleHeight) {
+                emphasisText = '';
             }
 
             // 用label方法写title
             var textShape = {
-                zlevel: this.getZlevelBase() + 1,
-                z: this.getZBase() + 1,
-                hoverable: false,
                 style: {
-                    x: rectangleX + marginX,
-                    y: rectangleY + marginY,
+                    textX: rectangleX + normalTextStyle.x,
+                    textY: rectangleY + normalTextStyle.y,
                     text: text,
-                    textColor: '#777'
+                    textPosition: 'specific',
+                    textColor: normalTextStyle.color,
+                    textFont: textFont
                 },
                 highlightStyle: {
-                    text: text
+                    textX: rectangleX + emphasisTextStyle.x,
+                    textY: rectangleY + emphasisTextStyle.y,
+                    text: emphasisText,
+                    textColor: emphasisTextStyle.color,
+                    textPosition: 'specific'
                 }
             };
-            textShape = {
-                style: {
-                    text: text
-                },
-                highlightStyle: {
-                    text: text
-                }
-            };
-            textShape = this.addLabel(
-                textShape,
-                this.series[0],
-                data[index],
-                text
-            );
-            textShape.style.textPosition = 'specific';
-            textShape.style.textX = rectangleX + marginX;
-            textShape.style.textY = rectangleY + marginY;
-            textShape.style.textColor = textShape.style.textColor || '#000';
-
-            textShape.highlightStyle.textPosition = 'specific';
-            textShape.highlightStyle.textX = rectangleX + marginX;
-            textShape.highlightStyle.textY = rectangleY + marginY;
-            textShape.highlightStyle.textColor = textShape.highlightStyle.textColor || '#000';
             return textShape;
+        },
+        /**
+         * 支持formatter
+         * @param {string} name 数据名称
+         * @param {number} value 数据值
+         * @param {string|Object} formatter 构造器
+         * @return {Object} 返回label的样式
+         */
+        getLabelText: function (name, value, formatter) {
+            if (formatter) {
+                if (typeof formatter === 'function') {
+                    return formatter.call(
+                        this.myChart,
+                        name,
+                        value
+                    );
+                }
+                else if (typeof formatter === 'string') {
+                    formatter = formatter.replace('{b}', '{b0}')
+                                         .replace('{c}', '{c0}');
+                    formatter = formatter.replace('{b0}', name)
+                                         .replace('{c0}', value);
+                    return formatter;
+                }
+            }
+            else {
+                return name;
+            }
         },
         /*
          * 构建子级矩形图，这里用线表示不再画矩形
@@ -297,7 +358,7 @@ define(function (require) {
          * @param {number} treemapY treemap容器起始坐标
          * @return
         */
-        _buildChildrenTreemap : function (
+        _buildChildrenTreemap: function (
             data,
             itemStyle,
             treemapWidth,

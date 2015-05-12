@@ -56,6 +56,7 @@ option = {
             saveAsImage : {show: true}
         }
     },
+    hoverable : true,
     series : [
         {
             name:'矩形图',
@@ -64,14 +65,28 @@ option = {
                 normal: {
                     label: {
                         show: true,
-                        formatter: "{b}: {c}"
+                        formatter: "{b}: {c}",
+                        textStyle: {
+                            color: '#00ffdd',
+                            fontFamily: 'Times New Roman",Georgia,Serif',
+                            fontSize: 20,
+                            fontStyle: 'italic',
+                            fontWeight:  'bolder'
+                        }
                     },
                     borderWidth: 1,
-                    borderColor: '#ccc'
+                    borderColor: '#000'
                 },
                 emphasis: {
                     label: {
-                        show: true
+                        show: true,
+                        textStyle: {
+                            color: '#0000ff',
+                            fontFamily: 'Times New Roman",Georgia,Serif',
+                            fontSize: 18,
+                            fontStyle: 'normal',
+                            fontWeight:  'bold'
+                        }
                     },
                     color: '#cc99cc',
                     borderWidth: 3,
@@ -98,7 +113,7 @@ option = {
                         emphasis: {
                             label: {
                                 show: true,
-                                formatter : "{b}: {c}",
+                                formatter : "{b}-{c}",
                                 textStyle: {
                                     color: 'red',
                                     fontSize: 18
@@ -108,7 +123,39 @@ option = {
                             borderWidth: 3,
                             borderColor: '#999999'
                         }
-                    }
+                    },
+                    children: [
+                        {
+                            name: 'S4',
+                            value: 6,
+                            children: [
+                                {
+                                    name: '2012',
+                                    value: 6
+                                },
+                                {
+                                    name: '2013',
+                                    value: 4
+                                },
+                                {
+                                    name: '2014',
+                                    value: 3
+                                }
+                            ]
+                        },
+                        {
+                            name: 'note 3',
+                            value: 6
+                        },
+                        {
+                            name: 'S5',
+                            value: 4
+                        },
+                        {
+                            name: 'S6',
+                            value: 3
+                        }
+                    ]
                 },
                 {
                     name: '小米',
@@ -116,6 +163,11 @@ option = {
                     itemStyle: {
                         normal: {
                             color: '#99ccff',
+                        },
+                        emphasis: {
+                            label: {
+                                show: false
+                            }
                         }
                     }
                 },
@@ -130,7 +182,7 @@ option = {
                 },
                 {
                     name: '魅族',
-                    value: 1,
+                    value: 3,
                     itemStyle: {
                         normal: {
                             color: '#99cccc',
