@@ -319,15 +319,15 @@
                             <td> evnetRiver </td>
                             <td> 事件河流图。常用于展示具有时间属性的多个事件，以及事件随时间的演化。</td>
                         </tr>
-                         
+
                         <tr>
                             <td> treemap </td>
-                            <td> 
+                            <td>
                             矩形式树状结构图，简称：矩形树图。用于展示树形数据结构，优势是能最大限度展示节点的尺寸特征。</td>
                         </tr>
                         <tr>
                             <td> venn </td>
-                            <td> 
+                            <td>
                             韦恩图。用于展示集合以及它们的交集。</td>
                         </tr>
                     </table>
@@ -1919,12 +1919,12 @@ require(['echarts'], function (ec){
                         <tr>
                             <td> <b>{number}</b> min </td>
                             <td> null </td>
-                            <td> 指定的最小值，eg: 0，默认无，必须参数</td>
+                            <td> 指定的最小值，eg: 0，默认无，必须参数，唯有指定了splitList时可缺省min。</td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> max </td>
                             <td> null </td>
-                            <td> 指定的最大值，eg: 100，默认无，必须参数</td>
+                            <td> 指定的最大值，eg: 100，默认无，必须参数，唯有指定了splitList时可缺省max</td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> precision </td>
@@ -1937,6 +1937,24 @@ require(['echarts'], function (ec){
                             <td> 分割段数，默认为5，为0时为线性渐变，calculable为true是默认均分100份 </td>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> splitList </td>
+                            <td> null </td>
+                            <td>
+                                自定义分割方式，支持不等距分割。splitList被指定时，splitNumber将被忽略。<br />
+                                splitList是一个（不可为空的）Array，Array的每一项为一个Object，含有如下属性：<br />
+                                { <br />
+                                &nbsp;&nbsp;range: [],     本项的数据范围，形式可以是： <br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;   [10, 30]   表示 &gt;= 10 &amp;&amp; &lt;= 30  <br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;   [null, 30] 表示 &lt;= 30  <br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;   [10, null] 表示 &gt;= 10  <br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;   10         表示 === 10 <br />
+                                &nbsp;&nbsp;label: '10 to 30',  本项的显示标签，缺省则自动生成label  <br />
+                                &nbsp;&nbsp;color: '#333'       本项的颜色，缺省则自动计算color  <br />
+                                } <br />
+                                详见例子 <a href="./example/dataRange2.html" target="_blank">this 》</a>
+                            </td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean | string}</b> selectedMode </td>
                             <td> true </td>
                             <td> 选择模式，默认开启值域开关，可选single，multiple </td>
@@ -1944,7 +1962,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td> <b>{boolean}</b> calculable </td>
                             <td> false </td>
-                            <td> 是否启用值域漫游，启用后无视splitNumber，值域显示为线性渐变 </td>
+                            <td> 是否启用值域漫游，启用后无视splitNumber和splitList，值域显示为线性渐变 </td>
                         </tr>
                         <tr>
                             <td> <b>{boolean}</b> hoverLink </td>

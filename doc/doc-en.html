@@ -1908,12 +1908,12 @@ require(['echarts'], function (ec){
                         <tr>
                             <td> <b>{number}</b> min </td>
                             <td> null </td>
-                            <td> The specified minimum value, such as 0. Defaults to null. Required parameter. </td>
+                            <td> The specified minimum value, such as 0. Defaults to null. Required parameter. Only when splitList is used, min can be ignored.</td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> max </td>
                             <td> null </td>
-                            <td> The specified maximum value, such as 100. Defaults to null. Required parameter. </td>
+                            <td> The specified maximum value, such as 100. Defaults to null. Required parameter. Only when splitList is used, max can be ignored.</td>
                         </tr>
                         <tr>
                             <td> <b>{number}</b> precision </td>
@@ -1926,6 +1926,24 @@ require(['echarts'], function (ec){
                             <td> the number of segments. Defaults to 5. Linear gradient when set to 0. When calculable is true, it is equally split into 100 parts by default. </td>
                         </tr>
                         <tr>
+                            <td> <b>{number}</b> splitList </td>
+                            <td> null </td>
+                            <td>
+                                Customizing that how to split dataRange. When splitList is specified, splitNumber is ignored. <br />
+                                splitList is an Array, which can not be empty. Each item of the Array is Object like: <br />
+                                { <br />
+                                &nbsp;&nbsp;range: [],     data range of this item, where the value can be: <br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   [10, 30] : means &gt;= 10 &amp;&amp; &lt;= 30  <br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   [null, 30] : means &lt;= 30  <br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   [10, null] : means &gt;= 10  <br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   10 : means === 10 <br />
+                                &nbsp;&nbsp;label: '10 to 30',  text label of this item. If ignoring this attribute, text label will be auto generated.  <br />
+                                &nbsp;&nbsp;color: '#333'       color of this item. If ignoring attribute, color can be auto generated.  <br />
+                                } <br />
+                                example: <a href="./example/dataRange2.html" target="_blank">this 》</a>
+                            </td>
+                        </tr>
+                        <tr>
                             <td> <b>{boolean | string}</b> selectedMode </td>
                             <td> true </td>
                             <td> selection mode. Enable dataRange switch by default. Can be one of: single, multiple </td>
@@ -1933,7 +1951,7 @@ require(['echarts'], function (ec){
                         <tr>
                             <td> <b>{boolean}</b> calculable </td>
                             <td> false </td>
-                            <td> Specifies whether the scale roaming feature will be enabled. When enabled, ignore splitNumber, dataRange shows as linear gradient. </td>
+                            <td> Specifies whether the scale roaming feature will be enabled. When enabled, ignore splitNumber and splitList, dataRange shows as linear gradient. </td>
                         </tr>
                         <tr>
                             <td> <b>{boolean}</b> hoverLink </td>

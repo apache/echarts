@@ -123,7 +123,7 @@ dataRangeStyle = [
     },
 // 10
     {
-        color:['red','yellow'],    //颜色 
+        color:['red','yellow'],    //颜色
         text:['高','低'],            // 文本，默认为数值文本
         calculable : true,
         min: 0,
@@ -132,11 +132,25 @@ dataRangeStyle = [
 // 11
     {
         orient: 'horizontal',      // 'vertical'
-        color:['red','yellow'],    //颜色 
+        color:['red','yellow'],    //颜色
         text:['高','低'],            // 文本，默认为数值文本
         calculable : true,
         min: 0,
         max: 2000
+    },
+// 12
+    {
+        orient: 'vertical',      // 'vertical'
+        color: ['red', 'pink'],    //颜色
+        splitList: [
+            {range: [300000]},
+            {range: [900, 200000]},
+            {range: [310, 1000]},
+            {range: [200, 300]},
+            {range: [10, 200], label: '自定义label: 10 到 200'},
+            {range: 5},
+            {range: [null, 10], color: 'black'}
+        ]
     }
 ]
 var cur = curIndex++%dataRangeStyle.length;
@@ -163,12 +177,14 @@ option = {
                     <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
                     <span class="text-primary">切换主题</span>
                     <select id="theme-select"></select>
+                    &nbsp;&nbsp;&nbsp;
+                    <a target="_blank" href="./dataRange2.html">dataRange间隔自定义（customize split）</a>
 
                     <span id='wrong-message' style="color:red"></span>
                 </div>
             </div><!--/span-->
         </div><!--/row-->
-        
+
         </div><!--/.fluid-container-->
 
     <footer id="footer"></footer>
