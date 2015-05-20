@@ -1926,21 +1926,28 @@ require(['echarts'], function (ec){
                             <td> the number of segments. Defaults to 5. Linear gradient when set to 0. When calculable is true, it is equally split into 100 parts by default. </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> splitList </td>
+                            <td> <b>{Array.&lt;Object&gt;}</b> splitList </td>
                             <td> null </td>
                             <td>
                                 Customizing that how to split dataRange. When splitList is specified, splitNumber is ignored. <br />
                                 splitList is an Array, which can not be empty. Each item of the Array is Object like: <br />
                                 { <br />
-                                &nbsp;&nbsp;range: [],     data range of this item, where the value can be: <br />
-                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   [10, 30] : means &gt;= 10 &amp;&amp; &lt;= 30  <br />
-                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   [null, 30] : means &lt;= 30  <br />
-                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   [10, null] : means &gt;= 10  <br />
-                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;   10 : means === 10 <br />
-                                &nbsp;&nbsp;label: '10 to 30',  text label of this item. If ignoring this attribute, text label will be auto generated.  <br />
-                                &nbsp;&nbsp;color: '#333'       color of this item. If ignoring attribute, color can be auto generated.  <br />
+                                &nbsp;&nbsp;start: 10 &nbsp;&nbsp;&nbsp; The start of the domain of this item. <br />
+                                &nbsp;&nbsp;end: 30 &nbsp;&nbsp;&nbsp; The end of the domain of this item. <br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 'start' and 'end' can be set to the same value, <br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; in which case this item is coresponding to the single value rather than an interval. <br />
+                                &nbsp;&nbsp;label: '10 to 30' &nbsp;&nbsp;&nbsp; text label of this item. If ignoring this attribute, Text label will be auto generated.  <br />
+                                &nbsp;&nbsp;color: '#333' &nbsp;&nbsp;&nbsp; Color of this item. If ignoring attribute, color can be auto generated.  <br />
                                 } <br />
                                 example: <a href="./example/dataRange2.html" target="_blank">this 》</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> range </td>
+                            <td> null </td>
+                            <td>
+                                This option is used to set the initial selected range of dataRange. This option works when "calculable" is true. <br />
+                                The value of this option likes: {start: 10, end: 50}
                             </td>
                         </tr>
                         <tr>

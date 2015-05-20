@@ -43,13 +43,11 @@ define(function (require) {
         splitList: null,           // 用于用户自定义不等距分割。如果定义了splitList，则splitNumber无效。
                                    // splitList为Array.<Object>，其中每个Object形如：
                                    // {
-                                   //   range: [],          本项的数据范围，形式可以是：
-                                   //                       [10, 30]   表示 >= 10 && <= 30
-                                   //                       [null, 30] 表示 <= 30
-                                   //                       [10, null] 表示 >= 10
-                                   //                       10         表示 === 10
-                                   //   label: '10 to 30',  本项的显示标签，缺省则自动生成label
-                                   //   color: '#333'       本项的显示颜色，缺省则自动计算color
+                                   //   start: 10,          本项的数据范围起点（>=），如果不设置表示负无穷。
+                                   //                       如果想本项只对应一个值，那么start和end设同样的数就可以了。
+                                   //   end: 90             本项的数据范围终点（<=），如果不设置表示正无穷。
+                                   //   label: '10 to 30',  本项的显示标签，缺省则自动生成label。
+                                   //   color: '#333'       本项的显示颜色，缺省则自动计算color。
                                    // }
         calculable: false,         // 是否值域漫游，启用后无视splitNumber和splitList，线性渐变
         selectedMode: true,        // 选择模式，默认开启值域开关
@@ -1063,13 +1061,20 @@ define(function (require) {
         // 外部传入range （calculable为true时有意义）
         _syncShapeFromRange : function () {
             var range = this.dataRangeOption.range || {};
-            // 做一个反转
-            this._range.end = typeof this._range.end != 'undefined'
-                              ? this._range.end
-                              : (typeof range.start != 'undefined' ? range.start : 0);
-            this._range.start = typeof this._range.start != 'undefined'
-                                ? this._range.start
-                                : (typeof range.end != 'undefined' ? range.end : 100);
+            var optRangeStart = range.start;
+            var optRangeEnd = range.end;
+            if (optRangeEnd < optRangeStart) {
+                optRangeStart = [optRangeEnd, optRangeEnd = optRangeStart][0]; // 反转
+            }
+
+            // 内部使用的_range和option的range的start、end的定义是相反的。
+            // 为了支持myChart.setOption(option, true); option中的设置优先。
+            this._range.end = optRangeStart != null
+                ? optRangeStart
+                : (this._range.end != null ? this._range.end : 0);
+            this._range.start = optRangeEnd != null
+                ? optRangeEnd
+                : (this._range.start != null ? this._range.start : 100);
 
             if (this._range.start != 100 || this._range.end !== 0) {
                 // 非默认满值同步一下图形
@@ -1508,26 +1513,23 @@ define(function (require) {
 
             for (var i = 0, len = splitList.length; i < len; i++) {
                 var splitListItem = splitList[i];
-                if (!splitListItem || !splitListItem.range) {
+                if (!splitListItem || (splitListItem.start == null && splitListItem.end == null)) {
                     throw new Error('Empty item exists in splitList!');
                 }
 
-                var range = splitListItem.range;
                 var reformedItem = {
                     label: splitListItem.label,
                     color: splitListItem.color
                 };
+                reformedItem.min = splitListItem.start;
+                reformedItem.max = splitListItem.end;
 
-                if (Object.prototype.toString.call(range) === '[object Array]') {
-                    reformedItem.min = range[0];
-                    reformedItem.max = range[1];
+                if (reformedItem.min > reformedItem.max) { // Need to be exchanged
+                    reformedItem.min = [reformedItem.max, reformedItem.max = reformedItem.min][0];
                 }
-                else {
-                    reformedItem.min = range;
-                    reformedItem.max = range;
-                    reformedItem.single = range;
+                if (reformedItem.min === reformedItem.max) {
+                    reformedItem.single = reformedItem.max; // Coresponding to single value
                 }
-
                 if (reformedItem.min == null) {
                     reformedItem.min = -Number.MAX_VALUE;
                 }

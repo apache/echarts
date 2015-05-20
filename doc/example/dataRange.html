@@ -143,13 +143,13 @@ dataRangeStyle = [
         orient: 'vertical',      // 'vertical'
         color: ['red', 'pink'],    //颜色
         splitList: [
-            {range: [300000]},
-            {range: [900, 200000]},
-            {range: [310, 1000]},
-            {range: [200, 300]},
-            {range: [10, 200], label: '自定义label: 10 到 200'},
-            {range: 5},
-            {range: [null, 10], color: 'black'}
+            {start: 300000},
+            {start: 900, end: 200000},
+            {start: 310, end: 1000},
+            {start: 200, end: 300},
+            {start: 10, end: 200, label: '自定义label: 10 到 200'},
+            {start: 5, end: 5},
+            {end: 10, color: 'black'}
         ]
     }
 ]

@@ -1937,21 +1937,27 @@ require(['echarts'], function (ec){
                             <td> 分割段数，默认为5，为0时为线性渐变，calculable为true是默认均分100份 </td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> splitList </td>
+                            <td> <b>{Array.&lt;Object&gt;}</b> splitList </td>
                             <td> null </td>
                             <td>
                                 自定义分割方式，支持不等距分割。splitList被指定时，splitNumber将被忽略。<br />
                                 splitList是一个（不可为空的）Array，Array的每一项为一个Object，含有如下属性：<br />
                                 { <br />
-                                &nbsp;&nbsp;range: [],     本项的数据范围，形式可以是： <br />
-                                &nbsp;&nbsp;&nbsp;&nbsp;   [10, 30]   表示 &gt;= 10 &amp;&amp; &lt;= 30  <br />
-                                &nbsp;&nbsp;&nbsp;&nbsp;   [null, 30] 表示 &lt;= 30  <br />
-                                &nbsp;&nbsp;&nbsp;&nbsp;   [10, null] 表示 &gt;= 10  <br />
-                                &nbsp;&nbsp;&nbsp;&nbsp;   10         表示 === 10 <br />
-                                &nbsp;&nbsp;label: '10 to 30',  本项的显示标签，缺省则自动生成label  <br />
-                                &nbsp;&nbsp;color: '#333'       本项的颜色，缺省则自动计算color  <br />
+                                &nbsp;&nbsp;start: 10 &nbsp;&nbsp;&nbsp; 本项的数据范围起点（>=），如果不设置表示负无穷。<br />
+                                &nbsp;&nbsp;end: 30 &nbsp;&nbsp;&nbsp; 本项的数据范围终点（<=），如果不设置表示正无穷。<br />
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;如果想本项只对应一个值，那么start和end设同样的数就可以了。<br />
+                                &nbsp;&nbsp;label: '10 to 30' &nbsp;&nbsp;&nbsp; 本项的显示标签，缺省则自动生成label  <br />
+                                &nbsp;&nbsp;color: '#333' &nbsp;&nbsp;&nbsp; 本项的颜色，缺省则自动计算color  <br />
                                 } <br />
                                 详见例子 <a href="./example/dataRange2.html" target="_blank">this 》</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> range </td>
+                            <td> null </td>
+                            <td>
+                                用于设置dataRange的初始选中范围。calculable为true时有效。<br />
+                                其值型如：{start: 10, end: 50}。
                             </td>
                         </tr>
                         <tr>

@@ -62,13 +62,13 @@ option = {
         x: 'left',
         y: 'bottom',
         splitList: [
-            {range: [1500, null]},
-            {range: [900, 1500]},
-            {range: [310, 1000]},
-            {range: [200, 300]},
-            {range: [10, 200], label: '10 到 200（自定义label）'},
-            {range: 5, label: '5（自定义特殊颜色）', color: 'black'},
-            {range: [null, 10]}
+            {start: 1500},
+            {start: 900, end: 1500},
+            {start: 310, end: 1000},
+            {start: 200, end: 300},
+            {start: 10, end: 200, label: '10 到 200（自定义label）'},
+            {start: 5, end: 5, label: '5（自定义特殊颜色）', color: 'black'},
+            {end: 10}
         ],
         color: ['#E0022B', '#E09107', '#A3E00B']
     },
