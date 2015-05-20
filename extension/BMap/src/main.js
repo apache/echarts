@@ -32,7 +32,7 @@ define(function (require) {
      *
      * @type {BMap.Map}
      * @private
-     */ 
+     */
     BMapExt.prototype._map = null;
 
     /**
@@ -67,7 +67,7 @@ define(function (require) {
      * @param {BMap} BMap
      * @param {echarts} ec
      * @private
-     */ 
+     */
     BMapExt.prototype._init = function (obj, BMap, ec, mapOption) {
         var self = this;
         self._map = obj.constructor == BMap.Map ? obj : new BMap.Map(obj, mapOption);
@@ -187,7 +187,7 @@ define(function (require) {
                 if (markType == 'markPoint') {
                     var data = markData.data;
                     if (data && data.length) {
-                        for (var k in data) {
+                        for (var k = 0, len = data.length; k < len; k++) {
                             self._AddPos(data[k]);
                         }
                     }
@@ -195,7 +195,7 @@ define(function (require) {
                 else {
                     data = markData.data;
                     if (data && data.length) {
-                        for (var k in data) {
+                        for (var k = 0, len = data.length; k < len; k++) {
                             self._AddPos(data[k][0]);
                             self._AddPos(data[k][1]);
                         }
@@ -254,14 +254,14 @@ define(function (require) {
 
                 var data = markPoint.data;
                 if (data && data.length) {
-                    for (var k in data) {
+                    for (var k = 0, len = data.length; k < len; k++) {
                         self._AddPos(data[k]);
                     }
                 }
 
                 data = markLine.data;
                 if (data && data.length) {
-                    for (var k in data) {
+                    for (var k = 0, len = data.length; k < len; k++) {
                         self._AddPos(data[k][0]);
                         self._AddPos(data[k][1]);
                     }
