@@ -47827,6 +47827,8 @@ require("echarts/chart/venn");
 
 require("echarts/chart/treemap");
 
+require("echarts/chart/tree");
+
 _global['echarts'] = echarts;
 _global['zrender'] = zrender;
 

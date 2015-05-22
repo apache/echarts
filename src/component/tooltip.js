@@ -1483,45 +1483,6 @@ define(function (require) {
                     case ecConfig.CHART_TYPE_LINE :
                     case ecConfig.CHART_TYPE_BAR :
                     case ecConfig.CHART_TYPE_K :
-                    case ecConfig.CHART_TYPE_TREEMAP :
-                        if (this.component.xAxis == null 
-                            || this.component.yAxis == null
-                            || serie.data.length <= dataIndex
-                        ) {
-                            return;
-                        }
-                        var xAxisIndex = serie.xAxisIndex || 0;
-                        var yAxisIndex = serie.yAxisIndex || 0;
-                        if (this.component.xAxis.getAxis(xAxisIndex).type 
-                            === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
-                        ) {
-                            // 横轴是类目
-                            this._event = {
-                                zrenderX: this.component.xAxis.getAxis(xAxisIndex)
-                                          .getCoordByIndex(dataIndex),
-                                zrenderY: this.component.grid.getY() 
-                                          + (this.component.grid.getYend() 
-                                             - this.component.grid.getY()
-                                            ) / 4
-                            };
-                        }
-                        else {
-                            // 纵轴是类目
-                            this._event = {
-                                zrenderX: this.component.grid.getX() 
-                                          + (this.component.grid.getXend() 
-                                              - this.component.grid.getX()
-                                            ) / 4,
-                                zrenderY: this.component.yAxis.getAxis(yAxisIndex)
-                                           .getCoordByIndex(dataIndex)
-                            };
-                        }
-                        this._showAxisTrigger(
-                            xAxisIndex, 
-                            yAxisIndex,
-                            dataIndex
-                        );
-                        break;
                     case ecConfig.CHART_TYPE_RADAR :
                         if (this.component.polar == null 
                             || serie.data[0].value.length <= dataIndex

@@ -212,6 +212,7 @@ function launchExample() {
             'echarts/chart/eventRiver',
             'echarts/chart/venn',
             'echarts/chart/treemap',
+            'echarts/chart/tree',
             needMap() ? 'echarts/chart/map' : 'echarts'
         ],
         requireCallback

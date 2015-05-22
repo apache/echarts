@@ -161,6 +161,7 @@ function launchExample() {
             'echarts/chart/funnel',
             'echarts/chart/venn',
             'echarts/chart/treemap',
+            'echarts/chart/tree',
             'echarts/chart/eventRiver'
         ],
         requireCallback
