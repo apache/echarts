@@ -1,5 +1,5 @@
 /**
- * echarts图表类：维恩图
+ * echarts图表类：矩形树图
  *
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
  * @author Loutongbing (娄同兵, loutongbing@126.com)

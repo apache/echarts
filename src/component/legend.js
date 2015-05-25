@@ -577,6 +577,7 @@ define(function (require) {
                     break;
                 case 'radar':
                 case 'venn':
+                case 'tree':
                 case 'treemap':
                 case 'scatter':
                     itemShape.highlightStyle.lineWidth = 3;

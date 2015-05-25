@@ -16,6 +16,7 @@ define(function() {
         CHART_TYPE_RADAR: 'radar',
         CHART_TYPE_VENN: 'venn',
         CHART_TYPE_TREEMAP: 'treemap',
+        CHART_TYPE_TREE: 'tree',
         CHART_TYPE_MAP: 'map',
         CHART_TYPE_K: 'k',
         CHART_TYPE_ISLAND: 'island',
