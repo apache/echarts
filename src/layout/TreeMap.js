@@ -6,27 +6,40 @@
 define(function (require) {
 
     function TreeMapLayout(opts) {
-        // 包含子矩形坐标与宽高的数组
-        this.rectangleList = [];
         /**
          * areas 每个子矩形面积
-         * x0 父矩形横坐标
-         * y0 父矩形横坐标
-         * width0 父矩形宽
-         * height0 父矩形高
+         * x 父矩形横坐标
+         * y 父矩形横坐标
+         * width 父矩形宽
+         * height 父矩形高
         */
         var row = {
-            x: opts.x0,
-            y: opts.y0,
-            width: opts.width0,
-            height: opts.height0
+            x: opts.x,
+            y: opts.y,
+            width: opts.width,
+            height: opts.height
         };
-        this.squarify(
-            opts.areas,
-            row
-        );
+
+        this.x = opts.x;
+        this.y = opts.y;
+        this.width = opts.width;
+        this.height = opts.height;
     }
-    TreeMapLayout.prototype.squarify = function (areas, row) {
+
+    TreeMapLayout.prototype.run = function (areas) {
+        var out = [];
+
+        this._squarify(areas, {
+            x: this.x,
+            y: this.y,
+            width: this.width,
+            height: this.height
+        }, out);
+
+        return out;
+    };
+
+    TreeMapLayout.prototype._squarify = function (areas, row, out) {
         var layoutDirection = 'VERTICAL';
         var width = row.width;
         var height = row.height;
@@ -36,7 +49,7 @@ define(function (require) {
             height = row.width;
         }
         // 把考虑方向与位置的因素剥离出来，只考虑怎么排列，运行完毕之后再修正
-        var shapeArr = this.getShapeListInAbstractRow(
+        var shapeArr = this._getShapeListInAbstractRow(
             areas, width, height
         );
         // 首先换算出虚拟的x、y坐标
@@ -51,7 +64,7 @@ define(function (require) {
         // 根据虚拟的shapeArr计算真实的小矩形
         if (layoutDirection == 'VERTICAL') {
             for (var k = 0; k < shapeArr.length; k++) {
-                this.rectangleList.push(
+                out.push(
                     {
                         x: shapeArr[k].x + row.x,
                         y: shapeArr[k].y + row.y,
@@ -69,7 +82,7 @@ define(function (require) {
         }
         else {
             for (var l = 0; l < shapeArr.length; l++) {
-                this.rectangleList.push(
+                out.push(
                     {
                         x: shapeArr[l].y + row.x,
                         y: shapeArr[l].x + row.y,
@@ -91,13 +104,14 @@ define(function (require) {
             return;
         }
         else {
-            this.squarify(
+            this._squarify(
                 nextAreaArr,
-                nextRow
+                nextRow,
+                out
             );
         }
     };
-    TreeMapLayout.prototype.getShapeListInAbstractRow = function (
+    TreeMapLayout.prototype._getShapeListInAbstractRow = function (
         areas,
         width,
         height
@@ -115,24 +129,24 @@ define(function (require) {
         // 纵横比最优时break并保留结果
         for (var count = 1; count < areas.length; count++) {
 
-            var shapeArr0 = this.placeFixedNumberRectangles(
+            var shapeArr0 = this._placeFixedNumberRectangles(
                 areas.slice(0, count),
                 width,
                 height
             );
-            var shapeArr1 = this.placeFixedNumberRectangles(
+            var shapeArr1 = this._placeFixedNumberRectangles(
                 areas.slice(0, count + 1),
                 width,
                 height
             );
-            if (this.isFirstBetter(shapeArr0, shapeArr1)) {
+            if (this._isFirstBetter(shapeArr0, shapeArr1)) {
                 return shapeArr0;
             }
         }
     };
 
     // 确定数量进行填充
-    TreeMapLayout.prototype.placeFixedNumberRectangles = function (
+    TreeMapLayout.prototype._placeFixedNumberRectangles = function (
         areaSubArr,
         width,
         height
@@ -170,7 +184,7 @@ define(function (require) {
         return shapeArr;
     };
     // 相邻的两种填充方式放进去，比较是不是前一个的纵横比较小
-    TreeMapLayout.prototype.isFirstBetter = function (
+    TreeMapLayout.prototype._isFirstBetter = function (
         shapeArr0,
         shapeArr1
     ) {
