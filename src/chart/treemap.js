@@ -32,9 +32,9 @@ define(function (require) {
                 // color: 各异,
                 label: {
                     show: true,
+                    x: 5,
+                    y: 12,
                     textStyle: {
-                        x: 5,
-                        y: 12,
                         align: 'left',
                         color: '#000',
                         fontFamily: 'Arial',
@@ -328,8 +328,8 @@ define(function (require) {
             if (!itemStyle.normal.label.show) {
                 text = '';
             }
-            else if (normalTextStyle.x + textWidth > rect.width
-                || normalTextStyle.y + textHeight > rect.height) {
+            else if (itemStyle.normal.label.x + textWidth > rect.width
+                || itemStyle.normal.label.y + textHeight > rect.height) {
                 text = '';
             }
 
@@ -344,16 +344,16 @@ define(function (require) {
             // 用label方法写title
             var textShape = {
                 style: {
-                    textX: rect.x + normalTextStyle.x,
-                    textY: rect.y + normalTextStyle.y,
+                    textX: rect.x + itemStyle.normal.label.x,
+                    textY: rect.y + itemStyle.normal.label.y,
                     text: text,
                     textPosition: 'specific',
                     textColor: normalTextStyle.color,
                     textFont: textFont
                 },
                 highlightStyle: {
-                    textX: rect.x + emphasisTextStyle.x,
-                    textY: rect.y + emphasisTextStyle.y,
+                    textX: rect.x + itemStyle.emphasis.label.x,
+                    textY: rect.y + itemStyle.emphasis.label.y,
                     text: emphasisText,
                     textColor: emphasisTextStyle.color,
                     textPosition: 'specific'

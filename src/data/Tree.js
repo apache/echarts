@@ -193,7 +193,7 @@ define(function(require) {
         for (var i = 0; i < data.length; i++) {
             buildHierarchy(data[i], rootNode);
         }
-
+        tree.root.updateDepthAndHeight(0);
         return tree;
     };
 

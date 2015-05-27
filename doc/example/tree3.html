@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="kener.linfeng@gmail.com">
+    <title>ECharts · Example</title>
+
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+
+    <link href="../asset/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/carousel.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="./www/js/echarts.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
+    <div class="container-fluid">
+        <div class="row-fluid example">
+            <div id="sidebar-code" class="col-md-4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+option = {
+    title : {
+        text: '中国省市',
+        subtext: '极坐标'
+    },
+    toolbox: {
+        show : true,
+        feature : {
+            mark : {show: true},
+            dataView : {show: true, readOnly: false},
+            restore : {show: true},
+            saveAsImage : {show: true}
+        }
+    },
+    series : [
+        {
+            name:'树图',
+            type:'tree',
+            orient: 'radial',  // vertical horizontal radial
+            rootLocation: {x: 'center',y: 'center'}, // 根节点位置  {x: 100, y: 'center'}
+            nodePadding: 6,
+            layerPadding: 100,
+            hoverable: false,
+            symbolSize: 6,
+            itemStyle: {
+                normal: {
+                    color: '#4883b4',
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: "{b}",
+                        textStyle: {
+                            color: '#000',
+                            fontSize: 5
+                        }
+                    },
+                    lineStyle: {
+                        color: '#ccc',
+                        type: 'curve' // 'curve'|'broken'|'solid'|'dotted'|'dashed'
+
+                    }
+                },
+                emphasis: {
+                    color: '#4883b4',
+                    label: {
+                        show: false
+                    },
+                    borderWidth: 0
+                }
+            },
+            
+            data: [
+                {
+                    name: '中国',
+                    children: [
+                        {
+                            name: '省',
+                            children: [
+                                {
+                                    name: '黑龙江省'
+                                },{
+                                    name: '辽宁省'
+                                },{
+                                    name: '吉林省'
+                                },{
+                                    name: '河北省'
+                                },{
+                                    name: '河南省'
+                                },{
+                                    name: '湖北省'
+                                },{
+                                    name: '湖南省'
+                                },{
+                                    name: '山东省'
+                                },{
+                                    name: '山西省'
+                                },{
+                                    name: '陕西省'
+                                },{
+                                    name: '安徽省'
+                                },{
+                                    name: '浙江省'
+                                },{
+                                    name: '江苏省'
+                                },{
+                                    name: '福建省'
+                                },{
+                                    name: '广东省'
+                                },{
+                                    name: '海南省'
+                                },{
+                                    name: '四川省'
+                                },{
+                                    name: '云南省'
+                                },{
+                                    name: '贵州省'
+                                },{
+                                    name: '青海省'
+                                },{
+                                    name: '甘肃省'
+                                },{
+                                    name: '江西省'
+                                },{
+                                    name: '台湾省'
+                                }
+                            ]
+                        },
+                        {
+                            name: '直辖市',
+                            children: [
+                                {
+                                    name: '北京'
+                                },
+                                {
+                                    name: '上海'
+                                },{
+                                    name: '天津'
+                                },{
+                                    name: '重庆'
+                                }
+                            ]
+                        },
+                        {
+                            name: '特别行政区',
+                            children: [
+                                {
+                                    name: '香港'
+                                },{
+                                    name: '澳门'
+                                }
+                            ]
+                        },
+                        {
+                            name: '自治区',
+                            children: [
+                                {
+                                    name: '内蒙古'
+                                },{
+                                    name: '新疆'
+                                },{
+                                    name: '西藏'
+                                },{
+                                    name: '宁夏'
+                                },{
+                                    name: '广西'
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="col-md-8">
+                <div id="main" class="main" style="height: 600px;"></div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        
+        </div><!--/.fluid-container-->
+
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
+    <script src="../asset/js/bootstrap.min.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>

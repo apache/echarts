@@ -41,7 +41,7 @@
 option = {
     title : {
         text: '手机占有率',
-        subtext: '线、节点样式'
+        subtext: '多个树'
     },
     tooltip : {
         trigger: 'item',
@@ -62,8 +62,94 @@ option = {
         {
             name:'树图',
             type:'tree',
+            orient: 'vertical',  // vertical horizontal
+            rootLocation: {x: 200, y: 50}, // 根节点位置  {x: 100, y: 'center'}
+            nodePadding: 1,
+            itemStyle: {
+                normal: {
+                    label: {
+                        show: false,
+                        formatter: "{b}"
+                    },
+                    lineStyle: {
+                        color: '#48b',
+                        shadowColor: '#000',
+                        shadowBlur: 3,
+                        shadowOffsetX: 3,
+                        shadowOffsetY: 5,
+                        type: 'curve' // 'curve'|'broken'|'solid'|'dotted'|'dashed'
+
+                    }
+                },
+                emphasis: {
+                    label: {
+                        show: true
+                    }
+                }
+            },
+            
+            data: [
+                {
+                    name: '手机',
+                    value: 6,
+                    symbolSize: 40,
+                    children: [
+                        {
+                            name: '苹果',
+                            value: 4,
+                            symbolSize: 40,
+                            children: [
+                                {
+                                    name: '4',
+                                    value: 4
+                                },
+                                {
+                                    name: '4s',
+                                    value: 4
+                                },
+                                {
+                                    name: '5',
+                                    value: 2
+                                },
+                                 {
+                                    name: '5s',
+                                    value: 2
+                                },
+                                {
+                                    name: '6',
+                                    value: 2
+                                },
+                                {
+                                    name: '6 plus',
+                                    value: 4
+                                }
+                            ]
+                        },
+                        {
+                            name: '小米',
+                            value: 4
+                        },
+                        {
+                            name: '三星',
+                            value: 2
+                        },
+                        {
+                            name: '联想',
+                            value: 2
+                        },
+                        {
+                            name: '魅族',
+                            value: 1
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            name:'树图',
+            type:'tree',
             orient: 'horizontal',  // vertical horizontal
-            rootLocation: {x: 100, y: '60%'}, // 根节点位置  {x: 'center',y: 10}
+            rootLocation: {x: 'center', y: '60%'}, // 根节点位置  {x: 'center',y: 10}
             nodePadding: 20,
             symbol: 'circle',
             symbolSize: 40,
@@ -100,7 +186,7 @@ option = {
                     children: [
                         {
                             name: '小米',
-                            value: 4,
+                            value: 5,
                             symbol: 'rectangle',
                             itemStyle: {
                                 normal: {

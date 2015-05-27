@@ -63,7 +63,7 @@ option = {
             name:'树图',
             type:'tree',
             orient: 'vertical',  // vertical horizontal
-            rootLocation: {x: 'center',y: 10}, // 根节点位置  {x: 100, y: 'center'}
+            rootLocation: {x: 'center',y: 50}, // 根节点位置  {x: 100, y: 'center'}
             nodePadding: 1,
             itemStyle: {
                 normal: {
@@ -73,10 +73,10 @@ option = {
                     },
                     lineStyle: {
                         color: '#48b',
-                        //shadowColor: '#000',
-                        //shadowBlur: 3,
-                        //shadowOffsetX: 3,
-                        //shadowOffsetY: 5,
+                        shadowColor: '#000',
+                        shadowBlur: 3,
+                        shadowOffsetX: 3,
+                        shadowOffsetY: 5,
                         type: 'curve' // 'curve'|'broken'|'solid'|'dotted'|'dashed'
 
                     }
@@ -92,68 +92,45 @@ option = {
                 {
                     name: '手机',
                     value: 6,
+                    symbolSize: 40,
                     children: [
                         {
-                            name: '小米',
+                            name: '苹果',
                             value: 4,
                             symbolSize: 40,
                             children: [
                                 {
-                                    name: '小米1',
+                                    name: '4',
                                     value: 4
                                 },
                                 {
-                                    name: '小米2',
+                                    name: '4s',
                                     value: 4
                                 },
                                 {
-                                    name: '小米3',
+                                    name: '5',
+                                    value: 2
+                                },
+                                 {
+                                    name: '5s',
                                     value: 2
                                 },
                                 {
-                                    name: '小米4',
+                                    name: '6',
                                     value: 2
                                 },
                                 {
-                                    name: '小米5',
+                                    name: '6 plus',
                                     value: 4
-                                },
-                                {
-                                    name: '小米6',
-                                    value: 4
-                                },
-                                {
-                                    name: '小米7',
-                                    value: 2
-                                },
-                                {
-                                    name: '小米8',
-                                    value: 2
-                                },
-                                {
-                                    name: '小米9',
-                                    value: 4
-                                },
-                                {
-                                    name: '小米10',
-                                    value: 4
-                                },
-                                {
-                                    name: '小米11',
-                                    value: 2
-                                },
-                                {
-                                    name: '小米12',
-                                    value: 2
                                 }
                             ]
                         },
                         {
-                            name: '苹果',
+                            name: '小米',
                             value: 4
                         },
                         {
-                            name: '华为',
+                            name: '三星',
                             value: 2
                         },
                         {
