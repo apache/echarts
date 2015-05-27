@@ -60,6 +60,7 @@ define(function (require) {
     var zrConfig = require('zrender/config');
     var zrEvent = require('zrender/tool/event');
     var zrUtil = require('zrender/tool/util');
+    var zrColor = require('zrender/tool/color');
 
     /**
      * 构造函数
@@ -116,7 +117,7 @@ define(function (require) {
         },
 
         _buildSeries: function(series, seriesIndex) {
-            var tree = Tree.fromOptionData('root', series.data);
+            var tree = Tree.fromOptionData(series.name, series.data);
 
             this._treesMap[seriesIndex] = tree;
 
@@ -202,7 +203,9 @@ define(function (require) {
                 }
             }
 
-            this._buildBreadcrumb(treeRoot, seriesIndex);
+            this._buildBreadcrumb(
+                treeRoot, seriesIndex, treemapX, treemapY + treemapHeight
+            );
 
             for (var i = currentShapeLen; i < shapeList.length; i++) {
                 this.zr.addShape(shapeList[i]);
@@ -508,8 +511,52 @@ define(function (require) {
 
         },
 
-        _buildBreadcrumb: function () {
+        _buildBreadcrumb: function (treeRoot, seriesIndex, x, y) {
+            var stack = [];
 
+            var current = treeRoot;
+            while (current) {
+                stack.unshift(current.data.name);
+                current = current.parent;
+            }
+
+            var series = this.series[seriesIndex];
+            var textStyle = this.query(series, 'itemStyle.normal.breadcrumb.textStyle') || {};
+            var textEmphasisStyle = 
+                this.query(series, 'itemStyle.emphasis.breadcrumb.textStyle') || {};
+
+            var commonStyle = {
+                y: y + 10,
+                textBaseline: 'top',
+                textAlign: 'left',
+                color: textStyle.color,
+                textFont: this.getFont(textStyle)
+            };
+            var commonHighlightStyle = {
+                brushType: 'fill',
+                color: textEmphasisStyle.color || zrColor.lift(textStyle.color, -0.3),
+                textFont: this.getFont(textEmphasisStyle)
+            };
+
+            for (var i = 0; i < stack.length; i++) {
+                var textShape = new TextShape({
+                    zlevel: this.getZlevelBase(),
+                    z: this.getZBase(),
+                    style: zrUtil.merge({
+                        x: x,
+                        text: stack[i] + (stack.length - 1 - i ? ' > ' : '')
+                    }, commonStyle),
+                    clickable: true,
+                    highlightStyle: commonHighlightStyle
+                });
+
+                ecData.set(textShape, 'seriesIndex', seriesIndex);
+                ecData.set(textShape, 'name', stack[i]);
+
+                x += textShape.getRect(textShape.style).width;
+
+                this.shapeList.push(textShape);
+            }
         },
 
         __onclick : function (params) {
