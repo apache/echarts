@@ -81,7 +81,7 @@ define(function (require) {
                 that.totalArea = maxArea;
                 //字体大小的确定，可配置，根据开关 确定是否要根据面积来定。。
                 if (wordletype.autoSizeCal.enable) {
-                    that._autoCalTextSize(data, maxArea, maxWit, maxHit, wordletype.autoSizeCal.miniSize);
+                    that._autoCalTextSize(data, maxArea, maxWit, maxHit, wordletype.autoSizeCal.minSize);
                 }
 
                 if (dfop.timer) {
@@ -323,7 +323,7 @@ define(function (require) {
                     areaPresent: .058,
                     autoSizeCal: {
                         enable: true,
-                        miniSize: 12
+                        minSize: 12
                     }
                 }
             });
@@ -576,7 +576,7 @@ define(function (require) {
             }
         },
 
-        _autoCalTextSize: function (data, shapeArea, maxwidth, maxheight, miniSize) {
+        _autoCalTextSize: function (data, shapeArea, maxwidth, maxheight, minSize) {
             //循环
             //面积 归一化
             //计算 每个字体的面积
@@ -585,7 +585,7 @@ define(function (require) {
                 });
             var i = data.length;
             var maxareapre = .25; /*面积归一化后， 字体占总面积的最大百分比*/
-            var minTextSize = miniSize; /*字体所能缩放的最小大小。。如果字体面积 依旧无法满足上述约束， 字体将不会再缩小*/
+            var minTextSize = minSize; /*字体所能缩放的最小大小。。如果字体面积 依旧无法满足上述约束， 字体将不会再缩小*/
             var cw = this.defaultOption.cw;
             var ch = this.defaultOption.ch;
             var c = this.defaultOption.c;
@@ -666,8 +666,8 @@ define(function (require) {
 
                 d.size = ~~(k * d.size);
 
-                if (d.size < miniSize) {
-                    d.size = miniSize;
+                if (d.size < minSize) {
+                    d.size = minSize;
                     return;
                 }
 

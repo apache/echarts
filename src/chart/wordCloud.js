@@ -215,8 +215,9 @@ define(function (require) {
                     textAlign: 'center'
                 },
                 highlightStyle: {
+                    brushType: emphasis.borderWidth ? 'both' : 'fill',
                     color: emphasisColor,
-                    lineWidth: emphasis.borderWidth,
+                    lineWidth: emphasis.borderWidth || 0,
                     strokeColor: emphasis.borderColor
                 },
                 position: [

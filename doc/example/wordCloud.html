@@ -39,19 +39,41 @@
                 <div class="well sidebar-nav">
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
+
+function createRandomItemStyle() {
+    return {
+        normal: {
+            color: 'rgb(' + [
+                Math.round(Math.random() * 160),
+                Math.round(Math.random() * 160),
+                Math.round(Math.random() * 160)
+            ].join(',') + ')'
+        }
+    };
+}
+
 option = {
+    title: {
+        text: 'Google Trends',
+        link: 'http://www.google.com/trends/hottrends'
+    },
     tooltip: {
         show: true
     },
     series: [{
+        name: 'Google Trends',
         type: 'wordCloud',
-        size: [250, 250],
-        textRotation : [0, 45, 90],
+        size: ['80%', '80%'],
+        textRotation : [0, 45, 90, -45],
         textPadding: 0,
+        autoSize: {
+            enable: true,
+            minSize: 14
+        },
         data: [
             {
-                'name': "中石油",
-                'value': 55545,
+                name: "Sam S Club",
+                value: 10000,
                 itemStyle: {
                     normal: {
                         color: 'black'
@@ -59,80 +81,99 @@ option = {
                 }
             },
             {
-                'name': "中石油加油卡",
-                'value': 6181
+                name: "Macys",
+                value: 6181,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油官网",
-                'value': 4386
+                name: "Amy Schumer",
+                value: 4386,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油涨停",
-                'value': 4055
+                name: "Jurassic World",
+                value: 4055,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油股票",
-                'value': 2467
+                name: "Charter Communications",
+                value: 2467,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油招聘",
-                'value': 2244
+                name: "Chick Fil A",
+                value: 2244,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油邮箱",
-                'value': 1898
+                name: "Planet Fitness",
+                value: 1898,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油人才招聘网",
-                'value': 1484
+                name: "Pitch Perfect",
+                value: 1484,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油加油站",
-                'value': 1112
+                name: "Express",
+                value: 1112,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油招标网",
-                'value': 965
+                name: "Home",
+                value: 965,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油招聘网",
-                'value': 847
+                name: "Johnny Depp",
+                value: 847,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油管道局",
-                'value': 582
+                name: "Lena Dunham",
+                value: 582,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油股价",
-                'value': 555
+                name: "Lewis Hamilton",
+                value: 555,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油股票行情",
-                'value': 550
+                name: "KXAN",
+                value: 550,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油市值",
-                'value': 462
+                name: "Mary Ellen Mark",
+                value: 462,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油 中石化",
-                'value': 366
+                name: "Farrah Abraham",
+                value: 366,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油邮箱登陆",
-                'value': 360
+                name: "Rita Ora",
+                value: 360,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油加油卡查询",
-                'value': 282
+                name: "Serena Williams",
+                value: 282,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油加油卡优惠",
-                'value': 273
+                name: "NCAA baseball tournament",
+                value: 273,
+                itemStyle: createRandomItemStyle()
             },
             {
-                'name': "中石油校园招聘",
-                'value': 265
+                name: "Point Break",
+                value: 265,
+                itemStyle: createRandomItemStyle()
             }
         ]
     }]
