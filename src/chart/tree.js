@@ -10,6 +10,7 @@ define(function (require) {
     var GOLDEN_SECTION = 0.618;
     // 图形依赖
     var toolArea = require('zrender/tool/area');
+    var vec2 = require('zrender/tool/vector');
     // 图形依赖
     var IconShape = require('../util/shape/Icon');
     var ImageShape = require('zrender/shape/Image');
@@ -30,13 +31,14 @@ define(function (require) {
         calculable: false,
         clickable: true,
         rootLocation: {},
+        orient: 'vertical',
         symbol: 'circle',
         symbolSize: 20,
         nodePadding: 30,
         layerPadding: 100,
         /*rootLocation: {
             x: 'center' | 'left' | 'right' | 'x%' | {number},
-            y: 'center' | 'top' | 'bottom' | 'x%' | {number}
+            y: 'center' | 'top' | 'bottom' | 'y%' | {number}
         },*/
         itemStyle: {
             normal: {
@@ -76,33 +78,34 @@ define(function (require) {
         this.refresh(option);
     }
     Tree.prototype = {
-        type : ecConfig.CHART_TYPE_TREEMAP,
+        type : ecConfig.CHART_TYPE_TREE,
         /**
          * 构建单个
          *
          * @param {Object} data 数据
          */
-        _buildShape : function () {
-            var queryTarget = [this.series[0], ecConfig.tree];
-            this.serie = this.deepMerge(queryTarget);
-            var serie = this.serie;
+        _buildShape : function (series, seriesIndex) {
+            var queryTarget = [series, ecConfig.tree];
+            var serie = this.deepMerge(queryTarget);
             var data = serie.data[0];
             this.tree = TreeData.fromOptionData(data.name, data.children);
             // 添加root的data
             this.tree.root.data = data;
             // 根据root坐标 方向 对每个节点的坐标进行映射
-            this._setTreeShape();
+            this._setTreeShape(serie);
             // 递归画出树节点与连接线
             this.tree.traverse(
                 function (treeNode) {
                     this._buildItem(
                         treeNode,
-                        serie.itemStyle
+                        serie,
+                        seriesIndex
                     );
                     // 画连接线
                     if (treeNode.children.length > 0) {
                         this._buildLink(
-                            treeNode
+                            treeNode,
+                            serie
                         );
                     }
                 },
@@ -117,9 +120,9 @@ define(function (require) {
          */
         _buildItem : function (
             treeNode,
-            itemStyle
+            serie,
+            seriesIndex
         ) {
-            var serie = this.serie;
             var queryTarget = [treeNode.data, serie];
             var symbol = this.deepQuery(queryTarget, 'symbol');
             // 多级控制
@@ -193,7 +196,7 @@ define(function (require) {
             // todo
             ecData.pack(
                 shape,
-                serie, 0,
+                serie, seriesIndex,
                 treeNode.data, 0,
                 treeNode.id
             );
@@ -201,14 +204,16 @@ define(function (require) {
         },
 
         _buildLink : function (
-            parentNode
+            parentNode,
+            serie
         ) {
-            var lineStyle = this.serie.itemStyle.normal.lineStyle;
+            var lineStyle = serie.itemStyle.normal.lineStyle;
             // 折线另外计算
             if (lineStyle.type === 'broken') {
                 this._buildBrokenLine(
                     parentNode,
-                    lineStyle
+                    lineStyle,
+                    serie
                 );
                 return;
             }
@@ -220,11 +225,10 @@ define(function (require) {
                 switch (lineStyle.type) {
                     case 'curve':
                         this._buildBezierCurve(
-                            xStart,
-                            yStart,
-                            xEnd,
-                            yEnd,
-                            lineStyle
+                            parentNode,
+                            parentNode.children[i],
+                            lineStyle,
+                            serie
                         );
                         break;
                     // 折线
@@ -245,7 +249,8 @@ define(function (require) {
         },
         _buildBrokenLine: function (
             parentNode,
-            lineStyle
+            lineStyle,
+            serie
         ) {
             // 引用_getLine需要把type改为solid
             var solidLineStyle = zrUtil.clone(lineStyle);
@@ -253,7 +258,7 @@ define(function (require) {
             var shapes = [];
             var xStart = parentNode.layout.position[0];
             var yStart = parentNode.layout.position[1];
-            var orient = this.serie.orient;
+            var orient = serie.orient;
 
             // 子节点的y
             var yEnd = parentNode.children[0].layout.position[1];
@@ -344,14 +349,17 @@ define(function (require) {
             });
         },
         _buildBezierCurve: function (
-            xStart,
-            yStart,
-            xEnd,
-            yEnd,
-            lineStyle
+            parentNode,
+            treeNode,
+            lineStyle,
+            serie
         ) {
             var offsetRatio = GOLDEN_SECTION;
-            var orient = this.serie.orient;
+            var orient = serie.orient;
+            var xStart = parentNode.layout.position[0];
+            var yStart = parentNode.layout.position[1];
+            var xEnd = treeNode.layout.position[0];
+            var yEnd = treeNode.layout.position[1];
             var cpX1 = xStart;
             var cpY1 = (yEnd - yStart) * offsetRatio + yStart;
             var cpX2 = xEnd;
@@ -361,6 +369,35 @@ define(function (require) {
                 cpY1 = yStart;
                 cpX2 = (xEnd - xStart) * (1 - offsetRatio) + xStart;
                 cpY2 = yEnd;
+            }
+            else if (orient === 'radial') {
+                // 根节点 画直线
+                if (parentNode.id === this.tree.root.id) {
+                    cpX1 = (xEnd - xStart) * offsetRatio + xStart;
+                    cpY1 = (yEnd - yStart) * offsetRatio + yStart;
+                    cpX2 = (xEnd - xStart) * (1 - offsetRatio) + xStart;
+                    cpY2 = (yEnd - yStart) * (1 - offsetRatio) + yStart;
+                }
+                else {
+                    var xStartOrigin = parentNode.layout.originPosition[0];
+                    var yStartOrigin = parentNode.layout.originPosition[1];
+                    var xEndOrigin = treeNode.layout.originPosition[0];
+                    var yEndOrigin = treeNode.layout.originPosition[1];
+                    var rootX = this.tree.root.layout.position[0];
+                    var rootY = this.tree.root.layout.position[1];
+
+                    cpX1 = xStartOrigin;
+                    cpY1 = (yEndOrigin - yStartOrigin) * offsetRatio + yStartOrigin;
+                    cpX2 = xEndOrigin;
+                    cpY2 = (yEndOrigin - yStartOrigin) * (1 - offsetRatio) + yStartOrigin;
+                    var rad = (cpX1 - this.minX) / this.width * Math.PI * 2;
+                    cpX1 = cpY1 * Math.cos(rad) + rootX;
+                    cpY1 = cpY1 * Math.sin(rad) + rootY;
+
+                    rad = (cpX2 - this.minX) / this.width * Math.PI * 2;
+                    cpX2 = cpY2 * Math.cos(rad) + rootX;
+                    cpY2 = cpY2 * Math.sin(rad) + rootY;
+                }
             }
             var shape = new BezierCurveShape({
                 zlevel: this.getZlevelBase() - 1,
@@ -384,17 +421,17 @@ define(function (require) {
             });
             this.shapeList.push(shape);
         },
-        _setTreeShape : function () {
+        _setTreeShape : function (serie) {
             // 跑出来树的layout
             var treeLayout = new TreeLayout(
                 {
-                    nodePadding: this.serie.nodePadding,
-                    layerPadding: this.serie.layerPadding
+                    nodePadding: serie.nodePadding,
+                    layerPadding: serie.layerPadding
                 }
             );
             this.tree.traverse(
                 function (treeNode) {
-                    var queryTarget = [treeNode.data, this.serie];
+                    var queryTarget = [treeNode.data, serie];
                     var symbolSize = this.deepQuery(queryTarget, 'symbolSize');
                     if (typeof symbolSize === 'number') {
                         symbolSize = [symbolSize, symbolSize];
@@ -407,18 +444,33 @@ define(function (require) {
                 this
             );
             treeLayout.run(this.tree);
-            var serie = this.serie;
             // 树的方向
             var orient = serie.orient;
             var rootX = serie.rootLocation.x;
             var rootY = serie.rootLocation.y;
             var zrWidth = this.zr.getWidth();
             var zrHeight = this.zr.getHeight();
-            rootX = this.parsePercent(rootX, zrWidth);
+            if (rootX === 'center') {
+                rootX = zrWidth * 0.5;
+            }
+            else {
+                rootX = this.parsePercent(rootX, zrWidth);
+            }
+            if (rootY === 'center') {
+                rootY = zrHeight * 0.5;
+            }
+            else {
+                rootY = this.parsePercent(rootY, zrHeight);
+            }
             rootY = this.parsePercent(rootY, zrHeight);
             // 水平树
             if (orient === 'horizontal') {
                 rootX = isNaN(rootX) ? 10 : rootX;
+                rootY = isNaN(rootY) ? zrHeight * 0.5 : rootY;
+            }
+            // 极坐标
+            if (orient === 'radial') {
+                rootX = isNaN(rootX) ? zrWidth * 0.5 : rootX;
                 rootY = isNaN(rootY) ? zrHeight * 0.5 : rootY;
             }
             // 纵向树
@@ -428,26 +480,51 @@ define(function (require) {
             }
             // tree layout自动算出来的root的坐标
             var originRootX = this.tree.root.layout.position[0];
-            var originRootY = this.tree.root.layout.position[1];
+            // 若是极坐标,则求最大最小值
+            if (orient === 'radial') {
+                var minX = Infinity;
+                var maxX = 0;
+                var maxWidth = 0;
+                this.tree.traverse(
+                    function (treeNode) {
+                        maxX = Math.max(maxX, treeNode.layout.position[0]);
+                        minX = Math.min(minX, treeNode.layout.position[0]);
+                        maxWidth = Math.max(maxWidth, treeNode.layout.width);
+                    }
+                );
+                //  2 * maxWidth 还不大好但至少保证绝不会重叠 todo
+                this.width = maxX - minX + 2 * maxWidth;
+                this.minX = minX;
+            }
             this.tree.traverse(
                 function (treeNode) {
 
                     var x = treeNode.layout.position[0] - originRootX + rootX;
-                    var y = treeNode.layout.position[1] - originRootY + rootY;
+                    var y = treeNode.layout.position[1] + rootY;
                     if (orient === 'horizontal') {
                         y = treeNode.layout.position[0] - originRootX + rootY;
-                        x = treeNode.layout.position[1] - originRootY + rootX;
+                        x = treeNode.layout.position[1] + rootX;
+                    }
+                    if (orient === 'radial') {
+                        x = treeNode.layout.position[0];
+                        y = treeNode.layout.position[1];
+                        // 记录原始坐标，以后计算贝塞尔曲线的控制点
+                        treeNode.layout.originPosition = [x, y];
+                        var r = y;
+                        var rad = (x - minX) / this.width * Math.PI * 2;
+                        x = r * Math.cos(rad) + rootX;
+                        y = r * Math.sin(rad) + rootY;
                     }
                     treeNode.layout.position[0] = x;
                     treeNode.layout.position[1] = y;
                 },
-                this.tree
+                this
             );
         },
         /*
          * 刷新
          */
-        refresh: function (newOption) {
+/*        refresh: function (newOption) {
             this.clear();
             if (newOption) {
                 this.option = newOption;
@@ -455,6 +532,43 @@ define(function (require) {
             }
 
             this._buildShape();
+        }*/
+        refresh: function (newOption) {
+            this.clear();
+
+            if (newOption) {
+                this.option = newOption;
+                this.series = this.option.series;
+            }
+
+            // Map storing all trees of series
+
+            var series = this.series;
+            var legend = this.component.legend;
+
+            for (var i = 0; i < series.length; i++) {
+                if (series[i].type === ecConfig.CHART_TYPE_TREE) {
+                    series[i] = this.reformOption(series[i]);
+
+                    var seriesName = series[i].name || '';
+                    this.selectedMap[seriesName] = 
+                        legend ? legend.isSelected(seriesName) : true;
+                    if (!this.selectedMap[seriesName]) {
+                        continue;
+                    }
+
+                    this._buildSeries(series[i], i);
+                }
+            }
+        },
+
+        _buildSeries: function (series, seriesIndex) {
+            /*var tree = Tree.fromOptionData('root', series.data);
+
+            this._treesMap[seriesIndex] = tree;*/
+
+            // this._buildTreemap(tree.root, seriesIndex);
+            this._buildShape(series, seriesIndex);
         }
     };
 
