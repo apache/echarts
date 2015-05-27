@@ -26,8 +26,8 @@ define(function (require) {
     var ecConfig = require('../config');
     // 维恩图默认参数
     ecConfig.tree = {
-        zlevel: 0,                  // 一级层叠
-        z: 1,                       // 二级层叠
+        zlevel: 1,                  // 一级层叠
+        z: 2,                       // 二级层叠
         calculable: false,
         clickable: true,
         rootLocation: {},
@@ -85,32 +85,49 @@ define(function (require) {
          * @param {Object} data 数据
          */
         _buildShape : function (series, seriesIndex) {
-            var queryTarget = [series, ecConfig.tree];
-            var serie = this.deepMerge(queryTarget);
-            var data = serie.data[0];
+            var data = series.data[0];
             this.tree = TreeData.fromOptionData(data.name, data.children);
             // 添加root的data
             this.tree.root.data = data;
             // 根据root坐标 方向 对每个节点的坐标进行映射
-            this._setTreeShape(serie);
+            this._setTreeShape(series);
             // 递归画出树节点与连接线
             this.tree.traverse(
                 function (treeNode) {
                     this._buildItem(
                         treeNode,
-                        serie,
+                        series,
                         seriesIndex
                     );
                     // 画连接线
                     if (treeNode.children.length > 0) {
                         this._buildLink(
                             treeNode,
-                            serie
+                            series
                         );
                     }
                 },
                 this
             );
+
+
+            var panable = series.roam === true || series.roam === 'move';
+            var zoomable = series.roam === true || series.roam === 'scale';
+            // Enable pan and zooom
+            this.zr.modLayer(this.getZlevelBase(), {
+                panable: panable,
+                zoomable: zoomable
+            });
+
+            if (
+                this.query('markPoint.effect.show')
+                || this.query('markLine.effect.show')
+            ) {
+                this.zr.modLayer(ecConfig.EFFECT_ZLEVEL, {
+                    panable: panable,
+                    zoomable: zoomable
+                });
+            }
 
             this.addShapeList();
         },
@@ -330,8 +347,14 @@ define(function (require) {
             yEnd,
             lineStyle
         ) {
+            if (xStart === xEnd) {
+                xStart = xEnd = this.subPixelOptimize(xStart, lineStyle.width);
+            }
+            if (yStart === yEnd) {
+                yStart = yEnd = this.subPixelOptimize(yStart, lineStyle.width);
+            }
             return new LineShape({
-                zlevel: this.getZlevelBase() - 1,
+                zlevel: this.getZlevelBase(),
                 hoverable: false,
                 style: zrUtil.merge(
                     {
@@ -400,7 +423,7 @@ define(function (require) {
                 }
             }
             var shape = new BezierCurveShape({
-                zlevel: this.getZlevelBase() - 1,
+                zlevel: this.getZlevelBase(),
                 hoverable: false,
                 style: zrUtil.merge(
                     {

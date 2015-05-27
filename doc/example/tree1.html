@@ -79,10 +79,9 @@ option = {
                         }
                     },
                     lineStyle: {
-                        color: '#99ccff',
-                        width: 2,
+                        color: '#000',
+                        width: 1,
                         type: 'broken' // 'curve'|'broken'|'solid'|'dotted'|'dashed'
-
                     }
                 },
                 emphasis: {
@@ -96,40 +95,39 @@ option = {
                     name: '手机',
                     value: 6,
                     symbolSize: [90, 70],
-                    symbol: 'image://http://www.damndigital.com/wp-content/uploads/2010/12/steve-jobs.jpg',
+                    symbol: 'image://http://www.iconpng.com/png/ecommerce-business/iphone.png',
+                    itemStyle: {
+                        normal: {
+                            label: {
+                                show: false
+                            }
+                        }
+                    },
                     children: [
                         {
                             name: '小米',
                             value: 4,
-                            symbol: 'rectangle',
+                            symbol: 'image://http://pic.58pic.com/58pic/12/36/51/66d58PICMUV.jpg',
                             itemStyle: {
                                 normal: {
-                                    color: '#ccccff',
                                     label: {
-                                        show: true
+                                        show: false
                                     }
-                                    
                                 }
                             },
                             symbolSize: [60, 60],
                             children: [
                                 {
                                     name: '小米1',
-                                    symbol: 'star',
-                                    symbolSize: [50, 50],
+                                    symbol: 'circle',
+                                    symbolSize: 20,
                                     value: 4,
                                     itemStyle: {
                                         normal: {
-                                            color: '#9999cc',
+                                            color: '#fa6900',
                                             label: {
                                                 show: true,
-                                                position: 'right',
-                                                textStyle: {
-                                                    color: '#50ac0d',
-                                                    fontSize: 20,
-                                                    fontStyle: 'italic',
-                                                    fontWeight:  'bolder'
-                                                }
+                                                position: 'right'
                                             },
                                             
                                         },
@@ -137,7 +135,6 @@ option = {
                                             label: {
                                                 show: false
                                             },
-                                            color: '#fa6900',
                                             borderWidth: 0
                                         }
                                     }
@@ -145,24 +142,21 @@ option = {
                                 {
                                     name: '小米2',
                                     value: 4,
-                                    symbol: 'triangle',
+                                    symbol: 'circle',
                                     symbolSize: 20,
                                     itemStyle: {
                                         normal: {
                                             label: {
                                                 show: true,
+                                                position: 'right',
                                                 formatter: "{b}"
                                             },
-                                            color: '#99dd99',
+                                            color: '#fa6900',
                                             borderWidth: 2,
                                             borderColor: '#cc66ff'
 
                                         },
                                         emphasis: {
-                                            label: {
-                                                show: false
-                                            },
-                                            color: '#ff66cc',
                                             borderWidth: 0
                                         }
                                     }
@@ -170,12 +164,20 @@ option = {
                                 {
                                     name: '小米3',
                                     value: 2,
+                                    symbol: 'circle',
+                                    symbolSize: 20,
                                     itemStyle: {
                                         normal: {
-                                            color: '#ffffcc',
+                                            label: {
+                                                position: 'right'
+                                            },
+                                            color: '#fa6900',
                                             brushType: 'stroke',
                                             borderWidth: 1,
                                             borderColor: '#999966',
+                                        },
+                                        emphasis: {
+                                            borderWidth: 0
                                         }
                                     }
                                 }
@@ -183,13 +185,12 @@ option = {
                         },
                         {
                             name: '苹果',
-                            symbol: 'rectangle',
+                            symbol: 'image://http://www.viastreaming.com/images/apple_logo2.png',
                             symbolSize: [60, 60],
                             itemStyle: {
                                 normal: {
-                                    color: '#ccff99',
                                     label: {
-                                        show: true
+                                        show: false
                                     }
                                     
                                 }
@@ -198,13 +199,12 @@ option = {
                         },
                         {
                             name: '华为',
-                            symbol: 'rectangle',
+                            symbol: 'image://http://market.huawei.com/hwgg/logo_cn/download/logo.jpg',
                             symbolSize: [60, 60],
                             itemStyle: {
                                 normal: {
-                                    color: '#99cccc',
                                     label: {
-                                        show: true
+                                        show: false
                                     }
                                     
                                 }
@@ -213,13 +213,12 @@ option = {
                         },
                         {
                             name: '联想',
-                            symbol: 'rectangle',
-                            symbolSize: [60, 60],
+                            symbol: 'image://http://www.lenovo.com.cn/HomeUpload/Home001/6d94ee9a20140714.jpg',
+                            symbolSize: [100, 40],
                             itemStyle: {
                                 normal: {
-                                    color: '#99ffcc',
                                     label: {
-                                        show: true
+                                        show: false
                                     }
                                     
                                 }
