@@ -129,6 +129,21 @@ define(function (require) {
          * @param {Object} data 数据
          */
         _buildTreemap : function (treeRoot, seriesIndex) {
+
+            // 清除之前的 shapes
+            var shapeList = this.shapeList;
+            for (var i = 0; i < shapeList.length;) {
+                var shape = shapeList[i];
+                if (ecData.get(shape, 'seriesIndex') === seriesIndex) {
+                    this.zr.delShape(shapeList[i]);
+                    shapeList.splice(i, 1);
+                }
+                else {
+                    i++;
+                }
+            }
+
+            var currentShapeLen = shapeList.length;
             var series = this.series[seriesIndex];
 
             var itemStyle = series.itemStyle;
@@ -186,7 +201,12 @@ define(function (require) {
                     );
                 }
             }
-            this.addShapeList();
+
+            this._buildBreadcrumb(treeRoot, seriesIndex);
+
+            for (var i = currentShapeLen; i < shapeList.length; i++) {
+                this.zr.addShape(shapeList[i]);
+            }
         },
 
         /**
@@ -376,7 +396,8 @@ define(function (require) {
         _buildChildrenTreemap: function (
             data,
             itemStyle,
-            rect
+            rect,
+            seriesIndex
         ) {
             var treemapArea = rect.width * rect.height; // 计算总面积
             // 遍历数组，通过value与area0计算实际面积area
@@ -404,7 +425,7 @@ define(function (require) {
                 // 容器边框不能重复画
                 // 上边
                 if (rect.y.toFixed(2) !== item.y.toFixed(2)) {
-                    lines.push(this.getLine(
+                    lines.push(this._getLine(
                         item.x,
                         item.y,
                         item.x + item.width,
@@ -415,7 +436,7 @@ define(function (require) {
                 }
                 // 左边
                 if (rect.x.toFixed(2) !== item.x.toFixed(2)) {
-                    lines.push(this.getLine(
+                    lines.push(this._getLine(
                         item.x,
                         item.y,
                         item.x,
@@ -426,7 +447,7 @@ define(function (require) {
                 }
                 // 下边
                 if ((rect.y + rect.height).toFixed(2) !== (item.y + item.height).toFixed(2)) {
-                    lines.push(this.getLine(
+                    lines.push(this._getLine(
                         item.x,
                         item.y + item.height,
                         item.x + item.width,
@@ -437,7 +458,7 @@ define(function (require) {
                 }
                 // 右边
                 if ((rect.x + rect.width).toFixed(2) !== (item.x + item.width).toFixed(2)) {
-                    lines.push(this.getLine(
+                    lines.push(this._getLine(
                         item.x + item.width,
                         item.y,
                         item.x + item.width,
@@ -447,6 +468,7 @@ define(function (require) {
                     ));
                 }
                 for (var l = 0; l < lines.length; l++) {
+                    ecData.set(lines[l], 'seriesIndex', seriesIndex);
                     this.shapeList.push(lines[l]);
                 }
             }
@@ -461,7 +483,7 @@ define(function (require) {
          * @param {number} lineColor 颜色
          * @return {Object} 返回一个线段
          */
-        getLine : function (
+        _getLine : function (
             xStart,
             yStart,
             xEnd,

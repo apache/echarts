@@ -257,20 +257,6 @@ option = {
         }
     ]
 };
-var ecConfig = require('echarts/config');
-function focus(param) {
-    var data = param.data;
-    
-    var children = data.children;
-    if (children) {
-        var newOption = $.extend({},option);
-        newOption.series[0].data = children;
-        myChart.setOption(newOption, true);
-    }
-    console.log(data);
-    
-}
-myChart.on(ecConfig.EVENT.CLICK, focus);
                     </textarea>
               </div><!--/.well -->
             </div><!--/span-->
