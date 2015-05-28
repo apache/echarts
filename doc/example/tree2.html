@@ -55,9 +55,9 @@ option = {
         {
             name:'树图',
             type:'tree',
-            orient: 'horizontal',  // vertical horizontal
-            rootLocation: {x: 100,y: 230}, // 根节点位置  {x: 100, y: 'center'}
-            nodePadding: 6,
+            orient: 'vertical',  // vertical horizontal
+            rootLocation: {x: 600,y: 130}, // 根节点位置  {x: 100, y: 'center'}
+            nodePadding: 18,
             layerPadding: 200,
             hoverable: false,
             symbolSize: 6,
@@ -66,7 +66,7 @@ option = {
                     color: '#4883b4',
                     label: {
                         show: true,
-                        position: 'right',
+                        position: 'bottom',
                         formatter: "{b}",
                         textStyle: {
                             color: '#000',
@@ -92,47 +92,6 @@ option = {
                 {
                     name: '中国',
                     children: [
-                        {
-                            name: '直辖市',
-                            children: [
-                                {
-                                    name: '北京'
-                                },
-                                {
-                                    name: '上海'
-                                },{
-                                    name: '天津'
-                                },{
-                                    name: '重庆'
-                                }
-                            ]
-                        },
-                        {
-                            name: '特别行政区',
-                            children: [
-                                {
-                                    name: '香港'
-                                },{
-                                    name: '澳门'
-                                }
-                            ]
-                        },
-                        {
-                            name: '自治区',
-                            children: [
-                                {
-                                    name: '内蒙古'
-                                },{
-                                    name: '新疆'
-                                },{
-                                    name: '西藏'
-                                },{
-                                    name: '宁夏'
-                                },{
-                                    name: '广西'
-                                }
-                            ]
-                        },
                         {
                             name: '省',
                             children: [
@@ -184,7 +143,49 @@ option = {
                                     name: '台湾省'
                                 }
                             ]
+                        },
+                        {
+                            name: '直辖市',
+                            children: [
+                                {
+                                    name: '北京'
+                                },
+                                {
+                                    name: '上海'
+                                },{
+                                    name: '天津'
+                                },{
+                                    name: '重庆'
+                                }
+                            ]
+                        },
+                        {
+                            name: '特别行政区',
+                            children: [
+                                {
+                                    name: '香港'
+                                },{
+                                    name: '澳门'
+                                }
+                            ]
+                        },
+                        {
+                            name: '自治区',
+                            children: [
+                                {
+                                    name: '内蒙古'
+                                },{
+                                    name: '新疆'
+                                },{
+                                    name: '西藏'
+                                },{
+                                    name: '宁夏'
+                                },{
+                                    name: '广西'
+                                }
+                            ]
                         }
+                        
                     ]
                 }
             ]
