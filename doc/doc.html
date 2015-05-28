@@ -56,8 +56,9 @@
                                 <li><a href="#Funnel">funnel</a></li>
                                 <li><a href="#eventRiver">eventRiver</a></li>
                                 <li><a href="#treemap">treemap</a></li>
-                                <li><a href="#treeChart">tree</a></li>
                                 <li><a href="#venn">venn</a></li>
+                                <li><a href="#treeChart">tree</a></li>
+                                <li><a href="#wordCloud">wordCloud</a></li>
                             </ul>
                             <li><a href="#引入ECharts">引入ECharts</a></li>
                             <ul>
@@ -106,6 +107,7 @@
                                     <li><a href="#SeriesTreemap">series（矩形树图）</a></li>
                                     <li><a href="#SeriesTree">series（树图）</a></li>
                                     <li><a href="#SeriesVenn">series（维恩图）</a></li>
+                                    <li><a href="#SeriesWordCloud">series（字符云）</a></li>
                                     <li><a href="#SeriesData">data</a></li>
                                     <li><a href="#SeriesMarkPoint">markPoint</a></li>
                                     <ul>
@@ -511,23 +513,34 @@
                         </tr>
                     </table>
 
+                    <h4>单图表类型：venn<a name="venn"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table" style="width:600px;">
+                        <tr>
+                            <th colspan=1> 韦恩图类型 </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/venn.png" title="" alt="韦恩图"/></td>
+                        </tr>
+                    </table>
+
                     <h4>单图表类型：tree<a name="treeChart"> </a></h4>
                     <table cellspacing="0" class="ADoc_table full">
                         <tr>
                             <th colspan=2> 树图 </th>
                         </tr>
                         <tr>
-                            <td><img src="./asset/img/example/tree.png" title="" alt="树图"/></td>
+                            <td><img src="./asset/img/example/tree1.png" title="" alt="树图"/></td>
+                            <td><img src="./asset/img/example/tree2.png" title="" alt="树图"/></td>
                         </tr>
                     </table>
 
-                    <h4>单图表类型：venn<a name="venn"> </a></h4>
-                    <table cellspacing="0" class="ADoc_table full">
+                    <h4>单图表类型：wordCloud<a name="wordCloud"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table" style="width:600px;">
                         <tr>
-                            <th colspan=1> 韦恩图类型 </th>
+                            <th colspan=2> 字符云 </th>
                         </tr>
                         <tr>
-                            <td><img src="./asset/img/example/venn.png" title="" alt="韦恩图"/></td>
+                            <td><img src="./asset/img/example/wordCloud.png" title="" alt="树图"/></td>
                         </tr>
                     </table>
 
@@ -566,18 +579,20 @@ require.config({
                                 <li>echarts.js : 这是包含AMD加载器的echarts主文件，需要通过script最先引入</li>
                                 <li>chart（文件夹） : echarts-optimizer通过依赖关系分析同时去除与echarts.js的重复模块后为echarts的每一个图表类型单独打包生成一个独立文件，根据应用需求可实现图表类型按需加载
                                     <ul>
-                                        <li>echarts-line.js : 折线图（如需折柱动态类型切换，require时还需要echarts/chart/bar）</li>
-                                        <li>echarts-bar.js : 柱形图（如需折柱动态类型切换，require时还需要echarts/chart/line）</li>
-                                        <li>echarts-scatter.js : 散点图</li>
-                                        <li>echarts-k.js : K线图</li>
-                                        <li>echarts-pie.js : 饼图（如需饼漏斗图动态类型切换，require时还需要echarts/chart/funnel）</li>
-                                        <li>echarts-radar.js : 雷达图</li>
-                                        <li>echarts-map.js : 地图</li>
-                                        <li>echarts-force.js : 力导向布局图（如需力导和弦动态类型切换，require时还需要echarts/chart/chord）</li>
-                                        <li>echarts-chord.js : 和弦图（如需力导和弦动态类型切换，require时还需要echarts/chart/force）</li>
-                                        <li>echarts-funnel.js : 漏斗图（如需饼漏斗图动态类型切换，require时还需要echarts/chart/pie）</li>
-                                        <li>echarts-gauge.js : 仪表盘</li>
-                                        <li>echarts-eventRiver.js : 事件河流图</li>
+                                        <li>line.js : 折线图（如需折柱动态类型切换，require时还需要echarts/chart/bar）</li>
+                                        <li>bar.js : 柱形图（如需折柱动态类型切换，require时还需要echarts/chart/line）</li>
+                                        <li>scatter.js : 散点图</li>
+                                        <li>k.js : K线图</li>
+                                        <li>pie.js : 饼图（如需饼漏斗图动态类型切换，require时还需要echarts/chart/funnel）</li>
+                                        <li>radar.js : 雷达图</li>
+                                        <li>map.js : 地图</li>
+                                        <li>force.js : 力导向布局图（如需力导和弦动态类型切换，require时还需要echarts/chart/chord）</li>
+                                        <li>chord.js : 和弦图（如需力导和弦动态类型切换，require时还需要echarts/chart/force）</li>
+                                        <li>funnel.js : 漏斗图（如需饼漏斗图动态类型切换，require时还需要echarts/chart/pie）</li>
+                                        <li>gauge.js : 仪表盘</li>
+                                        <li>eventRiver.js : 事件河流图</li>
+                                        <li>treemap.js : 矩阵树图</li>
+                                        <li>venn.js : 韦恩图</li>
                                     </ul>
                                 </li>
                             </ul>
@@ -4030,6 +4045,45 @@ indicator : [
                                     </tr>
                                 </table>
                             </td>
+                        </tr>
+                    </table>
+
+                    <h5>series（字符云）<a name="SeriesWordCloud"> </a></h5>
+                    <P> 驱动图表生成的数据内容数组，数组中每一项为一个系列的选项及数据：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> center </td>
+                            <td> <pre> ['50%', '50%'] </pre></td>
+                            <td>字符云中心位置，支持绝对值（px）和百分比</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> size </td>
+                            <td> <pre> ['40%', '40%'] </pre></td>
+                            <td>字符云大小，支持绝对值（px）和百分比</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> textRotation </td>
+                            <td> <pre>[0, 90]</pre> </td>
+                            <td>文字旋转角度可选列表，默认会随机从水平（0）和垂直（90）两个方向中选择，可以设置多个可选角度，例如 [0, -45, 45, 90] </td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> autoSize </td>
+                            <td>
+                            <pre>{ 
+    enable: true,
+    minSize: 12
+} </pre> </td>
+                            <td> 字体大小自动计算配置，默认开启自动计算，程序会根据每个数据的 value 大小以及画布的大小控制字体大小以达到最佳的显示效果。minSize 可以强制最小字体。 关闭的时候字体大小取 itemStyle.normal.textStyle.fontSize，建议开启。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> itemStyle </td>
+                            <td> {} </td>
+                            <td>参见<a href="#ItemStyle" title="">itemStyle</a></td>
                         </tr>
                     </table>
 

@@ -58,6 +58,7 @@
                                 <li><a href="#treemap">treemap</a></li>
                                 <li><a href="#treeChart">tree</a></li>
                                 <li><a href="#venn">venn</a></li>
+                                <li><a href="#wordCloud">wordCloud</a></li>
                             </ul>
                             <li><a href="#Import-ECharts">Import ECharts</a></li>
                             <ul>
@@ -107,6 +108,7 @@
                                     <li><a href="#SeriesTree">series (tree)</a></li>
 
                                     <li><a href="#SeriesVenn">series (venn)</a></li>
+                                    <li><a href="#SeriesWordCloud">series (wordCloud)</a></li>
                                     <li><a href="#SeriesData">data</a></li>
                                     <li><a href="#SeriesMarkPoint">markPoint</a></li>
                                     <ul>
@@ -507,17 +509,28 @@
                             <th colspan=2> tree </th>
                         </tr>
                         <tr>
-                            <td><img src="./asset/img/example/tree.png" title="" alt="tree"/></td>
+                            <td><img src="./asset/img/example/tree1.png" title="" alt="tree"/></td>
+                            <td><img src="./asset/img/example/tree2.png" title="" alt="tree"/></td>
                         </tr>
                     </table>
 
                     <h4>single chart type：venn<a name="venn"> </a></h4>
-                    <table cellspacing="0" class="ADoc_table full">
+                    <table cellspacing="0" class="ADoc_table full" style="width:600px;">
                         <tr>
                             <th colspan=1> Venn </th>
                         </tr>
                         <tr>
                             <td><img src="./asset/img/example/venn.png" title="" alt="Venn"/></td>
+                        </tr>
+                    </table>
+
+                    <h4>single chart type：wordCloud<a name="wordCloud"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table full" style="width:600px;">
+                        <tr>
+                            <th colspan=1> Venn </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/wordCloud.png" title="" alt="Venn"/></td>
                         </tr>
                     </table>
 
@@ -556,18 +569,18 @@ require.config({
                                 <li>echarts.js : The echarts core file which should be import by a &lt;script&gt tag, an AMD loader (<a href="https://github.com/ecomfe/esl" target="_blank">esl.js</a>) has been included in this file.</li>
                                 <li>chart ( folder ) : Via dependency analysis, echarts-optimizer generates a single file for every chart types, you can choose one of them according to your needs:
                                     <ul>
-                                        <li>echarts-line.js : Line ( require echarts/chart/bar as the same time if Magic switch is needed )</li>
-                                        <li>echarts-bar.js : Bar ( require echarts/chart/line as the same time if Magic switch is needed )</li>
-                                        <li>echarts-scatter.js : Scatter</li>
-                                        <li>echarts-k.js : Candlestick</li>
-                                        <li>echarts-pie.js : Pie ( require echarts/chart/funnel as the same time if Magic switch is needed )</li>
-                                        <li>echarts-radar.js : Radar</li>
-                                        <li>echarts-map.js : Map</li>
-                                        <li>echarts-force.js : Force-directed Chart ( require echarts/chart/chord as the same time if Magic switch is needed )</li>
-                                        <li>echarts-chord.js : Chord ( require echarts/chart/force as the same time if Magic switch is needed )</li>
-                                        <li>echarts-funnel.js : Funnel ( require echarts/chart/pie as the same time if Magic switch is needed )</li>
-                                        <li>echarts-gauge.js : Gauge</li>
-                                        <li>echarts-eventRiver.js : EventRiver</li>
+                                        <li>line.js : Line ( require echarts/chart/bar as the same time if Magic switch is needed )</li>
+                                        <li>bar.js : Bar ( require echarts/chart/line as the same time if Magic switch is needed )</li>
+                                        <li>scatter.js : Scatter</li>
+                                        <li>k.js : Candlestick</li>
+                                        <li>pie.js : Pie ( require echarts/chart/funnel as the same time if Magic switch is needed )</li>
+                                        <li>radar.js : Radar</li>
+                                        <li>map.js : Map</li>
+                                        <li>force.js : Force-directed Chart ( require echarts/chart/chord as the same time if Magic switch is needed )</li>
+                                        <li>chord.js : Chord ( require echarts/chart/force as the same time if Magic switch is needed )</li>
+                                        <li>funnel.js : Funnel ( require echarts/chart/pie as the same time if Magic switch is needed )</li>
+                                        <li>gauge.js : Gauge</li>
+                                        <li>eventRiver.js : EventRiver</li>
                                     </ul>
                                 </li>
                             </ul>
@@ -4021,6 +4034,45 @@ indicator : [
                                     </tr>
                                 </table>
                             </td>
+                        </tr>
+                    </table>
+
+                    <h5>series（wordCloud）<a name="SeriesWordCloud"> </a></h5>
+                    <P>  Here is the data array generated by data-driven chart. Each item in the array stands for a series' options and data.</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> Property </th>
+                            <th> Default </th>
+                            <th> Description </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> center </td>
+                            <td> <pre> ['50%', '50%'] </pre></td>
+                            <td>Center of the word cloud. Can be relatively percent or absolutely pixel.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> size </td>
+                            <td> <pre> ['40%', '40%'] </pre></td>
+                            <td>Center of the word cloud. Can be relatively percent or absolutely pixel.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> textRotation </td>
+                            <td> <pre>[0, 90]</pre> </td>
+                            <td> List of optional text rotation. In default it has two options: horizontal(0) and vertical(90).</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> autoSize </td>
+                            <td>
+                            <pre>{ 
+    enable: true,
+    minSize: 12
+} </pre> </td>
+                            <td> If enable text size auto calculation. It is recommand to enable to have a better result.</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> itemStyle </td>
+                            <td> {} </td>
+                            <td>参见<a href="#ItemStyle" title="">itemStyle</a></td>
                         </tr>
                     </table>
 

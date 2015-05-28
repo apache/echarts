@@ -40,12 +40,8 @@
                     <textarea id="code" name="code">
 option = {
     title : {
-        text: '手机占有率',
+        text: '树图',
         subtext: '虚构数据'
-    },
-    tooltip : {
-        trigger: 'item',
-        formatter: "{b}: {c}"
     },
     toolbox: {
         show : true,
@@ -90,56 +86,72 @@ option = {
             
             data: [
                 {
-                    name: '手机',
+                    name: '根节点',
                     value: 6,
-                    symbolSize: 40,
                     children: [
                         {
-                            name: '苹果',
+                            name: '节点1',
                             value: 4,
-                            symbolSize: 40,
                             children: [
                                 {
-                                    name: '4',
+                                    name: '叶子节点1',
                                     value: 4
                                 },
                                 {
-                                    name: '4s',
+                                    name: '叶子节点2',
                                     value: 4
                                 },
                                 {
-                                    name: '5',
+                                    name: '叶子节点3',
                                     value: 2
                                 },
                                  {
-                                    name: '5s',
+                                    name: '叶子节点4',
                                     value: 2
                                 },
                                 {
-                                    name: '6',
+                                    name: '叶子节点5',
                                     value: 2
                                 },
                                 {
-                                    name: '6 plus',
+                                    name: '叶子节点6',
                                     value: 4
                                 }
                             ]
                         },
                         {
-                            name: '小米',
-                            value: 4
+                            name: '节点2',
+                            value: 4,
+                            children: [{
+                                name: '叶子节点7',
+                                value: 4
+                            },
+                            {
+                                name: '叶子节点8',
+                                value: 4
+                            }]
                         },
                         {
-                            name: '三星',
-                            value: 2
-                        },
-                        {
-                            name: '联想',
-                            value: 2
-                        },
-                        {
-                            name: '魅族',
-                            value: 1
+                            name: '节点3',
+                            value: 1,
+                            children: [
+                                {
+                                    name: '叶子节点9',
+                                    value: 4
+                                },
+                                {
+                                    name: '叶子节点10',
+                                    value: 4
+                                },
+                                {
+                                    name: '叶子节点11',
+                                    value: 2
+                                },
+                                 {
+                                    name: '叶子节点12',
+                                    value: 2
+                                }
+                            ]
                         }
                     ]
                 }

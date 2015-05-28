@@ -203,9 +203,11 @@ define(function (require) {
                 }
             }
 
-            this._buildBreadcrumb(
-                treeRoot, seriesIndex, treemapX, treemapY + treemapHeight
-            );
+            if (this.query(series, 'itemStyle.normal.breadcrumb.show')) {
+                this._buildBreadcrumb(
+                    treeRoot, seriesIndex, treemapX, treemapY + treemapHeight
+                );   
+            }
 
             for (var i = currentShapeLen; i < shapeList.length; i++) {
                 this.zr.addShape(shapeList[i]);
