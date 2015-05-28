@@ -9,9 +9,9 @@
         { "name": "Yangji", "email": "511415343@qq.com" }
     ],
     "dependencies": {
-        "zrender": "~2.0.8"
+        "zrender": "ecomfe/zrender#2.0.8"
     },
     "repository": "git://github.com/ecomfe/echarts",
-    "main": "echarts",
+    "main": "src/chart.js",
     "homepage": "http://echarts.baidu.com"
 }
