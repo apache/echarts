@@ -9,9 +9,6 @@ define(function (require) {
     var ChartBase = require('./base');
     var GOLDEN_SECTION = 0.618;
     // 图形依赖
-    var toolArea = require('zrender/tool/area');
-    var vec2 = require('zrender/tool/vector');
-    // 图形依赖
     var IconShape = require('../util/shape/Icon');
     var ImageShape = require('zrender/shape/Image');
     var LineShape = require('zrender/shape/Line');
