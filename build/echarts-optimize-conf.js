@@ -60,7 +60,9 @@ exports.modules = {
         {name: 'echarts/chart/funnel', weight: 30},
         {name: 'echarts/chart/eventRiver', weight: 10},
         {name: 'echarts/chart/venn', weight: 10},
-        {name: 'echarts/chart/treemap', weight: 10}
+        {name: 'echarts/chart/treemap', weight: 10},
+        {name: 'echarts/chart/tree', weight: 10},
+        {name: 'echarts/chart/wordCloud', weight: 10}
     ]
 };
 

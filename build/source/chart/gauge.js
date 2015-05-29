@@ -125,8 +125,10 @@ define('echarts/chart/gauge', [
         _buildShape: function () {
             var series = this.series;
             this._paramsMap = {};
+            this.selectedMap = {};
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type === ecConfig.CHART_TYPE_GAUGE) {
+                    this.selectedMap[series[i].name] = true;
                     series[i] = this.reformOption(series[i]);
                     this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
                     this._buildSingleGauge(i);

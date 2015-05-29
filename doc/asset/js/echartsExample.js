@@ -213,6 +213,7 @@ function launchExample() {
             'echarts/chart/venn',
             'echarts/chart/treemap',
             'echarts/chart/tree',
+            'echarts/chart/wordCloud',
             needMap() ? 'echarts/chart/map' : 'echarts'
         ],
         requireCallback

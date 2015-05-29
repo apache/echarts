@@ -1,352 +1,688 @@
-define('echarts/chart/scatter', [
+define('echarts/chart/wordCloud', [
     'require',
     './base',
-    '../util/shape/Symbol',
-    '../component/axis',
+    'zrender/shape/Text',
+    '../layout/WordCloud',
     '../component/grid',
-    '../component/dataZoom',
     '../component/dataRange',
     '../config',
+    '../util/ecData',
     'zrender/tool/util',
     'zrender/tool/color',
     '../chart'
 ], function (require) {
     var ChartBase = require('./base');
-    var SymbolShape = require('../util/shape/Symbol');
-    require('../component/axis');
+    var TextShape = require('zrender/shape/Text');
+    var CloudLayout = require('../layout/WordCloud');
     require('../component/grid');
-    require('../component/dataZoom');
     require('../component/dataRange');
     var ecConfig = require('../config');
-    ecConfig.scatter = {
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    var zrColor = require('zrender/tool/color');
+    ecConfig.wordCloud = {
         zlevel: 0,
         z: 2,
         clickable: true,
-        legendHoverLink: true,
-        xAxisIndex: 0,
-        yAxisIndex: 0,
-        symbolSize: 4,
-        large: false,
-        largeThreshold: 2000,
+        center: [
+            '50%',
+            '50%'
+        ],
+        size: [
+            '40%',
+            '40%'
+        ],
+        textRotation: [
+            0,
+            90
+        ],
+        textPadding: 0,
+        autoSize: {
+            enable: true,
+            minSize: 12
+        },
         itemStyle: {
-            normal: { label: { show: false } },
-            emphasis: { label: { show: false } }
+            normal: {
+                textStyle: {
+                    fontSize: function (data) {
+                        return data.value;
+                    }
+                }
+            }
         }
     };
-    var zrUtil = require('zrender/tool/util');
-    var zrColor = require('zrender/tool/color');
-    function Scatter(ecTheme, messageCenter, zr, option, myChart) {
+    function Cloud(ecTheme, messageCenter, zr, option, myChart) {
         ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
         this.refresh(option);
     }
-    Scatter.prototype = {
-        type: ecConfig.CHART_TYPE_SCATTER,
-        _buildShape: function () {
-            var series = this.series;
-            this._sIndex2ColorMap = {};
-            this._symbol = this.option.symbolList;
-            this._sIndex2ShapeMap = {};
-            this.selectedMap = {};
-            this.xMarkMap = {};
-            var legend = this.component.legend;
-            var seriesArray = [];
-            var serie;
-            var serieName;
-            var iconShape;
-            var iconType;
-            for (var i = 0, l = series.length; i < l; i++) {
-                serie = series[i];
-                serieName = serie.name;
-                if (serie.type === ecConfig.CHART_TYPE_SCATTER) {
-                    series[i] = this.reformOption(series[i]);
-                    this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
-                    this._sIndex2ShapeMap[i] = this.query(serie, 'symbol') || this._symbol[i % this._symbol.length];
-                    if (legend) {
-                        this.selectedMap[serieName] = legend.isSelected(serieName);
-                        this._sIndex2ColorMap[i] = zrColor.alpha(legend.getColor(serieName), 0.5);
-                        iconShape = legend.getItemShape(serieName);
-                        if (iconShape) {
-                            var iconType = this._sIndex2ShapeMap[i];
-                            iconShape.style.brushType = iconType.match('empty') ? 'stroke' : 'both';
-                            iconType = iconType.replace('empty', '').toLowerCase();
-                            if (iconType.match('rectangle')) {
-                                iconShape.style.x += Math.round((iconShape.style.width - iconShape.style.height) / 2);
-                                iconShape.style.width = iconShape.style.height;
-                            }
-                            if (iconType.match('star')) {
-                                iconShape.style.n = iconType.replace('star', '') - 0 || 5;
-                                iconType = 'star';
-                            }
-                            if (iconType.match('image')) {
-                                iconShape.style.image = iconType.replace(new RegExp('^image:\\/\\/'), '');
-                                iconShape.style.x += Math.round((iconShape.style.width - iconShape.style.height) / 2);
-                                iconShape.style.width = iconShape.style.height;
-                                iconType = 'image';
-                            }
-                            iconShape.style.iconType = iconType;
-                            legend.setItemShape(serieName, iconShape);
-                        }
-                    } else {
-                        this.selectedMap[serieName] = true;
-                        this._sIndex2ColorMap[i] = zrColor.alpha(this.zr.getColor(i), 0.5);
-                    }
-                    if (this.selectedMap[serieName]) {
-                        seriesArray.push(i);
-                    }
-                }
-            }
-            this._buildSeries(seriesArray);
-            this.addShapeList();
-        },
-        _buildSeries: function (seriesArray) {
-            if (seriesArray.length === 0) {
-                return;
-            }
-            var series = this.series;
-            var seriesIndex;
-            var serie;
-            var data;
-            var value;
-            var xAxis;
-            var yAxis;
-            var pointList = {};
-            var x;
-            var y;
-            for (var j = 0, k = seriesArray.length; j < k; j++) {
-                seriesIndex = seriesArray[j];
-                serie = series[seriesIndex];
-                if (serie.data.length === 0) {
-                    continue;
-                }
-                xAxis = this.component.xAxis.getAxis(serie.xAxisIndex || 0);
-                yAxis = this.component.yAxis.getAxis(serie.yAxisIndex || 0);
-                pointList[seriesIndex] = [];
-                for (var i = 0, l = serie.data.length; i < l; i++) {
-                    data = serie.data[i];
-                    value = this.getDataFromOption(data, '-');
-                    if (value === '-' || value.length < 2) {
-                        continue;
-                    }
-                    x = xAxis.getCoord(value[0]);
-                    y = yAxis.getCoord(value[1]);
-                    pointList[seriesIndex].push([
-                        x,
-                        y,
-                        i,
-                        data.name || ''
-                    ]);
-                }
-                this.xMarkMap[seriesIndex] = this._markMap(xAxis, yAxis, serie.data, pointList[seriesIndex]);
-                this.buildMark(seriesIndex);
-            }
-            this._buildPointList(pointList);
-        },
-        _markMap: function (xAxis, yAxis, data, pointList) {
-            var xMarkMap = {
-                min0: Number.POSITIVE_INFINITY,
-                max0: Number.NEGATIVE_INFINITY,
-                sum0: 0,
-                counter0: 0,
-                average0: 0,
-                min1: Number.POSITIVE_INFINITY,
-                max1: Number.NEGATIVE_INFINITY,
-                sum1: 0,
-                counter1: 0,
-                average1: 0
-            };
-            var value;
-            for (var i = 0, l = pointList.length; i < l; i++) {
-                value = data[pointList[i][2]].value || data[pointList[i][2]];
-                if (xMarkMap.min0 > value[0]) {
-                    xMarkMap.min0 = value[0];
-                    xMarkMap.minY0 = pointList[i][1];
-                    xMarkMap.minX0 = pointList[i][0];
-                }
-                if (xMarkMap.max0 < value[0]) {
-                    xMarkMap.max0 = value[0];
-                    xMarkMap.maxY0 = pointList[i][1];
-                    xMarkMap.maxX0 = pointList[i][0];
-                }
-                xMarkMap.sum0 += value[0];
-                xMarkMap.counter0++;
-                if (xMarkMap.min1 > value[1]) {
-                    xMarkMap.min1 = value[1];
-                    xMarkMap.minY1 = pointList[i][1];
-                    xMarkMap.minX1 = pointList[i][0];
-                }
-                if (xMarkMap.max1 < value[1]) {
-                    xMarkMap.max1 = value[1];
-                    xMarkMap.maxY1 = pointList[i][1];
-                    xMarkMap.maxX1 = pointList[i][0];
-                }
-                xMarkMap.sum1 += value[1];
-                xMarkMap.counter1++;
-            }
-            var gridX = this.component.grid.getX();
-            var gridXend = this.component.grid.getXend();
-            var gridY = this.component.grid.getY();
-            var gridYend = this.component.grid.getYend();
-            xMarkMap.average0 = xMarkMap.sum0 / xMarkMap.counter0;
-            var x = xAxis.getCoord(xMarkMap.average0);
-            xMarkMap.averageLine0 = [
-                [
-                    x,
-                    gridYend
-                ],
-                [
-                    x,
-                    gridY
-                ]
-            ];
-            xMarkMap.minLine0 = [
-                [
-                    xMarkMap.minX0,
-                    gridYend
-                ],
-                [
-                    xMarkMap.minX0,
-                    gridY
-                ]
-            ];
-            xMarkMap.maxLine0 = [
-                [
-                    xMarkMap.maxX0,
-                    gridYend
-                ],
-                [
-                    xMarkMap.maxX0,
-                    gridY
-                ]
-            ];
-            xMarkMap.average1 = xMarkMap.sum1 / xMarkMap.counter1;
-            var y = yAxis.getCoord(xMarkMap.average1);
-            xMarkMap.averageLine1 = [
-                [
-                    gridX,
-                    y
-                ],
-                [
-                    gridXend,
-                    y
-                ]
-            ];
-            xMarkMap.minLine1 = [
-                [
-                    gridX,
-                    xMarkMap.minY1
-                ],
-                [
-                    gridXend,
-                    xMarkMap.minY1
-                ]
-            ];
-            xMarkMap.maxLine1 = [
-                [
-                    gridX,
-                    xMarkMap.maxY1
-                ],
-                [
-                    gridXend,
-                    xMarkMap.maxY1
-                ]
-            ];
-            return xMarkMap;
-        },
-        _buildPointList: function (pointList) {
-            var series = this.series;
-            var serie;
-            var seriesPL;
-            var singlePoint;
-            var shape;
-            for (var seriesIndex in pointList) {
-                serie = series[seriesIndex];
-                seriesPL = pointList[seriesIndex];
-                if (serie.large && serie.data.length > serie.largeThreshold) {
-                    this.shapeList.push(this._getLargeSymbol(seriesPL, this.getItemStyleColor(this.query(serie, 'itemStyle.normal.color'), seriesIndex, -1) || this._sIndex2ColorMap[seriesIndex]));
-                    continue;
-                }
-                for (var i = 0, l = seriesPL.length; i < l; i++) {
-                    singlePoint = seriesPL[i];
-                    shape = this._getSymbol(seriesIndex, singlePoint[2], singlePoint[3], singlePoint[0], singlePoint[1]);
-                    shape && this.shapeList.push(shape);
-                }
-            }
-        },
-        _getSymbol: function (seriesIndex, dataIndex, name, x, y) {
-            var series = this.series;
-            var serie = series[seriesIndex];
-            var data = serie.data[dataIndex];
-            var dataRange = this.component.dataRange;
-            var rangColor;
-            if (dataRange) {
-                rangColor = isNaN(data[2]) ? this._sIndex2ColorMap[seriesIndex] : dataRange.getColor(data[2]);
-                if (!rangColor) {
-                    return null;
-                }
-            } else {
-                rangColor = this._sIndex2ColorMap[seriesIndex];
-            }
-            var itemShape = this.getSymbolShape(serie, seriesIndex, data, dataIndex, name, x, y, this._sIndex2ShapeMap[seriesIndex], rangColor, 'rgba(0,0,0,0)', 'vertical');
-            itemShape.zlevel = this.getZlevelBase();
-            itemShape.z = this.getZBase();
-            itemShape._main = true;
-            return itemShape;
-        },
-        _getLargeSymbol: function (pointList, nColor) {
-            return new SymbolShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
-                _main: true,
-                hoverable: false,
-                style: {
-                    pointList: pointList,
-                    color: nColor,
-                    strokeColor: nColor
-                },
-                highlightStyle: { pointList: [] }
-            });
-        },
-        getMarkCoord: function (seriesIndex, mpData) {
-            var serie = this.series[seriesIndex];
-            var xMarkMap = this.xMarkMap[seriesIndex];
-            var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
-            var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex);
-            var pos;
-            if (mpData.type && (mpData.type === 'max' || mpData.type === 'min' || mpData.type === 'average')) {
-                var valueIndex = mpData.valueIndex != null ? mpData.valueIndex : 1;
-                pos = [
-                    xMarkMap[mpData.type + 'X' + valueIndex],
-                    xMarkMap[mpData.type + 'Y' + valueIndex],
-                    xMarkMap[mpData.type + 'Line' + valueIndex],
-                    xMarkMap[mpData.type + valueIndex]
-                ];
-            } else {
-                pos = [
-                    typeof mpData.xAxis != 'string' && xAxis.getCoordByIndex ? xAxis.getCoordByIndex(mpData.xAxis || 0) : xAxis.getCoord(mpData.xAxis || 0),
-                    typeof mpData.yAxis != 'string' && yAxis.getCoordByIndex ? yAxis.getCoordByIndex(mpData.yAxis || 0) : yAxis.getCoord(mpData.yAxis || 0)
-                ];
-            }
-            return pos;
-        },
+    Cloud.prototype = {
+        type: ecConfig.CHART_TYPE_WORDCLOUD,
         refresh: function (newOption) {
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
             }
-            this.backupShapeList();
-            this._buildShape();
+            this._init();
         },
-        ondataRange: function (param, status) {
-            if (this.component.dataRange) {
-                this.refresh();
-                status.needRefresh = true;
+        _init: function () {
+            var series = this.series;
+            this.backupShapeList();
+            var legend = this.component.legend;
+            for (var i = 0; i < series.length; i++) {
+                if (series[i].type === ecConfig.CHART_TYPE_WORDCLOUD) {
+                    series[i] = this.reformOption(series[i]);
+                    var serieName = series[i].name || '';
+                    this.selectedMap[serieName] = legend ? legend.isSelected(serieName) : true;
+                    if (!this.selectedMap[serieName]) {
+                        continue;
+                    }
+                    this.buildMark(i);
+                    this._initSerie(series[i]);
+                }
             }
-            return;
+        },
+        _initSerie: function (serie) {
+            var textStyle = serie.itemStyle.normal.textStyle;
+            var size = [
+                this.parsePercent(serie.size[0], this.zr.getWidth()) || 200,
+                this.parsePercent(serie.size[1], this.zr.getHeight()) || 200
+            ];
+            var center = this.parseCenter(this.zr, serie.center);
+            var layoutConfig = {
+                size: size,
+                wordletype: { autoSizeCal: serie.autoSize },
+                center: center,
+                rotate: serie.textRotation,
+                padding: serie.textPadding,
+                font: textStyle.fontFamily,
+                fontSize: textStyle.fontSize,
+                fontWeight: textStyle.fontWeight,
+                fontStyle: textStyle.fontStyle,
+                text: function (d) {
+                    return d.name;
+                },
+                data: serie.data
+            };
+            var clouds = new CloudLayout(layoutConfig);
+            var self = this;
+            clouds.end(function (d) {
+                self._buildShapes(d);
+            });
+            clouds.start();
+        },
+        _buildShapes: function (data) {
+            var len = data.length;
+            for (var i = 0; i < len; i++) {
+                this._buildTextShape(data[i], 0, i);
+            }
+            this.addShapeList();
+        },
+        _buildTextShape: function (oneText, seriesIndex, dataIndex) {
+            var series = this.series;
+            var serie = series[seriesIndex];
+            var serieName = serie.name || '';
+            var data = serie.data[dataIndex];
+            var queryTarget = [
+                data,
+                serie
+            ];
+            var legend = this.component.legend;
+            var defaultColor = legend ? legend.getColor(serieName) : this.zr.getColor(seriesIndex);
+            var normal = this.deepMerge(queryTarget, 'itemStyle.normal') || {};
+            var emphasis = this.deepMerge(queryTarget, 'itemStyle.emphasis') || {};
+            var normalColor = this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data) || defaultColor;
+            var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) || (typeof normalColor === 'string' ? zrColor.lift(normalColor, -0.2) : normalColor);
+            var that = this;
+            var textShape = new TextShape({
+                zlevel: this.getZlevelBase(),
+                z: this.getZBase(),
+                hoverable: true,
+                style: {
+                    x: 0,
+                    y: 0,
+                    text: oneText.text,
+                    color: normalColor,
+                    textFont: [
+                        oneText.style,
+                        oneText.weight,
+                        oneText.size + 'px',
+                        oneText.font
+                    ].join(' '),
+                    textBaseline: 'alphabetic',
+                    textAlign: 'center'
+                },
+                highlightStyle: {
+                    brushType: emphasis.borderWidth ? 'both' : 'fill',
+                    color: emphasisColor,
+                    lineWidth: emphasis.borderWidth || 0,
+                    strokeColor: emphasis.borderColor
+                },
+                position: [
+                    oneText.x,
+                    oneText.y
+                ],
+                rotation: [
+                    -oneText.rotate / 180 * Math.PI,
+                    0,
+                    0
+                ]
+            });
+            ecData.pack(textShape, serie, seriesIndex, data, dataIndex, data.name);
+            this.shapeList.push(textShape);
         }
     };
-    zrUtil.inherits(Scatter, ChartBase);
-    require('../chart').define('scatter', Scatter);
-    return Scatter;
+    zrUtil.inherits(Cloud, ChartBase);
+    require('../chart').define('wordCloud', Cloud);
+    return Cloud;
+});define('echarts/layout/WordCloud', [
+    'require',
+    '../layout/WordCloudRectZero',
+    'zrender/tool/util'
+], function (require) {
+    var ZeroArray = require('../layout/WordCloudRectZero');
+    var zrUtil = require('zrender/tool/util');
+    function CloudLayout(option) {
+        this._init(option);
+    }
+    CloudLayout.prototype = {
+        start: function () {
+            var board = null;
+            var maxWit = 0;
+            var maxHit = 0;
+            var maxArea = 0;
+            var i = -1;
+            var tags = [];
+            var maxBounds = null;
+            var data = this.wordsdata;
+            var dfop = this.defaultOption;
+            var wordletype = dfop.wordletype;
+            var size = dfop.size;
+            var that = this;
+            var zeroArrayObj = new ZeroArray({
+                type: wordletype.type,
+                width: size[0],
+                height: size[1]
+            });
+            zeroArrayObj.calculate(function (options) {
+                board = options.initarr;
+                maxWit = options.maxWit;
+                maxHit = options.maxHit;
+                maxArea = options.area;
+                maxBounds = options.imgboard;
+                startStep();
+            }, this);
+            return this;
+            function startStep() {
+                that.totalArea = maxArea;
+                if (wordletype.autoSizeCal.enable) {
+                    that._autoCalTextSize(data, maxArea, maxWit, maxHit, wordletype.autoSizeCal.minSize);
+                }
+                if (dfop.timer) {
+                    clearInterval(dfop.timer);
+                }
+                dfop.timer = setInterval(step, 0);
+                step();
+            }
+            function step() {
+                var start = +new Date();
+                var n = data.length;
+                var d;
+                while (+new Date() - start < dfop.timeInterval && ++i < n && dfop.timer) {
+                    d = data[i];
+                    d.x = size[0] >> 1;
+                    d.y = size[1] >> 1;
+                    that._cloudSprite(d, data, i);
+                    if (d.hasText && that._place(board, d, maxBounds)) {
+                        tags.push(d);
+                        d.x -= size[0] >> 1;
+                        d.y -= size[1] >> 1;
+                    }
+                }
+                if (i >= n) {
+                    that.stop();
+                    that._fixTagPosition(tags);
+                    dfop.endcallback(tags);
+                }
+            }
+        },
+        _fixTagPosition: function (tags) {
+            var center = this.defaultOption.center;
+            for (var i = 0, len = tags.length; i < len; i++) {
+                tags[i].x += center[0];
+                tags[i].y += center[1];
+            }
+        },
+        stop: function () {
+            if (this.defaultOption.timer) {
+                clearInterval(this.defaultOption.timer);
+                this.defaultOption.timer = null;
+            }
+            return this;
+        },
+        end: function (v) {
+            if (v) {
+                this.defaultOption.endcallback = v;
+            }
+            return this;
+        },
+        _init: function (option) {
+            this.defaultOption = {};
+            this._initProperty(option);
+            this._initMethod(option);
+            this._initCanvas();
+            this._initData(option.data);
+        },
+        _initData: function (datas) {
+            var that = this;
+            var thatop = that.defaultOption;
+            this.wordsdata = datas.map(function (d, i) {
+                d.text = thatop.text.call(that, d, i);
+                d.font = thatop.font.call(that, d, i);
+                d.style = thatop.fontStyle.call(that, d, i);
+                d.weight = thatop.fontWeight.call(that, d, i);
+                d.rotate = thatop.rotate.call(that, d, i);
+                d.size = ~~thatop.fontSize.call(that, d, i);
+                d.padding = thatop.padding.call(that, d, i);
+                return d;
+            }).sort(function (a, b) {
+                return b.value - a.value;
+            });
+        },
+        _initMethod: function (option) {
+            var dfop = this.defaultOption;
+            dfop.text = option.text ? functor(option.text) : cloudText;
+            dfop.font = option.font ? functor(option.font) : cloudFont;
+            dfop.fontSize = option.fontSize ? functor(option.fontSize) : cloudFontSize;
+            dfop.fontStyle = option.fontStyle ? functor(option.fontStyle) : cloudFontNormal;
+            dfop.fontWeight = option.fontWeight ? functor(option.fontWeight) : cloudFontNormal;
+            dfop.rotate = option.rotate ? newCloudRotate(option.rotate) : cloudRotate;
+            dfop.padding = option.padding ? functor(option.padding) : cloudPadding;
+            dfop.center = option.center;
+            dfop.spiral = archimedeanSpiral;
+            dfop.endcallback = function () {
+            };
+            dfop.rectangularSpiral = rectangularSpiral;
+            dfop.archimedeanSpiral = archimedeanSpiral;
+            function cloudText(d) {
+                return d.name;
+            }
+            function cloudFont() {
+                return 'sans-serif';
+            }
+            function cloudFontNormal() {
+                return 'normal';
+            }
+            function cloudFontSize(d) {
+                return d.value;
+            }
+            function cloudRotate() {
+                return 0;
+            }
+            function newCloudRotate(rotate) {
+                return function () {
+                    return rotate[Math.round(Math.random() * (rotate.length - 1))];
+                };
+            }
+            function cloudPadding() {
+                return 0;
+            }
+            function archimedeanSpiral(size) {
+                var e = size[0] / size[1];
+                return function (t) {
+                    return [
+                        e * (t *= 0.1) * Math.cos(t),
+                        t * Math.sin(t)
+                    ];
+                };
+            }
+            function rectangularSpiral(size) {
+                var dy = 4;
+                var dx = dy * size[0] / size[1];
+                var x = 0;
+                var y = 0;
+                return function (t) {
+                    var sign = t < 0 ? -1 : 1;
+                    switch (Math.sqrt(1 + 4 * sign * t) - sign & 3) {
+                    case 0:
+                        x += dx;
+                        break;
+                    case 1:
+                        y += dy;
+                        break;
+                    case 2:
+                        x -= dx;
+                        break;
+                    default:
+                        y -= dy;
+                        break;
+                    }
+                    return [
+                        x,
+                        y
+                    ];
+                };
+            }
+            function functor(v) {
+                return typeof v === 'function' ? v : function () {
+                    return v;
+                };
+            }
+        },
+        _initProperty: function (option) {
+            var dfop = this.defaultOption;
+            dfop.size = option.size || [
+                256,
+                256
+            ];
+            dfop.wordletype = option.wordletype;
+            dfop.words = option.words || [];
+            dfop.timeInterval = Infinity;
+            dfop.timer = null;
+            dfop.spirals = {
+                archimedean: dfop.archimedeanSpiral,
+                rectangular: dfop.rectangularSpiral
+            };
+            zrUtil.merge(dfop, {
+                size: [
+                    256,
+                    256
+                ],
+                wordletype: {
+                    type: 'RECT',
+                    areaPresent: 0.058,
+                    autoSizeCal: {
+                        enable: true,
+                        minSize: 12
+                    }
+                }
+            });
+        },
+        _initCanvas: function () {
+            var cloudRadians = Math.PI / 180;
+            var cw = 1 << 11 >> 5;
+            var ch = 1 << 11;
+            var canvas;
+            var ratio = 1;
+            if (typeof document !== 'undefined') {
+                canvas = document.createElement('canvas');
+                canvas.width = 1;
+                canvas.height = 1;
+                ratio = Math.sqrt(canvas.getContext('2d').getImageData(0, 0, 1, 1).data.length >> 2);
+                canvas.width = (cw << 5) / ratio;
+                canvas.height = ch / ratio;
+            } else {
+                canvas = new Canvas(cw << 5, ch);
+            }
+            var c = canvas.getContext('2d');
+            c.fillStyle = c.strokeStyle = 'red';
+            c.textAlign = 'center';
+            this.defaultOption.c = c;
+            this.defaultOption.cw = cw;
+            this.defaultOption.ch = ch;
+            this.defaultOption.ratio = ratio;
+            this.defaultOption.cloudRadians = cloudRadians;
+        },
+        _cloudSprite: function (d, data, di) {
+            if (d.sprite) {
+                return;
+            }
+            var cw = this.defaultOption.cw;
+            var ch = this.defaultOption.ch;
+            var c = this.defaultOption.c;
+            var ratio = this.defaultOption.ratio;
+            var cloudRadians = this.defaultOption.cloudRadians;
+            c.clearRect(0, 0, (cw << 5) / ratio, ch / ratio);
+            var x = 0;
+            var y = 0;
+            var maxh = 0;
+            var n = data.length;
+            --di;
+            while (++di < n) {
+                d = data[di];
+                c.save();
+                c.font = d.style + ' ' + d.weight + ' ' + ~~((d.size + 1) / ratio) + 'px ' + d.font;
+                var w = c.measureText(d.text + 'm').width * ratio;
+                var h = d.size << 1;
+                if (d.rotate) {
+                    var sr = Math.sin(d.rotate * cloudRadians);
+                    var cr = Math.cos(d.rotate * cloudRadians);
+                    var wcr = w * cr;
+                    var wsr = w * sr;
+                    var hcr = h * cr;
+                    var hsr = h * sr;
+                    w = Math.max(Math.abs(wcr + hsr), Math.abs(wcr - hsr)) + 31 >> 5 << 5;
+                    h = ~~Math.max(Math.abs(wsr + hcr), Math.abs(wsr - hcr));
+                } else {
+                    w = w + 31 >> 5 << 5;
+                }
+                if (h > maxh) {
+                    maxh = h;
+                }
+                if (x + w >= cw << 5) {
+                    x = 0;
+                    y += maxh;
+                    maxh = 0;
+                }
+                if (y + h >= ch) {
+                    break;
+                }
+                c.translate((x + (w >> 1)) / ratio, (y + (h >> 1)) / ratio);
+                if (d.rotate) {
+                    c.rotate(d.rotate * cloudRadians);
+                }
+                c.fillText(d.text, 0, 0);
+                if (d.padding) {
+                    c.lineWidth = 2 * d.padding;
+                    c.strokeText(d.text, 0, 0);
+                }
+                c.restore();
+                d.width = w;
+                d.height = h;
+                d.xoff = x;
+                d.yoff = y;
+                d.x1 = w >> 1;
+                d.y1 = h >> 1;
+                d.x0 = -d.x1;
+                d.y0 = -d.y1;
+                d.hasText = true;
+                x += w;
+            }
+            var pixels = c.getImageData(0, 0, (cw << 5) / ratio, ch / ratio).data;
+            var sprite = [];
+            while (--di >= 0) {
+                d = data[di];
+                if (!d.hasText) {
+                    continue;
+                }
+                var w = d.width;
+                var w32 = w >> 5;
+                var h = d.y1 - d.y0;
+                for (var i = 0; i < h * w32; i++) {
+                    sprite[i] = 0;
+                }
+                x = d.xoff;
+                if (x == null) {
+                    return;
+                }
+                y = d.yoff;
+                var seen = 0;
+                var seenRow = -1;
+                for (var j = 0; j < h; j++) {
+                    for (var i = 0; i < w; i++) {
+                        var k = w32 * j + (i >> 5);
+                        var m = pixels[(y + j) * (cw << 5) + (x + i) << 2] ? 1 << 31 - i % 32 : 0;
+                        sprite[k] |= m;
+                        seen |= m;
+                    }
+                    if (seen) {
+                        seenRow = j;
+                    } else {
+                        d.y0++;
+                        h--;
+                        j--;
+                        y++;
+                    }
+                }
+                d.y1 = d.y0 + seenRow;
+                d.sprite = sprite.slice(0, (d.y1 - d.y0) * w32);
+            }
+        },
+        _place: function (board, tag, maxBounds) {
+            var size = this.defaultOption.size;
+            var perimeter = [
+                {
+                    x: 0,
+                    y: 0
+                },
+                {
+                    x: size[0],
+                    y: size[1]
+                }
+            ];
+            var startX = tag.x;
+            var startY = tag.y;
+            var maxDelta = Math.sqrt(size[0] * size[0] + size[1] * size[1]);
+            var s = this.defaultOption.spiral(size);
+            var dt = Math.random() < 0.5 ? 1 : -1;
+            var t = -dt;
+            var dxdy;
+            var dx;
+            var dy;
+            while (dxdy = s(t += dt)) {
+                dx = ~~dxdy[0];
+                dy = ~~dxdy[1];
+                if (Math.min(dx, dy) > maxDelta) {
+                    break;
+                }
+                tag.x = startX + dx;
+                tag.y = startY + dy;
+                if (tag.x + tag.x0 < 0 || tag.y + tag.y0 < 0 || tag.x + tag.x1 > size[0] || tag.y + tag.y1 > size[1]) {
+                    continue;
+                }
+                if (!cloudCollide(tag, board, size[0])) {
+                    if (collideRects(tag, maxBounds)) {
+                        var sprite = tag.sprite;
+                        var w = tag.width >> 5;
+                        var sw = size[0] >> 5;
+                        var lx = tag.x - (w << 4);
+                        var sx = lx & 127;
+                        var msx = 32 - sx;
+                        var h = tag.y1 - tag.y0;
+                        var x = (tag.y + tag.y0) * sw + (lx >> 5);
+                        var last;
+                        for (var j = 0; j < h; j++) {
+                            last = 0;
+                            for (var i = 0; i <= w; i++) {
+                                board[x + i] |= last << msx | (i < w ? (last = sprite[j * w + i]) >>> sx : 0);
+                            }
+                            x += sw;
+                        }
+                        delete tag.sprite;
+                        return true;
+                    }
+                }
+            }
+            return false;
+            function cloudCollide(tag, board, sw) {
+                sw >>= 5;
+                var sprite = tag.sprite;
+                var w = tag.width >> 5;
+                var lx = tag.x - (w << 4);
+                var sx = lx & 127;
+                var msx = 32 - sx;
+                var h = tag.y1 - tag.y0;
+                var x = (tag.y + tag.y0) * sw + (lx >> 5);
+                var last;
+                for (var j = 0; j < h; j++) {
+                    last = 0;
+                    for (var i = 0; i <= w; i++) {
+                        if ((last << msx | (i < w ? (last = sprite[j * w + i]) >>> sx : 0)) & board[x + i]) {
+                            return true;
+                        }
+                    }
+                    x += sw;
+                }
+                return false;
+            }
+            function collideRects(a, maxBounds) {
+                return maxBounds.row[a.y] && maxBounds.cloumn[a.x] && a.x >= maxBounds.row[a.y].start && a.x <= maxBounds.row[a.y].end && a.y >= maxBounds.cloumn[a.x].start && a.y <= maxBounds.cloumn[a.x].end;
+            }
+        },
+        _autoCalTextSize: function (data, shapeArea, maxwidth, maxheight, minSize) {
+            var sizesum = sum(data, function (k) {
+                return k.size;
+            });
+            var i = data.length;
+            var maxareapre = 0.25;
+            var minTextSize = minSize;
+            var cw = this.defaultOption.cw;
+            var ch = this.defaultOption.ch;
+            var c = this.defaultOption.c;
+            var ratio = this.defaultOption.ratio;
+            var cloudRadians = this.defaultOption.cloudRadians;
+            var d;
+            var dpre;
+            while (i--) {
+                d = data[i];
+                dpre = d.size / sizesum;
+                if (maxareapre) {
+                    d.areapre = dpre < maxareapre ? dpre : maxareapre;
+                } else {
+                    d.areapre = dpre;
+                }
+                d.area = shapeArea * d.areapre;
+                d.totalarea = shapeArea;
+                measureTextWitHitByarea(d);
+            }
+            function measureTextWitHitByarea(d) {
+                c.clearRect(0, 0, (cw << 5) / ratio, ch / ratio);
+                c.save();
+                c.font = d.style + ' ' + d.weight + ' ' + ~~((d.size + 1) / ratio) + 'px ' + d.font;
+                var w = c.measureText(d.text + 'm').width * ratio, h = d.size << 1;
+                w = w + 31 >> 5 << 5;
+                c.restore();
+                d.aw = w;
+                d.ah = h;
+                var k, rw, rh;
+                if (d.rotate) {
+                    var sr = Math.sin(d.rotate * cloudRadians);
+                    var cr = Math.cos(d.rotate * cloudRadians);
+                    var wcr = w * cr;
+                    var wsr = w * sr;
+                    var hcr = h * cr;
+                    var hsr = h * sr;
+                    rw = Math.max(Math.abs(wcr + hsr), Math.abs(wcr - hsr)) + 31 >> 5 << 5;
+                    rh = ~~Math.max(Math.abs(wsr + hcr), Math.abs(wsr - hcr));
+                }
+                if (d.size <= minTextSize || d.rotate && w * h <= d.area && rw <= maxwidth && rh <= maxheight || w * h <= d.area && w <= maxwidth && h <= maxheight) {
+                    d.area = w * h;
+                    return;
+                }
+                if (d.rotate && rw > maxwidth && rh > maxheight) {
+                    k = Math.min(maxwidth / rw, maxheight / rh);
+                } else if (w > maxwidth || h > maxheight) {
+                    k = Math.min(maxwidth / w, maxheight / h);
+                } else {
+                    k = Math.sqrt(d.area / (d.aw * d.ah));
+                }
+                d.size = ~~(k * d.size);
+                if (d.size < minSize) {
+                    d.size = minSize;
+                    return;
+                }
+                return measureTextWitHitByarea(d);
+            }
+            function sum(dts, callback) {
+                var j = dts.length;
+                var ressum = 0;
+                while (j--) {
+                    ressum += callback(dts[j]);
+                }
+                return ressum;
+            }
+        }
+    };
+    return CloudLayout;
 });define('echarts/component/dataRange', [
     'require',
     './base',
@@ -1674,6 +2010,82 @@ define('echarts/chart/scatter', [
     zrUtil.inherits(DataRange, Base);
     require('../component').define('dataRange', DataRange);
     return DataRange;
+});define('echarts/layout/WordCloudRectZero', ['require'], function (require) {
+    function ZeroArray(option) {
+        this.defaultOption = { type: 'RECT' };
+        this._init(option);
+    }
+    ZeroArray.prototype = {
+        RECT: '_calculateRect',
+        _init: function (option) {
+            this._initOption(option);
+            this._initCanvas();
+        },
+        _initOption: function (option) {
+            for (k in option) {
+                this.defaultOption[k] = option[k];
+            }
+        },
+        _initCanvas: function () {
+            var canvas = document.createElement('canvas');
+            canvas.width = 1;
+            canvas.height = 1;
+            var ratio = Math.sqrt(canvas.getContext('2d').getImageData(0, 0, 1, 1).data.length >> 2);
+            canvas.width = this.defaultOption.width;
+            canvas.height = this.defaultOption.height;
+            if (canvas.getContext) {
+                var ctx = canvas.getContext('2d');
+            }
+            this.canvas = canvas;
+            this.ctx = ctx;
+            this.ratio = ratio;
+        },
+        calculate: function (callback, callbackObj) {
+            var calType = this.defaultOption.type, calmethod = this[calType];
+            this[calmethod].call(this, callback, callbackObj);
+        },
+        _calculateReturn: function (result, callback, callbackObj) {
+            callback.call(callbackObj, result);
+        },
+        _calculateRect: function (callback, callbackObj) {
+            var result = {}, width = this.defaultOption.width >> 5 << 5, height = this.defaultOption.height;
+            result.initarr = this._rectZeroArray(width * height);
+            result.area = width * height;
+            result.maxHit = height;
+            result.maxWit = width;
+            result.imgboard = this._rectBoard(width, height);
+            this._calculateReturn(result, callback, callbackObj);
+        },
+        _rectBoard: function (width, height) {
+            var row = [];
+            for (var i = 0; i < height; i++) {
+                row.push({
+                    y: i,
+                    start: 0,
+                    end: width
+                });
+            }
+            var cloumn = [];
+            for (var i = 0; i < width; i++) {
+                cloumn.push({
+                    x: i,
+                    start: 0,
+                    end: height
+                });
+            }
+            return {
+                row: row,
+                cloumn: cloumn
+            };
+        },
+        _rectZeroArray: function (num) {
+            var a = [], n = num, i = -1;
+            while (++i < n)
+                a[i] = 0;
+            return a;
+        }
+    };
+    return ZeroArray;
 });define('echarts/util/shape/HandlePolygon', [
     'require',
     'zrender/shape/Base',
