@@ -17,14 +17,12 @@ define(function (require) {
     var LineShape = require('zrender/shape/Line');
     var BezierCurveShape = require('zrender/shape/BezierCurve');
     // 布局依赖
-    var TreeMapLayout = require('../layout/TreeMap');
-    // 布局依赖
     var TreeLayout = require('../layout/Tree');
     // 数据依赖
     var TreeData = require('../data/Tree');
 
     var ecConfig = require('../config');
-    // 维恩图默认参数
+    // 默认参数
     ecConfig.tree = {
         zlevel: 1,                  // 一级层叠
         z: 2,                       // 二级层叠
@@ -109,8 +107,6 @@ define(function (require) {
                 },
                 this
             );
-
-
             var panable = series.roam === true || series.roam === 'move';
             var zoomable = series.roam === true || series.roam === 'scale';
             // Enable pan and zooom
@@ -118,7 +114,6 @@ define(function (require) {
                 panable: panable,
                 zoomable: zoomable
             });
-
             if (
                 this.query('markPoint.effect.show')
                 || this.query('markLine.effect.show')
@@ -128,7 +123,6 @@ define(function (require) {
                     zoomable: zoomable
                 });
             }
-
             this.addShapeList();
         },
 
@@ -153,9 +147,25 @@ define(function (require) {
             ) || {};
             var normalColor = normal.color || this.zr.getColor();
             var emphasisColor = emphasis.color || this.zr.getColor();
+            var angle = -treeNode.layout.angle || 0;
+            // 根节点不旋转
+            if (treeNode.id === this.tree.root.id) {
+                angle = 0;
+            }
+            var textPosition = 'right';
+            if (Math.abs(angle) >= Math.PI / 2 && Math.abs(angle) < Math.PI * 3 / 2) {
+                angle += Math.PI;
+                textPosition = 'left';
+            }
+            var rotation = [
+                angle,
+                treeNode.layout.position[0],
+                treeNode.layout.position[1]
+            ];
             var shape = new IconShape({
                 zlevel: this.getZlevelBase(),
                 z: this.getZBase() + 1,
+                rotation: rotation,
                 style: {
                     x: treeNode.layout.position[0] - treeNode.layout.width * 0.5,
                     y: treeNode.layout.position[1] - treeNode.layout.height * 0.5,
@@ -178,6 +188,8 @@ define(function (require) {
                     new RegExp('^image:\\/\\/'), ''
                 );
                 shape = new ImageShape({
+
+                    rotation: rotation,
                     style: shape.style,
                     highlightStyle: shape.highlightStyle,
                     clickable: shape.clickable,
@@ -191,6 +203,10 @@ define(function (require) {
                 shape.style.textPosition = this.deepQuery(
                     queryTarget, 'itemStyle.normal.label.position'
                 );
+                // 极坐标另外计算 时钟哪个侧面
+                if (serie.orient === 'radial' && shape.style.textPosition !== 'inside') {
+                    shape.style.textPosition = textPosition;
+                }
                 shape.style.textColor = this.deepQuery(
                     queryTarget, 'itemStyle.normal.label.textStyle.color'
                 );
@@ -534,9 +550,10 @@ define(function (require) {
                         // 记录原始坐标，以后计算贝塞尔曲线的控制点
                         treeNode.layout.originPosition = [x, y];
                         var r = y;
-                        var rad = (x - minX) / this.width * Math.PI * 2;
-                        x = r * Math.cos(rad) + rootX;
-                        y = r * Math.sin(rad) + rootY;
+                        var angle = (x - minX) / this.width * Math.PI * 2;
+                        x = r * Math.cos(angle) + rootX;
+                        y = r * Math.sin(angle) + rootY;
+                        treeNode.layout.angle = angle;
                     }
                     treeNode.layout.position[0] = x;
                     treeNode.layout.position[1] = y;
