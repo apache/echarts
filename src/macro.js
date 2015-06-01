@@ -4,6 +4,11 @@
  */
 
 (function (global) {
+    /**
+     * 默认的环境配置
+     *
+     * @type {Object}
+     */
     var DefaultEnv = {};
 
     /**
