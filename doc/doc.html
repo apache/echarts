@@ -3932,8 +3932,13 @@ indicator : [
                         <tr>
                             <td> <b>{string}</b> orient </td>
                             <td> 'vertical'</td>
-                            <td> 树的方向可选：'vertical' | 'horizontal'</td>
+                            <td> 树的方向可选：'vertical' | 'horizontal' | 'radial'</td>
                         </tr> 
+                        <tr>
+                            <td> <b>{boolean | string}</b> roam </td>
+                            <td> false </td>
+                            <td> 是否开启滚轮缩放和拖拽漫游，默认为false（关闭），其他有效输入为true（开启），'scale'（仅开启滚轮缩放），'move'（仅开启拖拽漫游）</td>
+                        </tr>
                         <tr>
                             <td> <b>{string}</b> symbol </td>
                             <td> 'circle' </td>
