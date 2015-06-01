@@ -734,7 +734,9 @@ define(function (require) {
                             brushType: 'fill'
                         },
                         position: [0, 0],
-                        rotation: 0
+                        rotation: 0,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase()
                     });
                     linkShape._symbolShape = symbolShape;
                     this.shapeList.push(symbolShape);
