@@ -102,7 +102,7 @@ define(function (require) {
             self.currentIndex %= timelineOption.data.length;
             // console.log(self.currentIndex);
             var curOption = self.options[self.currentIndex] || {};
-            self.myChart.setOption(curOption, timelineOption.notMerge);
+            self.myChart._setOption(curOption, timelineOption.notMerge, true);
             
             self.messageCenter.dispatch(
                 ecConfig.EVENT.TIMELINE_CHANGED,

@@ -63,7 +63,7 @@ define(function (require) {
         _instances[key].canvasSupported = _canvasSupported;
         _instances[key].setTheme(theme);
 
-        return  _instances[key];
+        return _instances[key];
     };
 
     /**
@@ -948,8 +948,11 @@ define(function (require) {
          * @param {Object} option
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
          *                   如果不需求，可以通过notMerger参数为true阻止与上次option的合并
+         * @param {boolean=} 默认false。keepTimeLine 表示从timeline组件调用而来，
+         *                   表示当前行为是timeline的数据切换，保持timeline，
+         *                   反之销毁timeline。 详见Issue #1601
          */
-        _setOption: function (option, notMerge) {
+        _setOption: function (option, notMerge, keepTimeLine) {
             if (!notMerge && this._option) {
                 this._option = zrUtil.merge(
                     this.getOption(),
@@ -959,6 +962,7 @@ define(function (require) {
             }
             else {
                 this._option = zrUtil.clone(option);
+                !keepTimeLine && this._timeline && this._timeline.dispose();
             }
 
             this._optionRestore = zrUtil.clone(this._option);
