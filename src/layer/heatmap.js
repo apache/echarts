@@ -5,7 +5,6 @@
  *
  * @module
  *
- * @requires /src/component/base.js
  * @requires NPM:zrender/shape/Image.js
  */
 define(function (require) {
@@ -50,13 +49,13 @@ define(function (require) {
 
     Heatmap.prototype = {
         /**
-         * Renders Heatmap
+         * Renders Heatmap and returns the rendered canvas
          * @param {Array} [x, y, value] array of data
          * @param {number} canvas width
          * @param {number} canvas height
-         * @return {Object} rendered zrender image
+         * @return {Object} rendered canvas
          */
-        getZRImage: function(data, width, height) {
+        getCanvas: function(data, width, height) {
             var brush = this._getBrush();
             var gradient = this._getGradient();
             var r = BRUSH_SIZE + this.option.blurSize;
@@ -96,18 +95,7 @@ define(function (require) {
             }
             ctx.putImageData(imageData, 0, 0);
 
-            var image = new zrImage({
-                position: [0, 0],
-                scale: [1, 1],
-                style: {
-                    x: 0,
-                    y: 0,
-                    image: canvas,
-                    width: canvas.width,
-                    height: canvas.height
-                }
-            });
-            return image;
+            return canvas;
         },
 
         /**

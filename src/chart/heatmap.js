@@ -6,10 +6,12 @@
  * @module
  *
  * @requires /src/chart/base.js
+ * @requires /src/chart/layer/heatmap.js
  * @requires /src/config.js
  * @requires /src/util/ecData.js
  * @requires NPM:zrender/tool/util.js
  * @requires NPM:zrender/tool/color.js
+ * @requires NPM:zrender/shape/Image.js
  */
 define(function (require) {
     var ChartBase = require('./base');
@@ -85,8 +87,19 @@ define(function (require) {
                 if (series[i].type === ecConfig.CHART_TYPE_HEATMAP) {
                     series[i] = this.reformOption(series[i]);
 
-                    var image = layer.getZRImage(series[i].data,
-                        this.zr.getWidth(), this.zr.getHeight());
+                    var canvas = layer.getCanvas(series[i].data,
+                        this.zr.getWidth(), this.zr.getHeight())
+                    var image = new zrImage({
+                        position: [0, 0],
+                        scale: [1, 1],
+                        style: {
+                            x: 0,
+                            y: 0,
+                            image: canvas,
+                            width: canvas.width,
+                            height: canvas.height
+                        }
+                    });
                     this.zr.addShape(image);
                 }
             }
