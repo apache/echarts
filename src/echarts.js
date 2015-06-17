@@ -27,7 +27,7 @@ define(function (require) {
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
 
-    self.version = '2.2.3';
+    self.version = '2.2.4';
     self.dependencies = {
         zrender: '2.0.9'
     };
