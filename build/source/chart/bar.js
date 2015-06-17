@@ -638,7 +638,7 @@ define('echarts/chart/bar', [
                 }
             }
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         }
     };

@@ -315,7 +315,7 @@ define('echarts/chart/k', [
                 }
             }
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         }
     };

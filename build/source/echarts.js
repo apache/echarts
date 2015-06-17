@@ -2267,6 +2267,7 @@ define('echarts/echarts', [
                 ]];
             var magicOption = this.getOption();
             var optionRestore = this._optionRestore;
+            var self = this;
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIdx = params[i][0];
                 data = params[i][1];
@@ -2345,7 +2346,6 @@ define('echarts/echarts', [
             }
             this.component.dataZoom && this.component.dataZoom.syncOption(magicOption);
             this._option = magicOption;
-            var self = this;
             function animationDone() {
                 if (!self._zr) {
                     return;

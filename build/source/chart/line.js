@@ -711,7 +711,7 @@ define('echarts/chart/line', [
                 }
             }
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         }
     };

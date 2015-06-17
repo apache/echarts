@@ -689,7 +689,7 @@ define('echarts/chart/pie', [
             }
             this.shapeList = backupShapeList;
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         },
         onclick: function (param) {
