@@ -1,8 +1,6 @@
 define('echarts/chart/tree', [
     'require',
     './base',
-    'zrender/tool/area',
-    'zrender/tool/vector',
     '../util/shape/Icon',
     'zrender/shape/Image',
     'zrender/shape/Line',
@@ -18,8 +16,6 @@ define('echarts/chart/tree', [
 ], function (require) {
     var ChartBase = require('./base');
     var GOLDEN_SECTION = 0.618;
-    var toolArea = require('zrender/tool/area');
-    var vec2 = require('zrender/tool/vector');
     var IconShape = require('../util/shape/Icon');
     var ImageShape = require('zrender/shape/Image');
     var LineShape = require('zrender/shape/Line');

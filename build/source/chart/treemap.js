@@ -36,6 +36,7 @@ define('echarts/chart/treemap', [
             '80%',
             '80%'
         ],
+        root: '',
         itemStyle: {
             normal: {
                 label: {
@@ -103,7 +104,8 @@ define('echarts/chart/treemap', [
         _buildSeries: function (series, seriesIndex) {
             var tree = Tree.fromOptionData(series.name, series.data);
             this._treesMap[seriesIndex] = tree;
-            this._buildTreemap(tree.root, seriesIndex);
+            var treeRoot = series.root && tree.getNodeById(series.root) || tree.root;
+            this._buildTreemap(treeRoot, seriesIndex);
         },
         _buildTreemap: function (treeRoot, seriesIndex) {
             var shapeList = this.shapeList;

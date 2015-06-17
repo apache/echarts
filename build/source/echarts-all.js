@@ -163,7 +163,7 @@ define('echarts/echarts', [
     var _idBase = new Date() - 0;
     var _instances = {};
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
-    self.version = '2.2.3';
+    self.version = '2.2.4';
     self.dependencies = { zrender: '2.0.9' };
     self.init = function (dom, theme) {
         var zrender = require('zrender');
@@ -705,11 +705,12 @@ define('echarts/echarts', [
                 return this._setTimelineOption(option);
             }
         },
-        _setOption: function (option, notMerge) {
+        _setOption: function (option, notMerge, keepTimeLine) {
             if (!notMerge && this._option) {
                 this._option = zrUtil.merge(this.getOption(), zrUtil.clone(option), true);
             } else {
                 this._option = zrUtil.clone(option);
+                !keepTimeLine && this._timeline && this._timeline.dispose();
             }
             this._optionRestore = zrUtil.clone(this._option);
             if (!this._option.series || this._option.series.length === 0) {
@@ -6156,7 +6157,7 @@ define('zrender/zrender', [
             var timelineOption = self.timelineOption;
             self.currentIndex %= timelineOption.data.length;
             var curOption = self.options[self.currentIndex] || {};
-            self.myChart.setOption(curOption, timelineOption.notMerge);
+            self.myChart._setOption(curOption, timelineOption.notMerge, true);
             self.messageCenter.dispatch(ecConfig.EVENT.TIMELINE_CHANGED, null, {
                 currentIndex: self.currentIndex,
                 data: timelineOption.data[self.currentIndex].name != null ? timelineOption.data[self.currentIndex].name : timelineOption.data[self.currentIndex]
@@ -10236,17 +10237,17 @@ define('zrender/zrender', [
             return;
         }
         el.updateTransform();
-        if (el.type == 'group') {
-            if (el.clipShape) {
-                el.clipShape.parent = el;
-                el.clipShape.updateTransform();
-                if (clipShapes) {
-                    clipShapes = clipShapes.slice();
-                    clipShapes.push(el.clipShape);
-                } else {
-                    clipShapes = [el.clipShape];
-                }
+        if (el.clipShape) {
+            el.clipShape.parent = el;
+            el.clipShape.updateTransform();
+            if (clipShapes) {
+                clipShapes = clipShapes.slice();
+                clipShapes.push(el.clipShape);
+            } else {
+                clipShapes = [el.clipShape];
             }
+        }
+        if (el.type == 'group') {
             for (var i = 0; i < el._children.length; i++) {
                 var child = el._children[i];
                 child.__dirty = el.__dirty || child.__dirty;
@@ -27335,7 +27336,6 @@ define('zrender/zrender', [
             }, this);
         },
         _buildLabels: function (serie, serieIdx, graph, mainSerie) {
-            var labelColor = this.query(mainSerie, 'itemStyle.normal.label.color');
             var rotateLabel = this.query(mainSerie, 'itemStyle.normal.label.rotate');
             var labelDistance = this.query(mainSerie, 'itemStyle.normal.label.distance');
             var center = this.parseCenter(this.zr, mainSerie.center);
@@ -27370,8 +27370,7 @@ define('zrender/zrender', [
                     hoverable: false,
                     style: {
                         text: node.data.label == null ? node.id : node.data.label,
-                        textAlign: isRightSide ? 'left' : 'right',
-                        color: labelColor || '#000000'
+                        textAlign: isRightSide ? 'left' : 'right'
                     }
                 };
                 if (rotateLabel) {
@@ -27387,10 +27386,10 @@ define('zrender/zrender', [
                     labelShape.style.x = start[0];
                     labelShape.style.y = start[1];
                 }
-                labelShape.style.textColor = this.deepQuery([
+                labelShape.style.color = this.deepQuery([
                     node.data,
                     mainSerie
-                ], 'itemStyle.normal.label.textStyle.color') || '#fff';
+                ], 'itemStyle.normal.label.textStyle.color') || '#000000';
                 labelShape.style.textFont = this.getFont(this.deepQuery([
                     node.data,
                     mainSerie
@@ -28566,7 +28565,9 @@ define('zrender/zrender', [
                             0,
                             0
                         ],
-                        rotation: 0
+                        rotation: 0,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase()
                     });
                     linkShape._symbolShape = symbolShape;
                     this.shapeList.push(symbolShape);
@@ -47620,6 +47621,7 @@ define('zrender/zrender', [
             '80%',
             '80%'
         ],
+        root: '',
         itemStyle: {
             normal: {
                 label: {
@@ -47687,7 +47689,8 @@ define('zrender/zrender', [
         _buildSeries: function (series, seriesIndex) {
             var tree = Tree.fromOptionData(series.name, series.data);
             this._treesMap[seriesIndex] = tree;
-            this._buildTreemap(tree.root, seriesIndex);
+            var treeRoot = series.root && tree.getNodeById(series.root) || tree.root;
+            this._buildTreemap(treeRoot, seriesIndex);
         },
         _buildTreemap: function (treeRoot, seriesIndex) {
             var shapeList = this.shapeList;
@@ -48214,8 +48217,6 @@ define('zrender/zrender', [
 });define('echarts/chart/tree', [
     'require',
     './base',
-    'zrender/tool/area',
-    'zrender/tool/vector',
     '../util/shape/Icon',
     'zrender/shape/Image',
     'zrender/shape/Line',
@@ -48231,8 +48232,6 @@ define('zrender/zrender', [
 ], function (require) {
     var ChartBase = require('./base');
     var GOLDEN_SECTION = 0.618;
-    var toolArea = require('zrender/tool/area');
-    var vec2 = require('zrender/tool/vector');
     var IconShape = require('../util/shape/Icon');
     var ImageShape = require('zrender/shape/Image');
     var LineShape = require('zrender/shape/Line');

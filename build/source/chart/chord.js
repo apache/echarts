@@ -513,7 +513,6 @@ define('echarts/chart/chord', [
             }, this);
         },
         _buildLabels: function (serie, serieIdx, graph, mainSerie) {
-            var labelColor = this.query(mainSerie, 'itemStyle.normal.label.color');
             var rotateLabel = this.query(mainSerie, 'itemStyle.normal.label.rotate');
             var labelDistance = this.query(mainSerie, 'itemStyle.normal.label.distance');
             var center = this.parseCenter(this.zr, mainSerie.center);
@@ -548,8 +547,7 @@ define('echarts/chart/chord', [
                     hoverable: false,
                     style: {
                         text: node.data.label == null ? node.id : node.data.label,
-                        textAlign: isRightSide ? 'left' : 'right',
-                        color: labelColor || '#000000'
+                        textAlign: isRightSide ? 'left' : 'right'
                     }
                 };
                 if (rotateLabel) {
@@ -565,10 +563,10 @@ define('echarts/chart/chord', [
                     labelShape.style.x = start[0];
                     labelShape.style.y = start[1];
                 }
-                labelShape.style.textColor = this.deepQuery([
+                labelShape.style.color = this.deepQuery([
                     node.data,
                     mainSerie
-                ], 'itemStyle.normal.label.textStyle.color') || '#fff';
+                ], 'itemStyle.normal.label.textStyle.color') || '#000000';
                 labelShape.style.textFont = this.getFont(this.deepQuery([
                     node.data,
                     mainSerie

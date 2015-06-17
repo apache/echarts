@@ -1655,7 +1655,7 @@ define('echarts/echarts', [
     var _idBase = new Date() - 0;
     var _instances = {};
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
-    self.version = '2.2.3';
+    self.version = '2.2.4';
     self.dependencies = { zrender: '2.0.9' };
     self.init = function (dom, theme) {
         var zrender = require('zrender');
@@ -2197,11 +2197,12 @@ define('echarts/echarts', [
                 return this._setTimelineOption(option);
             }
         },
-        _setOption: function (option, notMerge) {
+        _setOption: function (option, notMerge, keepTimeLine) {
             if (!notMerge && this._option) {
                 this._option = zrUtil.merge(this.getOption(), zrUtil.clone(option), true);
             } else {
                 this._option = zrUtil.clone(option);
+                !keepTimeLine && this._timeline && this._timeline.dispose();
             }
             this._optionRestore = zrUtil.clone(this._option);
             if (!this._option.series || this._option.series.length === 0) {
@@ -7648,7 +7649,7 @@ define('zrender/zrender', [
             var timelineOption = self.timelineOption;
             self.currentIndex %= timelineOption.data.length;
             var curOption = self.options[self.currentIndex] || {};
-            self.myChart.setOption(curOption, timelineOption.notMerge);
+            self.myChart._setOption(curOption, timelineOption.notMerge, true);
             self.messageCenter.dispatch(ecConfig.EVENT.TIMELINE_CHANGED, null, {
                 currentIndex: self.currentIndex,
                 data: timelineOption.data[self.currentIndex].name != null ? timelineOption.data[self.currentIndex].name : timelineOption.data[self.currentIndex]
@@ -11728,17 +11729,17 @@ define('zrender/zrender', [
             return;
         }
         el.updateTransform();
-        if (el.type == 'group') {
-            if (el.clipShape) {
-                el.clipShape.parent = el;
-                el.clipShape.updateTransform();
-                if (clipShapes) {
-                    clipShapes = clipShapes.slice();
-                    clipShapes.push(el.clipShape);
-                } else {
-                    clipShapes = [el.clipShape];
-                }
+        if (el.clipShape) {
+            el.clipShape.parent = el;
+            el.clipShape.updateTransform();
+            if (clipShapes) {
+                clipShapes = clipShapes.slice();
+                clipShapes.push(el.clipShape);
+            } else {
+                clipShapes = [el.clipShape];
             }
+        }
+        if (el.type == 'group') {
             for (var i = 0; i < el._children.length; i++) {
                 var child = el._children[i];
                 child.__dirty = el.__dirty || child.__dirty;
