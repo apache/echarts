@@ -939,7 +939,7 @@ define(function (require) {
             
             // 没有动画
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         }
     };

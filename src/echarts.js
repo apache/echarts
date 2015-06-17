@@ -1083,6 +1083,7 @@ define(function (require) {
             //this._optionRestore 和 magicOption 都要同步
             var magicOption = this.getOption();
             var optionRestore = this._optionRestore;
+            var self = this;
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIdx = params[i][0];
                 data = params[i][1];
@@ -1185,7 +1186,6 @@ define(function (require) {
             this.component.dataZoom && this.component.dataZoom.syncOption(magicOption);
 
             this._option = magicOption;
-            var self = this;
             function animationDone() {
                 if (!self._zr) {
                     return; // 已经被释放
