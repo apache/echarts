@@ -4,21 +4,22 @@
  * Inspired by https://github.com/mourner/simpleheat
  *
  * @module
- *
- * @requires NPM:zrender/shape/Image.js
  */
 define(function (require) {
     var zrImage = require('zrender/shape/Image');
 
     var defaultOptions = {
         blurSize: 30,
-        gradientColors: {
-            0.4: 'blue',
-            0.5: 'cyan',
-            0.6: 'lime',
-            0.8: 'yellow',
-            1.0: 'red'
-        },
+
+        // gradientColors is either shaped of ['blue', 'cyan', 'lime', 'yellow', 'red']
+        // or [{
+        //    offset: 0.2,
+        //    color: 'blue'
+        // }, {
+        //    offset 0.8,
+        //    color: 'cyan'
+        // }]
+        gradientColors: ['blue', 'cyan', 'lime', 'yellow', 'red'],
         minAlpha: 0.05,
         unifyValue: 1
     };
@@ -148,8 +149,15 @@ define(function (require) {
                 
                 // add color to gradient stops
                 var gradient = ctx.createLinearGradient(0, 0, 0, levels);
-                for (var pos in this.option.gradientColors) {
-                    gradient.addColorStop(pos, this.option.gradientColors[pos]);
+                var len = this.option.gradientColors.length;
+                for (var i = 0; i < len; ++i) {
+                    if (typeof this.option.gradientColors[i] === 'string') {
+                        gradient.addColorStop((i + 1) / len,
+                            this.option.gradientColors[i]);
+                    } else {
+                        gradient.addColorStop(this.option.gradientColors[i].offset,
+                            this.option.gradientColors[i].color);
+                    }
                 }
 
                 ctx.fillStyle = gradient;

@@ -78,7 +78,6 @@ define(function (require) {
          */
         _init: function() {
             var series = this.series;
-            this.backupShapeList();
 
             var layer = new HeatmapLayer();
 
