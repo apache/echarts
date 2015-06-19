@@ -1001,12 +1001,23 @@ define(function (require) {
                 if (series[i].heatmap) {
                     // convert geo position to screen position
                     var data = series[i].heatmap.data;
+                    var geoData = series[i].heatmap._geoData;
+                    // copy initial geo position
+                    if (geoData === undefined) {
+                        series[i].heatmap._geoData = [];
+                        for (var j = 0, len = data.length; j < len; ++j) {
+                            series[i].heatmap._geoData[j] = data[j];
+                        }
+                        geoData = series[i].heatmap._geoData;
+                    }
+
                     var len = data.length;
                     for (var id = 0; id < len; ++id) {
-                        data[id] = this.geo2pos(mapType, [data[id][0], data[id][1]]);
+                        data[id] = this.geo2pos(mapType, 
+                            [geoData[id][0], geoData[id][1]]);
                     }
                     var layer = new HeatmapLayer(series[i].heatmap.itemStyle);
-                    var canvas = layer.getCanvas(series[i].heatmap.data,
+                    var canvas = layer.getCanvas(data,
                         this.zr.getWidth(), this.zr.getHeight())
                     var image = new ZrImage({
                         zlevel: this.getZlevelBase(),
@@ -1022,6 +1033,9 @@ define(function (require) {
                             height: canvas.height
                         }
                     });
+                    image.type = 'heatmap';
+                    image._mapType = mapType;
+                    this.shapeList.push(image);
                     this.zr.addShape(image);
                 }
             }
@@ -1172,6 +1186,7 @@ define(function (require) {
                     var height = transform.height;
                     // 位置转经纬度
                     var geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
+                    console.log(mx - left, my - top);
                     if (eventDelta > 0) {
                         delta = 1.2;        // 放大
                         if (this._scaleLimitMap[mapType].max != null
@@ -1221,6 +1236,7 @@ define(function (require) {
                                 case 'polygon':
                                 case 'line':
                                 case 'ellipse':
+                                case 'heatmap':
                                     shape.scale[0] *= delta;
                                     shape.scale[1] *= delta;
                                     break;
