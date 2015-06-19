@@ -1022,7 +1022,10 @@ define(function (require) {
                     var image = new ZrImage({
                         zlevel: this.getZlevelBase(),
                         z: this.getZBase() + 1,
-                        position: [0, 0],
+                        position: [
+                            this._mapDataMap[mapType].transform.left,
+                            this._mapDataMap[mapType].transform.top
+                        ],
                         scale: [1, 1],
                         hoverable: false,
                         style: {
@@ -1186,7 +1189,6 @@ define(function (require) {
                     var height = transform.height;
                     // 位置转经纬度
                     var geoAndPos = this.pos2geo(mapType, [mx - left, my - top]);
-                    console.log(mx - left, my - top);
                     if (eventDelta > 0) {
                         delta = 1.2;        // 放大
                         if (this._scaleLimitMap[mapType].max != null

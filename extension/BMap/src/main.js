@@ -6,8 +6,6 @@
  */
 define(function (require) {
 
-    var HeatmapLayer = require('../../../../src/layer/heatmap');
-
     /**
      * 构造函数
      *
@@ -19,7 +17,6 @@ define(function (require) {
      */
     function BMapExt(obj, BMap, ec, mapOption) {
         this._init(obj, BMap, ec, mapOption);
-        this._buildHeatmap();
     };
 
     /**
@@ -375,27 +372,6 @@ define(function (require) {
                 self.setOption(option);
             }
         }
-
-        /**
-         * render heatmap overlay
-         */
-        self._buildHeatmap = function(serie){
-            // var size = self._map.getSize();
-            // var layer = new HeatmapLayer(serie);
-            // var canvas = layer.getCanvas(serie.data, size.width, size.height);
-            // var image = new zrImage({
-            //     position: [0, 0],
-            //     scale: [1, 1],
-            //     style: {
-            //         x: 0,
-            //         y: 0,
-            //         image: canvas,
-            //         width: size.width,
-            //         height: size.height
-            //     }
-            // });
-            // this.zr.addShape(image);
-        };
 
         self._map.addOverlay(myOverlay);
     };

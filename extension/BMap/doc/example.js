@@ -16,8 +16,7 @@
     [
         'echarts',
         'BMap',
-        'echarts/chart/map',
-        'echarts/chart/heatmap'
+        'echarts/chart/map'
     ],
     function (echarts, BMapExtension) {
         $('#main').css({
@@ -36,18 +35,6 @@
             x: 104.114129,
             y: 37.550339
         };
-
-        var heatData = [];
-        for (var i = 0; i < 200; ++i) {
-            heatData.push({
-              lng: startPoint.x + Math.random() * 0.0001,
-              lat: startPoint.y + Math.random() * 0.0001,
-              count: Math.floor(Math.random() * 100)
-            });
-        }
-        // heatmapOverlay = new BMapLib.HeatmapOverlay({"radius":20});
-        // map.addOverlay(heatmapOverlay);
-        // heatmapOverlay.setDataSet({data:heatData,max:100});
 
         var point = new BMap.Point(startPoint.x, startPoint.y);
         map.centerAndZoom(point, 5);
@@ -717,11 +704,6 @@
                             [{name:'广州'},{name:'盐城'}]
                         ]
                     }
-                },
-                {
-                    name: 'heatmap',
-                    type: 'heatmap',
-                    data: heatData
                 }
             ]
         };
