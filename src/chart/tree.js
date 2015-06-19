@@ -163,6 +163,7 @@ define(function (require) {
                 zlevel: this.getZlevelBase(),
                 z: this.getZBase() + 1,
                 rotation: rotation,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: treeNode.layout.position[0] - treeNode.layout.width * 0.5,
                     y: treeNode.layout.position[1] - treeNode.layout.height * 0.5,
@@ -185,7 +186,6 @@ define(function (require) {
                     new RegExp('^image:\\/\\/'), ''
                 );
                 shape = new ImageShape({
-
                     rotation: rotation,
                     style: shape.style,
                     highlightStyle: shape.highlightStyle,
