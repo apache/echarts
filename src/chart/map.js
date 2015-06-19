@@ -16,9 +16,11 @@ define(function (require) {
     var LineShape = require('zrender/shape/Line');
     var PolygonShape = require('zrender/shape/Polygon');
     var EllipseShape = require('zrender/shape/Ellipse');
+    var ZrImage = require('zrender/shape/Image');
     // 组件依赖
     require('../component/dataRange');
     require('../component/roamController');
+    var HeatmapLayer = require('../layer/heatmap');
 
     var ecConfig = require('../config');
     // 地图默认参数
@@ -337,6 +339,8 @@ define(function (require) {
                     self.addShapeList();
                     self.zr.refreshNextFrame();
                 }
+
+                self._buildHeatmap(mt);
             };
         },
 
@@ -987,6 +991,39 @@ define(function (require) {
                     _mapType : mapType
                 };
                 this.buildMark(sIdx);
+            }
+        },
+
+        _buildHeatmap: function(mapType) {
+            var series = this.series;
+            for (var i = 0, l = series.length; i < l; i++) {
+                // render heatmap
+                if (series[i].heatmap) {
+                    // convert geo position to screen position
+                    var data = series[i].heatmap.data;
+                    var len = data.length;
+                    for (var id = 0; id < len; ++id) {
+                        data[id] = this.geo2pos(mapType, [data[id][0], data[id][1]]);
+                    }
+                    var layer = new HeatmapLayer(series[i].heatmap.itemStyle);
+                    var canvas = layer.getCanvas(series[i].heatmap.data,
+                        this.zr.getWidth(), this.zr.getHeight())
+                    var image = new ZrImage({
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase() + 1,
+                        position: [0, 0],
+                        scale: [1, 1],
+                        hoverable: false,
+                        style: {
+                            x: 0,
+                            y: 0,
+                            image: canvas,
+                            width: canvas.width,
+                            height: canvas.height
+                        }
+                    });
+                    this.zr.addShape(image);
+                }
             }
         },
 

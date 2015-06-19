@@ -129,7 +129,7 @@ function needMap() {
 }
 
 var echarts;
-var developMode = false;
+var developMode = true;
 
 if (developMode) {
     window.esl = null;
@@ -214,6 +214,7 @@ function launchExample() {
             'echarts/chart/treemap',
             'echarts/chart/tree',
             'echarts/chart/wordCloud',
+            'echarts/chart/heatmap',
             needMap() ? 'echarts/chart/map' : 'echarts'
         ],
         requireCallback
