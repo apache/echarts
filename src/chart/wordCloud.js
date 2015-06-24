@@ -194,14 +194,12 @@ define(function (require) {
                     : normalColor
                     );
 
-
-            // console.log(oneText.x, oneText.x0);
-
             var that = this;
             var textShape = new TextShape({
                 zlevel: this.getZlevelBase(),
                 z: this.getZBase(),
                 hoverable: true,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: 0,
                     y: 0,
