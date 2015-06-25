@@ -917,8 +917,8 @@ define(function (require) {
                 }
 
                 if (this._selectedMode[mapType] &&
-                     this._selected[name]
-                     || (data.selected && this._selected[name] !== false)
+                     (this._selected[name] && data.selected !== false)
+                     || data.selected === true
                 ) {
                     textShape.style = textShape.highlightStyle;
                     shape.style = shape.highlightStyle;
