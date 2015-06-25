@@ -279,10 +279,13 @@ define(function (require) {
                     if (valueCalculation[mt] == 'average') {
                         valueData[mt][k].value /= valueData[mt][k].seriesIndex.length;
                     }
-                    valueData[mt][k].value = valueData[mt][k].value.toFixed(
-                        mapValuePrecision[mt] == null
-                            ? valueData[mt][k].precision : mapValuePrecision[mt]
-                    ) - 0;
+                    var value = valueData[mt][k].value;
+                    if (value != null) {
+                        valueData[mt][k].value = value.toFixed(
+                            mapValuePrecision[mt] == null
+                                ? valueData[mt][k].precision : mapValuePrecision[mt]
+                        ) - 0;   
+                    }
                 }
 
                 this._mapDataMap[mt] = this._mapDataMap[mt] || {};
