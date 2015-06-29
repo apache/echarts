@@ -246,12 +246,12 @@ define(function (require) {
         _initSerie: function(serie, serieIdx) {
             this._temperature = 1;
 
-            // data-matrix 表示数据
-            if (serie.data) {
+            // matrix 表示边
+            if (serie.matrix) {
                 this._graph = this._getSerieGraphFromDataMatrix(serie);
             }
-            // node-links 表示数据
-            else {
+            // links 表示边
+            else if (serie.links) {
                 this._graph = this._getSerieGraphFromNodeLinks(serie);
             }
 

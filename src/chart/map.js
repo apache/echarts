@@ -34,7 +34,7 @@ define(function (require) {
         //},
         // mapValueCalculation: 'sum',  // 数值合并方式，默认加和，可选为：
                                         // 'sum' | 'average' | 'max' | 'min'
-        mapValuePrecision: 0,           // 地图数值计算结果小数精度
+        // mapValuePrecision: 0,           // 地图数值计算结果小数精度
         showLegendSymbol: true,         // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
         // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
         dataRangeHoverLink: true,
@@ -233,7 +233,8 @@ define(function (require) {
                             valueData[mapType][name] = valueData[mapType][name]
                                                        || {
                                                            seriesIndex : [],
-                                                           valueMap: {}
+                                                           valueMap: {},
+                                                           precision: 0
                                                        };
                             for (var key in data[j]) {
                                 if (key != 'value') {
@@ -244,6 +245,12 @@ define(function (require) {
                                     // value
                                     valueData[mapType][name].value == null
                                     && (valueData[mapType][name].value = 0);
+
+                                    valueData[mapType][name].precision = 
+                                        Math.max(
+                                            this.getPrecision(+data[j].value),
+                                            valueData[mapType][name].precision
+                                        );
 
                                     valueData[mapType][name].value += (+data[j].value);
                                     valueData[mapType][name].valueMap[i] = +data[j].value;
@@ -268,13 +275,16 @@ define(function (require) {
                 this.lastShapeList = [];
             }
             for (var mt in valueData) {
-                if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
-                    for (var k in valueData[mt]) {
-                        valueData[mt][k].value =
-                            (valueData[mt][k].value / valueData[mt][k].seriesIndex.length)
-                            .toFixed(
-                                mapValuePrecision[mt]
-                            ) - 0;
+                for (var k in valueData[mt]) {
+                    if (valueCalculation[mt] == 'average') {
+                        valueData[mt][k].value /= valueData[mt][k].seriesIndex.length;
+                    }
+                    var value = valueData[mt][k].value;
+                    if (value != null) {
+                        valueData[mt][k].value = value.toFixed(
+                            mapValuePrecision[mt] == null
+                                ? valueData[mt][k].precision : mapValuePrecision[mt]
+                        ) - 0;   
                     }
                 }
 
@@ -907,8 +917,8 @@ define(function (require) {
                 }
 
                 if (this._selectedMode[mapType] &&
-                     this._selected[name]
-                     || (data.selected && this._selected[name] !== false)
+                     (this._selected[name] && data.selected !== false)
+                     || data.selected === true
                 ) {
                     textShape.style = textShape.highlightStyle;
                     shape.style = shape.highlightStyle;
