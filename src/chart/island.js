@@ -146,9 +146,10 @@ define(function (require) {
                              ? ecData.get(shape, 'series').name
                              : '';
             var font = this.getFont(this.option.island.textStyle);
+            var islandOption = this.option.island;
             var islandShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: islandOption.zlevel,
+                z: islandOption.z,
                 style: {
                     x: shape.style.x,
                     y: shape.style.y,

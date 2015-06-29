@@ -739,16 +739,17 @@ define(function (require) {
                     queryTarget = [data]; // level 3
                     seriesName = '';
                     for (var j = 0, k = data.seriesIndex.length; j < k; j++) {
+                        var serie = series[data.seriesIndex[j]];
                         // level 2
-                        queryTarget.push(series[data.seriesIndex[j]]);
-                        seriesName += series[data.seriesIndex[j]].name + ' ';
+                        queryTarget.push(serie);
+                        seriesName += serie.name + ' ';
                         if (legend
                             && this._showLegendSymbol[mapType]
-                            && legend.hasColor(series[data.seriesIndex[j]].name)
+                            && legend.hasColor(serie.name)
                         ) {
                             this.shapeList.push(new CircleShape({
-                                zlevel : this.getZlevelBase(),
-                                z : this.getZBase() + 1,
+                                zlevel : serie.zlevel,
+                                z : serie.z + 1,
                                 position : zrUtil.clone(style.position),
                                 _mapType : mapType,
                                 /*
@@ -761,7 +762,7 @@ define(function (require) {
                                     y : style.textY - 10,
                                     r : 3,
                                     color : legend.getColor(
-                                        series[data.seriesIndex[j]].name
+                                        serie.name
                                     )
                                 },
                                 hoverable : false

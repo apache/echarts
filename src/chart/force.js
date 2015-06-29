@@ -187,7 +187,7 @@ define(function (require) {
         type : ecConfig.CHART_TYPE_FORCE,
 
         _init: function() {
-            // var self = this;
+            this.selectedMap = {};
             var legend = this.component.legend;
             var series = this.series;
             var serieName;

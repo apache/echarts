@@ -704,8 +704,8 @@ define(function (require) {
                 vec2.add(start, start, center);
 
                 var labelShape = {
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         text: node.data.label == null ? node.id : node.data.label,
@@ -787,8 +787,8 @@ define(function (require) {
                     serie, edge.data, 'emphasis'
                 );
                 var ribbon = new RibbonShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase(),
+                    zlevel: serie.zlevel,
+                    z: serie.z,
                     style: {
                         x: center[0],
                         y: center[1],
@@ -859,8 +859,8 @@ define(function (require) {
                 );
 
                 var curveShape = new BezierCurveShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase(),
+                    zlevel: serie.zlevel,
+                    z: serie.z,
                     style: {
                         xStart: shape1.position[0],
                         yStart: shape1.position[1],
@@ -965,8 +965,8 @@ define(function (require) {
                     var end = vec2.scale([], v, radius[1] + this.scaleLineLength);
                     vec2.add(end, end, center);
                     var scaleShape = new LineShape({
-                        zlevel: this.getZlevelBase(),
-                        z: this.getZBase() - 1,
+                        zlevel: serie.zlevel,
+                        z: serie.z - 1,
                         hoverable: false,
                         style: {
                             xStart: start[0],
@@ -1006,8 +1006,8 @@ define(function (require) {
                                      || theta >= 270;
 
                     var textShape = new TextShape({
-                        zlevel: this.getZlevelBase(),
-                        z: this.getZBase() - 1,
+                        zlevel: serie.zlevel,
+                        z: serie.z - 1,
                         hoverable: false,
                         style: {
                             x: isRightSide 

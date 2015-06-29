@@ -683,8 +683,8 @@ define(function (require) {
             var normalBorderWidth = normal.barBorderWidth;
             
             barShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: x,
