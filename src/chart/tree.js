@@ -548,11 +548,12 @@ define(function (require) {
                         y = treeNode.layout.position[0] - originRootX + rootY;
                         x = rootX - treeNode.layout.position[1];
                     }
-                    else {
+                    else if (orient === 'horizontal') {
                         y = treeNode.layout.position[0] - originRootX + rootY;
                         x = treeNode.layout.position[1] + rootX;
                     }
-                    if (orient === 'radial') {
+                    // 极坐标
+                    else {
                         x = treeNode.layout.position[0];
                         y = treeNode.layout.position[1];
                         // 记录原始坐标，以后计算贝塞尔曲线的控制点
