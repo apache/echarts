@@ -1655,8 +1655,8 @@ define('echarts/echarts', [
     var _idBase = new Date() - 0;
     var _instances = {};
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
-    self.version = '2.2.4';
-    self.dependencies = { zrender: '2.0.9' };
+    self.version = '2.2.5';
+    self.dependencies = { zrender: '2.1.0' };
     self.init = function (dom, theme) {
         var zrender = require('zrender');
         if (zrender.version.replace('.', '') - 0 < self.dependencies.zrender.replace('.', '') - 0) {
@@ -3159,7 +3159,7 @@ define('zrender/zrender', [
     var Animation = require('./animation/Animation');
     var _instances = {};
     var zrender = {};
-    zrender.version = '2.0.9';
+    zrender.version = '2.1.0';
     zrender.init = function (dom) {
         var zr = new ZRender(guid(), dom);
         _instances[zr.id] = zr;
