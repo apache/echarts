@@ -125,8 +125,8 @@ define('echarts/chart/eventRiver', [
             var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) || (typeof normalColor === 'string' ? zrColor.lift(normalColor, -0.2) : normalColor);
             var pts = this._calculateControlPoints(oneEvent);
             var eventBubbleShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     pointList: pts,

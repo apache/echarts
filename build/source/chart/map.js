@@ -37,7 +37,6 @@ define('echarts/chart/map', [
         zlevel: 0,
         z: 2,
         mapType: 'china',
-        mapValuePrecision: 0,
         showLegendSymbol: true,
         dataRangeHoverLink: true,
         hoverable: true,
@@ -176,13 +175,15 @@ define('echarts/chart/map', [
                             name = this._nameChange(mapType, data[j].name);
                             valueData[mapType][name] = valueData[mapType][name] || {
                                 seriesIndex: [],
-                                valueMap: {}
+                                valueMap: {},
+                                precision: 0
                             };
                             for (var key in data[j]) {
                                 if (key != 'value') {
                                     valueData[mapType][name][key] = data[j][key];
                                 } else if (!isNaN(data[j].value)) {
                                     valueData[mapType][name].value == null && (valueData[mapType][name].value = 0);
+                                    valueData[mapType][name].precision = Math.max(this.getPrecision(+data[j].value), valueData[mapType][name].precision);
                                     valueData[mapType][name].value += +data[j].value;
                                     valueData[mapType][name].valueMap[i] = +data[j].value;
                                 }
@@ -203,9 +204,13 @@ define('echarts/chart/map', [
                 this.lastShapeList = [];
             }
             for (var mt in valueData) {
-                if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
-                    for (var k in valueData[mt]) {
-                        valueData[mt][k].value = (valueData[mt][k].value / valueData[mt][k].seriesIndex.length).toFixed(mapValuePrecision[mt]) - 0;
+                for (var k in valueData[mt]) {
+                    if (valueCalculation[mt] == 'average') {
+                        valueData[mt][k].value /= valueData[mt][k].seriesIndex.length;
+                    }
+                    var value = valueData[mt][k].value;
+                    if (value != null) {
+                        valueData[mt][k].value = value.toFixed(mapValuePrecision[mt] == null ? valueData[mt][k].precision : mapValuePrecision[mt]) - 0;
                     }
                 }
                 this._mapDataMap[mt] = this._mapDataMap[mt] || {};
@@ -496,19 +501,20 @@ define('echarts/chart/map', [
                     queryTarget = [data];
                     seriesName = '';
                     for (var j = 0, k = data.seriesIndex.length; j < k; j++) {
-                        queryTarget.push(series[data.seriesIndex[j]]);
-                        seriesName += series[data.seriesIndex[j]].name + ' ';
-                        if (legend && this._showLegendSymbol[mapType] && legend.hasColor(series[data.seriesIndex[j]].name)) {
+                        var serie = series[data.seriesIndex[j]];
+                        queryTarget.push(serie);
+                        seriesName += serie.name + ' ';
+                        if (legend && this._showLegendSymbol[mapType] && legend.hasColor(serie.name)) {
                             this.shapeList.push(new CircleShape({
-                                zlevel: this.getZlevelBase(),
-                                z: this.getZBase() + 1,
+                                zlevel: serie.zlevel,
+                                z: serie.z + 1,
                                 position: zrUtil.clone(style.position),
                                 _mapType: mapType,
                                 style: {
                                     x: style.textX + 3 + j * 7,
                                     y: style.textY - 10,
                                     r: 3,
-                                    color: legend.getColor(series[data.seriesIndex[j]].name)
+                                    color: legend.getColor(serie.name)
                                 },
                                 hoverable: false
                             }));
@@ -606,7 +612,7 @@ define('echarts/chart/map', [
                     }
                     break;
                 }
-                if (this._selectedMode[mapType] && this._selected[name] || data.selected && this._selected[name] !== false) {
+                if (this._selectedMode[mapType] && (this._selected[name] && data.selected !== false) || data.selected === true) {
                     textShape.style = textShape.highlightStyle;
                     shape.style = shape.highlightStyle;
                 }

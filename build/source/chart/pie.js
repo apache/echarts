@@ -130,8 +130,8 @@ define('echarts/chart/pie', [
                             this.option
                         ], 'calculable')) {
                         pieCase = {
-                            zlevel: this.getZlevelBase(),
-                            z: this.getZBase(),
+                            zlevel: series[i].zlevel,
+                            z: series[i].z,
                             hoverable: false,
                             style: {
                                 x: center[0],
@@ -264,8 +264,8 @@ define('echarts/chart/pie', [
             var normalColor = this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data) || defaultColor;
             var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) || (typeof normalColor === 'string' ? zrColor.lift(normalColor, -0.2) : normalColor);
             var sector = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: center[0],
@@ -359,8 +359,8 @@ define('echarts/chart/pie', [
             data.__labelX = x - (textAlign === 'left' ? 5 : -5);
             data.__labelY = y;
             var ts = new TextShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + 1,
+                zlevel: serie.zlevel,
+                z: serie.z + 1,
                 hoverable: false,
                 style: {
                     x: x,
@@ -425,8 +425,8 @@ define('echarts/chart/pie', [
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
                 return new PolylineShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         pointList: [

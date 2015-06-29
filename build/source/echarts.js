@@ -3417,6 +3417,7 @@ define('zrender/zrender', [
             DROP: 'drop',
             touchClickDelay: 300
         },
+        elementClassName: 'zr-element',
         catchBrushException: false,
         debugMode: 0,
         devicePixelRatio: Math.max(window.devicePixelRatio || 1, 1)
@@ -3520,9 +3521,10 @@ define('zrender/zrender', [
             var value = ecData.get(shape, 'value');
             var seriesName = ecData.get(shape, 'series') != null ? ecData.get(shape, 'series').name : '';
             var font = this.getFont(this.option.island.textStyle);
+            var islandOption = this.option.island;
             var islandShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: islandOption.zlevel,
+                z: islandOption.z,
                 style: {
                     x: shape.style.x,
                     y: shape.style.y,
@@ -10622,6 +10624,14 @@ define('zrender/zrender', [
         'touchend',
         'touchmove'
     ];
+    var isZRenderElement = function (event) {
+        if (window.G_vmlCanvasManager) {
+            return true;
+        }
+        event = event || window.event;
+        var target = event.toElement || event.relatedTarget || event.srcElement || event.target;
+        return target && target.className.match(config.elementClassName);
+    };
     var domHandlers = {
         resize: function (event) {
             event = event || window.event;
@@ -10630,6 +10640,9 @@ define('zrender/zrender', [
             this.dispatch(EVENT.RESIZE, event);
         },
         click: function (event) {
+            if (!isZRenderElement(event)) {
+                return;
+            }
             event = this._zrenderEventFixed(event);
             var _lastHover = this._lastHover;
             if (_lastHover && _lastHover.clickable || !_lastHover) {
@@ -10640,6 +10653,9 @@ define('zrender/zrender', [
             this._mousemoveHandler(event);
         },
         dblclick: function (event) {
+            if (!isZRenderElement(event)) {
+                return;
+            }
             event = event || window.event;
             event = this._zrenderEventFixed(event);
             var _lastHover = this._lastHover;
@@ -10651,6 +10667,9 @@ define('zrender/zrender', [
             this._mousemoveHandler(event);
         },
         mousewheel: function (event) {
+            if (!isZRenderElement(event)) {
+                return;
+            }
             event = this._zrenderEventFixed(event);
             var delta = event.wheelDelta || -event.detail;
             var scale = delta > 0 ? 1.1 : 1 / 1.1;
@@ -10682,6 +10701,9 @@ define('zrender/zrender', [
             this._mousemoveHandler(event);
         },
         mousemove: function (event) {
+            if (!isZRenderElement(event)) {
+                return;
+            }
             if (this.painter.isLoading()) {
                 return;
             }
@@ -10738,6 +10760,9 @@ define('zrender/zrender', [
             }
         },
         mouseout: function (event) {
+            if (!isZRenderElement(event)) {
+                return;
+            }
             event = this._zrenderEventFixed(event);
             var element = event.toElement || event.relatedTarget;
             if (element != this.root) {
@@ -10762,6 +10787,9 @@ define('zrender/zrender', [
             this.dispatch(EVENT.GLOBALOUT, event);
         },
         mousedown: function (event) {
+            if (!isZRenderElement(event)) {
+                return;
+            }
             this._clickThreshold = 0;
             if (this._lastDownButton == 2) {
                 this._lastDownButton = event.button;
@@ -10776,6 +10804,9 @@ define('zrender/zrender', [
             this._lastDownButton = event.button;
         },
         mouseup: function (event) {
+            if (!isZRenderElement(event)) {
+                return;
+            }
             event = this._zrenderEventFixed(event);
             this.root.style.cursor = 'default';
             this._isMouseDown = 0;
@@ -10785,12 +10816,18 @@ define('zrender/zrender', [
             this._processDragEnd(event);
         },
         touchstart: function (event) {
+            if (!isZRenderElement(event)) {
+                return;
+            }
             event = this._zrenderEventFixed(event, true);
             this._lastTouchMoment = new Date();
             this._mobileFindFixed(event);
             this._mousedownHandler(event);
         },
         touchmove: function (event) {
+            if (!isZRenderElement(event)) {
+                return;
+            }
             event = this._zrenderEventFixed(event, true);
             this._mousemoveHandler(event);
             if (this._isDragging) {
@@ -10798,6 +10835,9 @@ define('zrender/zrender', [
             }
         },
         touchend: function (event) {
+            if (!isZRenderElement(event)) {
+                return;
+            }
             event = this._zrenderEventFixed(event, true);
             this._mouseupHandler(event);
             var now = new Date();
@@ -11183,6 +11223,7 @@ define('zrender/zrender', [
             '-webkit-touch-callout:none;'
         ].join('');
         this._bgDom.setAttribute('data-zr-dom-id', 'bg');
+        this._bgDom.className = config.elementClassName;
         domRoot.appendChild(this._bgDom);
         this._bgDom.onselectstart = returnFalse;
         var hoverLayer = new Layer('_zrender_hover_', this);
@@ -12590,6 +12631,7 @@ define('zrender/zrender', [
         this.dom.style['user-select'] = 'none';
         this.dom.style['-webkit-touch-callout'] = 'none';
         this.dom.style['-webkit-tap-highlight-color'] = 'rgba(0,0,0,0)';
+        this.dom.className = config.elementClassName;
         vmlCanvasManager && vmlCanvasManager.initElement(this.dom);
         this.domBack = null;
         this.ctxBack = null;
@@ -15155,8 +15197,8 @@ define('zrender/zrender', [
             var shapeList = this._markPoint(seriesIndex, markPoint);
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 var tarShape = shapeList[i];
-                tarShape.zlevel = this.getZlevelBase();
-                tarShape.z = this.getZBase() + 1;
+                tarShape.zlevel = serie.zlevel;
+                tarShape.z = serie.z + 1;
                 for (var key in attachStyle) {
                     tarShape[key] = zrUtil.clone(attachStyle[key]);
                 }
@@ -15214,8 +15256,8 @@ define('zrender/zrender', [
                     zrUtil.merge(shapeBundle.style, firstShape.style);
                     zrUtil.merge(shapeBundle.highlightStyle = {}, firstShape.highlightStyle);
                     shapeBundle.style.brushType = 'stroke';
-                    shapeBundle.zlevel = this.getZlevelBase();
-                    shapeBundle.z = this.getZBase() + 1;
+                    shapeBundle.zlevel = serie.zlevel;
+                    shapeBundle.z = serie.z + 1;
                     shapeBundle.hoverable = false;
                     for (var key in attachStyle) {
                         shapeBundle[key] = zrUtil.clone(attachStyle[key]);
@@ -15231,8 +15273,8 @@ define('zrender/zrender', [
             } else {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
                     var tarShape = shapeList[i];
-                    tarShape.zlevel = this.getZlevelBase();
-                    tarShape.z = this.getZBase() + 1;
+                    tarShape.zlevel = serie.zlevel;
+                    tarShape.z = serie.z + 1;
                     for (var key in attachStyle) {
                         tarShape[key] = zrUtil.clone(attachStyle[key]);
                     }
@@ -17731,7 +17773,8 @@ define('zrender/zrender', [
         parsePercent: number.parsePercent,
         parseCenter: number.parseCenter,
         parseRadius: number.parseRadius,
-        numAddCommas: number.addCommas
+        numAddCommas: number.addCommas,
+        getPrecision: number.getPrecision
     };
     return Base;
 });define('echarts/layout/EdgeBundling', [
@@ -18828,11 +18871,21 @@ define('zrender/zrender', [
         x = (x + '').split('.');
         return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,') + (x.length > 1 ? '.' + x[1] : '');
     }
+    function getPrecision(val) {
+        var e = 1;
+        var count = 0;
+        while ((val * e | 0) / e !== val) {
+            e *= 10;
+            count++;
+        }
+        return count;
+    }
     return {
         parsePercent: parsePercent,
         parseCenter: parseCenter,
         parseRadius: parseRadius,
-        addCommas: addCommas
+        addCommas: addCommas,
+        getPrecision: getPrecision
     };
 });define('echarts/data/KDTree', [
     'require',

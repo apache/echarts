@@ -282,8 +282,8 @@ define('echarts/chart/treemap', [
                 height: rect.height
             });
             var locationArr = treeMapLayout.run(areaArr);
-            var lineWidth = itemStyle.normal.childBorderWidth || 1;
-            var lineColor = itemStyle.normal.childBorderColor || '#777';
+            var lineWidth = itemStyle.normal.childBorderWidth;
+            var lineColor = itemStyle.normal.childBorderColor;
             for (var k = 0; k < locationArr.length; k++) {
                 var item = locationArr[k];
                 var lines = [];
