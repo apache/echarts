@@ -534,10 +534,21 @@ define(function (require) {
             }
             this.tree.traverse(
                 function (treeNode) {
-
-                    var x = treeNode.layout.position[0] - originRootX + rootX;
-                    var y = treeNode.layout.position[1] + rootY;
-                    if (orient === 'horizontal') {
+                    var x;
+                    var y;
+                    if (orient === 'vertical' && serie.direction === 'inverse') {
+                        x = treeNode.layout.position[0] - originRootX + rootX;
+                        y = rootY - treeNode.layout.position[1];
+                    }
+                    else if (orient === 'vertical') {
+                        x = treeNode.layout.position[0] - originRootX + rootX;
+                        y = treeNode.layout.position[1] + rootY;
+                    }
+                    else if (orient === 'horizontal' && serie.direction === 'inverse') {
+                        y = treeNode.layout.position[0] - originRootX + rootY;
+                        x = rootX - treeNode.layout.position[1];
+                    }
+                    else {
                         y = treeNode.layout.position[0] - originRootX + rootY;
                         x = treeNode.layout.position[1] + rootX;
                     }
