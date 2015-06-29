@@ -225,11 +225,14 @@ define(function (require) {
 
                 if (this.selectedMap[serie.name]) {
                     var graph;
-                    if (serie.data && serie.matrix) {
+                    // matrix 表示边
+                    if (serie.matrix) {
                         graph = this._getSerieGraphFromDataMatrix(
                             serie, mainSerie
                         );
-                    } else if (serie.nodes && serie.links) {
+                    }
+                    // links 表示边
+                    else if (serie.links) {
                         graph = this._getSerieGraphFromNodeLinks(
                             serie, mainSerie
                         );
@@ -545,8 +548,8 @@ define(function (require) {
                 var startAngle = node.layout.startAngle / Math.PI * 180 * sign;
                 var endAngle = node.layout.endAngle / Math.PI * 180 * sign;
                 var sector = new SectorShape({
-                    zlevel: this.getZlevelBase(),
-                    z : this.getZBase(),
+                    zlevel: serie.zlevel,
+                    z : serie.z,
                     style: {
                         x: center[0],
                         y: center[1],
@@ -624,8 +627,8 @@ define(function (require) {
                     color = category ? this.getColor(category.name) : this.getColor(node.id);
                 }
                 var iconShape = new IconShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     style: {
                         x: - node.layout.size,
                         y: - node.layout.size,
