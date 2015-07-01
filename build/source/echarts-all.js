@@ -17385,7 +17385,7 @@ define('zrender/zrender', [
     function getPrecision(val) {
         var e = 1;
         var count = 0;
-        while ((val * e | 0) / e !== val) {
+        while (Math.round(val * e) / e !== val) {
             e *= 10;
             count++;
         }
