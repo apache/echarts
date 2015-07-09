@@ -168,8 +168,8 @@ define(function (require) {
                     this._selected[i] = [];
                     if (this.deepQuery([series[i], this.option], 'calculable')) {
                         pieCase = {
-                            zlevel: this.getZlevelBase(),
-                            z: this.getZBase(),
+                            zlevel: series[i].zlevel,
+                            z: series[i].z,
                             hoverable: false,
                             style: {
                                 x: center[0],          // 圆心横坐标
@@ -408,8 +408,8 @@ define(function (require) {
                 );
 
             var sector = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: center[0],          // 圆心横坐标
@@ -436,8 +436,7 @@ define(function (require) {
 
             if (isSelected) {
                 var midAngle =
-                    ((sector.style.startAngle + sector.style.endAngle) / 2)
-                    .toFixed(2) - 0;
+                    ((sector.style.startAngle + sector.style.endAngle) / 2).toFixed(2) - 0;
                 sector.style._hasSelected = true;
                 sector.style._x = sector.style.x;
                 sector.style._y = sector.style.y;
@@ -541,8 +540,8 @@ define(function (require) {
             data.__labelY = y;
 
             var ts = new TextShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + 1,
+                zlevel: serie.zlevel,
+                z: serie.z + 1,
                 hoverable: false,
                 style: {
                     x: x,
@@ -649,8 +648,8 @@ define(function (require) {
                 var sinValue = zrMath.sin(midAngle, true);
 
                 return new PolylineShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         pointList: [
@@ -1057,7 +1056,7 @@ define(function (require) {
 
             // 没有动画
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         },
 

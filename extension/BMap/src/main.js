@@ -368,10 +368,21 @@ define(function (require) {
         self.refresh = function () {
             if (self._ec) {
                 var option = self._ec.getOption();
+                var component = self._ec.component || {};
+                var legend = component.legend;
+                var dataRange = component.dataRange;
+
+                if (legend) {
+                    option.legend.selected = legend.getSelectedMap();
+                }
+
+                if (dataRange) {
+                    option.dataRange.range = dataRange._range;
+                }
                 self._ec.clear();
                 self.setOption(option);
             }
-        }
+        };
 
         self._map.addOverlay(myOverlay);
     };

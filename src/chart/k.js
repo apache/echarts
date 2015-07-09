@@ -416,8 +416,8 @@ define(function (require) {
             var queryTarget = [data, serie];
 
             var itemShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 hoverable: this.deepQuery(queryTarget, 'hoverable'),
                 style: {
@@ -543,7 +543,7 @@ define(function (require) {
             
             // 没有动画
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         }
     };

@@ -184,8 +184,8 @@ define(function (require) {
              var pts = this._calculateControlPoints(oneEvent);
              
              var eventBubbleShape = {
-                 zlevel: this.getZlevelBase(),
-                 z: this.getZBase(),
+                 zlevel: serie.zlevel,
+                 z: serie.z,
                  clickable: this.deepQuery(queryTarget, 'clickable'),
                  style: {
                      pointList: pts,

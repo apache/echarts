@@ -236,7 +236,9 @@ define(function (require) {
         parsePercent: number.parsePercent,
         parseCenter: number.parseCenter,
         parseRadius: number.parseRadius,
-        numAddCommas: number.addCommas
+        numAddCommas: number.addCommas,
+
+        getPrecision: number.getPrecision
     };
     
     return Base;

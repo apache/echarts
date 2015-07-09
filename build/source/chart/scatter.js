@@ -262,7 +262,7 @@ define('echarts/chart/scatter', [
                 serie = series[seriesIndex];
                 seriesPL = pointList[seriesIndex];
                 if (serie.large && serie.data.length > serie.largeThreshold) {
-                    this.shapeList.push(this._getLargeSymbol(seriesPL, this.getItemStyleColor(this.query(serie, 'itemStyle.normal.color'), seriesIndex, -1) || this._sIndex2ColorMap[seriesIndex]));
+                    this.shapeList.push(this._getLargeSymbol(serie, seriesPL, this.getItemStyleColor(this.query(serie, 'itemStyle.normal.color'), seriesIndex, -1) || this._sIndex2ColorMap[seriesIndex]));
                     continue;
                 }
                 for (var i = 0, l = seriesPL.length; i < l; i++) {
@@ -287,15 +287,15 @@ define('echarts/chart/scatter', [
                 rangColor = this._sIndex2ColorMap[seriesIndex];
             }
             var itemShape = this.getSymbolShape(serie, seriesIndex, data, dataIndex, name, x, y, this._sIndex2ShapeMap[seriesIndex], rangColor, 'rgba(0,0,0,0)', 'vertical');
-            itemShape.zlevel = this.getZlevelBase();
-            itemShape.z = this.getZBase();
+            itemShape.zlevel = serie.zlevel;
+            itemShape.z = serie.z;
             itemShape._main = true;
             return itemShape;
         },
-        _getLargeSymbol: function (pointList, nColor) {
+        _getLargeSymbol: function (serie, pointList, nColor) {
             return new SymbolShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 _main: true,
                 hoverable: false,
                 style: {

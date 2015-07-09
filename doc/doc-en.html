@@ -3838,6 +3838,11 @@ indicator : [
                             <td> size of the chart, in pixels or percent.</td>
                         </tr>
                         <tr>
+                            <td> <b>{string}</b> root</td>
+                            <td> ''</td>
+                            <td> Name of root node </td>
+                        </tr>
+                        <tr>
                             <td> <b>{Object}</b> itemStyle </td>
                             <td> {} </td>
                             <td>see <a href="#ItemStyle" title="">itemStyle</a>
@@ -3970,6 +3975,11 @@ indicator : [
                             <td> <b>{string}</b> orient </td>
                             <td> 'vertical'</td>
                             <td> direction of the tree, 'vertical' | 'horizontal' | 'radial'</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> direction </td>
+                            <td> ''</td>
+                            <td> to inverse the direction of the tree, can be: 'inverse'</td>
                         </tr>
                         <tr>
                             <td> <b>{boolean | string}</b> roam </td>
@@ -4266,11 +4276,6 @@ indicator : [
                             <td> style for markPoint symbol, same as series' <a href="#Series">itemStyle</a>. </td>
                         </tr>
                         <tr>
-                            <td> <b>{Object}</b> geoCoord </td>
-                            <td> {} </td>
-                            <td> applicable to maps only. Specifies the location of the the markPoint symbol, same as series' <a href="#Series">geoCoord</a>. </td>
-                        </tr>
-                        <tr>
                             <td> <b>{Array}</b> data </td>
                             <td> [] </td>
                             <td> data of markPoint symbol, see below. </td>
@@ -4412,11 +4417,6 @@ geoCoord : {
                             <td> <b>{Object}</b> itemStyle </td>
                             <td> {...} </td>
                             <td> style for markLine symbol, same as series' <a href="#Series">itemStyle</a> </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{Object}</b> geoCoord </td>
-                            <td> {} </td>
-                            <td> applicable to maps only. Specifies the location of the the markLine symbol, same as series' <a href="#Series">geoCoord</a> </td>
                         </tr>
                         <tr>
                             <td> <b>{Array}</b> data </td>

@@ -34,13 +34,25 @@ define('echarts/chart/venn', [
             this._dropBoxList = [];
             this._vennDataCounter = 0;
             var series = this.series;
-            this.data = series[0].data;
-            this._buildVenn(this.data);
+            var legend = this.component.legend;
+            for (var i = 0; i < series.length; i++) {
+                if (series[i].type === ecConfig.CHART_TYPE_VENN) {
+                    series[i] = this.reformOption(series[i]);
+                    var serieName = series[i].name || '';
+                    this.selectedMap[serieName] = legend ? legend.isSelected(serieName) : true;
+                    if (!this.selectedMap[serieName]) {
+                        continue;
+                    }
+                    this._buildVenn(i);
+                }
+            }
             this.addShapeList();
         },
-        _buildVenn: function (data) {
+        _buildVenn: function (seriesIndex) {
             var r0;
             var r1;
+            var serie = this.series[seriesIndex];
+            var data = serie.data;
             if (data[0].value > data[1].value) {
                 r0 = this.zr.getHeight() / 3;
                 r1 = r0 * Math.sqrt(data[1].value) / Math.sqrt(data[0].value);
@@ -56,8 +68,8 @@ define('echarts/chart/venn', [
             }
             var x1 = x0 + coincideLength;
             var y = this.zr.getHeight() / 2;
-            this._buildItem(0, 0, x0, y, r0);
-            this._buildItem(0, 1, x1, y, r1);
+            this._buildItem(seriesIndex, 0, data[0], x0, y, r0);
+            this._buildItem(seriesIndex, 1, data[1], x1, y, r1);
             if (data[2].value !== 0 && data[2].value !== data[0].value && data[2].value !== data[1].value) {
                 var xLeft = (r0 * r0 - r1 * r1) / (2 * coincideLength) + coincideLength / 2;
                 var xRight = coincideLength / 2 - (r0 * r0 - r1 * r1) / (2 * coincideLength);
@@ -70,7 +82,7 @@ define('echarts/chart/venn', [
                 if (data[0].value < data[1].value && x1 < x0 + xRight) {
                     rightLargeArcFlag = 1;
                 }
-                this._buildCoincideItem(2, x0 + xLeft, y - h, y + h, r0, r1, rightLargeArcFlag, leftLargeArcFlag);
+                this._buildCoincideItem(seriesIndex, 2, data[2], x0 + xLeft, y - h, y + h, r0, r1, rightLargeArcFlag, leftLargeArcFlag);
             }
         },
         _getCoincideLength: function (value0, value1, value2, r0, r1, coincideLengthAnchor, coincideLengthAnchorMin, coincideLengthAnchorMax) {
@@ -95,23 +107,23 @@ define('echarts/chart/venn', [
                 return this._getCoincideLength(value0, value1, value2, r0, r1, coincideLengthAnchor, coincideLengthAnchorMin, coincideLengthAnchorMax);
             }
         },
-        _buildItem: function (seriesIndex, dataIndex, x, y, r) {
+        _buildItem: function (seriesIndex, dataIndex, dataItem, x, y, r) {
             var series = this.series;
-            var circle = this.getCircle(dataIndex, x, y, r);
-            ecData.pack(circle, series[0], seriesIndex, series[0].data[dataIndex], dataIndex, series[0].data[dataIndex].name);
+            var serie = series[seriesIndex];
+            var circle = this.getCircle(seriesIndex, dataIndex, dataItem, x, y, r);
+            ecData.pack(circle, serie, seriesIndex, dataItem, dataIndex, dataItem.name);
             this.shapeList.push(circle);
-            if (series[0].itemStyle.normal.label.show) {
-                var label = this.getLabel(dataIndex, x, y, r);
-                ecData.pack(label, series[0], seriesIndex, series[0].data[dataIndex], dataIndex, series[0].data[dataIndex].name);
+            if (serie.itemStyle.normal.label.show) {
+                var label = this.getLabel(seriesIndex, dataIndex, dataItem, x, y, r);
+                ecData.pack(label, serie, seriesIndex, serie.data[dataIndex], dataIndex, serie.data[dataIndex].name);
                 this.shapeList.push(label);
             }
         },
-        _buildCoincideItem: function (dataIndex, x, y0, y1, r0, r1, rightLargeArcFlag, leftLargeArcFlag) {
+        _buildCoincideItem: function (seriesIndex, dataIndex, dataItem, x, y0, y1, r0, r1, rightLargeArcFlag, leftLargeArcFlag) {
             var series = this.series;
-            var serie = series[0];
-            var data = this.data[dataIndex];
+            var serie = series[seriesIndex];
             var queryTarget = [
-                data,
+                dataItem,
                 serie
             ];
             var normal = this.deepMerge(queryTarget, 'itemStyle.normal') || {};
@@ -124,8 +136,8 @@ define('echarts/chart/venn', [
                 path: path
             };
             var shape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 style: style,
                 highlightStyle: {
                     color: emphasisColor,
@@ -137,14 +149,13 @@ define('echarts/chart/venn', [
             if (shape.buildPathArray) {
                 shape.style.pathArray = shape.buildPathArray(style.path);
             }
-            ecData.pack(shape, series[0], 0, series[0].data[dataIndex], dataIndex, series[0].data[dataIndex].name);
+            ecData.pack(shape, series[seriesIndex], 0, dataItem, dataIndex, dataItem.name);
             this.shapeList.push(shape);
         },
-        getCircle: function (dataIndex, x, y, r) {
-            var serie = this.series[0];
-            var data = this.data[dataIndex];
+        getCircle: function (seriesIndex, dataIndex, dataItem, x, y, r) {
+            var serie = this.series[seriesIndex];
             var queryTarget = [
-                data,
+                dataItem,
                 serie
             ];
             var normal = this.deepMerge(queryTarget, 'itemStyle.normal') || {};
@@ -152,7 +163,8 @@ define('echarts/chart/venn', [
             var normalColor = normal.color || this.zr.getColor(dataIndex);
             var emphasisColor = emphasis.color || this.zr.getColor(dataIndex);
             var circle = {
-                zlevel: this.getZlevelBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: true,
                 style: {
                     x: x,
@@ -169,7 +181,7 @@ define('echarts/chart/venn', [
                 }
             };
             if (this.deepQuery([
-                    data,
+                    dataItem,
                     serie,
                     this.option
                 ], 'calculable')) {
@@ -178,24 +190,24 @@ define('echarts/chart/venn', [
             }
             return new CircleShape(circle);
         },
-        getLabel: function (dataIndex, x, y, r) {
-            var serie = this.series[0];
+        getLabel: function (seriesIndex, dataIndex, dataItem, x, y, r) {
+            var serie = this.series[seriesIndex];
             var itemStyle = serie.itemStyle;
-            var data = this.data[dataIndex];
             var queryTarget = [
-                data,
+                dataItem,
                 serie
             ];
             var normal = this.deepMerge(queryTarget, 'itemStyle.normal') || {};
             var status = 'normal';
             var labelControl = itemStyle[status].label;
             var textStyle = labelControl.textStyle || {};
-            var text = this.getLabelText(dataIndex, status);
+            var text = this.getLabelText(dataIndex, dataItem, status);
             var textFont = this.getFont(textStyle);
             var textColor = normal.color || this.zr.getColor(dataIndex);
             var textSize = textStyle.fontSize || 12;
             var textShape = {
-                zlevel: ecConfig.venn.zlevel + 1,
+                zlevel: serie.zlevel,
+                z: serie.z,
                 style: {
                     x: x,
                     y: y - r - textSize,
@@ -207,24 +219,23 @@ define('echarts/chart/venn', [
             };
             return new TextShape(textShape);
         },
-        getLabelText: function (dataIndex, status) {
+        getLabelText: function (dataIndex, dataItem, status) {
             var series = this.series;
             var serie = series[0];
-            var data = serie.data[dataIndex];
             var formatter = this.deepQuery([
-                data,
+                dataItem,
                 serie
             ], 'itemStyle.' + status + '.label.formatter');
             if (formatter) {
                 if (typeof formatter == 'function') {
-                    return formatter(serie.name, data.name, data.value);
+                    return formatter(serie.name, dataItem.name, dataItem.value);
                 } else if (typeof formatter == 'string') {
                     formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}');
-                    formatter = formatter.replace('{a0}', serie.name).replace('{b0}', data.name).replace('{c0}', data.value);
+                    formatter = formatter.replace('{a0}', serie.name).replace('{b0}', dataItem.name).replace('{c0}', dataItem.value);
                     return formatter;
                 }
             } else {
-                return data.name;
+                return dataItem.name;
             }
         },
         refresh: function (newOption) {
