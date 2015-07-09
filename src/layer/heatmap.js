@@ -72,8 +72,8 @@ define(function (require) {
                 var value = p[2];
 
                 // calculate alpha using value
-                var alpha = Math.min(value / this.option.maxValue
-                    || this.option.minAlpha, this.option.minAlpha);
+                var alpha = Math.min(1, Math.max(value / this.option.unifyValue
+                    || this.option.minAlpha, this.option.minAlpha));
 
                 // draw with the circle brush with alpha
                 ctx.globalAlpha = alpha;

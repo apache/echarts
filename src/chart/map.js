@@ -1001,31 +1001,42 @@ define(function (require) {
                 if (series[i].heatmap) {
                     // convert geo position to screen position
                     var data = series[i].heatmap.data;
-                    var geoData = series[i].heatmap._geoData;
-                    // copy initial geo position
-                    if (geoData === undefined) {
-                        series[i].heatmap._geoData = [];
+                    if (series[i].heatmap.needsTransform === false) {
+                        // baidu map position, does not need transform
+                        var geo = [];
                         for (var j = 0, len = data.length; j < len; ++j) {
-                            series[i].heatmap._geoData[j] = data[j];
+                            geo.push([data[j][3], data[j][4], data[j][2]]);
                         }
-                        geoData = series[i].heatmap._geoData;
-                    }
+                        var pos = [0, 0]
+                    } else {
+                        // other map
+                        var geoData = series[i].heatmap._geoData;
+                        // copy initial geo position
+                        if (geoData === undefined) {
+                            series[i].heatmap._geoData = [];
+                            for (var j = 0, len = data.length; j < len; ++j) {
+                                series[i].heatmap._geoData[j] = data[j];
+                            }
+                            geoData = series[i].heatmap._geoData;
+                        }
 
-                    var len = data.length;
-                    for (var id = 0; id < len; ++id) {
-                        data[id] = this.geo2pos(mapType, 
-                            [geoData[id][0], geoData[id][1]]);
+                        var len = data.length;
+                        for (var id = 0; id < len; ++id) {
+                            data[id] = this.geo2pos(mapType, 
+                                [geoData[id][0], geoData[id][1]]);
+                        }
+                        var pos = [
+                            this._mapDataMap[mapType].transform.left,
+                            this._mapDataMap[mapType].transform.top
+                        ]
                     }
                     var layer = new HeatmapLayer(series[i].heatmap.itemStyle);
-                    var canvas = layer.getCanvas(data,
+                    var canvas = layer.getCanvas(data[0][3] ? geo : data,
                         this.zr.getWidth(), this.zr.getHeight())
                     var image = new ZrImage({
                         zlevel: this.getZlevelBase(),
                         z: this.getZBase() + 1,
-                        position: [
-                            this._mapDataMap[mapType].transform.left,
-                            this._mapDataMap[mapType].transform.top
-                        ],
+                        position: pos,
                         scale: [1, 1],
                         hoverable: false,
                         style: {
