@@ -46,18 +46,30 @@
                     <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
                     <textarea id="code" name="code">
 var heatData = [];
-for (var i = 0; i < 100; ++i) {
+for (var i = 0; i < 200; ++i) {
     heatData.push([
-        110 + Math.random() * 20,
-        25 + Math.random() * 20,
+        100 + Math.random() * 20,
+        24 + Math.random() * 16,
         Math.random()
     ]);
+}
+for (var j = 0; j < 10; ++j) {
+    var x = 100 + Math.random() * 16;
+    var y = 24 + Math.random() * 12;
+    var cnt = 30 * Math.random();
+    for (var i = 0; i < cnt; ++i) {
+        heatData.push([
+            x + Math.random() * 2,
+            y + Math.random() * 2,
+            Math.random()
+        ]);
+    }
 }
 
 option = {
     color: ['#ff7f50','#32cd32','#6495ed'],
     title : {
-        text: '南航主要航空线路',
+        text: '热力图结合地图',
         x:'center'
     },
     tooltip : {
