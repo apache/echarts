@@ -1602,7 +1602,7 @@ define(function (require) {
                     zlevel,
                     {
                         motionBlur: true,
-                        lastFrameAlpha: 0.95
+                        lastFrameAlpha: this.option.effectBlendAlpha
                     }
                 );
             }
