@@ -1603,6 +1603,7 @@ define(function (require) {
                     {
                         motionBlur: true,
                         lastFrameAlpha: this.option.effectBlendAlpha
+                            || ecConfig.effectBlendAlpha
                     }
                 );
             }
