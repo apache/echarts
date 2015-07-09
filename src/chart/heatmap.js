@@ -51,6 +51,8 @@ define(function (require) {
          * @public
          */
         refresh: function(newOption) {
+            this.clear();
+
             if (newOption) {
                 this.option = newOption;
                 this.series = newOption.series;
@@ -65,6 +67,7 @@ define(function (require) {
          */
         _init: function() {
             var series = this.series;
+            this.backupShapeList();
 
             var len = series.length;
             for (var i = 0; i < len; ++i) {
@@ -73,10 +76,11 @@ define(function (require) {
 
                     var layer = new HeatmapLayer(series[i]);
                     var canvas = layer.getCanvas(series[i].data,
-                        this.zr.getWidth(), this.zr.getHeight())
+                        this.zr.getWidth(), this.zr.getHeight());
                     var image = new zrImage({
                         position: [0, 0],
                         scale: [1, 1],
+                        hoverable: this.option.hoverable,
                         style: {
                             x: 0,
                             y: 0,
@@ -85,9 +89,12 @@ define(function (require) {
                             height: canvas.height
                         }
                     });
-                    this.zr.addShape(image);
+                    this.shapeList.push(image);
+                    // this.zr.addShape(image);
                 }
             }
+
+            this.addShapeList();
         }
     };
 
