@@ -35,6 +35,7 @@
             x: 104.114129,
             y: 37.550339
         };
+
         var point = new BMap.Point(startPoint.x, startPoint.y);
         map.centerAndZoom(point, 5);
         map.enableScrollWheelZoom(true);

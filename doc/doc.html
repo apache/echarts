@@ -52,6 +52,7 @@
                                 <li><a href="#Chord">chord</a></li>
                                 <li><a href="#Force">force</a></li>
                                 <li><a href="#Map">map</a></li>
+                                <li><a href="#Heatmap">heatmap</a></li>
                                 <li><a href="#Gauge">gauge</a></li>
                                 <li><a href="#Funnel">funnel</a></li>
                                 <li><a href="#eventRiver">eventRiver</a></li>
@@ -99,6 +100,7 @@
                                     <li><a href="#SeriesPie">series（饼图）</a></li>
                                     <li><a href="#SeriesRadar">series（雷达图）</a></li>
                                     <li><a href="#SeriesMap">series（地图）</a></li>
+                                    <li><a href="#SeriesHeatmap">series（热力图）</a></li>
                                     <li><a href="#SeriesForce">series（力导向布局图）</a></li>
                                     <li><a href="#SeriesChord">series（和弦图）</a></li>
                                     <li><a href="#SeriesGauge">series（仪表盘）</a></li>
@@ -304,6 +306,10 @@
                             <td> 地图。内置世界地图、中国及中国34个省市自治区地图数据、可通过标准GeoJson扩展地图类型。支持svg扩展类地图应用，如室内地图、运动场、物件构造等。 </td>
                         </tr>
                         <tr>
+                            <td> heatmap </td>
+                            <td> 热力图。用于展现密度分布信息，支持与地图、百度地图插件联合使用。 </td>
+                        </tr>
+                        <tr>
                             <td> gauge </td>
                             <td> 仪表盘。用于展现关键指标数据，常见于BI类系统。 </td>
                         </tr>
@@ -457,6 +463,18 @@
                             <td><img src="./asset/img/example/map8.png" title="" alt="子区域模式"/></td>
                             <td><img src="./asset/img/example/map6.png" title="" alt="标准GeoJson扩展"/></td>
                             <td><img src="./asset/img/example/map16.png" title="" alt="SVG扩展"/></td>
+                        </tr>
+                    </table>
+
+                    <h4>单图表类型：heatmap<a name="Heatmap"> </a></h4>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th colspan="3"> 热力图 </th>
+                        </tr>
+                        <tr>
+                            <td><img src="./asset/img/example/heatmap1.png" title="" alt="热力图"/></td>
+                            <td><img src="./asset/img/example/heatmap2.png" title="" alt="热力图"/></td>
+                            <td><img src="./asset/img/example/heatmap3.png" title="" alt="热力图"/></td>
                         </tr>
                     </table>
 
@@ -3192,6 +3210,46 @@ indicator : [
                             <td> <b>{Object}</b> geoCoord </td>
                             <td> null </td>
                             <td> 通过绝对经纬度指定地区的名称文本位置，如{'Islands':[113.95, 22.26]}，香港离岛区名称显示定位到东经113.95，北纬22.26上</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Object}</b> heatmap </td>
+                            <td> null </td>
+                            <td> 叠加在地图上的热力图，数据位置为经纬度。详见<a target="_blank" href="./example/heatmap_map.html">例子</a>。</td>
+                        </tr>
+                    </table>
+
+                    <h5>series（热力图）<a name="SeriesHeatmap"> </a></h5>
+                    <P> 驱动图表生成的数据内容数组，数组中每一项为一个系列的选项及数据：</P>
+                    <table cellspacing="0" class="ADoc_table full">
+                        <tr>
+                            <th> 名称 </th>
+                            <th> 默认值 </th>
+                            <th> 描述 </th>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> blurSize </td>
+                            <td> 30 </td>
+                            <td> 一个热力图数据点的模糊范围，单位是像素</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{Array}</b> gradientColors </td>
+                            <td> ['blue', 'cyan', 'lime', 'yellow', 'red'] </td>
+                            <td> 可以是一个包含 offset 和 color 的 Object 的数组，如 [{ offset: 0.2, color: 'blue' }, { offset 0.8, color: 'cyan' }]；也可以是一个颜色字符串的数组如 ['blue', 'cyan', 'lime', 'yellow', 'red']，颜色将均匀分布。</td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> minAlpha </td>
+                            <td> 0.05 </td>
+                            <td> 当均一化后的数据点的值小于这个值时，将被设为该值。该值保证了数据值很小的数据也能在地图上展示。</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> valueScale </td>
+                            <td> 1 </td>
+                            <td> 所有数据点的值将乘以这个值再进行绘制。</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> opacity </td>
+                            <td> 1 </td>
+                            <td> 整个热力图的不透明度。</a></td>
                         </tr>
                     </table>
 
