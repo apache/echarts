@@ -163,6 +163,7 @@ define(function (require) {
                 zlevel: this.getZlevelBase(),
                 z: this.getZBase() + 1,
                 rotation: rotation,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: treeNode.layout.position[0] - treeNode.layout.width * 0.5,
                     y: treeNode.layout.position[1] - treeNode.layout.height * 0.5,
@@ -185,7 +186,6 @@ define(function (require) {
                     new RegExp('^image:\\/\\/'), ''
                 );
                 shape = new ImageShape({
-
                     rotation: rotation,
                     style: shape.style,
                     highlightStyle: shape.highlightStyle,
@@ -534,14 +534,26 @@ define(function (require) {
             }
             this.tree.traverse(
                 function (treeNode) {
-
-                    var x = treeNode.layout.position[0] - originRootX + rootX;
-                    var y = treeNode.layout.position[1] + rootY;
-                    if (orient === 'horizontal') {
+                    var x;
+                    var y;
+                    if (orient === 'vertical' && serie.direction === 'inverse') {
+                        x = treeNode.layout.position[0] - originRootX + rootX;
+                        y = rootY - treeNode.layout.position[1];
+                    }
+                    else if (orient === 'vertical') {
+                        x = treeNode.layout.position[0] - originRootX + rootX;
+                        y = treeNode.layout.position[1] + rootY;
+                    }
+                    else if (orient === 'horizontal' && serie.direction === 'inverse') {
+                        y = treeNode.layout.position[0] - originRootX + rootY;
+                        x = rootX - treeNode.layout.position[1];
+                    }
+                    else if (orient === 'horizontal') {
                         y = treeNode.layout.position[0] - originRootX + rootY;
                         x = treeNode.layout.position[1] + rootX;
                     }
-                    if (orient === 'radial') {
+                    // 极坐标
+                    else {
                         x = treeNode.layout.position[0];
                         y = treeNode.layout.position[1];
                         // 记录原始坐标，以后计算贝塞尔曲线的控制点

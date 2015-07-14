@@ -27,7 +27,12 @@ define(function (require) {
         this._tDom = document.createElement('div');
         this._textArea = document.createElement('textArea');
         this._buttonRefresh = document.createElement('button');
+        // 高级浏览器默认type为submit
+        // 如果图表出现在form表单时，点击button后会提交表单
+        // 设置为button，防止点击button后提交表单
+        this._buttonRefresh.setAttribute('type', 'button');
         this._buttonClose = document.createElement('button');
+        this._buttonClose.setAttribute('type', 'button');
         this._hasShow = false;
 
         // 缓存一些高宽数据

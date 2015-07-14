@@ -397,8 +397,8 @@ define('echarts/chart/line', [
                             singlePL = this._getLargePointList(orient, singlePL, serie.dataFilter);
                         }
                         var polylineShape = new PolylineShape({
-                            zlevel: this.getZlevelBase(),
-                            z: this.getZBase(),
+                            zlevel: serie.zlevel,
+                            z: serie.z,
                             style: {
                                 miterLimit: lineWidth,
                                 pointList: singlePL,
@@ -421,8 +421,8 @@ define('echarts/chart/line', [
                         this.shapeList.push(polylineShape);
                         if (isFill) {
                             var halfSmoothPolygonShape = new HalfSmoothPolygonShape({
-                                zlevel: this.getZlevelBase(),
-                                z: this.getZBase(),
+                                zlevel: serie.zlevel,
+                                z: serie.z,
                                 style: {
                                     miterLimit: lineWidth,
                                     pointList: zrUtil.clone(singlePL).concat([
@@ -578,8 +578,8 @@ define('echarts/chart/line', [
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
             var itemShape = this.getSymbolShape(serie, seriesIndex, data, dataIndex, name, x, y, this._sIndex2ShapeMap[seriesIndex], this._sIndex2ColorMap[seriesIndex], '#fff', orient === 'vertical' ? 'horizontal' : 'vertical');
-            itemShape.zlevel = this.getZlevelBase();
-            itemShape.z = this.getZBase() + 1;
+            itemShape.zlevel = serie.zlevel;
+            itemShape.z = serie.z + 1;
             if (this.deepQuery([
                     data,
                     serie,
@@ -711,7 +711,7 @@ define('echarts/chart/line', [
                 }
             }
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         }
     };

@@ -225,11 +225,14 @@ define(function (require) {
 
                 if (this.selectedMap[serie.name]) {
                     var graph;
-                    if (serie.data && serie.matrix) {
+                    // matrix 表示边
+                    if (serie.matrix) {
                         graph = this._getSerieGraphFromDataMatrix(
                             serie, mainSerie
                         );
-                    } else if (serie.nodes && serie.links) {
+                    }
+                    // links 表示边
+                    else if (serie.links) {
                         graph = this._getSerieGraphFromNodeLinks(
                             serie, mainSerie
                         );
@@ -545,8 +548,8 @@ define(function (require) {
                 var startAngle = node.layout.startAngle / Math.PI * 180 * sign;
                 var endAngle = node.layout.endAngle / Math.PI * 180 * sign;
                 var sector = new SectorShape({
-                    zlevel: this.getZlevelBase(),
-                    z : this.getZBase(),
+                    zlevel: serie.zlevel,
+                    z : serie.z,
                     style: {
                         x: center[0],
                         y: center[1],
@@ -624,8 +627,8 @@ define(function (require) {
                     color = category ? this.getColor(category.name) : this.getColor(node.id);
                 }
                 var iconShape = new IconShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     style: {
                         x: - node.layout.size,
                         y: - node.layout.size,
@@ -701,8 +704,8 @@ define(function (require) {
                 vec2.add(start, start, center);
 
                 var labelShape = {
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         text: node.data.label == null ? node.id : node.data.label,
@@ -784,8 +787,8 @@ define(function (require) {
                     serie, edge.data, 'emphasis'
                 );
                 var ribbon = new RibbonShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase(),
+                    zlevel: serie.zlevel,
+                    z: serie.z,
                     style: {
                         x: center[0],
                         y: center[1],
@@ -856,8 +859,8 @@ define(function (require) {
                 );
 
                 var curveShape = new BezierCurveShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase(),
+                    zlevel: serie.zlevel,
+                    z: serie.z,
                     style: {
                         xStart: shape1.position[0],
                         yStart: shape1.position[1],
@@ -962,8 +965,8 @@ define(function (require) {
                     var end = vec2.scale([], v, radius[1] + this.scaleLineLength);
                     vec2.add(end, end, center);
                     var scaleShape = new LineShape({
-                        zlevel: this.getZlevelBase(),
-                        z: this.getZBase() - 1,
+                        zlevel: serie.zlevel,
+                        z: serie.z - 1,
                         hoverable: false,
                         style: {
                             xStart: start[0],
@@ -1003,8 +1006,8 @@ define(function (require) {
                                      || theta >= 270;
 
                     var textShape = new TextShape({
-                        zlevel: this.getZlevelBase(),
-                        z: this.getZBase() - 1,
+                        zlevel: serie.zlevel,
+                        z: serie.z - 1,
                         hoverable: false,
                         style: {
                             x: isRightSide 

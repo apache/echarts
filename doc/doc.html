@@ -320,14 +320,6 @@
                             <td> evnetRiver </td>
                             <td> 事件河流图。常用于展示具有时间属性的多个事件，以及事件随时间的演化。</td>
                         </tr>
-                        <tr>
-                            <td> funnel </td>
-                            <td> 漏斗图。用于展现数据经过筛选、过滤等流程处理后发生的数据变化，常见于BI类系统。</td>
-                        </tr>
-                        <tr>
-                            <td> evnetRiver </td>
-                            <td> 事件河流图。常用于展示具有时间属性的多个事件，以及事件随时间的演化。</td>
-                        </tr>
 
                         <tr>
                             <td> treemap </td>
@@ -3851,7 +3843,12 @@ indicator : [
                             <td> <b>{Array}</b> size </td>
                             <td> ['80%', '80%']</td>
                             <td> 大小，支持绝对值（px）和百分比</td>
-                        </tr>  
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> root</td>
+                            <td> ''</td>
+                            <td> 当前显示的根节点的名字 </td>
+                        </tr>
                         <tr>
                             <td> <b>{Object}</b> itemStyle </td>
                             <td> {} </td>
@@ -3985,7 +3982,12 @@ indicator : [
                             <td> <b>{string}</b> orient </td>
                             <td> 'vertical'</td>
                             <td> 树的方向可选：'vertical' | 'horizontal' | 'radial'</td>
-                        </tr> 
+                        </tr>
+                        <tr>
+                            <td> <b>{string}</b> direction </td>
+                            <td> ''</td>
+                            <td> 方向反转，可选：'inverse'</td>
+                        </tr>  
                         <tr>
                             <td> <b>{boolean | string}</b> roam </td>
                             <td> false </td>
@@ -4281,11 +4283,6 @@ indicator : [
                             <td> 标注图形样式属性，同series中的<a href="#Series">itemStyle</a> </td>
                         </tr>
                         <tr>
-                            <td> <b>{Object}</b> geoCoord </td>
-                            <td> {} </td>
-                            <td> 地图特有，标注图形定位坐标，同series中的<a href="#Series">geoCoord</a> </td>
-                        </tr>
-                        <tr>
                             <td> <b>{Array}</b> data </td>
                             <td> [] </td>
                             <td> 标注图形数据，见下 </td>
@@ -4425,11 +4422,6 @@ geoCoord : {
                             <td> <b>{Object}</b> itemStyle </td>
                             <td> {...} </td>
                             <td> 标线图形样式属性，同series中的<a href="#Series">itemStyle</a> </td>
-                        </tr>
-                        <tr>
-                            <td> <b>{Object}</b> geoCoord </td>
-                            <td> {} </td>
-                            <td> 地图特有，标线图形定位坐标，同series中的<a href="#Series">geoCoord</a> </td>
                         </tr>
                         <tr>
                             <td> <b>{Array}</b> data </td>
