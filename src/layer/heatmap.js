@@ -19,7 +19,8 @@ define(function (require) {
         // }]
         gradientColors: ['blue', 'cyan', 'lime', 'yellow', 'red'],
         minAlpha: 0.05,
-        unifyValue: 1
+        unifyValue: 1,
+        opacity: 1
     };
 
     var BRUSH_SIZE = 20;
@@ -91,6 +92,7 @@ define(function (require) {
                 pixels[id - 3] = gradient[colorOffset * 4];     // red
                 pixels[id - 2] = gradient[colorOffset * 4 + 1]; // green
                 pixels[id - 1] = gradient[colorOffset * 4 + 2]; // blue
+                pixels[id] *= this.option.opacity;              // alpha
             }
             ctx.putImageData(imageData, 0, 0);
 
