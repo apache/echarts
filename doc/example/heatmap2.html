@@ -77,24 +77,22 @@ option = {
             type : 'heatmap',
             data : heatData,
             hoverable : false,
-            itemStyle : {
-                gradientColors: [{
-                    offset: 0.4,
-                    color: 'green'
-                }, {
-                    offset: 0.5,
-                    color: 'yellow'
-                }, {
-                    offset: 0.8,
-                    color: 'orange'
-                }, {
-                    offset: 1,
-                    color: 'red'
-                }],
-                minAlpha: 0.2,
-                valueScale: 2,
-                opacity: 0.6
-            }
+            gradientColors: [{
+                offset: 0.4,
+                color: 'green'
+            }, {
+                offset: 0.5,
+                color: 'yellow'
+            }, {
+                offset: 0.8,
+                color: 'orange'
+            }, {
+                offset: 1,
+                color: 'red'
+            }],
+            minAlpha: 0.2,
+            valueScale: 2,
+            opacity: 0.6
         }
     ]
 };

@@ -36,8 +36,8 @@ define(function (require) {
         this.option = opt;
         if (opt) {
             for (var i in defaultOptions) {
-                if (opt[i] !== undefined || opt.itemStyle && opt.itemStyle[i]) {
-                    this.option[i] = opt[i] || opt.itemStyle[i];
+                if (opt[i] !== undefined) {
+                    this.option[i] = opt[i];
                 } else {
                     this.option[i] = defaultOptions[i];
                 }
