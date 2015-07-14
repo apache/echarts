@@ -100,6 +100,7 @@
                                     <li><a href="#SeriesPie">series（饼图）</a></li>
                                     <li><a href="#SeriesRadar">series（雷达图）</a></li>
                                     <li><a href="#SeriesMap">series（地图）</a></li>
+                                    <li><a href="#SeriesHeatmap">series（热力图）</a></li>
                                     <li><a href="#SeriesForce">series（力导向布局图）</a></li>
                                     <li><a href="#SeriesChord">series（和弦图）</a></li>
                                     <li><a href="#SeriesGauge">series（仪表盘）</a></li>
@@ -3241,9 +3242,14 @@ indicator : [
                             <td> 当均一化后的数据点的值小于这个值时，将被设为该值。该值保证了数据值很小的数据也能在地图上展示。</a></td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> unifyValue </td>
+                            <td> <b>{number}</b> valueScale </td>
                             <td> 1 </td>
-                            <td> 所有数据点的值将除以这个值再进行绘制。</a></td>
+                            <td> 所有数据点的值将乘以这个值再进行绘制。</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> opacity </td>
+                            <td> 1 </td>
+                            <td> 整个热力图的不透明度。</a></td>
                         </tr>
                     </table>
 

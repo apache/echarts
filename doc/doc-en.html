@@ -100,6 +100,7 @@
                                     <li><a href="#SeriesPie">series (pie) </a></li>
                                     <li><a href="#SeriesRadar">series (radar) </a></li>
                                     <li><a href="#SeriesMap">series (map) </a></li>
+                                    <li><a href="#SeriesHeatmap">series (heatmap) </a></li>
                                     <li><a href="#SeriesHeatmap">series (map) </a></li>
                                     <li><a href="#SeriesForce">series (force) </a></li>
                                     <li><a href="#SeriesChord">series (chord) </a></li>
@@ -3234,9 +3235,14 @@ indicator : [
                             <td> If the unified value is less than minAlpha, it will be set to minAlpha to ensure small data value can also be visible on the chart.</a></td>
                         </tr>
                         <tr>
-                            <td> <b>{number}</b> unifyValue </td>
+                            <td> <b>{number}</b> valueScale </td>
                             <td> 1 </td>
-                            <td> All data values will divide this value.</a></td>
+                            <td> All data values will multiply this value.</a></td>
+                        </tr>
+                        <tr>
+                            <td> <b>{number}</b> opacity </td>
+                            <td> 1 </td>
+                            <td> Opacity of the heatmap. </a></td>
                         </tr>
                     </table>
 
