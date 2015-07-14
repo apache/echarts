@@ -19,7 +19,8 @@ define(function (require) {
         // }]
         gradientColors: ['blue', 'cyan', 'lime', 'yellow', 'red'],
         minAlpha: 0.05,
-        unifyValue: 1
+        valueScale: 1,
+        opacity: 1
     };
 
     var BRUSH_SIZE = 20;
@@ -35,8 +36,8 @@ define(function (require) {
         this.option = opt;
         if (opt) {
             for (var i in defaultOptions) {
-                if (opt[i] !== undefined) {
-                    this.option[i] = opt[i];
+                if (opt[i] !== undefined || opt.itemStyle && opt.itemStyle[i]) {
+                    this.option[i] = opt[i] || opt.itemStyle[i];
                 } else {
                     this.option[i] = defaultOptions[i];
                 }
@@ -72,8 +73,8 @@ define(function (require) {
                 var value = p[2];
 
                 // calculate alpha using value
-                var alpha = Math.min(value / this.option.maxValue
-                    || this.option.minAlpha, this.option.minAlpha);
+                var alpha = Math.min(1, Math.max(value * this.option.valueScale
+                    || this.option.minAlpha, this.option.minAlpha));
 
                 // draw with the circle brush with alpha
                 ctx.globalAlpha = alpha;
@@ -91,6 +92,7 @@ define(function (require) {
                 pixels[id - 3] = gradient[colorOffset * 4];     // red
                 pixels[id - 2] = gradient[colorOffset * 4 + 1]; // green
                 pixels[id - 1] = gradient[colorOffset * 4 + 2]; // blue
+                pixels[id] *= this.option.opacity;              // alpha
             }
             ctx.putImageData(imageData, 0, 0);
 
