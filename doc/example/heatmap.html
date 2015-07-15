@@ -70,13 +70,29 @@ for (var i = 0; i < 200; ++i) {
 }
 option = {
     title : {
-        text: '热力图'
+        text: '热力图自定义样式'
     },
     series : [
         {
             type : 'heatmap',
             data : heatData,
-            hoverable : false
+            hoverable : false,
+            gradientColors: [{
+                offset: 0.4,
+                color: 'green'
+            }, {
+                offset: 0.5,
+                color: 'yellow'
+            }, {
+                offset: 0.8,
+                color: 'orange'
+            }, {
+                offset: 1,
+                color: 'red'
+            }],
+            minAlpha: 0.2,
+            valueScale: 2,
+            opacity: 0.6
         }
     ]
 };
