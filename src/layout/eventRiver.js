@@ -4,8 +4,9 @@
  * @author clmtulip  (车丽美, clmtulip@gmail.com)
  */
 define(function(require) {
+
     function eventRiverLayout(series, intervalX, area) {
-        var space = 5;
+        var space = 4;
         var scale = intervalX;
 
         function importanceSort(a, b) {
@@ -13,7 +14,7 @@ define(function(require) {
             var y = b.importance;
             return ((x > y) ? -1 : ((x < y) ? 1 : 0));
         }
-        
+
         /**
          * 查询数组中元素的index
          */
@@ -28,7 +29,7 @@ define(function(require) {
             }
             return -1;
         }
-        
+
         // step 0. calculate event importance and sort descending
         for (var i = 0; i < series.length; i++) {
             for (var j = 0; j < series[i].data.length; j++) {
@@ -43,7 +44,7 @@ define(function(require) {
             }
             series[i].data.sort(importanceSort);
         }
-        
+
         // step 1. 计算每个group的重要值importance，并按递减顺序排序
         for (var i = 0; i < series.length; i++) {
             if (series[i].weight == null) {
@@ -57,7 +58,7 @@ define(function(require) {
         }
         // 根据importance对groups进行递减排序
         series.sort(importanceSort);
-        
+
         // step 3. set bubble positions in group order, then in event order
         // 找到包含所有事件的时间段，即最小和最大时间点
         var minTime = Number.MAX_VALUE;
@@ -71,149 +72,191 @@ define(function(require) {
                 }
             }
         }
-        // console.log('minTime: ' + minTime);
-        // console.log('maxTime: ' + maxTime);
-        
-        // 建立线段树根节点
-        var root = segmentTreeBuild(Math.floor(minTime), Math.ceil(maxTime));
+        //console.log('minTime: ' + minTime);
+        //console.log('maxTime: ' + maxTime);
 
-        var totalMaxY = 0;
+        // 时间范围 即 x轴显示的起始范围
+        minTime = ~~minTime;
+        maxTime = ~~maxTime;
+
+        // 气泡之间的间隙
+        var flagForOffset = (function () {
+
+            var length = maxTime - minTime + 1 + (~~intervalX);
+            if (length <= 0){
+                return [0];
+            }
+            var result = [];
+            while (length--){
+                result.push(0);
+            }
+            return result;
+        })();
+
+        var flagForPos = flagForOffset.slice(0);
+
+        var bubbleData = [];
+        var totalMaxy = 0;
+        var totalOffset = 0;
+
         for (var i = 0; i < series.length; i++) {
             for (var j = 0; j < series[i].data.length; j++) {
                 var e = series[i].data[j];
                 e.time = [];
                 e.value = [];
+                var tmp;
+                var maxy = 0;
                 for (var k = 0; k < series[i].data[j].evolution.length; k++) {
-                    e.time.push(series[i].data[j].evolution[k].timeScale);
-                    e.value.push(series[i].data[j].evolution[k].valueScale);
+                    tmp = series[i].data[j].evolution[k];
+                    e.time.push(tmp.timeScale);
+                    e.value.push(tmp.valueScale);
+                    maxy = Math.max(maxy, tmp.valueScale);
                 }
 
-                var mxIndex = indexOf(e.value, Math.max.apply(Math, e.value));
-                var maxY = segmentTreeQuery(root, e.time[mxIndex], e.time[mxIndex + 1]);
-                var k = 0;
-                e.y = maxY + e.value[mxIndex] / 2 + space;
-                // 检测overlap，调整event.y
-                for (k = 0; k < e.time.length - 1; k++) {
-                    var curMaxY = segmentTreeQuery(root, e.time[k], e.time[k + 1]);
-                    if (e.y - e.value[k] / 2 - space < curMaxY) {
-                        e.y = curMaxY + e.value[k] / 2  + space;
-                    }
-                }
-                var curMaxY = segmentTreeQuery(root, e.time[k], e.time[k] + scale);
-                if (e.y - e.value[k] / 2 - space < curMaxY) {
-                    e.y = curMaxY + e.value[k] / 2 + space;
-                }
-                series[i].y = e.y;
-                
-                totalMaxY = Math.max(totalMaxY, e.y + e.value[mxIndex] / 2);
-                
-                // 确定位置后更新线段树
-                for (k = 0; k < e.time.length - 1; k++) {
-                    segmentTreeInsert(root, e.time[k], e.time[k+1], e.y + e.value[k] / 2);
-                }
-                segmentTreeInsert(root, e.time[k], e.time[k] + scale, e.y + e.value[k] / 2);
+                // 边界计算
+                bubbleBound(e, intervalX, minTime);
+
+                // 得到可以放置的位置
+                e.y = findLocation(flagForPos, e, function (e, index){return e.ypx[index];});
+                // 得到偏移量
+                e._offset = findLocation(flagForOffset, e, function (){ return space;});
+
+                totalMaxy = Math.max(totalMaxy, e.y + maxy);
+                totalOffset = Math.max(totalOffset, e._offset);
+
+                bubbleData.push(e);
             }
         }
-        
+
         // 映射到显示区域内
-        scaleY(series, area, totalMaxY, space);
+        scaleY(bubbleData, area, totalMaxy, totalOffset);
     }
-    
+
     /**
-     * 映射到显示区域内 
-     * @param {Object} series
-     * @param {Object} area
+     * 映射到显示区域内
      */
-    function scaleY(series, area, maxY, space) {
+    function scaleY(bubbleData, area, maxY, offset) {
+        var height = area.height;
+        var offsetScale = offset / height > 0.5 ? 0.5 : 1;
+
         var yBase = area.y;
-        var yScale = (area.height - space) / maxY;
-        for (var i = 0; i < series.length; i++) {
-            series[i].y = series[i].y * yScale + yBase;
-            var eventList = series[i].data;
-            for (var j = 0; j < eventList.length; j++) {
-                eventList[j].y = eventList[j].y * yScale + yBase;
-                var evolutionList = eventList[j].evolution;
-                for (var k = 0; k < evolutionList.length; k++) {
-                    evolutionList[k].valueScale *= yScale * 1;
-                }
+        var yScale = (area.height - offset) / maxY;
+
+        for (var i = 0, length = bubbleData.length; i < length; i++){
+            var e = bubbleData[i];
+            e.y = yBase + yScale * e.y + e._offset * offsetScale;
+
+            delete e.time;
+            delete e.value;
+            delete e.xpx;
+            delete e.ypx;
+            delete e._offset;
+
+            // 修改值域范围
+            var evolutionList = e.evolution;
+            for (var k = 0, klen = evolutionList.length; k < klen; k++) {
+                evolutionList[k].valueScale *= yScale;
             }
-            
         }
     }
 
-    function segmentTreeBuild(left, right) {
-        var root = {
-            'left': left,
-            'right': right,
-            'leftChild': null,
-            'rightChild': null,
-            'maxValue': 0
-        };
-        
-        if (left + 1 < right) {
-            var mid = Math.round( (left + right) / 2);
-            root.leftChild = segmentTreeBuild(left, mid);
-            root.rightChild = segmentTreeBuild(mid, right);
-        }
-        
-        return root;
-    }
 
-    function segmentTreeQuery(root, left, right) {
-        if (right - left < 1) {
-            return 0;
+    /**
+     * 得到两点式的方程函数 y = k*x + b
+     * @param {number} x0 起点横坐标
+     * @param {number} y0 起点纵坐标
+     * @param {number} x1 终点横坐标
+     * @param {number} y1 终点纵坐标
+     * @returns {Function} 输入为横坐标 返回纵坐标s
+     */
+    function line(x0, y0, x1, y1){
+
+        // 横坐标相同,应该抛出错误
+        if (x0 === x1) {
+            throw new Error('x0 is equal with x1!!!');
         }
 
-        var mid = Math.round( (root.left + root.right) / 2);
-        var result = 0;
-        
-        if (left == root.left && right == root.right) {
-            result = root.maxValue;
-        }
-        else if (right <= mid && root.leftChild != null) {
-            result = segmentTreeQuery(root.leftChild, left, right);
-        }
-        else if (left >= mid && root.rightChild != null) {
-            result = segmentTreeQuery(root.rightChild, left, right);
-        }
-        else {
-            var leftValue = 0;
-            var rightValue = 0;
-            if (root.leftChild != null) {
-                leftValue = segmentTreeQuery(root.leftChild, left, mid);
+        // 纵坐标相同
+        if (y0 === y1) {
+            return function () {
+                return y0;
             }
-            if (root.rightChild != null) {
-                rightValue = segmentTreeQuery(root.rightChild, mid, right);
+        }
+
+        var k = (y0 - y1) / (x0 - x1);
+        var b = (y1 * x0 - y0 * x1) / (x0 - x1);
+
+        return function (x) {
+            return k * x + b;
+        }
+    }
+
+    /**
+     * 计算当前气泡的值经过的边界
+     * @param {object} e 气泡的值
+     * @param {array} e.time 时间范围
+     * @param {array} e.value 值域范围
+     * @param {number} intervalX 气泡尾巴长度
+     */
+    function bubbleBound(e, intervalX, minX){
+        var space = ~~intervalX;
+        var length = e.time.length;
+
+        e.xpx = [];
+        e.ypx = [];
+
+        var i = 0;
+        var x0 = 0;
+        var x1 = 0;
+        var y0 = 0;
+        var y1 = 0;
+        var newline;
+        for(; i < length; i++){
+
+            x0 = ~~e.time[i];
+            y0 = e.value[i] / 2;
+
+            if (i === length - 1) {
+                // i = length - 1  ~  += intervalX
+                x1 = x0 + space;
+                y1 = 0;
+            } else {
+                x1 = ~~(e.time[i + 1]);
+                y1 = e.value[i + 1] / 2;
             }
-            result = leftValue > rightValue ? leftValue : rightValue;
+
+            // to line
+            newline = line(x0, y0, x1, y1);
+            //
+            for (var x = x0; x < x1; x++){
+                e.xpx.push(x - minX);
+                e.ypx.push(newline(x));
+            }
         }
-        return result;
+
+        e.xpx.push(x1 - minX);
+        e.ypx.push(y1);
     }
 
-    // 插入和更新线段树
-    function segmentTreeInsert(root, left, right, value) {
-        if (root == null) {
-            return ;
-        }
-        var mid = Math.round( (root.left + root.right) / 2);
-        root.maxValue = root.maxValue > value ? root.maxValue : value;
+    function findLocation(flags, e, yvalue){
+        var pos = 0;
 
-        if (Math.floor(left * 10) == Math.floor(root.left * 10) 
-            && Math.floor(right * 10) == Math.floor(root.right * 10)
-        ) {
-            return;
+        var length = e.xpx.length;
+        var i = 0;
+        var y;
+        for(; i < length; i++){
+            y = yvalue(e, i);
+            pos = Math.max(pos, y + flags[e.xpx[i]]);
         }
-        else if (right <= mid) {
-            segmentTreeInsert(root.leftChild, left, right, value);
+
+        // reset flags
+        for(i = 0; i < length; i++){
+            y = yvalue(e, i);
+            flags[e.xpx[i]] = pos + y;
         }
-        else if (left >= mid) {
-            segmentTreeInsert(root.rightChild, left, right, value);
-        }
-        else {
-            segmentTreeInsert(root.leftChild, left, mid, value);
-            segmentTreeInsert(root.rightChild, mid, right, value);
-        }
+
+        return pos;
     }
-    
+
     return eventRiverLayout;
 });
