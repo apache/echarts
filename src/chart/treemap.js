@@ -27,6 +27,7 @@ define(function (require) {
         clickable: true,
         center: ['50%', '50%'],
         size: ['80%', '80%'],
+        root: '',
         itemStyle: {
             normal: {
                 // color: 各异,
@@ -121,7 +122,8 @@ define(function (require) {
 
             this._treesMap[seriesIndex] = tree;
 
-            this._buildTreemap(tree.root, seriesIndex);
+            var treeRoot = series.root && tree.getNodeById(series.root) || tree.root;
+            this._buildTreemap(treeRoot, seriesIndex);
         },
 
         /**
@@ -421,9 +423,8 @@ define(function (require) {
                 height: rect.height
             });
             var locationArr = treeMapLayout.run(areaArr);
-
-            var lineWidth = itemStyle.normal.childBorderWidth || 1;
-            var lineColor = itemStyle.normal.childBorderColor || '#777';
+            var lineWidth = itemStyle.normal.childBorderWidth;
+            var lineColor = itemStyle.normal.childBorderColor;
             for (var k = 0; k < locationArr.length; k++) {
                 var item = locationArr[k];
                 var lines = [];

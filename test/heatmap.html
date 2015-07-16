@@ -1,0 +1,60 @@
+<!Doctype html>
+<html>
+<head>
+    <script src="../doc/asset/js/esl/esl.js"></script>
+    <meta charset="utf-8">
+</head>
+<style>
+    html, body {
+        height: 100%;
+        margin: 0px;
+    }
+    #main {
+        width: 100%;
+        height: 100%;
+    }
+</style>
+<body>
+    <div id="main"></div>
+</body>
+<script>
+    require.config({
+        packages: [{
+            name: 'echarts',
+            location: '../src',
+            main: 'echarts'
+        }, {
+            name: 'zrender',
+            location: '../../zrender/src',
+            main: 'zrender'
+        }]
+    });
+
+    var data = [];
+    for (var i = 0; i < 1000; ++i) {
+        data.push([Math.random() * 400, Math.random() * 300, Math.random()]);
+    }
+    for (var i = 0; i < 100; ++i) {
+        data.push([Math.random() * 20 + i / 2 + 100, 
+            Math.random() * 20 + 200, Math.random()]);
+    }
+    for (var i = 0; i < 100; ++i) {
+        data.push([Math.random() * 20 + i / 2 + 300, 
+            Math.random() * 20 - i / 3 + 200, Math.random()]);
+    }
+    require(['echarts', 'echarts/chart/heatmap'], function (echarts, Heatmap) {
+        var myChart = echarts.init(document.getElementById('main'));
+        myChart.setOption({
+            series: [{
+                data: data,
+                type: 'heatmap',
+                name: 'name',
+                gradientColors: [
+                  'pink', 'orange', 'green'
+                ]
+            }]
+        });
+    });
+
+</script>
+</html>

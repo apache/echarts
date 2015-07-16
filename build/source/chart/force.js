@@ -109,6 +109,7 @@ define('echarts/chart/force', [
         constructor: Force,
         type: ecConfig.CHART_TYPE_FORCE,
         _init: function () {
+            this.selectedMap = {};
             var legend = this.component.legend;
             var series = this.series;
             var serieName;
@@ -150,9 +151,9 @@ define('echarts/chart/force', [
         },
         _initSerie: function (serie, serieIdx) {
             this._temperature = 1;
-            if (serie.data) {
+            if (serie.matrix) {
                 this._graph = this._getSerieGraphFromDataMatrix(serie);
-            } else {
+            } else if (serie.links) {
                 this._graph = this._getSerieGraphFromNodeLinks(serie);
             }
             this._buildLinkShapes(serie, serieIdx);
@@ -489,7 +490,9 @@ define('echarts/chart/force', [
                             0,
                             0
                         ],
-                        rotation: 0
+                        rotation: 0,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase()
                     });
                     linkShape._symbolShape = symbolShape;
                     this.shapeList.push(symbolShape);

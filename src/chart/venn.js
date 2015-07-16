@@ -52,8 +52,24 @@ define(function (require) {
             this._dropBoxList = [];
             this._vennDataCounter = 0;
             var series = this.series;
-            this.data = series[0].data;
-            this._buildVenn(this.data);
+            var legend = this.component.legend;
+            
+            for (var i = 0; i < series.length; i++) {
+                if (series[i].type === ecConfig.CHART_TYPE_VENN) {
+                    series[i] = this.reformOption(series[i]);
+                    var serieName = series[i].name || '';
+
+                    // 系列图例开关
+                    this.selectedMap[serieName] = 
+                        legend ? legend.isSelected(serieName) : true;
+                    if (!this.selectedMap[serieName]) {
+                        continue;
+                    }
+
+                    this._buildVenn(i);
+                }
+            }
+            
             this.addShapeList();
         },
         /**
@@ -61,9 +77,11 @@ define(function (require) {
          *
          * @param {Object} data 数据
          */
-        _buildVenn : function (data) {
+        _buildVenn : function (seriesIndex) {
             var r0;
             var r1;
+            var serie = this.series[seriesIndex];
+            var data = serie.data;
             if (data[0].value > data[1].value) {
                 r0 = this.zr.getHeight() / 3;
                 r1 = r0 * Math.sqrt(data[1].value) / Math.sqrt(data[0].value);
@@ -94,23 +112,23 @@ define(function (require) {
             var x1 = x0 +  coincideLength;
             var y = this.zr.getHeight() / 2;
             this._buildItem(
-                0, 0,
+                seriesIndex, 0, data[0],
                 x0,
                 y,
                 r0
             );
             this._buildItem(
-                0, 1,
+                seriesIndex, 1, data[1],
                 x1,
                 y,
                 r1
             );
             // 包含关系与无交集关系均不画公共部分
             if (
-                    data[2].value !== 0
-                    && data[2].value !== data[0].value
-                    && data[2].value !== data[1].value
-                ) {
+                data[2].value !== 0
+                && data[2].value !== data[0].value
+                && data[2].value !== data[1].value
+            ) {
                 var xLeft = (r0 * r0 - r1 * r1) / (2 * coincideLength) + coincideLength / 2;
                 var xRight = coincideLength / 2 - (r0 * r0 - r1 * r1) / (2 * coincideLength);
                 var h = Math.sqrt(r0 * r0 - xLeft * xLeft);
@@ -130,7 +148,9 @@ define(function (require) {
                     rightLargeArcFlag = 1;
                 }
                 this._buildCoincideItem(
+                    seriesIndex,
                     2,
+                    data[2],
                     x0 + xLeft,
                     y - h,
                     y + h,
@@ -141,18 +161,18 @@ define(function (require) {
                 );
             }
         },
-/**
- * 逼近算法得到两圆的间距
- * @param {number} value0 第一个圆的原始数值
- * @param {number} value1 第二个圆的原始数值
- * @param {number} value3 公共部分的原始数值
- * @param {number} r0 第一个圆的半径
- * @param {number} r1 第二个圆的半径
- * @param {number} coincideLengthAnchor 锚定
- * @param {number} coincideLengthAnchorMin 下限
- * @param {number} coincideLengthAnchorMax 上限
- * @return {Node}
-*/
+        /**
+         * 逼近算法得到两圆的间距
+         * @param {number} value0 第一个圆的原始数值
+         * @param {number} value1 第二个圆的原始数值
+         * @param {number} value3 公共部分的原始数值
+         * @param {number} r0 第一个圆的半径
+         * @param {number} r1 第二个圆的半径
+         * @param {number} coincideLengthAnchor 锚定
+         * @param {number} coincideLengthAnchorMin 下限
+         * @param {number} coincideLengthAnchorMax 上限
+         * @return {Node}
+        */
         _getCoincideLength: function (
             value0,
             value1,
@@ -200,47 +220,51 @@ define(function (require) {
          * 构建单个圆及指标
          */
         _buildItem : function (
-            seriesIndex, dataIndex,
+            seriesIndex, dataIndex, dataItem,
             x, y, r
         ) {
             var series = this.series;
+            var serie = series[seriesIndex];
 
             var circle = this.getCircle(
-                    dataIndex,
-                    x, y, r
-                );
+                seriesIndex,
+                dataIndex,
+                dataItem,
+                x, y, r
+            );
             ecData.pack(
                 circle,
-                series[0], seriesIndex,
-                series[0].data[dataIndex], dataIndex,
-                series[0].data[dataIndex].name
+                serie, seriesIndex,
+                dataItem, dataIndex,
+                dataItem.name
             );
             this.shapeList.push(circle);
 
-            if (series[0].itemStyle.normal.label.show) {
+            if (serie.itemStyle.normal.label.show) {
                 // 文本标签
                 var label = this.getLabel(
-                        dataIndex,
-                        x, y, r
-                    );
+                    seriesIndex,
+                    dataIndex,
+                    dataItem,
+                    x, y, r
+                );
                 ecData.pack(
                     label,
-                    series[0], seriesIndex,
-                    series[0].data[dataIndex], dataIndex,
-                    series[0].data[dataIndex].name
+                    serie, seriesIndex,
+                    serie.data[dataIndex], dataIndex,
+                    serie.data[dataIndex].name
                 );
                 this.shapeList.push(label);
             }
         },
 
         _buildCoincideItem : function (
-            dataIndex,
+            seriesIndex, dataIndex, dataItem,
             x, y0, y1, r0, r1, rightLargeArcFlag, leftLargeArcFlag
         ) {
             var series = this.series;
-            var serie = series[0];
-            var data = this.data[dataIndex];
-            var queryTarget = [data, serie];
+            var serie = series[seriesIndex];
+            var queryTarget = [dataItem, serie];
 
             // 多级控制
             var normal = this.deepMerge(
@@ -264,8 +288,8 @@ define(function (require) {
             };
 
             var shape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 style: style,
                 highlightStyle: {
                     color: emphasisColor,
@@ -279,9 +303,9 @@ define(function (require) {
             }
             ecData.pack(
                 shape,
-                series[0], 0,
-                series[0].data[dataIndex], dataIndex,
-                series[0].data[dataIndex].name
+                series[seriesIndex], 0,
+                dataItem, dataIndex,
+                dataItem.name
             );
             this.shapeList.push(shape);
         },
@@ -289,12 +313,13 @@ define(function (require) {
          * 构建圆形
          */
         getCircle : function (
+            seriesIndex,
             dataIndex,
+            dataItem,
             x, y, r
         ) {
-            var serie = this.series[0];
-            var data = this.data[dataIndex];
-            var queryTarget = [data, serie];
+            var serie = this.series[seriesIndex];
+            var queryTarget = [dataItem, serie];
 
             // 多级控制
             var normal = this.deepMerge(
@@ -309,7 +334,8 @@ define(function (require) {
             var emphasisColor = emphasis.color || this.zr.getColor(dataIndex);
 
             var circle = {
-                zlevel: this.getZlevelBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: true,
                 style: {
                     x: x,
@@ -326,7 +352,7 @@ define(function (require) {
                 }
             };
 
-            if (this.deepQuery([data, serie, this.option], 'calculable')) {
+            if (this.deepQuery([dataItem, serie, this.option], 'calculable')) {
                 this.setCalculable(circle);
                 circle.draggable = true;
             }
@@ -337,14 +363,15 @@ define(function (require) {
         /**
          * 需要显示则会有返回构建好的shape，否则返回undefined
          */
-        getLabel : function (
+        getLabel: function (
+            seriesIndex,
             dataIndex,
+            dataItem,
             x, y, r
         ) {
-            var serie = this.series[0];
+            var serie = this.series[seriesIndex];
             var itemStyle = serie.itemStyle;
-            var data = this.data[dataIndex];
-            var queryTarget = [data, serie];
+            var queryTarget = [dataItem, serie];
 
             // 多级控制
             var normal = this.deepMerge(
@@ -355,14 +382,15 @@ define(function (require) {
             // label配置
             var labelControl = itemStyle[status].label;
             var textStyle = labelControl.textStyle || {};
-            var text = this.getLabelText(dataIndex, status);
+            var text = this.getLabelText(dataIndex, dataItem, status);
             var textFont = this.getFont(textStyle);
             var textColor = normal.color || this.zr.getColor(dataIndex);
             // 求出label的纵坐标
             var textSize = textStyle.fontSize || 12;
 
             var textShape = {
-                zlevel: ecConfig.venn.zlevel + 1,
+                zlevel: serie.zlevel,
+                z: serie.z,
                 style: {
                     x: x,
                     y: y - r - textSize,
@@ -379,12 +407,11 @@ define(function (require) {
         /**
          * 根据lable.format计算label text
          */
-        getLabelText : function (dataIndex, status) {
+        getLabelText : function (dataIndex, dataItem, status) {
             var series = this.series;
             var serie = series[0];
-            var data = serie.data[dataIndex];
             var formatter = this.deepQuery(
-                [data, serie],
+                [dataItem, serie],
                 'itemStyle.' + status + '.label.formatter'
             );
 
@@ -392,8 +419,8 @@ define(function (require) {
                 if (typeof formatter == 'function') {
                     return formatter(
                         serie.name,
-                        data.name,
-                        data.value
+                        dataItem.name,
+                        dataItem.value
                     );
                 }
                 else if (typeof formatter == 'string') {
@@ -401,14 +428,14 @@ define(function (require) {
                                          .replace('{b}','{b0}')
                                          .replace('{c}','{c0}');
                     formatter = formatter.replace('{a0}', serie.name)
-                                         .replace('{b0}', data.name)
-                                         .replace('{c0}', data.value);
+                                         .replace('{b0}', dataItem.name)
+                                         .replace('{c0}', dataItem.value);
 
                     return formatter;
                 }
             }
             else {
-                return data.name;
+                return dataItem.name;
             }
         },
 

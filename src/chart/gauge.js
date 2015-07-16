@@ -196,7 +196,9 @@ define(function (require) {
                     newAngle,           // startAngle
                     lastAngle,          // endAngle
                     colorArray[i][1],   // color
-                    lineStyle
+                    lineStyle,
+                    serie.zlevel,
+                    serie.z
                 );
                 lastAngle = newAngle;
                 sectorShape._animationAdd = 'r';
@@ -235,8 +237,8 @@ define(function (require) {
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         xStart: center[0] + cosAngle * r,
@@ -291,8 +293,8 @@ define(function (require) {
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         xStart: center[0] + cosAngle * r,
@@ -348,8 +350,8 @@ define(function (require) {
                 cosAngle = Math.cos(angle * Math.PI / 180);
                 angle = (angle + 360) % 360;
                 this.shapeList.push(new TextShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         x: center[0] + cosAngle * r0,
@@ -398,8 +400,8 @@ define(function (require) {
                         : pointer.color;
             
             var pointShape = new GaugePointerShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + 1,
+                zlevel: serie.zlevel,
+                z: serie.z + 1,
                 clickable: this.query(serie, 'clickable'),
                 style: {
                     x: center[0],
@@ -430,8 +432,8 @@ define(function (require) {
             this.shapeList.push(pointShape);
             
             this.shapeList.push(new CircleShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + 2,
+                zlevel: serie.zlevel,
+                z: serie.z + 2,
                 hoverable: false,
                 style: {
                     x: center[0],
@@ -459,8 +461,8 @@ define(function (require) {
                 var x = params.center[0] + this.parsePercent(offsetCenter[0], params.radius[1]);
                 var y = params.center[1] + this.parsePercent(offsetCenter[1], params.radius[1]);
                 this.shapeList.push(new TextShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + (
+                    zlevel: serie.zlevel,
+                    z: serie.z + (
                         (Math.abs(x - params.center[0]) + Math.abs(y - params.center[1])) 
                           < textStyle.fontSize * 2 ? 2 : 1
                     ),
@@ -500,8 +502,8 @@ define(function (require) {
             var y = params.center[1] 
                     + this.parsePercent(offsetCenter[1], params.radius[1]);
             this.shapeList.push(new RectangleShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + (
+                zlevel: serie.zlevel,
+                z: serie.z + (
                     (Math.abs(x + detail.width / 2 - params.center[0]) 
                      + Math.abs(y + detail.height / 2 - params.center[1])) < textStyle.fontSize 
                     ? 2 : 1
@@ -572,10 +574,10 @@ define(function (require) {
         /**
          * 构建扇形
          */
-        _getSector: function (center, r0, r, startAngle, endAngle, color, lineStyle) {
+        _getSector: function (center, r0, r, startAngle, endAngle, color, lineStyle, zlevel, z) {
             return new SectorShape ({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: zlevel,
+                z: z,
                 hoverable: false,
                 style: {
                     x: center[0],      // 圆心横坐标

@@ -645,8 +645,8 @@ define(function (require) {
             
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 var tarShape = shapeList[i];
-                tarShape.zlevel = this.getZlevelBase();
-                tarShape.z = this.getZBase() + 1;
+                tarShape.zlevel = serie.zlevel;
+                tarShape.z = serie.z + 1;
                 for (var key in attachStyle) {
                     tarShape[key] = zrUtil.clone(attachStyle[key]);
                 }
@@ -723,8 +723,8 @@ define(function (require) {
                     zrUtil.merge(shapeBundle.style, firstShape.style);
                     zrUtil.merge(shapeBundle.highlightStyle = {}, firstShape.highlightStyle);
                     shapeBundle.style.brushType = 'stroke';
-                    shapeBundle.zlevel = this.getZlevelBase();
-                    shapeBundle.z = this.getZBase() + 1;
+                    shapeBundle.zlevel = serie.zlevel;
+                    shapeBundle.z = serie.z + 1;
                     shapeBundle.hoverable = false;
                     for (var key in attachStyle) {
                         shapeBundle[key] = zrUtil.clone(attachStyle[key]);
@@ -742,8 +742,8 @@ define(function (require) {
             else {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
                     var tarShape = shapeList[i];
-                    tarShape.zlevel = this.getZlevelBase();
-                    tarShape.z = this.getZBase() + 1;
+                    tarShape.zlevel = serie.zlevel;
+                    tarShape.z = serie.z + 1;
                     for (var key in attachStyle) {
                         tarShape[key] = zrUtil.clone(attachStyle[key]);
                     }
@@ -1602,7 +1602,8 @@ define(function (require) {
                     zlevel,
                     {
                         motionBlur: true,
-                        lastFrameAlpha: 0.95
+                        lastFrameAlpha: this.option.effectBlendAlpha
+                            || ecConfig.effectBlendAlpha
                     }
                 );
             }

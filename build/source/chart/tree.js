@@ -1,8 +1,6 @@
 define('echarts/chart/tree', [
     'require',
     './base',
-    'zrender/tool/area',
-    'zrender/tool/vector',
     '../util/shape/Icon',
     'zrender/shape/Image',
     'zrender/shape/Line',
@@ -18,8 +16,6 @@ define('echarts/chart/tree', [
 ], function (require) {
     var ChartBase = require('./base');
     var GOLDEN_SECTION = 0.618;
-    var toolArea = require('zrender/tool/area');
-    var vec2 = require('zrender/tool/vector');
     var IconShape = require('../util/shape/Icon');
     var ImageShape = require('zrender/shape/Image');
     var LineShape = require('zrender/shape/Line');
@@ -113,6 +109,7 @@ define('echarts/chart/tree', [
                 zlevel: this.getZlevelBase(),
                 z: this.getZBase() + 1,
                 rotation: rotation,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: treeNode.layout.position[0] - treeNode.layout.width * 0.5,
                     y: treeNode.layout.position[1] - treeNode.layout.height * 0.5,
@@ -362,13 +359,21 @@ define('echarts/chart/tree', [
                 this.minX = minX;
             }
             this.tree.traverse(function (treeNode) {
-                var x = treeNode.layout.position[0] - originRootX + rootX;
-                var y = treeNode.layout.position[1] + rootY;
-                if (orient === 'horizontal') {
+                var x;
+                var y;
+                if (orient === 'vertical' && serie.direction === 'inverse') {
+                    x = treeNode.layout.position[0] - originRootX + rootX;
+                    y = rootY - treeNode.layout.position[1];
+                } else if (orient === 'vertical') {
+                    x = treeNode.layout.position[0] - originRootX + rootX;
+                    y = treeNode.layout.position[1] + rootY;
+                } else if (orient === 'horizontal' && serie.direction === 'inverse') {
+                    y = treeNode.layout.position[0] - originRootX + rootY;
+                    x = rootX - treeNode.layout.position[1];
+                } else if (orient === 'horizontal') {
                     y = treeNode.layout.position[0] - originRootX + rootY;
                     x = treeNode.layout.position[1] + rootX;
-                }
-                if (orient === 'radial') {
+                } else {
                     x = treeNode.layout.position[0];
                     y = treeNode.layout.position[1];
                     treeNode.layout.originPosition = [

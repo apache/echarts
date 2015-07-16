@@ -8,8 +8,10 @@ define('echarts/chart/map', [
     'zrender/shape/Line',
     'zrender/shape/Polygon',
     'zrender/shape/Ellipse',
+    'zrender/shape/Image',
     '../component/dataRange',
     '../component/roamController',
+    '../layer/heatmap',
     '../config',
     '../util/ecData',
     'zrender/tool/util',
@@ -30,14 +32,15 @@ define('echarts/chart/map', [
     var LineShape = require('zrender/shape/Line');
     var PolygonShape = require('zrender/shape/Polygon');
     var EllipseShape = require('zrender/shape/Ellipse');
+    var ZrImage = require('zrender/shape/Image');
     require('../component/dataRange');
     require('../component/roamController');
+    var HeatmapLayer = require('../layer/heatmap');
     var ecConfig = require('../config');
     ecConfig.map = {
         zlevel: 0,
         z: 2,
         mapType: 'china',
-        mapValuePrecision: 0,
         showLegendSymbol: true,
         dataRangeHoverLink: true,
         hoverable: true,
@@ -176,13 +179,15 @@ define('echarts/chart/map', [
                             name = this._nameChange(mapType, data[j].name);
                             valueData[mapType][name] = valueData[mapType][name] || {
                                 seriesIndex: [],
-                                valueMap: {}
+                                valueMap: {},
+                                precision: 0
                             };
                             for (var key in data[j]) {
                                 if (key != 'value') {
                                     valueData[mapType][name][key] = data[j][key];
                                 } else if (!isNaN(data[j].value)) {
                                     valueData[mapType][name].value == null && (valueData[mapType][name].value = 0);
+                                    valueData[mapType][name].precision = Math.max(this.getPrecision(+data[j].value), valueData[mapType][name].precision);
                                     valueData[mapType][name].value += +data[j].value;
                                     valueData[mapType][name].valueMap[i] = +data[j].value;
                                 }
@@ -203,9 +208,13 @@ define('echarts/chart/map', [
                 this.lastShapeList = [];
             }
             for (var mt in valueData) {
-                if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
-                    for (var k in valueData[mt]) {
-                        valueData[mt][k].value = (valueData[mt][k].value / valueData[mt][k].seriesIndex.length).toFixed(mapValuePrecision[mt]) - 0;
+                for (var k in valueData[mt]) {
+                    if (valueCalculation[mt] == 'average') {
+                        valueData[mt][k].value /= valueData[mt][k].seriesIndex.length;
+                    }
+                    var value = valueData[mt][k].value;
+                    if (value != null) {
+                        valueData[mt][k].value = value.toFixed(mapValuePrecision[mt] == null ? valueData[mt][k].precision : mapValuePrecision[mt]) - 0;
                     }
                 }
                 this._mapDataMap[mt] = this._mapDataMap[mt] || {};
@@ -240,6 +249,7 @@ define('echarts/chart/map', [
                     self.addShapeList();
                     self.zr.refreshNextFrame();
                 }
+                self._buildHeatmap(mt);
             };
         },
         _clearSelected: function () {
@@ -496,19 +506,20 @@ define('echarts/chart/map', [
                     queryTarget = [data];
                     seriesName = '';
                     for (var j = 0, k = data.seriesIndex.length; j < k; j++) {
-                        queryTarget.push(series[data.seriesIndex[j]]);
-                        seriesName += series[data.seriesIndex[j]].name + ' ';
-                        if (legend && this._showLegendSymbol[mapType] && legend.hasColor(series[data.seriesIndex[j]].name)) {
+                        var serie = series[data.seriesIndex[j]];
+                        queryTarget.push(serie);
+                        seriesName += serie.name + ' ';
+                        if (legend && this._showLegendSymbol[mapType] && legend.hasColor(serie.name)) {
                             this.shapeList.push(new CircleShape({
-                                zlevel: this.getZlevelBase(),
-                                z: this.getZBase() + 1,
+                                zlevel: serie.zlevel,
+                                z: serie.z + 1,
                                 position: zrUtil.clone(style.position),
                                 _mapType: mapType,
                                 style: {
                                     x: style.textX + 3 + j * 7,
                                     y: style.textY - 10,
                                     r: 3,
-                                    color: legend.getColor(series[data.seriesIndex[j]].name)
+                                    color: legend.getColor(serie.name)
                                 },
                                 hoverable: false
                             }));
@@ -606,7 +617,7 @@ define('echarts/chart/map', [
                     }
                     break;
                 }
-                if (this._selectedMode[mapType] && this._selected[name] || data.selected && this._selected[name] !== false) {
+                if (this._selectedMode[mapType] && (this._selected[name] && data.selected !== false) || data.selected === true) {
                     textShape.style = textShape.highlightStyle;
                     shape.style = shape.highlightStyle;
                 }
@@ -658,6 +669,71 @@ define('echarts/chart/map', [
                     _mapType: mapType
                 };
                 this.buildMark(sIdx);
+            }
+        },
+        _buildHeatmap: function (mapType) {
+            var series = this.series;
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].heatmap) {
+                    var data = series[i].heatmap.data;
+                    if (series[i].heatmap.needsTransform === false) {
+                        var geo = [];
+                        for (var j = 0, len = data.length; j < len; ++j) {
+                            geo.push([
+                                data[j][3],
+                                data[j][4],
+                                data[j][2]
+                            ]);
+                        }
+                        var pos = [
+                            0,
+                            0
+                        ];
+                    } else {
+                        var geoData = series[i].heatmap._geoData;
+                        if (geoData === undefined) {
+                            series[i].heatmap._geoData = [];
+                            for (var j = 0, len = data.length; j < len; ++j) {
+                                series[i].heatmap._geoData[j] = data[j];
+                            }
+                            geoData = series[i].heatmap._geoData;
+                        }
+                        var len = data.length;
+                        for (var id = 0; id < len; ++id) {
+                            data[id] = this.geo2pos(mapType, [
+                                geoData[id][0],
+                                geoData[id][1]
+                            ]);
+                        }
+                        var pos = [
+                            this._mapDataMap[mapType].transform.left,
+                            this._mapDataMap[mapType].transform.top
+                        ];
+                    }
+                    var layer = new HeatmapLayer(series[i].heatmap.itemStyle);
+                    var canvas = layer.getCanvas(data[0][3] ? geo : data, this.zr.getWidth(), this.zr.getHeight());
+                    var image = new ZrImage({
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase() + 1,
+                        position: pos,
+                        scale: [
+                            1,
+                            1
+                        ],
+                        hoverable: false,
+                        style: {
+                            x: 0,
+                            y: 0,
+                            image: canvas,
+                            width: canvas.width,
+                            height: canvas.height
+                        }
+                    });
+                    image.type = 'heatmap';
+                    image._mapType = mapType;
+                    this.shapeList.push(image);
+                    this.zr.addShape(image);
+                }
             }
         },
         getMarkCoord: function (seriesIndex, mpData) {
@@ -807,6 +883,7 @@ define('echarts/chart/map', [
                             case 'polygon':
                             case 'line':
                             case 'ellipse':
+                            case 'heatmap':
                                 shape.scale[0] *= delta;
                                 shape.scale[1] *= delta;
                                 break;
@@ -3227,6 +3304,112 @@ define('echarts/chart/map', [
     zrUtil.inherits(RoamController, Base);
     require('../component').define('roamController', RoamController);
     return RoamController;
+});define('echarts/layer/heatmap', ['require'], function (require) {
+    var defaultOptions = {
+        blurSize: 30,
+        gradientColors: [
+            'blue',
+            'cyan',
+            'lime',
+            'yellow',
+            'red'
+        ],
+        minAlpha: 0.05,
+        valueScale: 1,
+        opacity: 1
+    };
+    var BRUSH_SIZE = 20;
+    var GRADIENT_LEVELS = 256;
+    function Heatmap(opt) {
+        this.option = opt;
+        if (opt) {
+            for (var i in defaultOptions) {
+                if (opt[i] !== undefined) {
+                    this.option[i] = opt[i];
+                } else {
+                    this.option[i] = defaultOptions[i];
+                }
+            }
+        } else {
+            this.option = defaultOptions;
+        }
+    }
+    Heatmap.prototype = {
+        getCanvas: function (data, width, height) {
+            var brush = this._getBrush();
+            var gradient = this._getGradient();
+            var r = BRUSH_SIZE + this.option.blurSize;
+            var canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            var ctx = canvas.getContext('2d');
+            var len = data.length;
+            for (var i = 0; i < len; ++i) {
+                var p = data[i];
+                var x = p[0];
+                var y = p[1];
+                var value = p[2];
+                var alpha = Math.min(1, Math.max(value * this.option.valueScale || this.option.minAlpha, this.option.minAlpha));
+                ctx.globalAlpha = alpha;
+                ctx.drawImage(brush, x - r, y - r);
+            }
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var pixels = imageData.data;
+            var len = pixels.length / 4;
+            while (len--) {
+                var id = len * 4 + 3;
+                var alpha = pixels[id] / 256;
+                var colorOffset = Math.floor(alpha * (GRADIENT_LEVELS - 1));
+                pixels[id - 3] = gradient[colorOffset * 4];
+                pixels[id - 2] = gradient[colorOffset * 4 + 1];
+                pixels[id - 1] = gradient[colorOffset * 4 + 2];
+                pixels[id] *= this.option.opacity;
+            }
+            ctx.putImageData(imageData, 0, 0);
+            return canvas;
+        },
+        _getBrush: function () {
+            if (!this._brushCanvas) {
+                this._brushCanvas = document.createElement('canvas');
+                var r = BRUSH_SIZE + this.option.blurSize;
+                var d = r * 2;
+                this._brushCanvas.width = d;
+                this._brushCanvas.height = d;
+                var ctx = this._brushCanvas.getContext('2d');
+                ctx.shadowOffsetX = d;
+                ctx.shadowBlur = this.option.blurSize;
+                ctx.shadowColor = 'black';
+                ctx.beginPath();
+                ctx.arc(-r, r, BRUSH_SIZE, 0, Math.PI * 2, true);
+                ctx.closePath();
+                ctx.fill();
+            }
+            return this._brushCanvas;
+        },
+        _getGradient: function () {
+            if (!this._gradientPixels) {
+                var levels = GRADIENT_LEVELS;
+                var canvas = document.createElement('canvas');
+                canvas.width = 1;
+                canvas.height = levels;
+                var ctx = canvas.getContext('2d');
+                var gradient = ctx.createLinearGradient(0, 0, 0, levels);
+                var len = this.option.gradientColors.length;
+                for (var i = 0; i < len; ++i) {
+                    if (typeof this.option.gradientColors[i] === 'string') {
+                        gradient.addColorStop((i + 1) / len, this.option.gradientColors[i]);
+                    } else {
+                        gradient.addColorStop(this.option.gradientColors[i].offset, this.option.gradientColors[i].color);
+                    }
+                }
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 1, levels);
+                this._gradientPixels = ctx.getImageData(0, 0, 1, levels).data;
+            }
+            return this._gradientPixels;
+        }
+    };
+    return Heatmap;
 });define('echarts/util/mapData/params', ['require'], function (require) {
     function decode(json) {
         if (!json.UTF8Encoding) {

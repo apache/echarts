@@ -163,8 +163,8 @@ define('echarts/echarts', [
     var _idBase = new Date() - 0;
     var _instances = {};
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
-    self.version = '2.2.3';
-    self.dependencies = { zrender: '2.0.9' };
+    self.version = '2.2.6';
+    self.dependencies = { zrender: '2.1.1' };
     self.init = function (dom, theme) {
         var zrender = require('zrender');
         if (zrender.version.replace('.', '') - 0 < self.dependencies.zrender.replace('.', '') - 0) {
@@ -705,11 +705,12 @@ define('echarts/echarts', [
                 return this._setTimelineOption(option);
             }
         },
-        _setOption: function (option, notMerge) {
+        _setOption: function (option, notMerge, keepTimeLine) {
             if (!notMerge && this._option) {
                 this._option = zrUtil.merge(this.getOption(), zrUtil.clone(option), true);
             } else {
                 this._option = zrUtil.clone(option);
+                !keepTimeLine && this._timeline && this._timeline.dispose();
             }
             this._optionRestore = zrUtil.clone(this._option);
             if (!this._option.series || this._option.series.length === 0) {
@@ -774,6 +775,7 @@ define('echarts/echarts', [
                 ]];
             var magicOption = this.getOption();
             var optionRestore = this._optionRestore;
+            var self = this;
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIdx = params[i][0];
                 data = params[i][1];
@@ -852,7 +854,6 @@ define('echarts/echarts', [
             }
             this.component.dataZoom && this.component.dataZoom.syncOption(magicOption);
             this._option = magicOption;
-            var self = this;
             function animationDone() {
                 if (!self._zr) {
                     return;
@@ -1220,6 +1221,7 @@ define('echarts/echarts', [
         CHART_TYPE_FUNNEL: 'funnel',
         CHART_TYPE_EVENTRIVER: 'eventRiver',
         CHART_TYPE_WORDCLOUD: 'wordCloud',
+        CHART_TYPE_HEATMAP: 'heatmap',
         COMPONENT_TYPE_TITLE: 'title',
         COMPONENT_TYPE_LEGEND: 'legend',
         COMPONENT_TYPE_DATARANGE: 'dataRange',
@@ -1357,6 +1359,7 @@ define('echarts/echarts', [
         },
         DRAG_ENABLE_TIME: 120,
         EFFECT_ZLEVEL: 10,
+        effectBlendAlpha: 0.95,
         symbolList: [
             'circle',
             'rectangle',
@@ -1666,7 +1669,7 @@ define('zrender/zrender', [
     var Animation = require('./animation/Animation');
     var _instances = {};
     var zrender = {};
-    zrender.version = '2.0.9';
+    zrender.version = '2.1.1';
     zrender.init = function (dom) {
         var zr = new ZRender(guid(), dom);
         _instances[zr.id] = zr;
@@ -1924,6 +1927,7 @@ define('zrender/zrender', [
             DROP: 'drop',
             touchClickDelay: 300
         },
+        elementClassName: 'zr-element',
         catchBrushException: false,
         debugMode: 0,
         devicePixelRatio: Math.max(window.devicePixelRatio || 1, 1)
@@ -2027,9 +2031,10 @@ define('zrender/zrender', [
             var value = ecData.get(shape, 'value');
             var seriesName = ecData.get(shape, 'series') != null ? ecData.get(shape, 'series').name : '';
             var font = this.getFont(this.option.island.textStyle);
+            var islandOption = this.option.island;
             var islandShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: islandOption.zlevel,
+                z: islandOption.z,
                 style: {
                     x: shape.style.x,
                     y: shape.style.y,
@@ -4476,6 +4481,9 @@ define('zrender/zrender', [
                 this._setSelectedMap();
                 this._axisLineWidth = this.option.tooltip.axisPointer.lineStyle.width;
                 this._enterable = this.option.tooltip.enterable;
+                if (!this._enterable && this._tDom.className.indexOf(zrConfig.elementClassName) < 0) {
+                    this._tDom.className += ' ' + zrConfig.elementClassName;
+                }
             }
             if (this.showing) {
                 var self = this;
@@ -6156,7 +6164,7 @@ define('zrender/zrender', [
             var timelineOption = self.timelineOption;
             self.currentIndex %= timelineOption.data.length;
             var curOption = self.options[self.currentIndex] || {};
-            self.myChart.setOption(curOption, timelineOption.notMerge);
+            self.myChart._setOption(curOption, timelineOption.notMerge, true);
             self.messageCenter.dispatch(ecConfig.EVENT.TIMELINE_CHANGED, null, {
                 currentIndex: self.currentIndex,
                 data: timelineOption.data[self.currentIndex].name != null ? timelineOption.data[self.currentIndex].name : timelineOption.data[self.currentIndex]
@@ -9129,6 +9137,14 @@ define('zrender/zrender', [
         'touchend',
         'touchmove'
     ];
+    var isZRenderElement = function (event) {
+        if (window.G_vmlCanvasManager) {
+            return true;
+        }
+        event = event || window.event;
+        var target = event.toElement || event.relatedTarget || event.srcElement || event.target;
+        return target && target.className.match(config.elementClassName);
+    };
     var domHandlers = {
         resize: function (event) {
             event = event || window.event;
@@ -9136,7 +9152,10 @@ define('zrender/zrender', [
             this._isMouseDown = 0;
             this.dispatch(EVENT.RESIZE, event);
         },
-        click: function (event) {
+        click: function (event, manually) {
+            if (!isZRenderElement(event) && !manually) {
+                return;
+            }
             event = this._zrenderEventFixed(event);
             var _lastHover = this._lastHover;
             if (_lastHover && _lastHover.clickable || !_lastHover) {
@@ -9146,7 +9165,10 @@ define('zrender/zrender', [
             }
             this._mousemoveHandler(event);
         },
-        dblclick: function (event) {
+        dblclick: function (event, manually) {
+            if (!isZRenderElement(event) && !manually) {
+                return;
+            }
             event = event || window.event;
             event = this._zrenderEventFixed(event);
             var _lastHover = this._lastHover;
@@ -9157,7 +9179,10 @@ define('zrender/zrender', [
             }
             this._mousemoveHandler(event);
         },
-        mousewheel: function (event) {
+        mousewheel: function (event, manually) {
+            if (!isZRenderElement(event) && !manually) {
+                return;
+            }
             event = this._zrenderEventFixed(event);
             var delta = event.wheelDelta || -event.detail;
             var scale = delta > 0 ? 1.1 : 1 / 1.1;
@@ -9188,7 +9213,10 @@ define('zrender/zrender', [
             this._dispatchAgency(this._lastHover, EVENT.MOUSEWHEEL, event);
             this._mousemoveHandler(event);
         },
-        mousemove: function (event) {
+        mousemove: function (event, manually) {
+            if (!isZRenderElement(event) && !manually) {
+                return;
+            }
             if (this.painter.isLoading()) {
                 return;
             }
@@ -9244,7 +9272,10 @@ define('zrender/zrender', [
                 this.painter.refreshHover();
             }
         },
-        mouseout: function (event) {
+        mouseout: function (event, manually) {
+            if (!isZRenderElement(event) && !manually) {
+                return;
+            }
             event = this._zrenderEventFixed(event);
             var element = event.toElement || event.relatedTarget;
             if (element != this.root) {
@@ -9268,7 +9299,10 @@ define('zrender/zrender', [
             }
             this.dispatch(EVENT.GLOBALOUT, event);
         },
-        mousedown: function (event) {
+        mousedown: function (event, manually) {
+            if (!isZRenderElement(event) && !manually) {
+                return;
+            }
             this._clickThreshold = 0;
             if (this._lastDownButton == 2) {
                 this._lastDownButton = event.button;
@@ -9282,7 +9316,10 @@ define('zrender/zrender', [
             this._dispatchAgency(this._lastHover, EVENT.MOUSEDOWN, event);
             this._lastDownButton = event.button;
         },
-        mouseup: function (event) {
+        mouseup: function (event, manually) {
+            if (!isZRenderElement(event) && !manually) {
+                return;
+            }
             event = this._zrenderEventFixed(event);
             this.root.style.cursor = 'default';
             this._isMouseDown = 0;
@@ -9291,20 +9328,29 @@ define('zrender/zrender', [
             this._processDrop(event);
             this._processDragEnd(event);
         },
-        touchstart: function (event) {
+        touchstart: function (event, manually) {
+            if (!isZRenderElement(event) && !manually) {
+                return;
+            }
             event = this._zrenderEventFixed(event, true);
             this._lastTouchMoment = new Date();
             this._mobileFindFixed(event);
             this._mousedownHandler(event);
         },
-        touchmove: function (event) {
+        touchmove: function (event, manually) {
+            if (!isZRenderElement(event) && !manually) {
+                return;
+            }
             event = this._zrenderEventFixed(event, true);
             this._mousemoveHandler(event);
             if (this._isDragging) {
                 eventTool.stop(event);
             }
         },
-        touchend: function (event) {
+        touchend: function (event, manually) {
+            if (!isZRenderElement(event) && !manually) {
+                return;
+            }
             event = this._zrenderEventFixed(event, true);
             this._mouseupHandler(event);
             var now = new Date();
@@ -9322,9 +9368,9 @@ define('zrender/zrender', [
             this.painter.clearHover();
         }
     };
-    function bind1Arg(handler, context) {
-        return function (e) {
-            return handler.call(context, e);
+    function bind2Arg(handler, context) {
+        return function (arg1, arg2) {
+            return handler.call(context, arg1, arg2);
         };
     }
     function bind3Arg(handler, context) {
@@ -9336,7 +9382,7 @@ define('zrender/zrender', [
         var len = domHandlerNames.length;
         while (len--) {
             var name = domHandlerNames[len];
-            instance['_' + name + 'Handler'] = bind1Arg(domHandlers[name], instance);
+            instance['_' + name + 'Handler'] = bind2Arg(domHandlers[name], instance);
         }
     }
     var Handler = function (root, storage, painter) {
@@ -9393,7 +9439,7 @@ define('zrender/zrender', [
         case EVENT.MOUSEDOWN:
         case EVENT.MOUSEUP:
         case EVENT.MOUSEOUT:
-            this['_' + eventName + 'Handler'](eventArgs);
+            this['_' + eventName + 'Handler'](eventArgs, true);
             break;
         }
     };
@@ -9690,6 +9736,7 @@ define('zrender/zrender', [
             '-webkit-touch-callout:none;'
         ].join('');
         this._bgDom.setAttribute('data-zr-dom-id', 'bg');
+        this._bgDom.className = config.elementClassName;
         domRoot.appendChild(this._bgDom);
         this._bgDom.onselectstart = returnFalse;
         var hoverLayer = new Layer('_zrender_hover_', this);
@@ -10236,17 +10283,17 @@ define('zrender/zrender', [
             return;
         }
         el.updateTransform();
-        if (el.type == 'group') {
-            if (el.clipShape) {
-                el.clipShape.parent = el;
-                el.clipShape.updateTransform();
-                if (clipShapes) {
-                    clipShapes = clipShapes.slice();
-                    clipShapes.push(el.clipShape);
-                } else {
-                    clipShapes = [el.clipShape];
-                }
+        if (el.clipShape) {
+            el.clipShape.parent = el;
+            el.clipShape.updateTransform();
+            if (clipShapes) {
+                clipShapes = clipShapes.slice();
+                clipShapes.push(el.clipShape);
+            } else {
+                clipShapes = [el.clipShape];
             }
+        }
+        if (el.type == 'group') {
             for (var i = 0; i < el._children.length; i++) {
                 var child = el._children[i];
                 child.__dirty = el.__dirty || child.__dirty;
@@ -10412,9 +10459,13 @@ define('zrender/zrender', [
             this._clips.push(clip);
         },
         remove: function (clip) {
-            var idx = util.indexOf(this._clips, clip);
-            if (idx >= 0) {
-                this._clips.splice(idx, 1);
+            if (clip.__inStep) {
+                clip.__needsRemove = true;
+            } else {
+                var idx = util.indexOf(this._clips, clip);
+                if (idx >= 0) {
+                    this._clips.splice(idx, 1);
+                }
             }
         },
         _update: function () {
@@ -10426,14 +10477,16 @@ define('zrender/zrender', [
             var deferredClips = [];
             for (var i = 0; i < len; i++) {
                 var clip = clips[i];
+                clip.__inStep = true;
                 var e = clip.step(time);
+                clip.__inStep = false;
                 if (e) {
                     deferredEvents.push(e);
                     deferredClips.push(clip);
                 }
             }
             for (var i = 0; i < len;) {
-                if (clips[i]._needsRemove) {
+                if (clips[i].__needsRemove) {
                     clips[i] = clips[len - 1];
                     clips.pop();
                     len--;
@@ -11097,6 +11150,7 @@ define('zrender/zrender', [
         this.dom.style['user-select'] = 'none';
         this.dom.style['-webkit-touch-callout'] = 'none';
         this.dom.style['-webkit-tap-highlight-color'] = 'rgba(0,0,0,0)';
+        this.dom.className = config.elementClassName;
         vmlCanvasManager && vmlCanvasManager.initElement(this.dom);
         this.domBack = null;
         this.ctxBack = null;
@@ -12977,7 +13031,7 @@ define('zrender/zrender', [
                     this.restart();
                     return 'restart';
                 }
-                this._needsRemove = true;
+                this.__needsRemove = true;
                 return 'destroy';
             }
             return null;
@@ -12986,7 +13040,7 @@ define('zrender/zrender', [
             var time = new Date().getTime();
             var remainder = (time - this._startTime) % this._life;
             this._startTime = new Date().getTime() - remainder + this.gap;
-            this._needsRemove = false;
+            this.__needsRemove = false;
         },
         fire: function (eventType, arg) {
             for (var i = 0, len = this._targetPool.length; i < len; i++) {
@@ -13662,8 +13716,8 @@ define('zrender/zrender', [
             var shapeList = this._markPoint(seriesIndex, markPoint);
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 var tarShape = shapeList[i];
-                tarShape.zlevel = this.getZlevelBase();
-                tarShape.z = this.getZBase() + 1;
+                tarShape.zlevel = serie.zlevel;
+                tarShape.z = serie.z + 1;
                 for (var key in attachStyle) {
                     tarShape[key] = zrUtil.clone(attachStyle[key]);
                 }
@@ -13721,8 +13775,8 @@ define('zrender/zrender', [
                     zrUtil.merge(shapeBundle.style, firstShape.style);
                     zrUtil.merge(shapeBundle.highlightStyle = {}, firstShape.highlightStyle);
                     shapeBundle.style.brushType = 'stroke';
-                    shapeBundle.zlevel = this.getZlevelBase();
-                    shapeBundle.z = this.getZBase() + 1;
+                    shapeBundle.zlevel = serie.zlevel;
+                    shapeBundle.z = serie.z + 1;
                     shapeBundle.hoverable = false;
                     for (var key in attachStyle) {
                         shapeBundle[key] = zrUtil.clone(attachStyle[key]);
@@ -13738,8 +13792,8 @@ define('zrender/zrender', [
             } else {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
                     var tarShape = shapeList[i];
-                    tarShape.zlevel = this.getZlevelBase();
-                    tarShape.z = this.getZBase() + 1;
+                    tarShape.zlevel = serie.zlevel;
+                    tarShape.z = serie.z + 1;
                     for (var key in attachStyle) {
                         tarShape[key] = zrUtil.clone(attachStyle[key]);
                     }
@@ -14303,7 +14357,7 @@ define('zrender/zrender', [
             if (this.canvasSupported) {
                 this.zr.modLayer(zlevel, {
                     motionBlur: true,
-                    lastFrameAlpha: 0.95
+                    lastFrameAlpha: this.option.effectBlendAlpha || ecConfig.effectBlendAlpha
                 });
             }
             var shape;
@@ -16238,7 +16292,8 @@ define('zrender/zrender', [
         parsePercent: number.parsePercent,
         parseCenter: number.parseCenter,
         parseRadius: number.parseRadius,
-        numAddCommas: number.addCommas
+        numAddCommas: number.addCommas,
+        getPrecision: number.getPrecision
     };
     return Base;
 });define('echarts/layout/EdgeBundling', [
@@ -17335,11 +17390,21 @@ define('zrender/zrender', [
         x = (x + '').split('.');
         return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g, '$1,') + (x.length > 1 ? '.' + x[1] : '');
     }
+    function getPrecision(val) {
+        var e = 1;
+        var count = 0;
+        while (Math.round(val * e) / e !== val) {
+            e *= 10;
+            count++;
+        }
+        return count;
+    }
     return {
         parsePercent: parsePercent,
         parseCenter: parseCenter,
         parseRadius: parseRadius,
-        addCommas: addCommas
+        addCommas: addCommas,
+        getPrecision: getPrecision
     };
 });define('echarts/data/KDTree', [
     'require',
@@ -17566,7 +17631,9 @@ define('zrender/zrender', [
         this._tDom = document.createElement('div');
         this._textArea = document.createElement('textArea');
         this._buttonRefresh = document.createElement('button');
+        this._buttonRefresh.setAttribute('type', 'button');
         this._buttonClose = document.createElement('button');
+        this._buttonClose.setAttribute('type', 'button');
         this._hasShow = false;
         this._zrHeight = zr.getHeight();
         this._zrWidth = zr.getWidth();
@@ -22039,8 +22106,8 @@ define('zrender/zrender', [
                             singlePL = this._getLargePointList(orient, singlePL, serie.dataFilter);
                         }
                         var polylineShape = new PolylineShape({
-                            zlevel: this.getZlevelBase(),
-                            z: this.getZBase(),
+                            zlevel: serie.zlevel,
+                            z: serie.z,
                             style: {
                                 miterLimit: lineWidth,
                                 pointList: singlePL,
@@ -22063,8 +22130,8 @@ define('zrender/zrender', [
                         this.shapeList.push(polylineShape);
                         if (isFill) {
                             var halfSmoothPolygonShape = new HalfSmoothPolygonShape({
-                                zlevel: this.getZlevelBase(),
-                                z: this.getZBase(),
+                                zlevel: serie.zlevel,
+                                z: serie.z,
                                 style: {
                                     miterLimit: lineWidth,
                                     pointList: zrUtil.clone(singlePL).concat([
@@ -22220,8 +22287,8 @@ define('zrender/zrender', [
             var serie = series[seriesIndex];
             var data = serie.data[dataIndex];
             var itemShape = this.getSymbolShape(serie, seriesIndex, data, dataIndex, name, x, y, this._sIndex2ShapeMap[seriesIndex], this._sIndex2ColorMap[seriesIndex], '#fff', orient === 'vertical' ? 'horizontal' : 'vertical');
-            itemShape.zlevel = this.getZlevelBase();
-            itemShape.z = this.getZBase() + 1;
+            itemShape.zlevel = serie.zlevel;
+            itemShape.z = serie.z + 1;
             if (this.deepQuery([
                     data,
                     serie,
@@ -22353,7 +22420,7 @@ define('zrender/zrender', [
                 }
             }
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         }
     };
@@ -22910,8 +22977,8 @@ define('zrender/zrender', [
             var emphasis = this.deepMerge(queryTarget, 'itemStyle.emphasis');
             var normalBorderWidth = normal.barBorderWidth;
             barShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: x,
@@ -23096,7 +23163,7 @@ define('zrender/zrender', [
                 }
             }
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         }
     };
@@ -23367,7 +23434,7 @@ define('zrender/zrender', [
                 serie = series[seriesIndex];
                 seriesPL = pointList[seriesIndex];
                 if (serie.large && serie.data.length > serie.largeThreshold) {
-                    this.shapeList.push(this._getLargeSymbol(seriesPL, this.getItemStyleColor(this.query(serie, 'itemStyle.normal.color'), seriesIndex, -1) || this._sIndex2ColorMap[seriesIndex]));
+                    this.shapeList.push(this._getLargeSymbol(serie, seriesPL, this.getItemStyleColor(this.query(serie, 'itemStyle.normal.color'), seriesIndex, -1) || this._sIndex2ColorMap[seriesIndex]));
                     continue;
                 }
                 for (var i = 0, l = seriesPL.length; i < l; i++) {
@@ -23392,15 +23459,15 @@ define('zrender/zrender', [
                 rangColor = this._sIndex2ColorMap[seriesIndex];
             }
             var itemShape = this.getSymbolShape(serie, seriesIndex, data, dataIndex, name, x, y, this._sIndex2ShapeMap[seriesIndex], rangColor, 'rgba(0,0,0,0)', 'vertical');
-            itemShape.zlevel = this.getZlevelBase();
-            itemShape.z = this.getZBase();
+            itemShape.zlevel = serie.zlevel;
+            itemShape.z = serie.z;
             itemShape._main = true;
             return itemShape;
         },
-        _getLargeSymbol: function (pointList, nColor) {
+        _getLargeSymbol: function (serie, pointList, nColor) {
             return new SymbolShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 _main: true,
                 hoverable: false,
                 style: {
@@ -25034,8 +25101,8 @@ define('zrender/zrender', [
                 serie
             ];
             var itemShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 hoverable: this.deepQuery(queryTarget, 'hoverable'),
                 style: {
@@ -25127,7 +25194,7 @@ define('zrender/zrender', [
                 }
             }
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         }
     };
@@ -25266,8 +25333,8 @@ define('zrender/zrender', [
                             this.option
                         ], 'calculable')) {
                         pieCase = {
-                            zlevel: this.getZlevelBase(),
-                            z: this.getZBase(),
+                            zlevel: series[i].zlevel,
+                            z: series[i].z,
                             hoverable: false,
                             style: {
                                 x: center[0],
@@ -25400,8 +25467,8 @@ define('zrender/zrender', [
             var normalColor = this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data) || defaultColor;
             var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) || (typeof normalColor === 'string' ? zrColor.lift(normalColor, -0.2) : normalColor);
             var sector = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: center[0],
@@ -25495,8 +25562,8 @@ define('zrender/zrender', [
             data.__labelX = x - (textAlign === 'left' ? 5 : -5);
             data.__labelY = y;
             var ts = new TextShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + 1,
+                zlevel: serie.zlevel,
+                z: serie.z + 1,
                 hoverable: false,
                 style: {
                     x: x,
@@ -25561,8 +25628,8 @@ define('zrender/zrender', [
                 var cosValue = zrMath.cos(midAngle, true);
                 var sinValue = zrMath.sin(midAngle, true);
                 return new PolylineShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         pointList: [
@@ -25825,7 +25892,7 @@ define('zrender/zrender', [
             }
             this.shapeList = backupShapeList;
             if (!aniCount) {
-                animationDone();
+                done && done();
             }
         },
         onclick: function (param) {
@@ -26988,9 +27055,9 @@ define('zrender/zrender', [
                 var serie = series[i];
                 if (this.selectedMap[serie.name]) {
                     var graph;
-                    if (serie.data && serie.matrix) {
+                    if (serie.matrix) {
                         graph = this._getSerieGraphFromDataMatrix(serie, mainSerie);
-                    } else if (serie.nodes && serie.links) {
+                    } else if (serie.links) {
                         graph = this._getSerieGraphFromNodeLinks(serie, mainSerie);
                     }
                     graph.filterNode(nodeFilter, this);
@@ -27244,8 +27311,8 @@ define('zrender/zrender', [
                 var startAngle = node.layout.startAngle / Math.PI * 180 * sign;
                 var endAngle = node.layout.endAngle / Math.PI * 180 * sign;
                 var sector = new SectorShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase(),
+                    zlevel: serie.zlevel,
+                    z: serie.z,
                     style: {
                         x: center[0],
                         y: center[1],
@@ -27305,8 +27372,8 @@ define('zrender/zrender', [
                     color = category ? this.getColor(category.name) : this.getColor(node.id);
                 }
                 var iconShape = new IconShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     style: {
                         x: -node.layout.size,
                         y: -node.layout.size,
@@ -27335,7 +27402,6 @@ define('zrender/zrender', [
             }, this);
         },
         _buildLabels: function (serie, serieIdx, graph, mainSerie) {
-            var labelColor = this.query(mainSerie, 'itemStyle.normal.label.color');
             var rotateLabel = this.query(mainSerie, 'itemStyle.normal.label.rotate');
             var labelDistance = this.query(mainSerie, 'itemStyle.normal.label.distance');
             var center = this.parseCenter(this.zr, mainSerie.center);
@@ -27365,13 +27431,12 @@ define('zrender/zrender', [
                 var start = vec2.scale([], v, radius[1] + distance);
                 vec2.add(start, start, center);
                 var labelShape = {
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         text: node.data.label == null ? node.id : node.data.label,
-                        textAlign: isRightSide ? 'left' : 'right',
-                        color: labelColor || '#000000'
+                        textAlign: isRightSide ? 'left' : 'right'
                     }
                 };
                 if (rotateLabel) {
@@ -27387,10 +27452,10 @@ define('zrender/zrender', [
                     labelShape.style.x = start[0];
                     labelShape.style.y = start[1];
                 }
-                labelShape.style.textColor = this.deepQuery([
+                labelShape.style.color = this.deepQuery([
                     node.data,
                     mainSerie
-                ], 'itemStyle.normal.label.textStyle.color') || '#fff';
+                ], 'itemStyle.normal.label.textStyle.color') || '#000000';
                 labelShape.style.textFont = this.getFont(this.deepQuery([
                     node.data,
                     mainSerie
@@ -27430,8 +27495,8 @@ define('zrender/zrender', [
                 var queryTarget = this._getEdgeQueryTarget(serie, edge.data);
                 var queryTargetEmphasis = this._getEdgeQueryTarget(serie, edge.data, 'emphasis');
                 var ribbon = new RibbonShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase(),
+                    zlevel: serie.zlevel,
+                    z: serie.z,
                     style: {
                         x: center[0],
                         y: center[1],
@@ -27479,8 +27544,8 @@ define('zrender/zrender', [
                 var queryTarget = this._getEdgeQueryTarget(serie, e.data);
                 var queryTargetEmphasis = this._getEdgeQueryTarget(serie, e.data, 'emphasis');
                 var curveShape = new BezierCurveShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase(),
+                    zlevel: serie.zlevel,
+                    z: serie.z,
                     style: {
                         xStart: shape1.position[0],
                         yStart: shape1.position[1],
@@ -27553,8 +27618,8 @@ define('zrender/zrender', [
                     var end = vec2.scale([], v, radius[1] + this.scaleLineLength);
                     vec2.add(end, end, center);
                     var scaleShape = new LineShape({
-                        zlevel: this.getZlevelBase(),
-                        z: this.getZBase() - 1,
+                        zlevel: serie.zlevel,
+                        z: serie.z - 1,
                         hoverable: false,
                         style: {
                             xStart: start[0],
@@ -27587,8 +27652,8 @@ define('zrender/zrender', [
                     }
                     var isRightSide = theta <= 90 || theta >= 270;
                     var textShape = new TextShape({
-                        zlevel: this.getZlevelBase(),
-                        z: this.getZBase() - 1,
+                        zlevel: serie.zlevel,
+                        z: serie.z - 1,
                         hoverable: false,
                         style: {
                             x: isRightSide ? radius[1] + this.scaleLineLength + 4 : -radius[1] - this.scaleLineLength - 4,
@@ -28186,6 +28251,7 @@ define('zrender/zrender', [
         constructor: Force,
         type: ecConfig.CHART_TYPE_FORCE,
         _init: function () {
+            this.selectedMap = {};
             var legend = this.component.legend;
             var series = this.series;
             var serieName;
@@ -28227,9 +28293,9 @@ define('zrender/zrender', [
         },
         _initSerie: function (serie, serieIdx) {
             this._temperature = 1;
-            if (serie.data) {
+            if (serie.matrix) {
                 this._graph = this._getSerieGraphFromDataMatrix(serie);
-            } else {
+            } else if (serie.links) {
                 this._graph = this._getSerieGraphFromNodeLinks(serie);
             }
             this._buildLinkShapes(serie, serieIdx);
@@ -28566,7 +28632,9 @@ define('zrender/zrender', [
                             0,
                             0
                         ],
-                        rotation: 0
+                        rotation: 0,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase()
                     });
                     linkShape._symbolShape = symbolShape;
                     this.shapeList.push(symbolShape);
@@ -29518,8 +29586,10 @@ define('zrender/zrender', [
     'zrender/shape/Line',
     'zrender/shape/Polygon',
     'zrender/shape/Ellipse',
+    'zrender/shape/Image',
     '../component/dataRange',
     '../component/roamController',
+    '../layer/heatmap',
     '../config',
     '../util/ecData',
     'zrender/tool/util',
@@ -29540,14 +29610,15 @@ define('zrender/zrender', [
     var LineShape = require('zrender/shape/Line');
     var PolygonShape = require('zrender/shape/Polygon');
     var EllipseShape = require('zrender/shape/Ellipse');
+    var ZrImage = require('zrender/shape/Image');
     require('../component/dataRange');
     require('../component/roamController');
+    var HeatmapLayer = require('../layer/heatmap');
     var ecConfig = require('../config');
     ecConfig.map = {
         zlevel: 0,
         z: 2,
         mapType: 'china',
-        mapValuePrecision: 0,
         showLegendSymbol: true,
         dataRangeHoverLink: true,
         hoverable: true,
@@ -29686,13 +29757,15 @@ define('zrender/zrender', [
                             name = this._nameChange(mapType, data[j].name);
                             valueData[mapType][name] = valueData[mapType][name] || {
                                 seriesIndex: [],
-                                valueMap: {}
+                                valueMap: {},
+                                precision: 0
                             };
                             for (var key in data[j]) {
                                 if (key != 'value') {
                                     valueData[mapType][name][key] = data[j][key];
                                 } else if (!isNaN(data[j].value)) {
                                     valueData[mapType][name].value == null && (valueData[mapType][name].value = 0);
+                                    valueData[mapType][name].precision = Math.max(this.getPrecision(+data[j].value), valueData[mapType][name].precision);
                                     valueData[mapType][name].value += +data[j].value;
                                     valueData[mapType][name].valueMap[i] = +data[j].value;
                                 }
@@ -29713,9 +29786,13 @@ define('zrender/zrender', [
                 this.lastShapeList = [];
             }
             for (var mt in valueData) {
-                if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
-                    for (var k in valueData[mt]) {
-                        valueData[mt][k].value = (valueData[mt][k].value / valueData[mt][k].seriesIndex.length).toFixed(mapValuePrecision[mt]) - 0;
+                for (var k in valueData[mt]) {
+                    if (valueCalculation[mt] == 'average') {
+                        valueData[mt][k].value /= valueData[mt][k].seriesIndex.length;
+                    }
+                    var value = valueData[mt][k].value;
+                    if (value != null) {
+                        valueData[mt][k].value = value.toFixed(mapValuePrecision[mt] == null ? valueData[mt][k].precision : mapValuePrecision[mt]) - 0;
                     }
                 }
                 this._mapDataMap[mt] = this._mapDataMap[mt] || {};
@@ -29750,6 +29827,7 @@ define('zrender/zrender', [
                     self.addShapeList();
                     self.zr.refreshNextFrame();
                 }
+                self._buildHeatmap(mt);
             };
         },
         _clearSelected: function () {
@@ -30006,19 +30084,20 @@ define('zrender/zrender', [
                     queryTarget = [data];
                     seriesName = '';
                     for (var j = 0, k = data.seriesIndex.length; j < k; j++) {
-                        queryTarget.push(series[data.seriesIndex[j]]);
-                        seriesName += series[data.seriesIndex[j]].name + ' ';
-                        if (legend && this._showLegendSymbol[mapType] && legend.hasColor(series[data.seriesIndex[j]].name)) {
+                        var serie = series[data.seriesIndex[j]];
+                        queryTarget.push(serie);
+                        seriesName += serie.name + ' ';
+                        if (legend && this._showLegendSymbol[mapType] && legend.hasColor(serie.name)) {
                             this.shapeList.push(new CircleShape({
-                                zlevel: this.getZlevelBase(),
-                                z: this.getZBase() + 1,
+                                zlevel: serie.zlevel,
+                                z: serie.z + 1,
                                 position: zrUtil.clone(style.position),
                                 _mapType: mapType,
                                 style: {
                                     x: style.textX + 3 + j * 7,
                                     y: style.textY - 10,
                                     r: 3,
-                                    color: legend.getColor(series[data.seriesIndex[j]].name)
+                                    color: legend.getColor(serie.name)
                                 },
                                 hoverable: false
                             }));
@@ -30116,7 +30195,7 @@ define('zrender/zrender', [
                     }
                     break;
                 }
-                if (this._selectedMode[mapType] && this._selected[name] || data.selected && this._selected[name] !== false) {
+                if (this._selectedMode[mapType] && (this._selected[name] && data.selected !== false) || data.selected === true) {
                     textShape.style = textShape.highlightStyle;
                     shape.style = shape.highlightStyle;
                 }
@@ -30168,6 +30247,71 @@ define('zrender/zrender', [
                     _mapType: mapType
                 };
                 this.buildMark(sIdx);
+            }
+        },
+        _buildHeatmap: function (mapType) {
+            var series = this.series;
+            for (var i = 0, l = series.length; i < l; i++) {
+                if (series[i].heatmap) {
+                    var data = series[i].heatmap.data;
+                    if (series[i].heatmap.needsTransform === false) {
+                        var geo = [];
+                        for (var j = 0, len = data.length; j < len; ++j) {
+                            geo.push([
+                                data[j][3],
+                                data[j][4],
+                                data[j][2]
+                            ]);
+                        }
+                        var pos = [
+                            0,
+                            0
+                        ];
+                    } else {
+                        var geoData = series[i].heatmap._geoData;
+                        if (geoData === undefined) {
+                            series[i].heatmap._geoData = [];
+                            for (var j = 0, len = data.length; j < len; ++j) {
+                                series[i].heatmap._geoData[j] = data[j];
+                            }
+                            geoData = series[i].heatmap._geoData;
+                        }
+                        var len = data.length;
+                        for (var id = 0; id < len; ++id) {
+                            data[id] = this.geo2pos(mapType, [
+                                geoData[id][0],
+                                geoData[id][1]
+                            ]);
+                        }
+                        var pos = [
+                            this._mapDataMap[mapType].transform.left,
+                            this._mapDataMap[mapType].transform.top
+                        ];
+                    }
+                    var layer = new HeatmapLayer(series[i].heatmap.itemStyle);
+                    var canvas = layer.getCanvas(data[0][3] ? geo : data, this.zr.getWidth(), this.zr.getHeight());
+                    var image = new ZrImage({
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase() + 1,
+                        position: pos,
+                        scale: [
+                            1,
+                            1
+                        ],
+                        hoverable: false,
+                        style: {
+                            x: 0,
+                            y: 0,
+                            image: canvas,
+                            width: canvas.width,
+                            height: canvas.height
+                        }
+                    });
+                    image.type = 'heatmap';
+                    image._mapType = mapType;
+                    this.shapeList.push(image);
+                    this.zr.addShape(image);
+                }
             }
         },
         getMarkCoord: function (seriesIndex, mpData) {
@@ -30317,6 +30461,7 @@ define('zrender/zrender', [
                             case 'polygon':
                             case 'line':
                             case 'ellipse':
+                            case 'heatmap':
                                 shape.scale[0] *= delta;
                                 shape.scale[1] *= delta;
                                 break;
@@ -31410,6 +31555,112 @@ define('zrender/zrender', [
     zrUtil.inherits(RoamController, Base);
     require('../component').define('roamController', RoamController);
     return RoamController;
+});define('echarts/layer/heatmap', ['require'], function (require) {
+    var defaultOptions = {
+        blurSize: 30,
+        gradientColors: [
+            'blue',
+            'cyan',
+            'lime',
+            'yellow',
+            'red'
+        ],
+        minAlpha: 0.05,
+        valueScale: 1,
+        opacity: 1
+    };
+    var BRUSH_SIZE = 20;
+    var GRADIENT_LEVELS = 256;
+    function Heatmap(opt) {
+        this.option = opt;
+        if (opt) {
+            for (var i in defaultOptions) {
+                if (opt[i] !== undefined) {
+                    this.option[i] = opt[i];
+                } else {
+                    this.option[i] = defaultOptions[i];
+                }
+            }
+        } else {
+            this.option = defaultOptions;
+        }
+    }
+    Heatmap.prototype = {
+        getCanvas: function (data, width, height) {
+            var brush = this._getBrush();
+            var gradient = this._getGradient();
+            var r = BRUSH_SIZE + this.option.blurSize;
+            var canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            var ctx = canvas.getContext('2d');
+            var len = data.length;
+            for (var i = 0; i < len; ++i) {
+                var p = data[i];
+                var x = p[0];
+                var y = p[1];
+                var value = p[2];
+                var alpha = Math.min(1, Math.max(value * this.option.valueScale || this.option.minAlpha, this.option.minAlpha));
+                ctx.globalAlpha = alpha;
+                ctx.drawImage(brush, x - r, y - r);
+            }
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var pixels = imageData.data;
+            var len = pixels.length / 4;
+            while (len--) {
+                var id = len * 4 + 3;
+                var alpha = pixels[id] / 256;
+                var colorOffset = Math.floor(alpha * (GRADIENT_LEVELS - 1));
+                pixels[id - 3] = gradient[colorOffset * 4];
+                pixels[id - 2] = gradient[colorOffset * 4 + 1];
+                pixels[id - 1] = gradient[colorOffset * 4 + 2];
+                pixels[id] *= this.option.opacity;
+            }
+            ctx.putImageData(imageData, 0, 0);
+            return canvas;
+        },
+        _getBrush: function () {
+            if (!this._brushCanvas) {
+                this._brushCanvas = document.createElement('canvas');
+                var r = BRUSH_SIZE + this.option.blurSize;
+                var d = r * 2;
+                this._brushCanvas.width = d;
+                this._brushCanvas.height = d;
+                var ctx = this._brushCanvas.getContext('2d');
+                ctx.shadowOffsetX = d;
+                ctx.shadowBlur = this.option.blurSize;
+                ctx.shadowColor = 'black';
+                ctx.beginPath();
+                ctx.arc(-r, r, BRUSH_SIZE, 0, Math.PI * 2, true);
+                ctx.closePath();
+                ctx.fill();
+            }
+            return this._brushCanvas;
+        },
+        _getGradient: function () {
+            if (!this._gradientPixels) {
+                var levels = GRADIENT_LEVELS;
+                var canvas = document.createElement('canvas');
+                canvas.width = 1;
+                canvas.height = levels;
+                var ctx = canvas.getContext('2d');
+                var gradient = ctx.createLinearGradient(0, 0, 0, levels);
+                var len = this.option.gradientColors.length;
+                for (var i = 0; i < len; ++i) {
+                    if (typeof this.option.gradientColors[i] === 'string') {
+                        gradient.addColorStop((i + 1) / len, this.option.gradientColors[i]);
+                    } else {
+                        gradient.addColorStop(this.option.gradientColors[i].offset, this.option.gradientColors[i].color);
+                    }
+                }
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 1, levels);
+                this._gradientPixels = ctx.getImageData(0, 0, 1, levels).data;
+            }
+            return this._gradientPixels;
+        }
+    };
+    return Heatmap;
 });define('echarts/util/mapData/params', ['require'], function (require) {
     function decode(json) {
         if (!json.UTF8Encoding) {
@@ -46010,7 +46261,7 @@ define('zrender/zrender', [
             var newAngle;
             for (var i = 0, l = colorArray.length; i < l; i++) {
                 newAngle = startAngle - totalAngle * (colorArray[i][0] - min) / total;
-                sectorShape = this._getSector(center, r0, r, newAngle, lastAngle, colorArray[i][1], lineStyle);
+                sectorShape = this._getSector(center, r0, r, newAngle, lastAngle, colorArray[i][1], lineStyle, serie.zlevel, serie.z);
                 lastAngle = newAngle;
                 sectorShape._animationAdd = 'r';
                 ecData.set(sectorShape, 'seriesIndex', seriesIndex);
@@ -46044,8 +46295,8 @@ define('zrender/zrender', [
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         xStart: center[0] + cosAngle * r,
@@ -46093,8 +46344,8 @@ define('zrender/zrender', [
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         xStart: center[0] + cosAngle * r,
@@ -46139,8 +46390,8 @@ define('zrender/zrender', [
                 cosAngle = Math.cos(angle * Math.PI / 180);
                 angle = (angle + 360) % 360;
                 this.shapeList.push(new TextShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         x: center[0] + cosAngle * r0,
@@ -46174,8 +46425,8 @@ define('zrender/zrender', [
             var angle = (params.startAngle - params.totalAngle / total * (value - serie.min)) * Math.PI / 180;
             var color = pointer.color === 'auto' ? this._getColor(seriesIndex, value) : pointer.color;
             var pointShape = new GaugePointerShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + 1,
+                zlevel: serie.zlevel,
+                z: serie.z + 1,
                 clickable: this.query(serie, 'clickable'),
                 style: {
                     x: center[0],
@@ -46199,8 +46450,8 @@ define('zrender/zrender', [
             ecData.pack(pointShape, this.series[seriesIndex], seriesIndex, this.series[seriesIndex].data[0], 0, this.series[seriesIndex].data[0].name, value);
             this.shapeList.push(pointShape);
             this.shapeList.push(new CircleShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + 2,
+                zlevel: serie.zlevel,
+                z: serie.z + 2,
                 hoverable: false,
                 style: {
                     x: center[0],
@@ -46226,8 +46477,8 @@ define('zrender/zrender', [
                 var x = params.center[0] + this.parsePercent(offsetCenter[0], params.radius[1]);
                 var y = params.center[1] + this.parsePercent(offsetCenter[1], params.radius[1]);
                 this.shapeList.push(new TextShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + (Math.abs(x - params.center[0]) + Math.abs(y - params.center[1]) < textStyle.fontSize * 2 ? 2 : 1),
+                    zlevel: serie.zlevel,
+                    z: serie.z + (Math.abs(x - params.center[0]) + Math.abs(y - params.center[1]) < textStyle.fontSize * 2 ? 2 : 1),
                     hoverable: false,
                     style: {
                         x: x,
@@ -46259,8 +46510,8 @@ define('zrender/zrender', [
             var x = params.center[0] - detail.width / 2 + this.parsePercent(offsetCenter[0], params.radius[1]);
             var y = params.center[1] + this.parsePercent(offsetCenter[1], params.radius[1]);
             this.shapeList.push(new RectangleShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + (Math.abs(x + detail.width / 2 - params.center[0]) + Math.abs(y + detail.height / 2 - params.center[1]) < textStyle.fontSize ? 2 : 1),
+                zlevel: serie.zlevel,
+                z: serie.z + (Math.abs(x + detail.width / 2 - params.center[0]) + Math.abs(y + detail.height / 2 - params.center[1]) < textStyle.fontSize ? 2 : 1),
                 hoverable: false,
                 style: {
                     x: x,
@@ -46317,10 +46568,10 @@ define('zrender/zrender', [
             }
             return colorArray[colorArray.length - 1][1];
         },
-        _getSector: function (center, r0, r, startAngle, endAngle, color, lineStyle) {
+        _getSector: function (center, r0, r, startAngle, endAngle, color, lineStyle, zlevel, z) {
             return new SectorShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: zlevel,
+                z: z,
                 hoverable: false,
                 style: {
                     x: center[0],
@@ -46743,8 +46994,8 @@ define('zrender/zrender', [
                 break;
             }
             var polygon = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     pointList: [
@@ -46809,8 +47060,8 @@ define('zrender/zrender', [
                 textAlign = 'left';
             }
             var textShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + 1,
+                zlevel: serie.zlevel,
+                z: serie.z + 1,
                 style: {
                     x: this._getLabelPoint(labelControl.position, x, location, topWidth, bottomWidth, lineLength, align),
                     y: y + height / 2,
@@ -46886,8 +47137,8 @@ define('zrender/zrender', [
             var labelControl = itemStyle[status].label;
             labelControl.position = labelControl.position || itemStyle.normal.label.position;
             var lineShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + 1,
+                zlevel: serie.zlevel,
+                z: serie.z + 1,
                 hoverable: false,
                 style: {
                     xStart: this._getLabelLineStartPoint(x, location, topWidth, bottomWidth, align),
@@ -47087,8 +47338,8 @@ define('zrender/zrender', [
             var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) || (typeof normalColor === 'string' ? zrColor.lift(normalColor, -0.2) : normalColor);
             var pts = this._calculateControlPoints(oneEvent);
             var eventBubbleShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     pointList: pts,
@@ -47181,7 +47432,7 @@ define('zrender/zrender', [
     return EventRiver;
 });define('echarts/layout/eventRiver', ['require'], function (require) {
     function eventRiverLayout(series, intervalX, area) {
-        var space = 5;
+        var space = 4;
         var scale = intervalX;
         function importanceSort(a, b) {
             var x = a.importance;
@@ -47234,112 +47485,128 @@ define('zrender/zrender', [
                 }
             }
         }
-        var root = segmentTreeBuild(Math.floor(minTime), Math.ceil(maxTime));
-        var totalMaxY = 0;
+        minTime = ~~minTime;
+        maxTime = ~~maxTime;
+        var flagForOffset = function () {
+            var length = maxTime - minTime + 1 + ~~intervalX;
+            if (length <= 0) {
+                return [0];
+            }
+            var result = [];
+            while (length--) {
+                result.push(0);
+            }
+            return result;
+        }();
+        var flagForPos = flagForOffset.slice(0);
+        var bubbleData = [];
+        var totalMaxy = 0;
+        var totalOffset = 0;
         for (var i = 0; i < series.length; i++) {
             for (var j = 0; j < series[i].data.length; j++) {
                 var e = series[i].data[j];
                 e.time = [];
                 e.value = [];
+                var tmp;
+                var maxy = 0;
                 for (var k = 0; k < series[i].data[j].evolution.length; k++) {
-                    e.time.push(series[i].data[j].evolution[k].timeScale);
-                    e.value.push(series[i].data[j].evolution[k].valueScale);
+                    tmp = series[i].data[j].evolution[k];
+                    e.time.push(tmp.timeScale);
+                    e.value.push(tmp.valueScale);
+                    maxy = Math.max(maxy, tmp.valueScale);
                 }
-                var mxIndex = indexOf(e.value, Math.max.apply(Math, e.value));
-                var maxY = segmentTreeQuery(root, e.time[mxIndex], e.time[mxIndex + 1]);
-                var k = 0;
-                e.y = maxY + e.value[mxIndex] / 2 + space;
-                for (k = 0; k < e.time.length - 1; k++) {
-                    var curMaxY = segmentTreeQuery(root, e.time[k], e.time[k + 1]);
-                    if (e.y - e.value[k] / 2 - space < curMaxY) {
-                        e.y = curMaxY + e.value[k] / 2 + space;
-                    }
-                }
-                var curMaxY = segmentTreeQuery(root, e.time[k], e.time[k] + scale);
-                if (e.y - e.value[k] / 2 - space < curMaxY) {
-                    e.y = curMaxY + e.value[k] / 2 + space;
-                }
-                series[i].y = e.y;
-                totalMaxY = Math.max(totalMaxY, e.y + e.value[mxIndex] / 2);
-                for (k = 0; k < e.time.length - 1; k++) {
-                    segmentTreeInsert(root, e.time[k], e.time[k + 1], e.y + e.value[k] / 2);
-                }
-                segmentTreeInsert(root, e.time[k], e.time[k] + scale, e.y + e.value[k] / 2);
+                bubbleBound(e, intervalX, minTime);
+                e.y = findLocation(flagForPos, e, function (e, index) {
+                    return e.ypx[index];
+                });
+                e._offset = findLocation(flagForOffset, e, function () {
+                    return space;
+                });
+                totalMaxy = Math.max(totalMaxy, e.y + maxy);
+                totalOffset = Math.max(totalOffset, e._offset);
+                bubbleData.push(e);
             }
         }
-        scaleY(series, area, totalMaxY, space);
+        scaleY(bubbleData, area, totalMaxy, totalOffset);
     }
-    function scaleY(series, area, maxY, space) {
+    function scaleY(bubbleData, area, maxY, offset) {
+        var height = area.height;
+        var offsetScale = offset / height > 0.5 ? 0.5 : 1;
         var yBase = area.y;
-        var yScale = (area.height - space) / maxY;
-        for (var i = 0; i < series.length; i++) {
-            series[i].y = series[i].y * yScale + yBase;
-            var eventList = series[i].data;
-            for (var j = 0; j < eventList.length; j++) {
-                eventList[j].y = eventList[j].y * yScale + yBase;
-                var evolutionList = eventList[j].evolution;
-                for (var k = 0; k < evolutionList.length; k++) {
-                    evolutionList[k].valueScale *= yScale * 1;
-                }
+        var yScale = (area.height - offset) / maxY;
+        for (var i = 0, length = bubbleData.length; i < length; i++) {
+            var e = bubbleData[i];
+            e.y = yBase + yScale * e.y + e._offset * offsetScale;
+            delete e.time;
+            delete e.value;
+            delete e.xpx;
+            delete e.ypx;
+            delete e._offset;
+            var evolutionList = e.evolution;
+            for (var k = 0, klen = evolutionList.length; k < klen; k++) {
+                evolutionList[k].valueScale *= yScale;
             }
         }
     }
-    function segmentTreeBuild(left, right) {
-        var root = {
-            'left': left,
-            'right': right,
-            'leftChild': null,
-            'rightChild': null,
-            'maxValue': 0
+    function line(x0, y0, x1, y1) {
+        if (x0 === x1) {
+            throw new Error('x0 is equal with x1!!!');
+        }
+        if (y0 === y1) {
+            return function () {
+                return y0;
+            };
+        }
+        var k = (y0 - y1) / (x0 - x1);
+        var b = (y1 * x0 - y0 * x1) / (x0 - x1);
+        return function (x) {
+            return k * x + b;
         };
-        if (left + 1 < right) {
-            var mid = Math.round((left + right) / 2);
-            root.leftChild = segmentTreeBuild(left, mid);
-            root.rightChild = segmentTreeBuild(mid, right);
-        }
-        return root;
     }
-    function segmentTreeQuery(root, left, right) {
-        if (right - left < 1) {
-            return 0;
-        }
-        var mid = Math.round((root.left + root.right) / 2);
-        var result = 0;
-        if (left == root.left && right == root.right) {
-            result = root.maxValue;
-        } else if (right <= mid && root.leftChild != null) {
-            result = segmentTreeQuery(root.leftChild, left, right);
-        } else if (left >= mid && root.rightChild != null) {
-            result = segmentTreeQuery(root.rightChild, left, right);
-        } else {
-            var leftValue = 0;
-            var rightValue = 0;
-            if (root.leftChild != null) {
-                leftValue = segmentTreeQuery(root.leftChild, left, mid);
+    function bubbleBound(e, intervalX, minX) {
+        var space = ~~intervalX;
+        var length = e.time.length;
+        e.xpx = [];
+        e.ypx = [];
+        var i = 0;
+        var x0 = 0;
+        var x1 = 0;
+        var y0 = 0;
+        var y1 = 0;
+        var newline;
+        for (; i < length; i++) {
+            x0 = ~~e.time[i];
+            y0 = e.value[i] / 2;
+            if (i === length - 1) {
+                x1 = x0 + space;
+                y1 = 0;
+            } else {
+                x1 = ~~e.time[i + 1];
+                y1 = e.value[i + 1] / 2;
             }
-            if (root.rightChild != null) {
-                rightValue = segmentTreeQuery(root.rightChild, mid, right);
+            newline = line(x0, y0, x1, y1);
+            for (var x = x0; x < x1; x++) {
+                e.xpx.push(x - minX);
+                e.ypx.push(newline(x));
             }
-            result = leftValue > rightValue ? leftValue : rightValue;
         }
-        return result;
+        e.xpx.push(x1 - minX);
+        e.ypx.push(y1);
     }
-    function segmentTreeInsert(root, left, right, value) {
-        if (root == null) {
-            return;
+    function findLocation(flags, e, yvalue) {
+        var pos = 0;
+        var length = e.xpx.length;
+        var i = 0;
+        var y;
+        for (; i < length; i++) {
+            y = yvalue(e, i);
+            pos = Math.max(pos, y + flags[e.xpx[i]]);
         }
-        var mid = Math.round((root.left + root.right) / 2);
-        root.maxValue = root.maxValue > value ? root.maxValue : value;
-        if (Math.floor(left * 10) == Math.floor(root.left * 10) && Math.floor(right * 10) == Math.floor(root.right * 10)) {
-            return;
-        } else if (right <= mid) {
-            segmentTreeInsert(root.leftChild, left, right, value);
-        } else if (left >= mid) {
-            segmentTreeInsert(root.rightChild, left, right, value);
-        } else {
-            segmentTreeInsert(root.leftChild, left, mid, value);
-            segmentTreeInsert(root.rightChild, mid, right, value);
+        for (i = 0; i < length; i++) {
+            y = yvalue(e, i);
+            flags[e.xpx[i]] = pos + y;
         }
+        return pos;
     }
     return eventRiverLayout;
 });define('echarts/chart/venn', [
@@ -47378,13 +47645,25 @@ define('zrender/zrender', [
             this._dropBoxList = [];
             this._vennDataCounter = 0;
             var series = this.series;
-            this.data = series[0].data;
-            this._buildVenn(this.data);
+            var legend = this.component.legend;
+            for (var i = 0; i < series.length; i++) {
+                if (series[i].type === ecConfig.CHART_TYPE_VENN) {
+                    series[i] = this.reformOption(series[i]);
+                    var serieName = series[i].name || '';
+                    this.selectedMap[serieName] = legend ? legend.isSelected(serieName) : true;
+                    if (!this.selectedMap[serieName]) {
+                        continue;
+                    }
+                    this._buildVenn(i);
+                }
+            }
             this.addShapeList();
         },
-        _buildVenn: function (data) {
+        _buildVenn: function (seriesIndex) {
             var r0;
             var r1;
+            var serie = this.series[seriesIndex];
+            var data = serie.data;
             if (data[0].value > data[1].value) {
                 r0 = this.zr.getHeight() / 3;
                 r1 = r0 * Math.sqrt(data[1].value) / Math.sqrt(data[0].value);
@@ -47400,8 +47679,8 @@ define('zrender/zrender', [
             }
             var x1 = x0 + coincideLength;
             var y = this.zr.getHeight() / 2;
-            this._buildItem(0, 0, x0, y, r0);
-            this._buildItem(0, 1, x1, y, r1);
+            this._buildItem(seriesIndex, 0, data[0], x0, y, r0);
+            this._buildItem(seriesIndex, 1, data[1], x1, y, r1);
             if (data[2].value !== 0 && data[2].value !== data[0].value && data[2].value !== data[1].value) {
                 var xLeft = (r0 * r0 - r1 * r1) / (2 * coincideLength) + coincideLength / 2;
                 var xRight = coincideLength / 2 - (r0 * r0 - r1 * r1) / (2 * coincideLength);
@@ -47414,7 +47693,7 @@ define('zrender/zrender', [
                 if (data[0].value < data[1].value && x1 < x0 + xRight) {
                     rightLargeArcFlag = 1;
                 }
-                this._buildCoincideItem(2, x0 + xLeft, y - h, y + h, r0, r1, rightLargeArcFlag, leftLargeArcFlag);
+                this._buildCoincideItem(seriesIndex, 2, data[2], x0 + xLeft, y - h, y + h, r0, r1, rightLargeArcFlag, leftLargeArcFlag);
             }
         },
         _getCoincideLength: function (value0, value1, value2, r0, r1, coincideLengthAnchor, coincideLengthAnchorMin, coincideLengthAnchorMax) {
@@ -47439,23 +47718,23 @@ define('zrender/zrender', [
                 return this._getCoincideLength(value0, value1, value2, r0, r1, coincideLengthAnchor, coincideLengthAnchorMin, coincideLengthAnchorMax);
             }
         },
-        _buildItem: function (seriesIndex, dataIndex, x, y, r) {
+        _buildItem: function (seriesIndex, dataIndex, dataItem, x, y, r) {
             var series = this.series;
-            var circle = this.getCircle(dataIndex, x, y, r);
-            ecData.pack(circle, series[0], seriesIndex, series[0].data[dataIndex], dataIndex, series[0].data[dataIndex].name);
+            var serie = series[seriesIndex];
+            var circle = this.getCircle(seriesIndex, dataIndex, dataItem, x, y, r);
+            ecData.pack(circle, serie, seriesIndex, dataItem, dataIndex, dataItem.name);
             this.shapeList.push(circle);
-            if (series[0].itemStyle.normal.label.show) {
-                var label = this.getLabel(dataIndex, x, y, r);
-                ecData.pack(label, series[0], seriesIndex, series[0].data[dataIndex], dataIndex, series[0].data[dataIndex].name);
+            if (serie.itemStyle.normal.label.show) {
+                var label = this.getLabel(seriesIndex, dataIndex, dataItem, x, y, r);
+                ecData.pack(label, serie, seriesIndex, serie.data[dataIndex], dataIndex, serie.data[dataIndex].name);
                 this.shapeList.push(label);
             }
         },
-        _buildCoincideItem: function (dataIndex, x, y0, y1, r0, r1, rightLargeArcFlag, leftLargeArcFlag) {
+        _buildCoincideItem: function (seriesIndex, dataIndex, dataItem, x, y0, y1, r0, r1, rightLargeArcFlag, leftLargeArcFlag) {
             var series = this.series;
-            var serie = series[0];
-            var data = this.data[dataIndex];
+            var serie = series[seriesIndex];
             var queryTarget = [
-                data,
+                dataItem,
                 serie
             ];
             var normal = this.deepMerge(queryTarget, 'itemStyle.normal') || {};
@@ -47468,8 +47747,8 @@ define('zrender/zrender', [
                 path: path
             };
             var shape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 style: style,
                 highlightStyle: {
                     color: emphasisColor,
@@ -47481,14 +47760,13 @@ define('zrender/zrender', [
             if (shape.buildPathArray) {
                 shape.style.pathArray = shape.buildPathArray(style.path);
             }
-            ecData.pack(shape, series[0], 0, series[0].data[dataIndex], dataIndex, series[0].data[dataIndex].name);
+            ecData.pack(shape, series[seriesIndex], 0, dataItem, dataIndex, dataItem.name);
             this.shapeList.push(shape);
         },
-        getCircle: function (dataIndex, x, y, r) {
-            var serie = this.series[0];
-            var data = this.data[dataIndex];
+        getCircle: function (seriesIndex, dataIndex, dataItem, x, y, r) {
+            var serie = this.series[seriesIndex];
             var queryTarget = [
-                data,
+                dataItem,
                 serie
             ];
             var normal = this.deepMerge(queryTarget, 'itemStyle.normal') || {};
@@ -47496,7 +47774,8 @@ define('zrender/zrender', [
             var normalColor = normal.color || this.zr.getColor(dataIndex);
             var emphasisColor = emphasis.color || this.zr.getColor(dataIndex);
             var circle = {
-                zlevel: this.getZlevelBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 clickable: true,
                 style: {
                     x: x,
@@ -47513,7 +47792,7 @@ define('zrender/zrender', [
                 }
             };
             if (this.deepQuery([
-                    data,
+                    dataItem,
                     serie,
                     this.option
                 ], 'calculable')) {
@@ -47522,24 +47801,24 @@ define('zrender/zrender', [
             }
             return new CircleShape(circle);
         },
-        getLabel: function (dataIndex, x, y, r) {
-            var serie = this.series[0];
+        getLabel: function (seriesIndex, dataIndex, dataItem, x, y, r) {
+            var serie = this.series[seriesIndex];
             var itemStyle = serie.itemStyle;
-            var data = this.data[dataIndex];
             var queryTarget = [
-                data,
+                dataItem,
                 serie
             ];
             var normal = this.deepMerge(queryTarget, 'itemStyle.normal') || {};
             var status = 'normal';
             var labelControl = itemStyle[status].label;
             var textStyle = labelControl.textStyle || {};
-            var text = this.getLabelText(dataIndex, status);
+            var text = this.getLabelText(dataIndex, dataItem, status);
             var textFont = this.getFont(textStyle);
             var textColor = normal.color || this.zr.getColor(dataIndex);
             var textSize = textStyle.fontSize || 12;
             var textShape = {
-                zlevel: ecConfig.venn.zlevel + 1,
+                zlevel: serie.zlevel,
+                z: serie.z,
                 style: {
                     x: x,
                     y: y - r - textSize,
@@ -47551,24 +47830,23 @@ define('zrender/zrender', [
             };
             return new TextShape(textShape);
         },
-        getLabelText: function (dataIndex, status) {
+        getLabelText: function (dataIndex, dataItem, status) {
             var series = this.series;
             var serie = series[0];
-            var data = serie.data[dataIndex];
             var formatter = this.deepQuery([
-                data,
+                dataItem,
                 serie
             ], 'itemStyle.' + status + '.label.formatter');
             if (formatter) {
                 if (typeof formatter == 'function') {
-                    return formatter(serie.name, data.name, data.value);
+                    return formatter(serie.name, dataItem.name, dataItem.value);
                 } else if (typeof formatter == 'string') {
                     formatter = formatter.replace('{a}', '{a0}').replace('{b}', '{b0}').replace('{c}', '{c0}');
-                    formatter = formatter.replace('{a0}', serie.name).replace('{b0}', data.name).replace('{c0}', data.value);
+                    formatter = formatter.replace('{a0}', serie.name).replace('{b0}', dataItem.name).replace('{c0}', dataItem.value);
                     return formatter;
                 }
             } else {
-                return data.name;
+                return dataItem.name;
             }
         },
         refresh: function (newOption) {
@@ -47620,6 +47898,7 @@ define('zrender/zrender', [
             '80%',
             '80%'
         ],
+        root: '',
         itemStyle: {
             normal: {
                 label: {
@@ -47687,7 +47966,8 @@ define('zrender/zrender', [
         _buildSeries: function (series, seriesIndex) {
             var tree = Tree.fromOptionData(series.name, series.data);
             this._treesMap[seriesIndex] = tree;
-            this._buildTreemap(tree.root, seriesIndex);
+            var treeRoot = series.root && tree.getNodeById(series.root) || tree.root;
+            this._buildTreemap(treeRoot, seriesIndex);
         },
         _buildTreemap: function (treeRoot, seriesIndex) {
             var shapeList = this.shapeList;
@@ -47864,8 +48144,8 @@ define('zrender/zrender', [
                 height: rect.height
             });
             var locationArr = treeMapLayout.run(areaArr);
-            var lineWidth = itemStyle.normal.childBorderWidth || 1;
-            var lineColor = itemStyle.normal.childBorderColor || '#777';
+            var lineWidth = itemStyle.normal.childBorderWidth;
+            var lineColor = itemStyle.normal.childBorderColor;
             for (var k = 0; k < locationArr.length; k++) {
                 var item = locationArr[k];
                 var lines = [];
@@ -48214,8 +48494,6 @@ define('zrender/zrender', [
 });define('echarts/chart/tree', [
     'require',
     './base',
-    'zrender/tool/area',
-    'zrender/tool/vector',
     '../util/shape/Icon',
     'zrender/shape/Image',
     'zrender/shape/Line',
@@ -48231,8 +48509,6 @@ define('zrender/zrender', [
 ], function (require) {
     var ChartBase = require('./base');
     var GOLDEN_SECTION = 0.618;
-    var toolArea = require('zrender/tool/area');
-    var vec2 = require('zrender/tool/vector');
     var IconShape = require('../util/shape/Icon');
     var ImageShape = require('zrender/shape/Image');
     var LineShape = require('zrender/shape/Line');
@@ -48326,6 +48602,7 @@ define('zrender/zrender', [
                 zlevel: this.getZlevelBase(),
                 z: this.getZBase() + 1,
                 rotation: rotation,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: treeNode.layout.position[0] - treeNode.layout.width * 0.5,
                     y: treeNode.layout.position[1] - treeNode.layout.height * 0.5,
@@ -48575,13 +48852,21 @@ define('zrender/zrender', [
                 this.minX = minX;
             }
             this.tree.traverse(function (treeNode) {
-                var x = treeNode.layout.position[0] - originRootX + rootX;
-                var y = treeNode.layout.position[1] + rootY;
-                if (orient === 'horizontal') {
+                var x;
+                var y;
+                if (orient === 'vertical' && serie.direction === 'inverse') {
+                    x = treeNode.layout.position[0] - originRootX + rootX;
+                    y = rootY - treeNode.layout.position[1];
+                } else if (orient === 'vertical') {
+                    x = treeNode.layout.position[0] - originRootX + rootX;
+                    y = treeNode.layout.position[1] + rootY;
+                } else if (orient === 'horizontal' && serie.direction === 'inverse') {
+                    y = treeNode.layout.position[0] - originRootX + rootY;
+                    x = rootX - treeNode.layout.position[1];
+                } else if (orient === 'horizontal') {
                     y = treeNode.layout.position[0] - originRootX + rootY;
                     x = treeNode.layout.position[1] + rootX;
-                }
-                if (orient === 'radial') {
+                } else {
                     x = treeNode.layout.position[0];
                     y = treeNode.layout.position[1];
                     treeNode.layout.originPosition = [
@@ -48833,11 +49118,11 @@ define('zrender/zrender', [
             var emphasis = this.deepMerge(queryTarget, 'itemStyle.emphasis') || {};
             var normalColor = this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data) || defaultColor;
             var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) || (typeof normalColor === 'string' ? zrColor.lift(normalColor, -0.2) : normalColor);
-            var that = this;
             var textShape = new TextShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 hoverable: true,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: 0,
                     y: 0,
@@ -49460,6 +49745,79 @@ define('zrender/zrender', [
         }
     };
     return ZeroArray;
+});define('echarts/chart/heatmap', [
+    'require',
+    './base',
+    '../layer/heatmap',
+    '../config',
+    '../util/ecData',
+    'zrender/tool/util',
+    'zrender/tool/color',
+    'zrender/shape/Image',
+    '../chart'
+], function (require) {
+    var ChartBase = require('./base');
+    var HeatmapLayer = require('../layer/heatmap');
+    var ecConfig = require('../config');
+    var ecData = require('../util/ecData');
+    var zrUtil = require('zrender/tool/util');
+    var zrColor = require('zrender/tool/color');
+    var zrImage = require('zrender/shape/Image');
+    ecConfig.heatmap = {
+        zlevel: 0,
+        z: 2,
+        clickable: true
+    };
+    function Heatmap(ecTheme, messageCenter, zr, option, myChart) {
+        ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
+        this.refresh(option);
+    }
+    Heatmap.prototype = {
+        type: ecConfig.CHART_TYPE_HEATMAP,
+        refresh: function (newOption) {
+            this.clear();
+            if (newOption) {
+                this.option = newOption;
+                this.series = newOption.series;
+            }
+            this._init();
+        },
+        _init: function () {
+            var series = this.series;
+            this.backupShapeList();
+            var len = series.length;
+            for (var i = 0; i < len; ++i) {
+                if (series[i].type === ecConfig.CHART_TYPE_HEATMAP) {
+                    series[i] = this.reformOption(series[i]);
+                    var layer = new HeatmapLayer(series[i]);
+                    var canvas = layer.getCanvas(series[i].data, this.zr.getWidth(), this.zr.getHeight());
+                    var image = new zrImage({
+                        position: [
+                            0,
+                            0
+                        ],
+                        scale: [
+                            1,
+                            1
+                        ],
+                        hoverable: this.option.hoverable,
+                        style: {
+                            x: 0,
+                            y: 0,
+                            image: canvas,
+                            width: canvas.width,
+                            height: canvas.height
+                        }
+                    });
+                    this.shapeList.push(image);
+                }
+            }
+            this.addShapeList();
+        }
+    };
+    zrUtil.inherits(Heatmap, ChartBase);
+    require('../chart').define('heatmap', Heatmap);
+    return Heatmap;
 });
 var zrender = require('zrender');
 zrender.tool = {
@@ -49517,6 +49875,8 @@ require("echarts/chart/treemap");
 require("echarts/chart/tree");
 
 require("echarts/chart/wordCloud");
+
+require("echarts/chart/heatmap");
 
 _global['echarts'] = echarts;
 _global['zrender'] = zrender;

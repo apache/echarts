@@ -16,9 +16,11 @@ define(function (require) {
     var LineShape = require('zrender/shape/Line');
     var PolygonShape = require('zrender/shape/Polygon');
     var EllipseShape = require('zrender/shape/Ellipse');
+    var ZrImage = require('zrender/shape/Image');
     // 组件依赖
     require('../component/dataRange');
     require('../component/roamController');
+    var HeatmapLayer = require('../layer/heatmap');
 
     var ecConfig = require('../config');
     // 地图默认参数
@@ -34,7 +36,7 @@ define(function (require) {
         //},
         // mapValueCalculation: 'sum',  // 数值合并方式，默认加和，可选为：
                                         // 'sum' | 'average' | 'max' | 'min'
-        mapValuePrecision: 0,           // 地图数值计算结果小数精度
+        // mapValuePrecision: 0,           // 地图数值计算结果小数精度
         showLegendSymbol: true,         // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
         // selectedMode: false,         // 选择模式，默认关闭，可选single，multiple
         dataRangeHoverLink: true,
@@ -233,7 +235,8 @@ define(function (require) {
                             valueData[mapType][name] = valueData[mapType][name]
                                                        || {
                                                            seriesIndex : [],
-                                                           valueMap: {}
+                                                           valueMap: {},
+                                                           precision: 0
                                                        };
                             for (var key in data[j]) {
                                 if (key != 'value') {
@@ -244,6 +247,12 @@ define(function (require) {
                                     // value
                                     valueData[mapType][name].value == null
                                     && (valueData[mapType][name].value = 0);
+
+                                    valueData[mapType][name].precision = 
+                                        Math.max(
+                                            this.getPrecision(+data[j].value),
+                                            valueData[mapType][name].precision
+                                        );
 
                                     valueData[mapType][name].value += (+data[j].value);
                                     valueData[mapType][name].valueMap[i] = +data[j].value;
@@ -268,13 +277,16 @@ define(function (require) {
                 this.lastShapeList = [];
             }
             for (var mt in valueData) {
-                if (valueCalculation[mt] && valueCalculation[mt] == 'average') {
-                    for (var k in valueData[mt]) {
-                        valueData[mt][k].value =
-                            (valueData[mt][k].value / valueData[mt][k].seriesIndex.length)
-                            .toFixed(
-                                mapValuePrecision[mt]
-                            ) - 0;
+                for (var k in valueData[mt]) {
+                    if (valueCalculation[mt] == 'average') {
+                        valueData[mt][k].value /= valueData[mt][k].seriesIndex.length;
+                    }
+                    var value = valueData[mt][k].value;
+                    if (value != null) {
+                        valueData[mt][k].value = value.toFixed(
+                            mapValuePrecision[mt] == null
+                                ? valueData[mt][k].precision : mapValuePrecision[mt]
+                        ) - 0;   
                     }
                 }
 
@@ -337,6 +349,8 @@ define(function (require) {
                     self.addShapeList();
                     self.zr.refreshNextFrame();
                 }
+
+                self._buildHeatmap(mt);
             };
         },
 
@@ -729,16 +743,17 @@ define(function (require) {
                     queryTarget = [data]; // level 3
                     seriesName = '';
                     for (var j = 0, k = data.seriesIndex.length; j < k; j++) {
+                        var serie = series[data.seriesIndex[j]];
                         // level 2
-                        queryTarget.push(series[data.seriesIndex[j]]);
-                        seriesName += series[data.seriesIndex[j]].name + ' ';
+                        queryTarget.push(serie);
+                        seriesName += serie.name + ' ';
                         if (legend
                             && this._showLegendSymbol[mapType]
-                            && legend.hasColor(series[data.seriesIndex[j]].name)
+                            && legend.hasColor(serie.name)
                         ) {
                             this.shapeList.push(new CircleShape({
-                                zlevel : this.getZlevelBase(),
-                                z : this.getZBase() + 1,
+                                zlevel : serie.zlevel,
+                                z : serie.z + 1,
                                 position : zrUtil.clone(style.position),
                                 _mapType : mapType,
                                 /*
@@ -751,7 +766,7 @@ define(function (require) {
                                     y : style.textY - 10,
                                     r : 3,
                                     color : legend.getColor(
-                                        series[data.seriesIndex[j]].name
+                                        serie.name
                                     )
                                 },
                                 hoverable : false
@@ -907,8 +922,8 @@ define(function (require) {
                 }
 
                 if (this._selectedMode[mapType] &&
-                     this._selected[name]
-                     || (data.selected && this._selected[name] !== false)
+                     (this._selected[name] && data.selected !== false)
+                     || data.selected === true
                 ) {
                     textShape.style = textShape.highlightStyle;
                     shape.style = shape.highlightStyle;
@@ -987,6 +1002,67 @@ define(function (require) {
                     _mapType : mapType
                 };
                 this.buildMark(sIdx);
+            }
+        },
+
+        _buildHeatmap: function(mapType) {
+            var series = this.series;
+            for (var i = 0, l = series.length; i < l; i++) {
+                // render heatmap
+                if (series[i].heatmap) {
+                    // convert geo position to screen position
+                    var data = series[i].heatmap.data;
+                    if (series[i].heatmap.needsTransform === false) {
+                        // baidu map position, does not need transform
+                        var geo = [];
+                        for (var j = 0, len = data.length; j < len; ++j) {
+                            geo.push([data[j][3], data[j][4], data[j][2]]);
+                        }
+                        var pos = [0, 0]
+                    } else {
+                        // other map
+                        var geoData = series[i].heatmap._geoData;
+                        // copy initial geo position
+                        if (geoData === undefined) {
+                            series[i].heatmap._geoData = [];
+                            for (var j = 0, len = data.length; j < len; ++j) {
+                                series[i].heatmap._geoData[j] = data[j];
+                            }
+                            geoData = series[i].heatmap._geoData;
+                        }
+
+                        var len = data.length;
+                        for (var id = 0; id < len; ++id) {
+                            data[id] = this.geo2pos(mapType, 
+                                [geoData[id][0], geoData[id][1]]);
+                        }
+                        var pos = [
+                            this._mapDataMap[mapType].transform.left,
+                            this._mapDataMap[mapType].transform.top
+                        ]
+                    }
+                    var layer = new HeatmapLayer(series[i].heatmap.itemStyle);
+                    var canvas = layer.getCanvas(data[0][3] ? geo : data,
+                        this.zr.getWidth(), this.zr.getHeight())
+                    var image = new ZrImage({
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase() + 1,
+                        position: pos,
+                        scale: [1, 1],
+                        hoverable: false,
+                        style: {
+                            x: 0,
+                            y: 0,
+                            image: canvas,
+                            width: canvas.width,
+                            height: canvas.height
+                        }
+                    });
+                    image.type = 'heatmap';
+                    image._mapType = mapType;
+                    this.shapeList.push(image);
+                    this.zr.addShape(image);
+                }
             }
         },
 
@@ -1184,6 +1260,7 @@ define(function (require) {
                                 case 'polygon':
                                 case 'line':
                                 case 'ellipse':
+                                case 'heatmap':
                                     shape.scale[0] *= delta;
                                     shape.scale[1] *= delta;
                                     break;

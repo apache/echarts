@@ -1,9 +1,8 @@
-var version = '2.2.3';
-var sp = location.href.lastIndexOf('/');
-var ep = location.href.lastIndexOf('.html');
-var curPage = sp < ep ? location.href.slice(sp + 1, ep) : 'index';
-var enVersion = (location.hash && location.hash.indexOf('-en') != -1)
-                || location.href.indexOf('-en') != -1;
+var version = '2.2.6';
+var sp = location.pathname.lastIndexOf('/');
+var ep = location.pathname.lastIndexOf('.html');
+var curPage = sp < ep ? location.pathname.slice(sp + 1, ep) : 'index';
+var enVersion = location.href.indexOf('-en.html') != -1;
 
 var activeClass = {};
 var loc = {};
@@ -19,12 +18,16 @@ switch (curPage) {
         loc.doc = './doc';
         loc.about = './doc';
         loc.changelog = './doc';
+        loc.option = './doc';
+        loc.spreadsheet = './doc';
         loc.start = './doc';
         loc.img = './doc';
         break;
     case 'feature' :
     case 'example' :
     case 'doc' :
+    case 'option' :
+    case 'spreadsheet' :
     case 'about' :
     case 'changelog' :
     case 'start' :
@@ -42,12 +45,21 @@ switch (curPage) {
         loc.doc = extSub + '../../doc';
         loc.about = extSub + '../../doc';
         loc.changelog = extSub + '../../doc';
+        loc.option = extSub + '../../doc';
+        loc.spreadsheet = extSub + '../../doc';
         loc.start = extSub + '../../doc';
         loc.img = extSub + '../../doc';
         break;
 }
 
-$('#head')[0].innerHTML = 
+// Those pages only exist in echarts-www project,
+// but not in http://ecomfe.github.io/echarts/ and doc in echarts project.
+if (location.href.indexOf('.baidu.com') < 0) {
+    loc.option = 'http://echarts.baidu.com/doc';
+    loc.spreadsheet = 'http://echarts.baidu.com/doc';
+}
+
+$('#head')[0].innerHTML =
     '<div class="container">'
         + '<div class="navbar-header">'
           + '<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">'
@@ -57,7 +69,7 @@ $('#head')[0].innerHTML =
             + '<span class="icon-bar"></span>'
           + '</button>'
           + '<a class="navbar-brand" href="http://echarts.baidu.com/index'
-          + (enVersion ? '-en': '') 
+          + (enVersion ? '-en': '')
           + '.html">ECharts</a>'
         + '</div>'
         + '<a href="https://github.com/ecomfe/echarts" target="_blank">'
@@ -69,13 +81,31 @@ $('#head')[0].innerHTML =
             ? ('<li class="' + (activeClass.index || '') + '"><a href="' + (loc.index || '.') + '/index-en.html">Home</a></li>'
                 + '<li class="' + (activeClass.feature || '') + '"><a href="' + (loc.feature || '.') + '/feature-en.html">Feature</a></li>'
                 + '<li class="' + (activeClass.example || '') + '"><a href="' + (loc.example || '.') + '/example-en.html">Example</a></li>'
-                + '<li class="' + (activeClass.doc || '') + '"><a href="' + (loc.doc || '.') + '/doc-en.html">API & Doc</a></li>'
+                // + '<li class="' + (activeClass.doc || '') + '"><a href="' + (loc.doc || '.') + '/doc-en.html">API & Doc</a></li>'
             )
             : ('<li class="' + (activeClass.index || '') + '"><a href="' + (loc.index || '.') + '/index.html">首页</a></li>'
                 + '<li class="' + (activeClass.feature || '') + '"><a href="' + (loc.feature || '.') + '/feature.html">特性</a></li>'
                 + '<li class="' + (activeClass.example || '') + '"><a href="' + (loc.example || '.') + '/example.html">实例</a></li>'
-                + '<li class="' + (activeClass.doc || '') + '"><a href="' + (loc.doc || '.') + '/doc.html">文档</a></li>'
+                // + '<li class="' + (activeClass.doc || '') + '"><a href="' + (loc.doc || '.') + '/doc.html">文档</a></li>'
             ))
+            + '<li class="dropdown ' + (activeClass.doc || activeClass.option || '') + '">'
+              + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + (enVersion ? 'API & Doc' : '文档') + '<b class="caret"></b></a>'
+              + '<ul class="dropdown-menu">'
+                + '<li class=""><a href="' + (loc.doc || '.') + '/doc' + (enVersion ? '-en.html">Base Document' : '.html">参考手册') + '</a></li>'
+                + '<li class=""><a href="' + (loc.option || '.') + '/option' + (enVersion ? '-en.html">Option Manual' : '.html">配置项查找工具') + '</a></li>'
+              + '</ul>'
+            + '</li>'
+            + '<li class="dropdown ' + (activeClass.spreadsheet || '') + '">'
+              + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + (enVersion ? 'Tool' : '工具') + '<b class="caret"></b></a>'
+              + '<ul class="dropdown-menu">'
+                + '<li><a href="http://ecomfe.github.io/echarts-builder-web/">' + (enVersion ? 'Online Builder' : '在线构建工具') + '</a></li>'
+                + '<li><a href="' + (loc.example || '.') + '/example/theme.html">' + (enVersion ? 'Theme Preview' : '皮肤主题预览') + '</a></li>'
+                + '<li><a href="' + (loc.example || '.') + '/example/themeDesigner.html">' + (enVersion ? 'Theme Designer' : '皮肤主题设计工具') + '</a></li>'
+                + '<li><a href="http://ecomfe.github.io/echarts-map-tool/">' + (enVersion ? 'Map Data Tool' : '地图数据生成工具') + '</a></li>'
+                + '<li><a href="' + (loc.spreadsheet || '.') + '/spreadsheet' + (enVersion ? '-en.html">Spreadsheet Data Tool' : '.html">Excel 数据转换工具') + '</a></li>'
+                + (enVersion ? '' : '<li><a target="_blank" href="http://study.163.com/course/courseMain.htm?courseId=1016007">视频教程</a></li>')
+              + '</ul>'
+            + '</li>'
             /*
             + '<li class="dropdown">'
               + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">教学 <b class="caret"></b></a>'
@@ -91,15 +121,12 @@ $('#head')[0].innerHTML =
             + '<li class="dropdown">'
               + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + (enVersion ? 'Download' : '下载') + '<b class="caret"></b></a>'
               + '<ul class="dropdown-menu">'
-                + '<li><a href="http://ecomfe.github.io/echarts-builder-web/">' + (enVersion ? 'Online builder' : '在线构建工具') + '</a></li>'
-                + '<li><a href="http://ecomfe.github.io/echarts-map-tool/">' + (enVersion ? 'Map tool' : '地图数据生成工具') + '</a></li>'
-                + '<li class="divider"></li>'
                 + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.zip"> echarts-' + version + ' (from Baidu)</a></li>'
                 + '<li><a href="https://github.com/ecomfe/echarts/archive/' + version + '.zip"> echarts-' + version + ' (from GitHub)</a></li>'
                 + '<li><a href="http://echarts.baidu.com/build/echarts-m-1.0.0.zip"> echarts-m-1.0.0 (beta)</a></li>'
                 + '<li><a href="http://echarts.baidu.com/x/build/echarts-x-0.2.0.zip"> echarts-x-0.2.0 </a></li>'
                 + '<li class="divider"></li>'
-                + (enVersion 
+                + (enVersion
                     ? '<li><a href="http://ecomfe.github.io/echarts/doc/changelog-en.html">Changelog</a></li>'
                     : '<li><a href="http://echarts.baidu.com/doc/changelog.html">Changelog</a></li>'
                 )
@@ -114,7 +141,7 @@ $('#head')[0].innerHTML =
           + '</ul>'
         + '</div><!--/.nav-collapse -->'
       + '</div>';
-      
+
 function back2Top() {
     $("body,html").animate({scrollTop:0},1000);
     return false;
@@ -125,51 +152,54 @@ function changeVersion() {
         window.location = curPage + (enVersion ? '' : '-en') + '.html'
     }
     else {
-        window.location = curPage + '.html' + (enVersion ? '' : '#-en'); 
+        window.location = curPage + '.html' + (enVersion ? '' : '#-en');
         if (enVersion) {
             window.location.hash = window.location.hash.replace('-en', '');
         }
         window.location.reload();
     }
 }
-$('#footer')[0].style.marginTop = '50px';
-$('#footer')[0].innerHTML =
-     '<div class="container">'
-        + '<div class="row" style="padding-bottom:20px;">'
-            + '<div class="col-md-3">'
-                + '<p>' + (enVersion ? 'Link' : 'ECharts团队出品') + '</p>'
-                + '<ul>'
-                    + '<li><a href="http://tushuo.baidu.com/" target="_blank">Baidu 图说</a></li>'
-                    + '<li><a href="' + (enVersion ? "http://ecomfe.github.io/echarts-x" : 'http://echarts.baidu.com/x/doc') + '" target="_blank">ECharts-X</a></li>'
-                    + '<li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>'
-                    + '<li><a href="https://github.com/pissang/qtek" target="_blank">QTEK</a></li>'
-                + '</ul>'
-            + '</div>'
-            + '<div class="col-md-3">'
-                + '<p>' + (enVersion ? 'More' : '更多') + '</p>'
-                + '<ul>'
-                    + '<li><a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a></li>'
-                    + '<li><a href="http://echarts.baidu.com/doc/changelog' + (enVersion ? '-en' : '') + '.html" target="_blank">Changelog</a></li>'
-                    + '<li><a href="http://efe.baidu.com" target="_blank">Baidu EFE</a></li>'
-                    + '<li><a href="http://www.oschina.net/p/echarts" target="_blank">' + (enVersion ? 'Open Source China' : '开源中国') + '</a></li>'
-                + '</ul>'
-            + '</div>'
-            + '<div class="col-md-3">'
-                + '<p>' + (enVersion ? 'Contact Us' : '联系我们') + '</p>'
-                + '<ul>'
-                    + '<li><a href="mailto:echarts(a)baidu.com">echarts(a)baidu.com</a></li>'
-                    + '<li><a href="https://github.com/ecomfe/echarts" target="_blank"> Github</a></li>'
-                    + '<li><a href="http://weibo.com/echarts" target="_blank">Weibo</a></li>'
-                + '</ul>'
-            + '</div>'
-            + '<div class="col-md-3 flogo">'
-                + '<a href="javascript:void(0)" onclick="back2Top()" title="' + (enVersion ? 'Back to top' : '回到顶部') + '"><img src="'+ (loc.img || '.')+ '/asset/img/echarts-logo2.png" alt="ECharts"/></a>'
-            + '</div>'
-        + '</div>'
-        + '<p class="pull-right"><a href="javascript:void(0)" onclick="back2Top()" >Back to top</a></p>'
-        + '<p>&copy; 2015 <a href="http://www.baidu.com/" target="_blank">Baidu</a></p>'
-    + '</div>';
 
+var $footer = $('#footer');
+if ($footer.length) {
+    $footer[0].style.marginTop = '50px';
+    $footer[0].innerHTML =
+         '<div class="container">'
+            + '<div class="row" style="padding-bottom:20px;">'
+                + '<div class="col-md-3">'
+                    + '<p>' + (enVersion ? 'Link' : 'ECharts团队出品') + '</p>'
+                    + '<ul>'
+                        + '<li><a href="http://tushuo.baidu.com/" target="_blank">Baidu 图说</a></li>'
+                        + '<li><a href="' + (enVersion ? "http://ecomfe.github.io/echarts-x" : 'http://echarts.baidu.com/x/doc') + '" target="_blank">ECharts-X</a></li>'
+                        + '<li><a href="http://ecomfe.github.io/zrender/index.html" target="_blank">ZRender</a></li>'
+                        + '<li><a href="https://github.com/pissang/qtek" target="_blank">QTEK</a></li>'
+                    + '</ul>'
+                + '</div>'
+                + '<div class="col-md-3">'
+                    + '<p>' + (enVersion ? 'More' : '更多') + '</p>'
+                    + '<ul>'
+                        + '<li><a href="https://github.com/ecomfe/echarts/blob/master/LICENSE.txt" target="_blank">License</a></li>'
+                        + '<li><a href="http://echarts.baidu.com/doc/changelog' + (enVersion ? '-en' : '') + '.html" target="_blank">Changelog</a></li>'
+                        + '<li><a href="http://efe.baidu.com" target="_blank">Baidu EFE</a></li>'
+                        + '<li><a href="http://www.oschina.net/p/echarts" target="_blank">' + (enVersion ? 'Open Source China' : '开源中国') + '</a></li>'
+                    + '</ul>'
+                + '</div>'
+                + '<div class="col-md-3">'
+                    + '<p>' + (enVersion ? 'Contact Us' : '联系我们') + '</p>'
+                    + '<ul>'
+                        + '<li><a href="mailto:echarts(a)baidu.com">echarts(a)baidu.com</a></li>'
+                        + '<li><a href="https://github.com/ecomfe/echarts" target="_blank"> Github</a></li>'
+                        + '<li><a href="http://weibo.com/echarts" target="_blank">Weibo</a></li>'
+                    + '</ul>'
+                + '</div>'
+                + '<div class="col-md-3 flogo">'
+                    + '<a href="javascript:void(0)" onclick="back2Top()" title="' + (enVersion ? 'Back to top' : '回到顶部') + '"><img src="'+ (loc.img || '.')+ '/asset/img/echarts-logo2.png" alt="ECharts"/></a>'
+                + '</div>'
+            + '</div>'
+            + '<p class="pull-right"><a href="javascript:void(0)" onclick="back2Top()" >Back to top</a></p>'
+            + '<p>&copy; 2015 <a href="http://www.baidu.com/" target="_blank">Baidu</a></p>'
+        + '</div>';
+}
 
 if (document.location.href.indexOf('local') == -1) {
     var hm = document.createElement("script");

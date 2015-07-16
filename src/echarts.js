@@ -27,9 +27,9 @@ define(function (require) {
     var _instances = {};    // ECharts实例map索引
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
 
-    self.version = '2.2.3';
+    self.version = '2.2.6';
     self.dependencies = {
-        zrender: '2.0.9'
+        zrender: '2.1.1'
     };
     /**
      * 入口方法
@@ -63,7 +63,7 @@ define(function (require) {
         _instances[key].canvasSupported = _canvasSupported;
         _instances[key].setTheme(theme);
 
-        return  _instances[key];
+        return _instances[key];
     };
 
     /**
@@ -948,8 +948,11 @@ define(function (require) {
          * @param {Object} option
          * @param {boolean=} notMerge 多次调用时option选项是默认是合并（merge）的，
          *                   如果不需求，可以通过notMerger参数为true阻止与上次option的合并
+         * @param {boolean=} 默认false。keepTimeLine 表示从timeline组件调用而来，
+         *                   表示当前行为是timeline的数据切换，保持timeline，
+         *                   反之销毁timeline。 详见Issue #1601
          */
-        _setOption: function (option, notMerge) {
+        _setOption: function (option, notMerge, keepTimeLine) {
             if (!notMerge && this._option) {
                 this._option = zrUtil.merge(
                     this.getOption(),
@@ -959,6 +962,7 @@ define(function (require) {
             }
             else {
                 this._option = zrUtil.clone(option);
+                !keepTimeLine && this._timeline && this._timeline.dispose();
             }
 
             this._optionRestore = zrUtil.clone(this._option);
@@ -1079,6 +1083,7 @@ define(function (require) {
             //this._optionRestore 和 magicOption 都要同步
             var magicOption = this.getOption();
             var optionRestore = this._optionRestore;
+            var self = this;
             for (var i = 0, l = params.length; i < l; i++) {
                 seriesIdx = params[i][0];
                 data = params[i][1];
@@ -1181,7 +1186,6 @@ define(function (require) {
             this.component.dataZoom && this.component.dataZoom.syncOption(magicOption);
 
             this._option = magicOption;
-            var self = this;
             function animationDone() {
                 if (!self._zr) {
                     return; // 已经被释放

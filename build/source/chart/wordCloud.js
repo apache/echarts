@@ -132,11 +132,11 @@ define('echarts/chart/wordCloud', [
             var emphasis = this.deepMerge(queryTarget, 'itemStyle.emphasis') || {};
             var normalColor = this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data) || defaultColor;
             var emphasisColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data) || (typeof normalColor === 'string' ? zrColor.lift(normalColor, -0.2) : normalColor);
-            var that = this;
             var textShape = new TextShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 hoverable: true,
+                clickable: this.deepQuery(queryTarget, 'clickable'),
                 style: {
                     x: 0,
                     y: 0,
