@@ -37,8 +37,17 @@ body p {
     font-weight: bolder;
     border-bottom: 3px solid rgb(62,152, 197);
 }
+@media (max-width: 980px) {
+    .navbar-default .navbar-nav > li > a {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+}
 .navbar-default .navbar-nav > li > a:hover {
     background-color: #eee;
+}
+.navbar-fixed-top {
+    z-index: 999999;
 }
 .carousel-caption.ecx-link {
     bottom: 20px;
@@ -215,15 +224,15 @@ hr {
 }
 .col-md-4.ani {
     transition: width 1s;
-    -moz-transition: width 1s; 
-    -webkit-transition: width 1s; 
+    -moz-transition: width 1s;
+    -webkit-transition: width 1s;
     -o-transition: width 1s;
 }
 .col-md-8.ani {
     transition: width 1s;
-    -moz-transition: width 1s; 
+    -moz-transition: width 1s;
     -webkit-transition: width 1s;
-    -o-transition: width 1s; 
+    -o-transition: width 1s;
 }
 .main {
     height: 400px;
@@ -368,7 +377,7 @@ table.full {width:100%;}
 .prettyprint {
   margin-top: 8px;
 }
-.prettyprint xmp{   
+.prettyprint xmp{
   margin: 0px;
   padding: 10px;
 }

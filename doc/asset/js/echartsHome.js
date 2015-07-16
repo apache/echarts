@@ -1,9 +1,8 @@
 var version = '2.2.6';
-var sp = location.href.lastIndexOf('/');
-var ep = location.href.lastIndexOf('.html');
-var curPage = sp < ep ? location.href.slice(sp + 1, ep) : 'index';
-var enVersion = (location.hash && location.hash.indexOf('-en') != -1)
-                || location.href.indexOf('-en') != -1;
+var sp = location.pathname.lastIndexOf('/');
+var ep = location.pathname.lastIndexOf('.html');
+var curPage = sp < ep ? location.pathname.slice(sp + 1, ep) : 'index';
+var enVersion = location.href.indexOf('-en.html') != -1;
 
 var activeClass = {};
 var loc = {};
@@ -19,12 +18,16 @@ switch (curPage) {
         loc.doc = './doc';
         loc.about = './doc';
         loc.changelog = './doc';
+        loc.option = './doc';
+        loc.spreadsheet = './doc';
         loc.start = './doc';
         loc.img = './doc';
         break;
     case 'feature' :
     case 'example' :
     case 'doc' :
+    case 'option' :
+    case 'spreadsheet' :
     case 'about' :
     case 'changelog' :
     case 'start' :
@@ -42,9 +45,18 @@ switch (curPage) {
         loc.doc = extSub + '../../doc';
         loc.about = extSub + '../../doc';
         loc.changelog = extSub + '../../doc';
+        loc.option = extSub + '../../doc';
+        loc.spreadsheet = extSub + '../../doc';
         loc.start = extSub + '../../doc';
         loc.img = extSub + '../../doc';
         break;
+}
+
+// Those pages only exist in echarts-www project,
+// but not in http://ecomfe.github.io/echarts/ and doc in echarts project.
+if (location.href.indexOf('.baidu.com') < 0) {
+    loc.option = 'http://echarts.baidu.com/doc';
+    loc.spreadsheet = 'http://echarts.baidu.com/doc';
 }
 
 $('#head')[0].innerHTML =
@@ -69,13 +81,31 @@ $('#head')[0].innerHTML =
             ? ('<li class="' + (activeClass.index || '') + '"><a href="' + (loc.index || '.') + '/index-en.html">Home</a></li>'
                 + '<li class="' + (activeClass.feature || '') + '"><a href="' + (loc.feature || '.') + '/feature-en.html">Feature</a></li>'
                 + '<li class="' + (activeClass.example || '') + '"><a href="' + (loc.example || '.') + '/example-en.html">Example</a></li>'
-                + '<li class="' + (activeClass.doc || '') + '"><a href="' + (loc.doc || '.') + '/doc-en.html">API & Doc</a></li>'
+                // + '<li class="' + (activeClass.doc || '') + '"><a href="' + (loc.doc || '.') + '/doc-en.html">API & Doc</a></li>'
             )
             : ('<li class="' + (activeClass.index || '') + '"><a href="' + (loc.index || '.') + '/index.html">首页</a></li>'
                 + '<li class="' + (activeClass.feature || '') + '"><a href="' + (loc.feature || '.') + '/feature.html">特性</a></li>'
                 + '<li class="' + (activeClass.example || '') + '"><a href="' + (loc.example || '.') + '/example.html">实例</a></li>'
-                + '<li class="' + (activeClass.doc || '') + '"><a href="' + (loc.doc || '.') + '/doc.html">文档</a></li>'
+                // + '<li class="' + (activeClass.doc || '') + '"><a href="' + (loc.doc || '.') + '/doc.html">文档</a></li>'
             ))
+            + '<li class="dropdown ' + (activeClass.doc || activeClass.option || '') + '">'
+              + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + (enVersion ? 'API & Doc' : '文档') + '<b class="caret"></b></a>'
+              + '<ul class="dropdown-menu">'
+                + '<li class=""><a href="' + (loc.doc || '.') + '/doc' + (enVersion ? '-en.html">Base Document' : '.html">参考手册') + '</a></li>'
+                + '<li class=""><a href="' + (loc.option || '.') + '/option' + (enVersion ? '-en.html">Option Manual' : '.html">配置项查找工具') + '</a></li>'
+              + '</ul>'
+            + '</li>'
+            + '<li class="dropdown ' + (activeClass.spreadsheet || '') + '">'
+              + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + (enVersion ? 'Tool' : '工具') + '<b class="caret"></b></a>'
+              + '<ul class="dropdown-menu">'
+                + '<li><a href="http://ecomfe.github.io/echarts-builder-web/">' + (enVersion ? 'Online Builder' : '在线构建工具') + '</a></li>'
+                + '<li><a href="' + (loc.example || '.') + '/example/theme.html">' + (enVersion ? 'Theme Preview' : '皮肤主题预览') + '</a></li>'
+                + '<li><a href="' + (loc.example || '.') + '/example/themeDesigner.html">' + (enVersion ? 'Theme Designer' : '皮肤主题设计工具') + '</a></li>'
+                + '<li><a href="http://ecomfe.github.io/echarts-map-tool/">' + (enVersion ? 'Map Data Tool' : '地图数据生成工具') + '</a></li>'
+                + '<li><a href="' + (loc.spreadsheet || '.') + '/spreadsheet' + (enVersion ? '-en.html">Spreadsheet Data Tool' : '.html">Excel 数据转换工具') + '</a></li>'
+                + (enVersion ? '' : '<li><a target="_blank" href="http://study.163.com/course/courseMain.htm?courseId=1016007">视频教程</a></li>')
+              + '</ul>'
+            + '</li>'
             /*
             + '<li class="dropdown">'
               + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">教学 <b class="caret"></b></a>'
@@ -91,9 +121,6 @@ $('#head')[0].innerHTML =
             + '<li class="dropdown">'
               + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + (enVersion ? 'Download' : '下载') + '<b class="caret"></b></a>'
               + '<ul class="dropdown-menu">'
-                + '<li><a href="http://ecomfe.github.io/echarts-builder-web/">' + (enVersion ? 'Online builder' : '在线构建工具') + '</a></li>'
-                + '<li><a href="http://ecomfe.github.io/echarts-map-tool/">' + (enVersion ? 'Map tool' : '地图数据生成工具') + '</a></li>'
-                + '<li class="divider"></li>'
                 + '<li><a href="http://echarts.baidu.com/build/echarts-' + version + '.zip"> echarts-' + version + ' (from Baidu)</a></li>'
                 + '<li><a href="https://github.com/ecomfe/echarts/archive/' + version + '.zip"> echarts-' + version + ' (from GitHub)</a></li>'
                 + '<li><a href="http://echarts.baidu.com/build/echarts-m-1.0.0.zip"> echarts-m-1.0.0 (beta)</a></li>'

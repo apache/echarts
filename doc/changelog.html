@@ -52,6 +52,7 @@
                 <ul>
                     <li>【+】新增热力图。示例查看 <a href="./example/heatmap.html">热力图</a></li>
                     <li>【+】新增<a href="http://echarts.baidu.com/doc/option.html">Option 查找工具</a>。</li>
+                    <li>【+】新增<a href="http://echarts.baidu.com/doc/spreadsheet.html">表格数据转换工具</a>。</li>
                     <li>[^] 事件河流图布局优化</li>
                     <li>[^] 修复 2.2.5 中 tooltip 联动 bug</li>
                     <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.1.1+</li>
@@ -162,7 +163,7 @@
                     <li>[#] [bar]多维度堆积下类目间隔优化</li>
                     <li>[#] [tooltip][markLine]修复多级控制无效</li>
                     <li>[#] [valueAxis]数值间隔自动调整算法优化，
-                        fix <a href="https://github.com/ecomfe/echarts/issues/1012" target="_blank">#1012 »</a>, 
+                        fix <a href="https://github.com/ecomfe/echarts/issues/1012" target="_blank">#1012 »</a>,
                         <a href="https://github.com/ecomfe/echarts/issues/1021" target="_blank">#1021 »</a>
                     </li>
                     <li>[#] 若干issues，fix
@@ -205,7 +206,7 @@
                     <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.6+</li>
                 </ul>
             </div>
-            
+
             <div>
                 <h3>2.1.8<small>（2014-11-07）</small></h3>
                 <ul>
@@ -227,7 +228,7 @@
                     <li>【+】 [chord]和弦图通过ribbonType配置项支持两种绘制形态</li>
                     <li>【+】 [timeAxis]新增时间类型坐标轴（beta）</li>
                     <li>【^】 [valueAxis]数值间隔自动调整算法优化，splitNumber默认自动调整，废除power、precision，by <a href="https://github.com/i6ma" target="_blank">谢世威</a>。</li>
-                    <li>【^】 [pie]优化饼图标签布局算法， fix 
+                    <li>【^】 [pie]优化饼图标签布局算法， fix
                         <a href="https://github.com/ecomfe/echarts/issues/326" target="_blank">#326 »</a>,
                         <a href="https://github.com/ecomfe/echarts/issues/405" target="_blank">#405 »</a>,
                         <a href="https://github.com/ecomfe/echarts/issues/290" target="_blank">#290 »</a>
@@ -272,10 +273,10 @@
                 <h3>2.0.4<small>（2014-09-23）</small></h3>
                 <ul>
                     <li>【+】 [force]力导向布局图节点支持图片，格式同symbol</li>
-                    <li>【#】 [line]平滑曲线出现负值， fix 
-                        <a href="https://github.com/ecomfe/echarts/issues/191" target="_blank">#191 »</a>, 
-                        <a href="https://github.com/ecomfe/echarts/issues/227" target="_blank">#227 »</a>, 
-                        <a href="https://github.com/ecomfe/echarts/issues/457" target="_blank">#457 »</a>, 
+                    <li>【#】 [line]平滑曲线出现负值， fix
+                        <a href="https://github.com/ecomfe/echarts/issues/191" target="_blank">#191 »</a>,
+                        <a href="https://github.com/ecomfe/echarts/issues/227" target="_blank">#227 »</a>,
+                        <a href="https://github.com/ecomfe/echarts/issues/457" target="_blank">#457 »</a>,
                         <a href="https://github.com/ecomfe/echarts/issues/521" target="_blank">#521 »</a>
                     </li>
                     <li>【#】 IE8图片无法显示，fix <a href="https://github.com/ecomfe/echarts/issues/691" target="_blank">#691 »</a></li>
@@ -314,7 +315,7 @@
                         <a href="https://github.com/ecomfe/echarts/issues/616" target="_blank">#616（直角坐标计算临界点错误）»</a>
                         <a href="https://github.com/ecomfe/echarts/issues/617" target="_blank">#617（雷达图虚线显示）»</a>
                         <a href="https://github.com/ecomfe/echarts/issues/644" target="_blank">#644（dom宽高为0时死循环）»</a>
-                        <a href="https://github.com/ecomfe/echarts/issues/650" target="_blank">#650（标注标线区域缩放后无法再显示）»</a>  
+                        <a href="https://github.com/ecomfe/echarts/issues/650" target="_blank">#650（标注标线区域缩放后无法再显示）»</a>
                     </li>
                     <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.3+</li>
                 </ul>
@@ -392,7 +393,7 @@
                         <a href="#" target="_blank">折线与坐标轴间1px位移 »</a>
                         <a href="https://github.com/ecomfe/echarts/issues/294" target="_blank">#294 »</a>
                         <a href="https://github.com/ecomfe/echarts/issues/303" target="_blank">#303 »</a>
-                        <a href="https://github.com/ecomfe/echarts/issues/364" target="_blank">#364 »</a> 
+                        <a href="https://github.com/ecomfe/echarts/issues/364" target="_blank">#364 »</a>
                     </li>
                     <li>[?] 依赖升级，<a href="http://ecomfe.github.io/zrender/" target="_blank">ZRender</a> 2.0.0+</li>
                 </ul>
@@ -478,8 +479,8 @@
                     <li>[^] IE8-文本清晰度优化</li>
                     <li>[#] [toolbox]修复动态类型可能造成的冲突样式污染</li>
                     <li>[#] 修复borderWidth设为0时被转换为1的错误</li>
-                    <li>[#] 若干issues，fix 
-                        <a href="https://github.com/ecomfe/echarts/issues/189" target="_blank">#189 »</a> 
+                    <li>[#] 若干issues，fix
+                        <a href="https://github.com/ecomfe/echarts/issues/189" target="_blank">#189 »</a>
                         <a href="https://github.com/ecomfe/echarts/issues/190" target="_blank">#190 »</a>
                         <a href="https://github.com/ecomfe/echarts/issues/193" target="_blank">#193 »</a>
                         <a href="http://www.oschina.net/question/1384706_141045" target="_blank">#IE8-红色背景 »</a>
