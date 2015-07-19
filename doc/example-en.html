@@ -73,8 +73,8 @@
         }
         #chartsTypeNav ul li {
             transition: background-color 0.3s;
-            -moz-transition: background-color 0.3s; 
-            -webkit-transition: background-color 0.3s; 
+            -moz-transition: background-color 0.3s;
+            -webkit-transition: background-color 0.3s;
             -o-transition: background-color 0.3s;
             padding-left:10px;
         }
@@ -92,7 +92,7 @@
                     <ul style="padding:5px 0;">
                         <li><i class="ec-icon ec-icon-line"></i> <a href="#line"><abbr title="Line & Area">Line</abbr></a></li>
                         <li><i class="ec-icon ec-icon-bar"></i> <a href="#bar"><abbr title="Column & Bar">Bar</abbr></a></li>
-                        <li><i class="ec-icon ec-icon-scatter"></i> <a href="#scatter"><abbr title="Scatter & Bubble">Scatter</abbr></a></li> 
+                        <li><i class="ec-icon ec-icon-scatter"></i> <a href="#scatter"><abbr title="Scatter & Bubble">Scatter</abbr></a></li>
                         <li><i class="ec-icon ec-icon-k"></i> <a href="#k">Candlestick</a></li>
                         <li><i class="ec-icon ec-icon-pie"></i> <a href="#pie"><abbr title="Pie & Doughnut">Pie</abbr></a></li>
                         <li><i class="ec-icon ec-icon-radar"></i> <a href="#radar">Radar</a></li>
@@ -866,7 +866,7 @@
     <script type="text/javascript" src="./asset/js/echartsHome.js"></script>
     <script src="./asset/js/bootstrap.min.js"></script>
     <script type="text/javascript">
-    $(window).load(function (){
+    $(function (){
       var section = $('[class=section]');
       function loadImage(i) {
           setTimeout(function (){
@@ -891,7 +891,7 @@
       for (var i = 0, l = section.length; i < l; i++) {
           loadImage(i);
       }
-      
+
     var chartsTypeNav = document.getElementById('chartsTypeNav');
     function _scroll() {
         var navHeight = chartsTypeNav.offsetHeight;
@@ -910,7 +910,7 @@
             // 未见footer
             chartsTypeNav.style.marginTop = 'auto';
         }
-        
+
         var len = offsetList.length;
         if (scrollHeight > offsetList[len - 3].offsetTop) {
                 navDom[len - 2].style.backgroundColor = '#3E98C5';
@@ -935,7 +935,7 @@
         offsetList = [];
         $('h3').each(function(idx, dom){
             offsetList[idx] = {
-                name : dom.childNodes[1].name, 
+                name : dom.childNodes[1].name,
                 offsetTop : dom.childNodes[1].offsetTop
             };
         });
@@ -945,7 +945,7 @@
         })
         setTimeout(_scroll, 500);
     }
-    
+
     function scroll2Pos (idx) {
         return function() {
             $("body,html").animate(
