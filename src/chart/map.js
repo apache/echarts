@@ -1041,7 +1041,7 @@ define(function (require) {
                             this._mapDataMap[mapType].transform.top
                         ]
                     }
-                    var layer = new HeatmapLayer(series[i].heatmap.itemStyle);
+                    var layer = new HeatmapLayer(series[i].heatmap);
                     var canvas = layer.getCanvas(data[0][3] ? geo : data,
                         this.zr.getWidth(), this.zr.getHeight())
                     var image = new ZrImage({
