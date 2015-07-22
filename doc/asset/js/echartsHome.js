@@ -1,4 +1,4 @@
-var version = '2.2.6';
+var version = '2.2.7';
 var sp = location.pathname.lastIndexOf('/');
 var ep = location.pathname.lastIndexOf('.html');
 var curPage = sp < ep ? location.pathname.slice(sp + 1, ep) : 'index';

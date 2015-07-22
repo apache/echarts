@@ -1655,7 +1655,7 @@ define('echarts/echarts', [
     var _idBase = new Date() - 0;
     var _instances = {};
     var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
-    self.version = '2.2.6';
+    self.version = '2.2.7';
     self.dependencies = { zrender: '2.1.1' };
     self.init = function (dom, theme) {
         var zrender = require('zrender');
