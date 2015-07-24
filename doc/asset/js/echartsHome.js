@@ -102,7 +102,7 @@ $('#head')[0].innerHTML =
                 + '<li><a href="' + (loc.example || '.') + '/example/theme.html">' + (enVersion ? 'Theme Preview' : '皮肤主题预览') + '</a></li>'
                 + '<li><a href="' + (loc.example || '.') + '/example/themeDesigner.html">' + (enVersion ? 'Theme Designer' : '皮肤主题设计工具') + '</a></li>'
                 + '<li><a href="http://ecomfe.github.io/echarts-map-tool/">' + (enVersion ? 'Map Data Tool' : '地图数据生成工具') + '</a></li>'
-                + '<li><a href="' + (loc.spreadsheet || '.') + '/spreadsheet' + (enVersion ? '-en.html">Spreadsheet Data Tool' : '.html">Excel 数据转换工具') + '</a></li>'
+                + '<li><a href="' + (loc.spreadsheet || '.') + '/spreadsheet' + (enVersion ? '-en.html">Spreadsheet Data Tool' : '.html">表格数据转换工具') + '</a></li>'
                 + (enVersion ? '' : '<li><a target="_blank" href="http://study.163.com/course/courseMain.htm?courseId=1016007">视频教程</a></li>')
               + '</ul>'
             + '</li>'
