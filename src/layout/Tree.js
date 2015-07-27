@@ -22,7 +22,7 @@ define(function (require) {
 
     TreeLayout.prototype.run = function (tree) {
         this._layerOffsets.length = 0;
-        for (var i = 0; i < tree.root.height + 1; i++) {
+        for (var i = 0, len = tree.root.height + 1; i < len; i++) {
             this._layerOffsets[i] = 0;
             this._layers[i] = [];
         }
@@ -34,9 +34,11 @@ define(function (require) {
     TreeLayout.prototype._updateNodeXPosition = function (node) {
         var minX = Infinity;
         var maxX = -Infinity;
+        var children = node.children;
+        var childrenLen = children.length;
         node.layout.position = node.layout.position || vec2.create();
-        for (var i = 0; i < node.children.length; i++) {
-            var child = node.children[i];
+        for (var i = 0; i < childrenLen; i++) {
+            var child = children[i];
             this._updateNodeXPosition(child);
             var x = child.layout.position[0];
             if (x < minX) {
@@ -46,7 +48,7 @@ define(function (require) {
                 maxX = x;
             }
         }
-        if (node.children.length > 0) {
+        if (childrenLen > 0) {
             node.layout.position[0] = (minX + maxX) / 2;
         } else {
             node.layout.position[0] = 0;
@@ -55,7 +57,7 @@ define(function (require) {
         if (off > node.layout.position[0]) {
             var shift = off - node.layout.position[0];
             this._shiftSubtree(node, shift);
-            for (var i = node.depth + 1; i < node.height + node.depth; i++) {
+            for (var i = node.depth + 1, len = node.height + node.depth; i < len; i++) {
                 this._layerOffsets[i] += shift;
             }
         }
@@ -66,7 +68,7 @@ define(function (require) {
 
     TreeLayout.prototype._shiftSubtree = function (root, offset) {
         root.layout.position[0] += offset;
-        for (var i = 0; i < root.children.length; i++) {
+        for (var i = 0, len = root.children.length; i < len; i++) {
             this._shiftSubtree(root.children[i], offset);
         }
     };
@@ -74,14 +76,14 @@ define(function (require) {
     TreeLayout.prototype._updateNodeYPosition = function (node, y, prevLayerHeight) {
         node.layout.position[1] = y;
         var layerHeight = 0;
-        for (var i = 0; i < node.children.length; i++) {
+        for (var i = 0, len = node.children.length; i < len; i++) {
             layerHeight = Math.max(node.children[i].layout.height, layerHeight);
         }
         var layerPadding = this.layerPadding;
         if (typeof(layerPadding) === 'function') {
             layerPadding = layerPadding(node.depth);
         }
-        for (var i = 0; i < node.children.length; i++) {
+        for (var i = 0, len = node.children.length; i < len; i++) {
             this._updateNodeYPosition(node.children[i], y + layerPadding + prevLayerHeight, layerHeight);
         }
     };
