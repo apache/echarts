@@ -8,20 +8,20 @@ define(function (require) {
 
         type: 'pie',
 
-        init: function (echarts) {
+        init: function (api) {
             var dataItemFilter = new DataItemFilter();
             this._dataItemFilter = dataItemFilter;
 
-            echarts.addProcessor(dataItemFilter);
+            api.addProcessor(dataItemFilter, true);
+
+
         },
 
         render: function () {
 
         },
 
-        dispose: function (echarts) {
-            echarts.removeProcessor()
-        }
+        dispose: function () {}
     });
 
     return Pie;

@@ -12,6 +12,7 @@ define(function(require) {
 
         type: '',
 
+        // Processor 第一次使用的时候调用
         init: function (option, globalState) {
             this.state = this.getInitialState(option);
             this.syncState(globalState);

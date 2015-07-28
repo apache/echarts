@@ -6,6 +6,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var Chart = require('./chart/Chart');
     var Component = require('./component/Component');
+    var ExtensionAPI = require('./ExtensionAPI');
 
     var zrender = require('zrender');
 
@@ -16,10 +17,15 @@ define(function (require) {
      */
     var ECharts = function (dom, theme) {
 
-        this.zr = zrender.init(dom);
+        this._zr = zrender.init(dom);
 
         theme = zrUtil.clone(theme || {});
         zrUtil.merge(theme, config);
+
+        // Create processors
+        this._processors = zrUtil.map(startupProcessorClasses, function (Processor) {
+            return new Processor();
+        });
 
         this._theme = theme;
 
@@ -29,10 +35,14 @@ define(function (require) {
         this._componentsList = [];
         this._componentsMap = {};
 
-        this._originalOption = null;
+        this._extensionAPI = new ExtensionAPI(this);
     };
 
     ECharts.prototype = {
+
+        getZr: function () {
+            return this._zr;
+        },
 
         setOption: function (rawOption, merge) {
             rawOption = zrUtil.clone(rawOption);
@@ -48,12 +58,7 @@ define(function (require) {
             // Pending
             // optionModel as parent ?
             var globalState = new Model({}, option);
-
-            // Create processors
-            this._processors = zrUtil.map(startupProcessorClasses, function (Processor) {
-                var processor = new Processor();
-                processor.init(option, globalState);
-            });
+            this._globalState = globalState;
 
             this._originalOption = option;
 
@@ -84,13 +89,13 @@ define(function (require) {
             // TODO Performance
             var option = this._originalOption.clone();
 
-            this._processOption(option);
+            this._processOption(option, this._globalState);
 
             this._prepareComponents(option);
 
             this._prepareCharts(option);
 
-            this._dispatchOption(option);
+            this._doRender(option);
         },
 
         _prepareCharts: function (option) {
@@ -103,7 +108,7 @@ define(function (require) {
                 if (! chart) {
                     chart = Chart.create(series);
                     if (chart) {
-                        chart.init();
+                        chart.init(this._extensionAPI);
                         this._chartsMap[series.type] = chart;
                         this._chartsList.push(chart);
                     }
@@ -139,6 +144,7 @@ define(function (require) {
                     if (! component) {
                         // Create and add component
                         component = Component.create(componentType, componentOption);
+                        component.init(this._extensionAPI);
                         componentsMap[componentType] = component;
                         componentsList.push(component);
                     }
@@ -154,20 +160,26 @@ define(function (require) {
             }, this);
         },
 
-        _processOption: function (option) {
+        _processOption: function (option, globalState) {
             zrUtil.each(this._processors, function (processor) {
-               processor.process(option);
+                if (! processor.__inited__) {
+                    processor.init(option, globalState);
+                    processor.__inited__ = true;
+                }
+                processor.syncState(globalState);
+                processor.process(option);
             });
         },
 
-        _dispatchOption: function (option) {
+        _doRender: function (option) {
+            var api = this._extensionAPI;
             // Render all components
             zrUtil.each(this._components, function (component) {
-                component.render(option);
+                component.render(option, api);
             });
             // Render all charts
             zrUtil.each(this._charts, function (chart) {
-                chart.render(option);
+                chart.render(option, api);
             });
         },
 

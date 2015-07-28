@@ -2,15 +2,29 @@ define(function (require) {
 
     var stateSyncHelper = require('../../processor/legendFilterStateSyncHelper')('pieDataItemFilter');
 
+    var zrUtil = require('zrender/core/util');
+
     var PieDataFilter = require('../../processor/Processor').extend({
 
         type: 'pieDataItemFilter',
 
         getInitialState: function (option) {
-            var allData = option.get('legend.data') || [];
+            var pieNameList = zrUtil.map(option.get('legend.data') || [], function (item) {
+                return item.name == null ? item.name : item;
+            });
+            var pieSeries = option.getSeriesByType('pie');
+            pieNameList = zrUtil.filter(pieNameList, function (name) {
+                if (name) {
+                    for (var i = 0; i < pieSeries.length; i++) {
+                        if (pieSeries[i].getData().getItemByName(name)) {
+                            return true;
+                        }
+                    }
+                }
+            });
             return {
-                all: allData,
-                legend: allData.slice()
+                all: pieNameList,
+                selected: pieNameList.slice()
             };
         },
 
@@ -18,7 +32,7 @@ define(function (require) {
             stateSyncHelper(this.state, globalState);
         },
 
-        process: function (option, processorCenter) {
+        process: function (option) {
             option.eachSeries(function (series) {
                 if (series.type === 'pie') {
                     series.getData().filter(function (dataItem) {

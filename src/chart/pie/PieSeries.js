@@ -2,10 +2,9 @@ define(function(require) {
 
     'use strict';
 
-    var Series = require('../../data/Series');
     var List = require('../../data/List');
 
-    var PieSeries = Series.extend({
+    return require('../../data/Series').extend({
 
         type: 'pie',
 
@@ -13,6 +12,4 @@ define(function(require) {
             return List.fromArray(option.data);
         }
     });
-
-    return PieSeries;
 });

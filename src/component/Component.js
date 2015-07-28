@@ -2,9 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
 
-    var Component = function () {
-
-    };
+    var Component = function () {};
 
     Component.prototype = {
 

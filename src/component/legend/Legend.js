@@ -6,12 +6,21 @@ define(function (require) {
 
         type: 'legend',
 
-        init: function () {
+        render: function (option, globalState) {
+            var selectedStateGroup = globalState.get('legend.selected');
+            if (selectedStateGroup) {
+                zrUtil.each(selectedStateGroup, function (selectedState) {
 
-        },
+                    var selectedMap = {};
+                    zrUtil.each(selectedState.selected, function (name) {
+                        selectedMap[name] = true;
+                    });
 
-        render: function (option, processorState) {
-            
+                    zrUtil.each(selectedState.all, function (name) {
+
+                    });
+                });
+            }
         }
     });
 });

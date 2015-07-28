@@ -9,10 +9,16 @@ define(function (require) {
         type: 'seriesFilter',
 
         getInitialState: function (option) {
-            var allData = option.get('legend.data') || [];
+            // Get series legend selector
+            var seriesNameList = zrUtil.map(option.get('legend.data') || [], function (item) {
+                return item.name == null ? item.name : item;
+            });
+            seriesNameList = zrUtil.filter(seriesNameList, function (item) {
+                return item && option.getSeriesByName(item) != null;
+            });
             return {
-                all: allData,
-                selected: allData.slice()
+                all: seriesNameList,
+                selected: seriesNameList.slice()
             };
         },
 

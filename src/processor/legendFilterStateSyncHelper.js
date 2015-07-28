@@ -4,7 +4,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
 
     return function (name) {
-        return function (state, globalState) {
+        return function (selfState, globalState) {
             // Sync with processor option
             var path = 'legend.selected';
             var selected = globalState.get(path);
@@ -12,17 +12,17 @@ define(function(require) {
                 selected = globalState.set(path, [])
             }
             var state = zrUtil.filter(selected, function (item) {
-                return item.name === name
+                return item.name === name;
             })[0];
             if (state) {
-                this.state.all = state.all;
-                this.state.selected = state.selected;
+                selfState.all = state.all;
+                selfState.selected = state.selected;
             }
             else {
                 selected.push({
                     name: name,
-                    all: state.all,
-                    selected: state.selected
+                    all: selfState.all,
+                    selected: selfState.selected
                 });
             }
         }

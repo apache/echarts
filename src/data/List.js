@@ -96,6 +96,14 @@ PENDING
         },
 */
 
+        getItemByName: function (name) {
+            var elements = this.elements;
+            for (var i = 0; i < elements.length; i++) {
+                if (elements[i].name === name) {
+                    return elements[i];
+                }
+            }
+        },
         /**
          * Get x of single data item by a given data index.
          * can be overwritten

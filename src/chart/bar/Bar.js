@@ -8,12 +8,10 @@ define(function (require) {
 
         type: 'bar',
 
-        init: function () {
+        init: function () {},
 
-        },
-
-        render: function () {
-
+        render: function (option, api) {
+            
         }
     });
 
