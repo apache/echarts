@@ -13,18 +13,18 @@ define(function(require) {
         type: '',
 
         // Processor 第一次使用的时候调用
-        init: function (option, globalState) {
-            this.state = this.getInitialState(option);
-            this.syncState(globalState);
+        init: function () {
+            this.state = this.getInitialState();
         },
 
         // Should be overwritten
-        getInitialState: function (option) {},
+        getInitialState: function () { return {} },
 
         setState: function (state) {},
 
-        // Sync state with global processor state
-        syncState: function (processorState) {},
+        optionChanged: function (optionChanged) {},
+
+        syncState: function (globalState) {},
 
         // Should be overwritten
         process: function (option) {}

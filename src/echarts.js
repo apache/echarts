@@ -24,7 +24,9 @@ define(function (require) {
 
         // Create processors
         this._processors = zrUtil.map(startupProcessorClasses, function (Processor) {
-            return new Processor();
+            var processor = new Processor();
+            processor.init();
+            return processor;
         });
 
         this._theme = theme;
@@ -36,6 +38,12 @@ define(function (require) {
         this._componentsMap = {};
 
         this._extensionAPI = new ExtensionAPI(this);
+
+        // Pending
+        // optionModel as parent ?
+        var globalState = new Model({});
+        this._state = globalState;
+
     };
 
     ECharts.prototype = {
@@ -55,14 +63,17 @@ define(function (require) {
                 series.seriesIndex = seriesIndex;
             });
 
-            // Pending
-            // optionModel as parent ?
-            var globalState = new Model({}, option);
-            this._globalState = globalState;
-
             this._originalOption = option;
 
-            this.updateImmediate();
+            this._prepareComponents(option);
+
+            this._prepareCharts(option);
+
+            zrUtil.each(this._processors, function (processor) {
+                processor.optionChanged(option);
+            });
+
+            this.updateImmediately();
         },
 
         addProcessor: function (processor, oneForEachType) {
@@ -85,15 +96,11 @@ define(function (require) {
 
         },
 
-        updateImmediate: function () {
+        updateImmediately: function () {
             // TODO Performance
             var option = this._originalOption.clone();
 
-            this._processOption(option, this._globalState);
-
-            this._prepareComponents(option);
-
-            this._prepareCharts(option);
+            this._processOption(option, this._state);
 
             this._doRender(option);
         },
@@ -162,10 +169,6 @@ define(function (require) {
 
         _processOption: function (option, globalState) {
             zrUtil.each(this._processors, function (processor) {
-                if (! processor.__inited__) {
-                    processor.init(option, globalState);
-                    processor.__inited__ = true;
-                }
                 processor.syncState(globalState);
                 processor.process(option);
             });
@@ -179,8 +182,12 @@ define(function (require) {
             });
             // Render all charts
             zrUtil.each(this._charts, function (chart) {
-                chart.render(option, api);
-            });
+                var group = chart.render(option, api);
+                this.zr.addElement(group);
+            }, this);
+
+            // TODO
+            // Remove group of unused chart
         },
 
         dispose: function () {
