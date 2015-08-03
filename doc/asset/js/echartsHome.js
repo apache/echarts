@@ -63,7 +63,7 @@ switch (curPage) {
 if (location.href.indexOf('.baidu.com') < 0) {
     loc.option = 'http://echarts.baidu.com/doc';
     loc.spreadsheet = 'http://echarts.baidu.com/doc';
-    log.schema = 'http://echarts.baidu.com/docv';
+    loc.schema = 'http://echarts.baidu.com/docv';
 }
 
 $('#head')[0].innerHTML =
