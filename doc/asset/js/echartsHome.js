@@ -2,7 +2,12 @@ var version = '2.2.7';
 var sp = location.pathname.lastIndexOf('/');
 var ep = location.pathname.lastIndexOf('.html');
 var curPage = sp < ep ? location.pathname.slice(sp + 1, ep) : 'index';
-var enVersion = location.href.indexOf('-en.html') != -1;
+var enVersion = location.href.indexOf('-en.html') != -1
+    // for example: http://ecomfe.github.io/echarts/doc/example/force2.html#-en
+    || (location.pathname.indexOf('doc/example/') >= 0
+        && location.hash
+        && location.hash.indexOf('-en') != -1
+    );
 
 var activeClass = {};
 var loc = {};
