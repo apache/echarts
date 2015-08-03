@@ -22,15 +22,20 @@ switch (curPage) {
         loc.spreadsheet = './doc';
         loc.start = './doc';
         loc.img = './doc';
+        loc.schema = extSub + './docv';
         break;
     case 'feature' :
     case 'example' :
     case 'doc' :
-    case 'option' :
-    case 'spreadsheet' :
     case 'about' :
     case 'changelog' :
     case 'start' :
+        activeClass[curPage] = 'active';
+        loc.index = '..';
+        break;
+    case 'option' :
+    case 'spreadsheet' :
+        forkWidth = 60;
         activeClass[curPage] = 'active';
         loc.index = '..';
         break;
@@ -49,6 +54,7 @@ switch (curPage) {
         loc.spreadsheet = extSub + '../../doc';
         loc.start = extSub + '../../doc';
         loc.img = extSub + '../../doc';
+        loc.schema = extSub + '../../docv';
         break;
 }
 
@@ -57,6 +63,7 @@ switch (curPage) {
 if (location.href.indexOf('.baidu.com') < 0) {
     loc.option = 'http://echarts.baidu.com/doc';
     loc.spreadsheet = 'http://echarts.baidu.com/doc';
+    log.schema = 'http://echarts.baidu.com/docv';
 }
 
 $('#head')[0].innerHTML =
@@ -95,7 +102,7 @@ $('#head')[0].innerHTML =
                 + '<li class=""><a href="' + (loc.option || '.') + '/option' + (enVersion ? '-en.html">Option Manual' : '.html">配置项查找工具') + '</a></li>'
               + '</ul>'
             + '</li>'
-            + '<li class="dropdown ' + (activeClass.spreadsheet || '') + '">'
+            + '<li class="dropdown ' + (activeClass.spreadsheet || '') + ' ec-secret-dropdown">'
               + '<a href="#" class="dropdown-toggle" data-toggle="dropdown">' + (enVersion ? 'Tool' : '工具') + '<b class="caret"></b></a>'
               + '<ul class="dropdown-menu">'
                 + '<li><a href="http://ecomfe.github.io/echarts-builder-web/">' + (enVersion ? 'Online Builder' : '在线构建工具') + '</a></li>'
@@ -104,6 +111,7 @@ $('#head')[0].innerHTML =
                 + '<li><a href="http://ecomfe.github.io/echarts-map-tool/">' + (enVersion ? 'Map Data Tool' : '地图数据生成工具') + '</a></li>'
                 + '<li><a href="' + (loc.spreadsheet || '.') + '/spreadsheet' + (enVersion ? '-en.html">Spreadsheet Data Tool' : '.html">表格数据转换工具') + '</a></li>'
                 + (enVersion ? '' : '<li><a target="_blank" href="http://study.163.com/course/courseMain.htm?courseId=1016007">视频教程</a></li>')
+                + (enVersion ? '' : '<li class="ec-secret-item"><a target="_blank" href="' + (loc.schema || '../docv') + '/entry/schema.html">文档编辑工具</a></li>')
               + '</ul>'
             + '</li>'
             /*
@@ -141,6 +149,10 @@ $('#head')[0].innerHTML =
           + '</ul>'
         + '</div><!--/.nav-collapse -->'
       + '</div>';
+
+$('#head').on('click', '.ec-secret-dropdown', function (e) {
+    $(e.currentTarget).find('.ec-secret-item')[e.altKey ? 'show' : 'hide']();
+});
 
 function back2Top() {
     $("body,html").animate({scrollTop:0},1000);
