@@ -22,7 +22,7 @@ switch (curPage) {
         loc.spreadsheet = './doc';
         loc.start = './doc';
         loc.img = './doc';
-        loc.schema = extSub + './docv';
+        loc.schema = './docv';
         break;
     case 'feature' :
     case 'example' :
