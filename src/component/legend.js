@@ -119,7 +119,14 @@ define(function (require) {
             var itemWidth = this.legendOption.itemWidth;
             var itemHeight = this.legendOption.itemHeight;
             var itemGap = this.legendOption.itemGap;
+            var hover = this.legendOption.hover;
             var color;
+            var coors = {
+                x:0,
+                y:0,
+                width:0,
+                height:itemHeight
+            };
 
             if (this.legendOption.orient === 'vertical' && this.legendOption.x === 'right') {
                 lastX = this._itemGroupLocation.x
@@ -149,6 +156,8 @@ define(function (require) {
                     }
                     continue;
                 }
+                coors.x = lastX;
+                coors.y = lastY;
                 itemType = data[i].icon || this._getSomethingByName(itemName).type;
                 
                 color = this.getColor(itemName);
@@ -222,24 +231,59 @@ define(function (require) {
 
                 textShape._name = itemName;
                 textShape = new TextShape(textShape);
-                
-                if (this.legendOption.selectedMode) {
-                    itemShape.onclick = textShape.onclick = this._legendSelected;
-                    itemShape.onmouseover =  textShape.onmouseover = this._dispatchHoverLink;
-                    itemShape.hoverConnect = textShape.id;
-                    textShape.hoverConnect = itemShape.id;
-                }
-                this.shapeList.push(itemShape);
-                this.shapeList.push(textShape);
 
                 if (this.legendOption.orient === 'horizontal') {
                     lastX += itemWidth + 5
                              + zrArea.getTextWidth(formattedName, dataFont)
                              + itemGap;
+                    coors.width = lastX - itemGap - coors.x;
                 }
                 else {
                     lastY += itemHeight + itemGap;
+                    coors.width = zrArea.getTextWidth(formattedName, dataFont) + 5 + itemWidth;
                 }
+
+                if (this.legendOption.selectedMode) {
+                    var _this = this;
+                    if(hover){
+                        if(hover.in){
+                            itemShape.onmouseover = textShape.onmouseover = (function(dom,data,x,y,width,height){
+                                return function(){
+                                    hover.in(dom,data,{
+                                        x:x,
+                                        y:y,
+                                        width:width,
+                                        height:height,
+                                        orient:_this.legendOption.orient
+                                    });
+                                    _this._dispatchHoverLink.apply(_this,arguments);
+                                }
+                            })(this.myChart.dom,data[i],coors.x,coors.y,coors.width,coors.height);
+                        }
+                        if(hover.out){
+                            itemShape.onmouseout = textShape.onmouseout = (function(dom,data,x,y,width,height){
+                                return function(){
+                                    hover.out(dom,data,
+                                        {
+                                            x:x,
+                                            y:y,
+                                            width:width,
+                                            height:height,
+                                            orient:_this.legendOption.orient
+                                        });
+                                }
+                            })(this.myChart.dom,data[i],coors.x,coors.y,coors.width,coors.height);
+                        }
+                    }else{
+                        itemShape.onmouseover =  textShape.onmouseover = this._dispatchHoverLink;
+                    }
+
+                    itemShape.onclick = textShape.onclick = this._legendSelected;
+                    itemShape.hoverConnect = textShape.id;
+                    textShape.hoverConnect = itemShape.id;
+                }
+                this.shapeList.push(itemShape);
+                this.shapeList.push(textShape);
             }
         
             if (this.legendOption.orient === 'horizontal'
