@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Legend Hover Interface</title>
+    <link href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body{
+            padding-bottom: 200px;
+        }
+        #whatsnew{
+            max-width: 600px;
+            margin: 30px auto;
+            font-size:1.5em;
+        }
+        #tooltip{
+            width:200px;
+            height:80px;
+            background:skyblue;
+            margin:30px auto;
+            text-align: center;
+            line-height: 80px;
+        }
+        #main{
+            width:600px;
+            height:400px;
+            margin:0 auto;
+        }
+        #doc{
+            width:600px;
+            margin:0 auto;
+        }
+        table{
+            width:100%;
+        }
+        table td{
+            padding-left: 30px;
+            border:1px solid #a0a0a0;
+        }
+    </style>
+</head>
+<body>
+    <div id="whatsnew">
+        <p>为了使整个页面的tooltip提示整个页面统一，全局使用bootstrap提供的tooltip.<br>所以在legend在hover后需要tooltip时，从echarts内部调用得到当前hover的legend坐标及尺寸数据，从而创建临时DOM以直接调用bootstrap的tooltip.</p>
+    </div>
+    <div id="tooltip">
+        I'm in DOM,
+        Hover Me
+    </div>
+    <div id="main"></div>
+    <div id="doc">
+        <h3>Usage</h3>
+        <pre>
+        在option的legend中进行设置：
+        legend{
+            //.....
+            data:[
+                {
+                    name: "蒸发量",
+                    someKeyName: "被日常蒸发的水量"
+                },
+                {
+                    name: "降水量",
+                    someKeyName: "来自于云朵里的水"
+                },
+                {
+                    name: "最高气温",
+                    someKeyName: "能热死人的气温就是最高气温"
+                }
+            ],
+            hover:{
+                in:function(canvasBox,legendData,coors){
+                    //do somethint here
+                },
+                out:function(canvasBox,legendData,coors){
+                    //do something here
+                }
+            }
+            //.....
+        }
+        </pre>
+        <h3>API</h3>
+        <table>
+            <tr><td>canvasBox</td><td>type:DOM<br>value:dom</td></tr>
+            <tr><td>legendData</td><td>type:Object<br>value://the object set in legend</td></tr>
+            <tr><td>coors</td><td>type:Object<br>value:{x,y,width,height,orient}</td></tr>
+        </table>
+    </div>
+</body>
+<script src="../doc/asset/js/esl/esl.js"></script>
+<script src="//cdn.bootcss.com/jquery/3.0.0-alpha1/jquery.min.js"></script>
+<script src="http://cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.js"></script>
+<script>
+    $("#tooltip").tooltip({
+        container: "body",
+        title: "Yeah ! I get the cursor ! ",
+        trigger: "hover"
+    });
+
+    require.config({
+        packages: [{
+            name: 'echarts',
+            location: '../src',
+            main: 'echarts'
+        }, {
+            name: 'zrender',
+            location: '../../../../zrender/src',
+            main: 'zrender'
+        }]
+    });
+
+    var option = {
+        legend: {
+            orient: 'horizontal', // 'vertical'
+            x: 'right', // 'center' | 'left' | {number},
+            y: 'top', // 'center' | 'bottom' | {number}
+            backgroundColor: '#eee',
+            borderColor: 'rgba(178,34,34,0.8)',
+            borderWidth: 4,
+            padding: 10,    // [5, 10, 15, 20]
+            itemGap: 20,
+            textStyle: {color: 'red'},
+            selected: {
+                '降水量' : false
+            },
+            data: [
+                {
+                    name:'蒸发量',
+                    hoverData:'被日常蒸发的水量',
+                    textStyle:{fontWeight:'bold', color:'green'}
+                },
+                {
+                    name:'降水量',
+                    hoverData:'来自于云朵里的水'
+                },
+                {
+                    name:'最高气温',
+                    hoverData:'能热死人的气温就是最高气温'
+                }
+            ],
+            hover: (function(){
+                var $fakeDiv;
+                return {
+                in : function(canvasBox,data,coors){
+                    if(!$fakeDiv) {
+                        var offset = $(canvasBox).find(".zr-element").offset(),
+                            left = offset.left + coors.x,
+                            top = offset.top + coors.y;
+
+                        $fakeDiv = $("<div style='z-index:-1;curosr:pointer;width:" + coors.width + "px;height:" + coors.height + "px;position:absolute;left:" + left + "px;top:" + top + "px;'></div>");
+
+                        $("body").append($fakeDiv);
+                        $fakeDiv.tooltip({
+                            title: data.hoverData,
+                            trigger: "manual",
+                            placement: coors.orient == "vertical" ? "auto right" : "auto top",
+                            container: "body"
+                        }).tooltip("show");
+                    }
+                },
+                    out : function(canvas,data,coors){
+                        $fakeDiv.tooltip("hide")
+                        $fakeDiv.remove();
+                        $fakeDiv=null;
+                    }
+                }
+            })()
+        },
+        xAxis :{
+            data : ['周一','周二','周三','周四','周五','周六','周日']
+        },
+        yAxis : [
+            {
+                type : 'value',
+                axisLabel : {
+                    formatter: '{value} ml'
+                }
+            },
+            {
+                type : 'value',
+                axisLabel : {
+                    formatter: '{value} °C'
+                },
+                splitLine : {show : false}
+            }
+        ],
+        series : [
+            {
+                name:'蒸发量',
+                type:'bar',
+                data:[2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6]
+            },
+            {
+                name:'最高气温',
+                type:'line',
+                yAxisIndex: 1,
+                data:[11, 11, 15, 13, 12, 13, 10]
+            },
+            {
+                name:'降水量',
+                type:'bar',
+                data:[2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6]
+            }
+        ]
+    };
+
+
+    require(["echarts","echarts/chart/bar","echarts/chart/line"],function(ec){
+        var chart = ec.init(document.getElementById("main"));
+        chart.setOption(option);
+    });
+</script>
+</html>
