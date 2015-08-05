@@ -4,7 +4,7 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
 
-    var extensionAPIList = ['addProcessor', 'update'];
+    var extensionAPIList = ['addProcessor', 'update', 'getCoordinateSystem'];
 
     function ExtensionAPI(echarts) {
         zrUtil.each(extensionAPIList, function (name) {

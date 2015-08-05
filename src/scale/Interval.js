@@ -50,7 +50,7 @@ define(function (require) {
             var extent = this._extent;
             return (val - extent[0]) / (extent[1] - extent[0]);
         },
-        
+
         /**
          * Scale normalized value
          * @param {number} val
@@ -115,11 +115,11 @@ define(function (require) {
         /**
          * @return {Array.<number>}
          */
-        getTicks: function () {            
+        getTicks: function () {
             var interval = this.getInterval();
             var extent = this._extent;
             var ticks = [];
-            
+
             if (interval) {
                 var niceExtent = this._niceExtent;
                 if (extent[0] < niceExtent[0]) {
@@ -174,12 +174,11 @@ define(function (require) {
          * Nice extent.
          */
         niceExtent: function () {
-            if (! this._niceExtent) {
-                this.niceTicks();
-            }
+            this.niceTicks();
+
             var extent = this._extent;
             var interval = this._interval;
-            
+
             extent[0] = mathFloor(extent[0] / interval) * interval;
             extent[1] = mathCeil(extent[1] / interval) * interval;
         }

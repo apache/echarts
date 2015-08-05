@@ -7,6 +7,7 @@ define(function (require) {
     var Chart = require('./chart/Chart');
     var Component = require('./component/Component');
     var ExtensionAPI = require('./ExtensionAPI');
+    var CoordinateSystemManager = require('./CoordinateSystem');
 
     var zrender = require('zrender');
 
@@ -44,6 +45,7 @@ define(function (require) {
         var globalState = new Model({});
         this._state = globalState;
 
+        this._coordinateSystem = new CoordinateSystemManager();
     };
 
     ECharts.prototype = {
@@ -92,6 +94,10 @@ define(function (require) {
             processors.push(processor);
         },
 
+        getCoordinateSystem: function (type, idx) {
+            return this._coordinateSystem.get(type, idx);
+        },
+
         update: function () {
 
         },
@@ -100,9 +106,15 @@ define(function (require) {
             // TODO Performance
             var option = this._originalOption.clone();
 
+            this._coordinateSystem.update(option);
+
             this._processOption(option, this._state);
 
             this._doRender(option);
+        },
+
+        resize: function () {
+
         },
 
         _prepareCharts: function (option) {
@@ -212,11 +224,19 @@ define(function (require) {
             return new ECharts(dom, theme);
         },
 
-        registerStartupProcessor: function (processorFactory) {}
+        registerStartupProcessor: function (Processor) {
+
+        },
+
+        registerCoordinateSystem: function (type, CoordinateSystem) {
+
+        }
     };
 
 
-    echarts.registerProcessor(require('./processor/SeriesFilter'));
+    echarts.registerStartupProcessor(require('./processor/AxisDefault'));
+
+    echarts.registerStartupProcessor(require('./processor/SeriesFilter'));
 
     return echarts;
 });

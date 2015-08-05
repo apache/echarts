@@ -34,6 +34,11 @@ define(function(require) {
     };
 
     /**
+     * @type {string}
+     */
+    Graph.prototype.type = 'graph';
+
+    /**
      * 是否是有向图
      * @return {boolean}
      */

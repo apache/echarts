@@ -1,6 +1,6 @@
 /**
  * Tree data structure
- * 
+ *
  * @module echarts/data/Tree
  * @author Yi Shen(https://www.github.com/pissang)
  */
@@ -130,6 +130,8 @@ define(function(require) {
          */
         this.root = new TreeNode(id);
     }
+
+    Tree.prototype.type = 'tree';
 
     /**
      * 遍历树的所有子节点

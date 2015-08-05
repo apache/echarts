@@ -9,7 +9,9 @@ define(function(require) {
         type: 'bar',
 
         getInitialData: function (option) {
-            return List.fromArray(option.data);
+            var list = List.fromArray(option.data);
+            list.dataDimension = 1;
+            return list;
         }
     });
 });

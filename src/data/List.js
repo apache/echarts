@@ -30,6 +30,8 @@ define(function(require) {
 
         this.elements = this.elements || [];
 
+        this.dataDimension = 2;
+
         // Depth and properties is useful in nested Array.
         // For example in eventRiver, data structure is a nested 2d array as following
         // [{evolution: []}, {evolution: []}]
@@ -42,6 +44,8 @@ define(function(require) {
     List.prototype = {
 
         constructor: List,
+
+        type: 'list',
 
         each: function (cb, context) {
             context = context || this;
@@ -85,17 +89,6 @@ define(function(require) {
             }
         },
 
-/*
-PENDING
-        flatten: function () {
-
-        },
-
-        group: function () {
-
-        },
-*/
-
         getItemByName: function (name) {
             var elements = this.elements;
             for (var i = 0; i < elements.length; i++) {
@@ -111,7 +104,9 @@ PENDING
          * @return {number}
          */
         getX: function (idx) {
-
+            var item = this.elements[idx];
+            // Use idx as x if data is 1d
+            return this.dataDimension === 1 ? idx : item.value[0];
         },
 
         /**
@@ -121,7 +116,10 @@ PENDING
          * @return {number}
          */
         getY: function (idx) {
-
+            var item = this.elements[idx];
+            if (this.dataDimension > 1) {
+                return item.value[1];
+            }
         },
 
         /**
@@ -131,7 +129,10 @@ PENDING
          * @return {number}
          */
         getZ: function (idx) {
-
+            var item = this.elements[idx];
+            if (this.dataDimension > 2) {
+                return item.value[2];
+            }
         },
 
         /**
@@ -141,13 +142,25 @@ PENDING
          * @return {number}
          */
         getValue: function (idx) {
-
+            var item = this.elements[idx];
+            // PENDING
+            return item.value[this.dataDimension];
         },
 
         clone: function () {
             // Clone with depth
         }
     };
+
+    zrUtil.each(['X', 'Y', 'Z', 'Value'], function (name) {
+        zrUtil.each(['each', 'map', 'filter'], function (iterType) {
+            List.prototype[iterType + name] = function (cb, context) {
+                this[iterType](function (item, idx) {
+                    return cb && cb.call(context || this, this['get' + name], idx);
+                }, context);
+            };
+        });
+    });
 
     List.fromArray = function (data) {
         var list = new List();

@@ -29,7 +29,6 @@ define(function (require) {
         },
 
         syncState: function (globalState) {
-            // Sync with processor option
             var obj = globalState.query('legend.selected', []).findWhere({
                 name: 'seriesFilter'
             }, {
