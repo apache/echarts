@@ -291,6 +291,7 @@ define(function (require) {
                 zlevel: serie.zlevel,
                 z: serie.z,
                 style: style,
+                clickable: true,
                 highlightStyle: {
                     color: emphasisColor,
                     lineWidth: emphasis.borderWidth,
