@@ -39,7 +39,8 @@ define(function (require) {
             normal: {
                 // color: 各异,
                 label: {
-                    show: true
+                    show: true,
+                    textStyle: {}
                 },
                 lineStyle: {
                     width: 1,
@@ -48,7 +49,9 @@ define(function (require) {
                 }
             },
             emphasis: {
-
+                label: {
+                    textStyle: {}
+                }
             }
         }
     };
@@ -142,6 +145,16 @@ define(function (require) {
                 queryTarget,
                 'itemStyle.emphasis'
             ) || {};
+
+            var textShape = this.getLabel(
+                serie,
+                normal,
+                emphasis,
+                treeNode.data.name,
+                treeNode.data.value
+            );
+
+
             var normalColor = normal.color || this.zr.getColor();
             var emphasisColor = emphasis.color || this.zr.getColor();
             var angle = -treeNode.layout.angle || 0;
@@ -149,7 +162,7 @@ define(function (require) {
             if (treeNode.id === this.tree.root.id) {
                 angle = 0;
             }
-            var textPosition = 'right';
+
             if (Math.abs(angle) >= Math.PI / 2 && Math.abs(angle) < Math.PI * 3 / 2) {
                 angle += Math.PI;
                 textPosition = 'left';
@@ -164,22 +177,30 @@ define(function (require) {
                 z: this.getZBase() + 1,
                 rotation: rotation,
                 clickable: this.deepQuery(queryTarget, 'clickable'),
-                style: {
-                    x: treeNode.layout.position[0] - treeNode.layout.width * 0.5,
-                    y: treeNode.layout.position[1] - treeNode.layout.height * 0.5,
-                    width: treeNode.layout.width,
-                    height: treeNode.layout.height,
-                    iconType: symbol,
-                    color: normalColor,
-                    brushType: 'both',
-                    lineWidth: normal.borderWidth,
-                    strokeColor: normal.borderColor
-                },
-                highlightStyle: {
-                    color: emphasisColor,
-                    lineWidth: emphasis.borderWidth,
-                    strokeColor: emphasis.borderColor
-                }
+                style: zrUtil.merge(
+                    {
+                        x: treeNode.layout.position[0] - treeNode.layout.width * 0.5,
+                        y: treeNode.layout.position[1] - treeNode.layout.height * 0.5,
+                        width: treeNode.layout.width,
+                        height: treeNode.layout.height,
+                        iconType: symbol,
+                        color: normalColor,
+                        brushType: 'both',
+                        lineWidth: normal.borderWidth,
+                        strokeColor: normal.borderColor
+                    },
+                    textShape.style,
+                    true
+                ),
+                highlightStyle: zrUtil.merge(
+                    {
+                        color: emphasis.color,
+                        lineWidth: emphasis.borderWidth,
+                        strokeColor: emphasis.borderColor
+                    },
+                    textShape.highlightStyle,
+                    true
+                )
             });
             if (shape.style.iconType.match('image')) {
                 shape.style.image = shape.style.iconType.replace(
@@ -194,35 +215,7 @@ define(function (require) {
                     z: this.getZBase()
                 });
             }
-            // 节点标签样式
-            if (this.deepQuery(queryTarget, 'itemStyle.normal.label.show')) {
-                shape.style.text = treeNode.data.label == null ? treeNode.id : treeNode.data.label;
-                shape.style.textPosition = this.deepQuery(
-                    queryTarget, 'itemStyle.normal.label.position'
-                );
-                // 极坐标另外计算 时钟哪个侧面
-                if (serie.orient === 'radial' && shape.style.textPosition !== 'inside') {
-                    shape.style.textPosition = textPosition;
-                }
-                shape.style.textColor = this.deepQuery(
-                    queryTarget, 'itemStyle.normal.label.textStyle.color'
-                );
-                shape.style.textFont = this.getFont(this.deepQuery(
-                    queryTarget, 'itemStyle.normal.label.textStyle'
-                ) || {});
-            }
 
-            if (this.deepQuery(queryTarget, 'itemStyle.emphasis.label.show')) {
-                shape.highlightStyle.textPosition = this.deepQuery(
-                    queryTarget, 'itemStyle.emphasis.label.position'
-                );
-                shape.highlightStyle.textColor = this.deepQuery(
-                    queryTarget, 'itemStyle.emphasis.label.textStyle.color'
-                );
-                shape.highlightStyle.textFont = this.getFont(this.deepQuery(
-                    queryTarget, 'itemStyle.emphasis.label.textStyle'
-                ) || {});
-            }
             // todo
             ecData.pack(
                 shape,
@@ -231,6 +224,65 @@ define(function (require) {
                 treeNode.id
             );
             this.shapeList.push(shape);
+        },
+
+        /**
+         * 获取label样式
+         *
+         * @param {Object} serie
+         * @param {Object} normal
+         * @param {Object} emphasis
+         * @param {string} name 数据名称
+         * @param {number} value 数据值
+         *
+         * @return {Object} 返回label的样式
+         */
+        getLabel: function (
+            serie,
+            normal,
+            emphasis,
+            name,
+            value
+        ) {
+            var shape = {
+                style: {},
+                highlightStyle:{}
+            };
+            var textPosition = 'right';
+            // 节点标签样式
+            if (normal.label.show) {
+
+                var text = this.getLabelText(name, value, normal.label.formatter);
+                shape.style.text = text;
+                shape.style.textPosition = normal.label.position;
+                // 极坐标另外计算 时钟哪个侧面
+                if (serie.orient === 'radial' && shape.style.textPosition !== 'inside') {
+                    shape.style.textPosition = textPosition;
+                }
+                shape.style.textColor = normal.label.textStyle.color;
+
+                shape.style.textFont = normal.label.textStyle;
+            }
+
+            if (emphasis.label.show) {
+                var emphasisLabel = this.deepQuery(
+                    [emphasis, normal],
+                    'label'
+                );
+                var emphasisText = this.getLabelText(name, value, emphasisLabel.formatter);
+                shape.highlightStyle.text = emphasisText;
+
+                shape.highlightStyle.textPosition = emphasisLabel.position;
+                // 极坐标另外计算 时钟哪个侧面
+                if (serie.orient === 'radial' && shape.highlightStyle.textPosition !== 'inside') {
+                    shape.highlightStyle.textPosition = textPosition;
+                }
+                shape.highlightStyle.textColor = emphasisLabel.textStyle.color;
+
+                shape.highlightStyle.textFont = emphasisLabel.textStyle;
+            }
+
+            return shape;
         },
 
         _buildLink : function (
@@ -252,12 +304,17 @@ define(function (require) {
                 var yStart = parentNode.layout.position[1];
                 var xEnd = parentNode.children[i].layout.position[0];
                 var yEnd = parentNode.children[i].layout.position[1];
+
+                var queryTarget = [parentNode.children[i].data, serie];
+                // 多级控制
+                var childLineStyle = this.deepMerge(queryTarget, 'itemStyle.normal.lineStyle');
+
                 switch (lineStyle.type) {
                     case 'curve':
                         this._buildBezierCurve(
                             parentNode,
                             parentNode.children[i],
-                            lineStyle,
+                            childLineStyle,
                             serie
                         );
                         break;
@@ -271,7 +328,7 @@ define(function (require) {
                             yStart,
                             xEnd,
                             yEnd,
-                            lineStyle
+                            childLineStyle
                         );
                         this.shapeList.push(shape);
                 }
@@ -341,13 +398,43 @@ define(function (require) {
                 else {
                     xMiddleStart = xEnd;
                 }
+                var queryTarget = [parentNode.children[i].data, serie];
+                // 多级控制
+                var childLineStyle = this.deepMerge(queryTarget, 'itemStyle.normal.lineStyle');
+                childLineStyle.type = 'solid';
+                // 若配置了lineStyle则要单个画
+                if (childLineStyle.color !== solidLineStyle.color
+                    || childLineStyle.width !== solidLineStyle.width) {
+                    // 第一条 从根节点垂直向下
+                    shapes.push(
+                        this._getLine(
+                            xStart,
+                            yStart,
+                            xMiddle,
+                            yMiddle,
+                            childLineStyle
+                        )
+                    );
+                    // 第二条 从根节点水平指向自己
+                    shapes.push(
+                        this._getLine(
+                            xMiddle,
+                            yMiddle,
+                            xMiddleStart,
+                            yMiddleStart,
+                            childLineStyle
+                        )
+                    );
+                }
+
+                // 第三条 垂直向下到子节点
                 shapes.push(
                     this._getLine(
                         xMiddleStart,
                         yMiddleStart,
                         xEnd,
                         yEnd,
-                        solidLineStyle
+                        childLineStyle
                     )
                 );
             }
@@ -570,6 +657,37 @@ define(function (require) {
                 this
             );
         },
+
+        /**
+         * 支持formatter
+         *
+         * @param {string} name 数据名称
+         * @param {number} value 数据值
+         * @param {string|Object} formatter 构造器
+         * @return {Object} 返回label的样式
+         */
+        getLabelText: function (name, value, formatter) {
+            if (formatter) {
+                if (typeof formatter === 'function') {
+                    return formatter.call(
+                        this.myChart,
+                        name,
+                        value
+                    );
+                }
+                else if (typeof formatter === 'string') {
+                    formatter = formatter.replace('{b}', '{b0}')
+                        .replace('{c}', '{c0}');
+                    formatter = formatter.replace('{b0}', name)
+                        .replace('{c0}', value);
+                    return formatter;
+                }
+            }
+            else {
+                return name;
+            }
+        },
+
         /*
          * 刷新
          */
@@ -600,7 +718,7 @@ define(function (require) {
                     series[i] = this.reformOption(series[i]);
 
                     var seriesName = series[i].name || '';
-                    this.selectedMap[seriesName] = 
+                    this.selectedMap[seriesName] =
                         legend ? legend.isSelected(seriesName) : true;
                     if (!this.selectedMap[seriesName]) {
                         continue;
