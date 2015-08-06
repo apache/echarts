@@ -3,7 +3,7 @@
  *
  * Note: it will change the elements placement in array.
  *
- * @module echarts/data/quickSelect
+ * @module echarts/core/quickSelect
  * @author Yi Shen(https://github.com/pissang)
  */
 define(function (require) {
@@ -49,14 +49,14 @@ define(function (require) {
     }
 
     /**
-     * @alias module:echarts/data/quickSelect
+     * @alias module:echarts/core/quickSelect
      * @param {Array} list
      * @param {number} [left]
      * @param {number} [right]
      * @param {number} nth
      * @param {Function} [compareFunc]
      * @example
-     *     var quickSelect = require('echarts/data/quickSelect');
+     *     var quickSelect = require('echarts/core/quickSelect');
      *     var list = [5, 2, 1, 4, 3]
      *     quickSelect(list, 3);
      *     quickSelect(list, 0, 3, 1, function (a, b) {return a - b});
@@ -77,6 +77,6 @@ define(function (require) {
         }
         return select(list, left, right, nth, compareFunc);
     }
-    
+
     return quickSelect;
 });

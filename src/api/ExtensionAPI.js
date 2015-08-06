@@ -4,13 +4,16 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
 
-    var extensionAPIList = ['addProcessor', 'update', 'getCoordinateSystem'];
+    var echartsAPIList = ['getZr', 'addProcessor', 'update', 'getCoordinateSystem'];
 
     function ExtensionAPI(echarts) {
-        zrUtil.each(extensionAPIList, function (name) {
+        zrUtil.each(echartsAPIList, function (name) {
             this[name] = zrUtil.bind(echarts[name], echarts);
         }, this);
     };
+
+    // Mix graphic api
+    zrUtil.merge(ExtensionAPI.prototype, require('./graphic'));
 
     return ExtensionAPI;
 });

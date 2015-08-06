@@ -5,13 +5,11 @@ define(function (require) {
         type: 'dataZoom',
 
         init: function (echarts) {
-
+            
         },
 
         render: function (option) {
 
-        },
-
-        
+        }
     });
 });

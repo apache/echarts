@@ -6,8 +6,8 @@ define(function (require) {
 
         type: 'legend',
 
-        render: function (option, globalState) {
-            var selectedStateGroup = globalState.get('legend.selected');
+        render: function (option, state, api) {
+            var selectedStateGroup = state.get('legend.selected');
             if (selectedStateGroup) {
                 zrUtil.each(selectedStateGroup, function (selectedState) {
 

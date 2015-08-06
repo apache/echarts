@@ -66,6 +66,9 @@ define(function (require) {
             });
 
             this._originalOption = option;
+            // Processed option is same with originalOption before processing
+            // PENDING
+            this._processedOption = option;
 
             this._prepareComponents(option);
 
@@ -103,18 +106,17 @@ define(function (require) {
         },
 
         updateImmediately: function () {
-            // TODO Performance
-            var option = this._originalOption.clone();
+            var processedOption = this._processOption(this._originalOption);
 
-            this._coordinateSystem.update(option);
+            this._processedOption = processedOption;
 
-            this._processOption(option, this._state);
+            this._coordinateSystem.update(processedOption);
 
-            this._doRender(option);
+            this._doRender(processedOption);
         },
 
         resize: function () {
-
+            this._coordinateSystem.resize(this._processedOption, this._extensionAPI);
         },
 
         _prepareCharts: function (option) {
@@ -128,7 +130,7 @@ define(function (require) {
                     chart = Chart.create(series);
                     if (chart) {
                         chart.init(this._extensionAPI);
-                        this._chartsMap[series.type] = chart;
+                        this._chartsMap[id] = chart;
                         this._chartsList.push(chart);
                     }
                     else {
@@ -179,22 +181,30 @@ define(function (require) {
             }, this);
         },
 
-        _processOption: function (option, globalState) {
+        _processOption: function (option) {
+            // TODO Performance
+            option = option.clone();
+
             zrUtil.each(this._processors, function (processor) {
-                processor.syncState(globalState);
+                processor.syncState(this._state);
                 processor.process(option);
-            });
+            }, this);
+
+            return option;
         },
 
-        _doRender: function (option) {
+        _doRender: function (optionModel, stateModel) {
             var api = this._extensionAPI;
             // Render all components
             zrUtil.each(this._components, function (component) {
-                component.render(option, api);
-            });
+                component.render(optionModel, stateModel, api);
+            }, this);
             // Render all charts
+            optionModel.eachSeries(function (series, idx) {
+                var id = series.type + '_' + (series.name || idx);
+            });
             zrUtil.each(this._charts, function (chart) {
-                var group = chart.render(option, api);
+                var group = chart.render(optionModel, api);
                 this.zr.addElement(group);
             }, this);
 

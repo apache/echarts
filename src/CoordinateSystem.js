@@ -26,6 +26,10 @@ define(function(require) {
             if (list) {
                 return list[idx];
             }
+        },
+
+        resize: function () {
+            
         }
     }
 

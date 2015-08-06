@@ -13,12 +13,10 @@ define(function (require) {
             this._dataItemFilter = dataItemFilter;
 
             api.addProcessor(dataItemFilter, true);
-
-
         },
 
-        render: function () {
-
+        render: function (series, option, api) {
+            
         },
 
         dispose: function () {}

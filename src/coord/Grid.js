@@ -10,6 +10,7 @@ define(function(require, factory) {
     var Axis2D = require('./CartesianAxis2D');
     var OrdinalScale = require('../scale/Ordinal');
     var IntervalScale = require('../scale/Interval');
+    var numberUtil = require('../core/number');
 
     function Grid() {
 
@@ -34,14 +35,42 @@ define(function(require, factory) {
             this._initCartesian(option);
         },
 
+        getRect: function () {
+            return {
+                x: this._x,
+                y: this._y,
+                width: this._width,
+                height: this._height
+            };
+        },
+
         /**
          * Resize the grid
          */
-        resize: function (option, api) {
-            var gridX = this._x;
-            var gridY = this._y;
-            var gridWidth = this._width;
-            var gridHeight = this._height;
+        resize: function (optionModel, api) {
+            var viewportWidth = api.getWidth();
+            var viewportHeight = api.getHeight();
+
+            var grid = optionModel.get('grid');
+
+            var parsePercent = numberUtil.parsePercent;
+            var gridX = parsePercent(grid.x, viewportWidth);
+            var gridY = parsePercent(grid.y, viewportHeight);
+            var gridX2 = parsePercent(grid.x2, viewportWidth);
+            var gridY2 = parsePercent(grid.y2, viewportHeight);
+            var gridWidth = parsePercent(grid.width, viewportWidth);
+            var gridHeight = parsePercent(grid.height, viewportHeight);
+            if (isNaN(gridWidth)) {
+                gridWidth = gridX2 - gridX;
+            }
+            if (isNaN(gridHeight)) {
+                gridHeight = gridY2 - gridY;
+            }
+
+            this._x = gridX;
+            this._y = gridY;
+            this._width = gridWidth;
+            this._height = gridHeight;
 
             zrUtil.each(this._axesList, function (axis) {
                 var extent;
@@ -107,6 +136,10 @@ define(function(require, factory) {
             yAxisIndex = yAxisIndex || 0;
 
             var cartesian = this.getCartesian(xAxisIndex, yAxisIndex);
+            if (! cartesian) {
+                // Error
+                return;
+            }
 
             var xAxis = cartesian.getAxis('x');
             var yAxis = cartesian.getAxis('y');
@@ -158,7 +191,7 @@ define(function(require, factory) {
                     var xAxisType = xAxisOpt.type;
                     // Create x axis
                     var axisX = new Axis2D(
-                        'x', getScaleByOption(xAxisOpt, xAxisOpt),
+                        'x', getScaleByOption(xAxisType, xAxisOpt),
                         [0, 0],
                         xAxisOpt.type,
                         xAxisOpt.position
@@ -262,7 +295,7 @@ define(function(require, factory) {
                 }
             });
         }
-    }
+    };
 
     Grid.create = function (option, api) {
         if (option.grid) {

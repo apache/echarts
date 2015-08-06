@@ -5,6 +5,10 @@
 
 define(function (require) {
 
+    function _trim(str) {
+        return str.replace(/^\s+/, '').replace(/\s+$/, '');
+    }
+
     /**
      * Linear mapping a value from domain to range
      * @memberOf module:echarts/core/number
@@ -27,8 +31,30 @@ define(function (require) {
         return t * (range[1] - range[0]) + range[0];
     };
 
+    /**
+     * Convert a percent string to absolute number.
+     * Returns NaN if percent is not a valid string or number
+     * @memberOf module:echarts/core/number
+     * @param {string|number} percent
+     * @param {number} all
+     * @return {number}
+     */
+    function parsePercent(percent, all) {
+        if (typeof percent === 'string') {
+            if (_trim(percent).match(/%$/)) {
+                return parseFloat(percent) / 100 * all;
+            }
+
+            return parseFloat(percent);
+        }
+
+        return +percent;
+    }
+
     return {
 
-        linearMap: linearMap
+        linearMap: linearMap,
+
+        parsePercent: parsePercent
     }
 });
