@@ -86,7 +86,7 @@ option = {
                 },
                 emphasis: {
                     label: {
-
+                        show: false
                     }
                 }
             },
@@ -112,6 +112,10 @@ option = {
                                 normal: {
                                     label: {
                                         show: false
+                                    },
+                                    lineStyle: {
+                                        color: '#669966',
+                                        width: 2
                                     }
                                 }
                             },
@@ -129,6 +133,10 @@ option = {
                                                 show: true,
                                                 position: 'right'
                                             },
+                                            lineStyle: {
+                                                color: '#996699',
+                                                width: 3
+                                            }
 
                                         },
                                         emphasis: {
@@ -149,7 +157,7 @@ option = {
                                             label: {
                                                 show: true,
                                                 position: 'right',
-                                                formatter: "{b}: {c}"
+                                                formatter: "{b}:{c}"
                                             },
                                             color: '#fa6900',
                                             borderWidth: 2,
@@ -174,7 +182,11 @@ option = {
                                             color: '#fa6900',
                                             brushType: 'stroke',
                                             borderWidth: 1,
-                                            borderColor: '#999966'
+                                            borderColor: '#999966',
+                                            lineStyle: {
+                                                color: '#999966',
+                                                width: 3
+                                            }
                                         },
                                         emphasis: {
                                             borderWidth: 0
