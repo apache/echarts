@@ -6,8 +6,6 @@ define(function (require) {
 
         this.parent = parent || null;
 
-        this.option = option;
-
         this.init(option);
     }
 
@@ -15,13 +13,22 @@ define(function (require) {
 
         constructor: Model,
 
-        init: function (option) {},
+        init: function (option) {
+            this._option = option;
+        },
+
+        /**
+         * 从新的 Option merge
+         */
+        mergeOption: function (option) {
+            zrUtil.merge(this._option, option);
+        },
 
         get: function (path) {
             if (typeof path == 'string') {
                 path = path.split('.');
             }
-            var obj = this.option;
+            var obj = this._option;
             for (var i = 0; i < path.length; i++) {
                 obj = obj[path[i]];
                 if (obj == null) {
@@ -34,43 +41,16 @@ define(function (require) {
             return obj;
         },
 
-        set: function (path, value) {
-            if (typeof path == 'string') {
-                path = path.split('.');
-            }
-            var obj = this.option;
-            var key;
-            for (var i = 0; i < path.length - 1; i++) {
-                key = path[i];
-                if (obj == null) {
-                    // Create an empty object if not exists
-                    obj[key] = {};
-                }
-                obj = obj[key];
-            }
-            key = path[i];
-            obj[key] = value;
-
-            return value;
+        getOption: function () {
+            return this._option;
         },
 
-        getSubModel: function (path) {
-            var Ctor = this.constructor;
-            return new Ctor(this.get(path), this);
-        },
+        restore: function () {},
 
+        // Pending
         clone: function () {
             var Ctor = this.constructor;
-            // PENDING Deep clone ?
             return new Ctor(zrUtil.clone(this._option, true));
-        },
-
-        merge: function (obj) {
-            zrUtil.merge(this._option, obj, true);
-        },
-
-        defaults: function (obj) {
-            zrUtil.merge(this._option, obj);
         }
     };
 

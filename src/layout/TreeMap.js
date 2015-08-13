@@ -6,20 +6,6 @@
 define(function (require) {
 
     function TreeMapLayout(opts) {
-        /**
-         * areas 每个子矩形面积
-         * x 父矩形横坐标
-         * y 父矩形横坐标
-         * width 父矩形宽
-         * height 父矩形高
-        */
-        var row = {
-            x: opts.x,
-            y: opts.y,
-            width: opts.width,
-            height: opts.height
-        };
-
         this.x = opts.x;
         this.y = opts.y;
         this.width = opts.width;

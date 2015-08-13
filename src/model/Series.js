@@ -16,6 +16,10 @@ define(function(require) {
             this._data = this.getInitialData(seriesOption);
         },
 
+        mergeOption: function (newSeriesOption) {
+            this._data = this.getInitialData(newSeriesOption);
+        },
+
         /**
          * Init a data structure from data related option in series
          * Must be overwritten
@@ -36,7 +40,7 @@ define(function(require) {
         var ExtendedSeriesModel = Model.extend.call(this);
         if (opts.type) {
             if (seriesModelClassesStore[opts.type]) {
-                // Error exists
+                // Warning
             }
             seriesModelClassesStore[opts.type] = ExtendedSeriesModel;
         }

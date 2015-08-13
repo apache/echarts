@@ -8,7 +8,7 @@
  */
 define(function (require) {
 
-    var KDTree = require('../data/KDTree');
+    var KDTree = require('../util/KDTree');
     var vec2 = require('zrender/tool/vector');
     var v2Create = vec2.create;
     var v2DistSquare = vec2.distSquare;
@@ -101,7 +101,7 @@ define(function (require) {
     }
 
     EdgeBundling.prototype = {
-        
+
         constructor: EdgeBundling,
 
         run: function (rawEdges) {
@@ -389,7 +389,7 @@ define(function (require) {
                     var turningAngleCos = vec2.dot(vTmp, v10);
                     // Turning angle is to large
                     if (turningAngleCos < maxTurningAngleCos) {
-                        // Calculat p's project point on vector p1-p0 
+                        // Calculat p's project point on vector p1-p0
                         // and distance to the vector
                         vec2.scaleAndAdd(
                             project, p0, v10, len * turningAngleCos

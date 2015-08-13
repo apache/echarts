@@ -36,7 +36,7 @@ define(function (require) {
 
         if (proto.type) {
             if (chartClassStore[proto.type]) {
-                // Error exists
+                // Warning
             }
             chartClassStore[proto.type] = ExtendedChart;
         }

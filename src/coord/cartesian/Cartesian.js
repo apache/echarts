@@ -88,7 +88,7 @@ define(function (require) {
          * @param {module:echarts/coord/Cartesian.Axis}
          */
         addAxis: function (axis) {
-            var dim = axis.dimension;
+            var dim = axis.dim;
 
             this._axis[dim] = axis;
 

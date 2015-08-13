@@ -1,8 +1,7 @@
 define(function (require) {
 
     var config = require('./config');
-    var OptionModel = require('./model/Option');
-    var Model = require('./model/Model');
+    var GlobalModel = require('./model/Global');
     var zrUtil = require('zrender/core/util');
     var Chart = require('./chart/Chart');
     var Component = require('./component/Component');
@@ -11,7 +10,7 @@ define(function (require) {
 
     var zrender = require('zrender');
 
-    var startupProcessorClasses = [];
+    var processors = [];
 
     /**
      * @module echarts~ECharts
@@ -23,13 +22,6 @@ define(function (require) {
         theme = zrUtil.clone(theme || {});
         zrUtil.merge(theme, config);
 
-        // Create processors
-        this._processors = zrUtil.map(startupProcessorClasses, function (Processor) {
-            var processor = new Processor();
-            processor.init();
-            return processor;
-        });
-
         this._theme = theme;
 
         this._chartsList = [];
@@ -39,11 +31,6 @@ define(function (require) {
         this._componentsMap = {};
 
         this._extensionAPI = new ExtensionAPI(this);
-
-        // Pending
-        // optionModel as parent ?
-        var globalState = new Model({});
-        this._state = globalState;
 
         this._coordinateSystem = new CoordinateSystemManager();
     };
@@ -58,43 +45,20 @@ define(function (require) {
             rawOption = zrUtil.clone(rawOption);
             zrUtil.merge(rawOption, this._theme);
 
-            var option = new OptionModel(rawOption);
+            var ecModel = new GlobalModel(rawOption);
 
             // Add series index
-            option.eachSeries(function (series, seriesIndex) {
+            ecModel.eachSeries(function (series, seriesIndex) {
                 series.seriesIndex = seriesIndex;
             });
 
-            this._originalOption = option;
-            // Processed option is same with originalOption before processing
-            // PENDING
-            this._processedOption = option;
+            this._model = ecModel;
 
-            this._prepareComponents(option);
+            this._prepareComponents(ecModel);
 
-            this._prepareCharts(option);
-
-            zrUtil.each(this._processors, function (processor) {
-                processor.optionChanged(option);
-            });
+            this._prepareCharts(ecModel);
 
             this.updateImmediately();
-        },
-
-        addProcessor: function (processor, oneForEachType) {
-            var processors = this._processors;
-            if (zrUtil.indexOf(processors, processor) >= 0) {
-                return;
-            };
-            if (oneForEachType) {
-                if (zrUtil.filter(processors, function (exist) {
-                    return exist.type === processor.type;
-                }).length) {
-                    return;
-                }
-            }
-
-            processors.push(processor);
         },
 
         getCoordinateSystem: function (type, idx) {
@@ -106,22 +70,22 @@ define(function (require) {
         },
 
         updateImmediately: function () {
-            var processedOption = this._processOption(this._originalOption);
+            this._model.restore();
 
-            this._processedOption = processedOption;
+            this._processData(this._model);
 
-            this._coordinateSystem.update(processedOption);
+            this._coordinateSystem.update(this._model);
 
-            this._doRender(processedOption);
+            this._doRender(this._model);
         },
 
         resize: function () {
-            this._coordinateSystem.resize(this._processedOption, this._extensionAPI);
+            this._coordinateSystem.resize(this._model, this._extensionAPI);
         },
 
-        _prepareCharts: function (option) {
+        _prepareCharts: function (ecModel) {
             var chartUsedMap = {};
-            zrUtil.each(option.get('series'), function (series, idx) {
+            zrUtil.each(ecModel.get('series'), function (series, idx) {
                 var id = series.type + '_' + (series.name || idx);
                 chartUsedMap[id] = true;
 
@@ -154,12 +118,12 @@ define(function (require) {
             };
         },
 
-        _prepareComponents: function (option) {
+        _prepareComponents: function (ecModel) {
             Component.eachAvailableComponent(function (componentType) {
                 var componentsMap = this._componentsMap;
                 var componentsList = this._componentsList;
 
-                var componentOption = option.get(componentType);
+                var componentOption = ecModel.get(componentType);
                 var component = componentsMap[componentType];
                 if (componentOption) {
                     if (! component) {
@@ -181,16 +145,10 @@ define(function (require) {
             }, this);
         },
 
-        _processOption: function (option) {
-            // TODO Performance
-            option = option.clone();
-
-            zrUtil.each(this._processors, function (processor) {
-                processor.syncState(this._state);
-                processor.process(option);
-            }, this);
-
-            return option;
+        _processData: function (ecModel) {
+            zrUtil.each(processors, function (processor) {
+                processor(ecModel);
+            });
         },
 
         _doRender: function (optionModel, stateModel) {
@@ -200,14 +158,12 @@ define(function (require) {
                 component.render(optionModel, stateModel, api);
             }, this);
             // Render all charts
-            optionModel.eachSeries(function (series, idx) {
-                var id = series.type + '_' + (series.name || idx);
-            });
-            zrUtil.each(this._charts, function (chart) {
-                var group = chart.render(optionModel, api);
+            optionModel.eachSeries(function (seriesModel, idx) {
+                var id = seriesModel.get('type') + '_' + (seriesModel.get('name') || idx);
+                var chart = this._chartsMap[id];
+                var group = chart.render(seriesModel, optionModel, api);
                 this.zr.addElement(group);
             }, this);
-
             // TODO
             // Remove group of unused chart
         },
@@ -234,7 +190,7 @@ define(function (require) {
             return new ECharts(dom, theme);
         },
 
-        registerStartupProcessor: function (Processor) {
+        registreProcessor: function (Processor) {
 
         },
 
@@ -244,9 +200,9 @@ define(function (require) {
     };
 
 
-    echarts.registerStartupProcessor(require('./processor/AxisDefault'));
+    echarts.registreProcessor(require('./processor/AxisDefault'));
 
-    echarts.registerStartupProcessor(require('./processor/SeriesFilter'));
+    echarts.registreProcessor(require('./processor/SeriesFilter'));
 
     return echarts;
 });

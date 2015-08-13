@@ -1,25 +1,22 @@
 define(function (require) {
 
-    var Chart = require('../Chart');
     var zrUtil = require('zrender/core/util');
 
-    require('./BarSeries');
-
-    var Bar = Chart.extend({
+    var Bar = require('../ChartView').extend({
 
         type: 'bar',
 
         init: function () {},
 
-        render: function (series, option, api) {
-            var coordinateSystemType = series.get('coordinateSystem');
+        render: function (seriesModel, ecModel, api) {
+            var coordinateSystemType = seriesModel.get('coordinateSystem');
 
             if (coordinateSystemType === 'cartesian') {
-                this._renderCartesianBar(series, option, api);
+                this._renderCartesianBar(seriesModel, ecModel, api);
             }
         },
 
-        _renderCartesianBar: function (series, option, api) {
+        _renderCartesianBar: function (series, ecModel, api) {
             // Currently only one grid is supported
             var grid = api.getCoordinateSystem('grid', 0);
 

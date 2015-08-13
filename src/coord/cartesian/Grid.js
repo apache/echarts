@@ -10,7 +10,10 @@ define(function(require, factory) {
     var Axis2D = require('./CartesianAxis2D');
     var OrdinalScale = require('../scale/Ordinal');
     var IntervalScale = require('../scale/Interval');
-    var numberUtil = require('../core/number');
+    var numberUtil = require('../util/number');
+
+    // 依赖 GridModel 做预处理
+    require('./GridModel');
 
     function Grid() {
 
@@ -273,14 +276,17 @@ define(function(require, factory) {
 
                     var data = series.getData();
                     if (data.type === 'list') {
-                        if (data.dataDimension === 2) {
+                        var categoryAxis = cartesian.getAxisByScale('ordinal');
+                        if (! categoryAxis || categoryAxis.dim === 'x') {
+                            data.eachY(function (value) {
+                                axisData.y.push(value);
+                            });
+                        }
+                        if (! categoryAxis || categoryAxis.dim === 'y') {
                             data.eachX(function (value) {
                                 axisData.x.push(value);
                             });
                         }
-                        data.eachY(function (value) {
-                            axisData.y.push(value);
-                        });
                     }
                 }
             }, this);

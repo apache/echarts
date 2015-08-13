@@ -6,11 +6,7 @@ define(function(require) {
 
         type: 'axisRangeFilter',
 
-        getInitialState: function () {
-
-        },
-
-        optionChanged: function (option, globalState) {
+        optionChanged: function (option) {
 
         },
 

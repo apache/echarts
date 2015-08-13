@@ -1,6 +1,6 @@
 /**
  * 数值处理模块
- * @module echarts/core/number
+ * @module echarts/util/number
  */
 
 define(function (require) {
@@ -11,7 +11,7 @@ define(function (require) {
 
     /**
      * Linear mapping a value from domain to range
-     * @memberOf module:echarts/core/number
+     * @memberOf module:echarts/util/number
      * @param  {number} val
      * @param  {Array.<number>} domain Domain extent
      * @param  {Array.<number>} range  Range extent
@@ -34,7 +34,7 @@ define(function (require) {
     /**
      * Convert a percent string to absolute number.
      * Returns NaN if percent is not a valid string or number
-     * @memberOf module:echarts/core/number
+     * @memberOf module:echarts/util/number
      * @param {string|number} percent
      * @param {number} all
      * @return {number}

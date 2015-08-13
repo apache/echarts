@@ -1,19 +1,19 @@
 define(function (require) {
 
-    var linearMap = require('../core/number').linearMap;
+    var linearMap = require('../util/number').linearMap;
     var zrUtil = require('zrender/core/util');
 
     /**
      * @name module:echarts/coord/CartesianAxis
      * @constructor
      */
-    var Axis = function (dimension, scale, coordExtent) {
+    var Axis = function (dim, scale, coordExtent) {
 
         /**
          * Axis dimension. Such as 'x', 'y', 'z'
          * @type {string}
          */
-        this.dimension = dimension;
+        this.dim = dim;
 
         /**
          * Axis scale

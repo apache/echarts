@@ -62,7 +62,7 @@ define(function(require) {
         /**
          * In-place filter
          */
-        filter: function (cb, context) {
+        filterInPlace: function (cb, context) {
             context = context || this;
             if (this.depth > 1) {
                 createArrayIterWithDepth(
@@ -77,7 +77,7 @@ define(function(require) {
         /**
          * In-place map
          */
-        map: function (cb, context) {
+        mapInPlace: function (cb, context) {
             context = context || this;
             if (this.depth > 1) {
                 createArrayIterWithDepth(
@@ -98,57 +98,84 @@ define(function(require) {
             }
         },
         /**
-         * Get x of single data item by a given data index.
+         * Get x of single data item.
          * can be overwritten
+         * @param {*} item
          * @param {number} idx
          * @return {number}
          */
-        getX: function (idx) {
-            var item = this.elements[idx];
+        getX: function (item, idx) {
             // Use idx as x if data is 1d
+            // Usually when xAxis is category axis
             return this.dataDimension === 1 ? idx : item.value[0];
         },
 
-        /**
-         * Get y of single data item by a given data index.
-         * can be overwritten
-         * @param {number} idx
-         * @return {number}
-         */
-        getY: function (idx) {
-            var item = this.elements[idx];
+        setX: function (item, x) {
             if (this.dataDimension > 1) {
-                return item.value[1];
+                item.value[0] = x;
             }
         },
 
         /**
-         * Get z of single data item by a given data index.
+         * Get y of single data item.
          * can be overwritten
-         * @param {number} idx
+         * @param {*} item
          * @return {number}
          */
-        getZ: function (idx) {
-            var item = this.elements[idx];
+        getY: function (item) {
+            if (this.dataDimension > 1) {
+                return item.value[1];
+            }
+            else {
+                // Value is a single number if data is 1d
+                return item.value;
+            }
+        },
+
+        setY: function (item, y) {
+            if (this.dataDimension > 1) {
+                item.value[1] = y;
+            }
+            else {
+                item.value = y;
+            }
+        },
+
+        /**
+         * Get z of single data item.
+         * can be overwritten
+         * @param {*} item
+         * @return {number}
+         */
+        getZ: function (item) {
             if (this.dataDimension > 2) {
                 return item.value[2];
             }
         },
 
+        setZ: function (item, z) {
+            if (this.dataDimension > 2) {
+                item.value[2] = z;
+            }
+        },
+
         /**
-         * Get value of single data item by a given data index.
+         * Get value of single data item.
          * can be overwritten
-         * @param {number} idx
+         * @param {*} item
          * @return {number}
          */
-        getValue: function (idx) {
-            var item = this.elements[idx];
+        getValue: function (item) {
             // PENDING
             return item.value[this.dataDimension];
         },
 
+        setValue: function (item, z) {
+            item.value[this.dataDimension] = z;
+        },
+
         clone: function () {
-            // Clone with depth
+            // Clone
         }
     };
 
@@ -156,7 +183,7 @@ define(function(require) {
         zrUtil.each(['each', 'map', 'filter'], function (iterType) {
             List.prototype[iterType + name] = function (cb, context) {
                 this[iterType](function (item, idx) {
-                    return cb && cb.call(context || this, this['get' + name], idx);
+                    return cb && cb.call(context || this, this['get' + name](item, idx));
                 }, context);
             };
         });
@@ -165,7 +192,6 @@ define(function(require) {
     List.fromArray = function (data) {
         var list = new List();
         // Normalize data
-        // 2D Array
         list.elements = zrUtil.map(data, function (dataItem) {
             if (dataItem !== Object(dataItem)) {
                 return {
