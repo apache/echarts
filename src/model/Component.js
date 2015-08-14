@@ -23,7 +23,15 @@ define(function(require) {
         return SubComponentModel;
     };
 
-    ComponentModel.create
+    ComponentModel.create = function (name, option) {
+        if (componentModelClasses[name]) {
+            return new componentModelClasses[name](option);
+        }
+    };
+
+    ComponentModel.has = function (name) {
+        return componentModelClasses[name];
+    };
 
     return ComponentModel;
 });

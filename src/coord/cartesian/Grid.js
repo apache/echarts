@@ -50,11 +50,11 @@ define(function(require, factory) {
         /**
          * Resize the grid
          */
-        resize: function (optionModel, api) {
+        resize: function (ecModel, api) {
             var viewportWidth = api.getWidth();
             var viewportHeight = api.getHeight();
 
-            var grid = optionModel.get('grid');
+            var grid = ecModel.get('grid');
 
             var parsePercent = numberUtil.parsePercent;
             var gridX = parsePercent(grid.x, viewportWidth);
@@ -162,10 +162,7 @@ define(function(require, factory) {
          * Initialize cartesian coordinate systems
          * @private
          */
-        _initCartesian: function (option) {
-            var xAxesList = option.xAxis;
-            var yAxesList = option.yAxis;
-
+        _initCartesian: function (ecModel) {
             /**
              * @inner
              */
@@ -182,35 +179,43 @@ define(function(require, factory) {
                 }
             };
 
-            for (var i = 0; i < xAxesList.length; i++) {
-                var xAxisOpt = xAxesList[i];
-                for (var j = 0; j < yAxesList.length; j++) {
-                    var yAxisOpt = yAxesList[j];
+            var leftUsed = false;
+            var bottomUsed = false;
+
+            var axesList = this._axesList;
+
+            ecModel.eachComponent('xAxis', function (xAxisModel, i) {
+                ecModel.eachComponent('yAxis', function (yAxisModel, j) {
+
                     var key = 'x' + i + 'y' + j;
                     var cartesian = new Cartesian(key);
                     this._coordsMap[key] = cartesian;
                     this._coordsList.push(cartesian);
 
-                    var xAxisType = xAxisOpt.type;
                     // Create x axis
+                    var xAxisType = xAxisModel.get('type');
+                    var xAxisPosition = xAxisModel.get('position') || (bottomUsed ? 'top' : 'bottom');
+                    bottomUsed = xAxisPosition === 'bottom';
                     var axisX = new Axis2D(
-                        'x', getScaleByOption(xAxisType, xAxisOpt),
+                        'x', getScaleByOption(xAxisType, xAxisModel),
                         [0, 0],
-                        xAxisOpt.type,
-                        xAxisOpt.position
+                        xAxisModel.get('type'),
+                        xAxisPosition
                     );
-                    axisX.onZero = xAxisOpt.axisLine.onZero;
+                    axisX.onZero = xAxisModel.get('axisLine.onZero');
                     cartesian.addAxis(axisX);
 
-                    var yAxisType = yAxisOpt.type;
                     // Create y axis
+                    var yAxisType = yAxisModel.get('type');
+                    var yAxisPosition = yAxisModel.get('position') || (leftUsed ? 'right' : 'left');
+                    leftUsed = yAxisPosition === 'left';
                     var axisY = new Axis2D(
-                        'y', getScaleByOption(yAxisType, yAxisOpt),
+                        'y', getScaleByOption(yAxisType, yAxisModel),
                         [0, 0],
-                        yAxisOpt.type,
-                        yAxisOpt.position
+                        yAxisModel.get('type'),
+                        yAxisModel.get('position')
                     );
-                    axisY.onZero = yAxisOpt.axisLine.onZero;
+                    axisY.onZero = yAxisModel.get('axisLine.onZero');
                     cartesian.addAxis(axisY);
 
                     axisX.otherAxis = axisY;
@@ -236,15 +241,15 @@ define(function(require, factory) {
                         horizontalAxis.reverse();
                     }
 
-                    this._axesList.push(axisX);
-                    this._axesList.push(axisY);
-                }
-            }
+                    axesList.push(axisX);
+                    axesList.push(axisY);
+                }, this);
+            }, this);
 
-            this._updateCartesianFromSeries(option);
+            this._updateCartesianFromSeries(ecModel);
 
             // Set axis from option
-            zrUtil.each(this._axesList, function (axis) {
+            zrUtil.each(axesList, function (axis) {
                 axis.scale.niceExtent();
             });
         },
@@ -254,15 +259,15 @@ define(function(require, factory) {
          * @param  {module:echarts/model/Option} option
          * @private
          */
-        _updateCartesianFromSeries: function (option) {
+        _updateCartesianFromSeries: function (ecModel) {
             var axisDataMap = {};
 
-            option.eachSeries(function (series, idx) {
-                var coordinateSystem = series.get('coordinateSystem');
+            ecModel.eachSeries(function (seriesModel, idx) {
+                var coordinateSystem = seriesModel.get('coordinateSystem');
 
                 if (coordinateSystem === 'cartesian') {
-                    var xAxisIndex = series.get('xAxisIndex');
-                    var yAxisIndex = series.get('yAxisIndex');
+                    var xAxisIndex = seriesModel.get('xAxisIndex');
+                    var yAxisIndex = seriesModel.get('yAxisIndex');
 
                     var cartesian = this.getCartesian(xAxisIndex, yAxisIndex);
                     var axisData = axisDataMap[cartesian.name];
@@ -274,7 +279,7 @@ define(function(require, factory) {
                         };
                     }
 
-                    var data = series.getData();
+                    var data = seriesModel.getData();
                     if (data.type === 'list') {
                         var categoryAxis = cartesian.getAxisByScale('ordinal');
                         if (! categoryAxis || categoryAxis.dim === 'x') {

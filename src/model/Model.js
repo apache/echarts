@@ -6,6 +6,8 @@ define(function (require) {
 
         this.parent = parent || null;
 
+        this.$option = {};
+
         this.init(option);
     }
 
@@ -14,21 +16,21 @@ define(function (require) {
         constructor: Model,
 
         init: function (option) {
-            this._option = option;
+            this.$option = option;
         },
 
         /**
          * 从新的 Option merge
          */
         mergeOption: function (option) {
-            zrUtil.merge(this._option, option);
+            zrUtil.merge(this.$option, option);
         },
 
         get: function (path) {
             if (typeof path == 'string') {
                 path = path.split('.');
             }
-            var obj = this._option;
+            var obj = this.$option;
             for (var i = 0; i < path.length; i++) {
                 obj = obj[path[i]];
                 if (obj == null) {
@@ -42,7 +44,7 @@ define(function (require) {
         },
 
         getOption: function () {
-            return this._option;
+            return this.$option;
         },
 
         restore: function () {},
@@ -50,7 +52,7 @@ define(function (require) {
         // Pending
         clone: function () {
             var Ctor = this.constructor;
-            return new Ctor(zrUtil.clone(this._option, true));
+            return new Ctor(zrUtil.clone(this.$option, true));
         }
     };
 

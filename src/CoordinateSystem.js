@@ -28,9 +28,7 @@ define(function(require) {
             }
         },
 
-        resize: function () {
-            
-        }
+        resize: function () {}
     }
 
     CoordinateSystemManager.register = function (type, coordinateSystemCreator) {

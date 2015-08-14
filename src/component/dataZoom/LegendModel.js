@@ -2,7 +2,7 @@ define(function(require) {
 
     'use strict';
 
-    return require('../../model/Model').extend({
+    return require('../model/Model').extend({
 
         type: 'legend',
 

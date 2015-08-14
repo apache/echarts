@@ -3,24 +3,25 @@ define(function(require) {
     'use strict';
 
     var AxisModel = require('../model/Component').extend({
-
-        type: 'axis',
-
-        mergeOption: function (option) {
-            
-        },
-
-        setRange: function (start, end) {
-            this._range[0] = start;
-            this._range[1] = end;
-        }
+        type: 'axis'
     });
 
     AxisModel.AxisX = AxisModel.extend({
-        type: 'axisX'
+
+        type: 'axisX',
+
+        init: function (option) {
+            option.type = option.type || 'category';
+        }
     });
+
     AxisModel.AxisY = AxisModel.extend({
-        type: 'axisY'
+
+        type: 'axisY',
+
+        init: function (option) {
+            option.type = option.type || 'value';
+        }
     });
 
     return AxisModel;

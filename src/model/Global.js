@@ -18,7 +18,7 @@ define(function (require) {
 
             this._seriesMap = {};
 
-            this._option = {};
+            this.$option = {};
 
             this.mergeOption(option);
         },
@@ -38,38 +38,64 @@ define(function (require) {
             }, this);
 
             // 同步 Option
-            this._option.series = this._series.map(function (seriesModel) {
+            this.$option.series = this._series.map(function (seriesModel) {
                 return seriesModel.getOption();
             });
 
+            var components = this._components;
             for (var name in newOption) {
-                if (this._components[name]) {
-                    this._components[name].mergeOption(newOption[name]);
+                var componentOption = newOption[name];
+                // Normalize
+                if (! (componentOption instanceof Array)) {
+                    componentOption = [componentOption];
                 }
-                else {
-                    var componentOption = newOption[name];
-                    var componentModel = ComponentModel.create(name, componentOption);
-                    if (! componentModel) {
-                        // 如果不存在对应的 model 则直接 merge
-                        if (typeof componentOption === 'object') {
-                            componentOption = zrUtil.merge(this._option[name] || {}, componentOption);
-                        }
-                        this._option[name] = componentOption;
+                if (! components[name]) {
+                    components[name] = [];
+                }
+
+                // 如果不存在对应的 model 则直接 merge
+                if (! ComponentModel.has(name)) {
+                    if (typeof componentOption[i] === 'object') {
+                        componentOption = zrUtil.merge(this.$option[name] || {}, componentOption);
                     }
                     else {
-                        this._components[name] = componentModel;
+                        this.$option[name] = componentOption;
                     }
+                }
+                else {
+                    for (var i = 0; i < componentOption.length; i++) {
+                        var componentModel = components[name][i];
+                        if (componentModel) {
+                            componentModel.mergeOption(componentOption[i]);
+                        }
+                        else {
+                            componentModel = ComponentModel.create(name, componentOption[i]);
+                            components[name][i] = componentModel;
 
-                    if (componentModel) {
-                        // 同步 Option
-                        this._option[name] = componentModel.getOption();
+                            if (componentModel) {
+                                // 同步 Option
+                                if (componentOption instanceof Array) {
+                                    this.$option[name][i] = componentModel.getOption();
+                                }
+                                else {
+                                    this.$option[name] = componentModel.getOption();
+                                }
+                            }
+                        }
                     }
                 }
             }
         },
 
-        getComponent: function (name) {
-            return this._components[name];
+        getComponent: function (type, idx) {
+            var list = this._components[type];
+            if (list) {
+                return list[idx || 0];
+            }
+        },
+
+        eachComponent: function (type, cb, context) {
+            zrUtil.each(this._components[type], cb, context);
         },
 
         getSeriesByName: function (name) {
