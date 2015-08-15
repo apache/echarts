@@ -6,9 +6,10 @@
  */
 define(function(require) {
 
-    var util = require('zrender/tool/util');
-
     'use strict';
+
+    var util = require('zrender/core/util');
+    var Model = require('../model/Model');
 
     /**
      * @alias module:echarts/data/Graph
@@ -48,39 +49,40 @@ define(function(require) {
 
     /**
      * 添加一个新的节点
-     * @param {string} id 节点名称
-     * @param {*} [data] 存储的数据
+     * @param {*} [option] 存储的数据
      */
-    Graph.prototype.addNode = function (id, data) {
-        if (this._nodesMap[id]) {
-            return this._nodesMap[id];
+    Graph.prototype.addNode = function (option) {
+        var name = option.name;
+
+        if (this._nodesMap[name]) {
+            return this._nodesMap[name];
         }
 
-        var node = new Graph.Node(id, data);
+        var node = new Graph.Node(option);
 
         this.nodes.push(node);
 
-        this._nodesMap[id] = node;
+        this._nodesMap[name] = node;
         return node;
     };
 
     /**
      * 获取节点
-     * @param  {string} id
+     * @param  {string} name
      * @return {module:echarts/data/Graph~Node}
      */
-    Graph.prototype.getNodeById = function (id) {
-        return this._nodesMap[id];
+    Graph.prototype.getNodeByName = function (name) {
+        return this._nodesMap[name];
     };
 
     /**
      * 添加边
      * @param {string|module:echarts/data/Graph~Node} n1
      * @param {string|module:echarts/data/Graph~Node} n2
-     * @param {*} data
+     * @param {*} option
      * @return {module:echarts/data/Graph~Edge}
      */
-    Graph.prototype.addEdge = function (n1, n2, data) {
+    Graph.prototype.addEdge = function (n1, n2, option) {
         if (typeof(n1) == 'string') {
             n1 = this._nodesMap[n1];
         }
@@ -91,12 +93,14 @@ define(function(require) {
             return;
         }
 
-        var key = n1.id + '-' + n2.id;
+        var key = n1.name + '-' + n2.name;
         if (this._edgesMap[key]) {
             return this._edgesMap[key];
         }
 
-        var edge = new Graph.Edge(n1, n2, data);
+        var edge = new Graph.Edge(option);
+        edge.node1 = n1;
+        edge.node2 = n2;
 
         if (this._directed) {
             n1.outEdges.push(edge);
@@ -120,7 +124,7 @@ define(function(require) {
     Graph.prototype.removeEdge = function (edge) {
         var n1 = edge.node1;
         var n2 = edge.node2;
-        var key = n1.id + '-' + n2.id;
+        var key = n1.name + '-' + n2.name;
         if (this._directed) {
             n1.outEdges.splice(util.indexOf(n1.outEdges, edge), 1);
             n2.inEdges.splice(util.indexOf(n2.inEdges, edge), 1);
@@ -142,10 +146,10 @@ define(function(require) {
      */
     Graph.prototype.getEdge = function (n1, n2) {
         if (typeof(n1) !== 'string') {
-            n1 = n1.id;
+            n1 = n1.name;
         }
         if (typeof(n2) !== 'string') {
-            n2 = n2.id;
+            n2 = n2.name;
         }
 
         if (this._directed) {
@@ -168,7 +172,7 @@ define(function(require) {
             }
         }
 
-        delete this._nodesMap[node.id];
+        delete this._nodesMap[node.name];
         this.nodes.splice(util.indexOf(this.nodes, node), 1);
 
         for (var i = 0; i < this.edges.length;) {
@@ -313,80 +317,74 @@ define(function(require) {
     Graph.prototype.clone = function () {
         var graph = new Graph(this._directed);
         for (var i = 0; i < this.nodes.length; i++) {
-            graph.addNode(this.nodes[i].id, this.nodes[i].data);
+            graph.addNode(this.nodes[i].name, this.nodes[i].data);
         }
         for (var i = 0; i < this.edges.length; i++) {
             var e = this.edges[i];
-            graph.addEdge(e.node1.id, e.node2.id, e.data);
+            graph.addEdge(e.node1.name, e.node2.name, e.data);
         }
         return graph;
     };
 
+
     /**
      * 图节点
      * @alias module:echarts/data/Graph~Node
-     * @param {string} id
-     * @param {*} [data]
      */
-    var Node = function(id, data) {
-        /**
-         * 节点名称
-         * @type {string}
-         */
-        this.id = id;
-        /**
-         * 节点存储的数据
-         * @type {*}
-         */
-        this.data = data || null;
-        /**
-         * 入边，只在有向图上有效
-         * @type {Array.<module:echarts/data/Graph~Edge>}
-         */
-        this.inEdges = [];
-        /**
-         * 出边，只在有向图上有效
-         * @type {Array.<module:echarts/data/Graph~Edge>}
-         */
-        this.outEdges = [];
-        /**
-         * 邻接边
-         * @type {Array.<module:echarts/data/Graph~Edge>}
-         */
-        this.edges = [];
-    };
+    var Node = Model.extend({
 
-    /**
-     * 度
-     * @return {number}
-     */
-    Node.prototype.degree = function () {
-        return this.edges.length;
-    };
+        init: function (option) {
+            /**
+            * 节点名称
+            * @type {string}
+            */
+            this.name = option.name || '';
+            /**
+            * 节点存储的数据
+            * @type {*}
+            */
+            this.$option = option || null;
+            /**
+            * 入边，只在有向图上有效
+            * @type {Array.<module:echarts/data/Graph~Edge>}
+            */
+            this.inEdges = [];
+            /**
+            * 出边，只在有向图上有效
+            * @type {Array.<module:echarts/data/Graph~Edge>}
+            */
+            this.outEdges = [];
+            /**
+            * 邻接边
+            * @type {Array.<module:echarts/data/Graph~Edge>}
+            */
+            this.edges = [];
+        },
 
-    /**
-     * 入度，只在有向图上有效
-     * @return {number}
-     */
-    Node.prototype.inDegree = function () {
-        return this.inEdges.length;
-    };
+        /**
+        * 度
+        * @return {number}
+        */
+        degree: function () {
+            return this.edges.length;
+        },
 
-    /**
-     * 出度，只在有向图上有效
-     * @return {number}
-     */
-    Node.prototype.outDegree = function () {
-        return this.outEdges.length;
-    };
+        /**
+        * 入度，只在有向图上有效
+        * @return {number}
+        */
+        inDegree: function () {
+            return this.inEdges.length;
+        },
 
-    /**
-     * 获取数据项
-     * @return {number}
-     */
-    Node.prototype.getValue = function () {
-        return this.data.value;
-    };
+        /**
+        * 出度，只在有向图上有效
+        * @return {number}
+        */
+        outDegree: function () {
+            return this.outEdges.length;
+        }
+    });
 
     /**
      * 图边
@@ -395,24 +393,24 @@ define(function(require) {
      * @param {module:echarts/data/Graph~Node} node2
      * @param {extra} data
      */
-    var Edge = function(node1, node2, data) {
+    var Edge = Model.extend({
+
         /**
          * 节点1，如果是有向图则为源节点
          * @type {module:echarts/data/Graph~Node}
          */
-        this.node1 = node1;
+        node1: null,
+
         /**
          * 节点2，如果是有向图则为目标节点
          * @type {module:echarts/data/Graph~Node}
          */
-        this.node2 = node2;
+        node2: null,
 
-        /**
-         * 边存储的数据
-         * @type {*}
-         */
-        this.data = data || null;
-    };
+        init: function (option) {
+            this.$option = option;
+        }
+    });
 
     Graph.Node = Node;
     Graph.Edge = Edge;
@@ -428,13 +426,13 @@ define(function(require) {
      *  4| x  x  x  x  x
      *  5| x  x  x  x  x
      * ```
-     * 节点的行列总和会被写到`node.data.value`
-     * 对于有向图会计算每一行的和写到`node.data.outValue`,
-     * 计算每一列的和写到`node.data.inValue`。
-     * 边的权重会被然后写到`edge.data.weight`。
+     * 节点的行列总和会被写到`node.$option.value`
+     * 对于有向图会计算每一行的和写到`node.$option.outValue`,
+     * 计算每一列的和写到`node.$option.inValue`。
+     * 边的权重会被然后写到`edge.$option.weight`。
      *
      * @method module:echarts/data/Graph.fromMatrix
-     * @param {Array.<Object>} nodesData 节点信息，必须有`id`属性, 会保存到`node.data`中
+     * @param {Array.<Object>} nodesData 节点信息，必须有`name`属性, 会保存到`node.data`中
      * @param {Array} matrix 邻接矩阵
      * @param {boolean} directed 是否是有向图
      * @return {module:echarts/data/Graph}
@@ -445,7 +443,7 @@ define(function(require) {
             || (matrix[0].length !== matrix.length)
             || (nodesData.length !== matrix.length)
         ) {
-            // Not a valid data
+            // Not a valname data
             return;
         }
 
@@ -453,23 +451,23 @@ define(function(require) {
         var graph = new Graph(directed);
 
         for (var i = 0; i < size; i++) {
-            var node = graph.addNode(nodesData[i].id, nodesData[i]);
+            var node = graph.addNode(nodesData[i].name, nodesData[i]);
             // TODO
             // node.data已经有value的情况
-            node.data.value = 0;
+            node.$option.value = 0;
             if (directed) {
-                node.data.outValue = node.data.inValue = 0;
+                node.$option.outValue = node.$option.inValue = 0;
             }
         }
         for (var i = 0; i < size; i++) {
             for (var j = 0; j < size; j++) {
                 var item = matrix[i][j];
                 if (directed) {
-                    graph.nodes[i].data.outValue += item;
-                    graph.nodes[j].data.inValue += item;
+                    graph.nodes[i].$option.outValue += item;
+                    graph.nodes[j].$option.inValue += item;
                 }
-                graph.nodes[i].data.value += item;
-                graph.nodes[j].data.value += item;
+                graph.nodes[i].$option.value += item;
+                graph.nodes[j].$option.value += item;
             }
         }
 
@@ -482,11 +480,11 @@ define(function(require) {
                 var n1 = graph.nodes[i];
                 var n2 = graph.nodes[j];
                 var edge = graph.addEdge(n1, n2, {});
-                edge.data.weight = item;
+                edge.$option.weight = item;
                 if (i !== j) {
                     if (directed && matrix[j][i]) {
                         var inEdge = graph.addEdge(n2, n1, {});
-                        inEdge.data.weight = matrix[j][i];
+                        inEdge.$option.weight = matrix[j][i];
                     }
                 }
             }

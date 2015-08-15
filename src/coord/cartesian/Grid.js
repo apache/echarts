@@ -6,7 +6,7 @@ define(function(require, factory) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
-    var Cartesian = require('./Cartesian');
+    var Cartesian2D = require('./Cartesian2D');
     var Axis2D = require('./CartesianAxis2D');
     var OrdinalScale = require('../scale/Ordinal');
     var IntervalScale = require('../scale/Interval');
@@ -126,39 +126,6 @@ define(function(require, factory) {
         },
 
         /**
-         * Convert series data to coorindates
-         * @param {Array} data
-         * @param {number} [xAxisIndex=0]
-         * @param {number} [yAxisIndex=0]
-         * @return {Array}
-         *  Return list of coordinates. For example:
-         *  `[[10, 10], [20, 20], [30, 30]]`
-         */
-        dataToCoords: function (data, xAxisIndex, yAxisIndex) {
-            xAxisIndex = xAxisIndex || 0;
-            yAxisIndex = yAxisIndex || 0;
-
-            var cartesian = this.getCartesian(xAxisIndex, yAxisIndex);
-            if (! cartesian) {
-                // Error
-                return;
-            }
-
-            var xAxis = cartesian.getAxis('x');
-            var yAxis = cartesian.getAxis('y');
-            var xAxisCoords = data.mapX(xAxis.dataToCoord, xAxis);
-            var yAxisCoords = data.mapY(yAxis.dataToCoord, yAxis);
-
-            var xIndex = xAxis.isHorizontal() ? 0 : 1;
-
-            return zrUtil.map(xAxisCoords, function (coord, idx) {
-                var item = [];
-                item[xIndex] = coord;
-                item[1 - xIndex] = yAxisCoords[idx];
-            });
-        },
-
-        /**
          * Initialize cartesian coordinate systems
          * @private
          */
@@ -188,7 +155,7 @@ define(function(require, factory) {
                 ecModel.eachComponent('yAxis', function (yAxisModel, j) {
 
                     var key = 'x' + i + 'y' + j;
-                    var cartesian = new Cartesian(key);
+                    var cartesian = new Cartesian2D(key);
                     this._coordsMap[key] = cartesian;
                     this._coordsList.push(cartesian);
 
@@ -265,7 +232,7 @@ define(function(require, factory) {
             ecModel.eachSeries(function (seriesModel, idx) {
                 var coordinateSystem = seriesModel.get('coordinateSystem');
 
-                if (coordinateSystem === 'cartesian') {
+                if (coordinateSystem === 'cartesian2d') {
                     var xAxisIndex = seriesModel.get('xAxisIndex');
                     var yAxisIndex = seriesModel.get('yAxisIndex');
 
@@ -282,14 +249,17 @@ define(function(require, factory) {
                     var data = seriesModel.getData();
                     if (data.type === 'list') {
                         var categoryAxis = cartesian.getAxisByScale('ordinal');
-                        if (! categoryAxis || categoryAxis.dim === 'x') {
+                        if (! categoryAxis) {
                             data.eachY(function (value) {
                                 axisData.y.push(value);
                             });
-                        }
-                        if (! categoryAxis || categoryAxis.dim === 'y') {
                             data.eachX(function (value) {
                                 axisData.x.push(value);
+                            });
+                        }
+                        else {
+                            data.eachY(function (value) {
+                                axisData[categoryAxis.dim].push(value);
                             });
                         }
                     }
@@ -308,11 +278,18 @@ define(function(require, factory) {
         }
     };
 
-    Grid.create = function (option, api) {
-        if (option.grid) {
+    Grid.create = function (ecModel, api) {
+        if (ecModel.getComponent('grid')) {
             var grid = new Grid();
-            grid.init(option);
-            grid.resize(option, api);
+            grid.init(ecModel);
+            grid.resize(ecModel, api);
+
+            // Inject the coordinateSystems into seriesModel
+            ecModel.eachSeries(function (seriesModel) {
+                seriesModel.coordinateSystem = grid.getCartesian(
+                    seriesModel.get('xAxisIndex'), seriesModel.get('yAxisIndex')
+                );
+            });
         }
     }
 

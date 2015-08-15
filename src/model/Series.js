@@ -10,6 +10,9 @@ define(function(require) {
 
         seriesIndex: 0,
 
+        // coodinateSystem will be injected in the echarts/CoordinateSystem
+        coordinateSystem: null,
+
         init: function (seriesOption) {
             this.name = seriesOption.name;
 

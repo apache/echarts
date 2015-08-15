@@ -14,10 +14,10 @@ define(function(require) {
 
         constructor: CoordinateSystemManager,
 
-        update: function (option) {
+        update: function (ecModel) {
             this._coordinateSystems = {};
             zrUtil.each(coordinateSystemCreators, function (coordinateSystemCreator, type) {
-                this._coordinateSystems[type] = coordinateSystemCreator.create(option);
+                this._coordinateSystems[type] = coordinateSystemCreator.create(ecModel);
             });
         },
 
@@ -28,7 +28,11 @@ define(function(require) {
             }
         },
 
-        resize: function () {}
+        resize: function (ecModel, api) {
+            zrUtil.each(this._coordinateSystems, function (coordinateSystem) {
+                coordinateSystem.resize(ecModel, api);
+            });
+        }
     }
 
     CoordinateSystemManager.register = function (type, coordinateSystemCreator) {

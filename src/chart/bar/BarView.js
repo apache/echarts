@@ -11,22 +11,31 @@ define(function (require) {
         render: function (seriesModel, ecModel, api) {
             var coordinateSystemType = seriesModel.get('coordinateSystem');
 
-            if (coordinateSystemType === 'cartesian') {
+            if (coordinateSystemType === 'cartesian2d') {
                 this._renderCartesianBar(seriesModel, ecModel, api);
             }
         },
 
-        _renderCartesianBar: function (series, ecModel, api) {
-            // Currently only one grid is supported
-            var grid = api.getCoordinateSystem('grid', 0);
+        _renderCartesianBar: function (seriesModel, ecModel, api) {
 
-            var data = series.getData();
-            var coords = grid.dataToCoords(
-                data, series.get('xAxisIndex'), series.get('yAxisIndex')
-            );
+            var group = api.createGroup();
+            seriesModel.getData().each(function (dataItem) {
+                var layout = dataItem.layout;
+                dataItem.parent = seriesModel;
 
-            data.each(function (dataItem, idx) {
-                var coord = coords[idx];
+                var rect = api.createRectangle({
+                    shape: {
+                        x: layout.x,
+                        y: layout.y,
+                        width: layout.width,
+                        height: layout.height
+                    },
+                    style: {
+                        color: dataItem.get('itemStyle.normal.color')
+                    }
+                });
+
+                group.add(rect);
             });
         }
     });

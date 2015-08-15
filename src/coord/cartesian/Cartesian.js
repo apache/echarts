@@ -11,7 +11,7 @@ define(function (require) {
     var Axis = require('./CartesianAxis');
 
     function dimAxisMapper(dim) {
-        return this._axis[dim];
+        return this._axes[dim];
     }
 
     /**
@@ -19,7 +19,7 @@ define(function (require) {
      * @constructor
      */
     var Cartesian = function (name) {
-        this._axis = {};
+        this._axes = {};
 
         this._dimList = [];
 
@@ -46,7 +46,7 @@ define(function (require) {
          * @return {module:echarts/coord/Cartesian~Axis}
          */
         getAxis: function (dim) {
-            return this._axis[dim];
+            return this._axes[dim];
         },
 
         /**
@@ -90,7 +90,7 @@ define(function (require) {
         addAxis: function (axis) {
             var dim = axis.dim;
 
-            this._axis[dim] = axis;
+            this._axes[dim] = axis;
 
             this._dimList.push(dim);
         },
@@ -120,7 +120,7 @@ define(function (require) {
 
             for (var i = 0; i < dimList.length; i++) {
                 var dim = dimList[i];
-                var axis = this._axis[axis];
+                var axis = this._axes[axis];
 
                 output[dim] = axis[method](input[dim]);
             }

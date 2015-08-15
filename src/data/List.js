@@ -2,6 +2,7 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var Model = require('../model/Model');
 
     function createArrayIterWithDepth(maxDepth, properties, cb, context, iterType) {
         // Simple optimization to avoid read the undefined value in properties array
@@ -26,11 +27,85 @@ define(function(require) {
         }
     }
 
+    var Entry = Model.extend({
+
+        layout: null,
+
+        init: function (option) {
+            
+            this.name = option.name || '';
+
+            this.$option = option;
+
+            this._value = option.value === null ? option : option.value
+
+            this.rawIndex = 0;
+        },
+
+
+        /**
+         * Get x of single data item.
+         * @return {number}
+         */
+        getX: function () {
+            // Use idx as x if data is 1d
+            // Usually when xAxis is category axis
+            return this.dimension === 1 ? this.rawIndex : this._value[0];
+        },
+
+        setX: function (x) {
+            if (this.dimension > 1) {
+                this._value[0] = x;
+            }
+        },
+
+        /**
+         * Get y of single data item.
+         * @return {number}
+         */
+        getY: function () {
+            if (this.dimension > 1) {
+                return this._value[1];
+            }
+            else {
+                // Value is a single number if data is 1d
+                return this._value;
+            }
+        },
+
+        setY: function (y) {
+            if (this.dimension > 1) {
+                this._value[1] = y;
+            }
+            else {
+                this._value = y;
+            }
+        },
+
+        getZ: function () {
+            if (this.dimension > 2) {
+                return this._value[2];
+            }
+        },
+
+        setZ: function (z) {
+            if (this.dimension > 2) {
+                this._value[2] = z;
+            }
+        },
+
+        getValue: function () {
+            return this._value[this.dimension];
+        },
+
+        setValue: function (value) {
+            this._value[this.dimensino] = value
+        }
+    });
+
     function List() {
 
         this.elements = this.elements || [];
-
-        this.dataDimension = 2;
 
         // Depth and properties is useful in nested Array.
         // For example in eventRiver, data structure is a nested 2d array as following
@@ -90,88 +165,13 @@ define(function(require) {
         },
 
         getItemByName: function (name) {
-            var elements = this.elements;
-            for (var i = 0; i < elements.length; i++) {
-                if (elements[i].name === name) {
-                    return elements[i];
-                }
-            }
-        },
-        /**
-         * Get x of single data item.
-         * can be overwritten
-         * @param {*} item
-         * @param {number} idx
-         * @return {number}
-         */
-        getX: function (item, idx) {
-            // Use idx as x if data is 1d
-            // Usually when xAxis is category axis
-            return this.dataDimension === 1 ? idx : item.value[0];
-        },
-
-        setX: function (item, x) {
-            if (this.dataDimension > 1) {
-                item.value[0] = x;
-            }
-        },
-
-        /**
-         * Get y of single data item.
-         * can be overwritten
-         * @param {*} item
-         * @return {number}
-         */
-        getY: function (item) {
-            if (this.dataDimension > 1) {
-                return item.value[1];
-            }
-            else {
-                // Value is a single number if data is 1d
-                return item.value;
-            }
-        },
-
-        setY: function (item, y) {
-            if (this.dataDimension > 1) {
-                item.value[1] = y;
-            }
-            else {
-                item.value = y;
-            }
-        },
-
-        /**
-         * Get z of single data item.
-         * can be overwritten
-         * @param {*} item
-         * @return {number}
-         */
-        getZ: function (item) {
-            if (this.dataDimension > 2) {
-                return item.value[2];
-            }
-        },
-
-        setZ: function (item, z) {
-            if (this.dataDimension > 2) {
-                item.value[2] = z;
-            }
-        },
-
-        /**
-         * Get value of single data item.
-         * can be overwritten
-         * @param {*} item
-         * @return {number}
-         */
-        getValue: function (item) {
-            // PENDING
-            return item.value[this.dataDimension];
-        },
-
-        setValue: function (item, z) {
-            item.value[this.dataDimension] = z;
+            // var elements = this.elements;
+            // for (var i = 0; i < elements.length; i++) {
+            //     if (elements[i].name === name) {
+            //         return elements[i];
+            //     }
+            // }
+            // TODO
         },
 
         clone: function () {
@@ -183,25 +183,23 @@ define(function(require) {
         zrUtil.each(['each', 'map', 'filter'], function (iterType) {
             List.prototype[iterType + name] = function (cb, context) {
                 this[iterType](function (item, idx) {
-                    return cb && cb.call(context || this, this['get' + name](item, idx));
+                    return cb && cb.call(context || this, item['get' + name](idx));
                 }, context);
             };
         });
     });
 
-    List.fromArray = function (data) {
+    List.fromArray = function (data, dimension) {
         var list = new List();
         // Normalize data
         list.elements = zrUtil.map(data, function (dataItem) {
-            if (dataItem !== Object(dataItem)) {
-                return {
-                    value: dataItem
-                };
-            }
-            return dataItem;
+            var entry = new Entry(dataItem);
+            entry.dimension = dimension;
         });
         return list;
-    }
+    };
+
+    List.Entry = Entry;
 
     return List;
 });
