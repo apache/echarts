@@ -176,5 +176,7 @@ define(function(require) {
         }
     };
 
+    require('../../echarts').registerLayout(BarLayoutGrid);
+
     return BarLayoutGrid;
 });

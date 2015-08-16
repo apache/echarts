@@ -11,17 +11,15 @@ define(function(require) {
             if (depth === maxDepth) {
                 return zrUtil[iterType](array, cb, context);
             }
-            else {
-                if (array) {
-                    var property = properties[i];
-                    for (var i = 0; i < array.length; i++) {
-                        var item = array[i];
-                        // Access property of each item
-                        if (nestedProperties && property && item) {
-                            item = item[property];
-                        }
-                        array[i] = eachAxis(item, depth);
+            else if (array) {
+                var property = properties[depth];
+                for (var i = 0; i < array.length; i++) {
+                    var item = array[i];
+                    // Access property of each item
+                    if (nestedProperties && property && item) {
+                        item = item[property];
                     }
+                    array[i] = eachAxis(item, depth);
                 }
             }
         }
@@ -31,20 +29,32 @@ define(function(require) {
 
         layout: null,
 
-        init: function (option) {
-            
+        init: function (option, parent, dataIndex) {
+
+            /**
+             * @type {string}
+             * @memeberOf module:echarts/data/List~Entry
+             * @public
+             */
             this.name = option.name || '';
 
             this.$option = option;
 
+            /**
+             * @type {number|Array}
+             * @memeberOf module:echarts/data/List~Entry
+             * @private
+             */
             this._value = option.value === null ? option : option.value
 
-            this.rawIndex = 0;
+            /**
+             * @private
+             * @readOnly
+             */
+            this.rawIndex = dataIndex || 0;
         },
 
-
         /**
-         * Get x of single data item.
          * @return {number}
          */
         getX: function () {
@@ -53,6 +63,9 @@ define(function(require) {
             return this.dimension === 1 ? this.rawIndex : this._value[0];
         },
 
+        /**
+         * @param {number} x
+         */
         setX: function (x) {
             if (this.dimension > 1) {
                 this._value[0] = x;
@@ -60,7 +73,6 @@ define(function(require) {
         },
 
         /**
-         * Get y of single data item.
          * @return {number}
          */
         getY: function () {
@@ -73,6 +85,9 @@ define(function(require) {
             }
         },
 
+        /**
+         * @param {number} y
+         */
         setY: function (y) {
             if (this.dimension > 1) {
                 this._value[1] = y;
@@ -82,22 +97,34 @@ define(function(require) {
             }
         },
 
+        /**
+         * @return {number}
+         */
         getZ: function () {
             if (this.dimension > 2) {
                 return this._value[2];
             }
         },
 
+        /**
+         * @param {number} z
+         */
         setZ: function (z) {
             if (this.dimension > 2) {
                 this._value[2] = z;
             }
         },
 
+        /**
+         * @return {number}
+         */
         getValue: function () {
             return this._value[this.dimension];
         },
 
+        /**
+         * @param {number} value
+         */
         setValue: function (value) {
             this._value[this.dimensino] = value
         }
@@ -189,11 +216,11 @@ define(function(require) {
         });
     });
 
-    List.fromArray = function (data, dimension) {
+    List.fromArray = function (data, dimension, parentModel) {
         var list = new List();
         // Normalize data
-        list.elements = zrUtil.map(data, function (dataItem) {
-            var entry = new Entry(dataItem);
+        list.elements = zrUtil.map(data, function (dataItem, index) {
+            var entry = new Entry(dataItem, parentModel, index);
             entry.dimension = dimension;
         });
         return list;

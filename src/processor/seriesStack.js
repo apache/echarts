@@ -5,10 +5,9 @@ define(function() {
         var stackedMap = {};
         option.eachSeries(function (series) {
             var data = series.getData();
+            var stack = series.get('stack');
 
-            if (data.type === 'list' && data.dataDimension === 1) {
-
-                var id = series.get('name') + '_' + series.get('name');
+            if (stack && data.type === 'list') {
 
                 data.eachY(function (y, idx) {
                     stackedMap[idx] = stackedMap[idx] || 0;

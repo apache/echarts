@@ -293,5 +293,7 @@ define(function(require, factory) {
         }
     }
 
+    require('../../CoordinateSystem').register('grid', Grid);
+
     return Grid;
 });

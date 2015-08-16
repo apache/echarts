@@ -7,6 +7,7 @@ define(function (require) {
         type: 'legend',
 
         render: function (ecModel, api) {
+            var legendModel = ecModel.getComponent('legend');
         }
     });
 });

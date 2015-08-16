@@ -1,20 +1,38 @@
+/**
+ * @module echarts/model/Model
+ */
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
 
-    function Model(option, parent) {
+    /**
+     * @alias module:echarts/model/Model
+     * @constructor
+     */
+    function Model(option, parentModel) {
 
-        this.parent = parent || null;
+        /**
+         * @type {module:echarts/model/Model}
+         */
+        this.parentModel = parentModel || null;
 
+        /**
+         * @type {Object}
+         * @readOnly
+         */
         this.$option = {};
 
-        this.init(option);
+        this.init.apply(this, arguments);
     }
 
     Model.prototype = {
 
         constructor: Model,
 
+        /**
+         * Model 的初始化函数
+         * @param {Object} option
+         */
         init: function (option) {
             this.$option = option;
         },
@@ -26,6 +44,10 @@ define(function (require) {
             zrUtil.merge(this.$option, option);
         },
 
+        /**
+         * @param {string} path
+         * @return {*}
+         */
         get: function (path) {
             if (typeof path == 'string') {
                 path = path.split('.');
@@ -37,14 +59,10 @@ define(function (require) {
                     break;
                 }
             }
-            if (obj == null && this.parent) {
-                return this.parent.get(path);
+            if (obj == null && this.parentModel) {
+                return this.parentModel.get(path);
             }
             return obj;
-        },
-
-        getOption: function () {
-            return this.$option;
         },
 
         restore: function () {},

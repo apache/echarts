@@ -1,3 +1,9 @@
+/**
+ * ECharts global model
+ *
+ * @module {echarts/model/Global}
+ */
+
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
@@ -6,6 +12,9 @@ define(function (require) {
     var SeriesModel = require('./SeriesModel');
     var ComponentModel = require('./Component/Model');
 
+    /**
+     * @alias module:echarts/model/Global
+     */
     var GlobalModel = Model.extend({
 
         constructor: GlobalModel,
@@ -108,8 +117,19 @@ define(function (require) {
             });
         },
 
-        getSeriesAll: function (seriesIndex) {
+        /**
+         * @param {number} seriesIndex
+         * @return {module:echarts/model/Series}
+         */
+        getSeries: function (seriesIndex) {
             return this._series[seriesIndex];
+        },
+
+        /**
+         * @return {Array.<module:echarts/model/Series>}
+         */
+        getSeriesAll: function () {
+            return this._series;
         },
 
         eachSeries: function (cb, context) {

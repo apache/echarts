@@ -7,128 +7,138 @@
 define(function(require) {
 
     var zrUtil = require('zrender/tool/util');
+    var Model = require('../model/Model');
 
     /**
      * @constructor module:echarts/data/Tree~TreeNode
-     * @param {string} id Node ID
-     * @param {Object} [data]
+     * @param {Object} option
      */
-    function TreeNode(id, data) {
-        /**
-         * @type {string}
-         */
-        this.id = id;
-        /**
-         * 节点的深度
-         * @type {number}
-         */
-        this.depth = 0;
-        /**
-         * 以当前节点为根节点的子树的高度
-         * @type {number}
-         */
-        this.height = 0;
-        /**
-         * 子节点列表
-         * @type {Array.<module:echarts/data/Tree~TreeNode>}
-         */
-        this.children = [];
+    var TreeNode = Model.extend({
+
+        init: function (option) {
+            /**
+            * @type {string}
+            * @memberOf {module:echarts/data/Tree~TreeNode}
+            * @readOnly
+            */
+            this.name = option.name || '';
+            /**
+            * 节点的深度
+            * @type {number}
+            * @readOnly
+            */
+            this.depth = 0;
+            /**
+            * 以当前节点为根节点的子树的高度
+            * @type {number}
+            * @readOnly
+            */
+            this.height = 0;
+
+            /**
+            * @type {module:echarts/data/Tree~TreeNode}
+            * @readOnly
+            */
+            this.parentNode = null;
+
+            /**
+            * 存储的用户数据
+            * @type {Object}
+            */
+            this.$option = option || null;
+
+            /**
+            * 子节点列表
+            * @type {Array.<module:echarts/data/Tree~TreeNode>}
+            * @readOnly
+            */
+            this.children = [];
+        },
 
         /**
-         * @type {module:echarts/data/Tree~TreeNode}
-         */
-        this.parent = null;
+        * 添加子节点
+        * @param {module:echarts/data/Tree~TreeNode} child
+        */
+        add: function (child) {
+            var children = this.children;
+            if (child.parentNode === this) {
+                return;
+            }
+
+            children.push(child);
+            child.parentNode = this;
+        },
 
         /**
-         * 存储的用户数据
-         * @type {Object}
-         */
-        this.data = data || null;
-    }
+        * 移除子节点
+        * @param {module:echarts/data/Tree~TreeNode} child
+        */
+        remove: function (child) {
+            var children = this.children;
+            var idx = zrUtil.indexOf(children, child);
+            if (idx >= 0) {
+                children.splice(idx, 1);
+                child.parentNode = null;
+            }
+        },
 
-    /**
-     * 添加子节点
-     * @param {module:echarts/data/Tree~TreeNode} child
-     */
-    TreeNode.prototype.add = function (child) {
-        var children = this.children;
-        if (child.parent === this) {
-            return;
-        }
+        /**
+        * 遍历当前节点及其所有子节点
+        * @param  {Function} cb
+        * @param  {Object}   [context]
+        */
+        eachNode: function (cb, context) {
+            cb.call(context, this);
 
-        children.push(child);
-        child.parent = this;
-    };
+            for (var i = 0; i < this.children.length; i++) {
+                this.children[i].eachNode(cb, context);
+            }
+        },
 
-    /**
-     * 移除子节点
-     * @param {module:echarts/data/Tree~TreeNode} child
-     */
-    TreeNode.prototype.remove = function (child) {
-        var children = this.children;
-        var idx = zrUtil.indexOf(children, child);
-        if (idx >= 0) {
-            children.splice(idx, 1);
-            child.parent = null;
-        }
-    };
+        /**
+        * 更新当前树及所有子树的高度和深度
+        * @param  {number} depth
+        */
+        updateDepthAndHeight: function (depth) {
+            var height = 0;
+            this.depth = depth;
+            for (var i = 0; i < this.children.length; i++) {
+                var child = this.children[i];
+                child.updateDepthAndHeight(depth + 1);
+                if (child.height > height) {
+                    height = child.height;
+                }
+            }
+            this.height = height + 1;
+        },
 
-    /**
-     * 遍历当前节点及其所有子节点
-     * @param  {Function} cb
-     * @param  {Object}   [context]
-     */
-    TreeNode.prototype.eachNode = function (cb, context) {
-        cb.call(context, this);
-
-        for (var i = 0; i < this.children.length; i++) {
-            this.children[i].eachNode(cb, context);
-        }
-    };
-
-    /**
-     * 更新当前树及所有子树的高度和深度
-     * @param  {number} depth
-     */
-    TreeNode.prototype.updateDepthAndHeight = function (depth) {
-        var height = 0;
-        this.depth = depth;
-        for (var i = 0; i < this.children.length; i++) {
-            var child = this.children[i];
-            child.updateDepthAndHeight(depth + 1);
-            if (child.height > height) {
-                height = child.height;
+        /**
+        * @param  {string} name
+        * @return module:echarts/data/Tree~TreeNode
+        */
+        getNodeByName: function (name) {
+            if (this.name === name) {
+                return this;
+            }
+            for (var i = 0; i < this.children.length; i++) {
+                var res = this.children[i].getNodeByName(name);
+                if (res) {
+                    return res;
+                }
             }
         }
-        this.height = height + 1;
-    };
-
-    /**
-     * @param  {string} id
-     * @return module:echarts/data/Tree~TreeNode
-     */
-    TreeNode.prototype.getNodeById = function (id) {
-        if (this.id === id) {
-            return this;
-        }
-        for (var i = 0; i < this.children.length; i++) {
-            var res = this.children[i].getNodeById(id);
-            if (res) {
-                return res;
-            }
-        }
-    };
+    });
 
     /**
      * @constructor
      * @alias module:echarts/data/Tree
-     * @param {string} id
+     * @param {string} name
      */
-    function Tree(id) {
+    function Tree(name) {
         /**
          * @type {module:echarts/data/Tree~TreeNode}
          */
-        this.root = new TreeNode(id);
+        this.root = new TreeNode(name);
     }
 
     Tree.prototype.type = 'tree';
@@ -144,44 +154,44 @@ define(function(require) {
 
     /**
      * 生成子树
-     * @param  {string} id 子树根节点 id
+     * @param  {string} name 子树根节点 name
      * @return {module:echarts/data/Tree}
      */
-    Tree.prototype.getSubTree = function(id) {
-        var root = this.getNodeById(id);
+    Tree.prototype.getSubTree = function(name) {
+        var root = this.getNodeByName(name);
         if (root) {
-            var tree = new Tree(root.id);
+            var tree = new Tree(root.name);
             tree.root = root;
             return tree;
         }
     };
 
     /**
-     * @param  {string} id
+     * @param  {string} name
      * @return module:echarts/data/Tree~TreeNode
      */
-    Tree.prototype.getNodeById = function (id) {
-        return this.root.getNodeById(id);
+    Tree.prototype.getNodeByName = function (name) {
+        return this.root.getNodeByName(name);
     };
 
 
     /**
      * 从 option 里的 data 数据构建树
-     * @param {string} id
+     * @param {string} name
      * @param {Array.<Object>} data
      * @return module:echarts/data/Tree
      */
-    Tree.fromOptionData = function (id, data) {
-        var tree = new Tree(id);
+    Tree.fromOptionData = function (name, data) {
+        var tree = new Tree(name);
         var rootNode = tree.root;
         // Root node
         rootNode.data = {
-            name: id,
+            name: name,
             children: data
         };
 
         function buildHierarchy(dataNode, parentNode) {
-            var node = new TreeNode(dataNode.name, dataNode);
+            var node = new TreeNode(dataNode);
             parentNode.add(node);
             // 遍历添加子节点
             var children = dataNode.children;

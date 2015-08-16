@@ -25,12 +25,24 @@ define(function(require) {
         this._directed = directed || false;
 
         /**
-         * @type {Array}
+         * @type {Array.<module:echarts/data/Graph~Node>}
          */
         this.nodes = [];
+
+        /**
+         * @type {Array.<module:echarts/data/Graph~Edge>}
+         */
         this.edges = [];
 
+        /**
+         * @type {Object.<string, module:echarts/data/Graph~Node>}
+         * @private
+         */
         this._nodesMap = {};
+        /**
+         * @type {Object.<string, module:echarts/data/Graph~Edge>}
+         * @private
+         */
         this._edgesMap = {};
     };
 

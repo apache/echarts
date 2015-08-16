@@ -9,7 +9,7 @@ define(function(require) {
         type: 'pie',
 
         getInitialData: function (option) {
-            return List.fromArray(option.data);
+            return List.fromArray(option.data, this, 1);
         }
     });
 });
