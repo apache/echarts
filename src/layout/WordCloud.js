@@ -646,8 +646,12 @@ define(function (require) {
 
                 //满足条件 不用继续调整的
                 // size 为 最小， 或者面积在允许范围内 且 宽和高也在允许范围内
-                if ((d.size <= minTextSize)
-                    || (d.rotate && w * h <= d.area && rw <= maxwidth && rh <= maxheight)
+                if (d.size < minTextSize) {
+                    d.size = minTextSize;
+                    return;
+                }
+
+                if ((d.rotate && w * h <= d.area && rw <= maxwidth && rh <= maxheight)
                     || (w * h <= d.area && w <= maxwidth && h <= maxheight)) {
                     d.area = w * h;
                     return;
