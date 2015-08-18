@@ -7,13 +7,14 @@ define(function(require, factory) {
 
     var zrUtil = require('zrender/core/util');
     var Cartesian2D = require('./Cartesian2D');
-    var Axis2D = require('./CartesianAxis2D');
-    var OrdinalScale = require('../scale/Ordinal');
-    var IntervalScale = require('../scale/Interval');
-    var numberUtil = require('../util/number');
+    var Axis2D = require('./Axis2D');
+    var OrdinalScale = require('../../scale/Ordinal');
+    var IntervalScale = require('../../scale/Interval');
+    var numberUtil = require('../../util/number');
 
-    // 依赖 GridModel 做预处理
+    // 依赖 GridModel, AxisModel 做预处理
     require('./GridModel');
+    require('./AxisModel');
 
     function Grid() {
 
@@ -54,15 +55,15 @@ define(function(require, factory) {
             var viewportWidth = api.getWidth();
             var viewportHeight = api.getHeight();
 
-            var grid = ecModel.get('grid');
+            var grid = ecModel.getComponent('grid');
 
             var parsePercent = numberUtil.parsePercent;
-            var gridX = parsePercent(grid.x, viewportWidth);
-            var gridY = parsePercent(grid.y, viewportHeight);
-            var gridX2 = parsePercent(grid.x2, viewportWidth);
-            var gridY2 = parsePercent(grid.y2, viewportHeight);
-            var gridWidth = parsePercent(grid.width, viewportWidth);
-            var gridHeight = parsePercent(grid.height, viewportHeight);
+            var gridX = parsePercent(grid.get('x'), viewportWidth);
+            var gridY = parsePercent(grid.get('y'), viewportHeight);
+            var gridX2 = parsePercent(grid.get('x2'), viewportWidth);
+            var gridY2 = parsePercent(grid.get('y2'), viewportHeight);
+            var gridWidth = parsePercent(grid.get('width'), viewportWidth);
+            var gridHeight = parsePercent(grid.get('height'), viewportHeight);
             if (isNaN(gridWidth)) {
                 gridWidth = gridX2 - gridX;
             }
@@ -248,7 +249,7 @@ define(function(require, factory) {
 
                     var data = seriesModel.getData();
                     if (data.type === 'list') {
-                        var categoryAxis = cartesian.getAxisByScale('ordinal');
+                        var categoryAxis = cartesian.getAxesByScale('ordinal')[0];
                         if (! categoryAxis) {
                             data.eachY(function (value) {
                                 axisData.y.push(value);
@@ -269,10 +270,10 @@ define(function(require, factory) {
             zrUtil.each(axisDataMap, function (axisData) {
                 var cartesian = axisData.cartesian;
                 if (axisData.x.length) {
-                    cartesian.getAxis('x').scale.setExtentFromData(x);
+                    cartesian.getAxis('x').scale.setExtentFromData(axisData.x);
                 }
                 if (axisData.y.length) {
-                    cartesian.getAxis('y').scale.setExtentFromData(y);
+                    cartesian.getAxis('y').scale.setExtentFromData(axisData.y);
                 }
             });
         }

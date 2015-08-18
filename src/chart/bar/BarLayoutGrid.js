@@ -16,12 +16,14 @@ define(function(require) {
 
         run: function (ecModel, api) {
 
-            var barWidthAndOffset = zrUtil.filter(
-                this._calBarWidthAndOffset(ecModel.getSeriesByType('bar')),
-                function (seriesModel) {
-                    return seriesModel.coordinateSystem
-                    && seriesModel.coordinateSystem.type === 'cartesian2d'
-                }
+            var barWidthAndOffset = this._calBarWidthAndOffset(
+                zrUtil.filter(
+                    ecModel.getSeriesByType('bar'),
+                    function (seriesModel) {
+                        return seriesModel.coordinateSystem
+                        && seriesModel.coordinateSystem.type === 'cartesian2d'
+                    }
+                )
             );
 
             var lastStackCoords = {};
@@ -31,7 +33,7 @@ define(function(require) {
                 var data = seriesModel.getData();
                 var cartesian = seriesModel.coordinateSystem;
 
-                var stackId = getSeriesStackId();
+                var stackId = getSeriesStackId(seriesModel);
                 var columnLayoutInfo = barWidthAndOffset[cartesian.name][stackId];
                 var columnOffset = columnLayoutInfo.offset;
                 var columnWidth = columnLayoutInfo.width;
@@ -136,7 +138,8 @@ define(function(require) {
 
                 var remainedWidth = columnsOnAxis.remainedWidth;
                 var autoWidthCount = columnsOnAxis.autoWidthCount;
-                var autoWidth = (remainedWidth - categoryGap) / (autoWidthCount + (autoWidthCount - 1) * barGapPercent);
+                var autoWidth = (remainedWidth - categoryGap)
+                    / (autoWidthCount + (autoWidthCount - 1) * barGapPercent);
                 autoWidth = Math.max(autoWidth, 0);
 
                 // Find if any auto calculated bar exceeded maxBarWidth
@@ -151,7 +154,8 @@ define(function(require) {
                 });
 
                 // Recalculate width again
-                autoWidth = (remainedWidth - categoryGap) / (autoWidthCount + (autoWidthCount - 1) * barGapPercent);
+                autoWidth = (remainedWidth - categoryGap)
+                    / (autoWidthCount + (autoWidthCount - 1) * barGapPercent);
                 autoWidth = Math.max(autoWidth, 0);
 
                 zrUtil.each(columnsOnAxis.stacks, function (column) {

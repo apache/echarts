@@ -355,7 +355,7 @@ define(function(require) {
             * 节点存储的数据
             * @type {*}
             */
-            this.$option = option || null;
+            this.option = option || null;
             /**
             * 入边，只在有向图上有效
             * @type {Array.<module:echarts/data/Graph~Edge>}
@@ -420,7 +420,7 @@ define(function(require) {
         node2: null,
 
         init: function (option) {
-            this.$option = option;
+            this.option = option;
         }
     });
 
@@ -438,10 +438,10 @@ define(function(require) {
      *  4| x  x  x  x  x
      *  5| x  x  x  x  x
      * ```
-     * 节点的行列总和会被写到`node.$option.value`
-     * 对于有向图会计算每一行的和写到`node.$option.outValue`,
-     * 计算每一列的和写到`node.$option.inValue`。
-     * 边的权重会被然后写到`edge.$option.weight`。
+     * 节点的行列总和会被写到`node.option.value`
+     * 对于有向图会计算每一行的和写到`node.option.outValue`,
+     * 计算每一列的和写到`node.option.inValue`。
+     * 边的权重会被然后写到`edge.option.weight`。
      *
      * @method module:echarts/data/Graph.fromMatrix
      * @param {Array.<Object>} nodesData 节点信息，必须有`name`属性, 会保存到`node.data`中
@@ -466,20 +466,20 @@ define(function(require) {
             var node = graph.addNode(nodesData[i].name, nodesData[i]);
             // TODO
             // node.data已经有value的情况
-            node.$option.value = 0;
+            node.option.value = 0;
             if (directed) {
-                node.$option.outValue = node.$option.inValue = 0;
+                node.option.outValue = node.option.inValue = 0;
             }
         }
         for (var i = 0; i < size; i++) {
             for (var j = 0; j < size; j++) {
                 var item = matrix[i][j];
                 if (directed) {
-                    graph.nodes[i].$option.outValue += item;
-                    graph.nodes[j].$option.inValue += item;
+                    graph.nodes[i].option.outValue += item;
+                    graph.nodes[j].option.inValue += item;
                 }
-                graph.nodes[i].$option.value += item;
-                graph.nodes[j].$option.value += item;
+                graph.nodes[i].option.value += item;
+                graph.nodes[j].option.value += item;
             }
         }
 
@@ -492,11 +492,11 @@ define(function(require) {
                 var n1 = graph.nodes[i];
                 var n2 = graph.nodes[j];
                 var edge = graph.addEdge(n1, n2, {});
-                edge.$option.weight = item;
+                edge.option.weight = item;
                 if (i !== j) {
                     if (directed && matrix[j][i]) {
                         var inEdge = graph.addEdge(n2, n1, {});
-                        inEdge.$option.weight = matrix[j][i];
+                        inEdge.option.weight = matrix[j][i];
                     }
                 }
             }

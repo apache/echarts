@@ -1,12 +1,12 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
-    var Axis = require('./CartesianAxis');
+    var Axis = require('./Axis');
 
     /**
      * Extend axis 2d
-     * @constructor module:echarts/coord/CartesianAxis2D
-     * @extends {module:echarts/coord/CartesianAxis}
+     * @constructor module:echarts/coord/cartesian/Axis2D
+     * @extends {module:echarts/coord/cartesian/Axis}
      * @param {string} dim
      * @param {*} scale
      * @param {Array.<number>} coordExtent
@@ -43,7 +43,7 @@ define(function (require) {
 
         /**
          * Reference to the other axis
-         * @type {module:echarts/coord/CartesianAxis2D}
+         * @type {module:echarts/coord/cartesian/Axis2D}
          */
         this.otherAxis = null;
 

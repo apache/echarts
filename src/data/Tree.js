@@ -45,7 +45,7 @@ define(function(require) {
             * 存储的用户数据
             * @type {Object}
             */
-            this.$option = option || null;
+            this.option = option || null;
 
             /**
             * 子节点列表

@@ -7,11 +7,11 @@ define(function(require) {
         type: 'dataZoom',
 
         setStart: function (start) {
-            this.$option.start = start;
+            this.option.start = start;
         },
 
         setEnd: function (end) {
-            this.$option.end = end;
+            this.option.end = end;
         },
 
         setRange: function (start, end) {

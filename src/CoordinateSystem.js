@@ -14,11 +14,12 @@ define(function(require) {
 
         constructor: CoordinateSystemManager,
 
-        update: function (ecModel) {
-            this._coordinateSystems = {};
+        update: function (ecModel, api) {
+            var coordinateSystems = {};
             zrUtil.each(coordinateSystemCreators, function (coordinateSystemCreator, type) {
-                this._coordinateSystems[type] = coordinateSystemCreator.create(ecModel);
-            });
+                coordinateSystems[type] = coordinateSystemCreator.create(ecModel, api);
+            }, this);
+            this._coordinateSystems = coordinateSystems;
         },
 
         get: function (type, idx) {

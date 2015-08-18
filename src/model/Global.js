@@ -9,91 +9,125 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var Model = require('./Model');
 
-    var SeriesModel = require('./SeriesModel');
-    var ComponentModel = require('./Component/Model');
+    var SeriesModel = require('./Series');
+    var ComponentModel = require('./Component');
 
     /**
      * @alias module:echarts/model/Global
+     *
+     * @param {Object} option
+     * @param {module:echarts/model/Model} parentModel
+     * @param {Object} theme
      */
     var GlobalModel = Model.extend({
 
         constructor: GlobalModel,
 
-        init: function (option) {
+        init: function (option, parentModel, theme) {
 
+            this.option = {};
+
+            /**
+             * @type {Object.<string, module:echarts/model/Model>}
+             * @private
+             */
             this._components = {};
 
+            /**
+             * @type {Array.<module:echarts/model/Model}
+             * @private
+             */
             this._series = [];
 
+            /**
+             * @type {Object.<string, module:echarts/model/Model>}
+             * @private
+             */
             this._seriesMap = {};
 
-            this.$option = {};
+            /**
+             * @type {module:echarts/model/Model}
+             * @private
+             */
+            this._theme = new Model(theme || {});
 
             this.mergeOption(option);
         },
 
         mergeOption: function (newOption) {
-            zrUtil.each(newOption.series, function (series) {
-                var seriesName = series.name;
-                var seriesModel = this._seriesMap[seriesName];
+
+            var option = this.option;
+
+            zrUtil.each(newOption.series, function (series, idx) {
+                var seriesName = series.name || (series.type + idx);
+                var seriesMap = this._seriesMap;
+                var seriesModel = seriesMap[seriesName];
                 if (seriesModel) {
                     seriesModel.mergeOption(series);
                 }
                 else {
-                    seriesModel = SeriesModel.create(series);
-                    this._seriesMap[seriesName] = seriesModel;
+                    seriesModel = SeriesModel.create(series, this, idx);
+                    seriesModel.name = seriesName;
+                    seriesMap[seriesName] = seriesModel;
                     this._series.push(seriesModel);
                 }
             }, this);
 
             // 同步 Option
-            this.$option.series = this._series.map(function (seriesModel) {
-                return seriesModel.getOption();
+            option.series = this._series.map(function (seriesModel) {
+                return seriesModel.option;
             });
 
             var components = this._components;
             for (var name in newOption) {
                 var componentOption = newOption[name];
-                // Normalize
-                if (! (componentOption instanceof Array)) {
-                    componentOption = [componentOption];
-                }
-                if (! components[name]) {
-                    components[name] = [];
-                }
-
                 // 如果不存在对应的 model 则直接 merge
                 if (! ComponentModel.has(name)) {
-                    if (typeof componentOption[i] === 'object') {
-                        componentOption = zrUtil.merge(this.$option[name] || {}, componentOption);
+                    if (typeof componentOption === 'object') {
+                        componentOption = zrUtil.merge(option[name] || {}, componentOption);
                     }
                     else {
-                        this.$option[name] = componentOption;
+                        option[name] = componentOption;
                     }
                 }
                 else {
+                    // Normalize
+                    if (! (componentOption instanceof Array)) {
+                        componentOption = [componentOption];
+                    }
+                    if (! components[name]) {
+                        components[name] = [];
+                    }
                     for (var i = 0; i < componentOption.length; i++) {
                         var componentModel = components[name][i];
                         if (componentModel) {
-                            componentModel.mergeOption(componentOption[i]);
+                            componentModel.mergeOption(
+                                componentOption[i], this
+                            );
                         }
                         else {
-                            componentModel = ComponentModel.create(name, componentOption[i]);
+                            componentModel = ComponentModel.create(
+                                name, componentOption[i], this
+                            );
                             components[name][i] = componentModel;
-
-                            if (componentModel) {
-                                // 同步 Option
-                                if (componentOption instanceof Array) {
-                                    this.$option[name][i] = componentModel.getOption();
-                                }
-                                else {
-                                    this.$option[name] = componentModel.getOption();
-                                }
+                        }
+                        if (componentModel) {
+                            // 同步 Option
+                            if (componentOption instanceof Array) {
+                                option[name] = option[name] || [];
+                                option[name][i] = componentModel.option;
+                            }
+                            else {
+                                option[name] = componentModel.option;
                             }
                         }
                     }
                 }
             }
+        },
+
+        getTheme: function () {
+            return this._theme;
         },
 
         getComponent: function (type, idx) {

@@ -1,11 +1,10 @@
 define(function (require) {
 
-    var defaultOption = require('./config');
     var GlobalModel = require('./model/Global');
     var zrUtil = require('zrender/core/util');
-    var Chart = require('./chart/Chart');
-    var Component = require('./component/Component');
-    var ExtensionAPI = require('./ExtensionAPI');
+    var Chart = require('./chart/ChartView');
+    var Component = require('./component/ComponentView');
+    var ExtensionAPI = require('./api/ExtensionAPI');
     var CoordinateSystemManager = require('./CoordinateSystem');
 
     var zrender = require('zrender');
@@ -16,9 +15,6 @@ define(function (require) {
     var ECharts = function (dom, theme) {
 
         this._zr = zrender.init(dom);
-
-        theme = zrUtil.clone(theme || {});
-        zrUtil.merge(theme, config);
 
         this._theme = theme;
 
@@ -44,15 +40,9 @@ define(function (require) {
         },
 
         setOption: function (option, merge) {
-            option = zrUtil.clone(option);
-            zrUtil.merge(option, this._theme);
+            option = zrUtil.clone(option, true);
 
-            var ecModel = new GlobalModel(option);
-
-            // Add series index
-            ecModel.eachSeries(function (series, seriesIndex) {
-                series.seriesIndex = seriesIndex;
-            });
+            var ecModel = new GlobalModel(option, null, this._theme);
 
             this._model = ecModel;
 
@@ -67,8 +57,15 @@ define(function (require) {
             return this._coordinateSystem.get(type, idx);
         },
 
-        update: function () {
+        getWidth: function () {
+            return this._zr.getWidth();
+        },
 
+        getHeight: function () {
+            return this._zr.getHeight();
+        },
+
+        update: function () {
         },
 
         updateImmediately: function () {
@@ -78,7 +75,7 @@ define(function (require) {
 
             this._processData(ecModel);
 
-            this._coordinateSystem.update(ecModel);
+            this._coordinateSystem.update(ecModel, this._extensionAPI);
 
             this._doLayout(ecModel);
 
@@ -232,9 +229,6 @@ define(function (require) {
 
         }
     };
-
-
-    echarts.registerProcessor(require('./processor/seriesFilter'));
 
     return echarts;
 });

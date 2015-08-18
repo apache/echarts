@@ -3,18 +3,33 @@ define(function(require) {
     'use strict';
 
     var Model = require('./Model');
+    var zrUtil = require('zrender/core/util');
 
     var SeriesModel = Model.extend({
 
         type: '',
 
+        /**
+         * @readOnly
+         */
         seriesIndex: 0,
 
         // coodinateSystem will be injected in the echarts/CoordinateSystem
         coordinateSystem: null,
 
-        init: function (seriesOption) {
-            this.name = seriesOption.name;
+        /**
+         * @type {Object}
+         * @protected
+         */
+        defaultOption: null,
+
+        init: function (seriesOption, parentModel, ecModel, seriesIndex) {
+
+            this.seriesIndex = seriesIndex;
+
+            zrUtil.merge(seriesOption, ecModel.getTheme().get(this.type));
+
+            zrUtil.merge(seriesOption, this.defaultOption);
 
             this._data = this.getInitialData(seriesOption);
         },
@@ -40,7 +55,7 @@ define(function(require) {
      * Extend a SeriesModel
      */
     SeriesModel.extend = function (opts) {
-        var ExtendedSeriesModel = Model.extend.call(this);
+        var ExtendedSeriesModel = Model.extend.call(this, opts);
         if (opts.type) {
             if (seriesModelClassesStore[opts.type]) {
                 // Warning
@@ -53,13 +68,13 @@ define(function(require) {
     /**
      * Create a SeriesModel by a given option
      */
-    SeriesModel.create = function (option) {
+    SeriesModel.create = function (option, ecModel, seriesIndex) {
         var chartType = option.type;
         var ExtendedSeriesModel = seriesModelClassesStore[chartType];
         if (! seriesModelClassesStore[chartType]) {
             // Error
         }
-        return new ExtendedSeriesModel(option);
+        return new ExtendedSeriesModel(option, null, ecModel, seriesIndex);
     };
 
     return SeriesModel;

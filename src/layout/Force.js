@@ -6,7 +6,7 @@
 define(function(require) {
 
     var ForceLayoutWorker = require('./forceLayoutWorker');
-    var vec2 = require('zrender/tool/vector');
+    var vec2 = require('zrender/coer/vector');
 
     var requestAnimationFrame = window.requestAnimationFrame
                                 || window.msRequestAnimationFrame
@@ -28,7 +28,7 @@ define(function(require) {
         ) {
             try {
                 var blob = new Blob([ForceLayoutWorker.getWorkerCode()]);
-                workerUrl = window.URL.createObjectURL(blob);   
+                workerUrl = window.URL.createObjectURL(blob);
             }
             catch (e) {
                 workerUrl = '';
@@ -85,7 +85,7 @@ define(function(require) {
             barnesHutOptimize: this.large,
             preventNodeOverlap: this.preventNodeOverlap,
             preventNodeEdgeOverlap: this.preventNodeEdgeOverlap,
-            
+
             maxSpeedIncrease: this.maxSpeedIncrease
         };
 
@@ -173,7 +173,7 @@ define(function(require) {
         }
         else {
             this._layout.initNodes(positionArr, massArr, sizeArr);
-            this._layout.initEdges(edgeArr, edgeWeightArr);   
+            this._layout.initEdges(edgeArr, edgeWeightArr);
         }
 
         this.updateConfig();
@@ -202,7 +202,7 @@ define(function(require) {
             }
         }
         else {
-            
+
             requestAnimationFrame(this._$onupdate);
 
             for (var i = 0; i < nodes.length; i++) {

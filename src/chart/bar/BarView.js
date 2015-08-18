@@ -1,7 +1,5 @@
 define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
-
     var Bar = require('../ChartView').extend({
 
         type: 'bar',
@@ -12,18 +10,15 @@ define(function (require) {
             var coordinateSystemType = seriesModel.get('coordinateSystem');
 
             if (coordinateSystemType === 'cartesian2d') {
-                this._renderCartesianBar(seriesModel, ecModel, api);
+                this._renderCartesian(seriesModel, ecModel, api);
             }
         },
 
-        _renderCartesianBar: function (seriesModel, ecModel, api) {
-
-            var group = api.createGroup();
+        _renderCartesian: function (seriesModel, ecModel, api) {
             seriesModel.getData().each(function (dataItem) {
                 var layout = dataItem.layout;
-                dataItem.parent = seriesModel;
 
-                var rect = api.createRectangle({
+                var rect = new api.Rectangle({
                     shape: {
                         x: layout.x,
                         y: layout.y,
@@ -31,11 +26,14 @@ define(function (require) {
                         height: layout.height
                     },
                     style: {
-                        color: dataItem.get('itemStyle.normal.color')
+                        fill: dataItem
+                                .withPrefix('itemStyle.normal.')
+                                .get('color'),
+                        stroke: dataItem.get('borderColor')
                     }
                 });
 
-                group.add(rect);
+                this.group.add(rect);
             });
         }
     });

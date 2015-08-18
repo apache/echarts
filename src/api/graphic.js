@@ -10,7 +10,7 @@ define(function(require) {
 
         Group: require('zrender/container/Group'),
 
-        Image: require('zrender/graphic/ZImage'),
+        Image: require('zrender/graphic/Image'),
 
         Text: require('zrender/graphic/Text'),
 

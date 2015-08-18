@@ -29,7 +29,7 @@ define(function(require) {
 
         layout: null,
 
-        init: function (option, parent, dataIndex) {
+        init: function (option, parentModel, ecModel, dataIndex) {
 
             /**
              * @type {string}
@@ -38,7 +38,7 @@ define(function(require) {
              */
             this.name = option.name || '';
 
-            this.$option = option;
+            this.option = option;
 
             /**
              * @type {number|Array}
@@ -164,7 +164,7 @@ define(function(require) {
         /**
          * In-place filter
          */
-        filterInPlace: function (cb, context) {
+        filter: function (cb, context) {
             context = context || this;
             if (this.depth > 1) {
                 createArrayIterWithDepth(
@@ -179,7 +179,7 @@ define(function(require) {
         /**
          * In-place map
          */
-        mapInPlace: function (cb, context) {
+        map: function (cb, context) {
             context = context || this;
             if (this.depth > 1) {
                 createArrayIterWithDepth(
@@ -216,12 +216,13 @@ define(function(require) {
         });
     });
 
-    List.fromArray = function (data, dimension, parentModel) {
+    List.fromArray = function (data, dimension, parentModel, ecModel) {
         var list = new List();
         // Normalize data
         list.elements = zrUtil.map(data, function (dataItem, index) {
-            var entry = new Entry(dataItem, parentModel, index);
+            var entry = new Entry(dataItem, parentModel, ecModel, index);
             entry.dimension = dimension;
+            return entry;
         });
         return list;
     };

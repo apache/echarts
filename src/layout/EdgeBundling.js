@@ -9,7 +9,7 @@
 define(function (require) {
 
     var KDTree = require('../util/KDTree');
-    var vec2 = require('zrender/tool/vector');
+    var vec2 = require('zrender/core/vector');
     var v2Create = vec2.create;
     var v2DistSquare = vec2.distSquare;
     var v2Dist = vec2.dist;

@@ -8,7 +8,7 @@ define(function (require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
-    var Axis = require('./CartesianAxis');
+    var Axis = require('./Axis');
 
     function dimAxisMapper(dim) {
         return this._axes[dim];

@@ -1,9 +1,15 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var Group = require('zrender/container/Group');
 
-    function Chart(echarts, chartOption) {
+    function Chart() {
 
+        /**
+         * @type {module:zrender/container/Group}
+         * @readOnly
+         */
+        this.group = new Group();
     }
 
     Chart.prototype = {
