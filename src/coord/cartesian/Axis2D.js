@@ -12,8 +12,6 @@ define(function (require) {
      * @param {Array.<number>} coordExtent
      * @param {string} axisType
      * @param {string} position
-     *
-     * @inner
      */
     var Axis2D = function (dim, scale, coordExtent, axisType, position) {
         Axis.call(this, dim, scale, coordExtent);

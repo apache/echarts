@@ -9,7 +9,7 @@ define(function(require) {
         type: 'bar',
 
         getInitialData: function (option) {
-            var list = List.fromArray(option.data, this, 1);
+            var list = List.fromArray(option.data, 1, this);
             return list;
         },
 

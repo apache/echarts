@@ -12,6 +12,8 @@ define(function (require) {
             if (coordinateSystemType === 'cartesian2d') {
                 this._renderCartesian(seriesModel, ecModel, api);
             }
+
+            return this.group;
         },
 
         _renderCartesian: function (seriesModel, ecModel, api) {
@@ -28,13 +30,13 @@ define(function (require) {
                     style: {
                         fill: dataItem
                                 .withPrefix('itemStyle.normal.')
-                                .get('color'),
+                                .get('color') || 'black',
                         stroke: dataItem.get('borderColor')
                     }
                 });
 
                 this.group.add(rect);
-            });
+            }, this);
         }
     });
 

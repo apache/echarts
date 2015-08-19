@@ -147,6 +147,10 @@ define(function (require) {
             approxTickNum = approxTickNum || 10;
             var extent = this._extent;
             var span = extent[1] - extent[0];
+            if (span === Infinity) {
+                return;
+            }
+
             // Figure out step quantity, for example 0.1, 1, 10, 100
             var interval = Math.pow(10, Math.floor(Math.log(span / approxTickNum) / Math.LN10));
             var err = approxTickNum / span * interval;

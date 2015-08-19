@@ -59,8 +59,8 @@ define(function (require) {
          * @return {*}
          */
         get: function (path) {
-            path = this._prefix + path;
             if (typeof path == 'string') {
+                path = this._prefix + path;
                 path = path.split('.');
             }
             var obj = this.option;

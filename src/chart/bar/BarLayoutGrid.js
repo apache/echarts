@@ -41,9 +41,9 @@ define(function(require) {
                 if (data.type === 'list') {
                     var coords = cartesian.dataToCoords(data);
                     lastStackCoords[stackId] = lastStackCoords[stackId] || [];
-                    data.each(function (dataItem, idx) {
-                        var coord = coords[idx];
-                        var lastCoord = lastStackCoords[stackId][idx] || projectAxis.otherCoord;
+                    data.each(function (dataItem, dataIndex) {
+                        var coord = coords[dataIndex];
+                        var lastCoord = lastStackCoords[stackId][dataIndex] || projectAxis.otherCoord;
                         var x, y, width, height;
                         if (projectAxis.isHorizontal()) {
                             x = coord[0] + columnOffset;
@@ -51,18 +51,18 @@ define(function(require) {
                             width = columnWidth;
                             height = Math.abs(coord[1] - lastCoord);
 
-                            lastStackCoords[stackId][idx] = y;
+                            lastStackCoords[stackId][dataIndex] = y;
                         }
                         else {
                             x = Math.min(lastCoord, coord[0]);
                             y = coord[1] + columnOffset;
                             width = Math.abs(coord[0] - lastCoord);
                             height = columnWidth;
-                            lastStackCoords[stackId][idx] = x;
+                            lastStackCoords[stackId][dataIndex] = x;
                         }
                         dataItem.layout = {
                             x: x,
-                            y: x,
+                            y: y,
                             width: width,
                             height: height
                         };

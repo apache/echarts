@@ -103,13 +103,22 @@ define(function(require, factory) {
                 // Insead of on the tick
                 if (axis.boundaryGap && axis.type === 'category') {
                     var size = extent[1] - extent[0];
-                    var len = axis.data.length;
+                    var len = axis.scale.getTicks().length;
                     var margin = size / len / 2;
                     extent[0] += margin;
                     extent[1] -= margin;
                 }
 
-                axis.setCoordExtent(extent);
+                axis.setCoordExtent(extent[0], extent[1]);
+
+                var otherAxis = axis.otherAxis;
+                var otherAxisPosition = otherAxis.position;
+                if (otherAxisPosition === 'bottom') {
+                    axis.reverse();
+                }
+                else if (otherAxisPosition === 'right') {
+                    axis.reverse();
+                }
             });
 
             // Adjust axis coord on the zero position of the other axis
@@ -134,16 +143,11 @@ define(function(require, factory) {
             /**
              * @inner
              */
-            var getScaleByOption = function (axisType, axisOption) {
-                if (axisOption.type) {
-                    return axisOption.type === 'value'
+            var getScaleByOption = function (axisType, axisModel) {
+                if (axisType) {
+                    return axisType === 'value'
                         ? new IntervalScale()
-                        : new OrdinalScale(axisOption.data);
-                }
-                else {
-                    return axisType === 'y'
-                        ? new IntervalScale()
-                        : new OrdinalScale(axisOption.data);
+                        : new OrdinalScale(axisModel.get('data'));
                 }
             };
 
@@ -171,6 +175,7 @@ define(function(require, factory) {
                         xAxisPosition
                     );
                     axisX.onZero = xAxisModel.get('axisLine.onZero');
+                    axisX.boundaryGap = xAxisModel.get('boundaryGap');
                     cartesian.addAxis(axisX);
 
                     // Create y axis
@@ -184,30 +189,11 @@ define(function(require, factory) {
                         yAxisModel.get('position')
                     );
                     axisY.onZero = yAxisModel.get('axisLine.onZero');
+                    axisY.boundaryGap = yAxisModel.get('boundaryGap');
                     cartesian.addAxis(axisY);
 
                     axisX.otherAxis = axisY;
                     axisY.otherAxis = axisX;
-
-                    var horizontalAxis;
-                    var verticalAxis;
-                    // Adjust axis direction
-                    if (axisX.isHorizontal()) {
-                        horizontalAxis = axisX;
-                        verticalAxis = axisY;
-                    }
-                    else {
-                        horizontalAxis = axisY;
-                        verticalAxis = axisX;
-                    }
-                    if (horizontalAxis.position === 'bottom') {
-                        // Reverse vertical axis to bottom-up direction
-                        verticalAxis.reverse();
-                    }
-                    if (verticalAxis.position === 'right') {
-                        // Reverse horizontal axis to right-left direction
-                        horizontalAxis.reverse();
-                    }
 
                     axesList.push(axisX);
                     axesList.push(axisY);
@@ -260,7 +246,7 @@ define(function(require, factory) {
                         }
                         else {
                             data.eachY(function (value) {
-                                axisData[categoryAxis.dim].push(value);
+                                axisData[categoryAxis.dim == 'y' ? 'x' : 'y'].push(value);
                             });
                         }
                     }
@@ -269,11 +255,13 @@ define(function(require, factory) {
 
             zrUtil.each(axisDataMap, function (axisData) {
                 var cartesian = axisData.cartesian;
+                var xAxis = cartesian.getAxis('x');
+                var yAxis = cartesian.getAxis('y');
                 if (axisData.x.length) {
-                    cartesian.getAxis('x').scale.setExtentFromData(axisData.x);
+                    xAxis.scale.setExtentFromData(axisData.x);
                 }
                 if (axisData.y.length) {
-                    cartesian.getAxis('y').scale.setExtentFromData(axisData.y);
+                    yAxis.scale.setExtentFromData(axisData.y);
                 }
             });
         }

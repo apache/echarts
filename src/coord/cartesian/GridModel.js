@@ -9,10 +9,10 @@ define(function(require) {
         defaultOption: {
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
-            x: 80,
-            y: 60,
-            x2: 80,
-            y2: 60,
+            x: '0%',
+            y: '0%',
+            x2: '100%',
+            y2: '100%',
             // width: {totalWidth} - x - x2,
             // height: {totalHeight} - y - y2,
             backgroundColor: 'rgba(0,0,0,0)',

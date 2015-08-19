@@ -177,7 +177,7 @@ define(function (require) {
                 var id = seriesModel.get('type') + '_' + (seriesModel.get('name') || idx);
                 var chart = this._chartsMap[id];
                 var group = chart.render(seriesModel, optionModel, api);
-                this.zr.addElement(group);
+                this._zr.add(group);
             }, this);
             // TODO
             // Remove group of unused chart

@@ -40,8 +40,7 @@ define(function(require) {
 
     ComponentModel.extend = function (opts) {
 
-        var SubComponentModel = Model.extend(opts);
-        SubComponentModel.extend = ComponentModel.extend;
+        var SubComponentModel = Model.extend.call(this, opts);
 
         var componentType = opts.type;
         if (componentType) {

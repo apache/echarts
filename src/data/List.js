@@ -29,6 +29,8 @@ define(function(require) {
 
         layout: null,
 
+        dimension: 1,
+
         init: function (option, parentModel, ecModel, dataIndex) {
 
             /**
@@ -45,7 +47,7 @@ define(function(require) {
              * @memeberOf module:echarts/data/List~Entry
              * @private
              */
-            this._value = option.value === null ? option : option.value
+            this._value = option.value == null ? option : option.value
 
             /**
              * @private
@@ -164,7 +166,7 @@ define(function(require) {
         /**
          * In-place filter
          */
-        filter: function (cb, context) {
+        filterInPlace: function (cb, context) {
             context = context || this;
             if (this.depth > 1) {
                 createArrayIterWithDepth(
@@ -179,7 +181,7 @@ define(function(require) {
         /**
          * In-place map
          */
-        map: function (cb, context) {
+        mapInPlace: function (cb, context) {
             context = context || this;
             if (this.depth > 1) {
                 createArrayIterWithDepth(
@@ -207,7 +209,8 @@ define(function(require) {
     };
 
     zrUtil.each(['X', 'Y', 'Z', 'Value'], function (name) {
-        zrUtil.each(['each', 'map', 'filter'], function (iterType) {
+        // TODO Map and filter
+        zrUtil.each(['each'], function (iterType) {
             List.prototype[iterType + name] = function (cb, context) {
                 this[iterType](function (item, idx) {
                     return cb && cb.call(context || this, item['get' + name](idx));
