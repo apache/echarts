@@ -12,6 +12,8 @@ define(function (require) {
     var SeriesModel = require('./Series');
     var ComponentModel = require('./Component');
 
+    var globalDefault = require('./globalDefault');
+
     /**
      * @alias module:echarts/model/Global
      *
@@ -51,9 +53,33 @@ define(function (require) {
              */
             this._theme = new Model(theme || {});
 
+            this._mergeTheme(option, theme);
+
+            zrUtil.merge(option, globalDefault, false);
+
             this.mergeOption(option);
         },
 
+        /**
+         * @private
+         */
+        _mergeTheme: function (option, theme) {
+            for (var name in theme) {
+                // 如果有 component model 则把具体的 merge 逻辑交给该 model 处理
+                if (! ComponentModel.has[name]) {
+                    if (typeof theme[name] === 'object') {
+                        zrUtil.merge(option[name], theme[name]);
+                    }
+                    else {
+                        option[name] = theme[name];
+                    }
+                }
+            }
+        },
+
+        /**
+         * @protected
+         */
         mergeOption: function (newOption) {
 
             var option = this.option;
@@ -81,7 +107,7 @@ define(function (require) {
             var components = this._components;
             for (var name in newOption) {
                 var componentOption = newOption[name];
-                // 如果不存在对应的 model 则直接 merge
+                // 如果不存在对应的 component model 则直接 merge
                 if (! ComponentModel.has(name)) {
                     if (typeof componentOption === 'object') {
                         componentOption = zrUtil.merge(option[name] || {}, componentOption);
@@ -126,10 +152,16 @@ define(function (require) {
             }
         },
 
+        /**
+         * @return {module:echarts/model/Model}
+         */
         getTheme: function () {
             return this._theme;
         },
 
+        /**
+         * @return {module:echarts/model/Component}
+         */
         getComponent: function (type, idx) {
             var list = this._components[type];
             if (list) {
@@ -145,6 +177,10 @@ define(function (require) {
             return this._seriesMap[name];
         },
 
+        /**
+         * @param {string} type
+         * @return {Array.<module:echarts/model/Series>}
+         */
         getSeriesByType: function (type) {
             return zrUtil.filter(this._series, function (series) {
                 return series.type === type;

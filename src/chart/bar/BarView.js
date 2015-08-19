@@ -30,7 +30,7 @@ define(function (require) {
                     style: {
                         fill: dataItem
                                 .withPrefix('itemStyle.normal.')
-                                .get('color') || 'black',
+                                .get('color'),
                         stroke: dataItem.get('borderColor')
                     }
                 });

@@ -10,6 +10,12 @@ define(function (require) {
     var zrender = require('zrender');
 
     /**
+     * @inner
+     */
+    function getSeriesId(series, seriesIndex) {
+        return series.type + '_' + (series.name ||  seriesIndex);
+    }
+    /**
      * @module echarts~ECharts
      */
     var ECharts = function (dom, theme) {
@@ -77,6 +83,8 @@ define(function (require) {
 
             this._coordinateSystem.update(ecModel, this._extensionAPI);
 
+            this._doVisualCoding(ecModel);
+
             this._doLayout(ecModel);
 
             this._doRender(ecModel);
@@ -92,16 +100,10 @@ define(function (require) {
             this._doRender(ecModel);
         },
 
-        _doLayout: function (model) {
-            zrUtil.each(this._layouts, function (layout) {
-                layout.run(model);
-            });
-        },
-
         _prepareCharts: function (ecModel) {
             var chartUsedMap = {};
             zrUtil.each(ecModel.get('series'), function (series, idx) {
-                var id = series.type + '_' + (series.name || idx);
+                var id = getSeriesId(series, idx);
                 chartUsedMap[id] = true;
 
                 var chart = this._chartsMap[id];
@@ -160,23 +162,57 @@ define(function (require) {
             }, this);
         },
 
+        /**
+         * Processor data in each series
+         *
+         * @param {module:echarts/model/Global} ecModel
+         * @private
+         */
         _processData: function (ecModel) {
-            zrUtil.each(processorList, function (processor) {
+            zrUtil.each(dataProcessorFuncs, function (processor) {
                 processor(ecModel);
             });
         },
 
-        _doRender: function (optionModel, stateModel) {
+        /**
+         * Layout before each chart render there series after visual coding and data processing
+         *
+         * @param {module:echarts/model/Global} ecModel
+         * @private
+         */
+        _doLayout: function (ecModel) {
+            zrUtil.each(this._layouts, function (layout) {
+                layout.run(ecModel);
+            });
+        },
+
+        /**
+         * Code visual infomation from data after data processing
+         *
+         * @param {module:echarts/model/Global} ecModel
+         * @private
+         */
+        _doVisualCoding: function (ecModel) {
+            zrUtil.each(visualCodingFuncs, function (visualCoding) {
+                visualCoding(ecModel);
+            });
+        },
+
+        /**
+         * Render each chart and component
+         *
+         */
+        _doRender: function (ecModel, stateModel) {
             var api = this._extensionAPI;
             // Render all components
             zrUtil.each(this._components, function (component) {
-                component.render(optionModel, stateModel, api);
+                component.render(ecModel, stateModel, api);
             }, this);
             // Render all charts
-            optionModel.eachSeries(function (seriesModel, idx) {
-                var id = seriesModel.get('type') + '_' + (seriesModel.get('name') || idx);
+            ecModel.eachSeries(function (seriesModel, idx) {
+                var id = getSeriesId(seriesModel.option, idx);
                 var chart = this._chartsMap[id];
-                var group = chart.render(seriesModel, optionModel, api);
+                var group = chart.render(seriesModel, ecModel, api);
                 this._zr.add(group);
             }, this);
             // TODO
@@ -196,9 +232,11 @@ define(function (require) {
     };
 
 
-    var processorList = [];
+    var dataProcessorFuncs = [];
 
     var layoutClasses = [];
+
+    var visualCodingFuncs = [];
 
     /**
      * @module echarts
@@ -209,26 +247,40 @@ define(function (require) {
             return new ECharts(dom, theme);
         },
 
-        registerProcessor: function (processor) {
-            if (zrUtil.indexOf(processorList, processor) < 0) {
-                processorList.push(processor);
+        /**
+         * @param {Function}
+         */
+        registerProcessor: function (processorFunc) {
+            if (zrUtil.indexOf(dataProcessorFuncs, processorFunc) < 0) {
+                dataProcessorFuncs.push(processorFunc);
             }
         },
 
+        /**
+         * @param {string} type
+         * @param {*} CoordinateSystem
+         */
         registerCoordinateSystem: function (type, CoordinateSystem) {
             CoordinateSystemManager.register(type, CoordinateSystem);
         },
 
+        /**
+         * @param {*} layout
+         */
         registerLayout: function (layout) {
             if (zrUtil.indexOf(layoutClasses, layout) < 0) {
                 layoutClasses.push(layout);
             }
         },
 
-        registerVisualCoding: function () {
 
+        registerVisualCoding: function (visualCodingFunc) {
+            visualCodingFuncs.push(visualCodingFunc);
         }
     };
+
+
+    echarts.registerVisualCoding(require('./visual/defaultColor'));
 
     return echarts;
 });
