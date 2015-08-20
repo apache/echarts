@@ -33,6 +33,13 @@ define(function (require) {
         _prefix: '',
 
         /**
+         * visual properties after visual coding
+         * @type {Object}
+         * @private
+         */
+        _visual: null,
+
+        /**
          * Model 的初始化函数
          * @param {Object} option
          */
@@ -74,6 +81,27 @@ define(function (require) {
                 return this.parentModel.get(path);
             }
             return obj;
+        },
+
+        /**
+         * Get visual property.
+         */
+        getVisual: function (key) {
+            var visual = this._visual;
+            var val = visual && visual[key];
+            var parentModel = this.parentModel;
+            if (val == null && parentModel) {
+                return parentModel.getVisual(key);
+            }
+            return val;
+        },
+
+        /**
+         * Set visual property
+         */
+        setVisual: function (key, val) {
+            this._visual = this._visual || {};
+            this._visual[key] = val;
         },
 
         restore: function () {},

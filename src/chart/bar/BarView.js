@@ -28,10 +28,8 @@ define(function (require) {
                         height: layout.height
                     },
                     style: {
-                        fill: dataItem
-                                .withPrefix('itemStyle.normal.')
-                                .get('color'),
-                        stroke: dataItem.get('borderColor')
+                        fill: dataItem.getVisual('color'),
+                        stroke: dataItem.get('itemStyle.normal.borderColor')
                     }
                 });
 

@@ -27,6 +27,8 @@ define(function (require) {
 
         init: function (option, parentModel, theme) {
 
+            theme = theme || {};
+
             this.option = {};
 
             /**
@@ -51,10 +53,11 @@ define(function (require) {
              * @type {module:echarts/model/Model}
              * @private
              */
-            this._theme = new Model(theme || {});
+            this._theme = new Model(theme);
 
             this._mergeTheme(option, theme);
 
+            // TODO Needs clone when merging to the unexisted property
             zrUtil.merge(option, globalDefault, false);
 
             this.mergeOption(option);
@@ -68,7 +71,9 @@ define(function (require) {
                 // 如果有 component model 则把具体的 merge 逻辑交给该 model 处理
                 if (! ComponentModel.has[name]) {
                     if (typeof theme[name] === 'object') {
-                        zrUtil.merge(option[name], theme[name]);
+                        option[name] = option[name]
+                            ? zrUtil.clone(theme[name])
+                            : zrUtil.merge(option[name], theme[name]);
                     }
                     else {
                         option[name] = theme[name];
@@ -110,7 +115,9 @@ define(function (require) {
                 // 如果不存在对应的 component model 则直接 merge
                 if (! ComponentModel.has(name)) {
                     if (typeof componentOption === 'object') {
-                        componentOption = zrUtil.merge(option[name] || {}, componentOption);
+                        option[name] = option[name] == null
+                            ? zrUtil.clone(componentOption)
+                            : zrUtil.merge(option[name], componentOption);
                     }
                     else {
                         option[name] = componentOption;

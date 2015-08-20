@@ -22,7 +22,7 @@ define(function (require) {
 
         this._zr = zrender.init(dom);
 
-        this._theme = theme;
+        this._theme = zrUtil.clone(theme);
 
         this._chartsList = [];
         this._chartsMap = {};
