@@ -1,13 +1,18 @@
+/**
+ * TODO processor的优先级
+ * TODO restore
+ * TODO setTheme
+ */
 define(function (require) {
 
     var GlobalModel = require('./model/Global');
-    var zrUtil = require('zrender/core/util');
     var Chart = require('./chart/ChartView');
     var Component = require('./component/ComponentView');
     var ExtensionAPI = require('./api/ExtensionAPI');
     var CoordinateSystemManager = require('./CoordinateSystem');
 
     var zrender = require('zrender');
+    var zrUtil = require('zrender/core/util');
 
     /**
      * @inner
@@ -18,9 +23,12 @@ define(function (require) {
     /**
      * @module echarts~ECharts
      */
-    var ECharts = function (dom, theme) {
+    var ECharts = function (dom, theme, opts) {
+        opts = opts || {};
 
-        this._zr = zrender.init(dom);
+        this._zr = zrender.init(dom, {
+            renderer: opts.renderer || 'canvas'
+        });
 
         this._theme = zrUtil.clone(theme);
 
@@ -45,12 +53,17 @@ define(function (require) {
             return this._zr;
         },
 
-        setOption: function (option, merge) {
+        setOption: function (option, notMerge) {
             option = zrUtil.clone(option, true);
 
-            var ecModel = new GlobalModel(option, null, this._theme);
-
-            this._model = ecModel;
+            var ecModel = this._model;
+            if (! ecModel || notMerge) {
+                ecModel = new GlobalModel(option, null, this._theme);
+                this._model = ecModel;
+            }
+            else {
+                ecModel.mergeOption(option);
+            }
 
             this._prepareComponents(ecModel);
 
@@ -59,14 +72,24 @@ define(function (require) {
             this.updateImmediately();
         },
 
+        setTheme: function (theme) {
+
+        },
+
         getCoordinateSystem: function (type, idx) {
             return this._coordinateSystem.get(type, idx);
         },
 
+        /**
+         * @return {number}
+         */
         getWidth: function () {
             return this._zr.getWidth();
         },
 
+        /**
+         * @return {number}
+         */
         getHeight: function () {
             return this._zr.getHeight();
         },
@@ -91,43 +114,55 @@ define(function (require) {
         },
 
         resize: function () {
-            var ecModel = this._model;
+            // var ecModel = this._model;
 
-            this._coordinateSystem.resize(ecModel, this._extensionAPI);
+            // this._coordinateSystem.resize(ecModel, this._extensionAPI);
 
-            this._doLayout(ecModel);
+            // this._doVisualCoding(ecModel);
 
-            this._doRender(ecModel);
+            // this._doLayout(ecModel);
+
+            // this._doRender(ecModel);
+
+            this.updateImmediately();
         },
 
         _prepareCharts: function (ecModel) {
-            var chartUsedMap = {};
-            zrUtil.each(ecModel.get('series'), function (series, idx) {
-                var id = getSeriesId(series, idx);
-                chartUsedMap[id] = true;
 
-                var chart = this._chartsMap[id];
+            var chartsList = this._chartsList;
+            var chartsMap = this._chartsMap;
+
+            for (var i = 0; i < chartsList.length; i++) {
+                chartsList[i].__keepAlive = false;
+            }
+
+            ecModel.eachSeries(function (seriesModel, idx) {
+                var id = getSeriesId(seriesModel.option, idx);
+
+                var chart = chartsMap[id];
                 if (! chart) {
-                    chart = Chart.create(series);
+                    chart = Chart.create(seriesModel.type);
                     if (chart) {
                         chart.init(this._extensionAPI);
-                        this._chartsMap[id] = chart;
-                        this._chartsList.push(chart);
+                        chartsMap[id] = chart;
+                        chartsList.push(chart);
                     }
                     else {
                         // Error
                     }
                 }
 
-                chart.__id__ = id;
+                chart.__keepAlive = true;
+                chart.__id = id;
             }, this);
 
-            for (var i = 0; i < this._chartsList.length;) {
-                var chart = this._chartsList[i];
-                if (! chartUsedMap[chart.__id__]) {
+            for (var i = 0; i < chartsList.length;) {
+                var chart = chartsList[i];
+                if (! chart.__keepAlive) {
+                    this._zr.remove(chart.group);
                     chart.dispose();
-                    this._chartsList.splice(i, 1);
-                    delete this._chartsMap[chart.__id__];
+                    chartsList.splice(i, 1);
+                    delete chartsMap[chart.__id];
                 }
                 else {
                     i++;
@@ -136,30 +171,47 @@ define(function (require) {
         },
 
         _prepareComponents: function (ecModel) {
-            Component.eachAvailableComponent(function (componentType) {
-                var componentsMap = this._componentsMap;
-                var componentsList = this._componentsList;
 
-                var componentOption = ecModel.get(componentType);
-                var component = componentsMap[componentType];
-                if (componentOption) {
+            var componentsMap = this._componentsMap;
+            var componentsList = this._componentsList;
+
+            for (var i = 0; i < componentsList.length; i++) {
+                componentsList[i].__keepAlive = true;
+            }
+
+            Component.eachAvailableComponent(function (componentType) {
+
+                ecModel.eachComponent(componentType, function (componentModel, idx) {
+                    var id = componentType + '_' + idx;
+                    var component = componentsMap[id];
                     if (! component) {
                         // Create and add component
-                        component = Component.create(componentType, componentOption);
+                        component = Component.create(componentType, componentModel);
                         component.init(this._extensionAPI);
-                        componentsMap[componentType] = component;
+                        componentsMap[id] = component;
                         componentsList.push(component);
+
+                        this._zr.add(component.group);
                     }
+                    component.__id = id;
+                    component.__keepAlive = true;
+                    // Used in rendering
+                    component.__model = componentModel;
+                }, this);
+            }, this);
+
+            for (var i = 0; i < componentsList.length;) {
+                var component = componentsList[i];
+                if (! component.__keepAlive) {
+                    this._zr.remove(component.group);
+                    component.dispose();
+                    componentsList.splice(i, 1);
+                    delete componentsMap[component.__id];
                 }
                 else {
-                    if (component) {
-                        // Remove and dispose component
-                        component.dispose();
-                        delete componentsMap[componentType];
-                        componentsList.splice(zrUtil.indexOf(componentsList, component));
-                    }
+                    i++;
                 }
-            }, this);
+            };
         },
 
         /**
@@ -202,21 +254,23 @@ define(function (require) {
          * Render each chart and component
          *
          */
-        _doRender: function (ecModel, stateModel) {
+        _doRender: function (ecModel) {
             var api = this._extensionAPI;
             // Render all components
-            zrUtil.each(this._components, function (component) {
-                component.render(ecModel, stateModel, api);
+            zrUtil.each(this._componentsList, function (component) {
+                component.render(component.__model, ecModel, api);
+            }, this);
+            // Remove groups of charts
+            zrUtil.each(this._chartsList, function (chart) {
+                this._zr.remove(chart.group);
             }, this);
             // Render all charts
             ecModel.eachSeries(function (seriesModel, idx) {
                 var id = getSeriesId(seriesModel.option, idx);
                 var chart = this._chartsMap[id];
-                var group = chart.render(seriesModel, ecModel, api);
-                this._zr.add(group);
+                chart.render(seriesModel, ecModel, api);
+                this._zr.add(chart.group);
             }, this);
-            // TODO
-            // Remove group of unused chart
         },
 
         dispose: function () {
@@ -243,8 +297,8 @@ define(function (require) {
      */
     var echarts = {
 
-        init: function (dom, theme) {
-            return new ECharts(dom, theme);
+        init: function (dom, theme, opts) {
+            return new ECharts(dom, theme, opts);
         },
 
         /**
@@ -273,12 +327,10 @@ define(function (require) {
             }
         },
 
-
         registerVisualCoding: function (visualCodingFunc) {
             visualCodingFuncs.push(visualCodingFunc);
         }
     };
-
 
     echarts.registerVisualCoding(require('./visual/defaultColor'));
 

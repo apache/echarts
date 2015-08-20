@@ -4,8 +4,6 @@ define(function (require) {
 
         type: 'bar',
 
-        init: function () {},
-
         render: function (seriesModel, ecModel, api) {
             var coordinateSystemType = seriesModel.get('coordinateSystem');
 

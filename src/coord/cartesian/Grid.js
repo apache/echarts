@@ -67,10 +67,10 @@ define(function(require, factory) {
             var gridWidth = parsePercent(grid.get('width'), viewportWidth);
             var gridHeight = parsePercent(grid.get('height'), viewportHeight);
             if (isNaN(gridWidth)) {
-                gridWidth = gridX2 - gridX;
+                gridWidth = viewportWidth - gridX2 - gridX;
             }
             if (isNaN(gridHeight)) {
-                gridHeight = gridY2 - gridY;
+                gridHeight = viewportHeight - gridY2 - gridY;
             }
 
             this._x = gridX;
@@ -203,11 +203,6 @@ define(function(require, factory) {
             }, this);
 
             this._updateCartesianFromSeries(ecModel);
-
-            // Set axis from option
-            zrUtil.each(axesList, function (axis) {
-                axis.scale.niceExtent();
-            });
         },
 
         /**
@@ -265,6 +260,11 @@ define(function(require, factory) {
                 if (axisData.y.length) {
                     yAxis.scale.setExtentFromData(axisData.y);
                 }
+            });
+
+            // Set axis from option
+            zrUtil.each(this._axesList, function (axis) {
+                axis.scale.niceExtent();
             });
         }
     };

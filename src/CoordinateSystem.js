@@ -16,9 +16,9 @@ define(function(require) {
 
         update: function (ecModel, api) {
             var coordinateSystems = {};
-            zrUtil.each(coordinateSystemCreators, function (coordinateSystemCreator, type) {
-                coordinateSystems[type] = coordinateSystemCreator.create(ecModel, api);
-            }, this);
+            for (var type in coordinateSystemCreators) {
+                coordinateSystems[type] = coordinateSystemCreators[type].create(ecModel, api);
+            }
             this._coordinateSystems = coordinateSystems;
         },
 

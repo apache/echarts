@@ -12,28 +12,46 @@
             }
         </style>
         <div id="main"></div>
-
         <script>
 
-            require(['echarts', 'echarts/chart/bar'], function (echarts) {
+            require(['echarts', 'echarts/chart/bar', 'echarts/component/legend'], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
 
-                chart.setOption({
-                    grid: {
+                var xAxisData = [];
+                var data = [];
 
+                for (var i = 0; i < 10000; i++) {
+                    xAxisData.push(Math.random());
+                    data.push(Math.random());
+                }
+
+                console.profile('setOption');
+                chart.setOption({
+                    legend: {
+                        data: [{
+                            name: 'bar',
+                            itemStyle: {
+                                normal: {
+                                    color: 'blue'
+                                }
+                            }
+                        }]
                     },
                     xAxis: {
-                        data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        data: xAxisData
                     },
                     yAxis: {
-
                     },
                     series: [{
+                        name: 'bar',
                         type: 'bar',
-                        data: [0, 1, 2, 3, 4]
+                        // data: [0, 1, 2, 3, 4]
+                        data: data
                     }]
                 });
+                console.profileEnd('setOption');
             })
 
         </script>

@@ -1,8 +1,16 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var Group = require('zrender/container/Group');
 
-    var Component = function () {};
+    var Component = function () {
+
+        /**
+         * @type {module:zrender/container/Group}
+         * @readOnly
+         */
+        this.group = new Group();
+    };
 
     Component.prototype = {
 
@@ -10,7 +18,7 @@ define(function (require) {
 
         init: function () {},
 
-        render: function () {},
+        render: function (componentModel, ecModel, api) {},
 
         dispose: function () {}
     };
@@ -49,7 +57,7 @@ define(function (require) {
         zrUtil.each(componentTypeList, cb, context);
     };
 
-    Component.create = function (type, option) {
+    Component.create = function (type) {
         var Component = componentClassStore[type];
         if (! Component) {
             // Error

@@ -25,6 +25,10 @@ define(function(require) {
         }
     }
 
+    /**
+     * @name echarts/data/List~Entry
+     * @extends {module:echarts/model/Model}
+     */
     var Entry = Model.extend({
 
         layout: null,
@@ -193,14 +197,17 @@ define(function(require) {
             }
         },
 
-        getItemByName: function (name) {
-            // var elements = this.elements;
-            // for (var i = 0; i < elements.length; i++) {
-            //     if (elements[i].name === name) {
-            //         return elements[i];
-            //     }
-            // }
-            // TODO
+        /**
+         * @return {module:echarts/data/List~Entry}
+         */
+        getByName: function (name) {
+            // TODO deep hierarchy
+            var elements = this.elements;
+            for (var i = 0; i < elements.length; i++) {
+                if (elements[i].name === name) {
+                    return elements[i];
+                }
+            }
         },
 
         clone: function () {
@@ -219,12 +226,12 @@ define(function(require) {
         });
     });
 
-    List.fromArray = function (data, dimension, parentModel, ecModel) {
+    List.fromArray = function (data, dimension, parentModel) {
         var list = new List();
         // Normalize data
         list.elements = zrUtil.map(data, function (dataItem, index) {
-            var entry = new Entry(dataItem, parentModel, ecModel, index);
-            entry.dimension = dimension;
+            var entry = new Entry(dataItem, parentModel, null, index);
+            entry.dimension = dimension || 1;
             return entry;
         });
         return list;

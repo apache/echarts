@@ -53,13 +53,12 @@ define(function (require) {
     /**
      * Create a chart by a given option
      */
-    Chart.create = function (option) {
-        var chartType = option.type;
+    Chart.create = function (chartType) {
         var ExtendedChart = chartClassStore[chartType];
         if (! ExtendedChart) {
             // Error
         }
-        return new ExtendedChart(option);
+        return new ExtendedChart();
     };
 
     return Chart;
