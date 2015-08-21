@@ -1,6 +1,6 @@
 define(function (require) {
 
-    return require('../ComponentView').extend({
+    return require('../../echarts').extendComponentView({
 
         type: 'dataZoom',
 

@@ -4,7 +4,7 @@ define(function(require) {
 
     var List = require('../../data/List');
 
-    return require('../../model/Component').extend({
+    return require('../../echarts').extendComponentModel({
 
         type: 'legend',
 

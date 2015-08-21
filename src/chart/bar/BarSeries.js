@@ -4,7 +4,7 @@ define(function(require) {
 
     var List = require('../../data/List');
 
-    return require('../../model/Series').extend({
+    return require('../../echarts').extendSeriesModel({
 
         type: 'bar',
 

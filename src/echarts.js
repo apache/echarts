@@ -6,10 +6,14 @@
 define(function (require) {
 
     var GlobalModel = require('./model/Global');
-    var Chart = require('./chart/ChartView');
-    var Component = require('./component/ComponentView');
     var ExtensionAPI = require('./api/ExtensionAPI');
     var CoordinateSystemManager = require('./CoordinateSystem');
+
+    var ComponentModel = require('./model/Component');
+    var SeriesModel = require('./model/Series');
+
+    var ComponentView = require('./view/Component');
+    var ChartView = require('./view/Chart');
 
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
@@ -141,7 +145,7 @@ define(function (require) {
 
                 var chart = chartsMap[id];
                 if (! chart) {
-                    chart = Chart.create(seriesModel.type);
+                    chart = ChartView.create(seriesModel.type);
                     if (chart) {
                         chart.init(this._extensionAPI);
                         chartsMap[id] = chart;
@@ -179,14 +183,14 @@ define(function (require) {
                 componentsList[i].__keepAlive = true;
             }
 
-            Component.eachAvailableComponent(function (componentType) {
+            ComponentView.eachAvailableComponent(function (componentType) {
 
                 ecModel.eachComponent(componentType, function (componentModel, idx) {
                     var id = componentType + '_' + idx;
                     var component = componentsMap[id];
                     if (! component) {
                         // Create and add component
-                        component = Component.create(componentType, componentModel);
+                        component = ComponentView.create(componentType, componentModel);
                         component.init(this._extensionAPI);
                         componentsMap[id] = component;
                         componentsList.push(component);
@@ -329,6 +333,34 @@ define(function (require) {
 
         registerVisualCoding: function (visualCodingFunc) {
             visualCodingFuncs.push(visualCodingFunc);
+        },
+
+        /**
+         * @param {Object} opts
+         */
+        extendSeriesModel: function (opts) {
+            return SeriesModel.extend(opts);
+        },
+
+        /**
+         * @param {Object} opts
+         */
+        extendChartView: function (opts) {
+            return ChartView.extend(opts);
+        },
+
+        /**
+         * @param {Object} opts
+         */
+        extendComponentModel: function (opts) {
+            return ComponentModel.extend(opts);
+        },
+
+        /**
+         * @param {Object} opts
+         */
+        extendComponentView: function (opts) {
+            return ComponentView.extend(opts);
         }
     };
 

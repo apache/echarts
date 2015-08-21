@@ -1,6 +1,6 @@
 define(function (require) {
 
-    var Bar = require('../ChartView').extend({
+    var Bar = require('../../echarts').extendChartView({
 
         type: 'bar',
 

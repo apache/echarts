@@ -28,8 +28,8 @@ define(function (require) {
     Chart.extend = function (proto) {
         var Super = this;
 
-        var ExtendedChart = function (echarts, chartOption) {
-            Super.call(this, echarts, chartOption);
+        var ExtendedChart = function () {
+            Super.call(this);
         };
 
         for (var name in proto) {

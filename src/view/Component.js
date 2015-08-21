@@ -29,8 +29,8 @@ define(function (require) {
     Component.extend = function (proto) {
         var Super = this;
 
-        var ExtendedComponent = function (echarts, chartOption) {
-            Super.call(this, echarts, chartOption);
+        var ExtendedComponent = function () {
+            Super.call(this);
         };
 
         for (var name in proto) {
