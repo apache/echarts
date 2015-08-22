@@ -35,7 +35,7 @@ define(function(require) {
 
         dimension: 1,
 
-        init: function (option, parentModel, ecModel, dataIndex) {
+        init: function (option, parentModel, dataIndex) {
 
             /**
              * @type {string}
@@ -57,7 +57,7 @@ define(function(require) {
              * @private
              * @readOnly
              */
-            this.rawIndex = dataIndex || 0;
+            this.dataIndex = dataIndex || 0;
         },
 
         /**
@@ -66,7 +66,7 @@ define(function(require) {
         getX: function () {
             // Use idx as x if data is 1d
             // Usually when xAxis is category axis
-            return this.dimension === 1 ? this.rawIndex : this._value[0];
+            return this.dimension === 1 ? this.dataIndex : this._value[0];
         },
 
         /**
@@ -132,13 +132,21 @@ define(function(require) {
          * @param {number} value
          */
         setValue: function (value) {
-            this._value[this.dimensino] = value
+            this._value[this.dimension] = value
+        },
+
+        clone: function () {
+            var entry = new Entry(
+                this.option, this.parentModel, this.dataIndex
+            );
+            entry.dimension = this.dimension;
+            return entry;
         }
     });
 
     function List() {
 
-        this.elements = this.elements || [];
+        this.elements = [];
 
         // Depth and properties is useful in nested Array.
         // For example in eventRiver, data structure is a nested 2d array as following
@@ -210,8 +218,27 @@ define(function(require) {
             }
         },
 
+        /**
+         * @param {string} name
+         * @param {*} option
+         */
+        append: function (name, option) {
+            var elements = this.elements;
+            var el = new Entry(option, null, elements.length);
+            el.name = name;
+            elements.push(el);
+            return el;
+        },
+
         clone: function () {
-            // Clone
+            var list = new List();
+            var elements = this.elements;
+            for (var i = 0; i < elements.length; i++) {
+                list.elements.push(elements[i].clone());
+            }
+            list.depth = this.depth;
+            list.properties = this.properties;
+            return list;
         }
     };
 
@@ -230,7 +257,7 @@ define(function(require) {
         var list = new List();
         // Normalize data
         list.elements = zrUtil.map(data, function (dataItem, index) {
-            var entry = new Entry(dataItem, parentModel, null, index);
+            var entry = new Entry(dataItem, parentModel, index);
             entry.dimension = dimension || 1;
             return entry;
         });

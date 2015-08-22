@@ -4,8 +4,10 @@ define(function(require) {
     // Grid view
     require('../echarts').extendComponentView({
 
-        render: function (gridModel, ecModel) {
+        render: function (gridModel, ecModel, api) {
+            this.group.add(new api.Rectangle({
 
+            }));
         }
     });
 });

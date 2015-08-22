@@ -32,10 +32,22 @@ define(function (require) {
             this.option = {};
 
             /**
+             * @type {Array}
+             * @private
+             */
+            this._stack = [];
+
+            /**
+             * @type {Array.<module:echarts/model/Model}
+             * @private
+             */
+            this._components = [];
+
+            /**
              * @type {Object.<string, module:echarts/model/Model>}
              * @private
              */
-            this._components = {};
+            this._componentsMap = {};
 
             /**
              * @type {Array.<module:echarts/model/Model}
@@ -109,6 +121,7 @@ define(function (require) {
                 return seriesModel.option;
             });
 
+            var componentsMap = this._componentsMap;
             var components = this._components;
             for (var name in newOption) {
                 var componentOption = newOption[name];
@@ -128,11 +141,11 @@ define(function (require) {
                     if (! (componentOption instanceof Array)) {
                         componentOption = [componentOption];
                     }
-                    if (! components[name]) {
-                        components[name] = [];
+                    if (! componentsMap[name]) {
+                        componentsMap[name] = [];
                     }
                     for (var i = 0; i < componentOption.length; i++) {
-                        var componentModel = components[name][i];
+                        var componentModel = componentsMap[name][i];
                         if (componentModel) {
                             componentModel.mergeOption(
                                 componentOption[i], this
@@ -142,7 +155,8 @@ define(function (require) {
                             componentModel = ComponentModel.create(
                                 name, componentOption[i], this
                             );
-                            components[name][i] = componentModel;
+                            componentsMap[name][i] = componentModel;
+                            components.push(componentModel);
                         }
                         if (componentModel) {
                             // 同步 Option
@@ -170,16 +184,25 @@ define(function (require) {
          * @return {module:echarts/model/Component}
          */
         getComponent: function (type, idx) {
-            var list = this._components[type];
+            var list = this._componentsMap[type];
             if (list) {
                 return list[idx || 0];
             }
         },
 
+        /**
+         * @param {string} type
+         * @param {Function} cb
+         * @param {*} context
+         */
         eachComponent: function (type, cb, context) {
-            zrUtil.each(this._components[type], cb, context);
+            zrUtil.each(this._componentsMap[type], cb, context);
         },
 
+        /**
+         * @param {string} name
+         * @return {Array.<module:echarts/model/Series>}
+         */
         getSeriesByName: function (name) {
             return this._seriesMap[name];
         },
@@ -206,15 +229,55 @@ define(function (require) {
          * @return {Array.<module:echarts/model/Series>}
          */
         getSeriesAll: function () {
-            return this._series;
+            return this._series.slice();
         },
 
+        /**
+         * @param {Function} cb
+         * @param {*} context
+         */
         eachSeries: function (cb, context) {
             zrUtil.each(this._series, cb, context);
         },
 
+        /**
+         * @param {Function} cb
+         * @param {*} context
+         */
         filterSeries: function (cb, context) {
             this._series = zrUtil.filter(this._series, cb, context);
+        },
+
+        save: function () {
+            this._stack.push({
+                series: this._series.slice()
+            });
+
+            var components = this._components;
+            var series = this._series;
+            var i;
+            for (i = 0; i < components.length; i++) {
+                components[i].save();
+            }
+            for (i = 0; i < series.length; i++) {
+                series[i].save();
+            }
+        },
+
+        restore: function () {
+            if (this._stack.length) {
+                this._series = this._stack.pop().series;
+            }
+
+            var components = this._components;
+            var series = this._series;
+            var i;
+            for (i = 0; i < components.length; i++) {
+                components[i].restore();
+            }
+            for (i = 0; i < series.length; i++) {
+                series[i].restore();
+            }
         }
     });
 

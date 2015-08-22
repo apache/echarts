@@ -40,6 +40,19 @@ define(function (require) {
      * @return {number}
      */
     function parsePercent(percent, all) {
+        switch (percent) {
+            case 'center':
+                percent = '50%';
+                break;
+            case 'left':
+            case 'top':
+                percent = '0%';
+                break;
+            case 'right':
+            case 'bottom':
+                percent = '100%';
+                break;
+        }
         if (typeof percent === 'string') {
             if (_trim(percent).match(/%$/)) {
                 return parseFloat(percent) / 100 * all;
@@ -51,10 +64,36 @@ define(function (require) {
         return +percent;
     }
 
+    /**
+     * Normalize css liked array configuration
+     * e.g.
+     *  3 => [3, 3, 3, 3]
+     *  [4, 2] => [4, 2, 4, 2]
+     *  [4, 3, 2] => [4, 3, 2, 3]
+     * @param {number|Array.<number>} val
+     */
+    function normalizeCssArray(val) {
+        var len = val.length;
+        if (typeof (val) === 'number') {
+            return [val, val, val, val];
+        }
+        else if (len === 2) {
+            // vertical | horizontal
+            return [val[0], val[1], val[0], val[1]];
+        }
+        else if (len === 3) {
+            // top | horizontal | bottom
+            return [val[0], val[1], val[2], val[1]];
+        }
+        return val;
+    }
+
     return {
 
         linearMap: linearMap,
 
-        parsePercent: parsePercent
+        parsePercent: parsePercent,
+
+        normalizeCssArray: normalizeCssArray
     }
 });

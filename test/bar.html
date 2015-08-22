@@ -19,11 +19,15 @@
                 var chart = echarts.init(document.getElementById('main'));
 
                 var xAxisData = [];
-                var data = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
 
-                for (var i = 0; i < 10000; i++) {
+                for (var i = 0; i < 20; i++) {
                     xAxisData.push(Math.random());
-                    data.push(Math.random());
+                    data1.push(Math.random());
+                    data2.push(Math.random());
+                    data3.push(Math.random());
                 }
 
                 console.profile('setOption');
@@ -33,10 +37,13 @@
                             name: 'bar',
                             itemStyle: {
                                 normal: {
-                                    color: 'blue'
+                                    // color: 'blue'
                                 }
                             }
-                        }]
+                        }, 'bar2', 'bar3'],
+                        selected: {
+                            'bar': false
+                        }
                     },
                     xAxis: {
                         // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
@@ -48,7 +55,17 @@
                         name: 'bar',
                         type: 'bar',
                         // data: [0, 1, 2, 3, 4]
-                        data: data
+                        data: data1
+                    }, {
+                        name: 'bar2',
+                        type: 'bar',
+                        // data: [0, 1, 2, 3, 4]
+                        data: data2
+                    }, {
+                        name: 'bar3',
+                        type: 'bar',
+                        // data: [0, 1, 2, 3, 4]
+                        data: data3
                     }]
                 });
                 console.profileEnd('setOption');

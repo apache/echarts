@@ -63,14 +63,14 @@ define(function(require) {
      * 添加一个新的节点
      * @param {*} [option] 存储的数据
      */
-    Graph.prototype.addNode = function (option) {
-        var name = option.name;
+    Graph.prototype.addNode = function (name, option) {
 
         if (this._nodesMap[name]) {
             return this._nodesMap[name];
         }
 
         var node = new Graph.Node(option);
+        node.name = name;
 
         this.nodes.push(node);
 
@@ -328,11 +328,13 @@ define(function(require) {
      */
     Graph.prototype.clone = function () {
         var graph = new Graph(this._directed);
-        for (var i = 0; i < this.nodes.length; i++) {
-            graph.addNode(this.nodes[i].name, this.nodes[i].data);
+        var nodes = this.nodes;
+        var edges = this.edges;
+        for (var i = 0; i < nodes.length; i++) {
+            graph.addNode(nodes[i].name, nodes[i].data);
         }
-        for (var i = 0; i < this.edges.length; i++) {
-            var e = this.edges[i];
+        for (var i = 0; i < edges.length; i++) {
+            var e = edges[i];
             graph.addEdge(e.node1.name, e.node2.name, e.data);
         }
         return graph;

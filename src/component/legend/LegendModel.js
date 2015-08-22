@@ -3,6 +3,7 @@ define(function(require) {
     'use strict';
 
     var List = require('../../data/List');
+    var zrUtil = require('zrender/core/util');
 
     return require('../../echarts').extendComponentModel({
 
@@ -13,7 +14,27 @@ define(function(require) {
 
             option.selected = option.selected || {};
 
-            this._data = List.fromArray(option.data);
+            var list = new List();
+            zrUtil.each(option.data, function (dataItem) {
+                if (typeof dataItem === 'string') {
+                    list.append(dataItem, {});
+                }
+                else {
+                    list.append(dataItem.name, dataItem);
+                }
+            });
+
+            /**
+             * @type {Array.<string>}
+             * @private
+             */
+            this._seriesNames = zrUtil.map(ecModel.getSeriesAll(), function (series) {
+                return series.name;
+            });
+
+            this._data = list;
+
+            this._stack = [];
         },
 
         /**
@@ -40,9 +61,21 @@ define(function(require) {
         /**
          * @param {string} name
          */
+        toggleSelected: function (name) {
+            var selected = this.option.selected;
+            if (! (name in selected)) {
+                selected[name] = true;
+            }
+            selected[name] = !selected[name];
+        },
+
+        /**
+         * @param {string} name
+         */
         isSelected: function (name) {
             var selected = this.option.selected;
-            return !((name in selected) && selected[name]);
+            return !((name in selected) && !selected[name])
+                && this._seriesNames.indexOf(name) >= 0
         },
 
         defaultOption: {

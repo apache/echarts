@@ -25,13 +25,22 @@ define(function(require) {
 
         init: function (seriesOption, parentModel, ecModel, seriesIndex) {
 
+            /**
+             * @type {number}
+             */
             this.seriesIndex = seriesIndex;
 
             zrUtil.merge(seriesOption, ecModel.getTheme().get(this.type));
 
             zrUtil.merge(seriesOption, this.defaultOption);
 
+            /**
+             * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
+             * @private
+             */
             this._data = this.getInitialData(seriesOption);
+
+            this._stack = [];
         },
 
         mergeOption: function (newSeriesOption) {
@@ -46,6 +55,18 @@ define(function(require) {
 
         getData: function () {
             return this._data;
+        },
+
+        save: function () {
+            this._stack.push({
+                data: this._data.clone()
+            });
+        },
+
+        restore: function () {
+            if (this._stack.length) {
+                this._data = this._stack.pop().data;
+            }
         }
     });
 

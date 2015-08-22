@@ -1,7 +1,8 @@
 /**
  * TODO processor的优先级
- * TODO restore
- * TODO setTheme
+ *      restore
+ *      setTheme
+ *      stack
  */
 define(function (require) {
 
@@ -30,25 +31,76 @@ define(function (require) {
     var ECharts = function (dom, theme, opts) {
         opts = opts || {};
 
+        /**
+         * @type {module:zrender/ZRender}
+         * @private
+         */
         this._zr = zrender.init(dom, {
             renderer: opts.renderer || 'canvas'
         });
 
+        /**
+         * @type {Object}
+         * @private
+         */
         this._theme = zrUtil.clone(theme);
 
+        /**
+         * @type {Array.<module:echarts/view/Chart>}
+         * @private
+         */
         this._chartsList = [];
+
+        /**
+         * @type {Object.<string, module:echarts/view/Chart>}
+         * @private
+         */
         this._chartsMap = {};
 
+        /**
+         * @type {Array.<module:echarts/view/Component>}
+         * @private
+         */
         this._componentsList = [];
+
+        /**
+         * @type {Object.<string, module:echarts/view/Component>}
+         * @private
+         */
         this._componentsMap = {};
 
+        /**
+         * @type {module:echarts/api/ExtensionAPI}
+         * @private
+         */
         this._extensionAPI = new ExtensionAPI(this);
 
+        /**
+         * @type {module:echarts/CoordinateSystem}
+         * @private
+         */
         this._coordinateSystem = new CoordinateSystemManager();
 
+        /**
+         * Layout instances
+         * @type {Array}
+         * @private
+         */
         this._layouts = zrUtil.map(layoutClasses, function (Layout) {
             return new Layout();
         });
+
+        /**
+         * @type {boolean}
+         * @private
+         */
+        this._needsUpdate = false;
+
+        this._zr.animation.on('frame', function () {
+            if (this._needsUpdate) {
+                this.updateImmediately();
+            }
+        }, this);
     };
 
     ECharts.prototype = {
@@ -99,12 +151,15 @@ define(function (require) {
         },
 
         update: function () {
+            this._needsUpdate = true;
         },
 
         updateImmediately: function () {
             var ecModel = this._model;
 
             ecModel.restore();
+
+            ecModel.save();
 
             this._processData(ecModel);
 
@@ -115,6 +170,8 @@ define(function (require) {
             this._doLayout(ecModel);
 
             this._doRender(ecModel);
+
+            this._needsUpdate = false;
         },
 
         resize: function () {
@@ -256,7 +313,6 @@ define(function (require) {
 
         /**
          * Render each chart and component
-         *
          */
         _doRender: function (ecModel) {
             var api = this._extensionAPI;

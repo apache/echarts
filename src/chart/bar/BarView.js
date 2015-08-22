@@ -5,6 +5,8 @@ define(function (require) {
         type: 'bar',
 
         render: function (seriesModel, ecModel, api) {
+            this.group.clear();
+
             var coordinateSystemType = seriesModel.get('coordinateSystem');
 
             if (coordinateSystemType === 'cartesian2d') {
@@ -18,7 +20,7 @@ define(function (require) {
             seriesModel.getData().each(function (dataItem) {
                 var layout = dataItem.layout;
 
-                var rect = new api.Rectangle({
+                var rect = new api.Rect({
                     shape: {
                         x: layout.x,
                         y: layout.y,

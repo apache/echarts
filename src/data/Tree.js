@@ -3,6 +3,8 @@
  *
  * @module echarts/data/Tree
  * @author Yi Shen(https://www.github.com/pissang)
+ *
+ * TODO clone
  */
 define(function(require) {
 

@@ -104,6 +104,8 @@ define(function (require) {
             this._visual[key] = val;
         },
 
+        save: function () {},
+
         restore: function () {},
 
         // Pending

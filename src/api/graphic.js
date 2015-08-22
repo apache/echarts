@@ -22,7 +22,7 @@ define(function(require) {
 
         Polyline: require('zrender/graphic/shape/Polyline'),
 
-        Rectangle: require('zrender/graphic/shape/Rectangle'),
+        Rect: require('zrender/graphic/shape/Rectangle'),
 
         /**
          * Create a path element from path data string
