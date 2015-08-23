@@ -7,26 +7,26 @@
  */
 define(function() {
     var _timeGap = [
-        {formatter: 'hh : mm : ss', value: 1000},               // 1s
-        {formatter: 'hh : mm : ss', value: 1000 * 5},           // 5s
-        {formatter: 'hh : mm : ss', value: 1000 * 10},          // 10s
-        {formatter: 'hh : mm : ss', value: 1000 * 15},          // 15s
-        {formatter: 'hh : mm : ss', value: 1000 * 30},          // 30s
-        {formatter: 'hh : mm\nMM - dd', value: 60000},          // 1m
-        {formatter: 'hh : mm\nMM - dd', value: 60000 * 5},      // 5m
-        {formatter: 'hh : mm\nMM - dd', value: 60000 * 10},     // 10m
-        {formatter: 'hh : mm\nMM - dd', value: 60000 * 15},     // 15m
-        {formatter: 'hh : mm\nMM - dd', value: 60000 * 30},     // 30m
-        {formatter: 'hh : mm\nMM - dd', value: 3600000},        // 1h
-        {formatter: 'hh : mm\nMM - dd', value: 3600000 * 2},    // 2h
-        {formatter: 'hh : mm\nMM - dd', value: 3600000 * 6},    // 6h
-        {formatter: 'hh : mm\nMM - dd', value: 3600000 * 12},   // 12h
-        {formatter: 'MM - dd\nyyyy', value: 3600000 * 24},      // 1d
-        {formatter: 'week', value: 3600000 * 24 * 7},           // 7d
-        {formatter: 'month', value: 3600000 * 24 * 31},         // 1M
-        {formatter: 'quarter', value: 3600000 * 24 * 380 / 4},  // 3M
-        {formatter: 'half-year', value: 3600000 * 24 * 380 / 2},// 6M
-        {formatter: 'year', value: 3600000 * 24 * 380}          // 1Y
+        {formatter: 'hh:mm:ss', value: 1000},               // 1s
+        {formatter: 'hh:mm:ss', value: 1000 * 5},           // 5s
+        {formatter: 'hh:mm:ss', value: 1000 * 10},          // 10s
+        {formatter: 'hh:mm:ss', value: 1000 * 15},          // 15s
+        {formatter: 'hh:mm:ss', value: 1000 * 30},          // 30s
+        {formatter: 'hh:mm\nMM/dd', value: 60000},          // 1m
+        {formatter: 'hh:mm\nMM/dd', value: 60000 * 5},      // 5m
+        {formatter: 'hh:mm\nMM/dd', value: 60000 * 10},     // 10m
+        {formatter: 'hh:mm\nMM/dd', value: 60000 * 15},     // 15m
+        {formatter: 'hh:mm\nMM/dd', value: 60000 * 30},     // 30m
+        {formatter: 'hh:mm\nMM/dd', value: 3600000},        // 1h
+        {formatter: 'hh:mm\nMM/dd', value: 3600000 * 2},    // 2h
+        {formatter: 'hh:mm\nMM/dd', value: 3600000 * 6},    // 6h
+        {formatter: 'hh:mm\nMM/dd', value: 3600000 * 12},   // 12h
+        {formatter: 'MM/dd\nyyyy', value: 3600000 * 24},    // 1d
+        {formatter: 'week', value: 3600000 * 24 * 7},            // 7d
+        {formatter: 'month', value: 3600000 * 24 * 31},          // 1M
+        {formatter: 'quarter', value: 3600000 * 24 * 380 / 4},   // 3M
+        {formatter: 'half-year', value: 3600000 * 24 * 380 / 2}, // 6M
+        {formatter: 'year', value: 3600000 * 24 * 380}           // 1Y
     ];
     
     /**
@@ -86,7 +86,7 @@ define(function() {
             || formatter == 'half-year'
             || formatter == 'year'
         ) {
-            formatter = 'MM - dd\nyyyy';
+            formatter = 'MM/dd\nyyyy';
         }
             
         var date = getNewDate(value);
