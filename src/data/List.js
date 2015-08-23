@@ -140,6 +140,7 @@ define(function(require) {
             var entry = new Entry(
                 this.option, this.parentModel, this.dataIndex
             );
+            entry.name = this.name;
             entry.dimension = this.dimension;
             return entry;
         }
@@ -263,6 +264,10 @@ define(function(require) {
         // Normalize data
         list.elements = zrUtil.map(data, function (dataItem, index) {
             var entry = new Entry(dataItem, parentModel, index);
+            // TODO
+            if (! dataItem.name) {
+                entry.name = index;
+            }
             entry.dimension = dimension || 1;
             return entry;
         });

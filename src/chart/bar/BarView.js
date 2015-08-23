@@ -5,8 +5,6 @@ define(function (require) {
         type: 'bar',
 
         render: function (seriesModel, ecModel, api) {
-            this.group.clear();
-
             var coordinateSystemType = seriesModel.get('coordinateSystem');
 
             if (coordinateSystemType === 'cartesian2d') {
@@ -37,7 +35,7 @@ define(function (require) {
                 .update(function (newData, oldData) {
                     // TODO DONT ANIMATE WHEN PROPERTIES ARE EQUAL
                     oldData.__el.animateShape()
-                        .when(500, newData.layout)
+                        .when(200, newData.layout)
                         .start();
 
                     newData.__el = oldData.__el;

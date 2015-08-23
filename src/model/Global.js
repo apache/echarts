@@ -106,7 +106,7 @@ define(function (require) {
                 var seriesMap = this._seriesMap;
                 var seriesModel = seriesMap[seriesName];
                 if (seriesModel) {
-                    seriesModel.mergeOption(series);
+                    seriesModel.mergeOption(series, this);
                 }
                 else {
                     seriesModel = SeriesModel.create(series, this, idx);

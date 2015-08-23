@@ -38,13 +38,13 @@ define(function(require) {
              * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
              * @private
              */
-            this._data = this.getInitialData(seriesOption);
+            this._data = this.getInitialData(seriesOption, ecModel);
 
             this._stack = [];
         },
 
-        mergeOption: function (newSeriesOption) {
-            this._data = this.getInitialData(newSeriesOption);
+        mergeOption: function (newSeriesOption, ecModel) {
+            this._data = this.getInitialData(newSeriesOption, ecModel);
         },
 
         /**
