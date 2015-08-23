@@ -328,8 +328,9 @@ define(function (require) {
             ecModel.eachSeries(function (seriesModel, idx) {
                 var id = getSeriesId(seriesModel.option, idx);
                 var chart = this._chartsMap[id];
-                chart.render(seriesModel, ecModel, api);
+                // PENDING 这里先添加 group，不然不能配置动画
                 this._zr.add(chart.group);
+                chart.render(seriesModel, ecModel, api);
             }, this);
         },
 

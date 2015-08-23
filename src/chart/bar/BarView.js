@@ -17,24 +17,37 @@ define(function (require) {
         },
 
         _renderCartesian: function (seriesModel, ecModel, api) {
-            seriesModel.getData().each(function (dataItem) {
-                var layout = dataItem.layout;
+            var group = this.group;
+            var data = seriesModel.getData();
+            data.diff(this.data)
+                .add(function (dataItem) {
+                    var rect = new api.Rect({
+                        shape: dataItem.layout,
+                        style: {
+                            fill: dataItem.getVisual('color'),
+                            stroke: dataItem.get('itemStyle.normal.borderColor')
+                        }
+                    });
 
-                var rect = new api.Rect({
-                    shape: {
-                        x: layout.x,
-                        y: layout.y,
-                        width: layout.width,
-                        height: layout.height
-                    },
-                    style: {
-                        fill: dataItem.getVisual('color'),
-                        stroke: dataItem.get('itemStyle.normal.borderColor')
-                    }
-                });
+                    dataItem.__el = rect;
+                    rect.__data = dataItem;
 
-                this.group.add(rect);
-            }, this);
+                    group.add(rect);
+                })
+                .update(function (newData, oldData) {
+                    // TODO DONT ANIMATE WHEN PROPERTIES ARE EQUAL
+                    oldData.__el.animateShape()
+                        .when(500, newData.layout)
+                        .start();
+
+                    newData.__el = oldData.__el;
+                })
+                .remove(function (dataItem) {
+                    group.remove(dataItem.__el);
+                })
+                .execute();
+
+            this.data = data;
         }
     });
 

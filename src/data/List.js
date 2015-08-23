@@ -3,6 +3,7 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var Model = require('../model/Model');
+    var DataDiffer = require('./DataDiffer');
 
     function createArrayIterWithDepth(maxDepth, properties, cb, context, iterType) {
         // Simple optimization to avoid read the undefined value in properties array
@@ -228,6 +229,10 @@ define(function(require) {
             el.name = name;
             elements.push(el);
             return el;
+        },
+
+        diff: function (oldList) {
+            return new DataDiffer(oldList ? oldList.elements : [], this.elements);
         },
 
         clone: function () {
