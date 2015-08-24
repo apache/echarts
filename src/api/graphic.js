@@ -24,6 +24,8 @@ define(function(require) {
 
         Rect: require('zrender/graphic/shape/Rectangle'),
 
+        Line: require('zrender/graphic/shape/Line'),
+
         /**
          * Create a path element from path data string
          */
@@ -53,6 +55,26 @@ define(function(require) {
             matrix.scale(m, m, [sx, sy]);
             matrix.translate(m, m, [-pathRect.x, -pathRect.y]);
             path.applyTransform(m);
+        },
+
+        subPixelOptimizeLine: function (p0, p1, lineWidth) {
+            var round = Math.round;
+            // Sub pixel optimize
+            var offset = lineWidth % 2 / 2;
+            var x1 = round(p0[0]);
+            var y1 = round(p0[1]);
+            var x2 = round(p1[0]);
+            var y2 = round(p1[1]);
+
+            if (x1 === x2) {
+                x1 += offset;
+                x2 += offset;
+            }
+            if (y1 === y2) {
+                y1 += offset;
+                y2 += offset;
+            }
         }
+
     }
 });

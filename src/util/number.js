@@ -95,5 +95,5 @@ define(function (require) {
         parsePercent: parsePercent,
 
         normalizeCssArray: normalizeCssArray
-    }
+    };
 });

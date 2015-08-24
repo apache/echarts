@@ -25,8 +25,8 @@ define(function (require) {
                 )
             ];
 
-            var x = 0;
-            var y = 0;
+            var x = padding[3];
+            var y = padding[0];
 
             legendModel.getData().each(function (dataItem) {
                 var seriesName = dataItem.name;

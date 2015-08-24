@@ -4,7 +4,6 @@ define(function (require) {
     var Group = require('zrender/container/Group');
 
     var Component = function () {
-
         /**
          * @type {module:zrender/container/Group}
          * @readOnly

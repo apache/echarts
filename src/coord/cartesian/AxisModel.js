@@ -133,7 +133,11 @@ define(function(require) {
     }
 
     var AxisModel = require('../../model/Component').extend({
-        type: 'axis'
+        type: 'axis',
+        /**
+         * @type {module:echarts/coord/cartesian/Axis2D}
+         */
+        axis: null
     });
 
     AxisModel.AxisX = AxisModel.extend({

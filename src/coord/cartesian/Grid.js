@@ -204,6 +204,10 @@ define(function(require, factory) {
 
                     axesList.push(axisX);
                     axesList.push(axisY);
+
+                    // Inject axis into axisModel
+                    xAxisModel.axis = axisX;
+                    yAxisModel.axis = axisY;
                 }, this);
             }, this);
 

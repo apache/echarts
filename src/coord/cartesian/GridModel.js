@@ -8,6 +8,11 @@ define(function(require) {
 
         type: 'grid',
 
+        /**
+         * @type {module:echarts/coord/cartesian/Grid}
+         */
+        coordinateSystem: null,
+
         defaultOption: {
             show: true,
             zlevel: 0,                  // 一级层叠
