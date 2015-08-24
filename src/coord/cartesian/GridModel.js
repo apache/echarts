@@ -9,6 +9,7 @@ define(function(require) {
         type: 'grid',
 
         defaultOption: {
+            show: true,
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
             x: 80,

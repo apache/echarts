@@ -25,7 +25,7 @@ define(function(require) {
         get: function (type, idx) {
             var list = this._coordinateSystems[type];
             if (list) {
-                return list[idx];
+                return list[idx || 0];
             }
         },
 

@@ -18,9 +18,14 @@ define(function (require) {
             var group = this.group;
             var data = seriesModel.getData();
             data.diff(this.data)
-                .add(function (dataItem) {
+                .add(function (dataItem, idx) {
+                    var layout = dataItem.layout;
                     var rect = new api.Rect({
-                        shape: dataItem.layout,
+                        shape: {
+                            x: layout.x,
+                            y: layout.y + layout.height,
+                            width: layout.width
+                        },
                         style: {
                             fill: dataItem.getVisual('color'),
                             stroke: dataItem.get('itemStyle.normal.borderColor')
@@ -31,16 +36,22 @@ define(function (require) {
                     rect.__data = dataItem;
 
                     group.add(rect);
+
+                    // Animation
+                    rect.animateShape()
+                        .when(500, layout)
+                        .delay(300 * dataItem.dataIndex / data.elements.length)
+                        .start('cubicOut');
                 })
                 .update(function (newData, oldData) {
                     // TODO DONT ANIMATE WHEN PROPERTIES ARE EQUAL
                     oldData.__el.animateShape()
-                        .when(200, newData.layout)
-                        .start();
+                        .when(500, newData.layout)
+                        .start('cubicOut');
 
                     newData.__el = oldData.__el;
                 })
-                .remove(function (dataItem) {
+                .remove(function (dataItem, idx) {
                     group.remove(dataItem.__el);
                 })
                 .execute();

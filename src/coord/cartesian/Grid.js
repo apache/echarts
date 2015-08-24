@@ -18,28 +18,26 @@ define(function(require, factory) {
     require('./GridModel');
     require('./AxisModel');
 
-    function Grid() {
+    function Grid(gridModel, ecModel) {
 
         this._x = 0;
         this._y = 0;
 
         this._width = 0;
         this._height = 0;
+
+        this._coordsMap = {};
+
+        this._coordsList = [];
+
+        this._axesList = [];
+
+        this._initCartesian(gridModel, ecModel);
     }
 
     Grid.prototype = {
 
         type: 'grid',
-
-        init: function (option) {
-            this._coordsMap = {};
-
-            this._coordsList = [];
-
-            this._axesList = [];
-
-            this._initCartesian(option);
-        },
 
         getRect: function () {
             return {
@@ -53,19 +51,17 @@ define(function(require, factory) {
         /**
          * Resize the grid
          */
-        resize: function (ecModel, api) {
+        resize: function (gridModel, api) {
             var viewportWidth = api.getWidth();
             var viewportHeight = api.getHeight();
 
-            var grid = ecModel.getComponent('grid');
-
             var parsePercent = numberUtil.parsePercent;
-            var gridX = parsePercent(grid.get('x'), viewportWidth);
-            var gridY = parsePercent(grid.get('y'), viewportHeight);
-            var gridX2 = parsePercent(grid.get('x2'), viewportWidth);
-            var gridY2 = parsePercent(grid.get('y2'), viewportHeight);
-            var gridWidth = parsePercent(grid.get('width'), viewportWidth);
-            var gridHeight = parsePercent(grid.get('height'), viewportHeight);
+            var gridX = parsePercent(gridModel.get('x'), viewportWidth);
+            var gridY = parsePercent(gridModel.get('y'), viewportHeight);
+            var gridX2 = parsePercent(gridModel.get('x2'), viewportWidth);
+            var gridY2 = parsePercent(gridModel.get('y2'), viewportHeight);
+            var gridWidth = parsePercent(gridModel.get('width'), viewportWidth);
+            var gridHeight = parsePercent(gridModel.get('height'), viewportHeight);
             if (isNaN(gridWidth)) {
                 gridWidth = viewportWidth - gridX2 - gridX;
             }
@@ -141,7 +137,7 @@ define(function(require, factory) {
          * Initialize cartesian coordinate systems
          * @private
          */
-        _initCartesian: function (ecModel) {
+        _initCartesian: function (gridModel, ecModel) {
             /**
              * @inner
              */
@@ -159,8 +155,17 @@ define(function(require, factory) {
             var axesList = this._axesList;
 
             ecModel.eachComponent('xAxis', function (xAxisModel, i) {
+                if (ecModel.getComponent(
+                        'grid', xAxisModel.get('gridIndex')
+                    ) !== gridModel) {
+                    return;
+                }
                 ecModel.eachComponent('yAxis', function (yAxisModel, j) {
-
+                    if (ecModel.getComponent(
+                            'grid', yAxisModel.get('gridIndex')
+                        ) !== gridModel) {
+                        return;
+                    }
                     var key = 'x' + i + 'y' + j;
                     var cartesian = new Cartesian2D(key);
                     this._coordsMap[key] = cartesian;
@@ -270,10 +275,10 @@ define(function(require, factory) {
     };
 
     Grid.create = function (ecModel, api) {
-        if (ecModel.getComponent('grid')) {
-            var grid = new Grid();
-            grid.init(ecModel);
-            grid.resize(ecModel, api);
+        var grids = [];
+        ecModel.eachComponent('grid', function (gridModel) {
+            var grid = new Grid(gridModel, ecModel);
+            grid.resize(gridModel, api);
 
             // Inject the coordinateSystems into seriesModel
             ecModel.eachSeries(function (seriesModel) {
@@ -281,7 +286,13 @@ define(function(require, factory) {
                     seriesModel.get('xAxisIndex'), seriesModel.get('yAxisIndex')
                 );
             });
-        }
+
+            gridModel.coordinateSystem = grid;
+
+            grids.push(grid);
+        });
+
+        return grids;
     }
 
     require('../../CoordinateSystem').register('grid', Grid);

@@ -14,9 +14,16 @@
         <div id="main"></div>
         <script>
 
-            require(['echarts', 'echarts/chart/bar', 'echarts/component/legend'], function (echarts) {
+            require([
+                'echarts',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/grid'
+            ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'));
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
 
                 var xAxisData = [];
                 var data1 = [];

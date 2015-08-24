@@ -5,9 +5,10 @@ define(function(require) {
     var defaultOption = {
 
         valueAxis: {
+            show: true,
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
-            show: true,
+            gridIndex: 0,
             position: 'left',      // 位置
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
@@ -62,9 +63,10 @@ define(function(require) {
         },
 
         categoryAxis: {
+            show: true,
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
-            show: true,
+            gridIndex: 0,
             position: 'bottom',    // 位置
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
