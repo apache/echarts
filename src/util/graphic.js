@@ -37,6 +37,8 @@ define(function(require) {
             return path;
         },
 
+        mergePath: pathTool.mergePath,
+
         /**
          * Resize a path to fit the rect
          */

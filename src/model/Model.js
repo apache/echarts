@@ -76,6 +76,11 @@ define(function (require) {
             return obj;
         },
 
+        /**
+         * @param {string} path
+         * @param {module:echarts/model/Model} parentModel
+         * @return {module:echarts/model/Model}
+         */
         getModel: function (path, parentModel) {
             var obj = this.get(path);
             return new Model(obj, parentModel);
