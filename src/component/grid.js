@@ -18,7 +18,7 @@ define(function(require) {
                         lineWidth: gridModel.get('borderWidth'),
                         fill: gridModel.get('backgroundColor')
                     },
-                    hoverable: false
+                    silent: true
                 }));
             }
         }

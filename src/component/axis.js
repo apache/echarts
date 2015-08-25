@@ -13,17 +13,23 @@ define(function(require) {
 
             this.group.clear();
 
-            var gridModel = ecModel.getComponent(
-                'grid', axisModel.get('gridIndex')
-            );
+            var gridModel = ecModel.getComponent('grid', axisModel.get('gridIndex'));
             if (axisModel.get('axisLine.show')) {
                 this._renderAxisLine(axisModel, gridModel, api);
             }
             if (axisModel.get('axisTick.show')) {
                 this._renderAxisTick(axisModel, gridModel, api);
             }
+            var labelShowList;
             if (axisModel.get('axisLabel.show')) {
-                this._renderAxisLabel(axisModel, gridModel, api);
+                labelShowList = this._renderAxisLabel(axisModel, gridModel, api);
+            }
+
+            if (axisModel.get('splitLine.show')) {
+                this._renderSplitLine(axisModel, gridModel, api, labelShowList);
+            }
+            if (axisModel.get('splitArea.show')) {
+                this._renderSplitArea(axisModel, gridModel, api, labelShowList);
             }
         },
 
@@ -109,7 +115,7 @@ define(function(require) {
                 // Only ordinal scale support tick interval
                 if (isOrdinalAxis) {
                     if (isTickIntervalFunction) {
-                        if (! tickInterval(i, axis.scale.getItem(i))) {
+                        if (!tickInterval(i, axis.scale.getItem(i))) {
                             continue;
                         }
                     }
@@ -176,7 +182,7 @@ define(function(require) {
             var textStyleModel = labelModel.getModel('textStyle');
 
             var labelFormatter = labelModel.get('formatter');
-            if (! labelFormatter) {
+            if (!labelFormatter) {
                // Default formatter
                switch (axisModel.get('type')) {
                    // TODO
@@ -225,7 +231,7 @@ define(function(require) {
                         needsCheckTextSpace = true;
                     }
                     else if (isLabelIntervalFunction) {
-                        if (! labelInterval(tick, axis.scale.getItem(tick))) {
+                        if (!labelInterval(tick, axis.scale.getItem(tick))) {
                             continue;
                         }
                     }
@@ -291,9 +297,9 @@ define(function(require) {
                     origin: [x, y]
                 });
 
-                if (needsCheckTextSpace && ! labelRotate) {
+                if (needsCheckTextSpace && !labelRotate) {
                     var rect = textEl.getBoundingRect();
-                    if (! textSpaceTakenRect) {
+                    if (!textSpaceTakenRect) {
                         textSpaceTakenRect = rect;
                     }
                     else {
@@ -311,7 +317,153 @@ define(function(require) {
 
                 this.group.add(textEl);
              }
-         }
+         },
+
+        /**
+         * @param {module:echarts/coord/cartesian/AxisModel} axisModel
+         * @param {module:echarts/coord/cartesian/GridModel} gridModel
+         * @param {module:echarts/ExtensionAPI} api
+         * @param {Array.<boolean>} showList
+         * @private
+         */
+        _renderSplitLine: function (axisModel, gridModel, api, showList) {
+            var axis = axisModel.axis;
+
+            var splitLineModel = axisModel.getModel('splitLine');
+            var lineStyleModel = splitLineModel.getModel('lineStyle');
+            var lineWidth = lineStyleModel.get('width');
+            var lineColors = lineStyleModel.get('color');
+            var lineType = lineStyleModel.get('type');
+
+            lineColors = lineColors instanceof Array ? lineColors : [lineColors];
+
+            var gridRect = gridModel.coordinateSystem.getRect();
+            var isHorizontal = axis.isHorizontal();
+
+            var splitLines = [];
+            var lineCount = 0;
+
+            var isOrdinalAxis = axis.scale.type === 'ordinal';
+            var ticksCoords = isOrdinalAxis && axis.boundaryGap
+                ? axis.getBandsCoords(true) : axis.getTicksCoords();
+
+            var p1 = [];
+            var p2 = [];
+            for (var i = 0; i < ticksCoords.length; i++) {
+                var tickCoord = ticksCoords[i];
+
+                if (isHorizontal) {
+                    p1[0] = tickCoord;
+                    p1[1] = gridRect.y;
+                    p2[0] = tickCoord;
+                    p2[1] = gridRect.y + gridRect.height;
+                }
+                else {
+                    p1[0] = gridRect.x;
+                    p1[1] = tickCoord;
+                    p2[0] = gridRect.x + gridRect.width;
+                    p2[1] = tickCoord;
+                }
+                api.subPixelOptimizeLine(p1, p2, lineWidth);
+
+                var colorIndex = (lineCount++) % lineColors.length;
+                splitLines[colorIndex] = splitLines[colorIndex] || [];
+                splitLines[colorIndex].push(new api.Line({
+                    shape: {
+                        x1: p1[0],
+                        y1: p1[1],
+                        x2: p2[0],
+                        y2: p2[1]
+                    }
+                }));
+            }
+
+            // Simple optimization
+            // Batching the lines if color are the same
+            for (var i = 0; i < splitLines.length; i++) {
+                this.group.add(api.mergePath(splitLines[i], {
+                    style: {
+                        stroke: lineColors[i % lineColors.length],
+                        lineType: lineType,
+                        lineWidth: lineWidth
+                    },
+                    silent: true
+                }));
+            }
+        },
+
+        /**
+         * @param {module:echarts/coord/cartesian/AxisModel} axisModel
+         * @param {module:echarts/coord/cartesian/GridModel} gridModel
+         * @param {module:echarts/ExtensionAPI} api
+         * @param {Array.<boolean>} showList
+         * @private
+         */
+        _renderSplitArea: function (axisModel, gridModel, api, showList) {
+            var axis = axisModel.axis;
+
+            var splitAreaModel = axisModel.getModel('splitArea');
+            var areaColors = splitAreaModel.get('areaStyle.color');
+
+            var gridRect = gridModel.coordinateSystem.getRect();
+            var isOrdinalAxis = axis.scale.type === 'ordinal';
+            var ticksCoords = isOrdinalAxis && axis.boundaryGap
+                ? axis.getBandsCoords(true) : axis.getTicksCoords();
+
+            var prevX;
+            var prevY;
+
+            var splitAreaRects = [];
+            var count = 0;
+
+            areaColors = areaColors instanceof Array ? areaColors : [areaColors];
+
+            for (var i = 1; i < ticksCoords.length; i++) {
+                var tickCoord = ticksCoords[i];
+
+                var x;
+                var y;
+                var width;
+                var height;
+                if (axis.isHorizontal()) {
+                    x = prevX;
+                    y = gridRect.y;
+                    width = tickCoord - x;
+                    height = gridRect.height;
+                }
+                else {
+                    x = gridRect.x;
+                    y = prevY;
+                    width = gridRect.width;
+                    height = tickCoord - y;
+                }
+
+                var colorIndex = (count++) % areaColors.length;
+                splitAreaRects[colorIndex] = splitAreaRects[colorIndex] || [];
+                splitAreaRects[colorIndex].push(new api.Rect({
+                    shape: {
+                        x: x,
+                        y: y,
+                        width: width,
+                        height: height
+                    }
+                }));
+
+                prevX = x;
+                prevY = y;
+            }
+
+            // Simple optimization
+            // Batching the rects if color are the same
+            for (var i = 0; i < splitAreaRects.length; i++) {
+                this.group.add(api.mergePath(splitAreaRects[i], {
+                    style: {
+                        fill: areaColors[i % areaColors.length]
+                    },
+                    silent: true
+                }));
+            }
+        }
     });
 
     AxisView.extend({

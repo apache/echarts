@@ -17,9 +17,11 @@ define(function (require) {
         _renderCartesian: function (seriesModel, ecModel, api) {
             var group = this.group;
             var data = seriesModel.getData();
+
             data.diff(this.data)
                 .add(function (dataItem, idx) {
                     var layout = dataItem.layout;
+                    var normalItemStyle = dataItem.getModel('itemStyle.normal');
                     var rect = new api.Rect({
                         shape: {
                             x: layout.x,
@@ -28,7 +30,8 @@ define(function (require) {
                         },
                         style: {
                             fill: dataItem.getVisual('color'),
-                            stroke: dataItem.get('itemStyle.normal.borderColor')
+                            stroke: normalItemStyle.get('borderColor'),
+                            lineWidth: normalItemStyle.get('borderWidth')
                         }
                     });
 
