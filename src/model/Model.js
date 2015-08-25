@@ -78,12 +78,12 @@ define(function (require) {
 
         /**
          * @param {string} path
-         * @param {module:echarts/model/Model} parentModel
          * @return {module:echarts/model/Model}
          */
-        getModel: function (path, parentModel) {
+        getModel: function (path) {
             var obj = this.get(path);
-            return new Model(obj, parentModel);
+            var parentModel = this.parentModel;
+            return new Model(obj, parentModel && parentModel.get(path));
         },
 
         /**
