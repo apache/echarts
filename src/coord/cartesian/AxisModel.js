@@ -7,7 +7,7 @@ define(function(require) {
         valueAxis: {
             show: true,
             zlevel: 0,                  // 一级层叠
-            z: 0,                       // 二级层叠
+            z: 10,                       // 二级层叠
             gridIndex: 0,
             position: 'left',      // 位置
             name: '',              // 坐标轴名字，默认为空
@@ -65,7 +65,7 @@ define(function(require) {
         categoryAxis: {
             show: true,
             zlevel: 0,                  // 一级层叠
-            z: 0,                       // 二级层叠
+            z: 10,                       // 二级层叠
             gridIndex: 0,
             position: 'bottom',    // 位置
             name: '',              // 坐标轴名字，默认为空

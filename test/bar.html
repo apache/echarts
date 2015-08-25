@@ -38,7 +38,7 @@
                     data3.push(Math.random());
                 }
 
-                console.profile('setOption');
+                console.time('setOption');
                 chart.setOption({
                     legend: {
                         // TODO First bar unclickable
@@ -77,7 +77,7 @@
                         data: data3
                     }]
                 });
-                console.profileEnd('setOption');
+                console.timeEnd('setOption');
             })
 
         </script>
