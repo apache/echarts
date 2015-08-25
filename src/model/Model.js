@@ -83,7 +83,7 @@ define(function (require) {
         getModel: function (path) {
             var obj = this.get(path);
             var parentModel = this.parentModel;
-            return new Model(obj, parentModel && parentModel.get(path));
+            return new Model(obj, parentModel && parentModel.getModel(path));
         },
 
         /**
