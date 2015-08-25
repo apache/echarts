@@ -8,9 +8,8 @@ define(function(require) {
 
         type: 'bar',
 
-        getInitialData: function (option, ecModel) {
-            var list = List.fromArray(option.data, 1, this);
-            return list;
+        getInitialData: function (option) {
+            return List.fromArray(option.data, 1, this);
         },
 
         defaultOption: {

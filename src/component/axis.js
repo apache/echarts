@@ -79,7 +79,8 @@ define(function(require) {
                     lineCap: 'round',
                     lineType: lineType
                 },
-                z: axisModel.get('z')
+                z: axisModel.get('z'),
+                silent: true
             }));
         },
 
@@ -164,7 +165,9 @@ define(function(require) {
                 style: {
                     stroke: tickColor,
                     lineWidth: tickLineWidth
-                }
+                },
+                silent: true,
+                z: axisModel.get('z')
             });
             this.group.add(tickEl);
         },
@@ -294,7 +297,9 @@ define(function(require) {
                         textBaseline: labelTextBaseline
                     },
                     rotation: labelRotate * Math.PI / 180,
-                    origin: [x, y]
+                    origin: [x, y],
+                    silent: true,
+                    z: axisModel.get('z')
                 });
 
                 if (needsCheckTextSpace && !labelRotate) {
@@ -387,7 +392,8 @@ define(function(require) {
                         lineType: lineType,
                         lineWidth: lineWidth
                     },
-                    silent: true
+                    silent: true,
+                    z: axisModel.get('z')
                 }));
             }
         },
@@ -460,7 +466,8 @@ define(function(require) {
                     style: {
                         fill: areaColors[i % areaColors.length]
                     },
-                    silent: true
+                    silent: true,
+                    z: axisModel.get('z')
                 }));
             }
         }
