@@ -15,7 +15,7 @@ define(function(require) {
     };
 
     // Mix graphic api
-    zrUtil.merge(ExtensionAPI.prototype, require('./graphic'));
+    zrUtil.merge(ExtensionAPI.prototype, require('./util/graphic'));
 
     return ExtensionAPI;
 });

@@ -62,6 +62,7 @@ define(function(require, factory) {
             var gridY2 = parsePercent(gridModel.get('y2'), viewportHeight);
             var gridWidth = parsePercent(gridModel.get('width'), viewportWidth);
             var gridHeight = parsePercent(gridModel.get('height'), viewportHeight);
+
             if (isNaN(gridWidth)) {
                 gridWidth = viewportWidth - gridX2 - gridX;
             }
@@ -123,7 +124,7 @@ define(function(require, factory) {
             zrUtil.each(this._axesList, function (axis) {
                 var otherAxis = axis.otherAxis;
                 if (axis.onZero && otherAxis.type !== 'category') {
-                    axis.otherCoord = otherAxis.dataToCoord(0);
+                    axis.otherCoord = otherAxis.dataToCoord(0, true);
                 }
             });
         },
@@ -235,7 +236,9 @@ define(function(require, factory) {
                         axisData = axisDataMap[cartesian.name] = {
                             x: [],
                             y: [],
-                            cartesian: cartesian
+                            cartesian: cartesian,
+                            xModel: ecModel.getComponent('xAxis', xAxisIndex),
+                            yModel: ecModel.getComponent('yAxis', yAxisIndex)
                         };
                     }
 
@@ -264,9 +267,15 @@ define(function(require, factory) {
                 var xAxis = cartesian.getAxis('x');
                 var yAxis = cartesian.getAxis('y');
                 if (axisData.x.length) {
+                    if (axisData.xModel.get('scale')) {
+                        axisData.x.push(0);
+                    }
                     xAxis.scale.setExtentFromData(axisData.x);
                 }
                 if (axisData.y.length) {
+                    if (axisData.yModel.get('scale')) {
+                        axisData.y.push(0);
+                    }
                     yAxis.scale.setExtentFromData(axisData.y);
                 }
             });

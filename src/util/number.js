@@ -88,12 +88,37 @@ define(function (require) {
         return val;
     }
 
+    /**
+     * 每三位默认加,格式化
+     * @type {string|number} x
+     */
+    function addCommas(x) {
+        if (isNaN(x)) {
+            return '-';
+        }
+        x = (x + '').split('.');
+        return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,')
+               + (x.length > 1 ? ('.' + x[1]) : '');
+    }
+
+    /**
+     * Fix rounding error of float numbers
+     */
+    function round(x) {
+        // PENDING
+        return +(+x).toFixed(10);
+    }
+
     return {
 
         linearMap: linearMap,
 
         parsePercent: parsePercent,
 
-        normalizeCssArray: normalizeCssArray
+        normalizeCssArray: normalizeCssArray,
+
+        addCommas: addCommas,
+
+        round: round
     };
 });

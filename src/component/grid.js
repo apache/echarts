@@ -17,7 +17,8 @@ define(function(require) {
                         stroke: gridModel.get('borderColor'),
                         lineWidth: gridModel.get('borderWidth'),
                         fill: gridModel.get('backgroundColor')
-                    }
+                    },
+                    silent: true
                 }));
             }
         }

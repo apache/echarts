@@ -36,8 +36,6 @@ define(function (require) {
 
         constructor: Model,
 
-        _prefix: '',
-
         /**
          * visual properties after visual coding
          * @type {Object}
@@ -59,23 +57,18 @@ define(function (require) {
         },
 
         /**
-         * Set getter path prefix
-         * @param {string} prefix
-         */
-        withPrefix: function (prefix) {
-            this._prefix = prefix || '';
-            return this;
-        },
-
-        /**
          * @param {string} path
          * @return {*}
          */
-        get: function (path) {
+        get: function (path, parentModel) {
             if (typeof path == 'string') {
-                path = this._prefix + path;
+                // path = this._prefix + path;
                 path = path.split('.');
             }
+            if (this.option == null) {
+                return;
+            }
+
             var obj = this.option;
             for (var i = 0; i < path.length; i++) {
                 obj = obj[path[i]];
@@ -87,6 +80,16 @@ define(function (require) {
                 return this.parentModel.get(path);
             }
             return obj;
+        },
+
+        /**
+         * @param {string} path
+         * @return {module:echarts/model/Model}
+         */
+        getModel: function (path) {
+            var obj = this.get(path);
+            var parentModel = this.parentModel;
+            return new Model(obj, parentModel && parentModel.getModel(path));
         },
 
         /**

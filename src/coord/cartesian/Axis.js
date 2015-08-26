@@ -57,21 +57,23 @@ define(function (require) {
         /**
          * Map a data to coord. Data is the rank if it has a ordinal scale
          * @param {number} data
+         * @param  {boolean} clamp
          * @return {number}
          */
-        dataToCoord: function (data) {
+        dataToCoord: function (data, clamp) {
             data = this.scale.normalize(data);
 
-            return linearMap(data, [0, 1], this._coordExtent);
+            return linearMap(data, [0, 1], this._coordExtent, clamp);
         },
 
         /**
          * Map a coord to data. Data is the rank if it has a ordinal scale
          * @param {number} coord
+         * @param  {boolean} clamp
          * @return {number}
          */
-        coordToData: function (coord) {
-            var t = linearMap(coord, this._coordExtent, [0, 1]);
+        coordToData: function (coord, clamp) {
+            var t = linearMap(coord, this._coordExtent, [0, 1], clamp);
 
             return this.scale.scale(t);
         },

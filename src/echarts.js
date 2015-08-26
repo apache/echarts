@@ -7,7 +7,7 @@
 define(function (require) {
 
     var GlobalModel = require('./model/Global');
-    var ExtensionAPI = require('./api/ExtensionAPI');
+    var ExtensionAPI = require('./ExtensionAPI');
     var CoordinateSystemManager = require('./CoordinateSystem');
 
     var ComponentModel = require('./model/Component');
@@ -70,7 +70,7 @@ define(function (require) {
         this._componentsMap = {};
 
         /**
-         * @type {module:echarts/api/ExtensionAPI}
+         * @type {module:echarts/ExtensionAPI}
          * @private
          */
         this._extensionAPI = new ExtensionAPI(this);

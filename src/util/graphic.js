@@ -37,6 +37,8 @@ define(function(require) {
             return path;
         },
 
+        mergePath: pathTool.mergePath,
+
         /**
          * Resize a path to fit the rect
          */
@@ -57,14 +59,14 @@ define(function(require) {
             path.applyTransform(m);
         },
 
-        subPixelOptimizeLine: function (p0, p1, lineWidth) {
+        subPixelOptimizeLine: function (p1, p2, lineWidth) {
             var round = Math.round;
             // Sub pixel optimize
             var offset = lineWidth % 2 / 2;
-            var x1 = round(p0[0]);
-            var y1 = round(p0[1]);
-            var x2 = round(p1[0]);
-            var y2 = round(p1[1]);
+            var x1 = round(p1[0]);
+            var y1 = round(p1[1]);
+            var x2 = round(p2[0]);
+            var y2 = round(p2[1]);
 
             if (x1 === x2) {
                 x1 += offset;
