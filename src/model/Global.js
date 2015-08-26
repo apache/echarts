@@ -123,11 +123,12 @@ define(function (require) {
 
             var componentsMap = this._componentsMap;
             var components = this._components;
-            for (var name in newOption) {
-                var componentOption = newOption[name];
-                // 如果不存在对应的 component model 则直接 merge
-                if (! ComponentModel.has(name)) {
-                    if (typeof componentOption === 'object') {
+            var modelNames = [];
+
+            // 如果不存在对应的 component model 则直接 merge
+            zrUtil.each(newOption, function (componentOption, name) {
+                if (!ComponentModel.has(name)) {
+                    if (componentOption && typeof componentOption === 'object') {
                         option[name] = option[name] == null
                             ? zrUtil.clone(componentOption)
                             : zrUtil.merge(option[name], componentOption);
@@ -137,40 +138,48 @@ define(function (require) {
                     }
                 }
                 else {
-                    // Normalize
-                    if (! (componentOption instanceof Array)) {
-                        componentOption = [componentOption];
+                    modelNames.push(name);
+                }
+            });
+
+            ComponentModel.topologicalTavel(modelNames, function (name, depends) {
+                var componentOption = newOption[name];
+
+                // Normalize
+                if (!(componentOption instanceof Array)) {
+                    componentOption = [componentOption];
+                }
+                if (!componentsMap[name]) {
+                    componentsMap[name] = [];
+                }
+
+                for (var i = 0; i < componentOption.length; i++) {
+                    var componentModel = componentsMap[name][i];
+                    if (componentModel) {
+                        componentModel.mergeOption(
+                            componentOption[i], this
+                        );
                     }
-                    if (! componentsMap[name]) {
-                        componentsMap[name] = [];
+                    else {
+                        componentModel = ComponentModel.create(
+                            name, componentOption[i], this,
+                            this._getComponentsByTypes(depends)
+                        );
+                        componentsMap[name][i] = componentModel;
+                        components.push(componentModel);
                     }
-                    for (var i = 0; i < componentOption.length; i++) {
-                        var componentModel = componentsMap[name][i];
-                        if (componentModel) {
-                            componentModel.mergeOption(
-                                componentOption[i], this
-                            );
+                    if (componentModel) {
+                        // 同步 Option
+                        if (componentOption instanceof Array) {
+                            option[name] = option[name] || [];
+                            option[name][i] = componentModel.option;
                         }
                         else {
-                            componentModel = ComponentModel.create(
-                                name, componentOption[i], this
-                            );
-                            componentsMap[name][i] = componentModel;
-                            components.push(componentModel);
-                        }
-                        if (componentModel) {
-                            // 同步 Option
-                            if (componentOption instanceof Array) {
-                                option[name] = option[name] || [];
-                                option[name][i] = componentModel.option;
-                            }
-                            else {
-                                option[name] = componentModel.option;
-                            }
+                            option[name] = componentModel.option;
                         }
                     }
                 }
-            }
+            });
         },
 
         /**
@@ -278,6 +287,24 @@ define(function (require) {
             for (i = 0; i < series.length; i++) {
                 series[i].restore();
             }
+        },
+
+        /**
+         * @private
+         * @param {Array.<string>|string} types model types
+         * @return {Object} key: {string} type, value: {Array.<Object>} models
+         */
+        _getComponentsByTypes: function (types) {
+            if (!(types instanceof Array)) {
+                types = types ? [types] : [];
+            }
+
+            var ret = {};
+            zrUtil.each(types, function (type) {
+                ret[type] = (this._componentsMap[type] || []).slice();
+            }, this);
+
+            return ret;
         }
     });
 

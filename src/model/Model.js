@@ -9,7 +9,7 @@ define(function (require) {
      * @alias module:echarts/model/Model
      * @constructor
      */
-    function Model(option, parentModel) {
+    function Model(option, parentModel, ecModel, dependentModels) {
 
         /**
          * @type {module:echarts/model/Model}
@@ -22,6 +22,12 @@ define(function (require) {
          * @protected
          */
         this.option = option;
+
+        /**
+         * @type {Object}
+         * @readOnly
+         */
+        this.dependentModels = dependentModels;
 
         this.init.apply(this, arguments);
     }
