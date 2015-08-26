@@ -107,8 +107,20 @@ define(function (require) {
 
         /**
          * Set visual property
+         *
+         * @example
+         *  setVisual('color', color);
+         *  setVisual({
+         *      'color': color
+         *  });
          */
         setVisual: function (key, val) {
+            if (typeof (key) === 'object') {
+                for (var name in key) {
+                    this.setVisual(name, key[name]);
+                }
+                return;
+            }
             this._visual = this._visual || {};
             this._visual[key] = val;
         },

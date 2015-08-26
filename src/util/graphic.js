@@ -3,10 +3,11 @@ define(function(require) {
     'use strict';
 
     var pathTool = require('zrender/tool/path');
-
     var matrix = require('zrender/core/matrix');
 
-    return {
+    var Path = require('zrender/graphic/Path');
+
+    var graphic = {
 
         Group: require('zrender/container/Group'),
 
@@ -25,6 +26,20 @@ define(function(require) {
         Rect: require('zrender/graphic/shape/Rectangle'),
 
         Line: require('zrender/graphic/shape/Line'),
+
+        /**
+         * Extend shape with parameters
+         */
+        extendShape: function (opts) {
+            return Path.extend(opts);
+        },
+
+        /**
+         * Extend path
+         */
+        extendPath: function (pathData, opts) {
+            return pathTool.extendFromString(pathData, opts);
+        },
 
         /**
          * Create a path element from path data string
@@ -59,6 +74,11 @@ define(function(require) {
             path.applyTransform(m);
         },
 
+        /**
+         * @param {Array.<number>} p1
+         * @param {Array.<number>} p2
+         * @param {number} lineWidth
+         */
         subPixelOptimizeLine: function (p1, p2, lineWidth) {
             var round = Math.round;
             // Sub pixel optimize
@@ -77,6 +97,7 @@ define(function(require) {
                 y2 += offset;
             }
         }
+    };
 
-    }
+    return graphic;
 });

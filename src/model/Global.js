@@ -249,6 +249,10 @@ define(function (require) {
             zrUtil.each(this._series, cb, context);
         },
 
+        eachSeriesByType: function (type, cb, context) {
+            return zrUtil.each(this.getSeriesByType(type), cb, context);
+        },
+
         /**
          * @param {Function} cb
          * @param {*} context

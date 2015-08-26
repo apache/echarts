@@ -1,6 +1,7 @@
 define(function (require) {
 
     var numberUtil = require('../../util/number');
+    var symbols = require('../../util/symbol');
 
     return require('../../echarts').extendComponentView({
 
@@ -35,20 +36,19 @@ define(function (require) {
                     ? seriesModel.getVisual('color')
                     : '#ccc';
 
-                var symbol = seriesModel.getVisual('symbol');
+                // Using rect symbol defaultly
+                var legendSymbolType = seriesModel.getVisual('legendSymbol')
+                    || seriesModel.getVisual('symbol')
+                    || 'roundRect';
 
                 var width = 20;
                 var height = 10;
-                var rect = new api.Rect({
-                    shape: {
-                        x: x,
-                        y: y,
-                        width: width,
-                        height: height
-                    },
-                    style: {
-                        fill: color
-                    }
+
+                var symbolCreator = symbols[legendSymbolType] || symbols.roundRect;
+                var legendSymbol = symbolCreator(x, y, width, height);
+
+                legendSymbol.style.set({
+                    fill: color
                 });
 
                 var text = new api.Text({
@@ -70,10 +70,10 @@ define(function (require) {
                     y += Math.max(height, textRect.height) + itemGap;
                 }
 
-                group.add(rect);
+                group.add(legendSymbol);
                 group.add(text);
 
-                rect.on('click', function () {
+                legendSymbol.on('click', function () {
                     legendModel.toggleSelected(seriesName);
                     api.update();
                 });

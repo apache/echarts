@@ -295,7 +295,10 @@ define(function (require) {
          */
         _doLayout: function (ecModel) {
             zrUtil.each(this._layouts, function (layout) {
-                layout.run(ecModel);
+                layout(ecModel);
+            });
+            zrUtil.each(layoutFuncs, function (layout) {
+                layout(ecModel);
             });
         },
 
@@ -351,6 +354,8 @@ define(function (require) {
 
     var layoutClasses = [];
 
+    var layoutFuncs = [];
+
     var visualCodingFuncs = [];
 
     /**
@@ -382,9 +387,16 @@ define(function (require) {
         /**
          * @param {*} layout
          */
-        registerLayout: function (layout) {
-            if (zrUtil.indexOf(layoutClasses, layout) < 0) {
-                layoutClasses.push(layout);
+        registerLayout: function (layout, isFactory) {
+            if (isFactory) {
+                if (zrUtil.indexOf(layoutClasses, layout) < 0) {
+                    layoutClasses.push(layout);
+                }
+            }
+            else {
+                if (zrUtil.indexOf(layoutFuncs, layout) < 0) {
+                    layoutFuncs.push(layout);
+                }
             }
         },
 
