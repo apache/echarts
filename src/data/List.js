@@ -178,6 +178,17 @@ define(function(require) {
         },
 
         /**
+         * Data mapping, returned array is flatten
+         */
+        map: function (cb, context) {
+            var ret = [];
+            this.each(function (item, idx) {
+                ret.push(cb && cb.call(context || this, item));
+            }, context);
+            return ret;
+        },
+
+        /**
          * In-place filter
          */
         filterInPlace: function (cb, context) {
@@ -195,17 +206,17 @@ define(function(require) {
         /**
          * In-place map
          */
-        mapInPlace: function (cb, context) {
-            context = context || this;
-            if (this.depth > 1) {
-                createArrayIterWithDepth(
-                    this.depth, this.properties, cb, context, 'map'
-                )(this.elements, 0);
-            }
-            else {
-                this.elements = zrUtil.map(this.elements, cb, context);
-            }
-        },
+        // mapInPlace: function (cb, context) {
+        //     context = context || this;
+        //     if (this.depth > 1) {
+        //         createArrayIterWithDepth(
+        //             this.depth, this.properties, cb, context, 'map'
+        //         )(this.elements, 0);
+        //     }
+        //     else {
+        //         this.elements = zrUtil.map(this.elements, cb, context);
+        //     }
+        // },
 
         /**
          * @return {module:echarts/data/List~Entry}
@@ -249,14 +260,19 @@ define(function(require) {
     };
 
     zrUtil.each(['X', 'Y', 'Z', 'Value'], function (name) {
-        // TODO Map and filter
-        zrUtil.each(['each'], function (iterType) {
-            List.prototype[iterType + name] = function (cb, context) {
-                this[iterType](function (item, idx) {
-                    return cb && cb.call(context || this, item['get' + name](idx));
-                }, context);
-            };
-        });
+        List.prototype['each' + name] = function (cb, context) {
+            this.each(function (item, idx) {
+                cb && cb.call(context || this, item['get' + name](idx));
+            }, context);
+        };
+
+        List.prototype['map' + name] = function (cb, context) {
+            var ret = [];
+            this.each(function (item) {
+                ret.push(cb && cb.call(context || this, item['get' + name]()));
+            }, context);
+            return ret;
+        };
     });
 
     List.fromArray = function (data, dimension, parentModel) {

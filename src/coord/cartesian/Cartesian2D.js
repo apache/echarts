@@ -22,11 +22,7 @@ define(function(require) {
          *  `[[10, 10], [20, 20], [30, 30]]`
          */
         dataToCoords: function (data) {
-            var array = [];
-            data.each(function (dataItem) {
-                array.push(this.dataToCoord(dataItem));
-            }, this);
-            return array;
+            return data.map(this.dataToCoord, this);
         },
 
         dataToCoord: function (dataItem) {

@@ -13,7 +13,7 @@ define(function(require) {
         var columnsMap = {};
 
         zrUtil.each(barSeries, function (seriesModel, idx) {
-            var cartesian = seriesModel.coordinateSystem
+            var cartesian = seriesModel.coordinateSystem;
 
             var categoryAxis = cartesian.getAxesByScale('ordinal')[0];
 
@@ -130,7 +130,7 @@ define(function(require) {
 
         var lastStackCoords = {};
 
-        ecModel.eachSeries(function (seriesModel) {
+        ecModel.eachSeriesByType('bar', function (seriesModel) {
 
             var data = seriesModel.getData();
             var cartesian = seriesModel.coordinateSystem;

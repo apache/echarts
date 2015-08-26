@@ -1,6 +1,6 @@
 define(function (require) {
 
-    var Bar = require('../../echarts').extendChartView({
+    return require('../../echarts').extendChartView({
 
         type: 'bar',
 
@@ -62,6 +62,4 @@ define(function (require) {
             this.data = data;
         }
     });
-
-    return Bar;
 });
