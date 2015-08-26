@@ -254,7 +254,7 @@ define(function(require, factory) {
                             });
                         }
                         else {
-                            data.eachY(function (value) {
+                            data.eachValue(function (value) {
                                 axisData[categoryAxis.dim == 'y' ? 'x' : 'y'].push(value);
                             });
                         }

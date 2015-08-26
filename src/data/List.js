@@ -86,10 +86,6 @@ define(function(require) {
             if (this.dimension > 1) {
                 return this._value[1];
             }
-            else {
-                // Value is a single number if data is 1d
-                return this._value;
-            }
         },
 
         /**
@@ -98,9 +94,6 @@ define(function(require) {
         setY: function (y) {
             if (this.dimension > 1) {
                 this._value[1] = y;
-            }
-            else {
-                this._value = y;
             }
         },
 
@@ -126,6 +119,11 @@ define(function(require) {
          * @return {number}
          */
         getValue: function () {
+            // PENDING
+            // Value is a single number if data is 1d
+            if (this.dimension === 1) {
+                return this._value;
+            }
             return this._value[this.dimension];
         },
 
@@ -133,7 +131,12 @@ define(function(require) {
          * @param {number} value
          */
         setValue: function (value) {
-            this._value[this.dimension] = value
+            if (this.dimension === 1) {
+                this._value = value;
+            }
+            else {
+                this._value[this.dimension] = value
+            }
         },
 
         clone: function () {

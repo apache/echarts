@@ -34,7 +34,7 @@ define(function(require) {
             var categoryAxis = this.getAxesByScale('ordinal')[0];
             var swapAxis = categoryAxis && categoryAxis.dim === 'y';
             var x = dataItem.getX();
-            var y = dataItem.getY();
+            var y = categoryAxis ? dataItem.getValue() : dataItem.getY();
 
             var coord = [];
             coord[xIndex] = xAxis.dataToCoord(swapAxis ? y : x);
