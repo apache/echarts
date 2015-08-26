@@ -4,7 +4,7 @@ define(function (require) {
 
     require('./bar/BarSeries');
     require('./bar/BarView');
-    require('./bar/BarLayoutGrid');
+    require('./bar/barLayoutGrid');
 
     // Series visual coding
     require('../echarts').registerVisualCoding(function (ecModel) {
