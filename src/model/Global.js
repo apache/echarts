@@ -179,7 +179,7 @@ define(function (require) {
                         }
                     }
                 }
-            });
+            }, this);
         },
 
         /**

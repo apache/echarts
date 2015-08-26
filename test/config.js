@@ -11,5 +11,5 @@ require.config({
             name: 'zrender'
         }
     ],
-    urlArgs: '_v_=' + Math.random()
+    urlArgs: '_v_=' + +new Date()
 });

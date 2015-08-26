@@ -17,11 +17,6 @@ define(function(require) {
              * @private
              */
             this._state = {};
-            /**
-             * @type {Array}
-             * @private
-             */
-            this._stack = [];
 
             this.mergeOption();
         },

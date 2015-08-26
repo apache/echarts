@@ -17,16 +17,6 @@ define(function(require) {
     var componentModelClasses = {};
 
     /**
-     * key: conponentType,
-     * value: {
-     *     predecessor: [conponentTypes...]
-     *     successor: [conponentTypes...]
-     * }
-     * @type {Object}
-     */
-    var dependencyGraph = {};
-
-    /**
      * @alias module:echarts/model/Component
      * @constructor
      * @param {Object} option
@@ -63,8 +53,6 @@ define(function(require) {
                 throw new Error('Component model "' + componentType + '" exists.');
             }
             componentModelClasses[componentType] = SubComponentModel;
-
-            initDepndency(opts);
         }
         return SubComponentModel;
     };
@@ -86,16 +74,17 @@ define(function(require) {
      * @param {Array.<string>} componentTypeList Target Component type list.
      * @param {Function} callback Params: componentType, depends.
      */
-    ComponentModel.topologicalTavel = function (componentTypeList, callback) {
+    ComponentModel.topologicalTavel = function (componentTypeList, callback, scope) {
         if (!componentTypeList.length) {
             return;
         }
+        var dependencyGraph = makeDepndencyGraph(componentTypeList);
         var stack = [];
-        var enterCount = [];
+        var entryCount = [];
 
-        zrUtil.each(dependencyGraph, function (vertex, componentType) {
-            enterCount[componentType] = vertex.predecessor.length;
-            if (enterCount[componentType] === 0) {
+        zrUtil.each(componentTypeList, function (componentType) {
+            entryCount[componentType] = dependencyGraph[componentType].predecessor.length;
+            if (entryCount[componentType] === 0) {
                 stack.push(componentType);
             }
         });
@@ -107,34 +96,49 @@ define(function(require) {
         while (stack.length) {
             var currComponentType = stack.pop();
             var currVertex = dependencyGraph[currComponentType];
-            callback(currComponentType, currVertex.predecessor.slice());
+            callback.call(scope, currComponentType, currVertex.predecessor.slice());
             zrUtil.each(currVertex.successor, removeEdge);
         }
 
         function removeEdge(succComponentType) {
-            enterCount[succComponentType]--;
-            if (enterCount[succComponentType] === 0) {
+            entryCount[succComponentType]--;
+            if (entryCount[succComponentType] === 0) {
                 stack.push(succComponentType);
             }
         }
     };
 
-    function initDepndency(opts) {
-        var currComponentType = opts.type;
-        var thisItem = createDependencyMapItem(currComponentType);
+    /**
+     * DepndencyGraph: {Object}
+     * key: conponentType,
+     * value: {
+     *     predecessor: [conponentTypes...]
+     *     successor: [conponentTypes...]
+     * }
+     */
+    function makeDepndencyGraph(componentTypeList) {
+        var dependencyGraph = {};
 
-        zrUtil.each(opts.depends || [], function (depComponentType) {
-            if (zrUtil.indexOf(thisItem.predecessor, depComponentType) < 0) {
-                thisItem.predecessor.push(depComponentType);
-            }
-            var thatItem = createDependencyMapItem(depComponentType);
-            if (zrUtil.indexOf(thatItem.successor, depComponentType) < 0) {
-                thatItem.successor.push(currComponentType);
-            }
+        zrUtil.each(componentTypeList, function (componentType) {
+            var thisItem = createDependencyGraphItem(dependencyGraph, componentType);
+            var ModelClass = componentModelClasses[componentType];
+            var depends = ModelClass.prototype.depends || [];
+
+            zrUtil.each(depends, function (depComponentType) {
+                if (zrUtil.indexOf(thisItem.predecessor, depComponentType) < 0) {
+                    thisItem.predecessor.push(depComponentType);
+                }
+                var thatItem = createDependencyGraphItem(dependencyGraph, depComponentType);
+                if (zrUtil.indexOf(thatItem.successor, depComponentType) < 0) {
+                    thatItem.successor.push(componentType);
+                }
+            });
         });
+
+        return dependencyGraph;
     }
 
-    function createDependencyMapItem(componentType) {
+    function createDependencyGraphItem(dependencyGraph, componentType) {
         if (!dependencyGraph[componentType]) {
             dependencyGraph[componentType] = {predecessor: [], successor: []};
         }
