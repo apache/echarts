@@ -35,26 +35,9 @@ define(function (require) {
         this.position = position || 'bottom';
 
         /**
-         * Coord on the other axis
-         */
-        this.otherCoord = 0;
-
-        /**
-         * Reference to the other axis
-         * @type {module:echarts/coord/cartesian/Axis2D}
-         */
-        this.otherAxis = null;
-
-        /**
          * @type {boolean}
          */
         this.boundaryGap = false;
-
-        /**
-         * If axis is on the zero coord of the other axis
-         * @type {boolean}
-         */
-        this.onZero = false;
     };
 
     Axis2D.prototype = {

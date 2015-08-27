@@ -9,11 +9,20 @@ define(function(require) {
 
         type: 'axis',
 
+        /**
+         * Position of axis line
+         * @private
+         */
+        _axisLinePosition: 0,
+
         render: function (axisModel, ecModel, api) {
 
             this.group.clear();
 
             var gridModel = ecModel.getComponent('grid', axisModel.get('gridIndex'));
+
+            this._axisLinePosition = this._getAxisLinePosition(axisModel, gridModel);
+
             if (axisModel.get('axisLine.show')) {
                 this._renderAxisLine(axisModel, gridModel, api);
             }
@@ -33,6 +42,36 @@ define(function(require) {
             }
         },
 
+        _getAxisLinePosition: function (axisModel, gridModel) {
+
+            var axis = axisModel.axis;
+            var grid = gridModel.coordinateSystem;
+            var rect = grid.getRect();
+
+            var otherAxis = grid.getAxis(axis.type === 'x' ? 'y' : 'x');
+
+            var position = 0;
+            if (axisModel.get('axisLine.onZero')) {
+                position = otherAxis.dataToCoord(0);
+            }
+
+            switch (axis.position) {
+                case 'left':
+                    position = rect.x;
+                    break;
+                case 'right':
+                    position = rect.x + rect.width;
+                    break;
+                case 'top':
+                    position = rect.y;
+                    break;
+                case 'bottom':
+                    position = rect.y + rect.height;
+            }
+
+             return position;
+        },
+
         /**
          * @param {module:echarts/coord/cartesian/AxisModel} axisModel
          * @param {module:echarts/coord/cartesian/GridModel} gridModel
@@ -41,7 +80,7 @@ define(function(require) {
          */
         _renderAxisLine: function (axisModel, gridModel, api) {
             var axis = axisModel.axis;
-
+            var grid = gridModel.coordinateSystem;
             var p1 = [];
             var p2 = [];
 
@@ -50,18 +89,17 @@ define(function(require) {
             var lineColor = lineStyleModel.get('color');
             var lineType = lineStyleModel.get('type');
 
-            var rect = gridModel.coordinateSystem.getRect();
+            var rect = grid.getRect();
 
-            var otherCoord = axis.otherCoord;
             if (axis.isHorizontal()) {
                 p1[0] = rect.x;
                 p2[0] = rect.x + rect.width;
-                p1[1] = p2[1] = otherCoord;
+                p1[1] = p2[1] = this._axisLinePosition;
             }
             else {
                 p1[1] = rect.y;
                 p2[1] = rect.y + rect.height;
-                p1[0] = p2[0] = otherCoord;
+                p1[0] = p2[0] = this._axisLinePosition;
             }
 
             api.subPixelOptimizeLine(p1, p2, lineWidth);
@@ -136,11 +174,11 @@ define(function(require) {
 
                 if (axis.isHorizontal()) {
                     x = tickCoord;
-                    y = axis.otherCoord;
+                    y = this._axisLinePosition;
                     offY = axisPosition === 'top' ? -tickLen : tickLen;
                 }
                 else {
-                    x = axis.otherCoord;
+                    x = this._axisLinePosition;
                     y = tickCoord;
                     offX = axisPosition === 'left' ? -tickLen : tickLen;
                 }

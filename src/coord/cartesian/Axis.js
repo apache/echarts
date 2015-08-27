@@ -21,7 +21,16 @@ define(function (require) {
          */
         this.scale = scale;
 
+        /**
+         * @type {Array.<number>}
+         * @private
+         */
         this._coordExtent = coordExtent;
+
+        /**
+         * @type {boolean}
+         */
+        this.inverse = false;
     };
 
     Axis.prototype = {
@@ -29,18 +38,15 @@ define(function (require) {
         constructor: Axis,
 
         /**
-         * Reverse axis direction
-         */
-        reverse: function () {
-            this._coordExtent = this._coordExtent.reverse();
-        },
-
-        /**
          * Get coord extent
          * @return {Array.<number>}
          */
         getCoordExtent: function () {
-            return this._coordExtent;
+            var ret = this._coordExtent.slice();
+            if (this.inverse) {
+                ret.reverse();
+            }
+            return ret;
         },
 
         /**
@@ -68,7 +74,7 @@ define(function (require) {
 
             data = this.scale.normalize(data);
 
-            return linearMap(data, [0, 1], this._coordExtent, clamp);
+            return linearMap(data, [0, 1], this.getCoordExtent(), clamp);
         },
 
         /**
@@ -78,7 +84,7 @@ define(function (require) {
          * @return {number}
          */
         coordToData: function (coord, clamp) {
-            var t = linearMap(coord, this._coordExtent, [0, 1], clamp);
+            var t = linearMap(coord, this.getCoordExtent(), [0, 1], clamp);
 
             return this.scale.scale(t);
         },

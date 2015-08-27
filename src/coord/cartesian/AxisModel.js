@@ -10,6 +10,7 @@ define(function(require) {
             z: 0,                       // 二级层叠
             gridIndex: 0,
             position: 'left',      // 位置
+            inverse: false,        // 反向坐标轴
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
             nameTextStyle: {},     // 坐标轴文字样式，默认取全局样式

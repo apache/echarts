@@ -20,16 +20,52 @@ define(function(require, factory) {
 
     function Grid(gridModel, ecModel) {
 
+        /**
+         * @type {number}
+         * @private
+         */
         this._x = 0;
+
+        /**
+         * @type {number}
+         * @private
+         */
         this._y = 0;
 
+        /**
+         * @type {number}
+         * @private
+         */
         this._width = 0;
+
+        /**
+         * @type {number}
+         * @private
+         */
         this._height = 0;
 
+        /**
+         * @type {Object.<string, module:echarts/coord/cartesian/Cartesian2D>}
+         * @private
+         */
         this._coordsMap = {};
 
+        /**
+         * @type {Array.<module:echarts/coord/cartesian/Cartesian>}
+         * @private
+         */
         this._coordsList = [];
 
+        /**
+         * @type {Object.<string, module:echarts/coord/cartesian/Axis2D>}
+         * @private
+         */
+        this._axesMap = {};
+
+        /**
+         * @type {Array.<module:echarts/coord/cartesian/Axis2D>}
+         * @private
+         */
         this._axesList = [];
 
         this._initCartesian(gridModel, ecModel);
@@ -108,25 +144,18 @@ define(function(require, factory) {
                     extent[1] -= margin;
                 }
 
-                axis.setCoordExtent(extent[0], extent[1]);
-
-                var otherAxis = axis.otherAxis;
-                var otherAxisPosition = otherAxis.position;
-                if (otherAxisPosition === 'bottom') {
-                    axis.reverse();
-                }
-                else if (otherAxisPosition === 'right') {
-                    axis.reverse();
-                }
+                var start = axis.isHorizontal() ? 0 : 1;
+                axis.setCoordExtent(extent[start], extent[1 - start]);
             });
+        },
 
-            // Adjust axis coord on the zero position of the other axis
-            zrUtil.each(this._axesList, function (axis) {
-                var otherAxis = axis.otherAxis;
-                if (axis.onZero && otherAxis.type !== 'category') {
-                    axis.otherCoord = otherAxis.dataToCoord(0, true);
-                }
-            });
+        /**
+         * @param {string} axisType
+         * @param {number} [axisIndex=0]
+         */
+        getAxis: function (axisType, axisIndex) {
+            var key = axisType + (axisIndex || 0);
+            return this._axesMap[key];
         },
 
         getCartesian: function (xAxisIndex, yAxisIndex) {
@@ -153,62 +182,68 @@ define(function(require, factory) {
             var leftUsed = false;
             var bottomUsed = false;
 
-            var axesList = this._axesList;
-
-            ecModel.eachComponent('xAxis', function (xAxisModel, i) {
+            ecModel.eachComponent('xAxis', function (xAxisModel, idx) {
                 if (ecModel.getComponent(
                         'grid', xAxisModel.get('gridIndex')
                     ) !== gridModel) {
                     return;
                 }
+
+                // Create x axis
+                var xAxisType = xAxisModel.get('type');
+                var xAxisPosition = xAxisModel.get('position') || (bottomUsed ? 'top' : 'bottom');
+                bottomUsed = xAxisPosition === 'bottom';
+                var axisX = new Axis2D(
+                    'x', getScaleByOption(xAxisType, xAxisModel),
+                    [0, 0],
+                    xAxisModel.get('type'),
+                    xAxisPosition
+                );
+                axisX.boundaryGap = xAxisModel.get('boundaryGap');
+                axisX.inverse = xAxisModel.get('inverse');
+
+                // Inject axis into axisModel
+                xAxisModel.axis = axisX;
+
+                this._axesList.push(axisX);
+                this._axesMap['x' + idx] = axisX;
+            }, this);
+
+            ecModel.eachComponent('yAxis', function (yAxisModel, idx) {
+                if (ecModel.getComponent(
+                        'grid', yAxisModel.get('gridIndex')
+                    ) !== gridModel) {
+                    return;
+                }
+
+                // Create y axis
+                var yAxisType = yAxisModel.get('type');
+                var yAxisPosition = yAxisModel.get('position') || (leftUsed ? 'right' : 'left');
+                leftUsed = yAxisPosition === 'left';
+                var axisY = new Axis2D(
+                    'y', getScaleByOption(yAxisType, yAxisModel),
+                    [0, 0],
+                    yAxisModel.get('type'),
+                    yAxisModel.get('position')
+                );
+                axisY.boundaryGap = yAxisModel.get('boundaryGap');
+                axisY.inverse = yAxisModel.get('inverse');
+
+                yAxisModel.axis = axisY;
+
+                this._axesList.push(axisY);
+                this._axesMap['y' + idx] = axisY;
+            }, this);
+
+            ecModel.eachComponent('xAxis', function (xAxisModel, i) {
                 ecModel.eachComponent('yAxis', function (yAxisModel, j) {
-                    if (ecModel.getComponent(
-                            'grid', yAxisModel.get('gridIndex')
-                        ) !== gridModel) {
-                        return;
-                    }
                     var key = 'x' + i + 'y' + j;
                     var cartesian = new Cartesian2D(key);
                     this._coordsMap[key] = cartesian;
                     this._coordsList.push(cartesian);
 
-                    // Create x axis
-                    var xAxisType = xAxisModel.get('type');
-                    var xAxisPosition = xAxisModel.get('position') || (bottomUsed ? 'top' : 'bottom');
-                    bottomUsed = xAxisPosition === 'bottom';
-                    var axisX = new Axis2D(
-                        'x', getScaleByOption(xAxisType, xAxisModel),
-                        [0, 0],
-                        xAxisModel.get('type'),
-                        xAxisPosition
-                    );
-                    axisX.onZero = xAxisModel.get('axisLine.onZero');
-                    axisX.boundaryGap = xAxisModel.get('boundaryGap');
-                    cartesian.addAxis(axisX);
-
-                    // Create y axis
-                    var yAxisType = yAxisModel.get('type');
-                    var yAxisPosition = yAxisModel.get('position') || (leftUsed ? 'right' : 'left');
-                    leftUsed = yAxisPosition === 'left';
-                    var axisY = new Axis2D(
-                        'y', getScaleByOption(yAxisType, yAxisModel),
-                        [0, 0],
-                        yAxisModel.get('type'),
-                        yAxisModel.get('position')
-                    );
-                    axisY.onZero = yAxisModel.get('axisLine.onZero');
-                    axisY.boundaryGap = yAxisModel.get('boundaryGap');
-                    cartesian.addAxis(axisY);
-
-                    axisX.otherAxis = axisY;
-                    axisY.otherAxis = axisX;
-
-                    axesList.push(axisX);
-                    axesList.push(axisY);
-
-                    // Inject axis into axisModel
-                    xAxisModel.axis = axisX;
-                    yAxisModel.axis = axisY;
+                    cartesian.addAxis(xAxisModel.axis);
+                    cartesian.addAxis(yAxisModel.axis);
                 }, this);
             }, this);
 
