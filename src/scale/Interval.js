@@ -67,8 +67,10 @@ define(function (require) {
         setExtentFromData: function (data) {
             var max = -Infinity;
             var min = Infinity;
-            var i = 0;
-            for (; i < data.length; i++) {
+            for (var i = 0; i < data.length; i++) {
+                if (data[i] == null || data[i] === '-') {
+                    continue;
+                }
                 max = Math.max(data[i], max);
                 min = Math.min(data[i], min);
             }

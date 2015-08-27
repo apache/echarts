@@ -61,6 +61,11 @@ define(function (require) {
          * @return {number}
          */
         dataToCoord: function (data, clamp) {
+            // PENDING
+            if (data == null || data === '-') {
+                return NaN;
+            }
+
             data = this.scale.normalize(data);
 
             return linearMap(data, [0, 1], this._coordExtent, clamp);

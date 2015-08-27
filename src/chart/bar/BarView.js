@@ -20,6 +20,11 @@ define(function (require) {
 
             data.diff(this.data)
                 .add(function (dataItem, idx) {
+                    // 空数据
+                    if (dataItem.getValue() == null) {
+                        return;
+                    }
+
                     var layout = dataItem.layout;
                     var normalItemStyle = dataItem.getModel('itemStyle.normal');
                     var rect = new api.Rect({
@@ -47,6 +52,11 @@ define(function (require) {
                         .start('cubicOut');
                 })
                 .update(function (newData, oldData) {
+                    // 空数据
+                    if (newData.getValue() == null) {
+                        group.remove(oldData.__el);
+                        return;
+                    }
                     // TODO DONT ANIMATE WHEN PROPERTIES ARE EQUAL
                     oldData.__el.animateShape()
                         .when(500, newData.layout)

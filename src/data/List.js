@@ -119,12 +119,19 @@ define(function(require) {
          * @return {number}
          */
         getValue: function () {
+            var value;
             // PENDING
             // Value is a single number if data is 1d
             if (this.dimension === 1) {
-                return this._value;
+                value = this._value;
             }
-            return this._value[this.dimension];
+            else {
+                value = this._value[this.dimension];
+            }
+            if (value === '-') {
+                value = null;
+            }
+            return value;
         },
 
         /**

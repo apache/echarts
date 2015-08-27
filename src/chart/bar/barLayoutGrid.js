@@ -144,6 +144,13 @@ define(function(require) {
                 var coords = cartesian.dataToCoords(data);
                 lastStackCoords[stackId] = lastStackCoords[stackId] || [];
                 data.each(function (dataItem, dataIndex) {
+
+                    var value = dataItem.getValue();
+                    // 空数据
+                    if (value == null) {
+                        return;
+                    }
+
                     var coord = coords[dataIndex];
                     var lastCoord = lastStackCoords[stackId][dataIndex] || projectAxis.otherCoord;
                     var x, y, width, height;
