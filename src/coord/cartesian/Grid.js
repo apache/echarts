@@ -258,7 +258,7 @@ define(function(require, factory) {
         _updateCartesianFromSeries: function (ecModel) {
             var axisDataMap = {};
 
-            ecModel.eachSeries(function (seriesModel, idx) {
+            ecModel.eachSeries(function (seriesModel) {
                 var coordinateSystem = seriesModel.get('coordinateSystem');
 
                 if (coordinateSystem === 'cartesian2d') {
