@@ -57,7 +57,6 @@ define(function (require) {
                         group.remove(oldData.__el);
                         return;
                     }
-                    // TODO DONT ANIMATE WHEN PROPERTIES ARE EQUAL
                     oldData.__el.animateShape()
                         .when(500, newData.layout)
                         .start('cubicOut');
@@ -65,7 +64,9 @@ define(function (require) {
                     newData.__el = oldData.__el;
                 })
                 .remove(function (dataItem, idx) {
-                    group.remove(dataItem.__el);
+                    if (dataItem.__el) {
+                        group.remove(dataItem.__el);
+                    }
                 })
                 .execute();
 

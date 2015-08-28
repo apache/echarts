@@ -107,7 +107,7 @@ define(function(require) {
     };
 
     return {
-        create: function (symbolType, x, y, w, h) {
+        createSymbol: function (symbolType, x, y, w, h) {
             if (symbolType.indexOf('image://') === 0) {
                 return symbols.image(symbolType.slice(8), x, y, w, h);
             }

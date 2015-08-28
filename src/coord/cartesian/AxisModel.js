@@ -9,7 +9,6 @@ define(function(require) {
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
             gridIndex: 0,
-            position: 'left',      // 位置
             inverse: false,        // 反向坐标轴
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
@@ -68,7 +67,6 @@ define(function(require) {
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
             gridIndex: 0,
-            position: 'bottom',    // 位置
             inverse: false,        // 反向坐标轴
             name: '',              // 坐标轴名字，默认为空
             nameLocation: 'end',   // 坐标轴名字位置，支持'start' | 'end'
@@ -149,6 +147,8 @@ define(function(require) {
         init: function (axisOption, parentModel, ecModel) {
             axisOption.type = axisOption.type || 'category';
 
+            axisOption.position = axisOption.position || 'bottom';
+
             mergeDefault(axisOption, ecModel);
         }
     });
@@ -159,6 +159,8 @@ define(function(require) {
 
         init: function (axisOption, parentModel, ecModel) {
             axisOption.type = axisOption.type || 'value';
+
+            axisOption.position = axisOption.position || 'left';
 
             mergeDefault(axisOption, ecModel);
         }

@@ -16,7 +16,7 @@
 
             require([
                 'echarts',
-                'echarts/chart/line',
+                'echarts/chart/scatter',
                 'echarts/component/legend',
                 'echarts/component/grid',
                 'echarts/component/axis'
@@ -26,39 +26,40 @@
                     renderer: 'canvas'
                 });
 
-                var xAxisData = [];
                 var data1 = [];
                 var data2 = [];
                 var data3 = [];
 
                 for (var i = 0; i < 20; i++) {
-                    xAxisData.push('类目' + i);
-                    data1.push(Math.random() * 5);
-                    data2.push(Math.random());
-                    data3.push(Math.random());
+                    data1.push([Math.random() * 2, Math.random() * 1]);
+                    data2.push([Math.random() * 10, Math.random() * 5]);
+                    data3.push([Math.random() * 20, Math.random() * 20]);
                 }
 
                 chart.setOption({
                     legend: {
-                        data: ['line', 'line2', 'line3']
+                        data: ['scatter', 'scatter2', 'scatter3']
                     },
                     xAxis: {
-                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
-                        data: xAxisData
+                        type: 'value'
                     },
                     yAxis: {
+                        type: 'value'
                     },
                     series: [{
-                        name: 'line',
-                        type: 'line',
+                        name: 'scatter',
+                        type: 'scatter',
+                        symbolSize: 20,
                         data: data1
                     }, {
-                        name: 'line2',
-                        type: 'line',
+                        name: 'scatter2',
+                        type: 'scatter',
+                        symbolSize: 20,
                         data: data2
                     }, {
-                        name: 'line3',
-                        type: 'line',
+                        name: 'scatter3',
+                        type: 'scatter',
+                        symbolSize: 20,
                         data: data3
                     }]
                 });

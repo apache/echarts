@@ -92,7 +92,7 @@ define(function(require) {
     SeriesModel.create = function (option, ecModel, seriesIndex) {
         var chartType = option.type;
         var ExtendedSeriesModel = seriesModelClassesStore[chartType];
-        if (! seriesModelClassesStore[chartType]) {
+        if (! ExtendedSeriesModel) {
             // Error
         }
         return new ExtendedSeriesModel(option, null, ecModel, seriesIndex);

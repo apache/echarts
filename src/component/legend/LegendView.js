@@ -84,13 +84,14 @@ define(function (require) {
                 || 'roundRect';
             var symbolType = seriesModel.getVisual('symbol');
 
-            var legendSymbolShape = symbolCreator.create(legendSymbolType, x, y, width, height);
+            var legendSymbolShape = symbolCreator.createSymbol(legendSymbolType, x, y, width, height);
 
             // Compose symbols
+            // PENDING Use group ?
             if (symbolType && symbolType !== legendSymbolType) {
                 var size = height * 0.8;
                 // Put symbol in the center
-                var symbolShape = symbolCreator.create(symbolType, x + (width - size) / 2, y + (height - size) / 2, size, size);
+                var symbolShape = symbolCreator.createSymbol(symbolType, x + (width - size) / 2, y + (height - size) / 2, size, size);
 
                 legendSymbolShape = api.mergePath([legendSymbolShape, symbolShape]);
             }

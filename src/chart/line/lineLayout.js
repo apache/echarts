@@ -3,13 +3,8 @@ define(function (require) {
     require('../../echarts').registerLayout(function (ecModel, api) {
 
         ecModel.eachSeriesByType('line', function (lineSeries) {
-            var cartesian = lineSeries.coordinateSystem;
-            if (cartesian.type !== 'cartesian2d') {
-                return;
-            }
-
             var data = lineSeries.getData();
-            var coords = cartesian.dataToCoords(data);
+            var coords = lineSeries.coordinateSystem.dataToCoords(data);
             data.each(function (dataItem, idx) {
                 var coord = coords[idx];
                 var value = dataItem.getValue();
