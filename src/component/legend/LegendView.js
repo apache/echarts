@@ -1,7 +1,7 @@
 define(function (require) {
 
     var numberUtil = require('../../util/number');
-    var symbols = require('../../util/symbol');
+    var symbolCreator = require('../../util/symbol');
 
     return require('../../echarts').extendComponentView({
 
@@ -29,6 +29,9 @@ define(function (require) {
             var x = padding[3];
             var y = padding[0];
 
+            var width = 20;
+            var height = 10;
+
             legendModel.getData().each(function (dataItem) {
                 var seriesName = dataItem.name;
                 var seriesModel = ecModel.getSeriesByName(seriesName);
@@ -36,19 +39,10 @@ define(function (require) {
                     ? seriesModel.getVisual('color')
                     : '#ccc';
 
-                // Using rect symbol defaultly
-                var legendSymbolType = seriesModel.getVisual('legendSymbol')
-                    || seriesModel.getVisual('symbol')
-                    || 'roundRect';
-
-                var width = 20;
-                var height = 10;
-
-                var symbolCreator = symbols[legendSymbolType] || symbols.roundRect;
-                var legendSymbol = symbolCreator(x, y, width, height);
-
+                var legendSymbol = this._createSymbol(seriesModel, x, y, width, height, api);
                 legendSymbol.style.set({
-                    fill: color
+                    fill: color,
+                    stroke: color
                 });
 
                 var text = new api.Text({
@@ -77,10 +71,31 @@ define(function (require) {
                     legendModel.toggleSelected(seriesName);
                     api.update();
                 });
-            });
+            }, this);
 
             var groupRect = group.getBoundingRect();
             group.position[0] -= groupRect.width / 2;
+        },
+
+        _createSymbol: function (seriesModel, x, y, width, height, api) {
+
+            // Using rect symbol defaultly
+            var legendSymbolType = seriesModel.getVisual('legendSymbol')
+                || 'roundRect';
+            var symbolType = seriesModel.getVisual('symbol');
+
+            var legendSymbolShape = symbolCreator.create(legendSymbolType, x, y, width, height);
+
+            // Compose symbols
+            if (symbolType && symbolType !== legendSymbolType) {
+                var size = height * 0.8;
+                // Put symbol in the center
+                var symbolShape = symbolCreator.create(symbolType, x + (width - size) / 2, y + (height - size) / 2, size, size);
+
+                legendSymbolShape = api.mergePath([legendSymbolShape, symbolShape]);
+            }
+
+            return legendSymbolShape;
         }
     });
 });

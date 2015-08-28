@@ -23,6 +23,17 @@ define(function(require) {
     });
 
     var symbols = {
+        line: function (x, y, w, h) {
+            return new graphic.Line({
+                shape: {
+                    x1: x,
+                    y1: y + h / 2,
+                    x2: x + w,
+                    y2: y + h / 2
+                }
+            });
+        },
+
         rect: function (x, y, w, h) {
             return new graphic.Rect({
                 shape: {
@@ -57,12 +68,12 @@ define(function(require) {
             });
         },
 
-        circle: function (x, y, r) {
+        circle: function (x, y, size) {
             return new graphic.Circle({
                 shape: {
-                    cx: x + r,
-                    cy: y + r,
-                    r: r
+                    cx: x + size / 2,
+                    cy: y + size / 2,
+                    r: size / 2
                 }
             });
         },
@@ -95,5 +106,22 @@ define(function(require) {
         }
     };
 
-    return symbols;
+    return {
+        create: function (symbolType, x, y, w, h) {
+            if (symbolType.indexOf('image://') === 0) {
+                return symbols.image(symbolType.slice(8), x, y, w, h);
+            }
+            else if (symbolType.indexOf('path://') === 0) {
+                return symbols.image(symbolType.slice(7), x, y, w, h);
+            }
+            else {
+                if (symbols[symbolType]) {
+                    return symbols[symbolType](x, y, w, h);
+                }
+                else {
+                    return symbols.rect(x, y, w, h);
+                }
+            }
+        }
+    };
 });

@@ -6,12 +6,10 @@ define(function (require) {
     require('./bar/BarView');
     require('./bar/barLayoutGrid');
 
-    // Series visual coding
+    // Visual coding for legend
     require('../echarts').registerVisualCoding(function (ecModel) {
-        ecModel.eachSeriesByType('bar', function (series) {
-            if (series.type === 'bar') {
-                series.setVisual('legendSymbol', 'roundRect');
-            }
+        ecModel.eachSeriesByType('bar', function (seriesSymbol) {
+            seriesSymbol.setVisual('legendSymbol', 'roundRect');
         });
     });
 });

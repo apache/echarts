@@ -18,6 +18,12 @@ define(function(require) {
             var data = seriesModel.getData();
             var lineStyleNormalModel = seriesModel.getModel('itemStyle.normal.lineStyle');
 
+            var points = data.map(function (dataItem) {
+                var layout = dataItem.layout;
+                if (layout) {
+                    return [layout.x, layout.y];
+                }
+            });
             // Initialization animation
             if (! this._data) {
                 var cartesian = seriesModel.coordinateSystem;
@@ -46,13 +52,6 @@ define(function(require) {
                     })
                     .start();
 
-                var points = data.map(function (dataItem) {
-                    var layout = dataItem.layout;
-                    if (layout) {
-                        return [layout.x, layout.y];
-                    }
-                });
-
                 var polyline = new api.Polyline({
                     shape: {
                         points: points
@@ -63,6 +62,15 @@ define(function(require) {
                     }
                 });
                 this.group.add(polyline);
+
+                this._polyline = polyline;
+            }
+            else {
+                this._polyline.animateShape()
+                    .when(500, {
+                        points: points
+                    })
+                    .start('cubicOut');
             }
 
             this._data = data;

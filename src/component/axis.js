@@ -1,3 +1,5 @@
+// TODO Split line interval
+// TODO Axis tick interval
 define(function(require) {
     'use strict';
 
@@ -23,22 +25,22 @@ define(function(require) {
 
             this._axisLinePosition = this._getAxisLinePosition(axisModel, gridModel);
 
-            if (axisModel.get('axisLine.show')) {
-                this._renderAxisLine(axisModel, gridModel, api);
-            }
-            if (axisModel.get('axisTick.show')) {
-                this._renderAxisTick(axisModel, gridModel, api);
-            }
             var labelShowList;
             if (axisModel.get('axisLabel.show')) {
                 labelShowList = this._renderAxisLabel(axisModel, gridModel, api);
             }
-
             if (axisModel.get('splitLine.show')) {
                 this._renderSplitLine(axisModel, gridModel, api, labelShowList);
             }
             if (axisModel.get('splitArea.show')) {
                 this._renderSplitArea(axisModel, gridModel, api, labelShowList);
+            }
+
+            if (axisModel.get('axisLine.show')) {
+                this._renderAxisLine(axisModel, gridModel, api);
+            }
+            if (axisModel.get('axisTick.show')) {
+                this._renderAxisTick(axisModel, gridModel, api);
             }
         },
 

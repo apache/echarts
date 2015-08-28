@@ -16,6 +16,7 @@ define(function(require) {
 
     // Mix graphic api
     zrUtil.merge(ExtensionAPI.prototype, require('./util/graphic'));
+    zrUtil.merge(ExtensionAPI.prototype, require('./util/symbol'));
 
     return ExtensionAPI;
 });

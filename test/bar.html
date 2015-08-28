@@ -31,7 +31,7 @@
                 var data2 = [];
                 var data3 = [];
 
-                for (var i = 0; i < 10; i++) {
+                for (var i = 0; i < 20; i++) {
                     xAxisData.push('类目' + i);
                     data1.push(Math.random() * 5);
                     data2.push(Math.random());
@@ -41,7 +41,6 @@
                 console.profile('setOption');
                 chart.setOption({
                     legend: {
-                        // TODO First bar unclickable
                         data: [{
                             name: 'bar',
                             itemStyle: {
@@ -55,7 +54,6 @@
                         }
                     },
                     xAxis: {
-                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
                         data: xAxisData
                     },
                     yAxis: {
@@ -63,17 +61,14 @@
                     series: [{
                         name: 'bar',
                         type: 'bar',
-                        // data: [0, 1, 2, 3, 4]
                         data: data1
                     }, {
                         name: 'bar2',
                         type: 'bar',
-                        // data: [0, 1, 2, 3, 4]
                         data: data2
                     }, {
                         name: 'bar3',
                         type: 'bar',
-                        // data: [0, 1, 2, 3, 4]
                         data: data3
                     }]
                 });
