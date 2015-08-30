@@ -1563,6 +1563,9 @@ define(function (require) {
                 case 'line' :
                     ecAnimation.line(this.zr, oldShape, newShape, duration, easing);
                     break;
+                case 'waterbubble':
+                    ecAnimation.waterbubble(this.zr, oldShape, newShape, duration, easing);
+                    break;
                 default :
                     this.zr.addShape(newShape);
                     break;

@@ -606,6 +606,37 @@ define(function (require) {
                 .start(easing);
         }
     }
+    /**
+     * waterbubble动画
+     * 
+     * @param {ZRender} zr
+     * @param {shape} oldShape
+     * @param {shape} newShape
+     * @param {number} duration
+     * @param {tring} easing
+     */
+    function waterbubble(zr, oldShape, newShape, duration, easing){
+        var x = newShape.style.x;
+        var y = newShape.style.y;
+        var data = newShape.style.data;
+
+        newShape.__animating = true;
+        if (newShape._animationAdd != 'r') {
+            newShape.style.data = 0;
+            zr.addShape(newShape);
+            zr.animate(newShape.id, 'style').when(duration, {
+                data: data
+            }).done(function () {
+                newShape.__animating = false;
+            }).start(easing);
+        } else {
+            newShape.style.data = newShape.style.data;
+            zr.addShape(newShape);
+            zr.animate(newShape.id, 'style').when(duration, { data: data }).done(function () {
+                newShape.__animating = false;
+            }).start(easing);
+        }
+    }
 
     return {
         pointList : pointList,
@@ -619,6 +650,7 @@ define(function (require) {
         gaugePointer : gaugePointer,
         icon : icon,
         line : line,
-        markline : markline
+        markline : markline,
+        waterbubble: waterbubble,
     };
 });
