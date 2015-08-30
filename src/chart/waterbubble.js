@@ -1,9 +1,10 @@
 /**
  * echarts图表类：水球图
- *
+ *inspired by issue https://github.com/ecomfe/echarts/issues/1838
+ *@author fiona23 (樊梦莹 fiona_fanmy@163.com fiona23.github.io)
+
  * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author fiona23 (樊梦莹 fiona_fanmy@163.com fiona23.github.io)
- *
+ * 
  */
 
 define(function (require) {
@@ -15,15 +16,12 @@ define(function (require) {
     // 图形依赖
     var TextShape = require('zrender/shape/Text');
     var CircleShape = require('zrender/shape/Circle');
-    var SectorShape = require('zrender/shape/Sector');
 
     var ecConfig = require('../config');
     
     var WaterbubbleShape = require('zrender/shape/waterbubble')
     //
     ecConfig.waterbubble = {
-        zlevel: 0,
-        z: 2,
         center: [
             '50%',
             '50%'
@@ -37,15 +35,11 @@ define(function (require) {
                 borderWidth: 5,
                 textFont: '',
                 label: {
-                    show: true,
-                    position: 'outer'
+                    show: false
                 }
             },
             emphasis: {
-                fillColor: 'rgba(255, 255, 255, 0.3)',
-                borderColor: 'rgba(0,0,0,0)',
-                borderWidth: 1,
-                label: { show: false }
+                fillColor: 'rgba(255, 255, 255, 0.3)'
             }
         }
     };
@@ -83,7 +77,7 @@ define(function (require) {
 
             var water;        //水球的水
             var circleBubble; // 水球壳体
-            var waterText;      
+            var waterText;     //描述文字
 
             this._selectedMode = false;
             var serieName;
@@ -113,6 +107,7 @@ define(function (require) {
 
                     emphasis.waterColor = emphasis.fillColor;
 
+                    //水和壳的距离
                     gap = 2*lineWidth;
 
                     if (legend) {
@@ -132,6 +127,7 @@ define(function (require) {
                                 data: data,
                                 waterColor: waterColor,
                                 brushType: 'fill',
+                                
                                 text: data*100 + '%',
                                 textPosition: 'inside',
                                 textColor: textColor,
@@ -156,7 +152,7 @@ define(function (require) {
                                 strokeColor: normal.fillColor
                             }
                         };
-                        // var sector = new this.getSector()
+
                         ecData.pack(water, series[i], i, undefined, -1);
                         circleWrapper =  new CircleShape(circleBubble);
                         //水
@@ -205,6 +201,7 @@ define(function (require) {
             var ey = sy;
 
             var extent; //幅度
+            //百分比过高和过低时水平 无水波
             if (data > 0.9 || data < 0.1) {
                 extent = sy
             } else{
