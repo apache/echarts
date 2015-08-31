@@ -29,8 +29,8 @@ define(function(require) {
                 var cartesian = seriesModel.coordinateSystem;
                 var xAxis = cartesian.getAxis('x');
                 var yAxis = cartesian.getAxis('y');
-                var xExtent = xAxis.getCoordExtent();
-                var yExtent = yAxis.getCoordExtent();
+                var xExtent = xAxis.getExtent();
+                var yExtent = yAxis.getExtent();
 
                 var clipPath = new api.Rect({
                     shape: {

@@ -8,8 +8,8 @@ define(function(require) {
 
         type: 'line',
 
-        getInitialData: function (option) {
-            return List.fromArray(option.data, 1, this);
+        getInitialData: function (option, ecModel) {
+            return List.fromArray(option.data, this, ecModel);
         },
 
         defaultOption: {
