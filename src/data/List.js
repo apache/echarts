@@ -81,13 +81,13 @@ define(function(require) {
                 value = [dataIndex, value];
             }
 
-            if (dependentVar) {
-                for (var i = 0; i < dependentVar.length; i++) {
-                    this[dependentVar[i] + 'Index'] = i;
+            if (independentVar) {
+                for (var i = 0; i < independentVar.length; i++) {
+                    this[independentVar[i] + 'Index'] = i;
                 }
                 this.valueIndex = value.length - 1;
 
-                this[independentVar + 'Index'] = this.valueIndex;
+                this[dependentVar + 'Index'] = this.valueIndex;
             }
 
             /**
@@ -252,25 +252,25 @@ define(function(require) {
         var independentVar;
         var dependentVar;
 
-        // if (xAxisModel.get('type') === 'category') {
-        //     independentVar = ['x'];
-        //     dependentVar = 'y';
-        // }
-        // else if (yAxisModel.get('type') === 'category') {
-        //     independentVar = ['y'];
-        //     dependentVar = 'x';
-        // }
-        // else {
-        //     var dim = data[0] && data[0].length;
-        //     if (dim === 2) {
-        //         independentVar = ['x'];
-        //         dependentVar = 'y';
-        //     }
-        //     else if (dim === 3) {
-        //         independentVar = ['x', 'y'];
-        //         dependentVar = 'z';
-        //     }
-        // }
+        if (xAxisModel.get('type') === 'category') {
+            independentVar = ['x'];
+            dependentVar = 'y';
+        }
+        else if (yAxisModel.get('type') === 'category') {
+            independentVar = ['y'];
+            dependentVar = 'x';
+        }
+        else {
+            var dim = data[0] && data[0].length;
+            if (dim === 2) {
+                independentVar = ['x'];
+                dependentVar = 'y';
+            }
+            else if (dim === 3) {
+                independentVar = ['x', 'y'];
+                dependentVar = 'z';
+            }
+        }
 
         var list = new List();
 
