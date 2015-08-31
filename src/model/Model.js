@@ -25,6 +25,14 @@ define(function (require) {
 
         /**
          * @type {Object}
+         * @protected
+         */
+        this.ecModel = ecModel;
+
+        /**
+         * key: componentType
+         * value: Array.<Object> Component model list, can not be null.
+         * @type {Object}
          * @readOnly
          */
         this.dependentModels = dependentModels;

@@ -1,75 +1,203 @@
+/**
+ * @file Data zoom model
+ */
 define(function(require) {
 
-    var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
+    var env = require('zrender/core/env');
+    var echarts = require('../../echarts');
+    var helper = require('./helper');
 
-    return require('../../echarts').extendComponentModel({
+    return echarts.extendComponentModel({
 
         type: 'dataZoom',
 
-        depends: ['xAxis', 'yAxis'],
+        dependencies: ['xAxis', 'yAxis', 'series'],
 
+        /**
+         * @override
+         */
         init: function (option, parentModel, ecModel) {
             this.mergeDefaultAndTheme(option, ecModel);
-
-            /**
-             * @type {Object}
-             * @private
-             */
-            this._state = {};
-
             this.mergeOption();
         },
 
+        /**
+         * @override
+         */
         mergeOption: function (newOption) {
             var thisOption = this.option;
 
             newOption && zrUtil.merge(thisOption, newOption);
 
-            // FIXME
-            // 实现?
             // Disable realtime view update if canvas is not supported.
-            if (!zrUtil.canvasSupported()) {
+            if (!env.canvasSupported) {
                 thisOption.realtime = false;
             }
 
-            // Init or reset zoom states.
-            var state = this._state;
-            var start = retrieveValue(thisOption.start, state.start, 0);
-            var end = retrieveValue(thisOption.end, state.end, 100);
-            // Auto reverse
-            (start > end) && (end = [start, start = end][0]);
-            state.start = start;
-            state.end = end;
-
-            // Overlap these arrays but not merge.
             // FIXME
-            // zrUtil.merge是否有选项，决定array是否merge？
-            thisOption.xAxisIndex = retrieveValue(newOption.xAxisIndex, thisOption.xAxisIndex, []);
-            thisOption.yAxisIndex = retrieveValue(newOption.yAxisIndex, thisOption.yAxisIndex, []);
-
-            // Remove thisOption.start/end for consistence when processing merge.
-            // Consider this case:
-            // this.thisOption has start 10 and end 80,
-            // and state has start 20 and end 60,
-            // and newOption has start 40 but no end (means remain end 60).
-            thisOption.start = null;
-            thisOption.end = null;
+            // 是否有toolbox zoom控件时，自动加一个dataZoom option，而非和某个dataZoom option共用？
+            // dataZoom option中可加type来判断是普通还是toolbox还是移动端需要的图面拖拽。
+            // optionMerge时根据type进行merge。
+            this._resetTargetAxes(newOption);
+            // this._resetTargetSeries(newOption);
+            this._resetRange();
         },
 
-        setStart: function (start) {
-            this._state.start = start;
+        _resetTargetAxes: function (newOption) {
+            var thisOption = this.option;
+            var noAxisDefined = true;
+
+            helper.eachAxisDim(function (names) {
+                // Overlap these arrays but not merge.
+                var axisIndices = helper.toArray(helper.retrieveValue(
+                    newOption[names.axisIndex], thisOption[names.axisIndex], []
+                ));
+                var axisModels = this.dependentModels[names.axis];
+
+                // If not specified, set default.
+                if (axisModels.length && !axisIndices.length) {
+                    for (var i = 0, len = axisModels.length; i < len; i++) {
+                        if (axisModels[i].get('type') === 'category') {
+                            axisIndices.push(i);
+                        }
+                    }
+                }
+                thisOption[names.axisIndex] = axisIndices;
+
+                if (axisIndices.length) {
+                    noAxisDefined = false;
+                }
+            }, this);
+
+            if (noAxisDefined) {
+                // FIXME
+                // 这里是兼容ec2的写法（没指定xAxisIndex和yAxisIndex时把scatter和双数值轴折柱纳入dataZoom控制），
+                // 但是实际是否需要Grid.js#getScaleByOption来判断（考虑time，log等axis type）？
+
+                // If both dataZoom.xAxisIndex and dataZoom.yAxisIndex is not specified,
+                // dataZoom component auto adopts series that reference to
+                // both xAxis and yAxis which type is 'value'.
+                this.ecModel.eachSeries(function (seriesModel) {
+                    if (this._isSeriesHasAllAxesTypeOf(seriesModel, 'value')) {
+                        helper.eachAxisDim(function (names) {
+                            var axisIndices = thisOption[names.axisIndex];
+                            var axisIndex = seriesModel.get(names.axisIndex);
+                            if (zrUtil.indexOf(axisIndices, axisIndex) < 0) {
+                                axisIndices.push(axisIndex);
+                            }
+                        });
+                    }
+                }, this);
+            }
         },
 
-        setEnd: function (end) {
-            this._state.end = end;
+        _isSeriesHasAllAxesTypeOf: function (seriesModel, axisType) {
+            // FIXME
+            // 需要series的xAxisIndex和yAxisIndex都首先自动设置上。
+            // 例如series.type === scatter时。
+
+            var is = true;
+            helper.eachAxisDim(function (names) {
+                var seriesAxisIndex = seriesModel.get(names.axisIndex);
+                var axisModel = this.dependentModels[names.axis][seriesAxisIndex];
+
+                if (!axisModel || axisModel.get('type') !== axisType) {
+                    is = false;
+                }
+            }, this);
+            return is;
         },
 
-        setRange: function (start, end) {
-            this._state.start = start;
-            this._state.end = end;
+        _resetRange: function () {
+            var thisOption = this.option;
+
+            // TODO
+            // 对于一个轴受多个dataZoom控制的情况（如toolbox）：
+            // datazoom改变时，不直接改变，而是发全局事件，监听：
+            // 如果轴是自己包含的轴，则自己改变start和end。
+            // 所有都改完后，重新走process流程。
+
+            // Determin which axes dataZoom.start/end and dataZoom.start2/end2 control.
+            // When only xAxisIndex or only yAxisIndex is specified, start/end controls them.
+            // targetDim === false means that both xAxisIndex and yAxisIndex are specified.
+            var targetDim;
+            helper.eachAxisDim(function (names) {
+                if (thisOption[names.axisIndex].length) {
+                    targetDim = targetDim !== false ? false : names.dim;
+                }
+            });
+
+            // Otherwise, determine it by dataZoom.orient (compatibale with the logic in ec2.)
+            // targetDim === 'y' means start/end control 'y' and start2/end2 control 'x'.
+            var targetDim2;
+            if (targetDim === false) {
+                targetDim = thisOption.orient === 'vertical' ? 'y' : 'x';
+                targetDim2 = targetDim === 'x' ? 'y' : 'x';
+            }
+
+            var optAttrs = [];
+            optAttrs[targetDim] = {start: 'start', end: 'end'};
+            targetDim2 && (optAttrs[targetDim2] = {start: 'start2', end: 'end2'});
+
+            zrUtil.each(optAttrs, function (dimItem, targetDim) {
+                var axisModels = this.dependentModels[targetDim + 'Axis'];
+                var startValue = thisOption[dimItem.start];
+                var endValue = thisOption[dimItem.end];
+
+                // Auto reverse when start > end
+                if (startValue > endValue) {
+                    startValue = [endValue, endValue = startValue][0];
+                }
+
+                // Set to axis and dataZoom
+                zrUtil.each(axisModels, function (axisModel) {
+                    axisModel.setDataZoomRange(startValue, endValue);
+                });
+                thisOption[dimItem.start] = startValue;
+                thisOption[dimItem.end] = endValue;
+            });
+
+            if (!targetDim2) {
+                thisOption.start2 = thisOption.end2 = null;
+            }
         },
 
+        /**
+         * @public
+         * @param {Object} param
+         * @param {number=} [param.start]
+         * @param {number=} [param.end]
+         * @param {number=} [param.start2]
+         * @param {number=} [param.end2]
+         */
+        setRange: function (param) {
+            var thisOption = this.option;
+
+            param.start != null && (thisOption.start = param.start);
+            param.end != null && (thisOption.end = param.end);
+            param.start2 != null && (thisOption.start2 = param.start2);
+            param.end2 != null && (thisOption.end2 = param.end2);
+
+            this._resetRange();
+        },
+
+        /**
+         * @public
+         */
+        getRange: function () {
+            var thisOption = this.option;
+            return {
+                start: thisOption.start,
+                end: thisOption.end,
+                star2: thisOption.star2,
+                end2: thisOption.end2
+            };
+        },
+
+        /**
+         * @protected
+         */
         defaultOption: {
             zlevel: 0,                 // 一级层叠
             z: 4,                      // 二级层叠
@@ -90,26 +218,14 @@ define(function(require) {
             showDetail: true,
             // xAxisIndex: [],         // 默认控制所有横向类目
             // yAxisIndex: [],         // 默认控制所有横向类目
-            // start: 0,               // 默认为0
-            // end: 100,               // 默认为全部 100%
+            start: 0,               // 默认为0
+            end: 100,               // 默认为全部 100%
+            start2: 0,               // 默认为0
+            end2: 100,               // 默认为全部 100%
             realtime: true
             // zoomLock: false         // 是否锁定选择区域大小
         }
 
     });
 
-    // FIXME
-    // 公用？
-    /**
-     * If value1 is not null, then return value1, otherwise judget rest of values.
-     * @param  {*...} values
-     * @return {*} Final value
-     */
-    function retrieveValue(values) {
-        for (var i = 0, len = arguements.length; i < len; i++) {
-            if (arguements[i] != null) {
-                return arguements[i];
-            }
-        }
-    }
 });

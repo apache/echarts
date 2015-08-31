@@ -3,8 +3,9 @@ define(function(require) {
     'use strict';
 
     var List = require('../../data/List');
+    var SeriesModel = require('../../model/Series');
 
-    return require('../../echarts').extendSeriesModel({
+    return SeriesModel.extend({
 
         type: 'pie',
 

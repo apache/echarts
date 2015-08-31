@@ -232,6 +232,18 @@ define(function(require) {
             }, context);
             return ret;
         };
+
+        List.prototype['filter' + name] = function (cb, context) {
+            var newList = this.clone();
+            var elements = []
+            newList.each(function (item) {
+                if (cb.call(context || newList, item['get' + name]())) {
+                    elements.push(item);
+                }
+            }, context);
+            newList.elements = elements;
+            return newList;
+        };
     });
 
     List.fromArray = function (data, seriesModel, ecModel) {

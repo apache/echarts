@@ -3,10 +3,11 @@ define(function(require) {
     'use strict';
 
     var List = require('../../data/List');
+    var SeriesModel = require('../../model/Series');
 
-    return require('../../echarts').extendSeriesModel({
+    return SeriesModel.extend({
 
-        type: 'line',
+        type: 'series.line',
 
         getInitialData: function (option, ecModel) {
             return List.fromArray(option.data, this, ecModel);

@@ -2,10 +2,10 @@ define(function(require) {
 
     'use strict';
 
-    var Model = require('./Model');
     var zrUtil = require('zrender/core/util');
+    var ComponentModel = require('./Component');
 
-    var SeriesModel = Model.extend({
+    var SeriesModel = ComponentModel.extend({
 
         type: '',
 
@@ -13,6 +13,11 @@ define(function(require) {
          * @readOnly
          */
         seriesIndex: 0,
+
+        /**
+         * @readOnly
+         */
+        name: '',
 
         // coodinateSystem will be injected in the echarts/CoordinateSystem
         coordinateSystem: null,
@@ -23,24 +28,36 @@ define(function(require) {
          */
         defaultOption: null,
 
-        init: function (seriesOption, parentModel, ecModel, seriesIndex) {
+        init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
 
             /**
              * @type {number}
              */
             this.seriesIndex = seriesIndex;
 
-            zrUtil.merge(seriesOption, ecModel.getTheme().get(this.type));
+            this.mergeDefaultAndTheme(option, ecModel);
 
-            zrUtil.merge(seriesOption, this.defaultOption);
+            var seriesName = this.get('name');
+            if (seriesName == null) {
+                seriesName = this.get('type') + '' + seriesIndex;
+            }
+            this.name += seriesName + '';
 
             /**
              * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
              * @private
              */
-            this._data = this.getInitialData(seriesOption, ecModel);
+            this._data = this.getInitialData(option, ecModel);
 
             this._stack = [];
+        },
+
+        mergeDefaultAndTheme: function (option, ecModel) {
+            zrUtil.merge(
+                option,
+                ecModel.getTheme().get(ComponentModel.parseComponentType(this.type).sub)
+            );
+            zrUtil.merge(option, this.defaultOption);
         },
 
         mergeOption: function (newSeriesOption, ecModel) {
@@ -69,34 +86,6 @@ define(function(require) {
             }
         }
     });
-
-    var seriesModelClassesStore = {};
-
-    /**
-     * Extend a SeriesModel
-     */
-    SeriesModel.extend = function (opts) {
-        var ExtendedSeriesModel = Model.extend.call(this, opts);
-        if (opts.type) {
-            if (seriesModelClassesStore[opts.type]) {
-                // Warning
-            }
-            seriesModelClassesStore[opts.type] = ExtendedSeriesModel;
-        }
-        return ExtendedSeriesModel;
-    };
-
-    /**
-     * Create a SeriesModel by a given option
-     */
-    SeriesModel.create = function (option, ecModel, seriesIndex) {
-        var chartType = option.type;
-        var ExtendedSeriesModel = seriesModelClassesStore[chartType];
-        if (! ExtendedSeriesModel) {
-            // Error
-        }
-        return new ExtendedSeriesModel(option, null, ecModel, seriesIndex);
-    };
 
     return SeriesModel;
 });

@@ -18,6 +18,8 @@ define(function(require) {
             // max: null,          // 最大值
             // scale: false,       // 脱离0值比例，放大聚焦到最终_min，_max区间
             // splitNumber: 5,        // 分割段数，默认为5
+            dataZoomStart: 0,         // 并不开放设置，而是由dataZoom设置
+            dataZoomEnd: 100,         // 并不开放设置，而是由dataZoom设置
             axisLine: {            // 坐标轴线
                 show: true,        // 默认显示，属性show控制显示与否
                 onZero: true,
@@ -134,10 +136,22 @@ define(function(require) {
 
     var AxisModel = require('../../model/Component').extend({
         type: 'axis',
+
         /**
          * @type {module:echarts/coord/cartesian/Axis2D}
          */
-        axis: null
+        axis: null,
+
+        /**
+         * @public
+         * @param {number} start 0-100, null means remain current value.
+         * @param {number} end 0-100, null means remain current value.
+         */
+        setDataZoomRange: function (start, end) {
+            var option = this.option;
+            start != null && (option.dataZoomStart = start);
+            end != null && (option.dataZoomEnd = end);
+        }
     });
 
     AxisModel.AxisX = AxisModel.extend({

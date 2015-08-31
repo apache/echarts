@@ -206,7 +206,9 @@ define(function (require) {
 
                 var chart = chartsMap[id];
                 if (! chart) {
-                    chart = ChartView.create(seriesModel.type);
+                    chart = ChartView.create(
+                        ComponentModel.parseComponentType(seriesModel.type).sub
+                    );
                     if (chart) {
                         chart.init(this._extensionAPI);
                         chartsMap[id] = chart;
@@ -232,7 +234,7 @@ define(function (require) {
                 else {
                     i++;
                 }
-            };
+            }
         },
 
         _prepareComponents: function (ecModel) {
@@ -276,7 +278,7 @@ define(function (require) {
                 else {
                     i++;
                 }
-            };
+            }
         },
 
         /**
@@ -414,13 +416,6 @@ define(function (require) {
 
         registerVisualCoding: function (visualCodingFunc) {
             visualCodingFuncs.push(visualCodingFunc);
-        },
-
-        /**
-         * @param {Object} opts
-         */
-        extendSeriesModel: function (opts) {
-            return SeriesModel.extend(opts);
         },
 
         /**

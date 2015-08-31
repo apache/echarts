@@ -9,9 +9,17 @@ define(function(require) {
 
     var Model = require('./Model');
     var zrUtil = require('zrender/core/util');
+    var arrayPush = Array.prototype.push;
+
+    var TYPE_DELIMITER = '.';
+    var IS_CONTAINER = '___EC__COMPONENT__CONTAINER___';
 
     /**
      * Component model classes
+     * key: componentType,
+     * value:
+     *     componentClass, when componentType is 'xxx'
+     *     or Array.<componentClass>, when componentType is 'xxx.yy'
      * @type {Object}
      */
     var componentModelClasses = {};
@@ -41,6 +49,7 @@ define(function(require) {
             zrUtil.merge(option, ecModel.getTheme().get(this.type));
             zrUtil.merge(option, this.defaultOption);
         }
+
     });
 
     ComponentModel.extend = function (opts) {
@@ -48,23 +57,61 @@ define(function(require) {
         var componentType = opts.type;
 
         if (componentType) {
-            if (componentModelClasses[componentType]) {
-                throw new Error('Component model "' + componentType + '" exists.');
+            componentType = ComponentModel.parseComponentType(componentType);
+
+            if (!componentType.sub) {
+                if (componentModelClasses[componentType.main]) {
+                    throw new Error(componentType.main + 'exists');
+                }
+                componentModelClasses[componentType.main] = SubComponentModel;
             }
-            componentModelClasses[componentType] = SubComponentModel;
+            else if (componentType.sub !== IS_CONTAINER) {
+                var container = makeContainer(componentType);
+                container[componentType.sub] = SubComponentModel;
+            }
         }
         return SubComponentModel;
     };
 
-    ComponentModel.create = function (name, option, ecModel, dependentModels) {
-        if (componentModelClasses[name]) {
-            return new componentModelClasses[name](option, null, ecModel, dependentModels);
+    ComponentModel.getComponentModelClass = function (componentType, option) {
+        var fullComponentType = componentType;
+        if (option && option.type) {
+            fullComponentType = componentType + TYPE_DELIMITER + option.type;
         }
+        var ComponentClass = getClassOrContainer(fullComponentType);
+        if (ComponentClass[IS_CONTAINER]) {
+            ComponentClass = ComponentClass[option.type];
+        }
+        return ComponentClass;
     };
 
-    ComponentModel.has = function (name) {
-        return !!componentModelClasses[name];
+    ComponentModel.has = function (componentType) {
+        return !!getClassOrContainer(componentType);
     };
+
+    ComponentModel.parseComponentType = function (componentType) {
+        var ret = {main: '', sub: ''};
+        if (componentType) {
+            componentType = componentType.split(TYPE_DELIMITER);
+            ret.main = componentType[0] || '';
+            ret.sub = componentType[1] || '';
+        }
+        return ret;
+    };
+
+    function makeContainer(componentType) {
+        var container = componentModelClasses[componentType.main];
+        if (!container || !container[IS_CONTAINER]) {
+            container = componentModelClasses[componentType.main] = {};
+            container[IS_CONTAINER] = true;
+        }
+        return container;
+    }
+
+    function getClassOrContainer(componentType) {
+        componentType = ComponentModel.parseComponentType(componentType);
+        return componentModelClasses[componentType.main];
+    }
 
     /**
      * Topological travel on Activity Network (Activity On Vertices).
@@ -118,8 +165,7 @@ define(function(require) {
         zrUtil.each(componentTypeList, function (componentType) {
 
             var thisItem = createDependencyGraphItem(graph, componentType);
-            var originalDeps = thisItem.originalDeps =
-                (componentModelClasses[componentType].prototype.dependencies || []).slice();
+            var originalDeps = thisItem.originalDeps = getDependencies(componentType);
 
             var availableDeps = getAvailableDependencies(originalDeps, componentTypeList);
             thisItem.entryCount = availableDeps.length;
@@ -139,6 +185,23 @@ define(function(require) {
         });
 
         return {graph: graph, noEntryList: noEntryList};
+    }
+
+    function getDependencies(componentType) {
+        componentType = ComponentModel.parseComponentType(componentType);
+        var deps = [];
+        var obj = componentModelClasses[componentType.main];
+        if (obj && obj[IS_CONTAINER]) {
+            zrUtil.each(obj, function (ComponentClass, componentType) {
+                if (componentType !== IS_CONTAINER) {
+                    arrayPush.apply(deps, ComponentClass.prototype.dependencies || []);
+                }
+            });
+        }
+        else if (obj) {
+            arrayPush.apply(deps, obj.prototype.dependencies || []);
+        }
+        return deps;
     }
 
     function createDependencyGraphItem(graph, componentType) {

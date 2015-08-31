@@ -9,6 +9,8 @@ define(function(require) {
 
         type: 'legend',
 
+        dependencies: ['series'],
+
         init: function (option, parentModel, ecModel) {
             this.mergeDefaultAndTheme(option, ecModel);
 
