@@ -33,11 +33,6 @@ define(function (require) {
          *  - 'right'
          */
         this.position = position || 'bottom';
-
-        /**
-         * @type {boolean}
-         */
-        this.boundaryGap = false;
     };
 
     Axis2D.prototype = {
