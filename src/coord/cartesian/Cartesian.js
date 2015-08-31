@@ -8,7 +8,6 @@ define(function (require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
-    var Axis = require('./Axis');
 
     function dimAxisMapper(dim) {
         return this._axes[dim];
@@ -27,11 +26,6 @@ define(function (require) {
          * @type {string}
          */
         this.name = name || '';
-        /**
-         * Series using this cartesian coordinate system
-         * @type {Array.<Object>}
-         */
-        this.series = [];
     };
 
     Cartesian.prototype = {
@@ -68,19 +62,6 @@ define(function (require) {
                     return axis.scale.type === scaleType;
                 }
             );
-        },
-
-        /**
-         * Create a basic axis
-         * @param {number|string} dim
-         * @return {module:echarts/coord/Cartesian.Axis}
-         */
-        createAxis: function (dim, scale, coordExtent) {
-            var axis = new Axis(dim, scale, coordExtent);
-
-            this.addAxis(axis);
-
-            return axis;
         },
 
         /**

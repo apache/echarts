@@ -1,8 +1,8 @@
 /**
  * TODO processor的优先级
- *      restore
  *      setTheme
  *      stack
+ *      axis position 统一处理
  */
 define(function (require) {
 
@@ -155,6 +155,8 @@ define(function (require) {
         },
 
         updateImmediately: function () {
+            // console.time('update');
+
             var ecModel = this._model;
 
             ecModel.restore();
@@ -172,6 +174,8 @@ define(function (require) {
             this._doRender(ecModel);
 
             this._needsUpdate = false;
+
+            // console.timeEnd('update');
         },
 
         resize: function () {
@@ -325,15 +329,23 @@ define(function (require) {
             }, this);
             // Remove groups of charts
             zrUtil.each(this._chartsList, function (chart) {
-                this._zr.remove(chart.group);
+                chart.__keepAlive = false;
             }, this);
             // Render all charts
             ecModel.eachSeries(function (seriesModel, idx) {
                 var id = getSeriesId(seriesModel.option, idx);
                 var chart = this._chartsMap[id];
+                chart.__keepAlive = true;
                 chart.render(seriesModel, ecModel, api);
 
                 this._zr.add(chart.group);
+            }, this);
+            // Remove groups of charts
+            zrUtil.each(this._chartsList, function (chart) {
+                if (!chart.__keepAlive) {
+                    this._zr.remove(chart.group);
+                    chart.remove();
+                }
             }, this);
         },
 

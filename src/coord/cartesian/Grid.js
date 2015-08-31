@@ -134,18 +134,9 @@ define(function(require, factory) {
                 }
 
                 axis.otherCoord = otherCoord;
-                // Category axis with boundary gap. Which label and points are on the center of bands
-                // Insead of on the tick
-                if (axis.boundaryGap && axis.type === 'category') {
-                    var size = extent[1] - extent[0];
-                    var len = axis.scale.getTicks().length;
-                    var margin = size / len / 2;
-                    extent[0] += margin;
-                    extent[1] -= margin;
-                }
 
                 var start = axis.isHorizontal() ? 0 : 1;
-                axis.setCoordExtent(extent[start], extent[1 - start]);
+                axis.setExtent(extent[start], extent[1 - start]);
             });
         },
 
@@ -199,7 +190,7 @@ define(function(require, factory) {
                     xAxisModel.get('type'),
                     xAxisPosition
                 );
-                axisX.boundaryGap = xAxisModel.get('boundaryGap');
+                axisX.onBand = xAxisModel.get('boundaryGap');
                 axisX.inverse = xAxisModel.get('inverse');
 
                 // Inject axis into axisModel
@@ -226,7 +217,7 @@ define(function(require, factory) {
                     yAxisModel.get('type'),
                     yAxisModel.get('position')
                 );
-                axisY.boundaryGap = yAxisModel.get('boundaryGap');
+                axisY.onBand = yAxisModel.get('boundaryGap');
                 axisY.inverse = yAxisModel.get('inverse');
 
                 yAxisModel.axis = axisY;

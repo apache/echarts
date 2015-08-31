@@ -22,25 +22,17 @@ define(function(require) {
          *  `[[10, 10], [20, 20], [30, 30]]`
          */
         dataToCoords: function (data) {
-            return data.map(this.dataToCoord, this);
-        },
-
-        dataToCoord: function (dataItem) {
             var xAxis = this.getAxis('x');
             var yAxis = this.getAxis('y');
 
             var xIndex = xAxis.isHorizontal() ? 0 : 1;
-            // If y axis is category axis
-            var categoryAxis = this.getAxesByScale('ordinal')[0];
-            var swapAxis = categoryAxis && categoryAxis.dim === 'y';
-            var x = dataItem.getX();
-            var y = categoryAxis ? dataItem.getValue() : dataItem.getY();
 
-            var coord = [];
-            coord[xIndex] = xAxis.dataToCoord(swapAxis ? y : x);
-            coord[1 - xIndex] = yAxis.dataToCoord(swapAxis ? x : y);
-
-            return coord;
+            return data.map(function (dataItem) {
+                var coord = [];
+                coord[xIndex] = xAxis.dataToCoord(dataItem.getX());
+                coord[1 - xIndex] = yAxis.dataToCoord(dataItem.getY());
+                return coord;
+            }, this);
         }
     };
 

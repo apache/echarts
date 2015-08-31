@@ -1,7 +1,7 @@
 /**
  * Linear continuous scale
  * @module echarts/coord/scale/Ordinal
- * 
+ *
  * http://en.wikipedia.org/wiki/Level_of_measurement
  */
 
@@ -26,7 +26,7 @@ define(function (require) {
     };
 
     OrdinalScale.prototype = {
-        
+
         constructor: OrdinalScale,
 
         type: 'ordinal',
@@ -94,12 +94,19 @@ define(function (require) {
         },
 
         /**
+         * @return {number}
+         */
+        getExtentSize: function () {
+            return this._extent[1] - this._extent[0];
+        },
+
+        /**
          * Get item on rank n
          */
         getItem: function (n) {
             return this._list[n];
         },
-        
+
         // Do nothing
         niceTicks: function () {},
         niceExtent: function () {},
