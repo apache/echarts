@@ -20,6 +20,8 @@ define(function (require) {
 
         render: function () {},
 
+        remove: function () {},
+
         dispose: function () {}
     };
 

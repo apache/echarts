@@ -1,7 +1,7 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
-    var Axis = require('./Axis');
+    var Axis = require('../Axis');
 
     /**
      * Extend axis 2d
@@ -47,7 +47,11 @@ define(function (require) {
         isHorizontal: function () {
             var position = this.position;
             return position === 'top' || position === 'bottom';
-        }
+        },
+
+        dataToCoord: Axis.prototype.mapData,
+
+        coordToData: Axis.prototype.unmapData
     };
     zrUtil.inherits(Axis2D, Axis);
 

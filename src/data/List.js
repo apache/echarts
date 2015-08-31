@@ -29,14 +29,42 @@ define(function(require) {
     /**
      * @name echarts/data/List~Entry
      * @extends {module:echarts/model/Model}
+     *
+     * @param {Object} option
+     * @param {module:echarts/model/Model} parentModel
+     * @param {number} dataIndex
+     * @param {Array.<string>} [independentVar=['x']]
+     * @param {Array.<string>} [dependentVar='y']
      */
     var Entry = Model.extend({
 
         layout: null,
 
-        dimension: 1,
+        /**
+         * @type {number}
+         * @protected
+         */
+        xIndex: 0,
 
-        init: function (option, parentModel, dataIndex) {
+        /**
+         * @type {number}
+         * @protected
+         */
+        yIndex: 1,
+
+        /**
+         * @type {number}
+         * @protected
+         */
+        zIndex: -1,
+
+        /**
+         * @type {number}
+         * @protected
+         */
+        valueIndex: 1,
+
+        init: function (option, parentModel, dataIndex, independentVar, dependentVar) {
 
             /**
              * @type {string}
@@ -47,102 +75,42 @@ define(function(require) {
 
             this.option = option;
 
+            var value = option.value == null ? option : option.value;
+
+            if (typeof value === 'number') {
+                value = [dataIndex, value];
+            }
+
+            if (dependentVar) {
+                for (var i = 0; i < dependentVar.length; i++) {
+                    this[dependentVar[i] + 'Index'] = i;
+                }
+                this.valueIndex = value.length - 1;
+
+                this[independentVar + 'Index'] = this.valueIndex;
+            }
+
             /**
-             * @type {number|Array}
+             * @type {Array.<number>}
              * @memeberOf module:echarts/data/List~Entry
              * @private
              */
-            this._value = option.value == null ? option : option.value
+            this._value = value;
 
             /**
              * @private
              * @readOnly
              */
-            this.dataIndex = dataIndex || 0;
+            this.dataIndex = dataIndex;
         },
 
         /**
          * @return {number}
          */
-        getX: function () {
-            // Use idx as x if data is 1d
-            // Usually when xAxis is category axis
-            return this.dimension === 1 ? this.dataIndex : this._value[0];
-        },
-
-        /**
-         * @param {number} x
-         */
-        setX: function (x) {
-            if (this.dimension > 1) {
-                this._value[0] = x;
-            }
-        },
-
-        /**
-         * @return {number}
-         */
-        getY: function () {
-            if (this.dimension > 1) {
-                return this._value[1];
-            }
-        },
-
-        /**
-         * @param {number} y
-         */
-        setY: function (y) {
-            if (this.dimension > 1) {
-                this._value[1] = y;
-            }
-        },
-
-        /**
-         * @return {number}
-         */
-        getZ: function () {
-            if (this.dimension > 2) {
-                return this._value[2];
-            }
-        },
-
-        /**
-         * @param {number} z
-         */
-        setZ: function (z) {
-            if (this.dimension > 2) {
-                this._value[2] = z;
-            }
-        },
-
-        /**
-         * @return {number}
-         */
-        getValue: function () {
-            var value;
-            // PENDING
-            // Value is a single number if data is 1d
-            if (this.dimension === 1) {
-                value = this._value;
-            }
-            else {
-                value = this._value[this.dimension];
-            }
-            if (value === '-') {
-                value = null;
-            }
-            return value;
-        },
-
-        /**
-         * @param {number} value
-         */
-        setValue: function (value) {
-            if (this.dimension === 1) {
-                this._value = value;
-            }
-            else {
-                this._value[this.dimension] = value
+        getStackedValue: function () {
+            if (this.dimension !== 1) {
+                // Only 1d value support stack
+                return this.getValue();
             }
         },
 
@@ -151,22 +119,33 @@ define(function(require) {
                 this.option, this.parentModel, this.dataIndex
             );
             entry.name = this.name;
-            entry.dimension = this.dimension;
+            entry.xIndex = this.xIndex;
+            entry.yIndex = this.yIndex;
+            entry.zIndex = this.zIndex;
+            entry.valueIndex = this.valueIndex;
             return entry;
         }
     });
 
+    zrUtil.each(['x', 'y', 'z', 'value'], function (dim) {
+        var capitalized = dim[0].toUpperCase() + dim.substr(1);
+        var indexKey = dim + 'Index';
+        Entry.prototype['get' + capitalized] = function () {
+            var index = this[indexKey];
+            if (index >= 0) {
+                return this._value[index];
+            }
+        }
+        Entry.prototype['set' + capitalized] = function (val) {
+            var index = this[indexKey];
+            if (index >= 0) {
+                this._value[indexKey] = val;
+            }
+        }
+    });
+
     function List() {
-
         this.elements = [];
-
-        // Depth and properties is useful in nested Array.
-        // For example in eventRiver, data structure is a nested 2d array as following
-        // [{evolution: []}, {evolution: []}]
-        // In this situation. depth should be 2 and properties should be ['evolution']
-        this.depth = 1;
-
-        this.properties = [];
     }
 
     List.prototype = {
@@ -177,18 +156,12 @@ define(function(require) {
 
         each: function (cb, context) {
             context = context || this;
-            if (this.depth > 1) {
-                createArrayIterWithDepth(
-                    this.depth, this.properties, cb, context, 'each'
-                )(this.elements, 0);
-            }
-            else {
-                zrUtil.each(this.elements, cb, context);
-            }
+            zrUtil.each(this.elements, cb, context);
         },
 
         /**
          * Data mapping, returned array is flatten
+         * PENDING
          */
         map: function (cb, context) {
             var ret = [];
@@ -198,35 +171,11 @@ define(function(require) {
             return ret;
         },
 
-        /**
-         * In-place filter
-         */
-        filterInPlace: function (cb, context) {
+        filter: function (cb, context) {
+            var list = new List();
             context = context || this;
-            if (this.depth > 1) {
-                createArrayIterWithDepth(
-                    this.depth, this.properties, cb, context, 'filter'
-                )(this.elements, 0);
-            }
-            else {
-                this.elements = zrUtil.filter(this.elements, cb, context);
-            }
+            list.elements = zrUtil.filter(this.elements, cb, context);
         },
-
-        /**
-         * In-place map
-         */
-        // mapInPlace: function (cb, context) {
-        //     context = context || this;
-        //     if (this.depth > 1) {
-        //         createArrayIterWithDepth(
-        //             this.depth, this.properties, cb, context, 'map'
-        //         )(this.elements, 0);
-        //     }
-        //     else {
-        //         this.elements = zrUtil.map(this.elements, cb, context);
-        //     }
-        // },
 
         /**
          * @return {module:echarts/data/List~Entry}
@@ -285,16 +234,41 @@ define(function(require) {
         };
     });
 
-    List.fromArray = function (data, dimension, parentModel) {
+    List.fromArray = function (data, seriesModel, ecModel) {
+        var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
+        var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
+        var independentVar;
+        var dependentVar;
+
+        // if (xAxisModel.get('type') === 'category') {
+        //     independentVar = ['x'];
+        //     dependentVar = 'y';
+        // }
+        // else if (yAxisModel.get('type') === 'category') {
+        //     independentVar = ['y'];
+        //     dependentVar = 'x';
+        // }
+        // else {
+        //     var dim = data[0] && data[0].length;
+        //     if (dim === 2) {
+        //         independentVar = ['x'];
+        //         dependentVar = 'y';
+        //     }
+        //     else if (dim === 3) {
+        //         independentVar = ['x', 'y'];
+        //         dependentVar = 'z';
+        //     }
+        // }
+
         var list = new List();
+
         // Normalize data
         list.elements = zrUtil.map(data, function (dataItem, index) {
-            var entry = new Entry(dataItem, parentModel, index);
+            var entry = new Entry(dataItem, seriesModel, index, independentVar, dependentVar);
             // TODO
             if (! dataItem.name) {
                 entry.name = index;
             }
-            entry.dimension = dimension || 1;
             return entry;
         });
         return list;

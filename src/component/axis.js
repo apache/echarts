@@ -50,7 +50,7 @@ define(function(require) {
             var grid = gridModel.coordinateSystem;
             var rect = grid.getRect();
 
-            var otherAxis = grid.getAxis(axis.type === 'x' ? 'y' : 'x');
+            var otherAxis = grid.getAxis(axis.dim === 'x' ? 'y' : 'x');
 
             var position = 0;
             if (axisModel.get('axisLine.onZero')) {
@@ -148,8 +148,7 @@ define(function(require) {
             var isOrdinalAxis = axis.scale.type === 'ordinal';
 
             var axisPosition = axis.position;
-            var ticksCoords = isOrdinalAxis && axis.boundaryGap
-                ? axis.getBandsCoords(true) : axis.getTicksCoords();
+            var ticksCoords = axis.getTicksPositions();
 
             var tickLines = [];
             for (var i = 0; i < ticksCoords.length; i++) {
@@ -388,9 +387,7 @@ define(function(require) {
             var splitLines = [];
             var lineCount = 0;
 
-            var isOrdinalAxis = axis.scale.type === 'ordinal';
-            var ticksCoords = isOrdinalAxis && axis.boundaryGap
-                ? axis.getBandsCoords(true) : axis.getTicksCoords();
+            var ticksCoords = axis.getTicksPositions();
 
             var p1 = [];
             var p2 = [];
@@ -452,9 +449,7 @@ define(function(require) {
             var areaColors = splitAreaModel.get('areaStyle.color');
 
             var gridRect = gridModel.coordinateSystem.getRect();
-            var isOrdinalAxis = axis.scale.type === 'ordinal';
-            var ticksCoords = isOrdinalAxis && axis.boundaryGap
-                ? axis.getBandsCoords(true) : axis.getTicksCoords();
+            var ticksCoords = axis.getTicksPositions();
 
             var prevX;
             var prevY;
