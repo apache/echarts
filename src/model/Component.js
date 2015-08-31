@@ -44,10 +44,9 @@ define(function(require) {
     });
 
     ComponentModel.extend = function (opts) {
-
         var SubComponentModel = Model.extend.call(this, opts);
-
         var componentType = opts.type;
+
         if (componentType) {
             if (componentModelClasses[componentType]) {
                 throw new Error('Component model "' + componentType + '" exists.');
@@ -57,9 +56,9 @@ define(function(require) {
         return SubComponentModel;
     };
 
-    ComponentModel.create = function (name, option, ecModel) {
+    ComponentModel.create = function (name, option, ecModel, dependentModels) {
         if (componentModelClasses[name]) {
-            return new componentModelClasses[name](option, null, ecModel);
+            return new componentModelClasses[name](option, null, ecModel, dependentModels);
         }
     };
 
@@ -69,25 +68,20 @@ define(function(require) {
 
     /**
      * Topological travel on Activity Network (Activity On Vertices).
+     * Dependencies is defined in Model.prototype.dependencies, like ['xAxis', 'yAxis'].
+     * If 'xAxis' or 'yAxis' is absent in componentTypeList, just ignore it in topology.
      *
      * @public
      * @param {Array.<string>} componentTypeList Target Component type list.
-     * @param {Function} callback Params: componentType, depends.
+     * @param {Function} callback Params: componentType, dependencies.
      */
-    ComponentModel.topologicalTavel = function (componentTypeList, callback, scope) {
+    ComponentModel.topologicalTravel = function (componentTypeList, callback, scope) {
         if (!componentTypeList.length) {
             return;
         }
-        var dependencyGraph = makeDepndencyGraph(componentTypeList);
-        var stack = [];
-        var entryCount = [];
-
-        zrUtil.each(componentTypeList, function (componentType) {
-            entryCount[componentType] = dependencyGraph[componentType].predecessor.length;
-            if (entryCount[componentType] === 0) {
-                stack.push(componentType);
-            }
-        });
+        var result = makeDepndencyGraph(componentTypeList);
+        var graph = result.graph;
+        var stack = result.noEntryList;
 
         if (!stack.length) {
             throw new Error('Circle exists in dependency graph.');
@@ -95,14 +89,14 @@ define(function(require) {
 
         while (stack.length) {
             var currComponentType = stack.pop();
-            var currVertex = dependencyGraph[currComponentType];
-            callback.call(scope, currComponentType, currVertex.predecessor.slice());
+            var currVertex = graph[currComponentType];
+            callback.call(scope, currComponentType, currVertex.originalDeps.slice());
             zrUtil.each(currVertex.successor, removeEdge);
         }
 
         function removeEdge(succComponentType) {
-            entryCount[succComponentType]--;
-            if (entryCount[succComponentType] === 0) {
+            graph[succComponentType].entryCount--;
+            if (graph[succComponentType].entryCount === 0) {
                 stack.push(succComponentType);
             }
         }
@@ -112,37 +106,54 @@ define(function(require) {
      * DepndencyGraph: {Object}
      * key: conponentType,
      * value: {
-     *     predecessor: [conponentTypes...]
-     *     successor: [conponentTypes...]
+     *     successor: [conponentTypes...],
+     *     originalDeps: [conponentTypes...],
+     *     entryCount: {number}
      * }
      */
     function makeDepndencyGraph(componentTypeList) {
-        var dependencyGraph = {};
+        var graph = {};
+        var noEntryList = [];
 
         zrUtil.each(componentTypeList, function (componentType) {
-            var thisItem = createDependencyGraphItem(dependencyGraph, componentType);
-            var ModelClass = componentModelClasses[componentType];
-            var depends = ModelClass.prototype.depends || [];
 
-            zrUtil.each(depends, function (depComponentType) {
+            var thisItem = createDependencyGraphItem(graph, componentType);
+            var originalDeps = thisItem.originalDeps =
+                (componentModelClasses[componentType].prototype.dependencies || []).slice();
+
+            var availableDeps = getAvailableDependencies(originalDeps, componentTypeList);
+            thisItem.entryCount = availableDeps.length;
+            if (thisItem.entryCount === 0) {
+                noEntryList.push(componentType);
+            }
+
+            zrUtil.each(availableDeps, function (depComponentType) {
                 if (zrUtil.indexOf(thisItem.predecessor, depComponentType) < 0) {
                     thisItem.predecessor.push(depComponentType);
                 }
-                var thatItem = createDependencyGraphItem(dependencyGraph, depComponentType);
+                var thatItem = createDependencyGraphItem(graph, depComponentType);
                 if (zrUtil.indexOf(thatItem.successor, depComponentType) < 0) {
                     thatItem.successor.push(componentType);
                 }
             });
         });
 
-        return dependencyGraph;
+        return {graph: graph, noEntryList: noEntryList};
     }
 
-    function createDependencyGraphItem(dependencyGraph, componentType) {
-        if (!dependencyGraph[componentType]) {
-            dependencyGraph[componentType] = {predecessor: [], successor: []};
+    function createDependencyGraphItem(graph, componentType) {
+        if (!graph[componentType]) {
+            graph[componentType] = {predecessor: [], successor: []};
         }
-        return dependencyGraph[componentType];
+        return graph[componentType];
+    }
+
+    function getAvailableDependencies(originalDeps, componentTypeList) {
+        var availableDeps = [];
+        zrUtil.each(originalDeps, function (dep) {
+            zrUtil.indexOf(componentTypeList, dep) >= 0 && availableDeps.push(dep);
+        });
+        return availableDeps;
     }
 
     return ComponentModel;
