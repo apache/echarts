@@ -31,12 +31,6 @@ define(function (require) {
             this.option = {};
 
             /**
-             * @type {Array}
-             * @private
-             */
-            this._stack = [];
-
-            /**
              * @type {Array.<module:echarts/model/Model}
              * @private
              */

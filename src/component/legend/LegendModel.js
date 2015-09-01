@@ -35,8 +35,6 @@ define(function(require) {
             });
 
             this._data = list;
-
-            this._stack = [];
         },
 
         /**
