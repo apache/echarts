@@ -159,9 +159,7 @@ define(function (require) {
 
             var ecModel = this._model;
 
-            ecModel.restore();
-
-            ecModel.save();
+            ecModel.restoreData();
 
             this._processData(ecModel);
 

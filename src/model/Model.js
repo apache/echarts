@@ -4,6 +4,7 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var unique = require('../util/unique');
 
     /**
      * @alias module:echarts/model/Model
@@ -36,6 +37,13 @@ define(function (require) {
          * @readOnly
          */
         this.dependentModels = dependentModels;
+
+        /**
+         * @type {string}
+         * @public
+         * @readOnly
+         */
+        this.uid = unique.getUID('model');
 
         this.init.apply(this, arguments);
     }
@@ -133,9 +141,7 @@ define(function (require) {
             this._visual[key] = val;
         },
 
-        save: function () {},
-
-        restore: function () {},
+        restoreData: function () {},
 
         // Pending
         clone: function () {

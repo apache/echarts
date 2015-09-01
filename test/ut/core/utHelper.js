@@ -6,6 +6,8 @@
      */
     var helper = context.utHelper = {};
 
+    var nativeSlice = Array.prototype.slice;
+
     /**
      * @public
      */
@@ -38,6 +40,26 @@
         return document.head
             || document.getElementsByTagName('head')[0]
             || document.documentElement;
+    };
+
+    /**
+     * @public
+     */
+    helper.curry = function (func) {
+        var args = nativeSlice.call(arguments, 1);
+        return function () {
+            return func.apply(this, args.concat(nativeSlice.call(arguments)));
+        };
+    };
+
+    /**
+     * @public
+     */
+    helper.bind = function (func, context) {
+        var args = nativeSlice.call(arguments, 2);
+        return function () {
+            return func.apply(context, args.concat(nativeSlice.call(arguments)));
+        };
     };
 
     /**

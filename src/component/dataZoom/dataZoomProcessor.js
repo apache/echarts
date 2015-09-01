@@ -62,11 +62,13 @@ define(function (require) {
                 // 这里仅仅处理了list类型
                 var seriesData = seriesModel.getData();
                 seriesModel.setData(
-                    seriesData['filter' + dimNames.dim.toUpperCase()](start, end)
+                    seriesData['filter' + dimNames.dim.toUpperCase()](function (value) {
+                        return value >= start && value <= end;
+                    })
                 );
 
                 // FIXME
-                // 对于数值轴，还要考虑log等情况
+                // 对于数值轴，还要考虑log等情况.
                 // FIXME
                 // 对于时间河流图，还要考虑是否须整块移除。
             });

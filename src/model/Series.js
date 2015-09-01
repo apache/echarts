@@ -49,7 +49,7 @@ define(function(require) {
              */
             this._data = this.getInitialData(option, ecModel);
 
-            this._stack = [];
+            this._dataBeforeProcessing = this._data.clone();
         },
 
         mergeDefaultAndTheme: function (option, ecModel) {
@@ -74,16 +74,8 @@ define(function(require) {
             return this._data;
         },
 
-        save: function () {
-            this._stack.push({
-                data: this._data.clone()
-            });
-        },
-
-        restore: function () {
-            if (this._stack.length) {
-                this._data = this._stack.pop().data;
-            }
+        restoreData: function () {
+            this._data = this._dataBeforeProcessing.clone();
         }
     });
 

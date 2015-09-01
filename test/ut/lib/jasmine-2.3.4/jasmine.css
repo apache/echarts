@@ -53,6 +53,6 @@ body { overflow-y: scroll; }
 .jasmine_html-reporter .failures .spec-detail { margin-bottom: 28px; }
 .jasmine_html-reporter .failures .spec-detail .description { background-color: #ca3a11; }
 .jasmine_html-reporter .failures .spec-detail .description a { color: white; }
-.jasmine_html-reporter .result-message { padding-top: 14px; color: #333; white-space: pre; }
+.jasmine_html-reporter .result-message { padding-top: 14px; color: #333; }
 .jasmine_html-reporter .result-message span.result { display: block; }
 .jasmine_html-reporter .stack-trace { margin: 5px 0 0 0; max-height: 224px; overflow: auto; line-height: 18px; color: #666; border: 1px solid #ddd; background: white; white-space: pre; }

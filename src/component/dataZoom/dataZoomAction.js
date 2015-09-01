@@ -8,7 +8,8 @@ define(function(require) {
     var echarts = require('../../echarts');
     var helper = require('./helper');
 
-    echarts.registerAction(function (event, ecModel) {
+    echarts.registerAction('dataZoom', function (event, ecModel) {
+        var sourceDataZoomModel = event.targetModel;
         ecModel.eachComponent('dataZoom', zrUtil.curry(processSingleDataZoom, event, ecModel));
     });
 
@@ -19,6 +20,13 @@ define(function(require) {
                 zrUtil.curry(processSingleAxis, ecModel, dataZoomModel, dimNames)
             );
         });
+    }
+
+    function processSingleAxis(ecModel, dataZoomModel, dimNames, axisIndex) {
+    }
+
+    function isSharingAxis(dataZoomModel0, dataZoomModel1) {
+
     }
 
 });

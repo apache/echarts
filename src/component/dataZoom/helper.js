@@ -48,5 +48,82 @@ define(function(require) {
         return zrUtil.isArray(value) ? value : (value == null ? [] : [value]);
     };
 
+    /**
+     * @public
+     */
+    helper.findLinkSet = function (forEachModel, axisIndicesGetter, sourceModel) {
+        var result = {models: [], dims: {}};
+        var dimRecords = {};
+        helper.eachAxisDim(function (dimNames) {
+            result.dims[dimNames.dim] = [];
+            dimRecords[dimNames.dim] = [];
+        });
+
+        if (!sourceModel) {
+            return result;
+        }
+
+        absorb(sourceModel);
+
+        var existsLink;
+        do {
+            existsLink = false;
+            forEachModel(processSingleModel);
+        }
+        while (existsLink);
+
+        wrapUpResult();
+
+        return result;
+
+        function processSingleModel(model) {
+            if (!isModelAbsorded(model) && isLink(model)) {
+                absorb(model);
+                existsLink = true;
+            }
+        }
+
+        function isModelAbsorded(model) {
+            return zrUtil.indexOf(result.models, model) >= 0;
+        }
+
+        function isLink(model) {
+            var hasLink = false;
+            helper.eachAxisDim(function (dimNames) {
+                var axisIndices = axisIndicesGetter(model, dimNames);
+                var singleDimSet = dimRecords[dimNames.dim];
+                for (var i = 0, len = axisIndices.length; i < len; i++) {
+                    if (singleDimSet[axisIndices[i]]) {
+                        hasLink = true;
+                        return;
+                    }
+                }
+            });
+            return hasLink;
+        }
+
+        function absorb(model) {
+            result.models.push(model);
+            helper.eachAxisDim(function (dimNames) {
+                var axisIndices = axisIndicesGetter(model, dimNames);
+                var singleDimSet = dimRecords[dimNames.dim];
+                for (var i = 0, len = axisIndices.length; i < len; i++) {
+                    singleDimSet[axisIndices[i]] = true;
+                }
+            });
+        }
+
+        function wrapUpResult() {
+            helper.eachAxisDim(function (dimNames) {
+                var dimRecord = dimRecords[dimNames.dim];
+                for (var i = 0; i < dimRecord.length; i++) {
+                    if (dimRecord[i]) {
+                        result.dims[dimNames.dim].push(i);
+                    }
+                }
+            });
+        }
+    };
+
     return helper;
 });

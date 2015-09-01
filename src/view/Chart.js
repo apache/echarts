@@ -2,6 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Group = require('zrender/container/Group');
+    var unique = require('../util/unique');
 
     function Chart() {
 
@@ -10,6 +11,12 @@ define(function (require) {
          * @readOnly
          */
         this.group = new Group();
+
+        /**
+         * @type {string}
+         * @readOnly
+         */
+        this.uid = unique.getUID('viewChart');
     }
 
     Chart.prototype = {

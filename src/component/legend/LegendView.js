@@ -34,7 +34,7 @@ define(function (require) {
 
             legendModel.getData().each(function (dataItem) {
                 var seriesName = dataItem.name;
-                var seriesModel = ecModel.getSeriesByName(seriesName);
+                var seriesModel = ecModel.getSeriesByName(seriesName, true);
                 var color = legendModel.isSelected(seriesName)
                     ? seriesModel.getVisual('color')
                     : '#ccc';

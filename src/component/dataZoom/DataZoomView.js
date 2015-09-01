@@ -3,7 +3,6 @@ define(function (require) {
     var echarts = require('../../echarts');
     var zrUtil = require('zrender/core/util');
     var helper = require('./helper');
-    var unique = require('../../util/unique');
     var retrieveValue = helper.retrieveValue;
 
     // Constants
@@ -16,7 +15,6 @@ define(function (require) {
 
         init: function (echarts) {
             this._location;
-            this._uid = unique.getUID('dataZoomView');
         },
 
         render: function (dataZoomModel, ecModel, api, event) {
@@ -29,7 +27,7 @@ define(function (require) {
             this._api = api;
             this._orient = dataZoomModel.get('orient');
 
-            if (!event || event.type !== 'dataZoom' || event.from !== this._uid) {
+            if (!event || event.type !== 'dataZoom' || event.from !== this.uid) {
                 this.group.clear();
 
                 if (this.dataZoomModel.get('show') === false) {
@@ -300,8 +298,9 @@ define(function (require) {
 
             this._api.dispatch({
                 type: 'dataZoom',
-                from: this._uid,
-                param: this._normalizeToRange()
+                from: this.uid,
+                param: this._normalizeToRange(),
+                targetModel: this._dataZoomModel
             });
 
             // FIXME

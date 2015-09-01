@@ -49,6 +49,12 @@ define(function (require) {
             this._componentsMap = {};
 
             /**
+             * @type {Object.<string, module:echarts/model/Model>}
+             * @private
+             */
+            this._componentsMapBeforeProcessing = {};
+
+            /**
              * @type {module:echarts/model/Model}
              * @private
              */
@@ -149,6 +155,11 @@ define(function (require) {
                     }
                 }
             }, this);
+
+            // Backup data
+            zrUtil.each(componentsMap, function (components, componentType) {
+                this._componentsMapBeforeProcessing[componentType] = components.slice();
+            }, this);
         },
 
         /**
@@ -179,10 +190,13 @@ define(function (require) {
 
         /**
          * @param {string} name
+         * @param {boolean} beforeProcessing
          * @return {module:echarts/model/Series}
          */
-        getSeriesByName: function (name) {
-            var series = this._componentsMap.series;
+        getSeriesByName: function (name, beforeProcessing) {
+            var series = beforeProcessing
+                ? this._componentsMapBeforeProcessing.series
+                : this._componentsMap.series;
             for (var i = 0, len = series.length; i < len; i++) {
                 // name should be unique.
                 if (series[i].name === name) {
@@ -238,36 +252,20 @@ define(function (require) {
             );
         },
 
-        save: function () {
-            var seriesList = this._componentsMap.series;
-            this._stack.push({
-                series: seriesList.slice()
+        restoreData: function () {
+            var componentsMap = this._componentsMap;
+            var componentTypes = [];
+
+            zrUtil.each(this._componentsMapBeforeProcessing, function (components, componentType) {
+                componentsMap[componentType] = components.slice();
+                componentTypes.push(componentType);
             });
 
-            var components = this._components;
-            var i;
-            for (i = 0; i < components.length; i++) {
-                components[i].save();
-            }
-            for (i = 0; i < seriesList.length; i++) {
-                seriesList[i].save();
-            }
-        },
-
-        restore: function () {
-            if (this._stack.length) {
-                this._componentsMap.series = this._stack.pop().series;
-            }
-
-            var seriesList = this._componentsMap.series;
-            var components = this._components;
-            var i;
-            for (i = 0; i < components.length; i++) {
-                components[i].restore();
-            }
-            for (i = 0; i < seriesList.length; i++) {
-                seriesList[i].restore();
-            }
+            ComponentModel.topologicalTravel(componentTypes, function (componentType, dependencies) {
+                zrUtil.each(componentsMap[componentType], function (component) {
+                    component.restoreData();
+                });
+            });
         },
 
         /**

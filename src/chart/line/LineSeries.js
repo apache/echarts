@@ -9,6 +9,8 @@ define(function(require) {
 
         type: 'series.line',
 
+        dependencies: ['xAxis', 'yAxis'],
+
         getInitialData: function (option, ecModel) {
             return List.fromArray(option.data, this, ecModel);
         },
