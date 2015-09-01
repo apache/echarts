@@ -48,19 +48,24 @@ define(function (require) {
                 .update(function (newData, oldData) {
                     var symbolSize = newData.getVisual('symbolSize');
                     var layout = newData.layout;
+                    var el = oldData.__el;
+                    el.stopAnimation();
                     // 空数据
                     // TODO
                     // if (newData.getValue() == null) {
                     //     group.remove(oldData.__el);
                     //     return;
                     // }
-                    oldData.__el.animate()
+                    el.animate()
                         .when(500, {
                             scale: [symbolSize, symbolSize],
                             position: [layout.x, layout.y]
                         })
                         .start('cubicOut');
-                    newData.__el = oldData.__el;
+                    newData.__el = el;
+
+                    // Add back
+                    group.add(el);
                 })
                 .remove(function (dataItem) {
                     if (dataItem.__el) {
@@ -70,6 +75,24 @@ define(function (require) {
                 .execute();
 
             this._data = data;
+        },
+
+        remove: function () {
+            if (this._data) {
+                var group = this.group;
+                this._data.each(function (dataItem) {
+                    var el = dataItem.__el;
+                    el.stopAnimation();
+                    el.animate()
+                        .when(200, {
+                            scale: [0, 0]
+                        })
+                        .done(function () {
+                            group.remove(dataItem.__el);
+                        })
+                        .start('cubicOut');
+                });
+            }
         }
     });
 });

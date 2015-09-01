@@ -18,7 +18,7 @@ define(function (require) {
             var group = this.group;
             var data = seriesModel.getData();
 
-            data.diff(this.data)
+            data.diff(this._data)
                 .add(function (dataItem, idx) {
                     // 空数据
                     if (dataItem.getValue() == null) {
@@ -52,16 +52,21 @@ define(function (require) {
                         .start('cubicOut');
                 })
                 .update(function (newData, oldData) {
+                    var el = oldData.__el;
+                    el.stopAnimation();
                     // 空数据
                     if (newData.getValue() == null) {
-                        group.remove(oldData.__el);
+                        group.remove(el);
                         return;
                     }
-                    oldData.__el.animateShape()
+                    el.animateShape()
                         .when(500, newData.layout)
                         .start('cubicOut');
 
-                    newData.__el = oldData.__el;
+                    newData.__el = el;
+
+                    // Add back
+                    group.add(el);
                 })
                 .remove(function (dataItem, idx) {
                     if (dataItem.__el) {
@@ -70,7 +75,25 @@ define(function (require) {
                 })
                 .execute();
 
-            this.data = data;
+            this._data = data;
+        },
+
+        remove: function () {
+            if (this._data) {
+                var group = this.group;
+                this._data.each(function (dataItem) {
+                    var el = dataItem.__el;
+                    el.stopAnimation();
+                    el.animateShape()
+                        .when(200, {
+                            width: 0
+                        })
+                        .done(function () {
+                            group.remove(dataItem.__el);
+                        })
+                        .start('cubicOut');
+                });
+            }
         }
     });
 });

@@ -194,6 +194,7 @@ define(function (require) {
 
             var chartsList = this._chartsList;
             var chartsMap = this._chartsMap;
+            var zr = this._zr;
 
             for (var i = 0; i < chartsList.length; i++) {
                 chartsList[i].__keepAlive = false;
@@ -211,6 +212,7 @@ define(function (require) {
                         chart.init(this._extensionAPI);
                         chartsMap[id] = chart;
                         chartsList.push(chart);
+                        zr.add(chart.group);
                     }
                     else {
                         // Error
@@ -224,7 +226,7 @@ define(function (require) {
             for (var i = 0; i < chartsList.length;) {
                 var chart = chartsList[i];
                 if (! chart.__keepAlive) {
-                    this._zr.remove(chart.group);
+                    zr.remove(chart.group);
                     chart.dispose();
                     chartsList.splice(i, 1);
                     delete chartsMap[chart.__id];
@@ -337,13 +339,10 @@ define(function (require) {
                 var chart = this._chartsMap[id];
                 chart.__keepAlive = true;
                 chart.render(seriesModel, ecModel, api);
-
-                this._zr.add(chart.group);
             }, this);
             // Remove groups of charts
             zrUtil.each(this._chartsList, function (chart) {
                 if (!chart.__keepAlive) {
-                    this._zr.remove(chart.group);
                     chart.remove();
                 }
             }, this);
