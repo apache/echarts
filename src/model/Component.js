@@ -41,8 +41,22 @@ define(function(require) {
          */
         defaultOption: null,
 
-        init: function (option, parentModel, ecModel) {
-            this.mergeDefaultAndTheme(option, ecModel);
+        /**
+         * @type {Object}
+         * @readOnly
+         */
+        ecModel: null,
+
+        /**
+         * key: componentType
+         * value:  Component model list, can not be null.
+         * @type {Object.<string, Array.<module:echarts/model/Model>>}
+         * @readOnly
+         */
+        dependentModel: null,
+
+        init: function () {
+            this.mergeDefaultAndTheme(this.option, this.ecModel);
         },
 
         mergeDefaultAndTheme: function (option, ecModel) {
@@ -52,10 +66,27 @@ define(function(require) {
 
     });
 
-    ComponentModel.extend = function (opts) {
-        var SubComponentModel = Model.extend.call(this, opts);
-        var componentType = opts.type;
+    ComponentModel.extend = function (proto) {
+        var SubComponentModel = function (option, parentModel, ecModel, dependentModels) {
+            this.ecModel = ecModel;
+            this.dependentModels = dependentModels;
+            ComponentModel.apply(this, arguments);
+        };
 
+        for (var name in proto) {
+            if (proto.hasOwnProperty(name)) {
+                SubComponentModel.prototype[name] = proto[name];
+            }
+        }
+
+        var Super = this;
+        SubComponentModel.extend = Super.extend;
+        zrUtil.inherits(SubComponentModel, Super);
+
+        return registerComponentClass(SubComponentModel, proto.type);
+    };
+
+    function registerComponentClass(SubComponentModel, componentType) {
         if (componentType) {
             componentType = ComponentModel.parseComponentType(componentType);
 
@@ -71,7 +102,7 @@ define(function(require) {
             }
         }
         return SubComponentModel;
-    };
+    }
 
     ComponentModel.getComponentModelClass = function (componentType, option) {
         var fullComponentType = componentType;

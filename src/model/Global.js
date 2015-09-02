@@ -136,17 +136,6 @@ define(function (require) {
                         componentsMap[componentType][i] = componentModel;
                         components.push(componentModel);
                     }
-
-                    if (componentModel) {
-                        // 同步 Option
-                        if (zrUtil.isArray(componentOption)) {
-                            option[componentType] = option[componentType] || [];
-                            option[componentType][i] = componentModel.option;
-                        }
-                        else {
-                            option[componentType] = componentModel.option;
-                        }
-                    }
                 }
             }, this);
 

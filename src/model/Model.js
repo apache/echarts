@@ -10,7 +10,7 @@ define(function (require) {
      * @alias module:echarts/model/Model
      * @constructor
      */
-    function Model(option, parentModel, ecModel, dependentModels) {
+    function Model(option, parentModel) {
 
         /**
          * @type {module:echarts/model/Model}
@@ -23,20 +23,6 @@ define(function (require) {
          * @protected
          */
         this.option = option;
-
-        /**
-         * @type {Object}
-         * @protected
-         */
-        this.ecModel = ecModel;
-
-        /**
-         * key: componentType
-         * value: Array.<Object> Component model list, can not be null.
-         * @type {Object}
-         * @readOnly
-         */
-        this.dependentModels = dependentModels;
 
         /**
          * @type {string}
@@ -77,7 +63,7 @@ define(function (require) {
          * @return {*}
          */
         get: function (path, parentModel) {
-            if (typeof path == 'string') {
+            if (typeof path === 'string') {
                 // path = this._prefix + path;
                 path = path.split('.');
             }
@@ -133,7 +119,9 @@ define(function (require) {
         setVisual: function (key, val) {
             if (typeof (key) === 'object') {
                 for (var name in key) {
-                    this.setVisual(name, key[name]);
+                    if (key.hasOwnProperty(name)) {
+                        this.setVisual(name, key[name]);
+                    }
                 }
                 return;
             }
@@ -151,22 +139,22 @@ define(function (require) {
     };
 
     Model.extend = function (proto) {
-        var Super = this;
-
         var ExtendedModel = function () {
-            Super.apply(this, arguments);
+            Model.apply(this, arguments);
         };
 
         for (var name in proto) {
-            ExtendedModel.prototype[name] = proto[name];
+            if (proto.hasOwnProperty(name)) {
+                ExtendedModel.prototype[name] = proto[name];
+            }
         }
 
+        var Super = this;
         ExtendedModel.extend = Super.extend;
-
         zrUtil.inherits(ExtendedModel, Super);
 
         return ExtendedModel;
-    }
+    };
 
     return Model;
 });
