@@ -35,11 +35,9 @@ define(function (require) {
                         fill: dataItem.getVisual('color')
                     });
 
-                    symbolShape.animate()
-                        .when(500, {
-                            scale: [symbolSize, symbolSize]
-                        })
-                        .start();
+                    symbolShape.animateTo({
+                        scale: [symbolSize, symbolSize]
+                    }, 500);
 
                     dataItem.__el = symbolShape;
 
@@ -56,12 +54,11 @@ define(function (require) {
                     //     group.remove(oldData.__el);
                     //     return;
                     // }
-                    el.animate()
-                        .when(500, {
-                            scale: [symbolSize, symbolSize],
-                            position: [layout.x, layout.y]
-                        })
-                        .start('cubicOut');
+                    el.animateTo({
+                        scale: [symbolSize, symbolSize],
+                        position: [layout.x, layout.y]
+                    }, 500, 'cubicOut');
+
                     newData.__el = el;
 
                     // Add back
@@ -83,14 +80,11 @@ define(function (require) {
                 this._data.each(function (dataItem) {
                     var el = dataItem.__el;
                     el.stopAnimation();
-                    el.animate()
-                        .when(200, {
-                            scale: [0, 0]
-                        })
-                        .done(function () {
-                            group.remove(dataItem.__el);
-                        })
-                        .start('cubicOut');
+                    el.animateTo({
+                        scale: [0, 0]
+                    }, 200, 'cubicOut', function () {
+                        group.remove(dataItem.__el);
+                    });
                 });
             }
         }

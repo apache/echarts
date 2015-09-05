@@ -1,9 +1,12 @@
 // TODO Split line interval
 // TODO Axis tick interval
+// TODO Axis name
+// TODO Axis splitNumber, min, max
 define(function(require) {
     'use strict';
 
-    var numberUtil = require('../util/number');
+    var zrUtil = require('zrender/core/util');
+    var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 
     require('../coord/cartesian/AxisModel');
 
@@ -25,23 +28,12 @@ define(function(require) {
 
             this._axisLinePosition = this._getAxisLinePosition(axisModel, gridModel);
 
-            var labelShowList;
-            if (axisModel.get('axisLabel.show')) {
-                labelShowList = this._renderAxisLabel(axisModel, gridModel, api);
-            }
-            if (axisModel.get('splitLine.show')) {
-                this._renderSplitLine(axisModel, gridModel, api, labelShowList);
-            }
-            if (axisModel.get('splitArea.show')) {
-                this._renderSplitArea(axisModel, gridModel, api, labelShowList);
-            }
-
-            if (axisModel.get('axisLine.show')) {
-                this._renderAxisLine(axisModel, gridModel, api);
-            }
-            if (axisModel.get('axisTick.show')) {
-                this._renderAxisTick(axisModel, gridModel, api);
-            }
+            var showList = [];
+            zrUtil.each(elementList, function (name) {
+                if (axisModel.get(name +'.show')) {
+                    this['_' + name](axisModel, gridModel, api, showList);
+                }
+            }, this);
         },
 
         _getAxisLinePosition: function (axisModel, gridModel) {
@@ -80,27 +72,23 @@ define(function(require) {
          * @param {module:echarts/ExtensionAPI} api
          * @private
          */
-        _renderAxisLine: function (axisModel, gridModel, api) {
+        _axisLine: function (axisModel, gridModel, api) {
             var axis = axisModel.axis;
-            var grid = gridModel.coordinateSystem;
             var p1 = [];
             var p2 = [];
 
             var lineStyleModel = axisModel.getModel('axisLine.lineStyle');
             var lineWidth = lineStyleModel.get('width');
-            var lineColor = lineStyleModel.get('color');
-            var lineType = lineStyleModel.get('type');
 
-            var rect = grid.getRect();
-
+            var coordExtent = axis.getExtent();
             if (axis.isHorizontal()) {
-                p1[0] = rect.x;
-                p2[0] = rect.x + rect.width;
+                p1[0] = coordExtent[0];
+                p2[0] = coordExtent[1];
                 p1[1] = p2[1] = this._axisLinePosition;
             }
             else {
-                p1[1] = rect.y;
-                p2[1] = rect.y + rect.height;
+                p1[1] = coordExtent[0];
+                p2[1] = coordExtent[1];
                 p1[0] = p2[0] = this._axisLinePosition;
             }
 
@@ -113,12 +101,9 @@ define(function(require) {
                     x2: p2[0],
                     y2: p2[1]
                 },
-                style: {
-                    stroke: lineColor,
-                    lineWidth: lineWidth,
-                    lineCap: 'round',
-                    lineType: lineType
-                },
+                style: zrUtil.merge({
+                    lineCap: 'round'
+                }, lineStyleModel.getLineStyle()),
                 z: axisModel.get('z'),
                 silent: true
             }));
@@ -130,22 +115,21 @@ define(function(require) {
          * @param {module:echarts/ExtensionAPI} api
          * @private
          */
-        _renderAxisTick: function (axisModel, gridModel, api) {
+        _axisTick: function (axisModel, gridModel, api) {
             var axis = axisModel.axis;
             var tickModel = axisModel.getModel('axisTick');
 
             var lineStyleModel = tickModel.getModel('lineStyle');
             var tickLen = tickModel.get('length');
-            var tickColor = lineStyleModel.get('color');
             var tickLineWidth = lineStyleModel.get('width');
             var tickInterval = tickModel.get('interval') || 0;
+            var isTickInside = tickModel.get('inside');
+
             var isTickIntervalFunction = typeof tickInterval === 'function';
             // PENDING Axis tick don't have the situation that don't have enough space to place
             if (tickInterval === 'auto') {
                 tickInterval = 0;
             }
-
-            var isOrdinalAxis = axis.scale.type === 'ordinal';
 
             var axisPosition = axis.position;
             var ticksCoords = axis.getTicksPositions();
@@ -153,17 +137,14 @@ define(function(require) {
             var tickLines = [];
             for (var i = 0; i < ticksCoords.length; i++) {
                 // Only ordinal scale support tick interval
-                if (isOrdinalAxis) {
-                    if (isTickIntervalFunction) {
-                        if (!tickInterval(i, axis.scale.getItem(i))) {
-                            continue;
-                        }
-                    }
-                    else {
-                        if (i % (tickInterval + 1)) {
-                            continue;
-                        }
-                    }
+                if (
+                    axis.scale.type === 'ordinal'
+                    && (isTickIntervalFunction
+                        && !tickInterval(i, axis.scale.getItem(i))
+                        || i % (tickInterval + 1)
+                    )
+                ) {
+                     continue
                 }
 
                 var tickCoord = ticksCoords[i];
@@ -183,12 +164,15 @@ define(function(require) {
                     y = tickCoord;
                     offX = axisPosition === 'left' ? -tickLen : tickLen;
                 }
-                if (tickModel.get('inside')) {
+
+                if (isTickInside) {
                     offX = -offX;
                     offY = -offY;
                 }
+
                 var p1 = [x, y];
                 var p2 = [x + offX, y + offY];
+
                 api.subPixelOptimizeLine(p1, p2, tickLineWidth);
                 // Tick line
                 tickLines.push(new api.Line({
@@ -201,10 +185,7 @@ define(function(require) {
                 }));
             }
             var tickEl = api.mergePath(tickLines, {
-                style: {
-                    stroke: tickColor,
-                    lineWidth: tickLineWidth
-                },
+                style: lineStyleModel.getLineStyle(),
                 silent: true,
                 z: axisModel.get('z')
             });
@@ -215,38 +196,14 @@ define(function(require) {
          * @param {module:echarts/coord/cartesian/AxisModel} axisModel
          * @param {module:echarts/coord/cartesian/GridModel} gridModel
          * @param {module:echarts/ExtensionAPI} api
+         * @param {Array.<boolean>} showList
          * @private
          */
-        _renderAxisLabel: function (axisModel, gridModel, api) {
+        _axisLabel: function (axisModel, gridModel, api, showList) {
             var axis = axisModel.axis;
 
             var labelModel = axisModel.getModel('axisLabel');
             var textStyleModel = labelModel.getModel('textStyle');
-
-            var labelFormatter = labelModel.get('formatter');
-            if (!labelFormatter) {
-               // Default formatter
-               switch (axisModel.get('type')) {
-                   // TODO
-                   case 'log':
-                       break;
-                   case 'category':
-                       labelFormatter = function (val) {return val;};
-                       break;
-                   default:
-                       labelFormatter = function (val) {
-                           return numberUtil.addCommas(numberUtil.round(val));
-                       }
-                       break;
-               }
-            }
-            else if (typeof labelFormatter === 'string') {
-                labelFormatter = (function (tpl) {
-                   return function (val) {
-                       return tpl.replace('{value}', val);
-                   };
-               })(labelFormatter);
-            }
 
             var gridRect = gridModel.coordinateSystem.getRect();
 
@@ -256,14 +213,22 @@ define(function(require) {
             var labelInterval = labelModel.get('interval') || 0;
             var isLabelIntervalFunction = typeof labelInterval === 'function';
 
-            var labelShowList = [];
-
             var textSpaceTakenRect;
             var needsCheckTextSpace;
 
+            var labels;
+            if (axis.scale.type === 'ordinal') {
+                labels = zrUtil.map(ticks, zrUtil.bind(axis.scale.getItem, axis.scale));
+            }
+            else {
+                labels = ticks.slice();
+            }
+
+            labels = axisModel.formatLabels(labels);
+
             for (var i = 0; i < ticks.length; i++) {
                 // Default is false
-                labelShowList[i] = false;
+                showList[i] = false;
 
                 needsCheckTextSpace = false;
 
@@ -272,15 +237,10 @@ define(function(require) {
                     if (labelInterval === 'auto') {
                         needsCheckTextSpace = true;
                     }
-                    else if (isLabelIntervalFunction) {
-                        if (!labelInterval(tick, axis.scale.getItem(tick))) {
-                            continue;
-                        }
-                    }
-                    else {
-                        if (tick % (labelInterval + 1)) {
-                            continue;
-                        }
+                    if (isLabelIntervalFunction
+                        && !labelInterval(tick, axis.scale.getItem(tick))
+                        || tick % (labelInterval + 1)) {
+                        continue;
                     }
                 }
 
@@ -290,15 +250,6 @@ define(function(require) {
                 var tickCoord = axis.dataToCoord(tick);
                 var labelTextAlign = 'center';
                 var labelTextBaseline = 'middle';
-
-                var label = tick;
-                switch (axis.type) {
-                    case 'category':
-                        label = axis.scale.getItem(tick);
-                        break;
-                    case 'time':
-                        // TODO
-                }
 
                 switch (axis.position) {
                     case 'top':
@@ -321,19 +272,18 @@ define(function(require) {
                         y = tickCoord;
                         labelTextAlign = 'left';
                 }
-                if (axis.isHorizontal()) {
-                    if (labelRotate) {
-                        labelTextAlign = labelRotate > 0 ? 'left' : 'right';
-                    }
+                if (axis.isHorizontal() && labelRotate) {
+                    labelTextAlign = labelRotate > 0 ? 'left' : 'right';
                 }
 
                 var textEl = new api.Text({
                     style: {
                         x: x,
                         y: y,
-                        text: labelFormatter(label),
+                        text: labels[i],
                         textAlign: labelTextAlign,
-                        textBaseline: labelTextBaseline
+                        textBaseline: labelTextBaseline,
+                        font: textStyleModel.getFont()
                     },
                     rotation: labelRotate * Math.PI / 180,
                     origin: [x, y],
@@ -346,18 +296,16 @@ define(function(require) {
                     if (!textSpaceTakenRect) {
                         textSpaceTakenRect = rect;
                     }
+                    // There is no space for current label;
+                    else if (textSpaceTakenRect.intersect(rect)) {
+                        continue;
+                    }
                     else {
-                        // There is no space for current label;
-                        if (textSpaceTakenRect.intersect(rect)) {
-                            continue;
-                        }
-                        else {
-                            textSpaceTakenRect.union(rect);
-                        }
+                        textSpaceTakenRect.union(rect);
                     }
                 }
 
-                labelShowList[i] = true;
+                showList[i] = true;
 
                 this.group.add(textEl);
              }
@@ -370,14 +318,13 @@ define(function(require) {
          * @param {Array.<boolean>} showList
          * @private
          */
-        _renderSplitLine: function (axisModel, gridModel, api, showList) {
+        _splitLine: function (axisModel, gridModel, api, showList) {
             var axis = axisModel.axis;
 
             var splitLineModel = axisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
             var lineWidth = lineStyleModel.get('width');
             var lineColors = lineStyleModel.get('color');
-            var lineType = lineStyleModel.get('type');
 
             lineColors = lineColors instanceof Array ? lineColors : [lineColors];
 
@@ -426,7 +373,7 @@ define(function(require) {
                 this.group.add(api.mergePath(splitLines[i], {
                     style: {
                         stroke: lineColors[i % lineColors.length],
-                        lineType: lineType,
+                        lineDash: lineStyleModel.getLineDash(),
                         lineWidth: lineWidth
                     },
                     silent: true,
@@ -442,7 +389,7 @@ define(function(require) {
          * @param {Array.<boolean>} showList
          * @private
          */
-        _renderSplitArea: function (axisModel, gridModel, api, showList) {
+        _splitArea: function (axisModel, gridModel, api, showList) {
             var axis = axisModel.axis;
 
             var splitAreaModel = axisModel.getModel('splitArea');
@@ -451,8 +398,8 @@ define(function(require) {
             var gridRect = gridModel.coordinateSystem.getRect();
             var ticksCoords = axis.getTicksPositions();
 
-            var prevX;
-            var prevY;
+            var prevX = ticksCoords[0];
+            var prevY = ticksCoords[0];
 
             var splitAreaRects = [];
             var count = 0;
@@ -490,8 +437,8 @@ define(function(require) {
                     }
                 }));
 
-                prevX = x;
-                prevY = y;
+                prevX = x + width;
+                prevY = y + height;
             }
 
             // Simple optimization

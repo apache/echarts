@@ -18,7 +18,7 @@
                 'echarts',
                 'echarts/chart/scatter',
                 'echarts/component/legend',
-                'echarts/component/grid'
+                'echarts/component/polar'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -30,32 +30,38 @@
                 var data3 = [];
 
                 for (var i = 0; i < 20; i++) {
-                    data1.push([Math.random() * 5, Math.random() * 4]);
-                    data2.push([Math.random() * 10, Math.random() * 5]);
-                    data3.push([Math.random() * 15, Math.random() * 10]);
+                    data1.push([Math.random() * 1, Math.random() * Math.PI * 2]);
+                    data2.push([Math.random() * 5, Math.random() * Math.PI * 2]);
+                    data3.push([Math.random() * 10, Math.random() * Math.PI * 2]);
                 }
 
                 chart.setOption({
                     legend: {
                         data: ['scatter', 'scatter2', 'scatter3']
                     },
-                    xAxis: {
+                    polar: {
+
+                    },
+                    angleAxis: {
                         type: 'value'
                     },
-                    yAxis: {
-                        type: 'value'
+                    radiusAxis: {
+
                     },
                     series: [{
+                        coordinateSystem: 'polar',
                         name: 'scatter',
                         type: 'scatter',
                         symbolSize: 20,
                         data: data1
                     }, {
+                        coordinateSystem: 'polar',
                         name: 'scatter2',
                         type: 'scatter',
                         symbolSize: 20,
                         data: data2
                     }, {
+                        coordinateSystem: 'polar',
                         name: 'scatter3',
                         type: 'scatter',
                         symbolSize: 20,

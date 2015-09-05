@@ -4,10 +4,15 @@ define(function(require) {
 
     'use strict';
 
-    return require('../../model/Component').extend({
+    require('./AxisModel');
+
+    require('../../echarts').extendComponentModel({
 
         type: 'grid',
 
+        dependencies: ['xAxis', 'yAxis'],
+
+        /**
         /**
          * @type {module:echarts/coord/cartesian/Grid}
          */

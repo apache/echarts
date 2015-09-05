@@ -18,7 +18,7 @@ define(function (require) {
          * Default is 0...len(list)-1
          * @type {Array.<number>}
          */
-        this._extent = [0, Infinity];
+        this._extent = [0, 0];
 
         if (list) {
             this.setExtentFromData(list);

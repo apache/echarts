@@ -3,13 +3,9 @@ define(function (require) {
     require('../../echarts').registerLayout(function (ecModel, api) {
 
         ecModel.eachSeriesByType('scatter', function (scatterSeries) {
-            var cartesian = scatterSeries.coordinateSystem;
-            if (cartesian.type !== 'cartesian2d') {
-                return;
-            }
-
+            var coordinateSystem = scatterSeries.coordinateSystem;
             var data = scatterSeries.getData();
-            var coords = cartesian.dataToCoords(data);
+            var coords = coordinateSystem.dataToCoords(data);
             data.each(function (dataItem, idx) {
                 var coord = coords[idx];
 

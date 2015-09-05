@@ -9,7 +9,7 @@ define(function (require) {
 
         type: 'series.scatter',
 
-        dependencies: ['xAxis', 'yAxis'],
+        dependencies: ['grid', 'polar'],
 
         getInitialData: function (option, ecModel) {
             return List.fromArray(option.data, this, ecModel);
@@ -21,8 +21,14 @@ define(function (require) {
             z: 2,                       // 二级层叠
             clickable: true,
             legendHoverLink: true,
+
+            // Cartesian coordinate system
             xAxisIndex: 0,
             yAxisIndex: 0,
+
+            // Polar coordinate system
+            polarIndex: 0,
+
             // symbol: null,        // 图形类型
             symbolSize: 4,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             // symbolRotate: null,  // 图形旋转控制

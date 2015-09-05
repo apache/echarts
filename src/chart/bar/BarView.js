@@ -46,22 +46,20 @@ define(function (require) {
                     group.add(rect);
 
                     // Animation
-                    rect.animateShape()
-                        .when(500, layout)
-                        .delay(300 * dataItem.dataIndex / data.elements.length)
-                        .start('cubicOut');
+                    rect.animateTo({
+                        shape: layout
+                    }, 1000, 300 * dataItem.dataIndex / data.elements.length, 'cubicOut');
                 })
                 .update(function (newData, oldData) {
                     var el = oldData.__el;
-                    el.stopAnimation();
                     // 空数据
                     if (newData.getValue() == null) {
                         group.remove(el);
                         return;
                     }
-                    el.animateShape()
-                        .when(500, newData.layout)
-                        .start('cubicOut');
+                    el.animateTo({
+                        shape: newData.layout
+                    }, 500, 'cubicOut');
 
                     newData.__el = el;
 
@@ -83,15 +81,14 @@ define(function (require) {
                 var group = this.group;
                 this._data.each(function (dataItem) {
                     var el = dataItem.__el;
-                    el.stopAnimation();
-                    el.animateShape()
-                        .when(200, {
+                    el.animateTo({
+                        shape: {
                             width: 0
-                        })
-                        .done(function () {
-                            group.remove(dataItem.__el);
-                        })
-                        .start('cubicOut');
+                        }
+                    }, 300, 'cubicOut',
+                    function () {
+                        group.remove(el);
+                    });
                 });
             }
         }

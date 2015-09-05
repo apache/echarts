@@ -27,7 +27,9 @@ define(function (require) {
 
         render: function () {},
 
-        remove: function () {},
+        remove: function () {
+            this.group.clear();
+        },
 
         dispose: function () {}
     };

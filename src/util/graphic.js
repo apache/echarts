@@ -27,6 +27,8 @@ define(function(require) {
 
         Line: require('zrender/graphic/shape/Line'),
 
+        Arc: require('zrender/graphic/shape/Arc'),
+
         /**
          * Extend shape with parameters
          */

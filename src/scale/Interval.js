@@ -21,7 +21,7 @@ define(function (require) {
          * @type {Array.<number>}
          * @private
          */
-        this._extent = [-Infinity, Infinity];
+        this._extent = [Infinity, -Infinity];
 
         if (data) {
             this.setExtentFromData(data);
@@ -63,10 +63,13 @@ define(function (require) {
 
         /**
          * Set extent from data
+         * @param {Array.<number>} data
+         * @param {boolean} union If union with current extent
          */
-        setExtentFromData: function (data) {
-            var max = -Infinity;
-            var min = Infinity;
+        setExtentFromData: function (data, union) {
+            var extent = this._extent;
+            var max = union ? extent[1] : -Infinity;
+            var min = union ? extent[0] : Infinity;
             for (var i = 0; i < data.length; i++) {
                 if (data[i] == null || data[i] === '-') {
                     continue;
@@ -149,7 +152,7 @@ define(function (require) {
             approxTickNum = approxTickNum || 10;
             var extent = this._extent;
             var span = extent[1] - extent[0];
-            if (span === Infinity) {
+            if (span === Infinity || span <= 0) {
                 return;
             }
 

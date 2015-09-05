@@ -16,9 +16,30 @@ define(function(require, factory) {
 
     // 依赖 GridModel, AxisModel 做预处理
     require('./GridModel');
-    require('./AxisModel');
 
-    function Grid(gridModel, ecModel) {
+    /**
+     * @param {module:echarts/coord/cartesian/AxisModel} axisModel
+     * @return {module:echarts/scale/*}
+     * @inner
+     */
+    function createScaleByModel(axisModel) {
+        var axisType = axisModel.get('type');
+        if (axisType) {
+            return axisType === 'category'
+                ? new OrdinalScale(axisModel.get('data'))
+                : new IntervalScale();
+        }
+    };
+
+    /**
+     * Check if the axis is used in the specified grid
+     * @inner
+     */
+    function isAxisUsedInTheGrid(axisModel, gridModel, ecModel) {
+        return ecModel.getComponent('grid', axisModel.get('gridIndex')) === gridModel;
+    }
+
+    function Grid(gridModel, ecModel, api) {
 
         /**
          * @type {number}
@@ -68,7 +89,7 @@ define(function(require, factory) {
          */
         this._axesList = [];
 
-        this._initCartesian(gridModel, ecModel);
+        this._initCartesian(gridModel, ecModel, api);
     }
 
     Grid.prototype = {
@@ -86,6 +107,8 @@ define(function(require, factory) {
 
         /**
          * Resize the grid
+         * @param {module:echarts/coord/cartesian/GridModel} gridModel
+         * @param {module:echarts/ExtensionAPI} api
          */
         resize: function (gridModel, api) {
             var viewportWidth = api.getWidth();
@@ -113,27 +136,20 @@ define(function(require, factory) {
 
             zrUtil.each(this._axesList, function (axis) {
                 var extent;
-                var otherCoord;
                 switch (axis.position) {
                     case 'top':
                         extent = [gridX, gridX + gridWidth];
-                        otherCoord = gridY;
                         break;
                     case 'left':
                         extent = [gridY, gridY + gridHeight];
-                        otherCoord = gridX;
                         break;
                     case 'right':
                         extent = [gridY, gridY + gridHeight];
-                        otherCoord = gridX + gridWidth;
                         break;
                     default: // Bottom
                         extent = [gridX, gridX + gridWidth];
-                        otherCoord = gridY + gridHeight;
                         break;
                 }
-
-                axis.otherCoord = otherCoord;
 
                 var start = axis.isHorizontal() ? 0 : 1;
                 axis.setExtent(extent[start], extent[1 - start]);
@@ -158,34 +174,25 @@ define(function(require, factory) {
          * Initialize cartesian coordinate systems
          * @private
          */
-        _initCartesian: function (gridModel, ecModel) {
-            /**
-             * @inner
-             */
-            var getScaleByOption = function (axisType, axisModel) {
-                if (axisType) {
-                    return axisType === 'value'
-                        ? new IntervalScale()
-                        : new OrdinalScale(axisModel.get('data'));
-                }
-            };
-
+        _initCartesian: function (gridModel, ecModel, api) {
             var leftUsed = false;
             var bottomUsed = false;
 
+            var xAxesMap = {};
+            var yAxesMap = {};
+            var xAxesCount = 0;
+            var yAxesCount = 0;
+
             ecModel.eachComponent('xAxis', function (xAxisModel, idx) {
-                if (ecModel.getComponent(
-                        'grid', xAxisModel.get('gridIndex')
-                    ) !== gridModel) {
+                if (!isAxisUsedInTheGrid(xAxisModel, gridModel, ecModel)) {
                     return;
                 }
 
                 // Create x axis
-                var xAxisType = xAxisModel.get('type');
                 var xAxisPosition = xAxisModel.get('position') || (bottomUsed ? 'top' : 'bottom');
                 bottomUsed = xAxisPosition === 'bottom';
                 var axisX = new Axis2D(
-                    'x', getScaleByOption(xAxisType, xAxisModel),
+                    'x', createScaleByModel(xAxisModel),
                     [0, 0],
                     xAxisModel.get('type'),
                     xAxisPosition
@@ -198,21 +205,21 @@ define(function(require, factory) {
 
                 this._axesList.push(axisX);
                 this._axesMap['x' + idx] = axisX;
+
+                xAxesMap[idx] = axisX;
+                xAxesCount++;
             }, this);
 
             ecModel.eachComponent('yAxis', function (yAxisModel, idx) {
-                if (ecModel.getComponent(
-                        'grid', yAxisModel.get('gridIndex')
-                    ) !== gridModel) {
+                if (!isAxisUsedInTheGrid(yAxisModel, gridModel, ecModel)) {
                     return;
                 }
 
                 // Create y axis
-                var yAxisType = yAxisModel.get('type');
                 var yAxisPosition = yAxisModel.get('position') || (leftUsed ? 'right' : 'left');
                 leftUsed = yAxisPosition === 'left';
                 var axisY = new Axis2D(
-                    'y', getScaleByOption(yAxisType, yAxisModel),
+                    'y', createScaleByModel(yAxisModel),
                     [0, 0],
                     yAxisModel.get('type'),
                     yAxisModel.get('position')
@@ -224,7 +231,30 @@ define(function(require, factory) {
 
                 this._axesList.push(axisY);
                 this._axesMap['y' + idx] = axisY;
+
+                xAxesMap[idx] = axisY;
+                yAxesCount++;
             }, this);
+
+            if (! xAxesCount || ! yAxesCount) {
+                api.log('Grid must has at least one x axis and one y axis');
+                // Roll back
+                this._axesMap = {};
+                this._axesList = [];
+                return;
+            }
+
+            zrUtil.each(xAxesMap, function (xAxis, xAxisIndex) {
+                zrUtil.each(yAxesMap, function (yAxis, yAxisIndex) {
+                    var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
+                    var cartesian = new Cartesian2D(key);
+                    this._coordsMap[key] = cartesian;
+                    this._coordsList.push(cartesian);
+
+                    cartesian.addAxis(xAxis);
+                    cartesian.addAxis(yAxis);
+                });
+            });
 
             ecModel.eachComponent('xAxis', function (xAxisModel, i) {
                 ecModel.eachComponent('yAxis', function (yAxisModel, j) {
@@ -238,7 +268,7 @@ define(function(require, factory) {
                 }, this);
             }, this);
 
-            this._updateCartesianFromSeries(ecModel);
+            this._updateCartesianFromSeries(ecModel, gridModel);
         },
 
         /**
@@ -246,15 +276,22 @@ define(function(require, factory) {
          * @param  {module:echarts/model/Option} option
          * @private
          */
-        _updateCartesianFromSeries: function (ecModel) {
+        _updateCartesianFromSeries: function (ecModel, gridModel) {
             var axisDataMap = {};
 
             ecModel.eachSeries(function (seriesModel) {
-                var coordinateSystem = seriesModel.get('coordinateSystem');
-
-                if (coordinateSystem === 'cartesian2d') {
+                if (seriesModel.get('coordinateSystem') === 'cartesian2d') {
                     var xAxisIndex = seriesModel.get('xAxisIndex');
                     var yAxisIndex = seriesModel.get('yAxisIndex');
+
+                    var xAxisModel = ecModel.getComponent('xAxis', xAxisIndex);
+                    var yAxisModel = ecModel.getComponent('yAxis', yAxisIndex);
+
+                    if (!isAxisUsedInTheGrid(xAxisModel, gridModel, ecModel)
+                        || !isAxisUsedInTheGrid(yAxisModel, gridModel, ecModel)
+                     ) {
+                        return;
+                    }
 
                     var cartesian = this.getCartesian(xAxisIndex, yAxisIndex);
                     var axisData = axisDataMap[cartesian.name];
@@ -263,8 +300,8 @@ define(function(require, factory) {
                             x: [],
                             y: [],
                             cartesian: cartesian,
-                            xModel: ecModel.getComponent('xAxis', xAxisIndex),
-                            yModel: ecModel.getComponent('yAxis', yAxisIndex)
+                            xModel: xAxisModel,
+                            yModel: yAxisModel
                         };
                     }
 
@@ -317,8 +354,8 @@ define(function(require, factory) {
 
     Grid.create = function (ecModel, api) {
         var grids = [];
-        ecModel.eachComponent('grid', function (gridModel) {
-            var grid = new Grid(gridModel, ecModel);
+        ecModel.eachComponent('grid', function (gridModel, idx) {
+            var grid = new Grid(gridModel, ecModel, api);
             grid.resize(gridModel, api);
 
             // Inject the coordinateSystems into seriesModel

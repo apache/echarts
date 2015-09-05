@@ -1,3 +1,5 @@
+// TODO entry.getLon(), entry.getLat()
+// List supported for cartesian, polar coordinateSystem
 define(function(require) {
     'use strict';
 
@@ -25,7 +27,7 @@ define(function(require) {
             }
         }
     }
-
+    var dimensions = ['x', 'y', 'z', 'value', 'radius', 'angle']
     /**
      * @name echarts/data/List~Entry
      * @extends {module:echarts/model/Model}
@@ -57,6 +59,18 @@ define(function(require) {
          * @protected
          */
         zIndex: -1,
+
+        /**
+         * @type {number}
+         * @protected
+         */
+        radiusIndex: 0,
+
+        /**
+         * @type {number}
+         * @protected
+         */
+        angleIndex: 1,
 
         /**
          * @type {number}
@@ -119,15 +133,16 @@ define(function(require) {
                 this.option, this.parentModel, this.dataIndex
             );
             entry.name = this.name;
-            entry.xIndex = this.xIndex;
-            entry.yIndex = this.yIndex;
-            entry.zIndex = this.zIndex;
-            entry.valueIndex = this.valueIndex;
+
+            for (var i = 0; i < dimensions.length; i++) {
+                var key = dimensions[i] + 'Index';
+                entry[key] = this[key];
+            }
             return entry;
         }
     });
 
-    zrUtil.each(['x', 'y', 'z', 'value'], function (dim) {
+    zrUtil.each(dimensions, function (dim) {
         var capitalized = dim[0].toUpperCase() + dim.substr(1);
         var indexKey = dim + 'Index';
         Entry.prototype['get' + capitalized] = function () {
@@ -247,28 +262,62 @@ define(function(require) {
     });
 
     List.fromArray = function (data, seriesModel, ecModel) {
-        var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
-        var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
+        var coordinateSystem = seriesModel.get('coordinateSystem');
         var independentVar;
         var dependentVar;
 
-        if (xAxisModel.get('type') === 'category') {
-            independentVar = ['x'];
-            dependentVar = 'y';
-        }
-        else if (yAxisModel.get('type') === 'category') {
-            independentVar = ['y'];
-            dependentVar = 'x';
-        }
-        else {
-            var dim = data[0] && data[0].length;
-            if (dim === 2) {
+        // FIXME
+        // 这里 List 跟几个坐标系和坐标系 Model 耦合了
+        if (coordinateSystem === 'cartesian2d') {
+            var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
+            var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
+            if (xAxisModel.get('type') === 'category') {
                 independentVar = ['x'];
                 dependentVar = 'y';
             }
-            else if (dim === 3) {
-                independentVar = ['x', 'y'];
-                dependentVar = 'z';
+            else if (yAxisModel.get('type') === 'category') {
+                independentVar = ['y'];
+                dependentVar = 'x';
+            }
+            else {
+                // PENDING
+                var dim = data[0] && data[0].length;
+                if (dim === 2) {
+                    independentVar = ['x'];
+                    dependentVar = 'y';
+                }
+                else if (dim === 3) {
+                    independentVar = ['x', 'y'];
+                    dependentVar = 'z';
+                }
+            }
+        }
+        else if (coordinateSystem === 'polar') {
+            function axisFinder(axisModel) {
+                return axisModel.get('polarIndex') === polarIndex;
+            };
+            var polarIndex = seriesModel.get('polarIndex') || 0;
+            var angleAxisModel = ecModel.findComponent('angleAxis', axisFinder);
+            var radiusAxisModel = ecModel.findComponent('radiusAxis', axisFinder);
+
+            if (angleAxisModel.get('type') === 'category') {
+                independentVar = ['angle'];
+                dependentVar = 'radius';
+            }
+            else if (radiusAxisModel.get('type') === 'category') {
+                independentVar = ['radius'];
+                dependentVar = 'angle';
+            }
+            else {
+                var dim = data[0] && data[0].length;
+                if (dim === 2) {
+                    independentVar = ['radius'];
+                    dependentVar = 'angle';
+                }
+                else if (dim === 3) {
+                    independentVar = ['radius', 'angle'];
+                    dependentVar = 'value';
+                }
             }
         }
 
@@ -277,7 +326,7 @@ define(function(require) {
         // Normalize data
         list.elements = zrUtil.map(data, function (dataItem, index) {
             var entry = new Entry(dataItem, seriesModel, index, independentVar, dependentVar);
-            // TODO
+            // FIXME
             if (! dataItem.name) {
                 entry.name = index;
             }

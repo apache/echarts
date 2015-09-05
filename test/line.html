@@ -18,8 +18,7 @@
                 'echarts',
                 'echarts/chart/line',
                 'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/axis'
+                'echarts/component/grid'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -47,6 +46,9 @@
                         data: xAxisData
                     },
                     yAxis: {
+                        splitLine: {
+                            show: false
+                        }
                     },
                     series: [{
                         name: 'line',

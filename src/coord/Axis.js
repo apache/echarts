@@ -32,7 +32,7 @@ define(function (require) {
          * @type {Array.<number>}
          * @private
          */
-        this._extent = extent;
+        this._extent = extent || [0, 0];
 
         /**
          * @type {boolean}
@@ -64,13 +64,13 @@ define(function (require) {
 
         /**
          * Set coord extent
-         * @param {number} min
-         * @param {number} max
+         * @param {number} start
+         * @param {number} end
          */
-        setExtent: function (min, max) {
+        setExtent: function (start, end) {
             var extent = this._extent;
-            extent[0] = min;
-            extent[1] = max;
+            extent[0] = start;
+            extent[1] = end;
         },
 
         /**
@@ -138,8 +138,6 @@ define(function (require) {
          * If axis has ticks [1, 2, 3, 4]. Bands on the axis are
          * |---1---|---2---|---3---|---4---|.
          *
-         * If margin is true. Coord extent is start at the position of first tick and end
-         * at the position of last tick.
          * @return {Array}
          */
         getBands: function () {

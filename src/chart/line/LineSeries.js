@@ -9,7 +9,7 @@ define(function(require) {
 
         type: 'series.line',
 
-        dependencies: ['xAxis', 'yAxis'],
+        dependencies: ['grid', 'polar'],
 
         getInitialData: function (option, ecModel) {
             return List.fromArray(option.data, this, ecModel);

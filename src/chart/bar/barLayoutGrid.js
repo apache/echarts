@@ -139,7 +139,8 @@ define(function(require) {
             var columnLayoutInfo = barWidthAndOffset[cartesian.name][stackId];
             var columnOffset = columnLayoutInfo.offset;
             var columnWidth = columnLayoutInfo.width;
-            var projectAxis = columnLayoutInfo.axis;
+            var valueAxis = cartesian.getOtherAxis(columnLayoutInfo.axis);
+
             if (data.type === 'list') {
                 var coords = cartesian.dataToCoords(data);
                 lastStackCoords[stackId] = lastStackCoords[stackId] || [];
@@ -152,22 +153,21 @@ define(function(require) {
                     }
 
                     var coord = coords[dataIndex];
-                    var lastCoord = lastStackCoords[stackId][dataIndex] || projectAxis.otherCoord;
+                    var lastCoord = lastStackCoords[stackId][dataIndex] || valueAxis.dataToCoord(0);
                     var x, y, width, height;
-                    if (projectAxis.isHorizontal()) {
-                        x = coord[0] + columnOffset;
-                        y = Math.min(lastCoord, coord[1]);
-                        width = columnWidth;
-                        height = Math.abs(coord[1] - lastCoord);
-
-                        lastStackCoords[stackId][dataIndex] = y;
-                    }
-                    else {
+                    if (valueAxis.isHorizontal()) {
                         x = Math.min(lastCoord, coord[0]);
                         y = coord[1] + columnOffset;
                         width = Math.abs(coord[0] - lastCoord);
                         height = columnWidth;
                         lastStackCoords[stackId][dataIndex] = x;
+                    }
+                    else {
+                        x = coord[0] + columnOffset;
+                        y = Math.min(lastCoord, coord[1]);
+                        width = columnWidth;
+                        height = Math.abs(coord[1] - lastCoord);
+                        lastStackCoords[stackId][dataIndex] = y;
                     }
                     dataItem.layout = {
                         x: x,

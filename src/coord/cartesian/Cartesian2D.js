@@ -33,6 +33,14 @@ define(function(require) {
                 coord[1 - xIndex] = yAxis.dataToCoord(dataItem.getY());
                 return coord;
             }, this);
+        },
+
+        /**
+         * Get other axis
+         * @param {module:echarts/coord/cartesian/Axis2D} axis
+         */
+        getOtherAxis: function (axis) {
+            return this.getAxis(axis.dim === 'x' ? 'y' : 'x');
         }
     };
 

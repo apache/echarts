@@ -64,7 +64,6 @@ define(function (require) {
          */
         get: function (path, parentModel) {
             if (typeof path === 'string') {
-                // path = this._prefix + path;
                 path = path.split('.');
             }
             if (this.option == null) {
@@ -155,6 +154,11 @@ define(function (require) {
 
         return ExtendedModel;
     };
+
+    zrUtil.merge(Model.prototype, require('./mixin/lineStyle'));
+    zrUtil.merge(Model.prototype, require('./mixin/areaStyle'));
+    zrUtil.merge(Model.prototype, require('./mixin/textStyle'));
+    zrUtil.merge(Model.prototype, require('./mixin/itemStyle'));
 
     return Model;
 });

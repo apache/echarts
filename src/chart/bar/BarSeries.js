@@ -9,7 +9,7 @@ define(function(require) {
 
         type: 'series.bar',
 
-        dependencies: ['xAxis', 'yAxis'],
+        dependencies: ['grid', 'polar'],
 
         getInitialData: function (option, ecModel) {
             return List.fromArray(option.data, this, ecModel);
@@ -22,8 +22,14 @@ define(function(require) {
             clickable: true,
             legendHoverLink: true,
             // stack: null
+
+            // Cartesian coordinate system
             xAxisIndex: 0,
             yAxisIndex: 0,
+
+            // Polar coordinate system
+            polarIndex: 0,
+
             barMinHeight: 0,          // 最小高度改为0
             // barWidth: null,        // 默认自适应
             barGap: '30%',            // 柱间距离，默认为柱形宽度的30%，可设固定值

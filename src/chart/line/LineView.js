@@ -25,7 +25,7 @@ define(function(require) {
                 }
             });
             // Initialization animation
-            if (! this._data) {
+            if (!this._data) {
                 var cartesian = seriesModel.coordinateSystem;
                 var xAxis = cartesian.getAxis('x');
                 var yAxis = cartesian.getAxis('y');

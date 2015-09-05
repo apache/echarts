@@ -108,6 +108,8 @@ define(function (require) {
                 }
             });
 
+            // FIXME 这里 componentTypes 是新的 Option，在依赖处理上是否会有问题
+            // FIXME OPTION 同步是否要改回原来的
             ComponentModel.topologicalTravel(componentTypes, function (componentType, dependencies) {
                 var componentOption = newOption[componentType];
 
@@ -124,6 +126,10 @@ define(function (require) {
                     var ComponentModelClass = ComponentModel.getComponentModelClass(
                         componentType, componentOption[i]
                     );
+
+                    if (! ComponentModelClass) {
+                        throw new Error('Component ' + componentType + ' not exists');
+                    }
 
                     if (componentModel && componentModel instanceof ComponentModelClass) {
                         componentModel.mergeOption(componentOption[i], this);
@@ -169,6 +175,24 @@ define(function (require) {
          */
         eachComponent: function (type, cb, context) {
             zrUtil.each(this._componentsMap[type], cb, context);
+        },
+
+        /**
+         * @param {string} type
+         * @param {Function} cb
+         * @param {*} context
+         * @return {module:echarts/model/Component}
+         */
+        findComponent: function (type, cb, context) {
+            var components = this._componentsMap[type];
+            if (components) {
+                for (var i = 0, len = components.length; i < len; i++) {
+                    if (cb.call(context, components[i], i)) {
+                        // Return first found
+                        return components[i];
+                    }
+                }
+            }
         },
 
         /**
@@ -221,6 +245,11 @@ define(function (require) {
             zrUtil.each(this._componentsMap.series, cb, context);
         },
 
+        /**
+         * @parma {string} type
+         * @param {Function} cb
+         * @param {*} context
+         */
         eachSeriesByType: function (type, cb, context) {
             return zrUtil.each(this.getSeriesByType(type), cb, context);
         },

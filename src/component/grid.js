@@ -3,6 +3,8 @@ define(function(require) {
 
     require('../coord/cartesian/Grid');
 
+    require('./axis');
+
     // Grid view
     require('../echarts').extendComponentView({
 

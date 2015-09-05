@@ -18,8 +18,7 @@
                 'echarts',
                 'echarts/chart/bar',
                 'echarts/component/legend',
-                'echarts/component/grid',
-                'echarts/component/axis'
+                'echarts/component/grid'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -54,9 +53,15 @@
                         }
                     },
                     xAxis: {
-                        data: xAxisData
+                        data: xAxisData,
+                        splitArea: {
+                            show: true
+                        }
                     },
                     yAxis: {
+                        splitArea: {
+                            show: false
+                        }
                     },
                     series: [{
                         name: 'bar',
