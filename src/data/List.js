@@ -293,7 +293,7 @@ define(function(require) {
             }
         }
         else if (coordinateSystem === 'polar') {
-            function axisFinder(axisModel) {
+            var axisFinder = function (axisModel) {
                 return axisModel.get('polarIndex') === polarIndex;
             };
             var polarIndex = seriesModel.get('polarIndex') || 0;

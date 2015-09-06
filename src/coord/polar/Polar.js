@@ -86,10 +86,10 @@ define(function(require) {
          */
         dataToCoord: function (data) {
             var radius = this._radiusAxis.dataToRadius(data[0]);
-            var angle = this._angleAxis.dataToAngle(data[1]);
+            var radian = this._angleAxis.dataToAngle(data[1]) / 180 * Math.PI;
 
-            var x = Math.cos(angle) * radius + this.cx;
-            var y = Math.sin(angle) * radius + this.cy;
+            var x = Math.cos(radian) * radius + this.cx;
+            var y = Math.sin(radian) * radius + this.cy;
 
             return [x, y];
         },
@@ -111,7 +111,7 @@ define(function(require) {
 
             return [
                 this._radiusAxis.radiusToData(radius),
-                this._angleAxis.angleToData(angle)
+                this._angleAxis.angleToData(angle) / Math.PI * 180
             ];
         }
     }

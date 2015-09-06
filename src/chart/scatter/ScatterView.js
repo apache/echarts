@@ -1,5 +1,7 @@
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
+
     require('../../echarts').extendChartView({
 
         type: 'scatter',
@@ -31,9 +33,13 @@ define(function (require) {
                     symbolShape.scale = [0.1, 0.1];
                     symbolShape.position = [layout.x, layout.y];
 
-                    symbolShape.style.set({
-                        fill: dataItem.getVisual('color')
-                    });
+                    symbolShape.style.set(zrUtil.merge(
+                        dataItem.getModel('itemStyle.normal').getItemStyle(),
+                        {
+                            fill: dataItem.getVisual('color')
+                        },
+                        true, false
+                    ));
 
                     symbolShape.animateTo({
                         scale: [symbolSize, symbolSize]

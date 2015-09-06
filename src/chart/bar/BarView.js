@@ -1,5 +1,9 @@
 define(function (require) {
 
+    'use strict';
+
+    var zrUtil = require('zrender/core/util');
+
     return require('../../echarts').extendChartView({
 
         type: 'bar',
@@ -26,18 +30,19 @@ define(function (require) {
                     }
 
                     var layout = dataItem.layout;
-                    var normalItemStyle = dataItem.getModel('itemStyle.normal');
                     var rect = new api.Rect({
                         shape: {
                             x: layout.x,
                             y: layout.y + layout.height,
                             width: layout.width
                         },
-                        style: {
-                            fill: dataItem.getVisual('color'),
-                            stroke: normalItemStyle.get('borderColor'),
-                            lineWidth: normalItemStyle.get('borderWidth')
-                        }
+                        style: zrUtil.merge(
+                            dataItem.getModel('itemStyle.normal').getItemStyle(),
+                            {
+                                fill: dataItem.getVisual('color')
+                            },
+                            true, false
+                        )
                     });
 
                     dataItem.__el = rect;

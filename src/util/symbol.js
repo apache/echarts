@@ -68,11 +68,13 @@ define(function(require) {
             });
         },
 
-        circle: function (x, y, size) {
+        circle: function (x, y, w, h) {
+            // Put circle in the center of square
+            var size = Math.min(w, h);
             return new graphic.Circle({
                 shape: {
-                    cx: x + size / 2,
-                    cy: y + size / 2,
+                    cx: x + w / 2,
+                    cy: y + h / 2,
                     r: size / 2
                 }
             });

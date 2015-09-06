@@ -6,7 +6,7 @@ define(function(require) {
 
     function AngleAxis(scale, angleExtent) {
 
-        angleExtent = angleExtent || [0, Math.PI * 2];
+        angleExtent = angleExtent || [0, 360];
 
         Axis.call(this, 'angle', scale, angleExtent);
 

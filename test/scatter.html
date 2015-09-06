@@ -29,10 +29,10 @@
                 var data2 = [];
                 var data3 = [];
 
-                for (var i = 0; i < 20; i++) {
-                    data1.push([Math.random() * 5, Math.random() * 4]);
-                    data2.push([Math.random() * 10, Math.random() * 5]);
-                    data3.push([Math.random() * 15, Math.random() * 10]);
+                for (var i = 0; i < 100; i++) {
+                    data1.push([Math.random() * 5, Math.random() * 4, Math.random()]);
+                    data2.push([Math.random() * 10, Math.random() * 5, Math.random()]);
+                    data3.push([Math.random() * 15, Math.random() * 10, Math.random()]);
                 }
 
                 chart.setOption({
@@ -40,25 +40,64 @@
                         data: ['scatter', 'scatter2', 'scatter3']
                     },
                     xAxis: {
-                        type: 'value'
+                        type: 'value',
+                        splitLine: {
+                            show: false
+                        }
                     },
                     yAxis: {
-                        type: 'value'
+                        type: 'value',
+                        splitLine: {
+                            show: false
+                        }
                     },
                     series: [{
                         name: 'scatter',
                         type: 'scatter',
-                        symbolSize: 20,
+                        itemStyle: {
+                            normal: {
+                                opacity: 0.8,
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowOffsetY: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        },
+                        symbolSize: function (val) {
+                            return val[2] * 40;
+                        },
                         data: data1
                     }, {
                         name: 'scatter2',
                         type: 'scatter',
-                        symbolSize: 20,
+                        itemStyle: {
+                            normal: {
+                                opacity: 0.8,
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowOffsetY: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        },
+                        symbolSize: function (val) {
+                            return val[2] * 40;
+                        },
                         data: data2
                     }, {
                         name: 'scatter3',
                         type: 'scatter',
-                        symbolSize: 20,
+                        itemStyle: {
+                            normal: {
+                                opacity: 0.8,
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowOffsetY: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        },
+                        symbolSize: function (val) {
+                            return val[2] * 40;
+                        },
                         data: data3
                     }]
                 });

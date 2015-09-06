@@ -23,7 +23,7 @@ define(function (require) {
 
             center: ['50%', '50%'],
 
-            radius: ['0%', '75%']
+            radius: ['0%', '80%']
         }
     });
 });

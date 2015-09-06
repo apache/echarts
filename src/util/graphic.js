@@ -98,6 +98,10 @@ define(function(require) {
                 y1 += offset;
                 y2 += offset;
             }
+            p1[0] = x1;
+            p1[1] = y1;
+            p2[0] = x2;
+            p2[1] = y2;
         }
     };
 

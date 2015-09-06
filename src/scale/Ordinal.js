@@ -73,8 +73,8 @@ define(function (require) {
          */
         setExtent: function (start, end) {
             var thisExtent = this._extent;
-            thisExtent[0] = start;
-            thisExtent[1] = end;
+            thisExtent[0] = Math.max(start, 0);
+            thisExtent[1] = Math.min(end, this._list.length - 1);
         },
 
         /**
@@ -94,6 +94,21 @@ define(function (require) {
         },
 
         /**
+         * @return {Array.<string>}
+         */
+        getTicksLabels: function () {
+            var labels = [];
+            var extent = this._extent;
+            var rank = extent[0];
+
+            while (rank <= extent[1]) {
+                labels.push(this._list[rank]);
+                rank++;
+            }
+            return labels;
+        },
+
+        /**
          * @return {number}
          */
         getExtentSize: function () {
@@ -103,7 +118,7 @@ define(function (require) {
         /**
          * Get item on rank n
          */
-        getItem: function (n) {
+        getLabel: function (n) {
             return this._list[n];
         },
 
