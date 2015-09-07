@@ -100,8 +100,11 @@ define(function(require) {
 
             var value = option.value == null ? option : option.value;
 
-            if (typeof value === 'number') {
-                value = [rawDataIndex, value];
+            if (value === '-' || value == null) {
+                value = [rawDataIndex, null];
+            }
+            else if (!isNaN(value)) {
+                value = [rawDataIndex, +value];
                 /**
                  * If dataIndex is persistent in entry, it should be udpated when modifying list.
                  * So use this.dataIndexIndex to mark that.
@@ -144,22 +147,24 @@ define(function(require) {
          * @return {number}
          */
         getStackedValue: function () {
-            if (this.dimension !== 1) {
-                // Only 1d value support stack
-                return this.getValue();
+
+        },
+
+        setDataIndex: function (index) {
+            if (this.dataIndexIndex != null) {
+                this._value[this.dataIndexIndex] = index;
             }
         },
 
         clone: function () {
-            var entry = new Entry(this.option, this.parentModel);
+            var entry = new Entry(this.option, this.parentModel, this.rawDataIndex);
             entry.name = this.name;
-            entry.dataIndexIndex = this.dataIndexIndex;
-            entry._value = entry.dataIndexIndex != null
-                ? this._value.slice() : this._value;
 
             for (var i = 0; i < dimensions.length; i++) {
                 var key = dimensions[i] + 'Index';
-                entry[key] = this[key];
+                if (this.hasOwnProperty(key)) {
+                    entry[key] = this[key];
+                }
             }
             return entry;
         }
@@ -172,12 +177,6 @@ define(function(require) {
             var index = this[indexKey];
             if (index >= 0) {
                 return this._value[index];
-            }
-        };
-        Entry.prototype['set' + capitalized] = function (val) {
-            var index = this[indexKey];
-            if (index >= 0) {
-                this._value[indexKey] = val;
             }
         };
     });
@@ -219,25 +218,11 @@ define(function(require) {
 
         filterSelf: function (cb, context) {
             this.elements = zrUtil.filter(this.elements, cb, context || this);
-
-            var dataIndexDirty = false;
-            this.elements = zrUtil.filter(this.elements, function (entry) {
-                var result = cb.apply(this, arguments);
-                if (result && entry.dataIndexIndex != null) {
-                    dataIndexDirty = true;
-                }
-                return result;
-            }, context || this);
-
-            dataIndexDirty && this.refreshDataIndex();
+            this.each(this._setEntryDataIndex);
         },
 
-        refreshDataIndex: function () {
-            this.each(function (entry, dataIndex) {
-                if (entry.dataIndexIndex != null) {
-                    entry._value[entry.dataIndexIndex] = dataIndex;
-                }
-            }, this);
+        _setEntryDataIndex: function (entry, dataIndex) {
+            entry.setDataIndex(dataIndex);
         },
 
         /**
