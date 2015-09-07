@@ -1,8 +1,6 @@
 define(function (require) {
-
-    require('../../echarts').registerLayout(function (ecModel, api) {
-
-        ecModel.eachSeriesByType('line', function (lineSeries) {
+    return function (seriesType, ecModel, api) {
+        ecModel.eachSeriesByType(seriesType, function (lineSeries) {
             var data = lineSeries.getData();
             var coords = lineSeries.coordinateSystem.dataToCoords(data);
 
@@ -18,5 +16,5 @@ define(function (require) {
                 }
             });
         });
-    });
+    }
 });

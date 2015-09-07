@@ -1,8 +1,13 @@
 define(function (require) {
 
-    require('./scatter/scatterLayout');
+    var zrUtil = require('zrender/core/util');
+
     require('./scatter/scatterVisual');
 
     require('./scatter/ScatterSeries');
     require('./scatter/ScatterView');
+
+    require('../echarts').registerLayout(zrUtil.curry(
+        require('../layout/points'), 'scatter'
+    ));
 });
