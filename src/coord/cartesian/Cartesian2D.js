@@ -29,8 +29,8 @@ define(function(require) {
 
             return data.map(function (dataItem) {
                 var coord = [];
-                coord[xIndex] = xAxis.dataToCoord(dataItem.getX());
-                coord[1 - xIndex] = yAxis.dataToCoord(dataItem.getY());
+                coord[xIndex] = xAxis.dataToCoord(dataItem.getX(true));
+                coord[1 - xIndex] = yAxis.dataToCoord(dataItem.getY(true));
                 return coord;
             }, this);
         },

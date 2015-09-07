@@ -309,7 +309,7 @@ define(function(require, factory) {
                                 if (value != null) {
                                     axisData[categoryAxis.dim === 'y' ? 'x' : 'y'].push(value);
                                 }
-                            });
+                            }, true);
                         }
                     }
                 }

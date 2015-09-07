@@ -74,7 +74,7 @@ define(function(require) {
          */
         dataToCoords: function (data) {
             return data.map(function (dataItem) {
-                return this.dataToCoord([dataItem.getRadius(), dataItem.getAngle()]);
+                return this.dataToCoord([dataItem.getRadius(true), dataItem.getAngle(true)]);
             }, this);
         },
 

@@ -7,28 +7,23 @@ define(function(require) {
     var Model = require('../model/Model');
     var DataDiffer = require('./DataDiffer');
 
-    function createArrayIterWithDepth(maxDepth, properties, cb, context, iterType) {
-        // Simple optimization to avoid read the undefined value in properties array
-        var nestedProperties = properties.length > 0;
-        return function eachAxis(array, depth) {
-            if (depth === maxDepth) {
-                return zrUtil[iterType](array, cb, context);
-            }
-            else if (array) {
-                var property = properties[depth];
-                for (var i = 0; i < array.length; i++) {
-                    var item = array[i];
-                    // Access property of each item
-                    if (nestedProperties && property && item) {
-                        item = item[property];
-                    }
-                    array[i] = eachAxis(item, depth);
-                }
-            }
-        };
-    }
+    var POSSIBLE_DIMENSIONS = ['x', 'y', 'z', 'value', 'radius', 'angle'];
 
-    var dimensions = ['x', 'y', 'z', 'value', 'radius', 'angle'];
+    /**
+     * Check if two entries has same xIndex, yIndex, zIndex, valueIndex, etc.
+     * @param {module:echarts/data/List~Entry} entry1
+     * @param {module:echarts/data/List~Entry} entry2
+     * @inner
+     */
+    function isEntrySameShape(entry1, entry2) {
+        for (var i = 0; i < POSSIBLE_DIMENSIONS.length; i++) {
+            var key = POSSIBLE_DIMENSIONS[i] + 'Index';
+            if (entry1[key] !== entry2[key]) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     /**
      * @name echarts/data/List~Entry
@@ -79,6 +74,11 @@ define(function(require) {
          * @protected
          */
         valueIndex: 1,
+
+        /**
+         * @type {module:echarts/data/List~Entry}
+         */
+        stackedOn: null,
 
         init: function (option, parentModel, rawDataIndex, independentVar, dependentVar) {
 
@@ -143,25 +143,19 @@ define(function(require) {
             this.rawDataIndex = rawDataIndex;
         },
 
-        /**
-         * @return {number}
-         */
-        getStackedValue: function () {
-
-        },
-
         setDataIndex: function (index) {
             if (this.dataIndexIndex != null) {
                 this._value[this.dataIndexIndex] = index;
             }
         },
 
-        clone: function () {
-            var entry = new Entry(this.option, this.parentModel, this.rawDataIndex);
+        clone: function (dataIndex) {
+            var entry = new Entry(this.option, this.parentModel, dataIndex);
             entry.name = this.name;
+            entry.stackedOn = this.stackedOn;
 
-            for (var i = 0; i < dimensions.length; i++) {
-                var key = dimensions[i] + 'Index';
+            for (var i = 0; i < POSSIBLE_DIMENSIONS.length; i++) {
+                var key = POSSIBLE_DIMENSIONS[i] + 'Index';
                 if (this.hasOwnProperty(key)) {
                     entry[key] = this[key];
                 }
@@ -170,23 +164,62 @@ define(function(require) {
         }
     });
 
-    zrUtil.each(dimensions, function (dim) {
+    zrUtil.each(POSSIBLE_DIMENSIONS, function (dim) {
         var capitalized = dim[0].toUpperCase() + dim.substr(1);
         var indexKey = dim + 'Index';
-        Entry.prototype['get' + capitalized] = function () {
+        var getterName = 'get' + capitalized;
+        Entry.prototype[getterName] = function (stack) {
             var index = this[indexKey];
             if (index >= 0) {
-                return this._value[index];
+                var val = this._value[index];
+                var stackedOn = this.stackedOn;
+
+                // Normalize empty value
+                if (val === '-' || val == null) {
+                    val = null;
+                }
+                if (val != null
+                    // Has stack
+                    && stack && stackedOn
+                    // Is getValue
+                    && index === this.valueIndex
+                    // Has same dimensions shape on stack
+                    // PENDING If check the two stacking entries have same shape
+                    && isEntrySameShape(this, stackedOn)
+                ) {
+                    var stackValue = stackedOn[getterName](stack);
+                    if (
+                        // Positive stack
+                        val > 0 && stackValue > 0
+                        // Negative stack
+                        || (val < 0 && stackValue < 0)
+                    ) {
+                        val += stackValue;
+                    }
+                }
+                return val;
             }
         };
     });
 
-    function List() {
+    function List(dimensions, value) {
         /**
          * @readOnly
          * @type {Array}
          */
         this.elements = [];
+
+        /**
+         * @readOnly
+         * @type {Array.<string>}
+         */
+        this.dimensions = dimensions || ['x']
+
+        /**
+         * @readOnly
+         * @type {string}
+         */
+        this.value = value || 'y';
     }
 
     List.prototype = {
@@ -195,17 +228,47 @@ define(function(require) {
 
         type: 'list',
 
+        /**
+         * @type {module:echarts/data/List~Entry}
+         */
+        at: function (idx) {
+            return this.elements[idx];
+        },
+
+        /**
+         * Create and add a new entry
+         * @param {Object} option
+         * @param {module:echarts/model/Series} seriesModel
+         * @return {module:echarts/data/List~Entry}
+         */
+        add: function (option, seriesModel) {
+            var elements = this.elements;
+            var entry = new Entry(option, seriesModel, elements.length, this.dimensions, this.value);
+            elements.push(entry);
+            return entry;
+        },
+
+        /**
+         * Get elements count
+         * @return {number}
+         */
         count: function () {
             return this.elements.length;
         },
 
+        /**
+         * Iterate each element
+         * @param {Function} cb
+         * @param {*} context
+         */
         each: function (cb, context) {
             zrUtil.each(this.elements, cb, context || this);
         },
 
         /**
-         * Data mapping, returned array is flatten
-         * PENDING
+         * Map elemements to a new created array
+         * @param {Function} cb
+         * @param {*} context
          */
         map: function (cb, context) {
             var ret = [];
@@ -216,6 +279,11 @@ define(function(require) {
             return ret;
         },
 
+        /**
+         * Filter elements in place
+         * @param {Function} cb
+         * @param {*} context
+         */
         filterSelf: function (cb, context) {
             this.elements = zrUtil.filter(this.elements, cb, context || this);
             this.each(this._setEntryDataIndex);
@@ -229,7 +297,6 @@ define(function(require) {
          * @return {module:echarts/data/List~Entry}
          */
         getByName: function (name) {
-            // TODO deep hierarchy
             var elements = this.elements;
             for (var i = 0; i < elements.length; i++) {
                 if (elements[i].name === name) {
@@ -250,31 +317,47 @@ define(function(require) {
             return el;
         },
 
+        /**
+         * Get the diff result with the old list data
+         * @param {module:echarts/data/List} oldList
+         * @return {module:echarts/data/DataDiffer}
+         * @example
+         *  data.diff(this._data)
+         *      .add(function (item) { // Add a new shape})
+         *      .update(function (newItem, oldItem) { // Update the shape})
+         *      .remove(function (item) { // Remove unused shape})
+         *      .execute()
+         */
         diff: function (oldList) {
             return new DataDiffer(oldList ? oldList.elements : [], this.elements);
         },
 
+        /**
+         * Clone a new list and all its' entries
+         * @return {module:echarts/data/List}
+         */
         clone: function () {
-            var list = new List();
-            var elements = this.elements;
-            for (var i = 0; i < elements.length; i++) {
-                list.elements.push(elements[i].clone());
-            }
+            var list = new List(this.dimensions, this.value);
+            list.elements = zrUtil.map(this.elements, function (el, i) {
+                return el.clone(i);
+            });
             return list;
         }
     };
 
-    zrUtil.each(['X', 'Y', 'Z', 'Value'], function (name) {
-        List.prototype['each' + name] = function (cb, context) {
+    zrUtil.each(POSSIBLE_DIMENSIONS, function (dim) {
+        var capitalized = dim[0].toUpperCase() + dim.substr(1);
+
+        List.prototype['each' + capitalized] = function (cb, stack, context) {
             this.each(function (item, idx) {
-                cb && cb.call(context || this, item['get' + name](idx));
+                cb && cb.call(context || this, item['get' + capitalized](stack));
             }, context);
         };
 
-        List.prototype['map' + name] = function (cb, context) {
+        List.prototype['map' + capitalized] = function (cb, stack, context) {
             var ret = [];
             this.each(function (item) {
-                ret.push(cb && cb.call(context || this, item['get' + name]()));
+                ret.push(cb && cb.call(context || this, item['get' + capitalized](stack)));
             }, context);
             return ret;
         };
@@ -340,11 +423,11 @@ define(function(require) {
             }
         }
 
-        var list = new List();
+        var list = new List(independentVar, dependentVar);
 
         // Normalize data
-        list.elements = zrUtil.map(data, function (dataItem, index) {
-            var entry = new Entry(dataItem, seriesModel, index, independentVar, dependentVar);
+        zrUtil.each(data, function (dataItem, index) {
+            var entry = list.add(dataItem, seriesModel);
             // FIXME
             if (! dataItem.name) {
                 entry.name = index;

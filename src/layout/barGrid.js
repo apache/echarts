@@ -146,7 +146,7 @@ define(function(require) {
                 lastStackCoords[stackId] = lastStackCoords[stackId] || [];
                 data.each(function (dataItem, dataIndex) {
 
-                    var value = dataItem.getValue();
+                    var value = dataItem.getValue(true);
                     // 空数据
                     if (value == null) {
                         return;

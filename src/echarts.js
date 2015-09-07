@@ -167,6 +167,8 @@ define(function (require) {
 
             this._processData(ecModel);
 
+            this._stackSeriesData(ecModel);
+
             this._coordinateSystem.update(ecModel, this._extensionAPI);
 
             this._doVisualCoding(ecModel);
@@ -308,6 +310,26 @@ define(function (require) {
         _processData: function (ecModel) {
             zrUtil.each(dataProcessorFuncs, function (processor) {
                 processor(ecModel);
+            });
+        },
+
+        /**
+         * @private
+         */
+        _stackSeriesData: function (ecModel) {
+            var stackedDataMap = {};
+            ecModel.eachSeries(function (series) {
+                var stack = series.get('stack');
+                var data = series.getData();
+                if (stack && data.type === 'list' && data.dimensions.length === 1) {
+                    var previousStack = stackedDataMap[stack];
+                    if (previousStack) {
+                        data.each(function (dataItem, idx) {
+                            dataItem.stackedOn = previousStack.at(idx);
+                        });
+                    }
+                    stackedDataMap[stack] = data;
+                }
             });
         },
 

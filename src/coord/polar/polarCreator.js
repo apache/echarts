@@ -108,11 +108,14 @@ define(function (require) {
                 var isAngleCategory = angleAxis.type === 'category';
 
                 var data = seriesModel.getData();
+                var valueMapper = function (a) {
+                    return a;
+                }
                 if (! isRadiusCategory) {
-                    radiusAxis.scale.setExtentFromData(data.map(function (dataItem) { return dataItem.getRadius(); }), true);
+                    radiusAxis.scale.setExtentFromData(data.mapRadius(valueMapper, true), true);
                 }
                 if (! isAngleCategory) {
-                    angleAxis.scale.setExtentFromData(data.map(function (dataItem) { return dataItem.getAngle(); }), true);
+                    angleAxis.scale.setExtentFromData(data.mapAngle(valueMapper, true), true);
                 }
             }
         });
