@@ -116,11 +116,11 @@ define(function(require) {
         return result;
     }
 
-    function barLayoutGrid(ecModel, api) {
+    function barLayoutGrid(seriesType, ecModel, api) {
 
         var barWidthAndOffset = calBarWidthAndOffset(
             zrUtil.filter(
-                ecModel.getSeriesByType('bar'),
+                ecModel.getSeriesByType(seriesType),
                 function (seriesModel) {
                     return seriesModel.coordinateSystem
                     && seriesModel.coordinateSystem.type === 'cartesian2d'
@@ -130,7 +130,7 @@ define(function(require) {
 
         var lastStackCoords = {};
 
-        ecModel.eachSeriesByType('bar', function (seriesModel) {
+        ecModel.eachSeriesByType(seriesType, function (seriesModel) {
 
             var data = seriesModel.getData();
             var cartesian = seriesModel.coordinateSystem;
@@ -179,8 +179,6 @@ define(function(require) {
             }
         }, this);
     }
-
-    require('../../echarts').registerLayout(barLayoutGrid);
 
     return barLayoutGrid;
 });

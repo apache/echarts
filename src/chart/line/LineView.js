@@ -3,6 +3,7 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var symbolCreator = require('../../util/symbol');
 
     return require('../../echarts').extendChartView({
 
@@ -22,10 +23,14 @@ define(function(require) {
             var coordinateSystem = seriesModel.coordinateSystem;
             var isCoordinateSystemPolar = coordinateSystem.type === 'polar';
 
-            // if (isCoordinateSystemPolar && points.length > 2) {
-            //     // Close polyline
-            //     points.push(Array.prototype.slice.call(points[0]));
-            // }
+            if (
+                isCoordinateSystemPolar
+                && points.length > 2
+                && coordinateSystem.getAngleAxis().type === 'category'
+            ) {
+                // Close polyline
+                points.push(Array.prototype.slice.call(points[0]));
+            }
 
             // Initialization animation
             if (!this._data) {
@@ -53,6 +58,7 @@ define(function(require) {
                 this._polyline = polyline;
             }
             else {
+                // FIXME Handle the situation of adding and removing data
                 this._polyline.animateShape()
                     .when(500, {
                         points: points
@@ -64,6 +70,10 @@ define(function(require) {
             }
 
             this._data = data;
+        },
+
+        _drawSymbols: function (data) {
+
         },
 
         _createGridClipShape: function (cartesian, api) {

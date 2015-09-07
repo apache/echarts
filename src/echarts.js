@@ -301,7 +301,7 @@ define(function (require) {
          */
         _doLayout: function (ecModel) {
             zrUtil.each(this._layouts, function (layout) {
-                layout(ecModel);
+                layout.update(ecModel);
             });
             zrUtil.each(layoutFuncs, function (layout) {
                 layout(ecModel);
