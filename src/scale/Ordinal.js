@@ -111,7 +111,7 @@ define(function (require) {
         /**
          * @return {number}
          */
-        getExtentSize: function () {
+        count: function () {
             return this._extent[1] - this._extent[0];
         },
 

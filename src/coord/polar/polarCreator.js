@@ -143,7 +143,7 @@ define(function (require) {
                 setAxis(angleAxis, angleAxisModel);
 
                 if (angleAxis.type === 'category' && ! angleAxis.onBand) {
-                    var angle = 360 - 360 / (angleAxis.scale.getExtentSize() + 1);
+                    var angle = 360 - 360 / (angleAxis.scale.count() + 1);
                     angleAxis.setExtent(0, angle);
                 }
 

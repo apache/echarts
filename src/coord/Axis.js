@@ -88,7 +88,7 @@ define(function (require) {
 
             var extent = this.getExtent();
             if (this.onBand) {
-                fixExtentWithBands(extent, this.scale.getExtentSize());
+                fixExtentWithBands(extent, this.scale.count());
             }
 
             return linearMap(data, [0, 1], extent, clamp);
@@ -104,7 +104,7 @@ define(function (require) {
             var extent = this.getExtent();
 
             if (this.onBand) {
-                fixExtentWithBands(extent, this.scale.getExtentSize());
+                fixExtentWithBands(extent, this.scale.count());
             }
 
             var t = linearMap(mapped, extent, [0, 1], clamp);
@@ -161,7 +161,7 @@ define(function (require) {
         getBands: function () {
             var extent = this._extent;
             var bands = [];
-            var len = this.scale.getExtentSize() + 1;
+            var len = this.scale.count() + 1;
             var start = extent[0];
             var end = extent[1];
             var size = end - start;
