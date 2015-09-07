@@ -224,7 +224,7 @@ define(function(require, factory) {
                     yAxisModel.get('type'),
                     yAxisModel.get('position')
                 );
-                axisY.onBand = yAxisModel.get('boundaryGap');
+                axisY.onBand = yAxisModel.get('boundaryGap') && axisY.type === 'category';
                 axisY.inverse = yAxisModel.get('inverse');
 
                 yAxisModel.axis = axisY;
