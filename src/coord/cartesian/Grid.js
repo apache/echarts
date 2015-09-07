@@ -26,10 +26,10 @@ define(function(require, factory) {
         var axisType = axisModel.get('type');
         if (axisType) {
             return axisType === 'category'
-                ? new OrdinalScale(axisModel.get('data'))
+                ? new OrdinalScale(axisModel.getData())
                 : new IntervalScale();
         }
-    };
+    }
 
     /**
      * Check if the axis is used in the specified grid
@@ -232,7 +232,7 @@ define(function(require, factory) {
                 this._axesList.push(axisY);
                 this._axesMap['y' + idx] = axisY;
 
-                xAxesMap[idx] = axisY;
+                yAxesMap[idx] = axisY;
                 yAxesCount++;
             }, this);
 
@@ -253,18 +253,6 @@ define(function(require, factory) {
 
                     cartesian.addAxis(xAxis);
                     cartesian.addAxis(yAxis);
-                });
-            });
-
-            ecModel.eachComponent('xAxis', function (xAxisModel, i) {
-                ecModel.eachComponent('yAxis', function (yAxisModel, j) {
-                    var key = 'x' + i + 'y' + j;
-                    var cartesian = new Cartesian2D(key);
-                    this._coordsMap[key] = cartesian;
-                    this._coordsList.push(cartesian);
-
-                    cartesian.addAxis(xAxisModel.axis);
-                    cartesian.addAxis(yAxisModel.axis);
                 }, this);
             }, this);
 
@@ -319,7 +307,7 @@ define(function(require, factory) {
                         else {
                             data.eachValue(function (value) {
                                 if (value != null) {
-                                    axisData[categoryAxis.dim == 'y' ? 'x' : 'y'].push(value);
+                                    axisData[categoryAxis.dim === 'y' ? 'x' : 'y'].push(value);
                                 }
                             });
                         }
@@ -371,7 +359,7 @@ define(function(require, factory) {
         });
 
         return grids;
-    }
+    };
 
     require('../../CoordinateSystem').register('grid', Grid);
 

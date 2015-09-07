@@ -68,9 +68,13 @@ define(function (require) {
                 group.add(text);
 
                 legendSymbol.on('click', function () {
-                    legendModel.toggleSelected(seriesName);
-                    api.update();
-                });
+                    api.dispatch({
+                        type: 'legendSelected',
+                        from: this.uid,
+                        legendModel: legendModel,
+                        seriesName: seriesName
+                    });
+                }, this);
             }, this);
 
             var groupRect = group.getBoundingRect();
@@ -80,9 +84,9 @@ define(function (require) {
         _createSymbol: function (seriesModel, x, y, width, height, api) {
 
             // Using rect symbol defaultly
-            var legendSymbolType = seriesModel.getVisual('legendSymbol')
+            var legendSymbolType = seriesModel && seriesModel.getVisual('legendSymbol')
                 || 'roundRect';
-            var symbolType = seriesModel.getVisual('symbol');
+            var symbolType = seriesModel && seriesModel.getVisual('symbol');
 
             var legendSymbolShape = symbolCreator.createSymbol(legendSymbolType, x, y, width, height);
 

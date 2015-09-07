@@ -9,24 +9,23 @@ define(function(require) {
     var helper = require('./helper');
 
     echarts.registerAction('dataZoom', function (event, ecModel) {
-        var sourceDataZoomModel = event.targetModel;
-        ecModel.eachComponent('dataZoom', zrUtil.curry(processSingleDataZoom, event, ecModel));
-    });
+        var linkSet = helper.findLinkSet(
+            zrUtil.bind(ecModel.eachComponent, ecModel, 'dataZoom'),
+            function (model, dimNames) {
+                return model.get(dimNames.axisIndex);
+            },
+            event.dataZoomModel
+        );
 
-    function processSingleDataZoom(event, ecModel, dataZoomModel) {
-        helper.eachAxisDim(function (dimNames) {
-            zrUtil.each(
-                dataZoomModel.get(dimNames.axisIndex),
-                zrUtil.curry(processSingleAxis, ecModel, dataZoomModel, dimNames)
-            );
+        var dataZoomRange = event.dataZoomRange;
+        zrUtil.each(linkSet.models, function (dataZoomModel) {
+            dataZoomModel.setRange({
+                start: dataZoomRange.start,
+                end: dataZoomRange.end,
+                start2: dataZoomRange.start2,
+                end2: dataZoomRange.end2
+            });
         });
-    }
-
-    function processSingleAxis(ecModel, dataZoomModel, dimNames, axisIndex) {
-    }
-
-    function isSharingAxis(dataZoomModel0, dataZoomModel1) {
-
-    }
+    });
 
 });

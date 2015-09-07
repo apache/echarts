@@ -77,6 +77,7 @@ define(function (require) {
                 max = Math.max(data[i], max);
                 min = Math.min(data[i], min);
             }
+
             this.setExtent(min, max);
         },
 

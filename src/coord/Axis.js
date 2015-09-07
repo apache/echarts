@@ -84,7 +84,6 @@ define(function (require) {
             if (data == null || data === '-') {
                 return NaN;
             }
-
             data = this.scale.normalize(data);
 
             var extent = this.getExtent();

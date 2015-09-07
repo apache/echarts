@@ -40,12 +40,14 @@ define(function(require) {
 
             var oldDataMap = {};
             var newDataMap = {};
+            var newDataIndexMap = {};
             var i;
             for (i = 0; i < oldArr.length; i++) {
                 oldDataMap[oldArr[i].name] = oldArr[i];
             }
             for (i = 0; i < newArr.length; i++) {
                 newDataMap[newArr[i].name] = newArr[i];
+                newDataIndexMap[newArr[i].name] = i;
             }
 
             for (i = 0; i < oldArr.length; i++) {
@@ -61,8 +63,8 @@ define(function(require) {
 
             for (i = 0; i < newArr.length; i++) {
                 var newData = newArr[i];
-                if (! oldDataMap[newData.name]) {
-                    this._add && this._add(newData);
+                if (!oldDataMap[newData.name]) {
+                    this._add && this._add(newData, newDataIndexMap[newData.name]);
                 }
             }
         }

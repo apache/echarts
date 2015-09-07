@@ -11,14 +11,14 @@ define(function(require) {
 
     // FIXME
     // 公用？
-    helper.eachAxisDim = function (callback, scope) {
+    helper.eachAxisDim = function (callback, context) {
         zrUtil.each(AXIS_DIMS, function (axisDim) {
             var names = {
                 axisIndex: axisDim + 'AxisIndex',
                 axis: axisDim + 'Axis',
                 dim: axisDim
             };
-            callback.call(scope, names);
+            callback.call(context, names);
         });
     };
 

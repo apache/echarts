@@ -19,7 +19,7 @@ define(function (require) {
             var data = seriesModel.getData();
 
             data.diff(this._data)
-                .add(function (dataItem, idx) {
+                .add(function (dataItem, dataIndex) {
                     // 空数据
                     if (dataItem.getValue() == null) {
                         return;
@@ -48,7 +48,7 @@ define(function (require) {
                     // Animation
                     rect.animateTo({
                         shape: layout
-                    }, 1000, 300 * dataItem.dataIndex / data.elements.length, 'cubicOut');
+                    }, 1000, 300 * dataIndex / data.count(), 'cubicOut');
                 })
                 .update(function (newData, oldData) {
                     var el = oldData.__el;

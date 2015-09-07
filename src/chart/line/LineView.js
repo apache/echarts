@@ -66,11 +66,13 @@ define(function(require) {
                 this._polyline = polyline;
             }
             else {
-                this._polyline.animateShape()
-                    .when(500, {
-                        points: points
-                    })
-                    .start('cubicOut');
+                // this._polyline.animateShape()
+                //     .when(500, {
+                //         points: points
+                //     })
+                //     .start('cubicOut');
+                this._polyline.shape.points = points;
+                this._polyline.dirty(true);
             }
 
             this._data = data;

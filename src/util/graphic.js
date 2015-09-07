@@ -4,7 +4,7 @@ define(function(require) {
 
     var pathTool = require('zrender/tool/path');
     var matrix = require('zrender/core/matrix');
-
+    var round = Math.round;
     var Path = require('zrender/graphic/Path');
 
     var graphic = {
@@ -77,27 +77,81 @@ define(function(require) {
         },
 
         /**
-         * @param {Array.<number>} p1
-         * @param {Array.<number>} p2
-         * @param {number} lineWidth
+         * Sub pixel optimize line for canvas
+         *
+         * @param {Object} param
+         * @param {Object} [param.shape]
+         * @param {number} [param.shape.x1]
+         * @param {number} [param.shape.y1]
+         * @param {number} [param.shape.x2]
+         * @param {number} [param.shape.y2]
+         * @param {Object} [param.style]
+         * @param {number} [param.style.lineWidth]
+         * @return {Object} Modified param
          */
-        subPixelOptimizeLine: function (p1, p2, lineWidth) {
-            var round = Math.round;
-            // Sub pixel optimize
-            var offset = lineWidth % 2 / 2;
-            var x1 = round(p1[0]);
-            var y1 = round(p1[1]);
-            var x2 = round(p2[0]);
-            var y2 = round(p2[1]);
+        subPixelOptimizeLine: function (param) {
+            var subPixelOptimize = graphic.subPixelOptimize;
+            var shape = param.shape;
+            var lineWidth = param.style.lineWidth;
 
-            if (x1 === x2) {
-                x1 += offset;
-                x2 += offset;
+            if (round(shape.x1 * 2) === round(shape.x2 * 2)) {
+                shape.x1 = shape.x2 = subPixelOptimize(shape.x1, lineWidth, true);
             }
-            if (y1 === y2) {
-                y1 += offset;
-                y2 += offset;
+            if (round(shape.y1 * 2) === round(shape.y2 * 2)) {
+                shape.y1 = shape.y2 = subPixelOptimize(shape.y1, lineWidth, true);
             }
+            return param;
+        },
+
+        /**
+         * Sub pixel optimize rect for canvas
+         *
+         * @param {Object} param
+         * @param {Object} [param.shape]
+         * @param {number} [param.shape.x]
+         * @param {number} [param.shape.y]
+         * @param {number} [param.shape.width]
+         * @param {number} [param.shape.height]
+         * @param {Object} [param.style]
+         * @param {number} [param.style.lineWidth]
+         * @return {Object} Modified param
+         */
+        subPixelOptimizeRect: function (param) {
+            var subPixelOptimize = graphic.subPixelOptimize;
+            var shape = param.shape;
+            var lineWidth = param.style.lineWidth;
+            var originX = shape.x;
+            var originY = shape.y;
+            var originWidth = shape.width;
+            var originHeight = shape.height;
+            shape.x = subPixelOptimize(shape.x, lineWidth, true);
+            shape.y = subPixelOptimize(shape.y, lineWidth, true);
+            shape.width = Math.max(
+                subPixelOptimize(originX + originWidth, lineWidth, false) - shape.x,
+                originWidth === 0 ? 0 : 1
+            );
+            shape.height = Math.max(
+                subPixelOptimize(originY + originHeight, lineWidth, false) - shape.y,
+                originHeight === 0 ? 0 : 1
+            );
+            return param;
+        },
+
+        /**
+         * Sub pixel optimize for canvas
+         *
+         * @param {number} position Coordinate, such as x, y
+         * @param {number} lineWidth Should be nonnegative integer.
+         * @param {boolean=} positiveOrNegative Default false (negative).
+         * @return {number} Optimized position.
+         */
+        subPixelOptimize: function (position, lineWidth, positiveOrNegative) {
+            // Assure that (position + lineWidth / 2) is near integer edge,
+            // otherwise line will be fuzzy in canvas.
+            var doubledPosition = round(position * 2);
+            return (doubledPosition + round(lineWidth)) % 2 === 0
+                ? doubledPosition / 2
+                : (doubledPosition + (positiveOrNegative ? 1 : -1)) / 2;
         }
     };
 

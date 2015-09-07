@@ -15,11 +15,42 @@ define(function(require) {
         dependencies: ['xAxis', 'yAxis', 'series'],
 
         /**
+         * @protected
+         */
+        defaultOption: {
+            zlevel: 0,                 // 一级层叠
+            z: 4,                      // 二级层叠
+            show: false,
+            orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
+                                       // 'horizontal' ¦ 'vertical'
+            // x: {number},            // 水平安放位置，默认为根据grid参数适配，可选为：
+                                       // {number}（x坐标，单位px）
+            // y: {number},            // 垂直安放位置，默认为根据grid参数适配，可选为：
+                                       // {number}（y坐标，单位px）
+            // width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
+            // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
+            backgroundColor: 'rgba(0,0,0,0)',       // 背景颜色
+            dataBackgroundColor: '#eee',            // 数据背景颜色
+            fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
+            handleColor: 'rgba(70,130,180,0.8)',    // 手柄颜色
+            handleSize: 10,
+            showDetail: true,
+            // xAxisIndex: [],         // 默认控制所有横向类目
+            // yAxisIndex: [],         // 默认控制所有横向类目
+            start: 0,               // 默认为0
+            end: 100,               // 默认为全部 100%
+            start2: 0,               // 默认为0
+            end2: 100,               // 默认为全部 100%
+            realtime: true
+            // zoomLock: false         // 是否锁定选择区域大小
+        },
+
+        /**
          * @override
          */
         init: function (option, parentModel, ecModel) {
             this.mergeDefaultAndTheme(option, ecModel);
-            this.mergeOption();
+            this.mergeOption({});
         },
 
         /**
@@ -48,12 +79,12 @@ define(function(require) {
             var thisOption = this.option;
             var noAxisDefined = true;
 
-            helper.eachAxisDim(function (names) {
+            helper.eachAxisDim(function (dimNames) {
                 // Overlap these arrays but not merge.
                 var axisIndices = helper.toArray(helper.retrieveValue(
-                    newOption[names.axisIndex], thisOption[names.axisIndex], []
+                    newOption[dimNames.axisIndex], thisOption[dimNames.axisIndex], []
                 ));
-                var axisModels = this.dependentModels[names.axis];
+                var axisModels = this.dependentModels[dimNames.axis];
 
                 // If not specified, set default.
                 if (axisModels.length && !axisIndices.length) {
@@ -63,7 +94,7 @@ define(function(require) {
                         }
                     }
                 }
-                thisOption[names.axisIndex] = axisIndices;
+                thisOption[dimNames.axisIndex] = axisIndices;
 
                 if (axisIndices.length) {
                     noAxisDefined = false;
@@ -80,9 +111,9 @@ define(function(require) {
                 // both xAxis and yAxis which type is 'value'.
                 this.ecModel.eachSeries(function (seriesModel) {
                     if (this._isSeriesHasAllAxesTypeOf(seriesModel, 'value')) {
-                        helper.eachAxisDim(function (names) {
-                            var axisIndices = thisOption[names.axisIndex];
-                            var axisIndex = seriesModel.get(names.axisIndex);
+                        helper.eachAxisDim(function (dimNames) {
+                            var axisIndices = thisOption[dimNames.axisIndex];
+                            var axisIndex = seriesModel.get(dimNames.axisIndex);
                             if (zrUtil.indexOf(axisIndices, axisIndex) < 0) {
                                 axisIndices.push(axisIndex);
                             }
@@ -98,9 +129,9 @@ define(function(require) {
             // 例如series.type === scatter时。
 
             var is = true;
-            helper.eachAxisDim(function (names) {
-                var seriesAxisIndex = seriesModel.get(names.axisIndex);
-                var axisModel = this.dependentModels[names.axis][seriesAxisIndex];
+            helper.eachAxisDim(function (dimNames) {
+                var seriesAxisIndex = seriesModel.get(dimNames.axisIndex);
+                var axisModel = this.dependentModels[dimNames.axis][seriesAxisIndex];
 
                 if (!axisModel || axisModel.get('type') !== axisType) {
                     is = false;
@@ -122,9 +153,9 @@ define(function(require) {
             // When only xAxisIndex or only yAxisIndex is specified, start/end controls them.
             // targetDim === false means that both xAxisIndex and yAxisIndex are specified.
             var targetDim;
-            helper.eachAxisDim(function (names) {
-                if (thisOption[names.axisIndex].length) {
-                    targetDim = targetDim !== false ? false : names.dim;
+            helper.eachAxisDim(function (dimNames) {
+                if (thisOption[dimNames.axisIndex].length) {
+                    targetDim = targetDim !== false ? false : dimNames.dim;
                 }
             });
 
@@ -136,7 +167,7 @@ define(function(require) {
                 targetDim2 = targetDim === 'x' ? 'y' : 'x';
             }
 
-            var optAttrs = [];
+            var optAttrs = {};
             optAttrs[targetDim] = {start: 'start', end: 'end'};
             targetDim2 && (optAttrs[targetDim2] = {start: 'start2', end: 'end2'});
 
@@ -156,11 +187,43 @@ define(function(require) {
                 });
                 thisOption[dimItem.start] = startValue;
                 thisOption[dimItem.end] = endValue;
-            });
+            }, this);
 
             if (!targetDim2) {
                 thisOption.start2 = thisOption.end2 = null;
             }
+        },
+
+        /**
+         * @public
+         * @param {Function} callback param: axisModel, dimNames, axisIndex, dataZoomModel, ecModel
+         */
+        eachTargetAxis: function (callback, context) {
+            var ecModel = this.ecModel;
+            helper.eachAxisDim(function (dimNames) {
+                zrUtil.each(
+                    this.get(dimNames.axisIndex),
+                    function (axisIndex) {
+                        callback.call(context, dimNames, axisIndex, this, ecModel);
+                    },
+                    this
+                );
+            }, this);
+        },
+
+        /**
+         * @public
+         * @param {string} dimName 'x', 'y', 'z'
+         * @param {number} axisIndex
+         */
+        getTargetSeriesModels: function (dimName, axisIndex) {
+            var seriesModels = [];
+            this.ecModel.eachSeries(function (seriesModel) {
+                if (axisIndex === seriesModel.get(dimName + 'AxisIndex')) {
+                    seriesModels.push(seriesModel);
+                }
+            });
+            return seriesModels;
         },
 
         /**
@@ -193,37 +256,6 @@ define(function(require) {
                 star2: thisOption.star2,
                 end2: thisOption.end2
             };
-        },
-
-        /**
-         * @protected
-         */
-        defaultOption: {
-            zlevel: 0,                 // 一级层叠
-            z: 4,                      // 二级层叠
-            show: false,
-            orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
-                                       // 'horizontal' ¦ 'vertical'
-            // x: {number},            // 水平安放位置，默认为根据grid参数适配，可选为：
-                                       // {number}（x坐标，单位px）
-            // y: {number},            // 垂直安放位置，默认为根据grid参数适配，可选为：
-                                       // {number}（y坐标，单位px）
-            // width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
-            // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
-            backgroundColor: 'rgba(0,0,0,0)',       // 背景颜色
-            dataBackgroundColor: '#eee',            // 数据背景颜色
-            fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
-            handleColor: 'rgba(70,130,180,0.8)',    // 手柄颜色
-            handleSize: 8,
-            showDetail: true,
-            // xAxisIndex: [],         // 默认控制所有横向类目
-            // yAxisIndex: [],         // 默认控制所有横向类目
-            start: 0,               // 默认为0
-            end: 100,               // 默认为全部 100%
-            start2: 0,               // 默认为0
-            end2: 100,               // 默认为全部 100%
-            realtime: true
-            // zoomLock: false         // 是否锁定选择区域大小
         }
 
     });

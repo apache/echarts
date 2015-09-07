@@ -154,12 +154,16 @@ define(function (require) {
             this._needsUpdate = true;
         },
 
-        updateImmediately: function () {
+        updateImmediately: function (event) {
             // console.time('update');
 
             var ecModel = this._model;
 
             ecModel.restoreData();
+
+            // TODO
+            // Save total ecModel here for undo/redo (after restoring data and before processing data).
+            // Undo (restoration of total ecModel) can be carried out in 'action' or outside API call.
 
             this._processData(ecModel);
 
@@ -167,9 +171,9 @@ define(function (require) {
 
             this._doVisualCoding(ecModel);
 
-            this._doLayout(ecModel);
+            this._doLayout(ecModel, event);
 
-            this._doRender(ecModel);
+            this._doRender(ecModel, event);
 
             this._needsUpdate = false;
 
@@ -188,6 +192,20 @@ define(function (require) {
             // this._doRender(ecModel);
 
             this.updateImmediately();
+        },
+
+        /**
+         * @pubilc
+         * @param {Object} event
+         * @param {string} [event.type] Event type
+         * @param {number} [event.from] From uid
+         */
+        dispatch: function (event) {
+            var action = actions[event.type];
+            if (action) {
+                action(event, this._model);
+                this.updateImmediately(event);
+            }
         },
 
         _prepareCharts: function (ecModel) {
@@ -299,12 +317,12 @@ define(function (require) {
          * @param {module:echarts/model/Global} ecModel
          * @private
          */
-        _doLayout: function (ecModel) {
+        _doLayout: function (ecModel, event) {
             zrUtil.each(this._layouts, function (layout) {
-                layout(ecModel);
+                layout(ecModel, event);
             });
             zrUtil.each(layoutFuncs, function (layout) {
-                layout(ecModel);
+                layout(ecModel, event);
             });
         },
 
@@ -323,23 +341,25 @@ define(function (require) {
         /**
          * Render each chart and component
          */
-        _doRender: function (ecModel) {
+        _doRender: function (ecModel, event) {
             var api = this._extensionAPI;
             // Render all components
             zrUtil.each(this._componentsList, function (component) {
-                component.render(component.__model, ecModel, api);
+                component.render(component.__model, ecModel, api, event);
             }, this);
-            // Remove groups of charts
+
             zrUtil.each(this._chartsList, function (chart) {
                 chart.__keepAlive = false;
             }, this);
+
             // Render all charts
             ecModel.eachSeries(function (seriesModel, idx) {
                 var id = getSeriesId(seriesModel.option, idx);
                 var chart = this._chartsMap[id];
                 chart.__keepAlive = true;
-                chart.render(seriesModel, ecModel, api);
+                chart.render(seriesModel, ecModel, api, event);
             }, this);
+
             // Remove groups of charts
             zrUtil.each(this._chartsList, function (chart) {
                 if (!chart.__keepAlive) {
@@ -363,6 +383,8 @@ define(function (require) {
 
     var dataProcessorFuncs = [];
 
+    var actions = [];
+
     var layoutClasses = [];
 
     var layoutFuncs = [];
@@ -384,6 +406,15 @@ define(function (require) {
         registerProcessor: function (processorFunc) {
             if (zrUtil.indexOf(dataProcessorFuncs, processorFunc) < 0) {
                 dataProcessorFuncs.push(processorFunc);
+            }
+        },
+
+        /**
+         * @param {Function}
+         */
+        registerAction: function (actionName, action) {
+            if (!actions[actionName]) {
+                actions[actionName] = action;
             }
         },
 
@@ -427,6 +458,13 @@ define(function (require) {
          */
         extendComponentModel: function (opts) {
             return ComponentModel.extend(opts);
+        },
+
+        /**
+         * @param {Object} opts
+         */
+        extendSeriesModel: function (opts) {
+            return SeriesModel.extend(opts);
         },
 
         /**

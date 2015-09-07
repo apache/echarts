@@ -92,9 +92,7 @@ define(function(require) {
                 p1[0] = p2[0] = this._axisLinePosition;
             }
 
-            api.subPixelOptimizeLine(p1, p2, lineWidth);
-
-            this.group.add(new api.Line({
+            this.group.add(new api.Line(api.subPixelOptimizeLine({
                 shape: {
                     x1: p1[0],
                     y1: p1[1],
@@ -106,7 +104,7 @@ define(function(require) {
                 }, lineStyleModel.getLineStyle()),
                 z: axisModel.get('z'),
                 silent: true
-            }));
+            })));
         },
 
         /**
@@ -144,7 +142,7 @@ define(function(require) {
                         || i % (tickInterval + 1)
                     )
                 ) {
-                     continue
+                     continue;
                 }
 
                 var tickCoord = ticksCoords[i];
@@ -173,16 +171,18 @@ define(function(require) {
                 var p1 = [x, y];
                 var p2 = [x + offX, y + offY];
 
-                api.subPixelOptimizeLine(p1, p2, tickLineWidth);
                 // Tick line
-                tickLines.push(new api.Line({
+                tickLines.push(new api.Line(api.subPixelOptimizeLine({
                     shape: {
                         x1: p1[0],
                         y1: p1[1],
                         x2: p2[0],
                         y2: p2[1]
+                    },
+                    style: {
+                        lineWidth: tickLineWidth
                     }
-                }));
+                })));
             }
             var tickEl = api.mergePath(tickLines, {
                 style: lineStyleModel.getLineStyle(),
@@ -218,7 +218,7 @@ define(function(require) {
 
             var labels;
             if (axis.scale.type === 'ordinal') {
-                labels = zrUtil.map(ticks, zrUtil.bind(axis.scale.getItem, axis.scale));
+                labels = zrUtil.map(ticks, axis.scale.getItem, axis.scale);
             }
             else {
                 labels = ticks.slice();
@@ -229,8 +229,8 @@ define(function(require) {
             for (var i = 0; i < ticks.length; i++) {
                 // Default is false
                 showList[i] = false;
-
                 needsCheckTextSpace = false;
+                var tick = ticks[i];
 
                 // Only ordinal scale support label interval
                 if (axis.scale.type === 'ordinal') {
@@ -239,14 +239,14 @@ define(function(require) {
                     }
                     if (isLabelIntervalFunction
                         && !labelInterval(tick, axis.scale.getItem(tick))
-                        || tick % (labelInterval + 1)) {
+                        || tick % (labelInterval + 1)
+                    ) {
                         continue;
                     }
                 }
 
                 var x;
                 var y;
-                var tick = ticks[i];
                 var tickCoord = axis.dataToCoord(tick);
                 var labelTextAlign = 'center';
                 var labelTextBaseline = 'middle';
@@ -353,18 +353,20 @@ define(function(require) {
                     p2[0] = gridRect.x + gridRect.width;
                     p2[1] = tickCoord;
                 }
-                api.subPixelOptimizeLine(p1, p2, lineWidth);
 
                 var colorIndex = (lineCount++) % lineColors.length;
                 splitLines[colorIndex] = splitLines[colorIndex] || [];
-                splitLines[colorIndex].push(new api.Line({
+                splitLines[colorIndex].push(new api.Line(api.subPixelOptimizeLine({
                     shape: {
                         x1: p1[0],
                         y1: p1[1],
                         x2: p2[0],
                         y2: p2[1]
+                    },
+                    style: {
+                        lineWidth: lineWidth
                     }
-                }));
+                })));
             }
 
             // Simple optimization

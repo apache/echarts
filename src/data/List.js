@@ -25,9 +25,11 @@ define(function(require) {
                     array[i] = eachAxis(item, depth);
                 }
             }
-        }
+        };
     }
-    var dimensions = ['x', 'y', 'z', 'value', 'radius', 'angle']
+
+    var dimensions = ['x', 'y', 'z', 'value', 'radius', 'angle'];
+
     /**
      * @name echarts/data/List~Entry
      * @extends {module:echarts/model/Model}
@@ -78,7 +80,7 @@ define(function(require) {
          */
         valueIndex: 1,
 
-        init: function (option, parentModel, dataIndex, independentVar, dependentVar) {
+        init: function (option, parentModel, rawDataIndex, independentVar, dependentVar) {
 
             /**
              * @type {string}
@@ -87,12 +89,27 @@ define(function(require) {
              */
             this.name = option.name || '';
 
+            /**
+             * this.option **MUST NOT** be modified in List!
+             * Different lists might share this option instance.
+             *
+             * @readOnly
+             * @type {*}
+             */
             this.option = option;
 
             var value = option.value == null ? option : option.value;
 
             if (typeof value === 'number') {
-                value = [dataIndex, value];
+                value = [rawDataIndex, value];
+                /**
+                 * If dataIndex is persistent in entry, it should be udpated when modifying list.
+                 * So use this.dataIndexIndex to mark that.
+                 *
+                 * @readOnly
+                 * @type {number}
+                 */
+                this.dataIndexIndex = 0;
             }
 
             if (independentVar) {
@@ -105,6 +122,10 @@ define(function(require) {
             }
 
             /**
+             * All of the content **MUST NOT** be modified,
+             * (because they are the same instance with option.value)
+             * except this._value[this.dataIndexIndex].
+             *
              * @type {Array.<number>}
              * @memeberOf module:echarts/data/List~Entry
              * @private
@@ -112,10 +133,11 @@ define(function(require) {
             this._value = value;
 
             /**
-             * @private
+             * Data index before modifying list (filterSelf).
+             *
              * @readOnly
              */
-            this.dataIndex = dataIndex;
+            this.rawDataIndex = rawDataIndex;
         },
 
         /**
@@ -129,10 +151,11 @@ define(function(require) {
         },
 
         clone: function () {
-            var entry = new Entry(
-                this.option, this.parentModel, this.dataIndex
-            );
+            var entry = new Entry(this.option, this.parentModel);
             entry.name = this.name;
+            entry.dataIndexIndex = this.dataIndexIndex;
+            entry._value = entry.dataIndexIndex != null
+                ? this._value.slice() : this._value;
 
             for (var i = 0; i < dimensions.length; i++) {
                 var key = dimensions[i] + 'Index';
@@ -150,16 +173,20 @@ define(function(require) {
             if (index >= 0) {
                 return this._value[index];
             }
-        }
+        };
         Entry.prototype['set' + capitalized] = function (val) {
             var index = this[indexKey];
             if (index >= 0) {
                 this._value[indexKey] = val;
             }
-        }
+        };
     });
 
     function List() {
+        /**
+         * @readOnly
+         * @type {Array}
+         */
         this.elements = [];
     }
 
@@ -169,9 +196,12 @@ define(function(require) {
 
         type: 'list',
 
+        count: function () {
+            return this.elements.length;
+        },
+
         each: function (cb, context) {
-            context = context || this;
-            zrUtil.each(this.elements, cb, context);
+            zrUtil.each(this.elements, cb, context || this);
         },
 
         /**
@@ -180,16 +210,34 @@ define(function(require) {
          */
         map: function (cb, context) {
             var ret = [];
+            context = context || this;
             this.each(function (item, idx) {
-                ret.push(cb && cb.call(context || this, item));
+                ret.push(cb && cb.call(context, item));
             }, context);
             return ret;
         },
 
-        filter: function (cb, context) {
-            var list = new List();
-            context = context || this;
-            list.elements = zrUtil.filter(this.elements, cb, context);
+        filterSelf: function (cb, context) {
+            this.elements = zrUtil.filter(this.elements, cb, context || this);
+
+            var dataIndexDirty = false;
+            this.elements = zrUtil.filter(this.elements, function (entry) {
+                var result = cb.apply(this, arguments);
+                if (result && entry.dataIndexIndex != null) {
+                    dataIndexDirty = true;
+                }
+                return result;
+            }, context || this);
+
+            dataIndexDirty && this.refreshDataIndex();
+        },
+
+        refreshDataIndex: function () {
+            this.each(function (entry, dataIndex) {
+                if (entry.dataIndexIndex != null) {
+                    entry._value[entry.dataIndexIndex] = dataIndex;
+                }
+            }, this);
         },
 
         /**
@@ -227,8 +275,6 @@ define(function(require) {
             for (var i = 0; i < elements.length; i++) {
                 list.elements.push(elements[i].clone());
             }
-            list.depth = this.depth;
-            list.properties = this.properties;
             return list;
         }
     };
@@ -246,18 +292,6 @@ define(function(require) {
                 ret.push(cb && cb.call(context || this, item['get' + name]()));
             }, context);
             return ret;
-        };
-
-        List.prototype['filter' + name] = function (cb, context) {
-            var newList = this.clone();
-            var elements = []
-            newList.each(function (item) {
-                if (cb.call(context || newList, item['get' + name]())) {
-                    elements.push(item);
-                }
-            }, context);
-            newList.elements = elements;
-            return newList;
         };
     });
 
@@ -295,7 +329,7 @@ define(function(require) {
         else if (coordinateSystem === 'polar') {
             function axisFinder(axisModel) {
                 return axisModel.get('polarIndex') === polarIndex;
-            };
+            }
             var polarIndex = seriesModel.get('polarIndex') || 0;
             var angleAxisModel = ecModel.findComponent('angleAxis', axisFinder);
             var radiusAxisModel = ecModel.findComponent('radiusAxis', axisFinder);

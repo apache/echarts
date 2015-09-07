@@ -2,19 +2,35 @@ define(function (require) {
 
     var echarts = require('../../echarts');
     var zrUtil = require('zrender/core/util');
-    var helper = require('./helper');
-    var retrieveValue = helper.retrieveValue;
+    var DataZoomLayout = require('./DataZoomLayout');
+    var graphic = require('../../util/graphic');
 
     // Constants
-    var DEFAULT_LOCATION_EDGE_GAP = 2;
-    var DEFAULT_FILLER_SIZE = 30;
+    var DEFAULT_FRAME_BORDER_WIDTH = 1;
+    var DEFAULT_HANDLE_INNER_COLOR = '#fff';
 
     return echarts.extendComponentView({
 
         type: 'dataZoom',
 
         init: function (echarts) {
-            this._location;
+            /**
+             * @private
+             * @type {Object}
+             */
+            this._updatableShapes = {};
+
+            /**
+             * @private
+             * @type {module:echarts/component/dataZoom/DataZoomLayout}
+             */
+            this._layout;
+
+            /**
+             * @private
+             * @type {string}
+             */
+            this._orient;
         },
 
         render: function (dataZoomModel, ecModel, api, event) {
@@ -22,9 +38,10 @@ define(function (require) {
             // 需要区别用户事件在本component上触发的render和其他render。
             // 后者不重新构造shape。否则难于实现拖拽。
 
-            this._dataZoomModel = dataZoomModel;
-            this._ecModel = ecModel;
-            this._api = api;
+            this.dataZoomModel = dataZoomModel;
+            this.ecModel = ecModel;
+            this.api = api;
+
             this._orient = dataZoomModel.get('orient');
 
             if (!event || event.type !== 'dataZoom' || event.from !== this.uid) {
@@ -35,153 +52,64 @@ define(function (require) {
                 }
 
                 // Layout
-                this._updateLocation();
-                this._updateSliderRange({init: true});
-                this._updateWidgetSize();
+                this._layout = new DataZoomLayout(dataZoomModel, ecModel, api);
+                this._layout.reset();
 
                 // Render
                 this._renderBackground();
                 this._renderDataShadow();
+                this._renderFrame();
+                this._renderFiller();
+                this._renderHandle();
             }
-        },
-
-        /**
-         * 根据选项计算实体的位置坐标
-         */
-        _updateLocation: function () {
-            var dataZoomModel = this._dataZoomModel;
-            var x;
-            var y;
-            var width;
-            var height;
-            // If some of x/y/width/height are not specified, auto-adapt according to target grid.
-            var gridRect = this._findGridRectForLocating();
-
-            if (this._orient === 'horizontal') { // Horizontal layout
-                width = retrieveValue(dataZoomModel.get('width'), gridRect.width);
-                height = retrieveValue(dataZoomModel.get('height'), DEFAULT_FILLER_SIZE);
-                x = retrieveValue(dataZoomModel.get('x'), gridRect.x);
-                y = retrieveValue(
-                    dataZoomModel.get('y'), (api.getHeight() - height - DEFAULT_LOCATION_EDGE_GAP)
-                );
-            }
-            else { // Vertical layout
-                width = retrieveValue(dataZoomModel.get('width'), DEFAULT_FILLER_SIZE);
-                height = retrieveValue(dataZoomModel.get('height'), gridRect.height);
-                x = retrieveValue(dataZoomModel.get('x'), DEFAULT_LOCATION_EDGE_GAP);
-                y = retrieveValue(dataZoomModel.get('y'), gridRect.y);
-            }
-
-            this._location = {
-                x: x, y: y, width: width, height: height
-            };
-        },
-
-        /**
-         * @private
-         * @param  {Object} dataZoomModel
-         * @param  {Object} operation
-         * @param  {boolean} [operation.init]
-         * @param  {string} [operation.rangeArg] 'start' or 'end'
-         * @param  {number} [operation.dx]
-         * @param  {number} [operation.dy]
-         */
-        _updateSliderRange: function (operation) {
-            // Based on this._location.
-            if (operation.init) {
-                var dataZoomModel = this._dataZoomModel;
-                var range = dataZoomModel.getRange();
-                var sliderTotalLength = this._getSliderTotalLength();
-
-                this._sliderRange = {
-                    start: Math.round(range.start * 100 / sliderTotalLength),
-                    end: Math.round(range.end * 100 / sliderTotalLength)
-                };
-            }
-            if (operation.rangeArg) {
-                this._sliderRange[operation.rangeArg] += this._getSliderDelta(operation);
-            }
-        },
-
-        _getSliderTotalLength: function () {
-            var location = this._location;
-            return this._orient === 'horizontal' ? location.width : location.height;
-        },
-
-        _getSliderDelta: function (operation) {
-            return retrieveValue(
-                this._orient === 'horizontal' ? operation.dx : operation.dy,
-                0
-            );
-        },
-
-        _normalizeToRange: function () {
-            var sliderTotalLength = this._getSliderTotalLength();
-            var sliderRange = this._sliderRange;
-            return {
-                start: sliderRange.start / sliderTotalLength * 100,
-                end: sliderRange.end / sliderTotalLength * 100
-            };
-        },
-
-        _updateWidgetSize: function () {
-            // Based on this._sliderRange and this._location.
-            var dataZoomModel = this._dataZoomModel;
-            var sliderRange = this._sliderRange;
-            var location = this._location;
-            var handleSize = dataZoomModel.get('handleSize');
-            var widgetSize = this._widgetSize = {};
-
-            if (dataZoomModel.get('orient') === 'horizontal') {
-                widgetSize.filler = {
-                    x: location.x + sliderRange.start + handleSize,
-                    y: location.y,
-                    width: sliderRange.end - sliderRange.start - handleSize * 2,
-                    height: location.height
-                };
-            }
-            else { // 'vertical'
-                widgetSize.filler = {
-                    x: location.x,
-                    y: location.y + sliderRange.start + handleSize,
-                    width: location.width,
-                    height: sliderRange.end - sliderRange.start - handleSize * 2
-                };
-            }
-        },
-
-        _findGridRectForLocating: function () {
-            // Find the grid coresponding to the first axis referred by dataZoom.
-            var axisModel;
-            var dataZoomModel = this._dataZoomModel;
-            var ecModel = this._ecModel;
-
-            helper.eachAxisDim(function (dimNames) {
-                var axisIndices = dataZoomModel.get(dimNames.axisIndex);
-                if (!axisModel && axisIndices.length) {
-                    axisModel = ecModel.get(dimNames.axis)[axisIndices[0]];
-                }
-            });
-            return ecModel.getComponent('grid', axisModel.get('gridIndex')).getRect();
         },
 
         _renderBackground : function () {
-            var dataZoomModel = this._dataZoomModel;
-            var location = this._location;
+            var dataZoomModel = this.dataZoomModel;
+            var location = this._layout.layout.location;
 
-            this.group.push(new api.Rect({
+            this.group.add(new this.api.Rect({
                 // FIXME
                 // zlevel: this.getZlevelBase(),
                 // z: this.getZBase(),
                 hoverable:false,
-                style: {
+                shape: {
                     x: location.x,
                     y: location.y,
                     width: location.width,
-                    height: location.height,
-                    color: dataZoomModel.get('backgroundColor')
+                    height: location.height
+                },
+                style: {
+                    fill: dataZoomModel.get('backgroundColor')
                 }
             }));
+        },
+
+        _renderFrame: function () {
+            var updatableShapes = this._updatableShapes;
+            var layout = this._layout.layout;
+            var baseFrame = {
+                // FIXME
+                // zlevel: this.getZlevelBase(),
+                // z: this.getZBase(),
+                hoverable: false,
+                style: {
+                    stroke: this.dataZoomModel.get('handleColor'),
+                    lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
+                    fill: 'rgba(0,0,0,0)'
+                }
+            };
+            this.group
+                .add(updatableShapes.startFrame = new this.api.Rect(zrUtil.mergeAll(
+                    {},
+                    baseFrame,
+                    layout.startFrame
+                )))
+                .add(updatableShapes.endFrame = new this.api.Rect(zrUtil.mergeAll(
+                    {},
+                    baseFrame,
+                    layout.endFrame
+                )));
         },
 
         _renderDataShadow: function () {
@@ -190,133 +118,132 @@ define(function (require) {
         },
 
         _renderFiller: function () {
-            var dataZoomModel = this._dataZoomModel;
-            var orient = dataZoomModel.get('orient');
+            this.group.add(
+                this._updatableShapes.filler = new this.api.Rect(zrUtil.merge(
+                    {
+                        // FIXME
+                        // zlevel: this.getZlevelBase(),
+                        // z: this.getZBase(),
+                        draggable: this._orient,
+                        drift: zrUtil.bind(this._onDrift, this, this._getUpdateArgs()),
+                        ondragend: zrUtil.bind(this._onDragEnd, this),
+                        style: {
+                            fill: this.dataZoomModel.get('fillerColor'),
+                            text: this._orient === 'horizontal' ? ':::' : '::',
+                            textPosition : 'inside'
+                        }
+                        // FIXME
+                        // highlightStyle: {
+                        //     brushType: 'fill',
+                        //     color: 'rgba(0,0,0,0)'
+                        // }
+                    },
+                    this._layout.layout.filler
+                ))
+            );
+        },
 
-            this._fillerShape = new api.Rect({
+        _renderHandle: function () {
+            var dataZoomModel = this.dataZoomModel;
+            var layout = this._layout.layout;
+            var updatableShapes = this._updatableShapes;
+            // FIXME
+            // var detailInfo = this.zoomOption.showDetail ? this._getDetail() : {start: '',end: ''};
+
+            var baseHandle = {
                 // FIXME
                 // zlevel: this.getZlevelBase(),
                 // z: this.getZBase(),
-                draggable: true,
-                ondrift: zrUtil.bind(this._onDrift, this, 'both'),
-                ondragend: zrUtil.bind(this._onDragEnd, this),
-                style: zrUtil.merge(
-                    {
-                        color: dataZoomModel.get('fillerColor'),
-                        text: orient === 'horizontal' ? ':::' : '::',
-                        textPosition : 'inside'
-                    },
-                    this._widgetSize
-                ),
-                highlightStyle: {
-                    brushType: 'fill',
-                    color: 'rgba(0,0,0,0)'
-                }
-            });
-
-            this.group.push(this._fillerShape);
-        },
-
-        _renderHandle : function () {
-            var detail = this.zoomOption.showDetail ? this._getDetail() : {start: '',end: ''};
-            this._startShape = {
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
-                draggable : true,
-                style : {
-                    iconType: 'rectangle',
-                    x: this._location.x,
-                    y: this._location.y,
-                    width: this._handleSize,
-                    height: this._handleSize,
-                    color: this.zoomOption.handleColor,
+                draggable: this._orient,
+                style: {
+                    fill: dataZoomModel.get('handleColor'),
+                    textColor: DEFAULT_HANDLE_INNER_COLOR,
                     text: '=',
                     textPosition: 'inside'
-                },
-                highlightStyle: {
-                    text: detail.start,
-                    brushType: 'fill',
-                    textPosition: 'left'
-                },
-                ondrift: this._ondrift,
-                ondragend: this._ondragend
+                }
+                // FIXME
+                // highlightStyle: {
+                //     text: detail.start,
+                //     brushType: 'fill',
+                //     textPosition: 'left'
+                // },
             };
 
-            if (this.zoomOption.orient === 'horizontal') {
-                this._startShape.style.height = this._location.height;
-                this._endShape = zrUtil.clone(this._startShape);
-
-                this._startShape.style.x = this._fillerShae.style.x - this._handleSize,
-                this._endShape.style.x = this._fillerShae.style.x + this._fillerShae.style.width;
-                this._endShape.highlightStyle.text = detail.end;
-                this._endShape.highlightStyle.textPosition = 'right';
-            }
-            else {
-                this._startShape.style.width = this._location.width;
-                this._endShape = zrUtil.clone(this._startShape);
-
-                this._startShape.style.y = this._fillerShae.style.y + this._fillerShae.style.height;
-                this._startShape.highlightStyle.textPosition = 'bottom';
-
-                this._endShape.style.y = this._fillerShae.style.y - this._handleSize;
-                this._endShape.highlightStyle.text = detail.end;
-                this._endShape.highlightStyle.textPosition = 'top';
-            }
-            this._startShape = new IconShape(this._startShape);
-            this._endShape = new IconShape(this._endShape);
-            this.shapeList.push(this._startShape);
-            this.shapeList.push(this._endShape);
+            this.group
+                .add(updatableShapes.handle1 = new this.api.Rect(zrUtil.mergeAll(
+                    {
+                        drift: zrUtil.bind(this._onDrift, this, this._getUpdateArgs('handle1')),
+                        ondragend: zrUtil.bind(this._onDragEnd, this)
+                    },
+                    baseHandle,
+                    layout.handle1
+                )))
+                .add(updatableShapes.handle2 = new this.api.Rect(zrUtil.mergeAll(
+                    {
+                        drift: zrUtil.bind(this._onDrift, this, this._getUpdateArgs('handle2')),
+                        ondragend: zrUtil.bind(this._onDragEnd, this)
+                    },
+                    baseHandle,
+                    layout.handle2
+                )));
         },
 
-        _onDrift : function (rangeArg, dx, dy) {
-            var dataZoomModel = this._dataZoomModel;
+        _updateView: function () {
+            // Only shape can be modified.
+            // So only update shape for convenience and performance.
+            zrUtil.each(this._updatableShapes, function (shape, name) {
+                shape.attr('shape', subPixelOptimize(this._layout.layout[name].shape, name));
+            }, this);
 
-            if (rangeArg === 'both' || dataZoomModel.get('zoomLock')) {
-                this._updateSliderRange({rangeArg: 'start', dx: dx, dy: dy});
-                this._updateSliderRange({rangeArg: 'end', dx: dx, dy: dy});
+            function subPixelOptimize(shape, name) {
+                var subPixelOptimizeLineWidth = {
+                    startFrame: DEFAULT_FRAME_BORDER_WIDTH,
+                    endFrame: DEFAULT_FRAME_BORDER_WIDTH
+                };
+                if (subPixelOptimizeLineWidth.hasOwnProperty(name)) {
+                    shape = graphic.subPixelOptimizeRect({
+                        shape: shape,
+                        style: {lineWidth: subPixelOptimizeLineWidth[name]}
+                    }).shape;
+                }
+                return shape;
             }
-            else { // rangeArg === 'start' or 'end'
-                this._updateSliderRange({rangeArg: rangeArg, dx: dx, dy: dy});
-            }
+        },
 
-            // FIXME
-            // refresh shape location
+        _getUpdateArgs: function (arg) {
+            return (!arg || this.dataZoomModel.get('zoomLock'))
+                ? ['handle1', 'handle2']
+                : [arg];
+        },
 
-            // FIXME
+        _onDrift: function (rangeArgs, dx, dy) {
+            var dataZoomModel = this.dataZoomModel;
+
+            this._layout.update({rangeArgs: rangeArgs, dx: dx, dy: dy});
+
+            this._updateView();
+
             if (dataZoomModel.get('realtime')) {
-                // this._syncData();
+                // FIXME
+                // if (this.zoomOption.showDetail) {
+                // }
+
+                this.api.dispatch({
+                    type: 'dataZoom',
+                    from: this.uid,
+                    dataZoomRange: this._layout.normalizeToRange(),
+                    dataZoomModel: this.dataZoomModel
+                });
             }
 
-            // FIXME
-            if (this.zoomOption.showDetail) {
-                // var detail = this._getDetail();
-                // this._startShape.style.text = this._startShape.highlightStyle.text = detail.start;
-                // this._endShape.style.text = this._endShape.highlightStyle.text = detail.end;
-                // this._startShape.style.textPosition = this._startShape.highlightStyle.textPosition;
-                // this._endShape.style.textPosition = this._endShape.highlightStyle.textPosition;
-            }
-
-            this._api.dispatch({
-                type: 'dataZoom',
-                from: this.uid,
-                param: this._normalizeToRange(),
-                targetModel: this._dataZoomModel
-            });
-
-            // FIXME
             return true;
         },
 
         _onDragEnd : function () {
+            // FIXME
             // if (this.zoomOption.showDetail) {
-            //     this._startShape.style.text = this._endShape.style.text = '=';
-            //     this._startShape.style.textPosition = this._endShape.style.textPosition = 'inside';
-            //     this.zr.modShape(this._startShape.id);
-            //     this.zr.modShape(this._endShape.id);
-            //     this.zr.refreshNextFrame();
             // }
-            // this.isDragend = true;
-        },
+        }
 
     });
 });
