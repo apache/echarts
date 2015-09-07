@@ -106,7 +106,7 @@ define(function (require) {
      */
     function round(x) {
         // PENDING
-        return +(+x).toFixed(10);
+        return +(+x).toFixed(12);
     }
 
     return {

@@ -29,10 +29,10 @@
                 var data2 = [];
                 var data3 = [];
 
-                for (var i = 0; i < 20; i++) {
-                    data1.push([Math.random() * 1, Math.random() * Math.PI * 2]);
-                    data2.push([Math.random() * 5, Math.random() * Math.PI * 2]);
-                    data3.push([Math.random() * 10, Math.random() * Math.PI * 2]);
+                for (var i = 0; i < 100; i++) {
+                    data1.push([Math.random() * 5, Math.random() * 360]);
+                    data2.push([Math.random() * 5, Math.random() * 360]);
+                    data3.push([Math.random() * 10, Math.random() * 360]);
                 }
 
                 chart.setOption({
@@ -46,25 +46,25 @@
                         type: 'value'
                     },
                     radiusAxis: {
-
+                        axisAngle: 0
                     },
                     series: [{
                         coordinateSystem: 'polar',
                         name: 'scatter',
                         type: 'scatter',
-                        symbolSize: 20,
+                        symbolSize: 10,
                         data: data1
                     }, {
                         coordinateSystem: 'polar',
                         name: 'scatter2',
                         type: 'scatter',
-                        symbolSize: 20,
+                        symbolSize: 10,
                         data: data2
                     }, {
                         coordinateSystem: 'polar',
                         name: 'scatter3',
                         type: 'scatter',
-                        symbolSize: 20,
+                        symbolSize: 10,
                         data: data3
                     }]
                 });

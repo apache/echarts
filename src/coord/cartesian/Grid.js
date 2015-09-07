@@ -197,7 +197,7 @@ define(function(require, factory) {
                     xAxisModel.get('type'),
                     xAxisPosition
                 );
-                axisX.onBand = xAxisModel.get('boundaryGap');
+                axisX.onBand = xAxisModel.get('boundaryGap') && axisX.type === 'category';
                 axisX.inverse = xAxisModel.get('inverse');
 
                 // Inject axis into axisModel

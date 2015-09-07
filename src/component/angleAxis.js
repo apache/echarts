@@ -6,25 +6,24 @@ define(function(require) {
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 
-    var lineStart = [];
-    var lineEnd = [];
-    var lineDirection = [];
-    var center = [];
-    function getLineShape(cx, cy, r0, r, radian) {
-        center[0] = cx;
-        center[1] = cy;
+    function getPointOnAxisLine(cx, cy, r, radian) {
+        var dx = r * Math.cos(radian);
+        var dy = r * Math.sin(radian);
 
-        lineDirection[0] = Math.cos(radian);
-        lineDirection[1] = Math.sin(radian);
+        return [cx + dx, cy + dy];
+    }
 
-        vector.scaleAndAdd(lineStart, center, lineDirection, r0);
-        vector.scaleAndAdd(lineEnd, center, lineDirection, r);
+    function getAxisLineShape(cx, cy, r0, r, angle) {
+        var radian = angle / 180 * Math.PI;
+
+        var start = getPointOnAxisLine(cx, cy, r0, radian);
+        var end = getPointOnAxisLine(cx, cy, r, radian);
 
         return {
-            x1: lineStart[0],
-            y1: lineStart[1],
-            x2: lineEnd[0],
-            y2: lineEnd[1]
+            x1: start[0],
+            y1: start[1],
+            x2: end[0],
+            y2: end[1]
         };
     }
 
@@ -45,6 +44,12 @@ define(function(require) {
             var cy = polar.cy;
             var radiusExtent = polar.getRadiusAxis().getExtent();
             var ticksAngles = angleAxis.getTicksPositions();
+
+            if (angleAxis.type !== 'category') {
+                // Remove the last tick which will overlap the first tick
+                ticksAngles.pop();
+            }
+
             zrUtil.each(elementList, function (name) {
                 if (angleAxisModel.get(name +'.show')) {
                     this['_' + name](angleAxisModel, ticksAngles, radiusExtent, cx, cy, api);
@@ -58,17 +63,17 @@ define(function(require) {
         _axisLine: function (angleAxisModel, ticksAngles, radiusExtent, cx, cy, api) {
             var lineStyleModel = angleAxisModel.getModel('axisLine.lineStyle');
 
-            var arc = new api.Arc({
+            var circle = new api.Circle({
                 shape: {
-                    x: cx,
-                    y: cy,
-                    r0: radiusExtent[0],
+                    cx: cx,
+                    cy: cy,
                     r: radiusExtent[1]
                 },
                 style: lineStyleModel.getLineStyle()
             });
+            circle.style.fill = null;
 
-            this.group.add(arc);
+            this.group.add(circle);
         },
 
         /**
@@ -81,19 +86,53 @@ define(function(require) {
 
             var lines = zrUtil.map(ticksAngles, function (tickAngle) {
                 return new api.Line({
-                    shape: getLineShape(cx, cy, radiusExtent[1], radiusExtent[1] + tickLen, tickAngle)
+                    shape: getAxisLineShape(cx, cy, radiusExtent[1], radiusExtent[1] + tickLen, tickAngle)
                 });
             });
             this.group.add(api.mergePath(
-                lines, tickModel.getModel('lineStyle').getLineStyle())
-            );
+                lines, {
+                    style: tickModel.getModel('lineStyle').getLineStyle()
+                }
+            ));
         },
 
         /**
          * @private
          */
         _axisLabel: function (angleAxisModel, ticksAngles, radiusExtent, cx, cy, api) {
+            var axis = angleAxisModel.axis;
 
+            var labelModel = angleAxisModel.getModel('axisLabel');
+            var textStyleModel = labelModel.getModel('textStyle');
+
+            var labels = angleAxisModel.formatLabels(axis.scale.getTicksLabels());
+
+            var labelMargin = labelModel.get('margin');
+            var labelsAngles = axis.getLabelsPositions();
+
+            // Use length of ticksAngles because it may remove the last tick to avoid overlapping
+            for (var i = 0; i < ticksAngles.length; i++) {
+                var tickAngle = labelsAngles[i] * Math.PI / 180;
+                var r = radiusExtent[1];
+                var p = getPointOnAxisLine(cx, cy, r + labelMargin, tickAngle);
+
+                var labelTextAlign = Math.abs(p[0] - cx) / r < 0.3
+                    ? 'center' : (p[0] > cx ? 'left' : 'right');
+                var labelTextBaseline = Math.abs(p[1] - cy) / r < 0.3
+                    ? 'middle' : (p[1] > cy ? 'top' : 'bottom');
+
+                this.group.add(new api.Text({
+                    style: {
+                        x: p[0],
+                        y: p[1],
+                        text: labels[i],
+                        textAlign: labelTextAlign,
+                        textBaseline: labelTextBaseline,
+                        font: textStyleModel.getFont()
+                    },
+                    silent: true
+                }))
+            }
         },
 
         /**
@@ -114,7 +153,7 @@ define(function(require) {
                 var colorIndex = (lineCount++) % lineColors.length;
                 splitLines[colorIndex] = splitLines[colorIndex] || [];
                 splitLines[colorIndex].push(new api.Line({
-                    shape: getLineShape(cx, cy, radiusExtent[0], radiusExtent[1], tickAngle)
+                    shape: getAxisLineShape(cx, cy, radiusExtent[0], radiusExtent[1], ticksAngles[i])
                 }))
             }
 

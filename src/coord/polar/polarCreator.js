@@ -5,10 +5,10 @@ define(function (require) {
     var IntervalScale = require('../../scale/Interval');
     var OrdinalScale = require('../../scale/Ordinal');
     var numberUtil = require('../../util/number');
+    var zrUtil = require('zrender/core/util');
 
-    // 依赖 PolarModel, AxisModel 做预处理
+    // 依赖 PolarModel 做预处理
     require('./PolarModel');
-    require('./AxisModel');
 
     /**
      * Retrieve angle axis or radius axis belongs to the given polar
@@ -49,7 +49,7 @@ define(function (require) {
         this.cy = parsePercent(center[1], height);
 
         var radiusAxis = this.getRadiusAxis();
-        var size = Math.min(width, height);
+        var size = Math.min(width, height) / 2;
         radiusAxis.setExtent(
             parsePercent(radius[0], size),
             parsePercent(radius[1], size)
@@ -79,7 +79,7 @@ define(function (require) {
     function setAxis(axis, axisModel) {
         axis.type = axisModel.get('type');
         axis.scale = createScaleByModel(axisModel);
-        axis.onBand = axisModel.get('boundaryGap');
+        axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
         axis.inverse = axisModel.get('inverse');
 
         // Inject axis instance
@@ -116,6 +116,12 @@ define(function (require) {
                 }
             }
         });
+
+        zrUtil.each(polarList, function (polar) {
+            // PENDING
+            polar.getAngleAxis().scale.niceExtent(12);
+            polar.getRadiusAxis().scale.niceExtent(5);
+        });
     }
 
     var polarCreator = {
@@ -135,6 +141,11 @@ define(function (require) {
 
                 setAxis(radiusAxis, radiusAxisModel);
                 setAxis(angleAxis, angleAxisModel);
+
+                if (angleAxis.type === 'category' && ! angleAxis.onBand) {
+                    var angle = 360 - 360 / (angleAxis.scale.getExtentSize() + 1);
+                    angleAxis.setExtent(0, angle);
+                }
 
                 polar.resize(polarModel, api);
                 polarList.push(polar);

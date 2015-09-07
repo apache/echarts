@@ -1,8 +1,7 @@
 define(function(require) {
     'use strict';
 
-    require('../coord/polar/Polar');
-
+    require('../coord/polar/polarCreator');
     require('./angleAxis');
     require('./radiusAxis');
 

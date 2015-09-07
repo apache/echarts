@@ -208,6 +208,7 @@ define(function(require) {
             var gridRect = gridModel.coordinateSystem.getRect();
 
             var ticks = axis.scale.getTicks();
+            var labels = axisModel.formatLabels(axis.scale.getTicksLabels());
             var labelMargin = labelModel.get('margin');
             var labelRotate = labelModel.get('rotate');
             var labelInterval = labelModel.get('interval') || 0;
@@ -215,16 +216,6 @@ define(function(require) {
 
             var textSpaceTakenRect;
             var needsCheckTextSpace;
-
-            var labels;
-            if (axis.scale.type === 'ordinal') {
-                labels = zrUtil.map(ticks, axis.scale.getItem, axis.scale);
-            }
-            else {
-                labels = ticks.slice();
-            }
-
-            labels = axisModel.formatLabels(labels);
 
             for (var i = 0; i < ticks.length; i++) {
                 // Default is false

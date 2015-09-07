@@ -1,14 +1,16 @@
-define({
-    getItemStyle: function () {
-        return {
-            fill: this.get('color'),
-            stroke: this.get('borderColor'),
-            lineWidth: this.get('borderWidth'),
-
-            shadowBlur: this.get('shadowBlur'),
-            shadowOffsetX: this.get('shadowOffsetX'),
-            shadowOffsetY: this.get('shadowOffsetY'),
-            shadowColor: this.get('shadowColor')
-        };
-    }
+define(function (require) {
+    return {
+        getItemStyle: require('./makeStyleMapper')(
+            [
+                ['fill', 'color'],
+                ['stroke', 'borderColor'],
+                ['lineWidth', 'borderWidth'],
+                ['opacity'],
+                ['shadowBlur'],
+                ['shadowOffsetX'],
+                ['shadowOffsetY'],
+                ['shadowColor']
+            ]
+        )
+    };
 });

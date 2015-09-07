@@ -145,6 +145,18 @@ define(function (require) {
         },
 
         /**
+         * @return {Array.<string>}
+         */
+        getTicksLabels: function () {
+            var labels = [];
+            var ticks = this.getTicks();
+            for (var i = 0; i < ticks.length; i++) {
+                labels.push(ticks[i].toString());
+            }
+            return labels;
+        },
+
+        /**
          * Update interval and extent of intervals for nice ticks
          * Algorithm from d3.js
          * @param  {number} [approxTickNum = 10] Given approx tick number
@@ -165,8 +177,11 @@ define(function (require) {
             if (err <= .15) {
                 interval *= 10;
             }
-            else if (err <= .35) {
+            else if (err <= .3) {
                 interval *= 5;
+            }
+            else if (err <= .5) {
+                interval *= 3;
             }
             else if (err <= .75) {
                 interval *= 2;
@@ -182,9 +197,10 @@ define(function (require) {
 
         /**
          * Nice extent.
+         * @param  {number} [approxTickNum = 10] Given approx tick number
          */
-        niceExtent: function () {
-            this.niceTicks();
+        niceExtent: function (approxTickNum) {
+            this.niceTicks(approxTickNum);
 
             var extent = this._extent;
             var interval = this._interval;

@@ -25,7 +25,6 @@ define(function(require) {
     zrUtil.merge(PolarAxisModel.prototype, require('../axisModelCommonMixin'));
 
 
-
     // Radius axis
     PolarAxisModel.extend({
 
@@ -37,11 +36,18 @@ define(function(require) {
         axis: null,
 
         init: function (axisOption, parentModel, ecModel) {
-            axisOption.type = axisOption.type || 'value';
-
-            axisOption.polarIndex = axisOption.polarIndex || 0;
+            zrUtil.merge(axisOption, this.defaultOption, false);
 
             mergeDefault(axisOption, ecModel);
+        },
+
+        defaultOption: {
+
+            type: 'value',
+
+            polarIndex: 0,
+
+            axisAngle: 0
         }
     });
 
@@ -56,11 +62,22 @@ define(function(require) {
         axis: null,
 
         init: function (axisOption, parentModel, ecModel) {
-            axisOption.type = axisOption.type || 'category';
-
-            axisOption.polarIndex = axisOption.polarIndex || 0;
+            zrUtil.merge(axisOption, this.defaultOption, false);
 
             mergeDefault(axisOption, ecModel);
+        },
+
+        defaultOption: {
+
+            type: 'category',
+
+            polarIndex: 0,
+
+            clockWise: true,
+
+            axisLabel: {
+                rotate: false
+            }
         }
     });
 });
