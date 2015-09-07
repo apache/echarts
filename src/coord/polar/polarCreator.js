@@ -79,7 +79,7 @@ define(function (require) {
     function setAxis(axis, axisModel) {
         axis.type = axisModel.get('type');
         axis.scale = createScaleByModel(axisModel);
-        axis.onBand = axisModel.get('boundaryGap');
+        axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
         axis.inverse = axisModel.get('inverse');
 
         // Inject axis instance
@@ -142,7 +142,7 @@ define(function (require) {
                 setAxis(radiusAxis, radiusAxisModel);
                 setAxis(angleAxis, angleAxisModel);
 
-                if (angleAxis.type === 'category') {
+                if (angleAxis.type === 'category' && ! angleAxis.onBand) {
                     var angle = 360 - 360 / (angleAxis.scale.getExtentSize() + 1);
                     angleAxis.setExtent(0, angle);
                 }

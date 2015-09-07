@@ -88,7 +88,7 @@ define(function (require) {
             data = this.scale.normalize(data);
 
             var extent = this.getExtent();
-            if (this.onBand && this.scale.type === 'ordinal') {
+            if (this.onBand) {
                 fixExtentWithBands(extent, this.scale.getExtentSize());
             }
 
@@ -104,7 +104,7 @@ define(function (require) {
         unmapData: function (mapped, clamp) {
             var extent = this.getExtent();
 
-            if (this.onBand && this.scale.type === 'ordinal') {
+            if (this.onBand) {
                 fixExtentWithBands(extent, this.scale.getExtentSize());
             }
 
@@ -116,20 +116,39 @@ define(function (require) {
          * @return {Array.<number>}
          */
         getTicksPositions: function () {
-            var ticks = this.scale.getTicks();
-            if (this.onBand && this.scale.type === 'ordinal') {
+            if (this.onBand) {
                 var bands = this.getBands();
-                var ret = [];
+                var positions = [];
                 for (var i = 0; i < bands.length; i++) {
-                    ret.push(bands[i][0]);
+                    positions.push(bands[i][0]);
                 }
                 if (bands[i - 1]) {
-                    ret.push(bands[i - 1][1]);
+                    positions.push(bands[i - 1][1]);
                 }
-                return ret;
+                return positions;
             }
             else {
-                return zrUtil.map(ticks, this.mapData, this);
+                return zrUtil.map(this.scale.getTicks(), this.mapData, this);
+            }
+        },
+
+        /**
+         * Positions of labels are on the ticks or on the middle of bands
+         * @return {Array.<number>}
+         */
+        getLabelsPositions: function () {
+            if (this.onBand) {
+                var bands = this.getBands();
+                var positions = [];
+                var band;
+                for (var i = 0; i < bands.length; i++) {
+                    band = bands[i];
+                    positions.push((band[0] + band[1]) / 2);
+                }
+                return positions;
+            }
+            else {
+                return zrUtil.map(this.scale.getTicks(), this.mapData, this);
             }
         },
 

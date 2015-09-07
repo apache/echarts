@@ -197,7 +197,7 @@ define(function(require, factory) {
                     xAxisModel.get('type'),
                     xAxisPosition
                 );
-                axisX.onBand = xAxisModel.get('boundaryGap');
+                axisX.onBand = xAxisModel.get('boundaryGap') && axisX.type === 'category';
                 axisX.inverse = xAxisModel.get('inverse');
 
                 // Inject axis into axisModel
@@ -232,7 +232,7 @@ define(function(require, factory) {
                 this._axesList.push(axisY);
                 this._axesMap['y' + idx] = axisY;
 
-                xAxesMap[idx] = axisY;
+                yAxesMap[idx] = axisY;
                 yAxesCount++;
             }, this);
 
@@ -253,18 +253,6 @@ define(function(require, factory) {
 
                     cartesian.addAxis(xAxis);
                     cartesian.addAxis(yAxis);
-                });
-            });
-
-            ecModel.eachComponent('xAxis', function (xAxisModel, i) {
-                ecModel.eachComponent('yAxis', function (yAxisModel, j) {
-                    var key = 'x' + i + 'y' + j;
-                    var cartesian = new Cartesian2D(key);
-                    this._coordsMap[key] = cartesian;
-                    this._coordsList.push(cartesian);
-
-                    cartesian.addAxis(xAxisModel.axis);
-                    cartesian.addAxis(yAxisModel.axis);
                 }, this);
             }, this);
 

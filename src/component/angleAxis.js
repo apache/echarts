@@ -108,9 +108,11 @@ define(function(require) {
             var labels = angleAxisModel.formatLabels(axis.scale.getTicksLabels());
 
             var labelMargin = labelModel.get('margin');
+            var labelsAngles = axis.getLabelsPositions();
 
+            // Use length of ticksAngles because it may remove the last tick to avoid overlapping
             for (var i = 0; i < ticksAngles.length; i++) {
-                var tickAngle = ticksAngles[i] * Math.PI / 180;
+                var tickAngle = labelsAngles[i] * Math.PI / 180;
                 var r = radiusExtent[1];
                 var p = getPointOnAxisLine(cx, cy, r + labelMargin, tickAngle);
 

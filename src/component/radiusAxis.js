@@ -4,7 +4,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var vector = require('zrender/core/vector');
 
-    var elementList = ['axisLabel', 'splitLine', 'splitArea', 'axisTick', 'axisLine'];
+    var elementList = ['splitLine', 'splitArea', 'axisLine', 'axisTick', 'axisLabel'];
 
     function getPointOnAxisLine(cx, cy, r, radian) {
         var dx = r * Math.cos(radian);
@@ -54,6 +54,11 @@ define(function(require) {
                     this['_' + name](radiusAxisModel, ticksPositions, angleExtent, cx, cy, api);
                 }
             }, this);
+
+            var z = radiusAxisModel.get('z');
+            this.group.eachChild(function (child) {
+                child.z = z;
+            });
         },
 
         /**
@@ -74,9 +79,9 @@ define(function(require) {
         _axisTick: function (radiusAxisModel, ticksPositions, angleExtent, cx, cy, api) {
             var tickModel = radiusAxisModel.getModel('axisTick');
 
-            var axisLineShape = getAxisLineShape(radiusAxisModel, cx, cy);
-            var start = [axisLineShape.x1, axisLineShape.y1];
-            var end = [axisLineShape.x2, axisLineShape.y2];
+            var lineShape = getAxisLineShape(radiusAxisModel, cx, cy);
+            var start = [lineShape.x1, lineShape.y1];
+            var end = [lineShape.x2, lineShape.y2];
 
             var len = vector.dist(end, start);
             var direction = [
@@ -89,6 +94,7 @@ define(function(require) {
             var p2 = [];
             var tickLen = tickModel.get('length');
             var lines = zrUtil.map(ticksPositions, function (tickPosition) {
+                // Get point on axis
                 vector.lerp(p1, start, end, tickPosition / len);
                 vector.scaleAndAdd(p2, p1, direction, tickLen);
                 return new api.Line({
@@ -102,7 +108,8 @@ define(function(require) {
             });
             this.group.add(api.mergePath(
                 lines, {
-                    style: tickModel.getModel('lineStyle').getLineStyle()
+                    style: tickModel.getModel('lineStyle').getLineStyle(),
+                    silent: true
                 }
             ));
         },
@@ -111,7 +118,44 @@ define(function(require) {
          * @private
          */
         _axisLabel: function (radiusAxisModel, ticksPositions, angleExtent, cx, cy, api) {
+            var axis = radiusAxisModel.axis;
+            var labelModel = radiusAxisModel.getModel('axisLabel');
+            var textStyleModel = labelModel.getModel('textStyle');
 
+            var labels = radiusAxisModel.formatLabels(axis.scale.getTicksLabels());
+
+            var lineShape = getAxisLineShape(radiusAxisModel, cx, cy);
+            var start = [lineShape.x1, lineShape.y1];
+            var end = [lineShape.x2, lineShape.y2];
+
+            var len = vector.dist(end, start);
+            var direction = [
+                start[1] - end[1],
+                end[0] - start[0]
+            ];
+            vector.normalize(direction, direction);
+
+            var p = [];
+            var labelMargin = labelModel.get('margin');
+            var labelsPositions = axis.getLabelsPositions();
+
+            // FIXME Text align and text baseline when axis angle is 90 degree
+            for (var i = 0; i < labelsPositions.length; i++) {
+                // Get point on axis
+                vector.lerp(p, start, end, labelsPositions[i] / len);
+                vector.scaleAndAdd(p, p, direction, labelMargin);
+                this.group.add(new api.Text({
+                    style: {
+                        x: p[0],
+                        y: p[1],
+                        text: labels[i],
+                        textAlign: 'center',
+                        textBaseline: 'top',
+                        font: textStyleModel.getFont()
+                    },
+                    silent: true
+                }));
+            };
         },
 
         /**
@@ -136,7 +180,8 @@ define(function(require) {
                         cx: cx,
                         cy: cy,
                         r: ticksPositions[i]
-                    }
+                    },
+                    silent: true
                 }))
             }
 
@@ -150,8 +195,7 @@ define(function(require) {
                         lineWidth: lineWidth,
                         fill: null
                     },
-                    silent: true,
-                    z: radiusAxisModel.get('z')
+                    silent: true
                 }));
             }
         },
