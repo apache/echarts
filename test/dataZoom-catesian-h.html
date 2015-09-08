@@ -45,10 +45,12 @@
                     },
                     xAxis: {
                         // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
-                        data: xAxisData
+                        data: xAxisData,
+                        boundaryGap: true
                     },
                     yAxis: {
                         // scale: true
+                        boundaryGap: false
                     },
                     series: [
                         {
@@ -56,16 +58,16 @@
                             type: 'line',
                             data: data1
                         },
-                        // {
-                        //     name: 'line2',
-                        //     type: 'line',
-                        //     data: data2
-                        // },
-                        // {
-                        //     name: 'line3',
-                        //     type: 'line',
-                        //     data: data3
-                        // }
+                        {
+                            name: 'line2',
+                            type: 'line',
+                            data: data2
+                        },
+                        {
+                            name: 'line3',
+                            type: 'line',
+                            data: data3
+                        }
                     ],
                     dataZoom: {
                         show: true

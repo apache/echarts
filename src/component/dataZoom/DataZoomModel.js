@@ -73,6 +73,7 @@ define(function(require) {
             this._resetTargetAxes(newOption);
             // this._resetTargetSeries(newOption);
             this._resetRange();
+            this._resetInverse();
         },
 
         _resetTargetAxes: function (newOption) {
@@ -84,22 +85,46 @@ define(function(require) {
                 var axisIndices = helper.toArray(helper.retrieveValue(
                     newOption[dimNames.axisIndex], thisOption[dimNames.axisIndex], []
                 ));
-                var axisModels = this.dependentModels[dimNames.axis];
-
-                // If not specified, set default.
-                if (axisModels.length && !axisIndices.length) {
-                    for (var i = 0, len = axisModels.length; i < len; i++) {
-                        if (axisModels[i].get('type') === 'category') {
-                            axisIndices.push(i);
-                        }
-                    }
-                }
                 thisOption[dimNames.axisIndex] = axisIndices;
 
                 if (axisIndices.length) {
                     noAxisDefined = false;
                 }
             }, this);
+
+            if (noAxisDefined) {
+                // Find axis that parallel to dataZoom as default.
+                var dimNames = this.get('orient') === 'vertical'
+                    ? {dim: 'y', axisIndex: 'yAxisIndex', axis: 'yAxis'}
+                    : {dim: 'x', axisIndex: 'xAxisIndex', axis: 'xAxis'};
+
+                if (this.dependentModels[dimNames.axis].length) {
+                    thisOption[dimNames.axisIndex] = [0];
+                    noAxisDefined = false;
+                }
+            }
+
+            if (noAxisDefined) {
+                // Find the first category axis as default. (consider polar)
+                helper.eachAxisDim(function (dimNames) {
+                    if (!noAxisDefined) {
+                        return;
+                    }
+                    var axisIndices = [];
+                    var axisModels = this.dependentModels[dimNames.axis];
+                    if (axisModels.length && !axisIndices.length) {
+                        for (var i = 0, len = axisModels.length; i < len; i++) {
+                            if (axisModels[i].get('type') === 'category') {
+                                axisIndices.push(i);
+                            }
+                        }
+                    }
+                    thisOption[dimNames.axisIndex] = axisIndices;
+                    if (axisIndices.length) {
+                        noAxisDefined = false;
+                    }
+                }, this);
+            }
 
             if (noAxisDefined) {
                 // FIXME
@@ -155,17 +180,19 @@ define(function(require) {
             var targetDim;
             helper.eachAxisDim(function (dimNames) {
                 if (thisOption[dimNames.axisIndex].length) {
-                    targetDim = targetDim !== false ? false : dimNames.dim;
+                    targetDim = targetDim != null ? false : dimNames.dim;
                 }
             });
 
             // Otherwise, determine it by dataZoom.orient (compatibale with the logic in ec2.)
             // targetDim === 'y' means start/end control 'y' and start2/end2 control 'x'.
+            // FIXME
+            // 不要这么做。不要 start2 end2 参数。
             var targetDim2;
-            if (targetDim === false) {
-                targetDim = thisOption.orient === 'vertical' ? 'y' : 'x';
-                targetDim2 = targetDim === 'x' ? 'y' : 'x';
-            }
+            // if (targetDim === false) {
+            //     targetDim = thisOption.orient === 'vertical' ? 'y' : 'x';
+            //     targetDim2 = targetDim === 'x' ? 'y' : 'x';
+            // }
 
             var optAttrs = {};
             optAttrs[targetDim] = {start: 'start', end: 'end'};
@@ -192,6 +219,36 @@ define(function(require) {
             if (!targetDim2) {
                 thisOption.start2 = thisOption.end2 = null;
             }
+        },
+
+        /**
+         * @private
+         */
+        _resetInverse: function () {
+            var orient = this.get('orient');
+            // Just use the first axis to determine mapping.
+            var targetAxisModel = this._getFirstTargetAxisModel();
+            var inverse = targetAxisModel && targetAxisModel.get('inverse');
+            this.option.inverse =
+                (orient === 'horizontal' && inverse)
+                || (orient === 'vertical' && !inverse);
+        },
+
+        /**
+         * @private
+         */
+        _getFirstTargetAxisModel: function () {
+            var firstAxisModel;
+            helper.eachAxisDim(function (dimNames) {
+                if (firstAxisModel == null) {
+                    var indices = this.get(dimNames.axisIndex);
+                    if (indices.length) {
+                        firstAxisModel = this.dependentModels[dimNames.axis][indices[0]];
+                    }
+                }
+            }, this);
+
+            return firstAxisModel;
         },
 
         /**

@@ -29,50 +29,71 @@ define(function (require) {
 
         // Process axis data
         var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
-        var percentExtent = [0, 100];
-        var dataZoomStart = axisModel.get('dataZoomStart');
-        var dataZoomEnd = axisModel.get('dataZoomEnd');
+        var seriesModels = dataZoomModel.getTargetSeriesModels(dimNames.dim, axisIndex);
+        var dataExtent = calculateDataExtent(dimNames, axisModel, seriesModels);
+        var dataWindow = calculateDataWindow(axisModel, dataExtent);
+        var axisType = axisModel.get('type');
 
-        var axisData = axisModel.getData();
-        if (axisData) {
-            var axisDataExtent = [0, axisData.length];
-            var axisStart = Math.floor(linearMap(dataZoomStart, percentExtent, axisDataExtent, true));
-            var axisEnd = Math.ceil(linearMap(dataZoomEnd, percentExtent, axisDataExtent, true));
-            // Only category axis has property 'data's.
+        if (axisType === 'category') {
+            var axisData = axisModel.getData();
             // FIXME
             // setter?
-            axisData = axisModel.option.data = axisData.slice(axisStart, axisEnd);
+            axisData = axisModel.option.data = axisData.slice(dataWindow[0], dataWindow[1] + 1);
         }
 
         // Process series data
-        var seriesModels = dataZoomModel.getTargetSeriesModels(dimNames.dim, axisIndex);
         zrUtil.each(seriesModels, function (seriesModel) {
-
-            // FIXME
-            // 如何filter，
-            // 是根据data自己存的信息（如dimension）来判断（这比较直接，但是现在list里存的信息没清楚），
-            // 还是根据axis type来判断（比较枚举不太好）
-            // var axisType = axisModel.get('type');
-
             // FIXME
             // 这里仅仅处理了list类型
             var seriesData = seriesModel.getData();
-            if (seriesData) {
-
-                var seriesDataExtent = [0, seriesData.count()];
-                var seriesStart = Math.floor(linearMap(dataZoomStart, percentExtent, seriesDataExtent, true));
-                var seriesEnd = Math.ceil(linearMap(dataZoomEnd, percentExtent, seriesDataExtent, true));
-                seriesData.filterSelf(function (entry) {
-                    var value = entry['get' + dimNames.dim.toUpperCase()]();
-                    return value >= seriesStart && value <= seriesEnd;
-                });
+            if (!seriesData) {
+                return;
             }
 
+            seriesData.filterSelf(function (entry) {
+                var value = entry[dimNames.getter]();
+                return value >= dataWindow[0] && value <= dataWindow[1];
+            });
+            // FIXME
+            // 对于value轴的过滤（另一个轴是category），效果有问题，现在简单去除节点不行。
             // FIXME
             // 对于数值轴，还要考虑log等情况.
             // FIXME
             // 对于时间河流图，还要考虑是否须整块移除。
         });
+    }
+
+    function calculateDataExtent(dimNames, axisModel, seriesModels) {
+        var dataExtent = [Number.MAX_VALUE, Number.MIN_VALUE];
+
+        if (axisModel.get('type') === 'category') {
+            // Only category axis has property 'data's.
+            var axisData = axisModel.getData() || [];
+            dataExtent = [0, axisData.length];
+        }
+        else {
+            zrUtil.each(seriesModels, function (seriesModel) {
+                var seriesData = seriesModel.getData();
+                if (seriesData) {
+                    var seriesExtent = seriesData['getExtent' + dimNames.dim.toUpperCase()]();
+                    seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
+                    seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
+                }
+            }, this);
+        }
+
+        return dataExtent;
+    }
+
+    function calculateDataWindow(axisModel, dataExtent) {
+        var dataZoomStart = axisModel.get('dataZoomStart');
+        var dataZoomEnd = axisModel.get('dataZoomEnd');
+        var percentExtent = [0, 100];
+
+        return [
+            Math.floor(linearMap(dataZoomStart, percentExtent, dataExtent, true)),
+            Math.ceil(linearMap(dataZoomEnd, percentExtent, dataExtent, true))
+        ];
     }
 
 });

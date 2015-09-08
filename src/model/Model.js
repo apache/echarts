@@ -4,7 +4,6 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
-    var unique = require('../util/unique');
 
     /**
      * @alias module:echarts/model/Model
@@ -23,13 +22,6 @@ define(function (require) {
          * @protected
          */
         this.option = option;
-
-        /**
-         * @type {string}
-         * @public
-         * @readOnly
-         */
-        this.uid = unique.getUID('model');
 
         this.init.apply(this, arguments);
     }

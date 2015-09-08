@@ -361,6 +361,18 @@ define(function(require) {
             }, context);
             return ret;
         };
+
+        List.prototype['getExtent' + capitalized] = function () {
+            var min = Number.MAX_VALUE;
+            var max = Number.MIN_VALUE;
+            this.each(function (item) {
+                var value = item['get' + capitalized]();
+                value > max && (max = value);
+                value < min && (min = value);
+            });
+            return [min, max];
+        };
+
     });
 
     List.fromArray = function (data, seriesModel, ecModel) {

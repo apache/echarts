@@ -10,6 +10,7 @@ define(function(require) {
     var Model = require('./Model');
     var zrUtil = require('zrender/core/util');
     var arrayPush = Array.prototype.push;
+    var unique = require('../util/unique');
 
     var TYPE_DELIMITER = '.';
     var IS_CONTAINER = '___EC__COMPONENT__CONTAINER___';
@@ -70,6 +71,13 @@ define(function(require) {
         var SubComponentModel = function (option, parentModel, ecModel, dependentModels) {
             this.ecModel = ecModel;
             this.dependentModels = dependentModels;
+            /**
+             * @type {string}
+             * @public
+             * @readOnly
+             */
+            this.uid = unique.getUID('componentModel');
+
             ComponentModel.apply(this, arguments);
         };
 

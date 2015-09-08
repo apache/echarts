@@ -108,15 +108,11 @@ define(function (require) {
             var viewRange = this.layout.viewRange;
             var viewExtend = [0, this._getViewTotalLength()];
             var percentExtent = [0, 100];
-            var range = {
+
+            return this._processRange({
                 start: linearMap(viewRange.handle1, viewExtend, percentExtent, true),
                 end: linearMap(viewRange.handle2, viewExtend, percentExtent, true)
-            };
-            // Auto exchange
-            if (range.start > range.end) {
-                range.start = [range.end, range.end = range.start][0];
-            }
-            return range;
+            });
         },
 
         /**
@@ -178,13 +174,33 @@ define(function (require) {
          */
         _initViewRange: function () {
             // Based on layout.location.
-            var range = this.dataZoomModel.getRange();
+            var range = this._processRange(this.dataZoomModel.getRange());
             var viewExtend = [0, this._getViewTotalLength()];
             var percentExtent = [0, 100];
             this.layout.viewRange = {
                 handle1: round(linearMap(range.start, percentExtent, viewExtend, true)),
                 handle2: round(linearMap(range.end, percentExtent, viewExtend, true))
             };
+        },
+
+        _processRange: function (range) {
+            // Auto exchange
+            if (range.start > range.end) {
+                range.start = [range.end, range.end = range.start][0];
+            }
+
+            // Clamp
+            range.start > 100 && (range.start = 100);
+            range.end > 100 && (range.end = 100);
+            range.start < 0 && (range.start = 0);
+            range.end < 0 && (range.end = 0);
+
+            // Reverse if needed.
+            var inverse = this.dataZoomModel.get('inverse');
+            if (inverse) {
+                range.end = [100 - range.start, range.start = 100 - range.end][0];
+            }
+            return range;
         },
 
         /**

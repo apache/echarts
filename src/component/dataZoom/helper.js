@@ -16,7 +16,9 @@ define(function(require) {
             var names = {
                 axisIndex: axisDim + 'AxisIndex',
                 axis: axisDim + 'Axis',
-                dim: axisDim
+                dim: axisDim,
+                index: axisDim + 'Index',
+                getter: 'get' + axisDim.toUpperCase()
             };
             callback.call(context, names);
         });
