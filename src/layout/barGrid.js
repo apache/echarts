@@ -142,8 +142,10 @@ define(function(require) {
             var valueAxis = cartesian.getOtherAxis(columnLayoutInfo.axis);
 
             if (data.type === 'list') {
+                var valueAxisStart = valueAxis.getExtent()[0];
                 var coords = cartesian.dataToCoords(data);
                 lastStackCoords[stackId] = lastStackCoords[stackId] || [];
+
                 data.each(function (dataItem, dataIndex) {
 
                     var value = dataItem.getValue(true);
@@ -153,22 +155,24 @@ define(function(require) {
                     }
 
                     var coord = coords[dataIndex];
-                    var lastCoord = lastStackCoords[stackId][dataIndex] || valueAxis.dataToCoord(0);
+                    var lastCoord = lastStackCoords[stackId][dataIndex] || valueAxisStart;
                     var x, y, width, height;
                     if (valueAxis.isHorizontal()) {
                         x = Math.min(lastCoord, coord[0]);
                         y = coord[1] + columnOffset;
                         width = Math.abs(coord[0] - lastCoord);
                         height = columnWidth;
-                        lastStackCoords[stackId][dataIndex] = x;
+                        lastCoord += coord[0] - lastCoord;
                     }
                     else {
                         x = coord[0] + columnOffset;
                         y = Math.min(lastCoord, coord[1]);
                         width = columnWidth;
                         height = Math.abs(coord[1] - lastCoord);
-                        lastStackCoords[stackId][dataIndex] = y;
+                        lastCoord += coord[1] - lastCoord;
                     }
+                    lastStackCoords[stackId][dataIndex] = lastCoord;
+
                     dataItem.layout = {
                         x: x,
                         y: y,

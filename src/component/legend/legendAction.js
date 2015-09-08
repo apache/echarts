@@ -5,8 +5,17 @@ define(function(require) {
 
     var echarts = require('../../echarts');
 
-    echarts.registerAction('legendSelected', function (event, ecModel) {
-        event.legendModel.toggleSelected(event.seriesName);
+    /**
+     * @event legendToggleSelect
+     * @type {Object}
+     * @property {string} type 'legendToggleSelect'
+     * @property {string} [from]
+     * @property {string} seriesName
+     */
+    echarts.registerAction('legendToggleSelect', function (event, ecModel) {
+        // Update all legend components
+        ecModel.eachComponent('legend', function (legendModel) {
+            legendModel && legendModel.toggleSelected(event.seriesName);
+        });
     });
-
 });

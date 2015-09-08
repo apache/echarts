@@ -181,7 +181,8 @@ define(function(require) {
                     },
                     style: {
                         lineWidth: tickLineWidth
-                    }
+                    },
+                    silent: true
                 })));
             }
             var tickEl = api.mergePath(tickLines, {
@@ -356,7 +357,8 @@ define(function(require) {
                     },
                     style: {
                         lineWidth: lineWidth
-                    }
+                    },
+                    silent: true
                 })));
             }
 
@@ -427,7 +429,8 @@ define(function(require) {
                         y: y,
                         width: width,
                         height: height
-                    }
+                    },
+                    silent: true
                 }));
 
                 prevX = x + width;

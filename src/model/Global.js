@@ -2,7 +2,10 @@
  * ECharts global model
  *
  * @module {echarts/model/Global}
+ *
  */
+
+// FIXME Filter 后 series 是否能够被 getComponent 或者 getComponenentById 获取？
 
 define(function (require) {
 
@@ -41,6 +44,12 @@ define(function (require) {
              * @private
              */
             this._componentsMap = {};
+
+            /**
+             * @type {Object.<string, module:echarts/model/Model>}
+             * @private
+             */
+            this._componentsIdMap = {};
 
             /**
              * @type {Object.<string, module:echarts/model/Model>}
@@ -88,7 +97,6 @@ define(function (require) {
 
             var option = this.option;
             var componentsMap = this._componentsMap;
-            var components = this._components;
             var componentTypes = [];
 
             // 如果不存在对应的 component model 则直接 merge
@@ -140,7 +148,10 @@ define(function (require) {
                             this._getComponentsByTypes(dependencies), i
                         );
                         componentsMap[componentType][i] = componentModel;
-                        components.push(componentModel);
+
+                        // Merge option is incremental
+                        this._components.push(componentModel);
+                        this._componentsIdMap[componentModel.uid] = componentModel;
                     }
                 }
             }, this);
@@ -159,6 +170,8 @@ define(function (require) {
         },
 
         /**
+         * @param {string} type
+         * @param {number} [idx=0]
          * @return {module:echarts/model/Component}
          */
         getComponent: function (type, idx) {
@@ -166,6 +179,14 @@ define(function (require) {
             if (list) {
                 return list[idx || 0];
             }
+        },
+
+        /**
+         * @param {string} uid
+         * @return {module:echarts/model/Component}
+         */
+        getComponentById: function (uid) {
+            return this._componentsIdMap[uid];
         },
 
         /**

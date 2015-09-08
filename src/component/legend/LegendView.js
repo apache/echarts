@@ -1,7 +1,16 @@
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
     var symbolCreator = require('../../util/symbol');
+
+    function createSelectActionDispatcher(uid, seriesName, api) {
+        api.dispatch({
+            type: 'legendToggleSelect',
+            from: uid,
+            seriesName: seriesName
+        });
+    }
 
     return require('../../echarts').extendComponentView({
 
@@ -65,14 +74,9 @@ define(function (require) {
                 group.add(legendSymbol);
                 group.add(text);
 
-                legendSymbol.on('click', function () {
-                    api.dispatch({
-                        type: 'legendSelected',
-                        from: this.uid,
-                        legendModel: legendModel,
-                        seriesName: seriesName
-                    });
-                }, this);
+                var onClick = zrUtil.curry(createSelectActionDispatcher, this.uid, seriesName, api);
+                legendSymbol.on('click', onClick, this);
+                text.on('click', onClick, this);
             }, this);
 
             var groupRect = group.getBoundingRect();
