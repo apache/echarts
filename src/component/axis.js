@@ -99,7 +99,7 @@ define(function(require) {
                     x2: p2[0],
                     y2: p2[1]
                 },
-                style: zrUtil.merge({
+                style: zrUtil.extend({
                     lineCap: 'round'
                 }, lineStyleModel.getLineStyle()),
                 z: axisModel.get('z'),

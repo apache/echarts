@@ -1,8 +1,8 @@
 /**
- * TODO processor的优先级
+ * TODO visualCoding 的优先级
  *      setTheme
- *      stack
  *      axis position 统一处理
+ *      规范 Symbol 配置和绘制
  */
 define(function (require) {
 
@@ -452,6 +452,7 @@ define(function (require) {
          * @param {*} layout
          */
         registerLayout: function (layout, isFactory) {
+            // PENDING All functions ?
             if (isFactory) {
                 if (zrUtil.indexOf(layoutClasses, layout) < 0) {
                     layoutClasses.push(layout);

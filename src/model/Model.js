@@ -62,17 +62,18 @@ define(function (require) {
          * @param {string} path
          * @return {*}
          */
-        get: function (path, parentModel) {
+        get: function (path) {
+            if (! path) {
+                return this.option;
+            }
+
             if (typeof path === 'string') {
                 path = path.split('.');
-            }
-            if (this.option == null) {
-                return;
             }
 
             var obj = this.option;
             for (var i = 0; i < path.length; i++) {
-                obj = obj[path[i]];
+                obj = obj && obj[path[i]];
                 if (obj == null) {
                     break;
                 }

@@ -1,12 +1,11 @@
 define(function (require) {
 
-    require('../../echarts').registerVisualCoding(function (ecModel) {
-
-        ecModel.eachSeriesByType('scatter', function (scatterSeries) {
-            var symbolType = scatterSeries.get('symbol') || 'circle';
+    return function (seriesType, defaultSymbolType, legendSymbol, ecModel, api) {
+        ecModel.eachSeriesByType(seriesType, function (scatterSeries) {
+            var symbolType = scatterSeries.get('symbol') || defaultSymbolType;
             var symbolSize = scatterSeries.get('symbolSize');
             scatterSeries.setVisual({
-                legendSymbol: symbolType,
+                legendSymbol: legendSymbol || symbolType,
                 symbol: symbolType,
                 symbolSize: symbolSize
             });
@@ -16,13 +15,10 @@ define(function (require) {
                 var symbolType = dataItem.get('symbol');
                 var symbolSize = dataItem.get('symbolSize');
                 if (typeof symbolSize === 'function') {
+                    var rawValue = dataItem.get('value') || dataItem.get();
                     dataItem.setVisual({
                         symbol: symbolType,
-                        symbolSize: symbolSize([
-                            dataItem.getX(),
-                            dataItem.getY(),
-                            dataItem.getValue()
-                        ])
+                        symbolSize: symbolSize(rawValue)
                     });
                 }
                 else if (symbolType && symbolType !== 'none') {
@@ -33,5 +29,5 @@ define(function (require) {
                 }
             });
         });
-    });
+    };
 });

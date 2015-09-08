@@ -36,12 +36,11 @@ define(function (require) {
                             y: layout.y + layout.height,
                             width: layout.width
                         },
-                        style: zrUtil.merge(
+                        style: zrUtil.extend(
                             dataItem.getModel('itemStyle.normal').getItemStyle(),
                             {
                                 fill: dataItem.getVisual('color')
-                            },
-                            true, false
+                            }
                         )
                     });
 

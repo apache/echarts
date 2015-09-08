@@ -44,12 +44,11 @@ define(function(require) {
                     shape: {
                         points: points
                     },
-                    style: zrUtil.merge(
+                    style: zrUtil.extend(
                         lineStyleNormalModel.getLineStyle(),
                         {
                             stroke: seriesModel.getVisual('color')
-                        },
-                        true, false
+                        }
                     )
                 });
 
@@ -71,10 +70,12 @@ define(function(require) {
                 this.group.add(this._polyline);
             }
 
+            this._drawSymbol()
+
             this._data = data;
         },
 
-        _drawSymbols: function (data) {
+        _drawSymbol: function () {
 
         },
 
