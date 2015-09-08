@@ -161,15 +161,15 @@ define(function (require) {
         getBands: function () {
             var extent = this._extent;
             var bands = [];
-            var len = this.scale.count() + 1;
+            var len = this.scale.count();
             var start = extent[0];
             var end = extent[1];
             var size = end - start;
 
-            for (var i = 1; i <= len; i++) {
+            for (var i = 0; i < len; i++) {
                 bands.push([
-                    size * (i - 1) / len + start,
-                    size * i / len + start
+                    size * i / len + start,
+                    size * (i + 1) / len + start
                 ]);
             }
             return bands;

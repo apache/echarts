@@ -5,6 +5,7 @@
  * http://en.wikipedia.org/wiki/Level_of_measurement
  */
 
+// FIXME only one data
 define(function (require) {
 
     /**
@@ -37,6 +38,10 @@ define(function (require) {
          */
         normalize: function (val) {
             var extent = this._extent;
+            // Only one data
+            if (extent[1] === extent[0]) {
+                return extent[0];
+            }
             return (val - extent[0]) / (extent[1] - extent[0]);
         },
 
@@ -112,7 +117,7 @@ define(function (require) {
          * @return {number}
          */
         count: function () {
-            return this._extent[1] - this._extent[0];
+            return this._extent[1] - this._extent[0] + 1;
         },
 
         /**

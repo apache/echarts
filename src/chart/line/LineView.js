@@ -39,14 +39,6 @@ define(function(require) {
 
             // Initialization animation
             if (!this._data) {
-                var removeClipPath = zrUtil.bind(group.removeClipPath, group);
-
-                var clipPath = isCoordinateSystemPolar
-                    ? this._createPolarClipShape(coordinateSystem, api, removeClipPath)
-                    : this._createGridClipShape(coordinateSystem, api, removeClipPath);
-
-                group.setClipPath(clipPath);
-
                 var polyline = new api.Polyline({
                     shape: {
                         points: points
@@ -58,6 +50,14 @@ define(function(require) {
                         }
                     )
                 });
+
+                var removeClipPath = zrUtil.bind(polyline.removeClipPath, polyline);
+
+                var clipPath = isCoordinateSystemPolar
+                    ? this._createPolarClipShape(coordinateSystem, api, removeClipPath)
+                    : this._createGridClipShape(coordinateSystem, api, removeClipPath);
+
+                polyline.setClipPath(clipPath);
 
                 group.add(polyline);
 

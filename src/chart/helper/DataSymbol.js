@@ -101,7 +101,6 @@ define(function (require) {
                 var group = this.group;
                 this._data.each(function (dataItem) {
                     var el = dataItem.__el;
-                    el.stopAnimation();
                     el.animateTo({
                         scale: [0, 0]
                     }, 200, 'cubicOut', function () {

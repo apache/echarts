@@ -22,7 +22,7 @@ define(function (require) {
         var sub = domain[1] - domain[0];
 
         if (sub === 0) {
-            return val;
+            return domain[0];
         }
         var t = (val - domain[0]) / sub;
         if (clamp) {
