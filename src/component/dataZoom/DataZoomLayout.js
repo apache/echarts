@@ -125,7 +125,7 @@ define(function (require) {
             var width;
             var height;
             // If some of x/y/width/height are not specified, auto-adapt according to target grid.
-            var gridRect = this._findGridRectForLocating();
+            var gridRect = this._findCoordRectForLocating();
 
             if (this._orient === 'horizontal') { // Horizontal layout
                 width = retrieveValue(dataZoomModel.get('width'), gridRect.width);
@@ -151,7 +151,7 @@ define(function (require) {
         /**
          * @private
          */
-        _findGridRectForLocating: function () {
+        _findCoordRectForLocating: function () {
             // Find the grid coresponding to the first axis referred by dataZoom.
             var axisModel;
             var dataZoomModel = this.dataZoomModel;
@@ -163,10 +163,31 @@ define(function (require) {
                     axisModel = ecModel.getComponent(dimNames.axis, axisIndices[0]);
                 }
             });
-            return ecModel
+
+            // FIXME
+            // 判断是catesian还是polar
+            var rect;
+            var gridIndex = axisModel.get('gridIndex');
+            if (gridIndex != null) {
+                rect = ecModel
                 .getComponent('grid', axisModel.get('gridIndex'))
                 .coordinateSystem
                 .getRect();
+            }
+            else { // Polar
+                // FIXME
+                // 暂时随便写的
+                var width = this.api.getWidth();
+                var height = this.api.getHeight();
+                rect = {
+                    x: width * 0.2,
+                    y: height * 0.2,
+                    width: width * 0.6,
+                    height: height * 0.6
+                };
+            }
+
+            return rect;
         },
 
         /**

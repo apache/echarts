@@ -3,8 +3,8 @@ define(function(require) {
     'use strict';
 
     var axisDefault = require('../axisDefault');
-
     var zrUtil = require('zrender/core/util');
+    var ComponentModel = require('../../model/Component');
 
     function mergeDefault(axisOption, ecModel) {
         var axisType = axisOption.type + 'Axis';
@@ -14,12 +14,60 @@ define(function(require) {
         zrUtil.merge(axisOption, axisDefault[axisType]);
     }
 
-    var PolarAxisModel = require('../../model/Component').extend({
+    var PolarAxisModel = ComponentModel.extend({
         type: 'polarAxis',
         /**
          * @type {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
          */
-        axis: null
+        axis: null,
+
+        /**
+         * @override
+         */
+        init: function () {
+            ComponentModel.prototype.init.call(this);
+
+            var data = this.getData();
+            if (data) {
+                // FIXME
+                // clone?
+                /**
+                 * @type {Array}
+                 * @private
+                 */
+                this._dataBeforeProcessing = data.slice();
+            }
+        },
+
+        /**
+         * @public
+         * @return {Array=} data Can be null
+         */
+        getData: function () {
+            return this.get('data');
+        },
+
+        /**
+         * @public
+         * @param {number} start 0-100, null means remain current value.
+         * @param {number} end 0-100, null means remain current value.
+         */
+        setDataZoomRange: function (start, end) {
+            var option = this.option;
+            start != null && (option.dataZoomStart = start);
+            end != null && (option.dataZoomEnd = end);
+        },
+
+        /**
+         * @override
+         */
+        restoreData: function () {
+            // FIXME
+            // clone?
+            if (this._dataBeforeProcessing) {
+                this.option.data = this._dataBeforeProcessing.slice();
+            }
+        }
     });
 
     zrUtil.merge(PolarAxisModel.prototype, require('../axisModelCommonMixin'));

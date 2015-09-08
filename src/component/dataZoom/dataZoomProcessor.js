@@ -75,7 +75,7 @@ define(function (require) {
             zrUtil.each(seriesModels, function (seriesModel) {
                 var seriesData = seriesModel.getData();
                 if (seriesData) {
-                    var seriesExtent = seriesData['getExtent' + dimNames.dim.toUpperCase()]();
+                    var seriesExtent = seriesData[dimNames.extentGetter]();
                     seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
                     seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
                 }

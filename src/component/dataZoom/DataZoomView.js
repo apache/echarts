@@ -231,8 +231,8 @@ define(function (require) {
                 this.api.dispatch({
                     type: 'dataZoom',
                     from: this.uid,
-                    dataZoomRange: this._layout.normalizeToRange(),
-                    dataZoomModel: this.dataZoomModel
+                    dataZoomModelId: this.dataZoomModel.uid,
+                    dataZoomRange: this._layout.normalizeToRange()
                 });
             }
 

@@ -7,18 +7,21 @@ define(function(require) {
 
     var helper = {};
 
-    var AXIS_DIMS = ['x', 'y'];
+    var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
 
     // FIXME
     // 公用？
     helper.eachAxisDim = function (callback, context) {
         zrUtil.each(AXIS_DIMS, function (axisDim) {
+            var capital = axisDim[0].toUpperCase() + axisDim.substr(1);
             var names = {
                 axisIndex: axisDim + 'AxisIndex',
                 axis: axisDim + 'Axis',
                 dim: axisDim,
+                capital: capital,
                 index: axisDim + 'Index',
-                getter: 'get' + axisDim.toUpperCase()
+                getter: 'get' + capital,
+                extentGetter: 'getExtent' + capital
             };
             callback.call(context, names);
         });

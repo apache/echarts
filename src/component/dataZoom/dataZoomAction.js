@@ -9,12 +9,18 @@ define(function(require) {
     var helper = require('./helper');
 
     echarts.registerAction('dataZoom', function (event, ecModel) {
+
+        var fromDataZoomModel = ecModel.getComponentById(event.dataZoomModelId);
+        if (!fromDataZoomModel) {
+            return;
+        }
+
         var linkSet = helper.findLinkSet(
             zrUtil.bind(ecModel.eachComponent, ecModel, 'dataZoom'),
             function (model, dimNames) {
                 return model.get(dimNames.axisIndex);
             },
-            event.dataZoomModel
+            fromDataZoomModel
         );
 
         var dataZoomRange = event.dataZoomRange;
