@@ -2,7 +2,7 @@
  * TODO visualCoding 的优先级
  *      setTheme
  *      axis position 统一处理
- *      规范 Symbol 配置和绘制
+ *      规范 Symbol 配置和绘制, customPath
  */
 define(function (require) {
 

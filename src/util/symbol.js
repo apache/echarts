@@ -22,7 +22,7 @@ define(function(require) {
         }
     });
 
-    var symbols = {
+    var symbolCreators = {
         line: function (x, y, w, h) {
             return new graphic.Line({
                 shape: {
@@ -109,21 +109,46 @@ define(function(require) {
     };
 
     return {
-        createSymbol: function (symbolType, x, y, w, h) {
-            if (symbolType.indexOf('image://') === 0) {
-                return symbols.image(symbolType.slice(8), x, y, w, h);
+        /**
+         * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
+         */
+        createSymbol: function (symbolConfig, x, y, w, h, color) {
+            var isEmpty = symbolConfig.indexOf('empty') === 0;
+            if (isEmpty) {
+                symbolConfig = symbolConfig.substr(5, 1).toLowerCase() + symbolConfig.substr(6);
             }
-            else if (symbolType.indexOf('path://') === 0) {
-                return symbols.image(symbolType.slice(7), x, y, w, h);
+            var symbolPath;
+
+            if (symbolConfig.indexOf('image://') === 0) {
+                symbolPath = symbolCreators.image(symbolConfig.slice(8), x, y, w, h);
+            }
+            else if (symbolConfig.indexOf('path://') === 0) {
+                symbolPath = symbolCreators.image(symbolConfig.slice(7), x, y, w, h);
             }
             else {
-                if (symbols[symbolType]) {
-                    return symbols[symbolType](x, y, w, h);
+                if (symbolCreators[symbolConfig]) {
+                    symbolPath = symbolCreators[symbolConfig](x, y, w, h);
                 }
                 else {
-                    return symbols.rect(x, y, w, h);
+                    symbolPath = symbolCreators.rect(x, y, w, h);
                 }
             }
+
+            var symbolStyle = symbolPath.style;
+            if (isEmpty) {
+                symbolStyle.set({
+                    stroke: color,
+                    fill: '#fff',
+                    lineWidth: 2
+                });
+            }
+            else {
+                // FIXME 判断图形默认是填充还是描边，使用 onlyStroke ?
+                symbolStyle.fill && (symbolStyle.fill = color);
+                symbolStyle.stroke && (symbolStyle.stroke = color);
+            }
+
+            return symbolPath;
         }
     };
 });

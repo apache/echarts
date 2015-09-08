@@ -39,11 +39,9 @@ define(function (require) {
                     ? seriesModel.getVisual('color')
                     : '#ccc';
 
-                var legendSymbol = this._createSymbol(seriesModel, x, y, width, height, api);
-                legendSymbol.style.set({
-                    fill: color,
-                    stroke: color
-                });
+                var legendSymbol = this._createSymbol(
+                    seriesModel, x, y, width, height, color, api
+                );
 
                 var text = new api.Text({
                     style: {
@@ -81,26 +79,29 @@ define(function (require) {
             group.position[0] -= groupRect.width / 2;
         },
 
-        _createSymbol: function (seriesModel, x, y, width, height, api) {
+        _createSymbol: function (seriesModel, x, y, width, height, color, api) {
 
+            var group = new api.Group();
             // Using rect symbol defaultly
             var legendSymbolType = seriesModel && seriesModel.getVisual('legendSymbol')
                 || 'roundRect';
             var symbolType = seriesModel && seriesModel.getVisual('symbol');
 
-            var legendSymbolShape = symbolCreator.createSymbol(legendSymbolType, x, y, width, height);
+            group.add(symbolCreator.createSymbol(
+                legendSymbolType, x, y, width, height, color
+            ));
 
             // Compose symbols
             // PENDING Use group ?
             if (symbolType && symbolType !== legendSymbolType) {
                 var size = height * 0.8;
                 // Put symbol in the center
-                var symbolShape = symbolCreator.createSymbol(symbolType, x + (width - size) / 2, y + (height - size) / 2, size, size);
-
-                legendSymbolShape = api.mergePath([legendSymbolShape, symbolShape]);
+                group.add(symbolCreator.createSymbol(
+                    symbolType, x + (width - size) / 2, y + (height - size) / 2, size, size, color
+                ));
             }
 
-            return legendSymbolShape;
+            return group;
         }
     });
 });

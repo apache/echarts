@@ -3,14 +3,19 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
-    var symbolCreator = require('../../util/symbol');
+    var DataSymbol = require('../helper/DataSymbol');
 
     return require('../../echarts').extendChartView({
 
         type: 'line',
 
-        render: function (seriesModel, ecModel, api) {
+        init: function () {
+            this._dataSymbol = new DataSymbol();
+            this.group.add(this._dataSymbol.group);
+        },
 
+        render: function (seriesModel, ecModel, api) {
+            var group = this.group;
             var data = seriesModel.getData();
             var lineStyleNormalModel = seriesModel.getModel('itemStyle.normal.lineStyle');
 
@@ -34,11 +39,13 @@ define(function(require) {
 
             // Initialization animation
             if (!this._data) {
-                var clipPath = isCoordinateSystemPolar
-                    ? this._createPolarClipShape(coordinateSystem, api)
-                    : this._createGridClipShape(coordinateSystem, api);
+                var removeClipPath = zrUtil.bind(group.removeClipPath, group);
 
-                this.group.setClipPath(clipPath);
+                var clipPath = isCoordinateSystemPolar
+                    ? this._createPolarClipShape(coordinateSystem, api, removeClipPath)
+                    : this._createGridClipShape(coordinateSystem, api, removeClipPath);
+
+                group.setClipPath(clipPath);
 
                 var polyline = new api.Polyline({
                     shape: {
@@ -52,34 +59,33 @@ define(function(require) {
                     )
                 });
 
-                this.group.add(polyline);
+                group.add(polyline);
 
                 this._polyline = polyline;
             }
             else {
                 // FIXME Handle the situation of adding and removing data
-                // this._polyline.animateShape()
-                //     .when(500, {
-                //         points: points
-                //     })
-                //     .start('cubicOut');
-                this._polyline.shape.points = points;
-                this._polyline.dirty(true);
+                this._polyline.animateTo({
+                    shape: {
+                        points: points
+                    }
+                }, 500, 'cubicOut');
+                // this._polyline.shape.points = points;
+                // this._polyline.dirty(true);
 
                 // Add back
-                this.group.add(this._polyline);
+                group.add(this._polyline);
             }
 
-            this._drawSymbol()
+            var dataSymbol = this._dataSymbol;
+            dataSymbol.z = seriesModel.get('z') + 1;
+            // Draw symbols
+            dataSymbol.updateData(data);
 
             this._data = data;
         },
 
-        _drawSymbol: function () {
-
-        },
-
-        _createGridClipShape: function (cartesian, api) {
+        _createGridClipShape: function (cartesian, api, cb) {
             var xAxis = cartesian.getAxis('x');
             var yAxis = cartesian.getAxis('y');
             var xExtent = xAxis.getExtent();
@@ -101,12 +107,12 @@ define(function(require) {
                     width: xExtent[1] - xExtent[0],
                     height: yExtent[1] - yExtent[0]
                 }
-            }, 1500);
+            }, 1500, cb);
 
             return clipPath;
         },
 
-        _createPolarClipShape: function (polar, api) {
+        _createPolarClipShape: function (polar, api, cb) {
             // var angleAxis = polar.getAngleAxis();
             var radiusAxis = polar.getRadiusAxis();
 
@@ -127,9 +133,14 @@ define(function(require) {
                 shape: {
                     endAngle: Math.PI * 2
                 }
-            }, 1500);
+            }, 1500, cb);
 
             return clipPath;
+        },
+
+        remove: function () {
+            this.group.remove(this._polyline);
+            this._dataSymbol.remove();
         }
     });
 });

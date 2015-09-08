@@ -1,4 +1,6 @@
-define(function () {
+define(function (require) {
+    var zrUtil = require('zrender/core/util');
+
     return function (properties) {
         // Normalize
         for (var i = 0; i < properties.length; i++) {
@@ -6,15 +8,19 @@ define(function () {
                properties[i][1] = properties[i][0];
             }
         }
-        return function () {
-            var obj = {};
+        return function (excludes) {
+            var style = {};
             for (var i = 0; i < properties.length; i++) {
-                var val = this.get(properties[i][1]);
+                var propName = properties[i][1];
+                if (excludes && zrUtil.indexOf(excludes, propName) >= 0) {
+                    continue;
+                }
+                var val = this.get(propName);
                 if (val != null) {
-                    obj[properties[i][0]] = val;
+                    style[properties[i][0]] = val;
                 }
             }
-            return obj;
+            return style;
         }
     }
 });
