@@ -16,7 +16,7 @@
 
             require([
                 'echarts',
-                'echarts/chart/line',
+                'echarts/chart/bar',
                 'echarts/component/legend',
                 'echarts/component/grid',
                 'echarts/component/axis',
@@ -34,9 +34,9 @@
 
                 for (var i = 0; i < 20; i++) {
                     xAxisData.push('类目' + i);
-                    data1.push(Math.random() * 5);
-                    data2.push(Math.random());
-                    data3.push(Math.random());
+                    data1.push(Math.random() * 2);
+                    data2.push(Math.random() * 2);
+                    data3.push(Math.random() * 2);
                 }
 
                 chart.setOption({
@@ -55,17 +55,17 @@
                     series: [
                         {
                             name: 'line',
-                            type: 'line',
+                            type: 'bar',
                             data: data1
                         },
                         {
                             name: 'line2',
-                            type: 'line',
+                            type: 'bar',
                             data: data2
                         },
                         {
                             name: 'line3',
-                            type: 'line',
+                            type: 'bar',
                             data: data3
                         }
                     ],

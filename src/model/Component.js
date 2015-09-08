@@ -112,7 +112,7 @@ define(function(require) {
         return SubComponentModel;
     }
 
-    ComponentModel.getComponentModelClass = function (componentType, option) {
+    ComponentModel.getComponentModelClass = function (componentType, option, throwWhenNotFound) {
         var fullComponentType = componentType;
         if (option && option.type) {
             fullComponentType = componentType + TYPE_DELIMITER + option.type;
@@ -121,6 +121,11 @@ define(function(require) {
         if (ComponentClass[IS_CONTAINER]) {
             ComponentClass = ComponentClass[option.type];
         }
+
+        if (throwWhenNotFound && !ComponentClass) {
+            throw new Error('Component ' + fullComponentType + ' not exists');
+        }
+
         return ComponentClass;
     };
 

@@ -132,12 +132,8 @@ define(function (require) {
                 for (var i = 0; i < componentOption.length; i++) {
                     var componentModel = componentsMap[componentType][i];
                     var ComponentModelClass = ComponentModel.getComponentModelClass(
-                        componentType, componentOption[i]
+                        componentType, componentOption[i], true
                     );
-
-                    if (! ComponentModelClass) {
-                        throw new Error('Component ' + componentType + ' not exists');
-                    }
 
                     if (componentModel && componentModel instanceof ComponentModelClass) {
                         componentModel.mergeOption(componentOption[i], this);

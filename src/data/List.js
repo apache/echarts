@@ -286,11 +286,6 @@ define(function(require) {
          */
         filterSelf: function (cb, context) {
             this.elements = zrUtil.filter(this.elements, cb, context || this);
-            this.each(this._setEntryDataIndex);
-        },
-
-        _setEntryDataIndex: function (entry, dataIndex) {
-            entry.setDataIndex(dataIndex);
         },
 
         /**
@@ -396,7 +391,7 @@ define(function(require) {
                 independentVar = ['y'];
                 dependentVar = 'x';
 
-                categoryAxisModel = xAxisModel;
+                categoryAxisModel = yAxisModel;
             }
             else {
                 // PENDING

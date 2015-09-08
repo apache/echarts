@@ -29,12 +29,12 @@ define(function (require) {
 
         // Process axis data
         var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
+        var isCategoryFilter = axisModel.get('type') === 'category';
         var seriesModels = dataZoomModel.getTargetSeriesModels(dimNames.dim, axisIndex);
         var dataExtent = calculateDataExtent(dimNames, axisModel, seriesModels);
-        var dataWindow = calculateDataWindow(axisModel, dataExtent);
-        var axisType = axisModel.get('type');
+        var dataWindow = calculateDataWindow(axisModel, dataExtent, isCategoryFilter);
 
-        if (axisType === 'category') {
+        if (isCategoryFilter) {
             var axisData = axisModel.getData();
             // FIXME
             // setter?
@@ -50,10 +50,23 @@ define(function (require) {
                 return;
             }
 
-            seriesData.filterSelf(function (entry) {
-                var value = entry[dimNames.getter]();
-                return value >= dataWindow[0] && value <= dataWindow[1];
-            });
+            if (isCategoryFilter) {
+                seriesData.filterSelf(function (entry) {
+                    var dataIndex = entry[dimNames.getter]();
+                    var reserve = dataIndex >= dataWindow[0] && dataIndex <= dataWindow[1];
+                    if (reserve) {
+                        entry.setDataIndex(dataIndex - dataWindow[0]);
+                    }
+                    return reserve;
+                });
+            }
+            else {
+                seriesData.filterSelf(function (entry) {
+                    var value = entry[dimNames.getter]();
+                    return value >= dataWindow[0] && value <= dataWindow[1];
+                });
+            }
+
             // FIXME
             // 对于value轴的过滤（另一个轴是category），效果有问题，现在简单去除节点不行。
             // FIXME
@@ -85,15 +98,20 @@ define(function (require) {
         return dataExtent;
     }
 
-    function calculateDataWindow(axisModel, dataExtent) {
+    function calculateDataWindow(axisModel, dataExtent, isCategoryFilter) {
         var dataZoomStart = axisModel.get('dataZoomStart');
         var dataZoomEnd = axisModel.get('dataZoomEnd');
         var percentExtent = [0, 100];
 
-        return [
-            Math.floor(linearMap(dataZoomStart, percentExtent, dataExtent, true)),
-            Math.ceil(linearMap(dataZoomEnd, percentExtent, dataExtent, true))
+        var result = [
+            linearMap(dataZoomStart, percentExtent, dataExtent, true),
+            linearMap(dataZoomEnd, percentExtent, dataExtent, true)
         ];
+        if (isCategoryFilter) {
+            result = [Math.floor(result[0]), Math.ceil(result[1])];
+        }
+
+        return result;
     }
 
 });
