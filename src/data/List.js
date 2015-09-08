@@ -380,6 +380,7 @@ define(function(require) {
         var independentVar;
         var dependentVar;
 
+        var categoryAxisModel;
         // FIXME
         // 这里 List 跟几个坐标系和坐标系 Model 耦合了
         if (coordinateSystem === 'cartesian2d') {
@@ -388,10 +389,14 @@ define(function(require) {
             if (xAxisModel.get('type') === 'category') {
                 independentVar = ['x'];
                 dependentVar = 'y';
+
+                categoryAxisModel = xAxisModel;
             }
             else if (yAxisModel.get('type') === 'category') {
                 independentVar = ['y'];
                 dependentVar = 'x';
+
+                categoryAxisModel = xAxisModel;
             }
             else {
                 // PENDING
@@ -417,12 +422,17 @@ define(function(require) {
             if (angleAxisModel.get('type') === 'category') {
                 independentVar = ['angle'];
                 dependentVar = 'radius';
+
+                categoryAxisModel = angleAxisModel;
             }
             else if (radiusAxisModel.get('type') === 'category') {
                 independentVar = ['radius'];
                 dependentVar = 'angle';
+
+                categoryAxisModel = radiusAxisModel;
             }
             else {
+                // PENDING
                 var dim = data[0] && data[0].length;
                 if (dim === 2) {
                     independentVar = ['radius'];
@@ -437,12 +447,12 @@ define(function(require) {
 
         var list = new List(independentVar, dependentVar);
 
+        var categoryAxisData = categoryAxisModel && categoryAxisModel.getData();
         // Normalize data
-        zrUtil.each(data, function (dataItem, index) {
+        zrUtil.each(data, function (dataItem, idx) {
             var entry = list.add(dataItem, seriesModel);
-            // FIXME
             if (! dataItem.name) {
-                entry.name = index;
+                entry.name = categoryAxisData && categoryAxisData[idx] || idx;
             }
             return entry;
         });
