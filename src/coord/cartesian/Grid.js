@@ -178,65 +178,51 @@ define(function(require, factory) {
             var leftUsed = false;
             var bottomUsed = false;
 
-            var xAxesMap = {};
-            var yAxesMap = {};
-            var xAxesCount = 0;
-            var yAxesCount = 0;
+            var axesMap = {
+                x: {},
+                y: {}
+            };
+            var axesCount = {
+                x: 0,
+                y: 0
+            };
 
-            ecModel.eachComponent('xAxis', function (xAxisModel, idx) {
-                if (!isAxisUsedInTheGrid(xAxisModel, gridModel, ecModel)) {
-                    return;
+            function createAxisCreator(axisType) {
+                return function (axisModel, idx) {
+                    if (!isAxisUsedInTheGrid(axisModel, gridModel, ecModel)) {
+                        return;
+                    }
+
+                    var axisPosition = axisType === 'x'
+                        ? axisModel.get('position') || (bottomUsed ? 'top' : 'bottom')
+                        : axisModel.get('position') || (leftUsed ? 'right' : 'left');
+
+                    var axis = new Axis2D(
+                        axisType, createScaleByModel(axisModel),
+                        [0, 0],
+                        axisModel.get('type'),
+                        axisPosition
+                    );
+
+                    axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
+                    axis.inverse = axisModel.get('inverse');
+
+                    // Inject axis into axisModel
+                    axisModel.axis = axis;
+
+                    this._axesList.push(axis);
+                    this._axesMap[axisType + idx] = axis;
+
+                    axesMap[axisType][idx] = axis;
+                    axesCount[axisType]++;
                 }
+            }
 
-                // Create x axis
-                var xAxisPosition = xAxisModel.get('position') || (bottomUsed ? 'top' : 'bottom');
-                bottomUsed = xAxisPosition === 'bottom';
-                var axisX = new Axis2D(
-                    'x', createScaleByModel(xAxisModel),
-                    [0, 0],
-                    xAxisModel.get('type'),
-                    xAxisPosition
-                );
-                axisX.onBand = xAxisModel.get('boundaryGap') && axisX.type === 'category';
-                axisX.inverse = xAxisModel.get('inverse');
+            ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
 
-                // Inject axis into axisModel
-                xAxisModel.axis = axisX;
+            ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
 
-                this._axesList.push(axisX);
-                this._axesMap['x' + idx] = axisX;
-
-                xAxesMap[idx] = axisX;
-                xAxesCount++;
-            }, this);
-
-            ecModel.eachComponent('yAxis', function (yAxisModel, idx) {
-                if (!isAxisUsedInTheGrid(yAxisModel, gridModel, ecModel)) {
-                    return;
-                }
-
-                // Create y axis
-                var yAxisPosition = yAxisModel.get('position') || (leftUsed ? 'right' : 'left');
-                leftUsed = yAxisPosition === 'left';
-                var axisY = new Axis2D(
-                    'y', createScaleByModel(yAxisModel),
-                    [0, 0],
-                    yAxisModel.get('type'),
-                    yAxisModel.get('position')
-                );
-                axisY.onBand = yAxisModel.get('boundaryGap') && axisY.type === 'category';
-                axisY.inverse = yAxisModel.get('inverse');
-
-                yAxisModel.axis = axisY;
-
-                this._axesList.push(axisY);
-                this._axesMap['y' + idx] = axisY;
-
-                yAxesMap[idx] = axisY;
-                yAxesCount++;
-            }, this);
-
-            if (! xAxesCount || ! yAxesCount) {
+            if (! axesCount.x || ! axesCount.y) {
                 api.log('Grid must has at least one x axis and one y axis');
                 // Roll back
                 this._axesMap = {};
@@ -244,8 +230,8 @@ define(function(require, factory) {
                 return;
             }
 
-            zrUtil.each(xAxesMap, function (xAxis, xAxisIndex) {
-                zrUtil.each(yAxesMap, function (yAxis, yAxisIndex) {
+            zrUtil.each(axesMap.x, function (xAxis, xAxisIndex) {
+                zrUtil.each(axesMap.y, function (yAxis, yAxisIndex) {
                     var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
                     var cartesian = new Cartesian2D(key);
                     this._coordsMap[key] = cartesian;
