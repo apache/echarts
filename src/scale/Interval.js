@@ -71,11 +71,8 @@ define(function (require) {
             var max = union ? extent[1] : -Infinity;
             var min = union ? extent[0] : Infinity;
             for (var i = 0; i < data.length; i++) {
-                if (data[i] == null || data[i] === '-') {
-                    continue;
-                }
-                max = Math.max(data[i], max);
-                min = Math.min(data[i], min);
+                data[i] > max && (max = data[i]);
+                data[i] < min && (min = data[i]);
             }
 
             this.setExtent(min, max);
@@ -96,8 +93,12 @@ define(function (require) {
          */
         setExtent: function (start, end) {
             var thisExtent = this._extent;
-            thisExtent[0] = isNaN(start) ? 0 : start;
-            thisExtent[1] = isNaN(end) ? 0 : end;
+            if (! isNaN(start)) {
+                thisExtent[0] = start;
+            }
+            if (! isNaN(end)) {
+                thisExtent[1] = end;
+            }
         },
 
         /**
@@ -197,16 +198,22 @@ define(function (require) {
 
         /**
          * Nice extent.
-         * @param  {number} [approxTickNum = 10] Given approx tick number
+         * @param {number} [approxTickNum = 10] Given approx tick number
+         * @param {boolean} [fixMin=false]
+         * @param {boolean} [fixMax=false]
          */
-        niceExtent: function (approxTickNum) {
+        niceExtent: function (approxTickNum, fixMin, fixMax) {
             this.niceTicks(approxTickNum);
 
             var extent = this._extent;
             var interval = this._interval;
 
-            extent[0] = mathFloor(extent[0] / interval) * interval;
-            extent[1] = mathCeil(extent[1] / interval) * interval;
+            if (! fixMin) {
+                extent[0] = mathFloor(extent[0] / interval) * interval;
+            }
+            if (! fixMax) {
+                extent[1] = mathCeil(extent[1] / interval) * interval;
+            }
         }
     };
 

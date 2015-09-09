@@ -5,8 +5,6 @@
  */
 define(function(require, factory) {
 
-    'use strict';
-
     var zrUtil = require('zrender/core/util');
     var Cartesian2D = require('./Cartesian2D');
     var Axis2D = require('./Axis2D');
@@ -187,6 +185,33 @@ define(function(require, factory) {
                 y: 0
             };
 
+            ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
+
+            ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
+
+            if (! axesCount.x || ! axesCount.y) {
+                api.log('Grid must has at least one x axis and one y axis');
+                // Roll back
+                this._axesMap = {};
+                this._axesList = [];
+                return;
+            }
+
+            zrUtil.each(axesMap.x, function (xAxis, xAxisIndex) {
+                zrUtil.each(axesMap.y, function (yAxis, yAxisIndex) {
+                    var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
+                    var cartesian = new Cartesian2D(key);
+                    this._coordsMap[key] = cartesian;
+                    this._coordsList.push(cartesian);
+
+                    cartesian.addAxis(xAxis);
+                    cartesian.addAxis(yAxis);
+                }, this);
+            }, this);
+
+            this._updateCartesianFromSeries(ecModel, gridModel);
+
+
             function createAxisCreator(axisType) {
                 return function (axisModel, idx) {
                     if (!isAxisUsedInTheGrid(axisModel, gridModel, ecModel)) {
@@ -217,32 +242,6 @@ define(function(require, factory) {
                     axesCount[axisType]++;
                 }
             }
-
-            ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
-
-            ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
-
-            if (! axesCount.x || ! axesCount.y) {
-                api.log('Grid must has at least one x axis and one y axis');
-                // Roll back
-                this._axesMap = {};
-                this._axesList = [];
-                return;
-            }
-
-            zrUtil.each(axesMap.x, function (xAxis, xAxisIndex) {
-                zrUtil.each(axesMap.y, function (yAxis, yAxisIndex) {
-                    var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
-                    var cartesian = new Cartesian2D(key);
-                    this._coordsMap[key] = cartesian;
-                    this._coordsList.push(cartesian);
-
-                    cartesian.addAxis(xAxis);
-                    cartesian.addAxis(yAxis);
-                }, this);
-            }, this);
-
-            this._updateCartesianFromSeries(ecModel, gridModel);
         },
 
         /**
@@ -306,23 +305,32 @@ define(function(require, factory) {
                 var xAxis = cartesian.getAxis('x');
                 var yAxis = cartesian.getAxis('y');
                 if (axisData.x.length) {
-                    if (axisData.xModel.get('scale')) {
+                    var xModel = axisData.xModel;
+                    if (xModel.get('scale')) {
                         axisData.x.push(0);
                     }
                     xAxis.scale.setExtentFromData(axisData.x);
+
+                    niceScaleExent(xAxis, xModel);
                 }
                 if (axisData.y.length) {
-                    if (axisData.yModel.get('scale')) {
+                    var yModel = axisData.yModel;
+                    if (yModel.get('scale')) {
                         axisData.y.push(0);
                     }
                     yAxis.scale.setExtentFromData(axisData.y);
+
+                    niceScaleExent(yAxis, yModel);
                 }
             });
 
-            // Set axis from option
-            zrUtil.each(this._axesList, function (axis) {
-                axis.scale.niceExtent();
-            });
+            function niceScaleExent(axis, model) {
+                var min = model.get('min');
+                var max = model.get('max');
+                axis.scale.setExtent(min, max);
+
+                axis.scale.niceExtent(model.get('splitNumber'), !!min, !!max);
+            }
         }
     };
 
