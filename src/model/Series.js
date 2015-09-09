@@ -29,7 +29,6 @@ define(function(require) {
         defaultOption: null,
 
         init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
-
             /**
              * @type {number}
              */
@@ -49,7 +48,7 @@ define(function(require) {
              */
             this._data = this.getInitialData(option, ecModel);
 
-            this._dataBeforeProcessing = this._data.clone();
+            this._dataBeforeProcessing = this._data.cloneShallow();
         },
 
         mergeDefaultAndTheme: function (option, ecModel) {
@@ -74,8 +73,9 @@ define(function(require) {
             return this._data;
         },
 
+        // PENDING Clear visual and layout ?
         restoreData: function () {
-            this._data = this._dataBeforeProcessing.clone();
+            this._data = this._dataBeforeProcessing.cloneShallow();
         }
     });
 

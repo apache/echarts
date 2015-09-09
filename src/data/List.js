@@ -149,17 +149,11 @@ define(function(require) {
             }
         },
 
-        clone: function (dataIndex) {
-            var entry = new Entry(this.option, this.parentModel, dataIndex);
+        clone: function (dataIndex, independentVar, dependentVar) {
+            var entry = new Entry(this.option, this.parentModel, dataIndex, independentVar, dependentVar);
             entry.name = this.name;
             entry.stackedOn = this.stackedOn;
 
-            for (var i = 0; i < POSSIBLE_DIMENSIONS.length; i++) {
-                var key = POSSIBLE_DIMENSIONS[i] + 'Index';
-                if (this.hasOwnProperty(key)) {
-                    entry[key] = this[key];
-                }
-            }
             return entry;
         }
     });
@@ -272,10 +266,11 @@ define(function(require) {
          */
         map: function (cb, context) {
             var ret = [];
+            var elements = this.elements;
             context = context || this;
-            this.each(function (item, idx) {
-                ret.push(cb && cb.call(context, item));
-            }, context);
+            for (var i = 0; i < elements.length; i++) {
+                ret.push(cb && cb.call(context, elements[i], i));
+            }
             return ret;
         },
 
@@ -321,9 +316,26 @@ define(function(require) {
          */
         clone: function () {
             var list = new List(this.dimensions, this.value);
-            list.elements = zrUtil.map(this.elements, function (el, i) {
-                return el.clone(i);
-            });
+            var elements = this.elements;
+            for (var i = 0; i < elements.length; i++) {
+                list.elements.push(elements[i].clone(i, this.dimensions, this.value));
+            }
+            return list;
+        },
+
+        /**
+         * Clone a new list
+         */
+        cloneShallow: function () {
+            var list = new List(this.dimensions, this.value);
+            list.elements = this.elements.slice();
+            // FIXME
+            // All list have the same entries may have problem
+            // When processor modify the data besides data index
+            // Reset data index
+            for (var i = 0; i < list.elements.length; i++) {
+                list.elements[i].setDataIndex(i);
+            }
             return list;
         }
     };
@@ -436,7 +448,7 @@ define(function(require) {
         // Normalize data
         zrUtil.each(data, function (dataItem, idx) {
             var entry = list.add(dataItem, seriesModel);
-            if (! dataItem.name) {
+            if (!dataItem.name) {
                 entry.name = categoryAxisData && categoryAxisData[idx] || idx;
             }
             return entry;
