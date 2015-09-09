@@ -362,8 +362,10 @@ define(function(require) {
             var max = Number.MIN_VALUE;
             this.each(function (item) {
                 var value = item['get' + capitalized]();
-                value > max && (max = value);
-                value < min && (min = value);
+                if (value != null) {
+                    value > max && (max = value);
+                    value < min && (min = value);
+                }
             });
             return [min, max];
         };
