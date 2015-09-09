@@ -238,12 +238,12 @@ define(function(require) {
         /**
          * Create and add a new entry
          * @param {Object} option
-         * @param {module:echarts/model/Series} seriesModel
+         * @param {module:echarts/model/Model} parentModel
          * @return {module:echarts/data/List~Entry}
          */
-        add: function (option, seriesModel) {
+        add: function (option, parentModel) {
             var elements = this.elements;
-            var entry = new Entry(option, seriesModel, elements.length, this.dimensions, this.value);
+            var entry = new Entry(option, parentModel, elements.length, this.dimensions, this.value);
             elements.push(entry);
             return entry;
         },
@@ -298,18 +298,6 @@ define(function(require) {
                     return elements[i];
                 }
             }
-        },
-
-        /**
-         * @param {string} name
-         * @param {*} option
-         */
-        append: function (name, option) {
-            var elements = this.elements;
-            var el = new Entry(option, null, elements.length);
-            el.name = name;
-            elements.push(el);
-            return el;
         },
 
         /**

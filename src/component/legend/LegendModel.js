@@ -19,11 +19,11 @@ define(function(require) {
             var list = new List();
             zrUtil.each(option.data, function (dataItem) {
                 if (typeof dataItem === 'string') {
-                    list.append(dataItem, {});
+                    dataItem = {
+                        name: dataItem
+                    };
                 }
-                else {
-                    list.append(dataItem.name, dataItem);
-                }
+                list.add(dataItem, this);
             });
 
             /**

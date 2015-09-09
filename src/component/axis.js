@@ -78,7 +78,6 @@ define(function(require) {
             var p2 = [];
 
             var lineStyleModel = axisModel.getModel('axisLine.lineStyle');
-            var lineWidth = lineStyleModel.get('width');
 
             var coordExtent = axis.getExtent();
             if (axis.isHorizontal()) {
