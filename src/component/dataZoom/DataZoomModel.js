@@ -208,10 +208,6 @@ define(function(require) {
                     startValue = [endValue, endValue = startValue][0];
                 }
 
-                // Set to axis and dataZoom
-                zrUtil.each(axisModels, function (axisModel) {
-                    axisModel.setDataZoomRange(startValue, endValue);
-                });
                 thisOption[dimItem.start] = startValue;
                 thisOption[dimItem.end] = endValue;
             }, this);

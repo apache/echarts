@@ -48,17 +48,6 @@ define(function(require) {
         },
 
         /**
-         * @public
-         * @param {number} start 0-100, null means remain current value.
-         * @param {number} end 0-100, null means remain current value.
-         */
-        setDataZoomRange: function (start, end) {
-            var option = this.option;
-            start != null && (option.dataZoomStart = start);
-            end != null && (option.dataZoomEnd = end);
-        },
-
-        /**
          * @override
          */
         restoreData: function () {

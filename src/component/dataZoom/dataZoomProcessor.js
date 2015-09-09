@@ -32,7 +32,7 @@ define(function (require) {
         var isCategoryFilter = axisModel.get('type') === 'category';
         var seriesModels = dataZoomModel.getTargetSeriesModels(dimNames.dim, axisIndex);
         var dataExtent = calculateDataExtent(dimNames, axisModel, seriesModels);
-        var dataWindow = calculateDataWindow(axisModel, dataExtent, isCategoryFilter);
+        var dataWindow = calculateDataWindow(axisModel, dataZoomModel, dataExtent, isCategoryFilter);
 
         if (isCategoryFilter) {
             var axisData = axisModel.getData();
@@ -98,14 +98,13 @@ define(function (require) {
         return dataExtent;
     }
 
-    function calculateDataWindow(axisModel, dataExtent, isCategoryFilter) {
-        var dataZoomStart = axisModel.get('dataZoomStart');
-        var dataZoomEnd = axisModel.get('dataZoomEnd');
+    function calculateDataWindow(axisModel, dataZoomModel, dataExtent, isCategoryFilter) {
+        var dataZoomRange = dataZoomModel.getRange();
         var percentExtent = [0, 100];
 
         var result = [
-            linearMap(dataZoomStart, percentExtent, dataExtent, true),
-            linearMap(dataZoomEnd, percentExtent, dataExtent, true)
+            linearMap(dataZoomRange.start, percentExtent, dataExtent, true),
+            linearMap(dataZoomRange.end, percentExtent, dataExtent, true)
         ];
         if (isCategoryFilter) {
             result = [Math.floor(result[0]), Math.ceil(result[1])];
