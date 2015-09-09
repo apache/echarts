@@ -70,9 +70,12 @@ define(function (require) {
             var extent = this._extent;
             var max = union ? extent[1] : -Infinity;
             var min = union ? extent[0] : Infinity;
+
             for (var i = 0; i < data.length; i++) {
-                data[i] > max && (max = data[i]);
-                data[i] < min && (min = data[i]);
+                if (data[i] != null) {
+                    data[i] > max && (max = data[i]);
+                    data[i] < min && (min = data[i]);
+                }
             }
 
             this.setExtent(min, max);
