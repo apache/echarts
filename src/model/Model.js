@@ -121,6 +121,10 @@ define(function (require) {
             this._visual[key] = val;
         },
 
+        clearVisual: function () {
+            this._visual = null;
+        },
+
         restoreData: function () {},
 
         // Pending

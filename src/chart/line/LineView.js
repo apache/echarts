@@ -1,9 +1,26 @@
+// TODO Area
+// TODO Null data
 define(function(require) {
 
     'use strict';
 
     var zrUtil = require('zrender/core/util');
     var DataSymbol = require('../helper/DataSymbol');
+    var lineAnimationDiff = require('./lineAnimationDiff');
+
+    function isPointsSame(points1, points2) {
+        if (points1.length !== points2.length) {
+            return;
+        }
+        for (var i = 0; i < points1.length; i++) {
+            var p1 = points1[i].point;
+            var p2 = points2[i].point;
+            if (p1[0] !== p2[0] || p1[1] !== p2[1]) {
+                return;
+            }
+        }
+        return true;
+    }
 
     return require('../../echarts').extendChartView({
 
@@ -25,6 +42,13 @@ define(function(require) {
                     return [layout.x, layout.y];
                 }
             });
+            var pointsWithName = data.map(function (dataItem, idx) {
+                return {
+                    name: dataItem.name,
+                    point: points[idx]
+                };
+            });
+
             var coordinateSystem = seriesModel.coordinateSystem;
             var isCoordinateSystemPolar = coordinateSystem.type === 'polar';
 
@@ -64,25 +88,34 @@ define(function(require) {
                 this._polyline = polyline;
             }
             else {
-                // FIXME Handle the situation of adding and removing data
-                this._polyline.animateTo({
-                    shape: {
-                        points: points
-                    }
-                }, 500, 'cubicOut');
-                // this._polyline.shape.points = points;
-                // this._polyline.dirty(true);
+                // In the case data zoom triggerred refreshing frequently
+                // Data may not change if line has a category axis. So it should animate nothing
+                if (! isPointsSame(this._pointsWithName, pointsWithName)) {
+                    var diff = lineAnimationDiff(this._pointsWithName, pointsWithName);
+                    this._polyline.shape.points = diff.current;
+                    // FIXME Handle the situation of adding and removing data
+                    this._polyline.animateTo({
+                        shape: {
+                            points: diff.next
+                        }
+                    }, 300, 'cubicOut');
+                }
 
                 // Add back
                 group.add(this._polyline);
             }
 
-            var dataSymbol = this._dataSymbol;
-            dataSymbol.z = seriesModel.get('z') + 1;
-            // Draw symbols
-            dataSymbol.updateData(data);
+            // var dataSymbol = this._dataSymbol;
+            // dataSymbol.z = seriesModel.get('z') + 1;
+            // // Draw symbols
+            // dataSymbol.updateData(data);
 
             this._data = data;
+
+            this._pointsWithName = pointsWithName;
+        },
+
+        _animateLine: function (oldData, newData) {
         },
 
         _createGridClipShape: function (cartesian, api, cb) {

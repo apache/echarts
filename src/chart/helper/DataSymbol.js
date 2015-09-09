@@ -11,6 +11,11 @@ define(function (require) {
         this.z = 0;
 
         this.zlevel = 0;
+
+        this.animation = {
+            easing: 'cubicOut',
+            duration: 300
+        }
     }
 
     DataSymbol.prototype = {
@@ -22,14 +27,15 @@ define(function (require) {
         updateData: function (data) {
 
             var group = this.group;
+            var animationConfig = this.animation;
 
             data.diff(this._data)
                 .add(function (dataItem) {
                     // 空数据
                     // TODO
-                    // if (dataItem.getValue() == null) {
-                    //     return;
-                    // }
+                    if (dataItem.getValue() == null) {
+                        return;
+                    }
 
                     var layout = dataItem.layout;
                     var color = dataItem.getVisual('color');
@@ -56,14 +62,14 @@ define(function (require) {
 
                     // 空数据
                     // TODO
-                    // if (newData.getValue() == null) {
-                    //     group.remove(oldData.__el);
-                    //     return;
-                    // }
+                    if (newData.getValue() == null) {
+                        group.remove(el);
+                        return;
+                    }
                     el.animateTo({
                         scale: [symbolSize, symbolSize],
                         position: [layout.x, layout.y]
-                    }, 500, 'cubicOut');
+                    }, animationConfig.duration, animationConfig.easing);
 
                     newData.__el = el;
 
@@ -71,8 +77,13 @@ define(function (require) {
                     group.add(el);
                 })
                 .remove(function (dataItem) {
-                    if (dataItem.__el) {
-                        group.remove(dataItem.__el);
+                    var el = dataItem.__el;
+                    if (el) {
+                        el.animateTo({
+                            scale: [0, 0]
+                        }, 200, 'cubicOut', function () {
+                            group.remove(el);
+                        });
                     }
                 })
                 .execute();
@@ -104,7 +115,7 @@ define(function (require) {
                     el.animateTo({
                         scale: [0, 0]
                     }, 200, 'cubicOut', function () {
-                        group.remove(dataItem.__el);
+                        group.remove(el);
                     });
                 });
             }

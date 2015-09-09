@@ -60,7 +60,11 @@ define(function(require) {
         },
 
         mergeOption: function (newSeriesOption, ecModel) {
-            this._data = this.getInitialData(newSeriesOption, ecModel);
+            var data = this.getInitialData(newSeriesOption, ecModel);
+            // TODO Merge data?
+            if (data) {
+                this._data = data;
+            }
         },
 
         /**
@@ -73,8 +77,12 @@ define(function(require) {
             return this._data;
         },
 
-        // PENDING Clear visual and layout ?
         restoreData: function () {
+
+            // PENDING
+            // Legend may have wrong symbol if visual is cleared
+            // this.clearVisual();
+
             this._data = this._dataBeforeProcessing.cloneShallow();
         }
     });

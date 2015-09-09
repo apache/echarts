@@ -332,9 +332,14 @@ define(function(require) {
             // FIXME
             // All list have the same entries may have problem
             // When processor modify the data besides data index
+
             // Reset data index
             for (var i = 0; i < list.elements.length; i++) {
-                list.elements[i].setDataIndex(i);
+                var el = list.elements[i];
+                // Reset
+                el.setDataIndex(i);
+                el.clearVisual();
+                el.layout = null;
             }
             return list;
         }

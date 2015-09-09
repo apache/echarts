@@ -71,9 +71,15 @@ define(function (require) {
                     group.add(el);
                 })
                 .remove(function (dataItem, idx) {
-                    if (dataItem.__el) {
-                        group.remove(dataItem.__el);
-                    }
+                    var el = dataItem.__el;
+                    el.animateTo({
+                        shape: {
+                            width: 0
+                        }
+                    }, 300, 'cubicOut',
+                    function () {
+                        group.remove(el);
+                    });
                 })
                 .execute();
 
