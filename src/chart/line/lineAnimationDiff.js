@@ -10,6 +10,7 @@ define(function (require) {
 
         var oldPoints = [];
         var newPoints = [];
+        var status = [];
 
         // FIXME One data ?
         var diff = arrayDiff(oldData, newData, nameCompare);
@@ -20,6 +21,10 @@ define(function (require) {
         for (var i = 0; i < diffCount; i++) {
             var diffItem = diff[i];
 
+            status.push(diffItem.cmd);
+
+            // FIXME, animation is not so perfect when dataZoom window moves fast
+            // Which is in case remvoing or add more than one data in the tail or head
             switch (diffItem.cmd) {
                 case '=':
                     oldPoints.push(oldData[diffItem.idx].point);
@@ -53,13 +58,15 @@ define(function (require) {
                     ];
 
                     oldPoints.push(oldData[diffItem.idx].point);
+                    // oldPoints.push(siblingDataNotRemove.point);
                     newPoints.push(siblingDataNotRemove.point);
             }
         }
 
         return {
             current: oldPoints,
-            next: newPoints
+            next: newPoints,
+            status: status
         };
     }
 });

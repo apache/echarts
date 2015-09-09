@@ -5,6 +5,7 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var vector = require('zrender/core/vector');
     var DataSymbol = require('../helper/DataSymbol');
     var lineAnimationDiff = require('./lineAnimationDiff');
 
@@ -61,6 +62,11 @@ define(function(require) {
                 points.push(Array.prototype.slice.call(points[0]));
             }
 
+            // Draw symbols, enable animation on the first draw
+            var dataSymbol = this._dataSymbol;
+            dataSymbol.z = seriesModel.get('z') + 1;
+            dataSymbol.updateData(data, !this._data);
+
             // Initialization animation
             if (!this._data) {
                 var polyline = new api.Polyline({
@@ -70,7 +76,8 @@ define(function(require) {
                     style: zrUtil.extend(
                         lineStyleNormalModel.getLineStyle(),
                         {
-                            stroke: seriesModel.getVisual('color')
+                            stroke: seriesModel.getVisual('color'),
+                            lineJoin: 'bevel'
                         }
                     )
                 });
@@ -90,32 +97,53 @@ define(function(require) {
             else {
                 // In the case data zoom triggerred refreshing frequently
                 // Data may not change if line has a category axis. So it should animate nothing
+
                 if (! isPointsSame(this._pointsWithName, pointsWithName)) {
-                    var diff = lineAnimationDiff(this._pointsWithName, pointsWithName);
-                    this._polyline.shape.points = diff.current;
-                    // FIXME Handle the situation of adding and removing data
-                    this._polyline.animateTo({
-                        shape: {
-                            points: diff.next
-                        }
-                    }, 300, 'cubicOut');
+                    this._updateAnimation(data, pointsWithName);
+                    // Add back
+                    this.group.add(this._polyline);
                 }
-
-                // Add back
-                group.add(this._polyline);
             }
-
-            // var dataSymbol = this._dataSymbol;
-            // dataSymbol.z = seriesModel.get('z') + 1;
-            // // Draw symbols
-            // dataSymbol.updateData(data);
 
             this._data = data;
 
             this._pointsWithName = pointsWithName;
         },
 
-        _animateLine: function (oldData, newData) {
+        _updateAnimation: function (data, pointsWithName) {
+            var polyline = this._polyline;
+            var diff = lineAnimationDiff(this._pointsWithName, pointsWithName);
+            polyline.shape.points = diff.current;
+            // FIXME Handle the situation of adding and removing data
+            polyline.animateTo({
+                shape: {
+                    points: diff.next
+                }
+            }, 300, 'cubicOut');
+
+            var updatedDataIndices = [];
+            var diffStatus = diff.status;
+            var symbolElements = this._dataSymbol.getSymbolElements();
+
+            for (var i = 0; i < diffStatus.length; i++) {
+                if (diffStatus[i] === '=') {
+                    updatedDataIndices.push(i);
+                }
+            }
+
+            if (polyline.animators) {
+                polyline.animators[0].during(function () {
+                    // Symbol elements may be more than updatedDataIndices if there is new added data
+                    for (var i = 0; i < updatedDataIndices.length; i++) {
+                        vector.copy(
+                            symbolElements[i].position,
+                            // synchronizing whith the point on line
+                            polyline.shape.points[updatedDataIndices[i]]
+                        );
+                        symbolElements[i].dirty();
+                    }
+                });
+            }
         },
 
         _createGridClipShape: function (cartesian, api, cb) {
@@ -173,7 +201,7 @@ define(function(require) {
 
         remove: function () {
             this.group.remove(this._polyline);
-            this._dataSymbol.remove();
+            this._dataSymbol.remove(true);
         }
     });
 });

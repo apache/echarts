@@ -12,11 +12,11 @@ define(function (require) {
         },
 
         render: function (seriesModel, ecModel, api) {
-            this._dataSymbol.updateData(seriesModel.getData());
+            this._dataSymbol.updateData(seriesModel.getData(), true);
         },
 
         remove: function () {
-            this._dataSymbol.remove();
+            this._dataSymbol.remove(true);
         }
     });
 });

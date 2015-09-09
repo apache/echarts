@@ -4,7 +4,6 @@
 define(function(require) {
 
     var zrUtil = require('zrender/core/util');
-    var env = require('zrender/core/env');
     var echarts = require('../../echarts');
     var helper = require('./helper');
 

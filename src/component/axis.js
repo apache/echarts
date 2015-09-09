@@ -1,7 +1,7 @@
 // TODO Split line interval
-// TODO Axis tick interval
-// TODO Axis name
-// TODO Axis splitNumber, min, max
+//      Axis tick interval
+//      Axis name
+//      boundaryGap
 define(function(require) {
     'use strict';
 
