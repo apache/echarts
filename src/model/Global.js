@@ -139,6 +139,7 @@ define(function (require) {
                         componentModel.mergeOption(componentOption[i], this);
                     }
                     else {
+                        // PENDING Global as parent ?
                         componentModel = new ComponentModelClass(
                             componentOption[i], null, this,
                             this._getComponentsByTypes(dependencies), i
