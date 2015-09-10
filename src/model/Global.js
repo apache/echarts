@@ -141,7 +141,7 @@ define(function (require) {
                     else {
                         // PENDING Global as parent ?
                         componentModel = new ComponentModelClass(
-                            componentOption[i], null, this,
+                            componentOption[i], this, this,
                             this._getComponentsByTypes(dependencies), i
                         );
                         componentsMap[componentType][i] = componentModel;
