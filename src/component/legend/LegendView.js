@@ -2,6 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
+    var formatUtil = require('../../util/format');
     var symbolCreator = require('../../util/symbol');
 
     function createSelectActionDispatcher(uid, seriesName, api) {
@@ -18,7 +19,7 @@ define(function (require) {
 
         render: function (legendModel, ecModel, api) {
             var itemGap = legendModel.get('itemGap');
-            var padding = numberUtil.normalizeCssArray(
+            var padding = formatUtil.normalizeCssArray(
                 legendModel.get('padding')
             );
             var orient = legendModel.get('orient');

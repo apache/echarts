@@ -1,6 +1,7 @@
 define(function (require) {
 
     var numberUtil = require('../util/number');
+    var formatUtil = require('../util/format');
     var zrUtil = require('zrender/core/util');
 
     function categoryDefaultFormatter(val) {
@@ -27,7 +28,7 @@ define(function (require) {
                     break;
                 default:
                     labelFormatter = function (val) {
-                        return numberUtil.addCommas(numberUtil.round(val));
+                        return formatUtil.addCommas(numberUtil.round(val));
                     };
             }
         }

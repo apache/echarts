@@ -2,7 +2,6 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
-    var vector = require('zrender/core/vector');
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 

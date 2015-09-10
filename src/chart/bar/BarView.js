@@ -47,6 +47,9 @@ define(function (require) {
                     dataItem.__el = rect;
                     rect.__data = dataItem;
 
+                    // Attach data on the el
+                    rect.data = dataItem;
+
                     group.add(rect);
 
                     // Animation
@@ -55,20 +58,20 @@ define(function (require) {
                     }, 1000, 300 * dataIndex / data.count(), 'cubicOut');
                 })
                 .update(function (newData, oldData) {
-                    var el = oldData.__el;
+                    var rect = oldData.__el;
                     // 空数据
                     if (newData.getValue() == null) {
-                        group.remove(el);
+                        group.remove(rect);
                         return;
                     }
-                    el.animateTo({
+                    rect.animateTo({
                         shape: newData.layout
                     }, 500, 'cubicOut');
 
-                    newData.__el = el;
+                    newData.__el = rect;
 
                     // Add back
-                    group.add(el);
+                    group.add(rect);
                 })
                 .remove(function (dataItem, idx) {
                     var el = dataItem.__el;

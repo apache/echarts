@@ -82,6 +82,19 @@ define(function(require) {
 
         init: function (option, parentModel, rawDataIndex, independentVar, dependentVar) {
 
+            // Normalize option to { value: [] }
+            var value = option.value;
+            // Pending
+            if (value == null
+                && (zrUtil.isArray(option)
+                || typeof (option) === 'number')
+            ) {
+                value = option;
+                option = {
+                    value: option
+                }
+            }
+
             /**
              * @type {string}
              * @memeberOf module:echarts/data/List~Entry
@@ -97,8 +110,6 @@ define(function(require) {
              * @type {*}
              */
             this.option = option;
-
-            var value = option.value == null ? option : option.value;
 
             if (value === '-' || value == null) {
                 value = [rawDataIndex, null];
@@ -143,6 +154,13 @@ define(function(require) {
             this.rawDataIndex = rawDataIndex;
         },
 
+        /**
+         * Get raw value which is given by option
+         */
+        getRawValue: function () {
+            return this.get('value') || this.get();
+        },
+
         setDataIndex: function (index) {
             if (this.dataIndexIndex != null) {
                 this._value[this.dataIndexIndex] = index;
@@ -162,6 +180,7 @@ define(function(require) {
         var capitalized = dim[0].toUpperCase() + dim.substr(1);
         var indexKey = dim + 'Index';
         var getterName = 'get' + capitalized;
+
         Entry.prototype[getterName] = function (stack) {
             var index = this[indexKey];
             if (index >= 0) {

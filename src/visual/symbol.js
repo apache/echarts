@@ -15,7 +15,7 @@ define(function (require) {
                 var symbolType = dataItem.get('symbol');
                 var symbolSize = dataItem.get('symbolSize');
                 if (typeof symbolSize === 'function') {
-                    var rawValue = dataItem.get('value') || dataItem.get();
+                    var rawValue = dataItem.get('value');
                     dataItem.setVisual({
                         symbol: symbolType,
                         symbolSize: symbolSize(rawValue)

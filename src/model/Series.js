@@ -3,7 +3,11 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var formatUtil = require('../util/format');
     var ComponentModel = require('./Component');
+
+    var encodeHTML = formatUtil.encodeHTML;
+    var addCommas = formatUtil.addCommas;
 
     var SeriesModel = ComponentModel.extend({
 
@@ -77,8 +81,22 @@ define(function(require) {
             return this._data;
         },
 
-        restoreData: function () {
+        /**
+         * Default tooltip formatter
+         *
+         * @param {module:echarts/model/Model} dataItem
+         */
+        formatTooltipHTML: function (dataItem) {
+            var value = dataItem.get('value');
+            var formattedValue = zrUtil.isArray(value)
+                ? zrUtil.map(value, addCommas) : addCommas(value);
 
+            return encodeHTML(this.name) + '<br />'
+                + encodeHTML(dataItem.name) + ' : '
+                + formattedValue;
+        },
+
+        restoreData: function () {
             // PENDING
             // Legend may have wrong symbol if visual is cleared
             // this.clearVisual();

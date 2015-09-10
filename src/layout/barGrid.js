@@ -116,6 +116,11 @@ define(function(require) {
         return result;
     }
 
+    /**
+     * @param {string} seriesType
+     * @param {module:echarts/model/Global} ecModel
+     * @param {module:echarts/ExtensionAPI} api
+     */
     function barLayoutGrid(seriesType, ecModel, api) {
 
         var barWidthAndOffset = calBarWidthAndOffset(

@@ -13,7 +13,7 @@ define(function (require) {
 
         type: 'dataZoom',
 
-        init: function (echarts) {
+        init: function () {
             /**
              * @private
              * @type {Object}

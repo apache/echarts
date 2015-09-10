@@ -53,6 +53,7 @@ define(function(require) {
             var coordinateSystem = seriesModel.coordinateSystem;
             var isCoordinateSystemPolar = coordinateSystem.type === 'polar';
 
+            // TODO Update after animation
             if (
                 isCoordinateSystemPolar
                 && points.length > 2
@@ -100,9 +101,9 @@ define(function(require) {
 
                 if (! isPointsSame(this._pointsWithName, pointsWithName)) {
                     this._updateAnimation(data, pointsWithName);
-                    // Add back
-                    this.group.add(this._polyline);
                 }
+                // Add back
+                group.add(this._polyline);
             }
 
             this._data = data;

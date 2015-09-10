@@ -22,7 +22,7 @@ define(function (require) {
 
         constructor: Component,
 
-        init: function () {},
+        init: function (ecModel, api) {},
 
         render: function (componentModel, ecModel, api) {},
 

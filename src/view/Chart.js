@@ -23,9 +23,9 @@ define(function (require) {
 
         type: '',
 
-        init: function () {},
+        init: function (ecModel, api) {},
 
-        render: function () {},
+        render: function (seriesModel, ecModel, api) {},
 
         remove: function () {
             this.group.clear();

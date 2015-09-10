@@ -3,6 +3,8 @@
  *      setTheme
  *      axis position 统一处理
  *      规范 Symbol 配置和绘制, customPath
+ *
+ *      每次 update 只刷新 model 变化的那些 component（需要做依赖收集）
  */
 define(function (require) {
 
@@ -31,6 +33,11 @@ define(function (require) {
     var ECharts = function (dom, theme, opts) {
         opts = opts || {};
 
+        /**
+         * @type {HTMLDomElement}
+         * @private
+         */
+        this._dom = dom;
         /**
          * @type {module:zrender/ZRender}
          * @private
@@ -105,6 +112,10 @@ define(function (require) {
 
     ECharts.prototype = {
 
+        getDom: function () {
+            return this._dom;
+        },
+
         getZr: function () {
             return this._zr;
         },
@@ -155,7 +166,7 @@ define(function (require) {
         },
 
         updateImmediately: function (event) {
-            // console.time('update');
+            console.time('update');
 
             var ecModel = this._model;
 
@@ -179,7 +190,7 @@ define(function (require) {
 
             this._needsUpdate = false;
 
-            // console.timeEnd('update');
+            console.timeEnd('update');
         },
 
         resize: function () {
@@ -229,7 +240,7 @@ define(function (require) {
                         ComponentModel.parseComponentType(seriesModel.type).sub
                     );
                     if (chart) {
-                        chart.init(this._extensionAPI);
+                        chart.init(ecModel, this._extensionAPI);
                         chartsMap[id] = chart;
                         chartsList.push(chart);
                         zr.add(chart.group);
@@ -247,7 +258,7 @@ define(function (require) {
                 var chart = chartsList[i];
                 if (! chart.__keepAlive) {
                     zr.remove(chart.group);
-                    chart.dispose();
+                    chart.dispose(this._extensionAPI);
                     chartsList.splice(i, 1);
                     delete chartsMap[chart.__id];
                 }
@@ -274,7 +285,7 @@ define(function (require) {
                     if (! component) {
                         // Create and add component
                         component = ComponentView.create(componentType, componentModel);
-                        component.init(this._extensionAPI);
+                        component.init(ecModel, this._extensionAPI);
                         componentsMap[id] = component;
                         componentsList.push(component);
 
@@ -291,7 +302,7 @@ define(function (require) {
                 var component = componentsList[i];
                 if (! component.__keepAlive) {
                     this._zr.remove(component.group);
-                    component.dispose();
+                    component.dispose(this._extensionAPI);
                     componentsList.splice(i, 1);
                     delete componentsMap[component.__id];
                 }
