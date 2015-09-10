@@ -175,6 +175,8 @@ define(function (require) {
             var that = this;
             var thatop = that.defaultOption;
             this.wordsdata = datas.map(function (d, i) {
+                d.dataIndex = i;
+
                 d.text = thatop.text.call(that, d, i);
 
                 d.font = thatop.font.call(that, d, i);

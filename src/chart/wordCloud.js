@@ -20,9 +20,9 @@ define(function (require) {
         zlevel: 0,
         z: 2,
         clickable: true,
-        
+
         center: ['50%', '50%'],
-        
+
         size: ['40%', '40%'],
 
         // 字体旋转角度, 随机从指定数组中取
@@ -53,7 +53,7 @@ define(function (require) {
     function Cloud(ecTheme, messageCenter, zr, option, myChart) {
         ChartBase.call(this, ecTheme, messageCenter, zr, option, myChart);
 
-        this.refresh(option); 
+        this.refresh(option);
     }
 
     Cloud.prototype = {
@@ -99,7 +99,7 @@ define(function (require) {
         },
 
         _initSerie: function (serie) {
-            
+
             var textStyle = serie.itemStyle.normal.textStyle;
 
             var size = [
@@ -167,11 +167,12 @@ define(function (require) {
          * @param dataIndex {int}
          * @private
          */
-        _buildTextShape: function (oneText, seriesIndex, dataIndex) {
+        _buildTextShape: function (data, seriesIndex) {
             var series = this.series;
             var serie = series[seriesIndex];
             var serieName = serie.name || '';
-            var data = serie.data[dataIndex];
+            var data = data;
+            var dataIndex = data.dataIndex;
             var queryTarget = [
                 data,
                 serie
@@ -202,12 +203,12 @@ define(function (require) {
                 style: {
                     x: 0,
                     y: 0,
-                    text: oneText.text,
+                    text: data.text,
                     color: normalColor,
-                    textFont: [oneText.style,
-                                oneText.weight,
-                                oneText.size + 'px',
-                                oneText.font].join(' '),
+                    textFont: [data.style,
+                                data.weight,
+                                data.size + 'px',
+                                data.font].join(' '),
                     textBaseline: 'alphabetic',
                     textAlign: 'center'
                 },
@@ -218,11 +219,11 @@ define(function (require) {
                     strokeColor: emphasis.borderColor
                 },
                 position: [
-                    oneText.x,
-                    oneText.y
+                    data.x,
+                    data.y
                 ],
                 rotation: [
-                    -oneText.rotate / 180 * Math.PI,
+                    -data.rotate / 180 * Math.PI,
                     0,
                     0
                 ]
