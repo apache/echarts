@@ -15,7 +15,7 @@ define(function(require) {
         type: 'cartesian2d',
 
         /**
-         * If contain coord
+         * If contain point
          */
         containPoint: function (x, y) {
             return this.getAxis('x').contain(x)
@@ -23,7 +23,7 @@ define(function(require) {
         },
 
         /**
-         * Convert series data to coorindates
+         * Convert series data to a list of points
          * @param {module:echarts/data/List} data
          * @return {Array}
          *  Return list of coordinates. For example:

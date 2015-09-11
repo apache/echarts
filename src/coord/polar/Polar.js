@@ -52,6 +52,15 @@ define(function(require) {
         type: 'polar',
 
         /**
+         * If contain coord
+         */
+        containPoint: function (point) {
+            var coord = this.pointToCoord(point);
+            return this._radiusAxis.contain(coord[0])
+                && this._angleAxis.contain(coord[1]);
+        },
+
+        /**
          * @return {module:echarts/coord/polar/AngleAxis}
          */
         getAngleAxis: function () {
@@ -66,7 +75,7 @@ define(function(require) {
         },
 
         /**
-         * Convert series data to a list of coorindates
+         * Convert series data to a list of (x, y) points
          * @param {module:echarts/data/List} data
          * @return {Array}
          *  Return list of coordinates. For example:
@@ -79,7 +88,7 @@ define(function(require) {
         },
 
         /**
-         * Convert a single data item to coordinate.
+         * Convert a single data item to (x, y) point.
          * Parameter data is an array which the first element is radius and the second is angle
          * @param {Array.<number>} data
          * @return {Array.<number>}
@@ -95,13 +104,27 @@ define(function(require) {
         },
 
         /**
-         * Convert a coord to data
-         * @param {Array.<number>} coord
+         * Convert a (x, y) point to data
+         * @param {Array.<number>} point
          * @return {Array.<number>}
          */
-        pointToData: function (coord) {
-            var dx = coord[0] - this.cx;
-            var dy = coord[1] - this.cy;
+        pointToData: function (point) {
+            var coord = this.pointToCoord(point);
+
+            return [
+                this._radiusAxis.radiusToData(coord[0]),
+                this._angleAxis.angleToData(coord[1]) / Math.PI * 180
+            ];
+        },
+
+        /**
+         * Convert a (x, y) point to (radius, angle) coord
+         * @param {Array.<number>} point
+         * @return {Array.<number>}
+         */
+        pointToCoord: function (point) {
+            var dx = point[0] - this.cx;
+            var dy = point[1] - this.cy;
 
             var radius = Math.sqrt(dx * dx + dy * dy);
             dx /= radius;
@@ -109,10 +132,7 @@ define(function(require) {
 
             var angle = Math.atan2(dy, dx);
 
-            return [
-                this._radiusAxis.radiusToData(radius),
-                this._angleAxis.angleToData(angle) / Math.PI * 180
-            ];
+            return [radius, angle];
         }
     }
 
