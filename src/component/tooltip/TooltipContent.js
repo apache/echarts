@@ -9,7 +9,7 @@ define(function (require) {
     var each = zrUtil.each;
     var toCamelCase = formatUtil.toCamelCase;
 
-    var vendors = ['-moz-', '-webkit-', '-o-', ''];
+    var vendors = ['', '-webkit-', '-moz-', '-o-'];
 
     var gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;';
 
@@ -39,10 +39,10 @@ define(function (require) {
 
         color && cssText.push('color:' + color);
 
+        cssText.push('font:' + textStyleModel.getFont());
+
         fontSize &&
             cssText.push('line-height:' + Math.round(fontSize * 3 / 2) + 'px');
-
-        cssText.push('font:' + textStyleModel.getFont());
 
         each(['decoration', 'align'], function (name) {
             var val = textStyleModel.get(name);
@@ -73,7 +73,7 @@ define(function (require) {
             cssText.push(assembleTransition(transitionDuration));
 
         if (backgroundColor) {
-            // for sb ie~
+            // for ie
             cssText.push(
                 'background-Color:' + zrColor.toHex(backgroundColor)
             );
@@ -119,6 +119,8 @@ define(function (require) {
         constructor: TooltipContent,
 
         show: function (tooltipModel) {
+            clearTimeout(this._hideTimeout);
+
             this.el.style.cssText = gCssText + assembleCssText(tooltipModel);;
 
             this._show = true;
@@ -135,7 +137,19 @@ define(function (require) {
         },
 
         hide: function () {
-            this.el.style.display = 'none';
+            if (this._show) {
+                this.el.style.display = 'none';
+            }
+
+            this._show = false;
+        },
+
+        // showLater: function ()
+
+        hideLater: function (time) {
+            if (time) {
+                this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time);
+            }
         },
 
         isShow: function () {
