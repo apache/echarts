@@ -1,6 +1,6 @@
-define({
-    getAreaStyle: function () {
-        return require('./makeStyleMapper')(
+define(function (require) {
+    return {
+        getAreaStyle: require('./makeStyleMapper')(
             [
                 ['fill', 'color'],
                 ['shadowBlur'],
@@ -8,6 +8,6 @@ define({
                 ['shadowOffsetY'],
                 ['shadowColor']
             ]
-        );
-    }
+        )
+    };
 });

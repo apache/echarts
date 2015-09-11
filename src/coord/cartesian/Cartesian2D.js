@@ -17,9 +17,9 @@ define(function(require) {
         /**
          * If contain point
          */
-        containPoint: function (x, y) {
-            return this.getAxis('x').contain(x)
-                && this.getAxis('y').contain(y);
+        containPoint: function (point) {
+            return this.getAxis('x').contain(point[0])
+                && this.getAxis('y').contain(point[1]);
         },
 
         /**
@@ -30,15 +30,32 @@ define(function(require) {
          *  `[[10, 10], [20, 20], [30, 30]]`
          */
         dataToPoints: function (data) {
-            var xAxis = this.getAxis('x');
-            var yAxis = this.getAxis('y');
-
             return data.map(function (dataItem) {
-                var coord = [];
-                coord[0] = xAxis.dataToCoord(dataItem.getX(true));
-                coord[1] = yAxis.dataToCoord(dataItem.getY(true));
-                return coord;
+                // PENDGING `MUST` Stack ?
+                return this.dataToPoint([dataItem.getX(true), dataItem.getY(true)]);
             }, this);
+        },
+
+        /**
+         * @param {Array.<number>} data
+         * @return {Array.<number>}
+         */
+        dataToPoint: function (data) {
+            return [
+                this.getAxis('x').dataToCoord(data[0]),
+                this.getAxis('y').dataToCoord(data[1])
+            ];
+        },
+
+        /**
+         * @param {Array.<number>} point
+         * @return {Array.<number>}
+         */
+        pointToData: function (point) {
+            return [
+                this.getAxis('x').coordToData(point[0]),
+                this.getAxis('y').coordToData(point[1])
+            ];
         },
 
         /**

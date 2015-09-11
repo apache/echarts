@@ -18,7 +18,8 @@
                 'echarts',
                 'echarts/chart/scatter',
                 'echarts/component/legend',
-                'echarts/component/grid'
+                'echarts/component/grid',
+                'echarts/component/tooltip'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -39,11 +40,20 @@
                     legend: {
                         data: ['scatter', 'scatter2', 'scatter3']
                     },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    },
                     xAxis: {
                         type: 'value',
                         splitLine: {
                             show: false
-                        }
+                        },
+                        min: 0,
+                        max: 15,
+                        splitNumber: 30
                     },
                     yAxis: {
                         type: 'value',

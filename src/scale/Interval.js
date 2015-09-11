@@ -42,6 +42,15 @@ define(function (require) {
         type: 'interval',
 
         /**
+         * If scale extent contain give value
+         * @param {number}
+         */
+        contain: function (pos) {
+            var extent = this._extent;
+            return pos >= extent[0] && pos <= extent[1];
+        },
+
+        /**
          * Normalize value to linear [0, 1]
          * @param {number} val
          * @return {number}

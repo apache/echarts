@@ -83,7 +83,7 @@ define(function(require) {
          */
         dataToPoints: function (data) {
             return data.map(function (dataItem) {
-                return this.dataToCoord([dataItem.getRadius(true), dataItem.getAngle(true)]);
+                return this.dataToPoint([dataItem.getRadius(true), dataItem.getAngle(true)]);
             }, this);
         },
 

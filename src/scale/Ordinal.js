@@ -33,6 +33,15 @@ define(function (require) {
         type: 'ordinal',
 
         /**
+         * If scale extent contain give value
+         * @param {number}
+         */
+        contain: function (rank) {
+            var extent = this._extent;
+            return rank >= extent[0] && rank <= extent[1] && this._list[rank] != null;
+        },
+
+        /**
          * Normalize given rank to linear [0, 1]
          * @return {number} [val]
          */
@@ -46,7 +55,7 @@ define(function (require) {
         },
 
         /**
-         * Scale normalized value
+         * Scale normalized value to rank
          * @param {number} val
          * @return {number}
          */

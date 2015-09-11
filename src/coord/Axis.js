@@ -56,30 +56,31 @@ define(function (require) {
          */
         contain: function (coord) {
             var extent = this._extent;
-            return coord >= extent[0] && coord <= extent[1];
+            var min = Math.min(extent[0], extent[1]);
+            var max = Math.max(extent[0], extent[1]);
+            return coord >= min && coord <= max;
         },
 
         /**
-         * Get coord extent
+         * Get coord extent.
          * @return {Array.<number>}
          */
         getExtent: function () {
             var ret = this._extent.slice();
-            if (this.inverse) {
-                ret.reverse();
-            }
+            this.inverse && ret.reverse();
+
             return ret;
         },
 
         /**
          * Set coord extent
-         * @param {number} start
-         * @param {number} end
+         * @param {number} min
+         * @param {number} max
          */
-        setExtent: function (start, end) {
+        setExtent: function (min, max) {
             var extent = this._extent;
-            extent[0] = start;
-            extent[1] = end;
+            extent[0] = min;
+            extent[1] = max;
         },
 
         /**
@@ -105,18 +106,18 @@ define(function (require) {
 
         /**
          * Convert coord to data. Data is the rank if it has a ordinal scale
-         * @param {number} mapped
+         * @param {number} coord
          * @param  {boolean} clamp
          * @return {number}
          */
-        coordToData: function (mapped, clamp) {
+        coordToData: function (coord, clamp) {
             var extent = this.getExtent();
 
             if (this.onBand) {
                 fixExtentWithBands(extent, this.scale.count());
             }
 
-            var t = linearMap(mapped, extent, [0, 1], clamp);
+            var t = linearMap(coord, extent, [0, 1], clamp);
 
             return this.scale.scale(t);
         },

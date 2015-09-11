@@ -101,7 +101,7 @@ define(function (require) {
 
             for (var i = 0; i < dimList.length; i++) {
                 var dim = dimList[i];
-                var axis = this._axes[axis];
+                var axis = this._axes[dim];
 
                 output[dim] = axis[method](input[dim]);
             }
