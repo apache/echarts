@@ -23,9 +23,9 @@ define(function (require) {
 
         constructor: RadiusAxis,
 
-        dataToRadius: Axis.prototype.mapData,
+        dataToRadius: Axis.prototype.dataToCoord,
 
-        radiusToData: Axis.prototype.unmapData
+        radiusToData: Axis.prototype.coordToData
     };
 
     zrUtil.inherits(RadiusAxis, Axis);

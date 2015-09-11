@@ -129,7 +129,7 @@ define(function(require) {
             }
 
             var axisPosition = axis.position;
-            var ticksCoords = axis.getTicksPositions();
+            var ticksCoords = axis.getTicksCoords();
 
             var tickLines = [];
             for (var i = 0; i < ticksCoords.length; i++) {
@@ -325,7 +325,7 @@ define(function(require) {
             var splitLines = [];
             var lineCount = 0;
 
-            var ticksCoords = axis.getTicksPositions();
+            var ticksCoords = axis.getTicksCoords();
 
             var p1 = [];
             var p2 = [];
@@ -390,7 +390,7 @@ define(function(require) {
             var areaColors = splitAreaModel.get('areaStyle.color');
 
             var gridRect = gridModel.coordinateSystem.getRect();
-            var ticksCoords = axis.getTicksPositions();
+            var ticksCoords = axis.getTicksCoords();
 
             var prevX = ticksCoords[0];
             var prevY = ticksCoords[0];

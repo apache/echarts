@@ -15,6 +15,14 @@ define(function(require) {
         type: 'cartesian2d',
 
         /**
+         * If contain coord
+         */
+        containPoint: function (x, y) {
+            return this.getAxis('x').contain(x)
+                && this.getAxis('y').contain(y);
+        },
+
+        /**
          * Convert series data to coorindates
          * @param {module:echarts/data/List} data
          * @return {Array}
@@ -25,12 +33,10 @@ define(function(require) {
             var xAxis = this.getAxis('x');
             var yAxis = this.getAxis('y');
 
-            var xIndex = xAxis.isHorizontal() ? 0 : 1;
-
             return data.map(function (dataItem) {
                 var coord = [];
-                coord[xIndex] = xAxis.dataToCoord(dataItem.getX(true));
-                coord[1 - xIndex] = yAxis.dataToCoord(dataItem.getY(true));
+                coord[0] = xAxis.dataToCoord(dataItem.getX(true));
+                coord[1] = yAxis.dataToCoord(dataItem.getY(true));
                 return coord;
             }, this);
         },

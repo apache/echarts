@@ -25,9 +25,9 @@ define(function(require) {
 
         constructor: AngleAxis,
 
-        dataToAngle: Axis.prototype.mapData,
+        dataToAngle: Axis.prototype.dataToCoord,
 
-        angleToData: Axis.prototype.unmapData
+        angleToData: Axis.prototype.coordToData
     };
 
     zrUtil.inherits(AngleAxis, Axis);

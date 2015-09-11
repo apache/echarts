@@ -42,7 +42,7 @@ define(function(require) {
             var cx = polar.cx;
             var cy = polar.cy;
             var radiusExtent = polar.getRadiusAxis().getExtent();
-            var ticksAngles = angleAxis.getTicksPositions();
+            var ticksAngles = angleAxis.getTicksCoords();
 
             if (angleAxis.type !== 'category') {
                 // Remove the last tick which will overlap the first tick
@@ -107,7 +107,7 @@ define(function(require) {
             var labels = angleAxisModel.formatLabels(axis.scale.getTicksLabels());
 
             var labelMargin = labelModel.get('margin');
-            var labelsAngles = axis.getLabelsPositions();
+            var labelsAngles = axis.getLabelsCoords();
 
             // Use length of ticksAngles because it may remove the last tick to avoid overlapping
             for (var i = 0; i < ticksAngles.length; i++) {

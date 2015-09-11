@@ -48,10 +48,10 @@ define(function(require) {
             var cx = polar.cx;
             var cy = polar.cy;
             var angleExtent = polar.getAngleAxis().getExtent();
-            var ticksPositions = radiusAxis.getTicksPositions();
+            var ticksCoords = radiusAxis.getTicksCoords();
             zrUtil.each(elementList, function (name) {
                 if (radiusAxisModel.get(name +'.show')) {
-                    this['_' + name](radiusAxisModel, ticksPositions, angleExtent, cx, cy, api);
+                    this['_' + name](radiusAxisModel, ticksCoords, angleExtent, cx, cy, api);
                 }
             }, this);
 
@@ -64,7 +64,7 @@ define(function(require) {
         /**
          * @private
          */
-        _axisLine: function (radiusAxisModel, ticksPositions, angleExtent, cx, cy, api) {
+        _axisLine: function (radiusAxisModel, ticksCoords, angleExtent, cx, cy, api) {
             var arc = new api.Line({
                 shape: getAxisLineShape(radiusAxisModel, cx, cy),
                 style: radiusAxisModel.getModel('axisLine.lineStyle').getLineStyle()
@@ -76,7 +76,7 @@ define(function(require) {
         /**
          * @private
          */
-        _axisTick: function (radiusAxisModel, ticksPositions, angleExtent, cx, cy, api) {
+        _axisTick: function (radiusAxisModel, ticksCoords, angleExtent, cx, cy, api) {
             var tickModel = radiusAxisModel.getModel('axisTick');
 
             var lineShape = getAxisLineShape(radiusAxisModel, cx, cy);
@@ -93,7 +93,7 @@ define(function(require) {
             var p1 = [];
             var p2 = [];
             var tickLen = tickModel.get('length');
-            var lines = zrUtil.map(ticksPositions, function (tickPosition) {
+            var lines = zrUtil.map(ticksCoords, function (tickPosition) {
                 // Get point on axis
                 vector.lerp(p1, start, end, tickPosition / len);
                 vector.scaleAndAdd(p2, p1, direction, tickLen);
@@ -117,7 +117,7 @@ define(function(require) {
         /**
          * @private
          */
-        _axisLabel: function (radiusAxisModel, ticksPositions, angleExtent, cx, cy, api) {
+        _axisLabel: function (radiusAxisModel, ticksCoords, angleExtent, cx, cy, api) {
             var axis = radiusAxisModel.axis;
             var labelModel = radiusAxisModel.getModel('axisLabel');
             var textStyleModel = labelModel.getModel('textStyle');
@@ -137,7 +137,7 @@ define(function(require) {
 
             var p = [];
             var labelMargin = labelModel.get('margin');
-            var labelsPositions = axis.getLabelsPositions();
+            var labelsPositions = axis.getLabelsCoords();
 
             // FIXME Text align and text baseline when axis angle is 90 degree
             for (var i = 0; i < labelsPositions.length; i++) {
@@ -161,7 +161,7 @@ define(function(require) {
         /**
          * @private
          */
-        _splitLine: function (radiusAxisModel, ticksPositions, angleExtent, cx, cy, api) {
+        _splitLine: function (radiusAxisModel, ticksCoords, angleExtent, cx, cy, api) {
             var splitLineModel = radiusAxisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
             var lineColors = lineStyleModel.get('color');
@@ -172,14 +172,14 @@ define(function(require) {
 
             var splitLines = [];
 
-            for (var i = 0; i < ticksPositions.length; i++) {
+            for (var i = 0; i < ticksCoords.length; i++) {
                 var colorIndex = (lineCount++) % lineColors.length;
                 splitLines[colorIndex] = splitLines[colorIndex] || [];
                 splitLines[colorIndex].push(new api.Circle({
                     shape: {
                         cx: cx,
                         cy: cy,
-                        r: ticksPositions[i]
+                        r: ticksCoords[i]
                     },
                     silent: true
                 }))
@@ -203,7 +203,7 @@ define(function(require) {
         /**
          * @private
          */
-        _splitArea: function (radiusAxisModel, ticksPositions, angleExtent, cx, cy, api) {
+        _splitArea: function (radiusAxisModel, ticksCoords, angleExtent, cx, cy, api) {
 
         }
     });

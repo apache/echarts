@@ -51,6 +51,15 @@ define(function (require) {
         constructor: Axis,
 
         /**
+         * If axis extent contain give coord
+         * @param {number}
+         */
+        contain: function (coord) {
+            var extent = this._extent;
+            return coord >= extent[0] && coord <= extent[1];
+        },
+
+        /**
          * Get coord extent
          * @return {Array.<number>}
          */
@@ -74,12 +83,12 @@ define(function (require) {
         },
 
         /**
-         * Map a data to extent. Data is the rank if it has a ordinal scale
+         * Convert data to coord. Data is the rank if it has a ordinal scale
          * @param {number} data
          * @param  {boolean} clamp
          * @return {number}
          */
-        mapData: function (data, clamp) {
+        dataToCoord: function (data, clamp) {
             // PENDING
             if (data == null || data === '-') {
                 return NaN;
@@ -95,12 +104,12 @@ define(function (require) {
         },
 
         /**
-         * Unmap a data. Data is the rank if it has a ordinal scale
+         * Convert coord to data. Data is the rank if it has a ordinal scale
          * @param {number} mapped
          * @param  {boolean} clamp
          * @return {number}
          */
-        unmapData: function (mapped, clamp) {
+        coordToData: function (mapped, clamp) {
             var extent = this.getExtent();
 
             if (this.onBand) {
@@ -114,40 +123,40 @@ define(function (require) {
         /**
          * @return {Array.<number>}
          */
-        getTicksPositions: function () {
+        getTicksCoords: function () {
             if (this.onBand) {
                 var bands = this.getBands();
-                var positions = [];
+                var coords = [];
                 for (var i = 0; i < bands.length; i++) {
-                    positions.push(bands[i][0]);
+                    coords.push(bands[i][0]);
                 }
                 if (bands[i - 1]) {
-                    positions.push(bands[i - 1][1]);
+                    coords.push(bands[i - 1][1]);
                 }
-                return positions;
+                return coords;
             }
             else {
-                return zrUtil.map(this.scale.getTicks(), this.mapData, this);
+                return zrUtil.map(this.scale.getTicks(), this.dataToCoord, this);
             }
         },
 
         /**
-         * Positions of labels are on the ticks or on the middle of bands
+         * Coords of labels are on the ticks or on the middle of bands
          * @return {Array.<number>}
          */
-        getLabelsPositions: function () {
+        getLabelsCoords: function () {
             if (this.onBand) {
                 var bands = this.getBands();
-                var positions = [];
+                var coords = [];
                 var band;
                 for (var i = 0; i < bands.length; i++) {
                     band = bands[i];
-                    positions.push((band[0] + band[1]) / 2);
+                    coords.push((band[0] + band[1]) / 2);
                 }
-                return positions;
+                return coords;
             }
             else {
-                return zrUtil.map(this.scale.getTicks(), this.mapData, this);
+                return zrUtil.map(this.scale.getTicks(), this.dataToCoord, this);
             }
         },
 
