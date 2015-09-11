@@ -7,6 +7,8 @@
 
 define(function (require) {
 
+    var numberUtil = require('../util/number');
+
     var mathFloor = Math.floor;
     var mathCeil = Math.ceil;
     /**
@@ -147,7 +149,8 @@ define(function (require) {
                 var tick = niceExtent[0];
                 while (tick <= niceExtent[1]) {
                     ticks.push(tick);
-                    tick += interval;
+                    // Avoid rounding error
+                    tick = numberUtil.round(tick + interval);
                 }
                 if (extent[1] > niceExtent[1]) {
                     ticks.push(extent[1]);
