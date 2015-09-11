@@ -14,7 +14,7 @@ define(function(require) {
     }
 
     function getBbox(root) {
-        var svgNode = root.firstChild;
+        var svgNode = root.children[0];
         // Find the svg node
         while (!(svgNode.nodeName.toLowerCase() == 'svg' && svgNode.nodeType == 1)) {
             svgNode = svgNode.nextSibling;

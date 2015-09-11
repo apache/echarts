@@ -761,7 +761,7 @@ define(function (require) {
                 if (!this.hasAppend) {
                     this._tDom.style.left = this._zrWidth / 2 + 'px';
                     this._tDom.style.top = this._zrHeight / 2 + 'px';
-                    this.dom.firstChild.appendChild(this._tDom);
+                    this.dom.children[0].appendChild(this._tDom);
                     this.hasAppend = true;
                 }
                 this._show(position, x + 10, y + 10, specialCssText);
@@ -913,7 +913,7 @@ define(function (require) {
                 if (!this.hasAppend) {
                     this._tDom.style.left = this._zrWidth / 2 + 'px';
                     this._tDom.style.top = this._zrHeight / 2 + 'px';
-                    this.dom.firstChild.appendChild(this._tDom);
+                    this.dom.children[0].appendChild(this._tDom);
                     this.hasAppend = true;
                 }
                 this._show(
@@ -1085,7 +1085,7 @@ define(function (require) {
             if (!this.hasAppend) {
                 this._tDom.style.left = this._zrWidth / 2 + 'px';
                 this._tDom.style.top = this._zrHeight / 2 + 'px';
-                this.dom.firstChild.appendChild(this._tDom);
+                this.dom.children[0].appendChild(this._tDom);
                 this.hasAppend = true;
             }
             
@@ -1713,8 +1713,8 @@ define(function (require) {
             this.zr.un(zrConfig.EVENT.MOUSEMOVE, this._onmousemove);
             this.zr.un(zrConfig.EVENT.GLOBALOUT, this._onglobalout);
             
-            if (this.hasAppend && !!this.dom.firstChild) {
-                this.dom.firstChild.removeChild(this._tDom);
+            if (this.hasAppend && !!this.dom.children[0]) {
+                this.dom.children[0].removeChild(this._tDom);
             }
             this._tDom = null;
         },
