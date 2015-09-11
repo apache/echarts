@@ -2,7 +2,7 @@ define(function (require) {
     return function (seriesType, ecModel, api) {
         ecModel.eachSeriesByType(seriesType, function (lineSeries) {
             var data = lineSeries.getData();
-            var coords = lineSeries.coordinateSystem.dataToCoords(data);
+            var coords = lineSeries.coordinateSystem.dataToPoints(data);
 
             data.each(function (dataItem, idx) {
                 var coord = coords[idx];

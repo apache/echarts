@@ -148,7 +148,7 @@ define(function(require) {
 
             if (data.type === 'list') {
                 var valueAxisStart = valueAxis.getExtent()[0];
-                var coords = cartesian.dataToCoords(data);
+                var coords = cartesian.dataToPoints(data);
                 lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 
                 data.each(function (dataItem, dataIndex) {

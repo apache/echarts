@@ -72,7 +72,7 @@ define(function(require) {
          *  Return list of coordinates. For example:
          *  `[[10, 10], [20, 20], [30, 30]]`
          */
-        dataToCoords: function (data) {
+        dataToPoints: function (data) {
             return data.map(function (dataItem) {
                 return this.dataToCoord([dataItem.getRadius(true), dataItem.getAngle(true)]);
             }, this);
@@ -84,7 +84,7 @@ define(function(require) {
          * @param {Array.<number>} data
          * @return {Array.<number>}
          */
-        dataToCoord: function (data) {
+        dataToPoint: function (data) {
             var radius = this._radiusAxis.dataToRadius(data[0]);
             var radian = this._angleAxis.dataToAngle(data[1]) / 180 * Math.PI;
 
@@ -99,7 +99,7 @@ define(function(require) {
          * @param {Array.<number>} coord
          * @return {Array.<number>}
          */
-        coordToData: function (coord) {
+        pointToData: function (coord) {
             var dx = coord[0] - this.cx;
             var dy = coord[1] - this.cy;
 

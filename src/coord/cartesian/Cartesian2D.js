@@ -29,7 +29,7 @@ define(function(require) {
          *  Return list of coordinates. For example:
          *  `[[10, 10], [20, 20], [30, 30]]`
          */
-        dataToCoords: function (data) {
+        dataToPoints: function (data) {
             var xAxis = this.getAxis('x');
             var yAxis = this.getAxis('y');
 
