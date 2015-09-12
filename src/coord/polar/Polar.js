@@ -116,7 +116,7 @@ define(function(require) {
             var coord = this.pointToCoord(point);
             return [
                 this._radiusAxis.radiusToData(coord[0]),
-                this._angleAxis.angleToData(coord[1]) / Math.PI * 180
+                this._angleAxis.angleToData(coord[1])
             ];
         },
 
@@ -133,9 +133,15 @@ define(function(require) {
             dx /= radius;
             dy /= radius;
 
-            var angle = Math.atan2(dy, dx);
+            var radian = Math.atan2(dy, dx);
 
-            return [radius, angle];
+            // Threshold to 0 - 360
+            // FIXME Angle Extent ?
+            if (radian < 0) {
+                radian += Math.PI * 2;
+            }
+
+            return [radius, radian / Math.PI * 180];
         },
 
         /**

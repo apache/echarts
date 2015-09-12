@@ -18,7 +18,8 @@
                 'echarts',
                 'echarts/chart/line',
                 'echarts/component/legend',
-                'echarts/component/polar'
+                'echarts/component/polar',
+                'echarts/component/tooltip'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -40,6 +41,12 @@
                 chart.setOption({
                     legend: {
                         data: ['line', 'line2', 'line3']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
                     },
                     polar: {},
                     angleAxis: {

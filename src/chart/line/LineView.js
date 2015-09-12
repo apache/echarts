@@ -53,7 +53,7 @@ define(function(require) {
             var coordinateSystem = seriesModel.coordinateSystem;
             var isCoordinateSystemPolar = coordinateSystem.type === 'polar';
 
-            // TODO Update after animation
+            // FIXME Update after animation
             if (
                 isCoordinateSystemPolar
                 && points.length > 2
@@ -66,10 +66,11 @@ define(function(require) {
             // Draw symbols, enable animation on the first draw
             var dataSymbol = this._dataSymbol;
             dataSymbol.z = seriesModel.get('z') + 1;
-            dataSymbol.updateData(data, !this._data);
 
             // Initialization animation
             if (!this._data) {
+                dataSymbol.updateData(data, false);
+
                 var polyline = new api.Polyline({
                     shape: {
                         points: points
@@ -96,9 +97,9 @@ define(function(require) {
                 this._polyline = polyline;
             }
             else {
+                dataSymbol.updateData(data, false);
                 // In the case data zoom triggerred refreshing frequently
                 // Data may not change if line has a category axis. So it should animate nothing
-
                 if (! isPointsSame(this._pointsWithName, pointsWithName)) {
                     this._updateAnimation(data, pointsWithName);
                 }

@@ -7,6 +7,36 @@ define(function (require) {
         return coordName + axisType;
     }
 
+    function makeLineShape(x1, y1, x2, y2) {
+        return {
+            x1: x1,
+            y1: y1,
+            x2: x2,
+            y2: y2
+        };
+    }
+
+    function makeRectShape(x, y, width, height) {
+        return {
+            x: x,
+            y: y,
+            width: width,
+            height: height
+        };
+    }
+
+    function makeSectorShape(cx, cy, r0, r, startAngle, endAngle) {
+        return {
+            cx: cx,
+            cy: cy,
+            r0: r0,
+            r: r,
+            startAngle: startAngle,
+            endAngle: endAngle,
+            clockwise: true
+        };
+    }
+
     require('./tooltip/TooltipModel');
 
     require('../echarts').extendComponentView({
@@ -69,40 +99,41 @@ define(function (require) {
          */
         _showAxisTooltip: function (e) {
             var ecModel = this._ecModel;
+            var tooltipModel = this._tooltipModel;
+            var axisPointerModel = tooltipModel.getModel('axisPointer');
 
             ecModel.eachSeries(function (seriesModel) {
                 // Try show the axis pointer
                 this.group.show();
 
-                var coordinateSystem = seriesModel.coordinateSystem;
+                var coordSys = seriesModel.coordinateSystem;
 
                 // If mouse position is not in the grid or polar
                 var point = [e.offsetX, e.offsetY];
-                if (coordinateSystem && ! coordinateSystem.containPoint(point)) {
+                if (coordSys && ! coordSys.containPoint(point)) {
                     // Hide axis pointer
                     this._hideAxisTooltip();
                     return;
                 }
 
-                if (coordinateSystem.type === 'cartesian2d') {
-                    this._showCartesianAxis(coordinateSystem, point);
+                if (coordSys.type === 'cartesian2d') {
+                    this._showCartesianPointer(axisPointerModel, coordSys, point);
                 }
-                else if (coordinateSystem.type === 'polar') {
-                    this._showPolarAxis(coordinateSystem, point);
+                else if (coordSys.type === 'polar') {
+                    this._showPolarPointer(axisPointerModel, coordSys, point);
                 }
             }, this)
         },
 
         /**
          * Show tooltip on axis of cartesian coordinate
-         * @param {Object} e
+         * @param {module:echarts/model/Model} axisPointerModel
+         * @param {module:echarts/coord/cartesian/Cartesian2D} cartesian
+         * @param {Array.<number>} point
+         * @private
          */
-        _showCartesianAxis: function (cartesian, point) {
+        _showCartesianPointer: function (axisPointerModel, cartesian, point) {
             var self = this;
-
-            var tooltipModel = this._tooltipModel;
-
-            var axisPointerModel = tooltipModel.getModel('axisPointer');
 
             var cateogryAxis = cartesian.getAxesByScale('ordinal')[0];
 
@@ -115,62 +146,164 @@ define(function (require) {
                 point = cartesian.dataToPoint(value);
             }
 
-            if (axisPointerType === 'line') {
+            if (axisPointerType === 'cross') {
+                moveGridLine('x', point, cartesian.getAxis('y').getExtent());
+                moveGridLine('y', point, cartesian.getAxis('x').getExtent());
+            }
+            else {
                 var axisType = axisPointerModel.get('axis');
                 if (axisType === 'auto') {
                     axisType = (cateogryAxis && cateogryAxis.dim) || 'x';
                 }
 
-                var pointerAxis = cartesian.getAxis(axisType);
-                var otherAxis = cartesian.getOtherAxis(pointerAxis);
+                var otherAxis = cartesian.getAxis(axisType === 'x' ? 'y' : 'x');
                 var otherExtent = otherAxis.getExtent();
 
-                moveLine(axisType, point, otherExtent);
-            }
-            else if (axisPointerType === 'cross') {
-                moveLine('x', point, cartesian.getAxis('y').getExtent());
-                moveLine('y', point, cartesian.getAxis('x').getExtent());
-            }
-            else if (axisPointerType === 'shadow') {
-
+                if (cartesian.type === 'cartesian2d') {
+                    (axisPointerType === 'line' ? moveGridLine : moveGridShadow)(
+                        axisType, point, otherExtent
+                    );
+                }
             }
 
-            function moveLine(axisType, point, otherExtent) {
-
+            /**
+             * @inner
+             */
+            function moveGridLine(axisType, point, otherExtent) {
                 var pointerEl = self._getPointerElement(cartesian, axisPointerModel, axisType)
-                var targetShape;
-                if (axisType === 'x') {
-                    targetShape = {
-                        x1: point[0],
-                        y1: otherExtent[0],
-                        x2: point[0],
-                        y2: otherExtent[1]
-                    };
-                }
-                else {
-                    targetShape = {
-                        x1: otherExtent[0],
-                        y1: point[1],
-                        x2: otherExtent[1],
-                        y2: point[1]
-                    };
-                }
+                var targetShape = axisType === 'x'
+                    ? makeLineShape(point[0], otherExtent[0], point[0], otherExtent[1])
+                    : makeLineShape(otherExtent[0], point[1], otherExtent[1], point[1]);
 
                 // pointerEl.animateTo({
                 //     shape: targetShape
                 // }, 100, 'cubicOut');
                 pointerEl.attr({
                     shape: targetShape
-                })
+                });
             }
+
+            /**
+             * @inner
+             */
+            function moveGridShadow(axisType, point, otherExtent) {
+                var axis = cartesian.getAxis(axisType);
+                var pointerEl = self._getPointerElement(cartesian, axisPointerModel, axisType);
+                var bandWidth = axis.getBandWidth();
+                var extentSize = otherExtent[1] - otherExtent[0];
+                var targetShape = axisType === 'x'
+                    ? makeRectShape(point[0] - bandWidth / 2, otherExtent[0], bandWidth, extentSize)
+                    : makeRectShape(otherExtent[0], point[1] - bandWidth / 2, extentSize, bandWidth);
+
+                // FIXME 动画总是感觉不连贯
+                // pointerEl.animateTo({
+                //     shape: targetShape
+                // }, 100, 'cubicOut');
+                pointerEl.attr({
+                    shape: targetShape
+                });
+            }
+
         },
 
         /**
          * Show tooltip on axis of polar coordinate
-         * @param {Object} e
+         * @param {module:echarts/model/Model} axisPointerModel
+         * @param {module:echarts/coord/polar/Polar} polar
+         * @param {Array.<number>} point
          */
-        _showPolarAxis: function () {
+        _showPolarPointer: function (axisPointerModel, polar, point) {
+            var self = this;
 
+            var axisPointerType = axisPointerModel.get('type');
+
+            var value = polar.pointToData(point);
+            var angleAxis = polar.getAngleAxis();
+            var radiusAxis = polar.getRadiusAxis();
+
+            // Make sure point is discrete on cateogry axis
+            point = polar.dataToPoint(value);
+
+            if (axisPointerType === 'cross') {
+                movePolarLine('angle', point, angleAxis.getExtent());
+                movePolarLine('radius', point, radiusAxis.getExtent());
+            }
+            else {
+                var axisType = axisPointerModel.get('axis');
+                if (axisType === 'auto') {
+                    axisType = radiusAxis.type === 'category' ? 'radius' : 'angle';
+                }
+
+                var otherAxis = polar.getAxis(axisType === 'radius' ? 'angle' : 'radius');
+                var otherExtent = otherAxis.getExtent();
+
+                (axisPointerType === 'line' ? movePolarLine : movePolarShadow)(
+                    axisType, point, otherExtent
+                );
+            }
+            /**
+             * @inner
+             */
+            function movePolarLine(axisType, point, otherExtent) {
+                var pointerEl = self._getPointerElement(polar, axisPointerModel, axisType);
+
+                var mouseCoord = polar.pointToCoord(point);
+
+                var targetShape;
+
+                if (axisType === 'angle') {
+                    var p1 = polar.coordToPoint([otherExtent[0], mouseCoord[1]]);
+                    var p2 = polar.coordToPoint([otherExtent[1], mouseCoord[1]]);
+                    targetShape = makeLineShape(p1[0], p1[1], p2[0], p2[1]);
+                }
+                else {
+                    targetShape = {
+                        cx: polar.cx,
+                        cy: polar.cy,
+                        r: mouseCoord[0]
+                    };
+                }
+
+                pointerEl.attr({
+                    shape: targetShape
+                });
+            }
+
+            /**
+             * @inner
+             */
+            function movePolarShadow(axisType, point, otherExtent) {
+                var axis = polar.getAxis(axisType);
+                var pointerEl = self._getPointerElement(polar, axisPointerModel, axisType)
+                var bandWidth = axis.getBandWidth();
+
+                var mouseCoord = polar.pointToCoord(point);
+
+                var targetShape;
+
+                var radian = Math.PI / 180;
+
+                if (axisType === 'angle') {
+                    targetShape = makeSectorShape(
+                        polar.cx, polar.cy,
+                        otherExtent[0], otherExtent[1],
+                        (mouseCoord[1] - bandWidth / 2) * radian,
+                        (mouseCoord[1] + bandWidth / 2) * radian
+                    );
+                }
+                else {
+                    targetShape = makeSectorShape(
+                        polar.cx, polar.cy,
+                        mouseCoord[0] - bandWidth / 2,
+                        mouseCoord[0] + bandWidth / 2,
+                        0, Math.PI * 2
+                    );
+                }
+
+                pointerEl.attr({
+                    shape: targetShape
+                });
+            }
         },
 
         /**
@@ -180,9 +313,9 @@ define(function (require) {
             this.group.hide();
         },
 
-        _getPointerElement: function (coordSystem, pointerModel, axisType) {
+        _getPointerElement: function (coordSys, pointerModel, axisType) {
             var axisPointers = this._axisPointers;
-            var key = getAxisPointerKey(coordSystem.name, axisType);
+            var key = getAxisPointerKey(coordSys.name, axisType);
             if (axisPointers[key]) {
                 return axisPointers[key];
             }
@@ -193,9 +326,11 @@ define(function (require) {
             var isShadow = pointerType === 'shadow';
             var style = styleModel[isShadow ? 'getAreaStyle' : 'getLineStyle']();
 
-            var elementType = axisType === 'radius'
+            var elementType = coordSys.type === 'polar'
                 ? (isShadow ? 'Sector' : 'Circle')
                 : (isShadow ? 'Rect' : 'Line');
+
+           isShadow ? (style.stroke = null) : (style.fill = null);
 
             var el = axisPointers[key] = new graphic[elementType]({
                 style: style,
@@ -204,6 +339,10 @@ define(function (require) {
 
             this.group.add(el);
             return el;
+        },
+
+        _showSeriesTooltip: function (series, e) {
+
         },
 
         /**
