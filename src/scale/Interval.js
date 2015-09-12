@@ -224,10 +224,10 @@ define(function (require) {
             var interval = this._interval;
 
             if (! fixMin) {
-                extent[0] = mathFloor(extent[0] / interval) * interval;
+                extent[0] = numberUtil.round(mathFloor(extent[0] / interval) * interval);
             }
             if (! fixMax) {
-                extent[1] = mathCeil(extent[1] / interval) * interval;
+                extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
             }
         }
     };

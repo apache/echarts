@@ -6,33 +6,6 @@ define(function(require) {
 
     var elementList = ['splitLine', 'splitArea', 'axisLine', 'axisTick', 'axisLabel'];
 
-    function getPointOnAxisLine(cx, cy, r, radian) {
-        var dx = r * Math.cos(radian);
-        var dy = r * Math.sin(radian);
-
-        return [cx + dx, cy + dy];
-    }
-
-    function getAxisLineShape(radiusAxisModel, cx, cy) {
-
-        var radiusAxis = radiusAxisModel.axis;
-        var radius = radiusAxis.getExtent();
-
-        var axisAngle = radiusAxisModel.get('axisAngle');
-
-        var radian = axisAngle / 180 * Math.PI;
-
-        var start = getPointOnAxisLine(cx, cy, radius[0], radian);
-        var end = getPointOnAxisLine(cx, cy, radius[1], radian);
-
-        return {
-            x1: start[0],
-            y1: start[1],
-            x2: end[0],
-            y2: end[1]
-        };
-    }
-
     require('../coord/polar/polarCreator');
 
     require('../echarts').extendComponentView({
@@ -45,13 +18,12 @@ define(function(require) {
             var polarModel = ecModel.getComponent('polar', radiusAxisModel.get('polarIndex'));
             var radiusAxis = radiusAxisModel.axis;
             var polar = polarModel.coordinateSystem;
-            var cx = polar.cx;
-            var cy = polar.cy;
-            var angleExtent = polar.getAngleAxis().getExtent();
             var ticksCoords = radiusAxis.getTicksCoords();
+            var axisAngle = radiusAxisModel.get('axisAngle');
+            var radiusExtent = radiusAxis.getExtent();
             zrUtil.each(elementList, function (name) {
                 if (radiusAxisModel.get(name +'.show')) {
-                    this['_' + name](radiusAxisModel, ticksCoords, angleExtent, cx, cy, api);
+                    this['_' + name](radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api);
                 }
             }, this);
 
@@ -64,9 +36,16 @@ define(function(require) {
         /**
          * @private
          */
-        _axisLine: function (radiusAxisModel, ticksCoords, angleExtent, cx, cy, api) {
+        _axisLine: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api) {
+            var p1 = polar.coordToPoint([radiusExtent[0], axisAngle]);
+            var p2 = polar.coordToPoint([radiusExtent[1], axisAngle]);
             var arc = new api.Line({
-                shape: getAxisLineShape(radiusAxisModel, cx, cy),
+                shape: {
+                    x1: p1[0],
+                    y1: p1[1],
+                    x2: p2[0],
+                    y2: p2[1]
+                },
                 style: radiusAxisModel.getModel('axisLine.lineStyle').getLineStyle()
             });
 
@@ -76,12 +55,11 @@ define(function(require) {
         /**
          * @private
          */
-        _axisTick: function (radiusAxisModel, ticksCoords, angleExtent, cx, cy, api) {
+        _axisTick: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api) {
             var tickModel = radiusAxisModel.getModel('axisTick');
 
-            var lineShape = getAxisLineShape(radiusAxisModel, cx, cy);
-            var start = [lineShape.x1, lineShape.y1];
-            var end = [lineShape.x2, lineShape.y2];
+            var start = polar.coordToPoint([radiusExtent[0], axisAngle]);
+            var end = polar.coordToPoint([radiusExtent[1], axisAngle]);
 
             var len = vector.dist(end, start);
             var direction = [
@@ -117,16 +95,15 @@ define(function(require) {
         /**
          * @private
          */
-        _axisLabel: function (radiusAxisModel, ticksCoords, angleExtent, cx, cy, api) {
+        _axisLabel: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api) {
             var axis = radiusAxisModel.axis;
             var labelModel = radiusAxisModel.getModel('axisLabel');
             var textStyleModel = labelModel.getModel('textStyle');
 
             var labels = radiusAxisModel.formatLabels(axis.scale.getTicksLabels());
 
-            var lineShape = getAxisLineShape(radiusAxisModel, cx, cy);
-            var start = [lineShape.x1, lineShape.y1];
-            var end = [lineShape.x2, lineShape.y2];
+            var start = polar.coordToPoint([radiusExtent[0], axisAngle]);
+            var end = polar.coordToPoint([radiusExtent[1], axisAngle]);
 
             var len = vector.dist(end, start);
             var direction = [
@@ -161,7 +138,7 @@ define(function(require) {
         /**
          * @private
          */
-        _splitLine: function (radiusAxisModel, ticksCoords, angleExtent, cx, cy, api) {
+        _splitLine: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api) {
             var splitLineModel = radiusAxisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
             var lineColors = lineStyleModel.get('color');
@@ -177,8 +154,8 @@ define(function(require) {
                 splitLines[colorIndex] = splitLines[colorIndex] || [];
                 splitLines[colorIndex].push(new api.Circle({
                     shape: {
-                        cx: cx,
-                        cy: cy,
+                        cx: polar.cx,
+                        cy: polar.cy,
                         r: ticksCoords[i]
                     },
                     silent: true
@@ -203,7 +180,7 @@ define(function(require) {
         /**
          * @private
          */
-        _splitArea: function (radiusAxisModel, ticksCoords, angleExtent, cx, cy, api) {
+        _splitArea: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api) {
 
         }
     });

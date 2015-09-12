@@ -7,10 +7,6 @@ define(function(require) {
 
     // Polar view
     require('../echarts').extendComponentView({
-
-        type: 'polar',
-
-        render: function (gridModel, ecModel, api) {
-        }
+        type: 'polar'
     });
 });

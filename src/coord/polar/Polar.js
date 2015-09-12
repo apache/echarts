@@ -61,6 +61,13 @@ define(function(require) {
         },
 
         /**
+         * @return {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
+         */
+        getAxis: function (axisType) {
+            return this['_' + axisType + 'Axis'];
+        },
+
+        /**
          * @return {module:echarts/coord/polar/AngleAxis}
          */
         getAngleAxis: function () {
@@ -94,13 +101,10 @@ define(function(require) {
          * @return {Array.<number>}
          */
         dataToPoint: function (data) {
-            var radius = this._radiusAxis.dataToRadius(data[0]);
-            var radian = this._angleAxis.dataToAngle(data[1]) / 180 * Math.PI;
-
-            var x = Math.cos(radian) * radius + this.cx;
-            var y = Math.sin(radian) * radius + this.cy;
-
-            return [x, y];
+            return this.coordToPoint([
+                this._radiusAxis.dataToRadius(data[0]),
+                this._angleAxis.dataToAngle(data[1])
+            ])
         },
 
         /**
@@ -110,7 +114,6 @@ define(function(require) {
          */
         pointToData: function (point) {
             var coord = this.pointToCoord(point);
-
             return [
                 this._radiusAxis.radiusToData(coord[0]),
                 this._angleAxis.angleToData(coord[1]) / Math.PI * 180
@@ -133,6 +136,20 @@ define(function(require) {
             var angle = Math.atan2(dy, dx);
 
             return [radius, angle];
+        },
+
+        /**
+         * Convert a (radius, angle) coord to (x, y) point
+         * @param {Array.<number>} coord
+         * @return {Array.<number>}
+         */
+        coordToPoint: function (coord) {
+            var radius = coord[0];
+            var radian = coord[1] / 180 * Math.PI;
+            var x = Math.cos(radian) * radius + this.cx;
+            var y = Math.sin(radian) * radius + this.cy;
+
+            return [x, y];
         }
     }
 

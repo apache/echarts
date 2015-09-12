@@ -19,7 +19,7 @@ define(function(require) {
 
             if (categoryAxis) {
                 var columnsOnAxis = columnsMap[cartesian.name] || {
-                    remainedWidth: categoryAxis.getBandWidth(true),
+                    remainedWidth: categoryAxis.getBandWidth(),
                     autoWidthCount: 0,
                     categoryGap: '20%',
                     gap: '30%',
@@ -65,7 +65,7 @@ define(function(require) {
             var categoryGap = columnsOnAxis.categoryGap;
             var barGapPercent = columnsOnAxis.gap;
             var categoryAxis = columnsOnAxis.axis;
-            var bandWidth = categoryAxis.getBandWidth(true);
+            var bandWidth = categoryAxis.getBandWidth();
             if (typeof categoryGap === 'string') {
                 categoryGap = (parseFloat(categoryGap) / 100) * bandWidth;
             }

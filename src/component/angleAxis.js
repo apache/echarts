@@ -5,18 +5,9 @@ define(function(require) {
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 
-    function getPointOnAxisLine(cx, cy, r, radian) {
-        var dx = r * Math.cos(radian);
-        var dy = r * Math.sin(radian);
-
-        return [cx + dx, cy + dy];
-    }
-
-    function getAxisLineShape(cx, cy, r0, r, angle) {
-        var radian = angle / 180 * Math.PI;
-
-        var start = getPointOnAxisLine(cx, cy, r0, radian);
-        var end = getPointOnAxisLine(cx, cy, r, radian);
+    function getAxisLineShape(polar, r0, r, angle) {
+        var start = polar.coordToPoint([r0, angle]);
+        var end = polar.coordToPoint([r, angle]);
 
         return {
             x1: start[0],
@@ -39,8 +30,6 @@ define(function(require) {
             var polarModel = ecModel.getComponent('polar', angleAxisModel.get('polarIndex'));
             var angleAxis = angleAxisModel.axis;
             var polar = polarModel.coordinateSystem;
-            var cx = polar.cx;
-            var cy = polar.cy;
             var radiusExtent = polar.getRadiusAxis().getExtent();
             var ticksAngles = angleAxis.getTicksCoords();
 
@@ -51,7 +40,7 @@ define(function(require) {
 
             zrUtil.each(elementList, function (name) {
                 if (angleAxisModel.get(name +'.show')) {
-                    this['_' + name](angleAxisModel, ticksAngles, radiusExtent, cx, cy, api);
+                    this['_' + name](angleAxisModel, polar, ticksAngles, radiusExtent, api);
                 }
             }, this);
         },
@@ -59,13 +48,13 @@ define(function(require) {
         /**
          * @private
          */
-        _axisLine: function (angleAxisModel, ticksAngles, radiusExtent, cx, cy, api) {
+        _axisLine: function (angleAxisModel, polar, ticksAngles, radiusExtent, api) {
             var lineStyleModel = angleAxisModel.getModel('axisLine.lineStyle');
 
             var circle = new api.Circle({
                 shape: {
-                    cx: cx,
-                    cy: cy,
+                    cx: polar.cx,
+                    cy: polar.cy,
                     r: radiusExtent[1]
                 },
                 style: lineStyleModel.getLineStyle()
@@ -78,14 +67,14 @@ define(function(require) {
         /**
          * @private
          */
-        _axisTick: function (angleAxisModel, ticksAngles, radiusExtent, cx, cy, api) {
+        _axisTick: function (angleAxisModel, polar, ticksAngles, radiusExtent, api) {
             var tickModel = angleAxisModel.getModel('axisTick');
 
             var tickLen = (tickModel.get('inside') ? -1 : 1) * tickModel.get('length');
 
             var lines = zrUtil.map(ticksAngles, function (tickAngle) {
                 return new api.Line({
-                    shape: getAxisLineShape(cx, cy, radiusExtent[1], radiusExtent[1] + tickLen, tickAngle)
+                    shape: getAxisLineShape(polar, radiusExtent[1], radiusExtent[1] + tickLen, tickAngle)
                 });
             });
             this.group.add(api.mergePath(
@@ -98,7 +87,7 @@ define(function(require) {
         /**
          * @private
          */
-        _axisLabel: function (angleAxisModel, ticksAngles, radiusExtent, cx, cy, api) {
+        _axisLabel: function (angleAxisModel, polar, ticksAngles, radiusExtent, api) {
             var axis = angleAxisModel.axis;
 
             var labelModel = angleAxisModel.getModel('axisLabel');
@@ -111,9 +100,10 @@ define(function(require) {
 
             // Use length of ticksAngles because it may remove the last tick to avoid overlapping
             for (var i = 0; i < ticksAngles.length; i++) {
-                var tickAngle = labelsAngles[i] * Math.PI / 180;
                 var r = radiusExtent[1];
-                var p = getPointOnAxisLine(cx, cy, r + labelMargin, tickAngle);
+                var p = polar.coordToPoint([r + labelMargin, labelsAngles[i]]);
+                var cx = polar.cx;
+                var cy = polar.cy;
 
                 var labelTextAlign = Math.abs(p[0] - cx) / r < 0.3
                     ? 'center' : (p[0] > cx ? 'left' : 'right');
@@ -137,7 +127,7 @@ define(function(require) {
         /**
          * @private
          */
-        _splitLine: function (angleAxisModel, ticksAngles, radiusExtent, cx, cy, api) {
+        _splitLine: function (angleAxisModel, polar, ticksAngles, radiusExtent, api) {
             var splitLineModel = angleAxisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
             var lineColors = lineStyleModel.get('color');
@@ -152,7 +142,7 @@ define(function(require) {
                 var colorIndex = (lineCount++) % lineColors.length;
                 splitLines[colorIndex] = splitLines[colorIndex] || [];
                 splitLines[colorIndex].push(new api.Line({
-                    shape: getAxisLineShape(cx, cy, radiusExtent[0], radiusExtent[1], ticksAngles[i])
+                    shape: getAxisLineShape(polar, radiusExtent[0], radiusExtent[1], ticksAngles[i])
                 }))
             }
 
@@ -174,7 +164,7 @@ define(function(require) {
         /**
          * @private
          */
-        _splitArea: function (angleAxisModel, ticksAngles, radiusExtent, cx, cy, api) {
+        _splitArea: function (angleAxisModel, polar, ticksAngles, radiusExtent, api) {
 
         }
     });

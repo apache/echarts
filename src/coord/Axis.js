@@ -163,11 +163,13 @@ define(function (require) {
 
         /**
          * Get bands.
-         * If axis has ticks [1, 2, 3, 4]. Bands on the axis are
+         * 
+         * If axis has labels [1, 2, 3, 4]. Bands on the axis are
          * |---1---|---2---|---3---|---4---|.
          *
          * @return {Array}
          */
+         // FIXME Situation when labels is on ticks
         getBands: function () {
             var extent = this._extent;
             var bands = [];
@@ -192,7 +194,8 @@ define(function (require) {
         getBandWidth: function () {
             var axisExtent = this._extent;
             var extent = this.scale.getExtent();
-            var len = extent[1] - extent[0] + 1;
+
+            var len = extent[1] - extent[0] + (this.onBand ? 1 : 0);
 
             var size = axisExtent[1] - axisExtent[0];
 
