@@ -47,6 +47,7 @@ describe('List', function () {
                 somProp: 'foo'
             }]);
             expect(list.getDataModel(1).get('somProp')).toEqual('foo');
+            expect(list.getDataModel(0).get('somProp')).toBeNull();
         });
 
         testCase('Empty data', function (List) {

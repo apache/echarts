@@ -88,6 +88,10 @@ define(function (require) {
                 optionModelIndices[idx] = modelIdx;
                 optionModels.push(model);
             }
+            else {
+                // Reference to the undefined
+                optionModelIndices[idx] = -1;
+            }
             // Bar chart, line chart which uses category axis
             // only gives the 'y' value. 'x' value is the indices of cateogry
             if (typeof (value) === 'number') {
@@ -244,14 +248,21 @@ define(function (require) {
     };
 
     /**
-     * Get model of one data item
+     * Get model of one data item.
+     * It will create a temporary model if value on idx is not an option.
      */
     listProto.getDataModel = function (idx) {
         var storage = this._storage;
         var optionModelIndices = storage.$optionModelIndices;
         var modelIndex = optionModelIndices && optionModelIndices[idx];
 
-        return this._optionModels[modelIndex];
+        var model = this._optionModels[modelIndex];
+
+        if (! model) {
+            // Create a temporary model if value on idx is not an option.
+            model = new Model(null, this.seriesModel);
+        }
+        return model;
     };
 
     /**
