@@ -182,12 +182,16 @@ define(function (require) {
         for (var i = 0; i < indices.length; i++) {
             // Simple optimization
             if (dimSize === 1) {
-                cb && cb.call(context, this.get(dimensions[0], i, stack));
+                cb && cb.call(
+                    context, this.get(dimensions[0], i, stack), i
+                );
             }
             else {
                 for (var k = 0; k < dimSize; k++) {
                     value[k] = this.get(dimensions[k], i, stack);
                 }
+                // Index
+                value[k] = i;
                 cb.apply(context, value);
             }
         }
@@ -214,12 +218,15 @@ define(function (require) {
             var keep;
             // Simple optimization
             if (dimSize === 1) {
-                keep = cb && cb.call(context, this.get(dimensions[0], i, stack));
+                keep = cb && cb.call(
+                    context, this.get(dimensions[0], i, stack), i
+                );
             }
             else {
                 for (var k = 0; k < dimSize; k++) {
                     value[k] = this.get(dimensions[k], i, stack);
                 }
+                value[k] = i;
                 keep = cb.apply(context, value);
             }
             if (keep) {
