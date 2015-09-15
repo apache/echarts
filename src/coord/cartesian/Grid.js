@@ -25,7 +25,7 @@ define(function(require, factory) {
         if (axisType) {
             return axisType === 'category'
                 // Give [Infinity, -Infinity] extent to make the unionExtent is right
-                ? new OrdinalScale(axisModel.getData(), [Infinity, -Infinity])
+                ? new OrdinalScale(axisModel.get('data'), [Infinity, -Infinity])
                 : new IntervalScale();
         }
     }

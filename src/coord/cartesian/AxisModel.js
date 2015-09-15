@@ -21,44 +21,7 @@ define(function(require) {
         /**
          * @type {module:echarts/coord/cartesian/Axis2D}
          */
-        axis: null,
-
-        /**
-         * @override
-         */
-        init: function () {
-            ComponentModel.prototype.init.call(this);
-
-            var data = this.getData();
-            if (data) {
-                // FIXME
-                // clone?
-                /**
-                 * @type {Array}
-                 * @private
-                 */
-                this._dataBeforeProcessing = data.slice();
-            }
-        },
-
-        /**
-         * @public
-         * @return {Array=} data Can be null
-         */
-        getData: function () {
-            return this.get('data');
-        },
-
-        /**
-         * @override
-         */
-        restoreData: function () {
-            // FIXME
-            // clone?
-            if (this._dataBeforeProcessing) {
-                this.option.data = this._dataBeforeProcessing.slice();
-            }
-        }
+        axis: null
     });
 
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));

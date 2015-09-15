@@ -19,44 +19,7 @@ define(function(require) {
         /**
          * @type {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
          */
-        axis: null,
-
-        /**
-         * @override
-         */
-        init: function () {
-            ComponentModel.prototype.init.call(this);
-
-            var data = this.getData();
-            if (data) {
-                // FIXME
-                // clone?
-                /**
-                 * @type {Array}
-                 * @private
-                 */
-                this._dataBeforeProcessing = data.slice();
-            }
-        },
-
-        /**
-         * @public
-         * @return {Array=} data Can be null
-         */
-        getData: function () {
-            return this.get('data');
-        },
-
-        /**
-         * @override
-         */
-        restoreData: function () {
-            // FIXME
-            // clone?
-            if (this._dataBeforeProcessing) {
-                this.option.data = this._dataBeforeProcessing.slice();
-            }
-        }
+        axis: null
     });
 
     zrUtil.merge(PolarAxisModel.prototype, require('../axisModelCommonMixin'));

@@ -82,21 +82,21 @@ define(function (require) {
     function calculateDataExtent(dimNames, axisModel, seriesModels) {
         var dataExtent = [Number.MAX_VALUE, Number.MIN_VALUE];
 
-        if (axisModel.get('type') === 'category') {
-            // Only category axis has property 'data's.
-            var axisData = axisModel.getData() || [];
-            dataExtent = [0, axisData.length];
-        }
-        else {
-            zrUtil.each(seriesModels, function (seriesModel) {
-                var seriesData = seriesModel.getData();
-                if (seriesData) {
-                    var seriesExtent = seriesData.getDataExtent(dimNames.dim);
-                    seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
-                    seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
-                }
-            }, this);
-        }
+        // if (axisModel.get('type') === 'category') {
+        //     // Only category axis has property 'data's.
+        //     var axisData = axisModel.getData() || [];
+        //     dataExtent = [0, axisData.length];
+        // }
+        // else {
+        zrUtil.each(seriesModels, function (seriesModel) {
+            var seriesData = seriesModel.getData();
+            if (seriesData) {
+                var seriesExtent = seriesData.getDataExtent(dimNames.dim);
+                seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
+                seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
+            }
+        }, this);
+        // }
 
         return dataExtent;
     }
