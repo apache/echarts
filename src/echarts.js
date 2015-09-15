@@ -939,7 +939,7 @@ define(function (require) {
                 return this._setOption(option, notMerge);
             }
             else {
-                return this._setTimelineOption(option);
+                return this._setTimelineOption(option, notMerge);
             }
         },
 
@@ -1054,7 +1054,11 @@ define(function (require) {
          * timelineOption接口，配置图表实例任何可配置选项
          * @param {Object} option
          */
-        _setTimelineOption: function(option) {
+        _setTimelineOption: function(option, notMerge) {
+        	if (notMerge) {
+                this._setOption(option.options[0],true,false);
+            }
+        	
             this._timeline && this._timeline.dispose();
             var Timeline = require('./component/timeline');
             var timeline = new Timeline(
