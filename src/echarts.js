@@ -1055,7 +1055,7 @@ define(function (require) {
          * @param {Object} option
          */
         _setTimelineOption: function(option, notMerge) {
-        	if (notMerge) {
+            if (notMerge) {
                 this._setOption(option.options[0],true,false);
             }
         	
