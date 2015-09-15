@@ -71,6 +71,9 @@ define(function (require) {
         self._dispatchHoverLink = function(param) {
             return self.__dispatchHoverLink(param);
         };
+        self._dispatchMouseOut = function(param) {
+            return self.__dispatchMouseOut(param);
+        };
         
         this._colorIndex = 0;
         this._colorMap = {};
@@ -226,6 +229,7 @@ define(function (require) {
                 if (this.legendOption.selectedMode) {
                     itemShape.onclick = textShape.onclick = this._legendSelected;
                     itemShape.onmouseover =  textShape.onmouseover = this._dispatchHoverLink;
+                    itemShape.onmouseout =  textShape.onmouseout = this._dispatchMouseOut;
                     itemShape.hoverConnect = textShape.id;
                     textShape.hoverConnect = itemShape.id;
                 }
@@ -633,6 +637,21 @@ define(function (require) {
         __dispatchHoverLink : function(param) {
             this.messageCenter.dispatch(
                 ecConfig.EVENT.LEGEND_HOVERLINK,
+                param.event,
+                {
+                    target: param.target._name
+                },
+                this.myChart
+            );
+            return;
+        },
+        
+        /**
+         * 产生mouseout事件 
+         */
+        __dispatchMouseOut : function(param) {
+            this.messageCenter.dispatch(
+                ecConfig.EVENT.LEGEND_MOUSEOUT,
                 param.event,
                 {
                     target: param.target._name

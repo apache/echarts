@@ -189,6 +189,7 @@ define(function() {
             DATA_RANGE_HOVERLINK: 'dataRangeHoverLink',
             LEGEND_SELECTED: 'legendSelected',
             LEGEND_HOVERLINK: 'legendHoverLink',
+            LEGEND_MOUSEOUT: 'legendMouseOut',
             MAP_SELECTED: 'mapSelected',
             PIE_SELECTED: 'pieSelected',
             MAGIC_TYPE_CHANGED: 'magicTypeChanged',
