@@ -41,6 +41,7 @@ define(function (require) {
                 dimensionInfo = {
                     name: dimensionName,
                     // Type can be 'float', 'int', 'number'
+                    // Default is number, Precision of float may not enough
                     type: 'number'
                 };
             }
@@ -222,13 +223,11 @@ define(function (require) {
         var value = storage[dim] && storage[dim][dataIndex];
         if (stack && this.stackedOn) {
             var stackedValue = this.stackedOn.get(dim, idx, stack);
-            // Ignore the empty data
-            if (!isNaN(stackedValue)) {
-                if (value >= 0 && stackedValue > 0 // Positive stack
-                   || (value <= 0 && stackedValue < 0) // Negative stack
-                ) {
-                    value += stackedValue;
-                }
+            // Considering positive stack, negative stack and empty data
+            if ((value >= 0 && stackedValue > 0)  // Positive stack
+                || (value <= 0 && stackedValue < 0) // Negative stack
+            ) {
+                value += stackedValue;
             }
         }
         return value;
@@ -358,11 +357,11 @@ define(function (require) {
         for (var i = 0; i < indices.length; i++) {
             if (dimSize === 0) {
                 // FIXME Pass value as parameter ?
-                cb && cb.call(context, i);
+                cb.call(context, i);
             }
             // Simple optimization
             else if (dimSize === 1) {
-                cb && cb.call(context, this.get(dimensions[0], i, firstDimStack), i);
+                cb.call(context, this.get(dimensions[0], i, firstDimStack), i);
             }
             else {
                 for (var k = 0; k < dimSize; k++) {
@@ -401,7 +400,7 @@ define(function (require) {
             var keep;
             // Simple optimization
             if (dimSize === 1) {
-                keep = cb && cb.call(
+                keep = cb.call(
                     context, this.get(dimensions[0], i, firstDimStack), i
                 );
             }
