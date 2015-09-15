@@ -10,20 +10,17 @@ define(function (require) {
 
     /**
      * @alias module:echarts/coord/scale/Ordinal
-     * @param {Array} list
+     * @param {Array} data
+     * @param {Array.<number>} extent
      */
-    var OrdinalScale = function (list) {
-        this._list = [];
+    var OrdinalScale = function (data, extent) {
+        this._data = data;
         /**
-         * Extent of ordianl is the extent of rank
-         * Default is 0...len(list)-1
+         * Extent of ordinal is the extent of rank
+         * Default is 0...len(data)-1
          * @type {Array.<number>}
          */
-        this._extent = [0, 0];
-
-        if (list) {
-            this.setExtentFromData(list);
-        }
+        this._extent = extent || [0, data.length - 1];
     };
 
     OrdinalScale.prototype = {
@@ -38,7 +35,7 @@ define(function (require) {
          */
         contain: function (rank) {
             var extent = this._extent;
-            return rank >= extent[0] && rank <= extent[1] && this._list[rank] != null;
+            return rank >= extent[0] && rank <= extent[1] && this._data[rank] != null;
         },
 
         /**
@@ -66,10 +63,14 @@ define(function (require) {
 
         /**
          * Set extent from data
+         * @param {Array.<number>} other
          */
-        setExtentFromData: function (list) {
-            this._list = list;
-            this._extent = [0, list.length - 1];
+        unionExtent: function (other) {
+            var extent = this._extent;
+            other[0] < extent[0] && (extent[0] = other[0]);
+            other[1] > extent[1] && (extent[1] = other[1]);
+
+            this.setExtent(extent[0], extent[1]);
         },
 
         /**
@@ -81,14 +82,18 @@ define(function (require) {
         },
 
         /**
-         * Set extent. Given extent will intersect with default extent 0...len(list)-1
+         * Set extent. Given extent will intersect with default extent 0...len(data)-1
          * @param {number} start
          * @param {number} end
          */
         setExtent: function (start, end) {
             var thisExtent = this._extent;
-            thisExtent[0] = Math.max(start, 0);
-            thisExtent[1] = Math.min(end, this._list.length - 1);
+            if (start != null) {
+                thisExtent[0] = Math.max(start, 0);
+            }
+            if (end != null) {
+                thisExtent[1] = Math.min(end, this._data.length - 1);
+            }
         },
 
         /**
@@ -116,7 +121,7 @@ define(function (require) {
             var rank = extent[0];
 
             while (rank <= extent[1]) {
-                labels.push(this._list[rank]);
+                labels.push(this._data[rank]);
                 rank++;
             }
             return labels;
@@ -133,7 +138,7 @@ define(function (require) {
          * Get item on rank n
          */
         getLabel: function (n) {
-            return this._list[n];
+            return this._data[n];
         },
 
         // Do nothing

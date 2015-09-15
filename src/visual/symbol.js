@@ -1,31 +1,33 @@
 define(function (require) {
 
     return function (seriesType, defaultSymbolType, legendSymbol, ecModel, api) {
-        ecModel.eachSeriesByType(seriesType, function (scatterSeries) {
-            var symbolType = scatterSeries.get('symbol') || defaultSymbolType;
-            var symbolSize = scatterSeries.get('symbolSize');
-            scatterSeries.setVisual({
+        ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+            var data = seriesModel.getData();
+
+            var symbolType = seriesModel.get('symbol') || defaultSymbolType;
+            var symbolSize = seriesModel.get('symbolSize');
+
+            data.setVisual({
                 legendSymbol: legendSymbol || symbolType,
                 symbol: symbolType,
                 symbolSize: symbolSize
             });
 
-            var data = scatterSeries.getData();
-            data.each(function (dataItem) {
-                var symbolType = dataItem.get('symbol');
-                var symbolSize = dataItem.get('symbolSize');
-                if (typeof symbolSize === 'function') {
-                    var rawValue = dataItem.get('value');
-                    dataItem.setVisual({
-                        symbol: symbolType,
-                        symbolSize: symbolSize(rawValue)
-                    });
-                }
-                else if (symbolType && symbolType !== 'none') {
-                    dataItem.setVisual({
-                        symbol: symbolType,
-                        symbolSize: symbolSize
-                    });
+            if (typeof symbolSize === 'function') {
+                data.each(function (idx) {
+                    var rawValue = data.getRawValue(idx);
+                    data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue))
+                });
+            }
+            data.each(function (idx) {
+                var itemModel = data.getItemModel(idx);
+                var symbolType = itemModel.get('symbol', true);
+                var symbolSize = itemModel.get('symbolSize', true);
+                if (symbolType != null && symbolType !== 'none') {
+                    data.setItemVisual(idx, 'symbol', symbolType);
+                    if (symbolSize != null) {
+                        data.setItemVisual(idx, 'symbolSize', symbolSize);
+                    }
                 }
             });
         });

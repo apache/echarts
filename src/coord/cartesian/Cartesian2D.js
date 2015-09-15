@@ -25,15 +25,15 @@ define(function(require) {
         /**
          * Convert series data to a list of points
          * @param {module:echarts/data/List} data
+         * @param {boolean} stack
          * @return {Array}
          *  Return list of coordinates. For example:
          *  `[[10, 10], [20, 20], [30, 30]]`
          */
-        dataToPoints: function (data) {
-            return data.map(function (dataItem) {
-                // PENDGING `MUST` Stack ?
-                return this.dataToPoint([dataItem.getX(true), dataItem.getY(true)]);
-            }, this);
+        dataToPoints: function (data, stack) {
+            return data.map(['x', 'y'], function (x, y) {
+                return this.dataToPoint([x, y]);
+            }, stack, this);
         },
 
         /**

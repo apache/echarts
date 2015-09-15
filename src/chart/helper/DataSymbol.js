@@ -8,15 +8,18 @@ define(function (require) {
         return dataItem.__symbolEl;
     }
 
-    function createSymbol(dataItem, enableAnimation) {
-        var layout = dataItem.layout;
-        var color = dataItem.getVisual('color');
+    function createSymbol(data, idx, enableAnimation) {
+        var point = data.getItemLayout(idx);
+        var color = data.getItemVisual(idx, 'color');
 
-        var symbolSize = dataItem.getVisual('symbolSize');
-        var symbolType = dataItem.getVisual('symbol') || 'circle';
-        var symbolEl = symbolCreators.createSymbol(symbolType, -0.5, -0.5, 1, 1, color);
+        var symbolSize = data.getItemVisual(idx, 'symbolSize');
+        var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
 
-        symbolEl.position = [layout.x, layout.y];
+        var symbolEl = symbolCreators.createSymbol(
+            symbolType, -0.5, -0.5, 1, 1, color
+        );
+
+        symbolEl.position = point;
 
         if (enableAnimation) {
 
@@ -67,33 +70,33 @@ define(function (require) {
         updateData: function (data, enableAnimation) {
 
             var group = this.group;
+            var oldData = this._data;
 
-            data.diff(this._data)
-                .add(function (dataItem) {
+            data.diff(oldData)
+                .add(function (newIdx) {
                     // 空数据
                     // TODO
-                    if (dataItem.getValue() == null) {
+                    if (!data.hasValue(newIdx)) {
                         return;
                     }
 
-                    var symbolShape = createSymbol(dataItem, enableAnimation);
+                    var symbolEl = createSymbol(data, newIdx, enableAnimation);
 
-                    dataItem.__symbolEl = symbolShape;
+                    data.setItemGraphicEl(newIdx, symbolEl);
 
                     // Attach data on the el
-                    symbolShape.data = dataItem;
+                    symbolEl.dataIndex = newIdx;
 
-                    group.add(symbolShape);
+                    group.add(symbolEl);
                 })
-                .update(function (newData, oldData) {
-                    var symbolSize = newData.getVisual('symbolSize');
-                    var layout = newData.layout;
-                    var el = oldData.__symbolEl;
+                .update(function (newIdx, oldIdx) {
+                    var symbolSize = data.getItemVisual(newIdx, 'symbolSize');
+                    var point = data.getItemLayout(newIdx);
+                    var el = oldData.getItemGraphicEl(oldIdx);
 
                     // 空数据
                     // TODO
-                    if (newData.getValue() == null) {
-                        group.remove(el);
+                    if (!data.hasValue(newIdx)) {
                         return;
                     }
 
@@ -101,49 +104,47 @@ define(function (require) {
                     if (enableAnimation) {
                         el.animateTo({
                             scale: [symbolSize, symbolSize],
-                            position: [layout.x, layout.y]
+                            position: point
                         }, 300, 'cubicOut');
                     }
                     else {
                         el.attr({
                             scale: [symbolSize, symbolSize],
-                            position: [layout.x, layout.y]
+                            position: point
                         });
                     }
 
-                    newData.__symbolEl = el;
+                    data.setItemGraphicEl(newIdx, el);
+                    data.dataIndex = newIdx;
 
                     // Add back
                     group.add(el);
                 })
-                .remove(function (dataItem) {
-                    var el = dataItem.__symbolEl;
-                    if (el) {
-                        if (enableAnimation) {
-                            el.animateTo({
-                                scale: [0, 0]
-                            }, 200, 'cubicOut', function () {
-                                group.remove(el);
-                            });
-                        }
-                        else {
+                .remove(function (oldIdx) {
+                    var el = oldData.getItemGraphicEl(oldIdx);
+                    if (enableAnimation) {
+                        el.animateTo({
+                            scale: [0, 0]
+                        }, 200, 'cubicOut', function () {
                             group.remove(el);
-                        }
+                        });
+                    }
+                    else {
+                        group.remove(el);
                     }
                 })
                 .execute();
 
             // Update common properties
-            data.each(function (dataItem) {
-                var el = dataItem.__symbolEl;
+            data.eachItemGraphicEl(function (el, idx) {
                 el.z = this.z;
 
                 zrUtil.extend(
                     el.style,
-                    dataItem.getModel('itemStyle.normal').getItemStyle()
+                    data.getItemModel(idx).getModel('itemStyle.normal').getItemStyle()
                 );
 
-                var symbolSize = dataItem.getVisual('symbolSize');
+                var symbolSize = data.getItemVisual(idx, 'symbolSize');
                 // Adjust the line width
                 el.__lineWidth = el.__lineWidth || el.style.lineWidth;
                 el.style.lineWidth = el.__lineWidth / symbolSize;
@@ -155,14 +156,18 @@ define(function (require) {
         remove: function (enableAnimation) {
             if (this._data) {
                 var group = this.group;
-                this._data.each(function (dataItem) {
-                    var el = dataItem.__symbolEl;
-                    el.animateTo({
-                        scale: [0, 0]
-                    }, 200, 'cubicOut', function () {
-                        group.remove(el);
+                if (enableAnimation) {
+                    this._data.eachItemGraphicEl(function (el) {
+                        el.animateTo({
+                            scale: [0, 0]
+                        }, 200, 'cubicOut', function () {
+                            group.remove(el);
+                        });
                     });
-                });
+                }
+                else {
+                    group.removeAll();
+                }
             }
         }
     }

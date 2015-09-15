@@ -12,8 +12,9 @@ define(function (require) {
     require('../echarts').registerLayout(zrUtil.curry(barLayoutGrid, 'bar'));
     // Visual coding for legend
     require('../echarts').registerVisualCoding(function (ecModel) {
-        ecModel.eachSeriesByType('bar', function (seriesSymbol) {
-            seriesSymbol.setVisual('legendSymbol', 'roundRect');
+        ecModel.eachSeriesByType('bar', function (seriesModel) {
+            var data = seriesModel.getData();
+            data.setVisual('legendSymbol', 'roundRect');
         });
     });
 });

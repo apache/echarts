@@ -11,7 +11,7 @@ define(function(require) {
         type: 'grid',
 
         render: function (gridModel, ecModel, api) {
-            this.group.clear();
+            this.group.removeAll();
             if (gridModel.get('show')) {
                 this.group.add(new api.Rect({
                     shape:gridModel.coordinateSystem.getRect(),

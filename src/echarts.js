@@ -121,6 +121,7 @@ define(function (require) {
         },
 
         setOption: function (option, notMerge) {
+            // PENDING
             option = zrUtil.clone(option, true);
 
             var ecModel = this._model;
@@ -332,12 +333,10 @@ define(function (require) {
             ecModel.eachSeries(function (series) {
                 var stack = series.get('stack');
                 var data = series.getData();
-                if (stack && data.type === 'list' && data.dimensions.length === 1) {
+                if (stack && data.type === 'list') {
                     var previousStack = stackedDataMap[stack];
                     if (previousStack) {
-                        data.each(function (dataItem, idx) {
-                            dataItem.stackedOn = previousStack.at(idx);
-                        });
+                        data.stackedOn = previousStack;
                     }
                     stackedDataMap[stack] = data;
                 }

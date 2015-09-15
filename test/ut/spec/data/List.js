@@ -10,7 +10,7 @@ describe('List', function () {
 
         function testCase(name, doTest) {
             it(name, function (done) {
-                window.require(['echarts/data/LargeList'], function () {
+                window.require(['echarts/data/List'], function () {
                     doTest.apply(null, arguments);
                     done();
                 });
@@ -46,8 +46,8 @@ describe('List', function () {
                 value: 2,
                 somProp: 'foo'
             }]);
-            expect(list.getDataModel(1).get('somProp')).toEqual('foo');
-            expect(list.getDataModel(0).get('somProp')).toBeNull();
+            expect(list.getItemModel(1).get('somProp')).toEqual('foo');
+            expect(list.getItemModel(0).get('somProp')).toBeNull();
         });
 
         testCase('Empty data', function (List) {
@@ -67,6 +67,39 @@ describe('List', function () {
             expect(list2.get('y', 1, true)).toEqual(2);
             expect(list2.get('y', 2, true)).toEqual(5);
             expect(list2.get('y', 3, true)).toEqual(2);
+        });
+
+        testCase('getRawValue', function (List) {
+            var list = new List(['x', 'y']);
+            list.initData([1, 2, 3]);
+            expect(list.getRawValue(1)).toEqual(2);
+
+            list.initData([[10, 15], [20, 25], [30, 35]]);
+            expect(list.getRawValue(1)).toEqual([20, 25]);
+        });
+
+        testCase('getDataExtent', function (List) {
+            var list = new List(['x', 'y']);
+            list.initData([1, 2, 3]);
+            expect(list.getDataExtent('x')).toEqual([0, 2]);
+            expect(list.getDataExtent('y')).toEqual([1, 3]);
+        });
+
+        testCase('Data types', function (List) {
+            var list = new List([{
+                name: 'name',
+                type: 'string'
+            }, {
+                name: 'x',
+                type: 'int'
+            }, {
+                name: 'y',
+                type: 'float'
+            }]);
+            list.initData([['foo', 1.1, 1.1]]);
+            expect(list.get('name', 0)).toEqual('foo');
+            expect(list.get('x', 0)).toEqual(1);
+            expect(list.get('y', 0)).toBeCloseTo(1.1, 5);
         });
 
         testCase('map', function (List) {

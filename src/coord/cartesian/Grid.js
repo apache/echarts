@@ -24,7 +24,8 @@ define(function(require, factory) {
         var axisType = axisModel.get('type');
         if (axisType) {
             return axisType === 'category'
-                ? new OrdinalScale(axisModel.getData())
+                // Give [Infinity, -Infinity] extent to make the unionExtent is right
+                ? new OrdinalScale(axisModel.getData(), [Infinity, -Infinity])
                 : new IntervalScale();
         }
     }
@@ -250,8 +251,6 @@ define(function(require, factory) {
          * @private
          */
         _updateCartesianFromSeries: function (ecModel, gridModel) {
-            var axisDataMap = {};
-
             ecModel.eachSeries(function (seriesModel) {
                 if (seriesModel.get('coordinateSystem') === 'cartesian2d') {
                     var xAxisIndex = seriesModel.get('xAxisIndex');
@@ -267,68 +266,31 @@ define(function(require, factory) {
                     }
 
                     var cartesian = this.getCartesian(xAxisIndex, yAxisIndex);
-                    var axisData = axisDataMap[cartesian.name];
-                    if (! axisData) {
-                        axisData = axisDataMap[cartesian.name] = {
-                            x: [],
-                            y: [],
-                            cartesian: cartesian,
-                            xModel: xAxisModel,
-                            yModel: yAxisModel
-                        };
-                    }
 
                     var data = seriesModel.getData();
                     if (data.type === 'list') {
-                        var categoryAxis = cartesian.getAxesByScale('ordinal')[0];
-                        if (! categoryAxis) {
-                            data.eachY(function (value) {
-                                axisData.y.push(value);
-                            });
-                            data.eachX(function (value) {
-                                axisData.x.push(value);
-                            });
-                        }
-                        else {
-                            data.eachValue(function (value) {
-                                if (value != null) {
-                                    axisData[categoryAxis.dim === 'y' ? 'x' : 'y'].push(value);
-                                }
-                            }, true);
-                        }
+                        var xAxis = cartesian.getAxis('x');
+                        var yAxis = cartesian.getAxis('y');
+                        xAxis.scale.unionExtent(
+                            data.getDataExtent('x', xAxis.scale.type !== 'ordinal')
+                        );
+                        yAxis.scale.unionExtent(
+                            data.getDataExtent('y', yAxis.scale.type !== 'ordinal')
+                        );
+
+                        niceScaleExent(xAxis, xAxisModel);
+                        niceScaleExent(yAxis, yAxisModel);
                     }
                 }
             }, this);
 
-            zrUtil.each(axisDataMap, function (axisData) {
-                var cartesian = axisData.cartesian;
-                var xAxis = cartesian.getAxis('x');
-                var yAxis = cartesian.getAxis('y');
-                if (axisData.x.length) {
-                    var xModel = axisData.xModel;
-                    if (xModel.get('scale')) {
-                        axisData.x.push(0);
-                    }
-                    xAxis.scale.setExtentFromData(axisData.x);
-
-                    niceScaleExent(xAxis, xModel);
-                }
-                if (axisData.y.length) {
-                    var yModel = axisData.yModel;
-                    if (yModel.get('scale')) {
-                        axisData.y.push(0);
-                    }
-                    yAxis.scale.setExtentFromData(axisData.y);
-
-                    niceScaleExent(yAxis, yModel);
-                }
-            });
-
             function niceScaleExent(axis, model) {
+                if (axis.scale.type === 'ordinal') {
+                    return;
+                }
                 var min = model.get('min');
                 var max = model.get('max');
                 axis.scale.setExtent(min, max);
-
                 axis.scale.niceExtent(model.get('splitNumber'), !!min, !!max);
             }
         }

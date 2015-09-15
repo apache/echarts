@@ -34,12 +34,12 @@ define(function (require) {
         var dataExtent = calculateDataExtent(dimNames, axisModel, seriesModels);
         var dataWindow = calculateDataWindow(axisModel, dataZoomModel, dataExtent, isCategoryFilter);
 
-        if (isCategoryFilter) {
-            var axisData = axisModel.getData();
+        // if (isCategoryFilter) {
+            // var axisData = axisModel.getData();
             // FIXME
             // setter?
-            axisData = axisModel.option.data = axisData.slice(dataWindow[0], dataWindow[1] + 1);
-        }
+            // axisData = axisModel.option.data = axisData.slice(dataWindow[0], dataWindow[1] + 1);
+        // }
 
         // Process series data
         zrUtil.each(seriesModels, function (seriesModel) {
@@ -50,22 +50,25 @@ define(function (require) {
                 return;
             }
 
-            if (isCategoryFilter) {
-                seriesData.filterSelf(function (entry) {
-                    var dataIndex = entry[dimNames.getter]();
-                    var reserve = dataIndex >= dataWindow[0] && dataIndex <= dataWindow[1];
-                    if (reserve) {
-                        entry.setDataIndex(dataIndex - dataWindow[0]);
-                    }
-                    return reserve;
-                });
-            }
-            else {
-                seriesData.filterSelf(function (entry) {
-                    var value = entry[dimNames.getter]();
-                    return value >= dataWindow[0] && value <= dataWindow[1];
-                });
-            }
+            // if (isCategoryFilter) {
+            //     seriesData.filterSelf(function (entry) {
+            //         var dataIndex = entry[dimNames.getter]();
+            //         var reserve = dataIndex >= dataWindow[0] && dataIndex <= dataWindow[1];
+            //         if (reserve) {
+            //             entry.setDataIndex(dataIndex - dataWindow[0]);
+            //         }
+            //         return reserve;
+            //     });
+            // }
+            // else {
+            //     seriesData.filterSelf(function (entry) {
+            //         var value = entry[dimNames.getter]();
+            //         return value >= dataWindow[0] && value <= dataWindow[1];
+            //     });
+            // }
+            seriesData.filterSelf(dimNames.dim, function (value) {
+                return value >= dataWindow[0] && value <= dataWindow[1];
+            });
 
             // FIXME
             // 对于value轴的过滤（另一个轴是category），效果有问题，现在简单去除节点不行。
@@ -88,7 +91,7 @@ define(function (require) {
             zrUtil.each(seriesModels, function (seriesModel) {
                 var seriesData = seriesModel.getData();
                 if (seriesData) {
-                    var seriesExtent = seriesData[dimNames.extentGetter]();
+                    var seriesExtent = seriesData.getDataExtent(dimNames.dim);
                     seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
                     seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
                 }

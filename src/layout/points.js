@@ -1,20 +1,17 @@
 define(function (require) {
+
     return function (seriesType, ecModel, api) {
         ecModel.eachSeriesByType(seriesType, function (lineSeries) {
             var data = lineSeries.getData();
-            var coords = lineSeries.coordinateSystem.dataToPoints(data);
+            var coordSys = lineSeries.coordinateSystem;
 
-            data.each(function (dataItem, idx) {
-                var coord = coords[idx];
-                var value = dataItem.getValue();
-
-                if (value != null) {
-                    dataItem.layout = {
-                        x: coord[0],
-                        y: coord[1]
-                    };
+            var dims = coordSys.type === 'cartesian2d' ? ['x', 'y'] : ['radius', 'angle'];
+            data.each(dims, function (x, y, idx) {
+                if (!isNaN(y) && !isNaN(x)) {
+                    var point = coordSys.dataToPoint([x, y]);
+                    data.setItemLayout(idx, point);
                 }
-            });
+            }, true);
         });
     }
 });

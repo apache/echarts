@@ -31,13 +31,6 @@ define(function (require) {
         constructor: Model,
 
         /**
-         * visual properties after visual coding
-         * @type {Object}
-         * @private
-         */
-        _visual: null,
-
-        /**
          * Model 的初始化函数
          * @param {Object} option
          */
@@ -52,9 +45,10 @@ define(function (require) {
 
         /**
          * @param {string} path
+         * @param {boolean} [ignoreParent=false]
          * @return {*}
          */
-        get: function (path) {
+        get: function (path, ignoreParent) {
             if (! path) {
                 return this.option;
             }
@@ -70,7 +64,7 @@ define(function (require) {
                     break;
                 }
             }
-            if (obj == null && this.parentModel) {
+            if (obj == null && this.parentModel && !ignoreParent) {
                 return this.parentModel.get(path);
             }
             return obj;
@@ -84,45 +78,6 @@ define(function (require) {
             var obj = this.get(path);
             var parentModel = this.parentModel;
             return new Model(obj, parentModel && parentModel.getModel(path));
-        },
-
-        /**
-         * Get visual property.
-         */
-        getVisual: function (key) {
-            var visual = this._visual;
-            var val = visual && visual[key];
-            var parentModel = this.parentModel;
-            if (val == null && parentModel) {
-                return parentModel.getVisual(key);
-            }
-            return val;
-        },
-
-        /**
-         * Set visual property
-         *
-         * @example
-         *  setVisual('color', color);
-         *  setVisual({
-         *      'color': color
-         *  });
-         */
-        setVisual: function (key, val) {
-            if (typeof (key) === 'object') {
-                for (var name in key) {
-                    if (key.hasOwnProperty(name)) {
-                        this.setVisual(name, key[name]);
-                    }
-                }
-                return;
-            }
-            this._visual = this._visual || {};
-            this._visual[key] = val;
-        },
-
-        clearVisual: function () {
-            this._visual = null;
         },
 
         restoreData: function () {},

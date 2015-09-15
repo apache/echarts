@@ -16,7 +16,7 @@ define(function (require) {
      * @param {Array.<number>} data
      * @constructor
      */
-    var IntervalScale = function (data) {
+    var IntervalScale = function () {
 
         /**
          * Extent
@@ -24,10 +24,6 @@ define(function (require) {
          * @private
          */
         this._extent = [Infinity, -Infinity];
-
-        if (data) {
-            this.setExtentFromData(data);
-        }
 
         /**
          * Step is calculated in adjustExtent
@@ -74,22 +70,12 @@ define(function (require) {
 
         /**
          * Set extent from data
-         * @param {Array.<number>} data
-         * @param {boolean} union If union with current extent
+         * @param {Array.<number>} other
          */
-        setExtentFromData: function (data, union) {
+        unionExtent: function (other) {
             var extent = this._extent;
-            var max = union ? extent[1] : -Infinity;
-            var min = union ? extent[0] : Infinity;
-
-            for (var i = 0; i < data.length; i++) {
-                if (data[i] != null) {
-                    data[i] > max && (max = data[i]);
-                    data[i] < min && (min = data[i]);
-                }
-            }
-
-            this.setExtent(min, max);
+            other[0] < extent[0] && (extent[0] = other[0]);
+            other[1] > extent[1] && (extent[1] = other[1]);
         },
 
         /**

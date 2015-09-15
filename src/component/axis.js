@@ -2,6 +2,7 @@
 //      Axis tick interval
 //      Axis name
 //      boundaryGap
+//      Custom label itemStyle
 define(function(require) {
     'use strict';
 
@@ -22,7 +23,7 @@ define(function(require) {
 
         render: function (axisModel, ecModel, api) {
 
-            this.group.clear();
+            this.group.removeAll();
 
             var gridModel = ecModel.getComponent('grid', axisModel.get('gridIndex'));
 

@@ -13,7 +13,7 @@ define(function(require) {
         type: 'radiusAxis',
 
         render: function (radiusAxisModel, ecModel, api) {
-            this.group.clear();
+            this.group.removeAll();
 
             var polarModel = ecModel.getComponent('polar', radiusAxisModel.get('polarIndex'));
             var radiusAxis = radiusAxisModel.axis;
@@ -107,8 +107,8 @@ define(function(require) {
 
             var len = vector.dist(end, start);
             var direction = [
-                start[1] - end[1],
-                end[0] - start[0]
+                end[1] - start[1],
+                start[0] - end[0]
             ];
             vector.normalize(direction, direction);
 
@@ -127,7 +127,7 @@ define(function(require) {
                         y: p[1],
                         text: labels[i],
                         textAlign: 'center',
-                        textBaseline: 'top',
+                        textBaseline: 'bottom',
                         font: textStyleModel.getFont()
                     },
                     silent: true

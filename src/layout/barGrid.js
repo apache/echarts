@@ -148,19 +148,17 @@ define(function(require) {
 
             if (data.type === 'list') {
                 var valueAxisStart = valueAxis.getExtent()[0];
-                var coords = cartesian.dataToPoints(data);
+                var coords = cartesian.dataToPoints(data, true);
                 lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 
-                data.each(function (dataItem, dataIndex) {
-
-                    var value = dataItem.getValue(true);
+                data.each(valueAxis.dim, function (value, idx) {
                     // 空数据
-                    if (value == null) {
+                    if (isNaN(value)) {
                         return;
                     }
 
-                    var coord = coords[dataIndex];
-                    var lastCoord = lastStackCoords[stackId][dataIndex] || valueAxisStart;
+                    var coord = coords[idx];
+                    var lastCoord = lastStackCoords[stackId][idx] || valueAxisStart;
                     var x, y, width, height;
                     if (valueAxis.isHorizontal()) {
                         x = Math.min(lastCoord, coord[0]);
@@ -176,15 +174,15 @@ define(function(require) {
                         height = Math.abs(coord[1] - lastCoord);
                         lastCoord += coord[1] - lastCoord;
                     }
-                    lastStackCoords[stackId][dataIndex] = lastCoord;
+                    lastStackCoords[stackId][idx] = lastCoord;
 
-                    dataItem.layout = {
+                    data.setItemLayout(idx, {
                         x: x,
                         y: y,
                         width: width,
                         height: height
-                    };
-                });
+                    });
+                }, true);
             }
         }, this);
     }

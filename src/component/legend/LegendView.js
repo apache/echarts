@@ -25,7 +25,7 @@ define(function (require) {
             var orient = legendModel.get('orient');
 
             var group = this.group;
-            group.clear();
+            group.removeAll();
 
             group.position = [
                 numberUtil.parsePercent(
@@ -42,20 +42,21 @@ define(function (require) {
             var width = 20;
             var height = 10;
 
-            legendModel.getData().each(function (dataItem) {
-                var seriesName = dataItem.name;
+            zrUtil.each(legendModel.getData(), function (itemModel) {
+                var seriesName = itemModel.get('name');
                 var seriesModel = ecModel.getSeriesByName(seriesName, true);
+                var data = seriesModel.getData();
                 var color = legendModel.isSelected(seriesName)
-                    ? seriesModel.getVisual('color')
+                    ? data.getVisual('color')
                     : '#ccc';
 
                 var legendSymbol = this._createSymbol(
-                    seriesModel, x, y, width, height, color, api
+                    data, x, y, width, height, color, api
                 );
 
                 var text = new api.Text({
                     style: {
-                        text: dataItem.name,
+                        text: seriesName,
                         x: x + width + 5,
                         y: y,
                         fill: '#000',
@@ -84,13 +85,13 @@ define(function (require) {
             group.position[0] -= groupRect.width / 2;
         },
 
-        _createSymbol: function (seriesModel, x, y, width, height, color, api) {
+        _createSymbol: function (data, x, y, width, height, color, api) {
 
             var group = new api.Group();
             // Using rect symbol defaultly
-            var legendSymbolType = seriesModel && seriesModel.getVisual('legendSymbol')
+            var legendSymbolType = data && data.getVisual('legendSymbol')
                 || 'roundRect';
-            var symbolType = seriesModel && seriesModel.getVisual('symbol');
+            var symbolType = data && data.getVisual('symbol');
 
             group.add(symbolCreator.createSymbol(
                 legendSymbolType, x, y, width, height, color

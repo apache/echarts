@@ -90,10 +90,6 @@ define(function (require) {
          * @return {number}
          */
         dataToCoord: function (data, clamp) {
-            // PENDING
-            if (data == null || data === '-') {
-                return NaN;
-            }
             data = this.scale.normalize(data);
 
             var extent = this.getExtent();
@@ -163,7 +159,7 @@ define(function (require) {
 
         /**
          * Get bands.
-         * 
+         *
          * If axis has labels [1, 2, 3, 4]. Bands on the axis are
          * |---1---|---2---|---3---|---4---|.
          *

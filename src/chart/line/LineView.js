@@ -37,12 +37,7 @@ define(function(require) {
             var data = seriesModel.getData();
             var lineStyleNormalModel = seriesModel.getModel('itemStyle.normal.lineStyle');
 
-            var points = data.map(function (dataItem) {
-                var layout = dataItem.layout;
-                if (layout) {
-                    return [layout.x, layout.y];
-                }
-            });
+            var points = data.map(data.getItemLayout, true);
             var pointsWithName = data.map(function (dataItem, idx) {
                 return {
                     name: dataItem.name,
@@ -78,7 +73,7 @@ define(function(require) {
                     style: zrUtil.extend(
                         lineStyleNormalModel.getLineStyle(),
                         {
-                            stroke: seriesModel.getVisual('color'),
+                            stroke: data.getVisual('color'),
                             lineJoin: 'bevel'
                         }
                     )

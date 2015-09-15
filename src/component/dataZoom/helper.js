@@ -19,9 +19,7 @@ define(function(require) {
                 axis: axisDim + 'Axis',
                 dim: axisDim,
                 capital: capital,
-                index: axisDim + 'Index',
-                getter: 'get' + capital,
-                extentGetter: 'getExtent' + capital
+                index: axisDim + 'Index'
             };
             callback.call(context, names);
         });

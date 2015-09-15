@@ -66,7 +66,7 @@ define(function (require) {
         if (axisType) {
             return axisType === 'value'
                 ? new IntervalScale()
-                : new OrdinalScale(axisModel.get('data'));
+                : new OrdinalScale(axisModel.get('data'), [Infinity, -Infinity]);
         }
     };
 
@@ -104,19 +104,14 @@ define(function (require) {
 
                 var radiusAxis = polar.getRadiusAxis();
                 var angleAxis = polar.getAngleAxis();
-                var isRadiusCategory = radiusAxis.type === 'category';
-                var isAngleCategory = angleAxis.type === 'category';
 
                 var data = seriesModel.getData();
-                var valueMapper = function (a) {
-                    return a;
-                }
-                if (! isRadiusCategory) {
-                    radiusAxis.scale.setExtentFromData(data.mapRadius(valueMapper, true), true);
-                }
-                if (! isAngleCategory) {
-                    angleAxis.scale.setExtentFromData(data.mapAngle(valueMapper, true), true);
-                }
+                radiusAxis.scale.unionExtent(
+                    data.getDataExtent('radius', radiusAxis.type !== 'category')
+                );
+                angleAxis.scale.unionExtent(
+                    data.getDataExtent('angle', angleAxis.type !== 'category')
+                );
             }
         });
 

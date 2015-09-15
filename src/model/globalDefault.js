@@ -3,10 +3,15 @@ define({
     backgroundColor: 'rgba(0,0,0,0)',
 
     // 默认色板
-    color: ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
-            '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
-            '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
-            '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'],
+    // color: ['#ff7f50','#87cefa','#da70d6','#32cd32','#6495ed',
+    //         '#ff69b4','#ba55d3','#cd5c5c','#ffa500','#40e0d0',
+    //         '#1e90ff','#ff6347','#7b68ee','#00fa9a','#ffd700',
+    //         '#6699FF','#ff6666','#3cb371','#b8860b','#30e0e0'],
+
+
+    // https://dribbble.com/shots/1065960-Infographic-Pie-chart-visualization
+    color: ['#5793f3', '#5578c2', '#d4df5a', '#fd9c35', '#fec42c',
+            '#dd4444', '#bd3b47', '#bd3b47', '#cd4870'],
 
     // 默认需要 Grid 配置项
     grid: {},

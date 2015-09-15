@@ -2,8 +2,8 @@ define(function(require) {
 
     'use strict';
 
-    var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
+    var Model = require('../../model/Model');
 
     return require('../../echarts').extendComponentModel({
 
@@ -16,15 +16,14 @@ define(function(require) {
 
             option.selected = option.selected || {};
 
-            var list = new List();
-            zrUtil.each(option.data, function (dataItem) {
+            this._data = zrUtil.map(option.data, function (dataItem) {
                 if (typeof dataItem === 'string') {
                     dataItem = {
                         name: dataItem
                     };
                 }
-                list.add(dataItem, this);
-            });
+                return new Model(dataItem, this);
+            }, this);
 
             /**
              * @type {Array.<string>}
@@ -34,11 +33,10 @@ define(function(require) {
                 return series.name;
             });
 
-            this._data = list;
         },
 
         /**
-         * @return {module:echarts/data/List}
+         * @return {Array.<module:echarts/model/Model>}
          */
         getData: function () {
             return this._data;

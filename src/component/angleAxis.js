@@ -25,7 +25,7 @@ define(function(require) {
         type: 'angleAxis',
 
         render: function (angleAxisModel, ecModel, api) {
-            this.group.clear();
+            this.group.removeAll();
 
             var polarModel = ecModel.getComponent('polar', angleAxisModel.get('polarIndex'));
             var angleAxis = angleAxisModel.axis;

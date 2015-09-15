@@ -45,7 +45,7 @@ define(function (require) {
             this._orient = dataZoomModel.get('orient');
 
             if (!event || event.type !== 'dataZoom' || event.from !== this.uid) {
-                this.group.clear();
+                this.group.removeAll();
 
                 if (this.dataZoomModel.get('show') === false) {
                     return;

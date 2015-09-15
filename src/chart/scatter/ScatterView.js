@@ -12,7 +12,9 @@ define(function (require) {
         },
 
         render: function (seriesModel, ecModel, api) {
-            this._dataSymbol.updateData(seriesModel.getData(), true);
+            this._dataSymbol.updateData(
+                seriesModel.getData(), ecModel.get('animation')
+            );
         },
 
         remove: function () {

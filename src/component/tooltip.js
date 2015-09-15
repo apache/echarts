@@ -53,7 +53,7 @@ define(function (require) {
 
         render: function (tooltipModel, ecModel, api) {
             // Reset
-            this.group.clear();
+            this.group.removeAll();
             this._axisPointers = {};
 
             this._tooltipModel = tooltipModel;

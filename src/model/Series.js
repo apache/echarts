@@ -53,6 +53,9 @@ define(function(require) {
             this._data = this.getInitialData(option, ecModel);
 
             this._dataBeforeProcessing = this._data.cloneShallow();
+
+            this._itemVisuals = [];
+            this._itemLayouts = [];
         },
 
         mergeDefaultAndTheme: function (option, ecModel) {
@@ -77,6 +80,9 @@ define(function(require) {
          */
         getInitialData: function () {},
 
+        /**
+         * @return {module:echarts/data/List|module:echarts/data/Graph|module:echarts/data/Tree}
+         */
         getData: function () {
             return this._data;
         },
@@ -87,7 +93,7 @@ define(function(require) {
          * @param {module:echarts/model/Model} dataItem
          */
         formatTooltipHTML: function (dataItem) {
-            var value = dataItem.get('value');
+            var value = dataItem.getRawValue();
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas) : addCommas(value);
 
@@ -97,10 +103,6 @@ define(function(require) {
         },
 
         restoreData: function () {
-            // PENDING
-            // Legend may have wrong symbol if visual is cleared
-            // this.clearVisual();
-
             this._data = this._dataBeforeProcessing.cloneShallow();
         }
     });

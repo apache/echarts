@@ -1,24 +1,249 @@
-// TODO entry.getLon(), entry.getLat()
-// List supported for cartesian, polar coordinateSystem
-define(function(require) {
-    'use strict';
+/**
+ * List for data storage
+ * @module echarts/data/List
+ */
+define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
+    var UNDEFINED = 'undefined';
+    var global = window;
+    var Float32Array = typeof global.Float32Array === UNDEFINED
+        ? Array : global.Float32Array;
+    var Int32Array = typeof global.Int32Array === UNDEFINED
+        ? Array : global.Int32Array;
+
+    var dataCtors = {
+        float: Float32Array,
+        int: Int32Array,
+        'number': Array
+    }
+
     var Model = require('../model/Model');
     var DataDiffer = require('./DataDiffer');
 
-    var POSSIBLE_DIMENSIONS = ['x', 'y', 'z', 'value', 'radius', 'angle'];
+    var zrUtil = require('zrender/core/util');
+    var isObject = zrUtil.isObject;
 
     /**
-     * Check if two entries has same xIndex, yIndex, zIndex, valueIndex, etc.
-     * @param {module:echarts/data/List~Entry} entry1
-     * @param {module:echarts/data/List~Entry} entry2
-     * @inner
+     * @constructor
+     * @alias module:echarts/data/List
      */
-    function isEntrySameShape(entry1, entry2) {
-        for (var i = 0; i < POSSIBLE_DIMENSIONS.length; i++) {
-            var key = POSSIBLE_DIMENSIONS[i] + 'Index';
-            if (entry1[key] !== entry2[key]) {
+    var List = function (dimensions, seriesModel) {
+
+        dimensions = dimensions || ['x', 'y'];
+
+        var dimensionInfos = [];
+        var dimensionNames = [];
+        for (var i = 0; i < dimensions.length; i++) {
+            var dimensionName;
+            var dimensionInfo = {};
+            if (typeof dimensions[i] === 'string') {
+                dimensionName = dimensions[i];
+                dimensionInfo = {
+                    name: dimensionName,
+                    // Type can be 'float', 'int', 'number'
+                    type: 'number'
+                };
+            }
+            else {
+                dimensionInfo = dimensions[i];
+                dimensionName = dimensionInfo.name;
+                dimensionInfo.type = dimensionInfo.type || 'float'
+            }
+            dimensionNames.push(dimensionName);
+            dimensionInfos.push(dimensionInfo);
+        }
+        /**
+         * @readOnly
+         * @type {Array.<string>}
+         */
+        this.dimensions = dimensionNames;
+
+        /**
+         * Infomation of each data dimension, like data type.
+         */
+        this._dimensionInfos = dimensionInfos;
+
+        /**
+         * @type {module:echarts/model/Model}
+         */
+        this.seriesModel = seriesModel;
+
+        /**
+         * Indices stores the indices of data subset after filtered.
+         * This data subset will be used in chart.
+         * @type {Array.<number>}
+         * @readOnly
+         */
+        this.indices = [];
+
+        /**
+         * Dimensions hint for regenerating the raw value
+         * @type {Array.<string>}
+         */
+        this._rawValueDims = ['x'];
+
+        /**
+         * Data storage
+         * @type {Object.<key, TypedArray|Array>}
+         * @private
+         */
+        this._storage = {};
+
+        /**
+         * Models of data option is stored sparse for optimizing memory cost
+         * @type {Array.<module:echarts/model/Model>}
+         * @private
+         */
+        this._optionModels = [];
+
+        /**
+         * @param {module:echarts/data/List}
+         */
+        this.stackedOn = null;
+
+        /**
+         * Global visual properties after visual coding
+         * @type {Object}
+         * @private
+         */
+        this._visual = {};
+
+        /**
+         * Item visual properties after visual coding
+         * @type {Array.<Object>}
+         * @private
+         */
+        this._itemVisuals = [];
+
+        /**
+         * Item layout properties after layout
+         * @type {Array.<Object>}
+         * @private
+         */
+        this._itemLayouts = [];
+
+        /**
+         * Graphic elemnents
+         * @type {Array.<module:zrender/Element>}
+         * @private
+         */
+        this._graphicEls = [];
+    }
+
+    var listProto = List.prototype;
+
+    listProto.type = 'list';
+
+    /**
+     * Initialize from data
+     */
+    listProto.initData = function (data) {
+        // Clear
+        var optionModels = this._optionModels = [];
+        var storage = this._storage = {};
+        var indices = this.indices = [];
+
+        var dimensions = this.dimensions;
+        var size = data.length;
+
+        // Init storage
+        for (var i = 0; i < dimensions.length; i++) {
+            var dimInfo = this._dimensionInfos[i];
+            var DataCtor = dataCtors[dimInfo.type];
+            storage[dimensions[i]] = new DataCtor(size);
+        }
+
+        // Special storage of indices of option model
+        // It is used for indexing the model in List#_optionModels
+        var optionModelIndices = storage.$optionModelIndices = new Int32Array(size);
+
+        var tempValue = [];
+        var rawValue1D = false;
+        for (var idx = 0; idx < data.length; idx++) {
+            var value = data[idx];
+            // Each data item contains value and option
+            if (data[idx] != null && data[idx].hasOwnProperty('value')) {
+                value = data[idx].value;
+                var model = new Model(data[idx], this.seriesModel);
+                var modelIdx = optionModels.length;
+                optionModelIndices[idx] = modelIdx;
+                optionModels.push(model);
+            }
+            else {
+                // Reference to the undefined
+                optionModelIndices[idx] = -1;
+            }
+            // Bar chart, line chart which uses category axis
+            // only gives the 'y' value. 'x' value is the indices of cateogry
+            if (typeof (value) === 'number') {
+                // Use a tempValue to normalize the value to be a (x, y) value
+                tempValue[0] = idx;
+                tempValue[1] = value;
+                value = tempValue;
+                rawValue1D = true;
+            }
+
+            // Store the data by dimensions
+            for (var k = 0; k < dimensions.length; k++) {
+                var dim = dimensions[k];
+                var dimStorage = storage[dim];
+                var dimValue = value[k];
+                // PENDING NULL is empty or zero
+                if (dimValue == null || dimValue === '-') {
+                    dimValue = NaN;
+                }
+                dimStorage[idx] = dimValue;
+            }
+
+            indices.push(idx);
+        }
+
+        this._rawValueDims = rawValue1D ? dimensions.slice(1, 2) : dimensions.slice();
+    };
+
+    /**
+     * @return {number}
+     */
+    listProto.count = function () {
+        return this.indices.length;
+    };
+
+    /**
+     * Get value
+     * @param {string} dim
+     * @param {number} idx
+     * @param {boolean} stack
+     * @return {number}
+     */
+    listProto.get = function (dim, idx, stack) {
+        var storage = this._storage;
+        var dataIndex = this.indices[idx];
+
+        var value = storage[dim] && storage[dim][dataIndex];
+        if (stack && this.stackedOn) {
+            var stackedValue = this.stackedOn.get(dim, idx, stack);
+            // Ignore the empty data
+            if (!isNaN(stackedValue)) {
+                if (value >= 0 && stackedValue > 0 // Positive stack
+                   || (value <= 0 && stackedValue < 0) // Negative stack
+                ) {
+                    value += stackedValue;
+                }
+            }
+        }
+        return value;
+    };
+
+    /**
+     * If value is NaN. Inlcuding '-'
+     * @param {string} dim
+     * @param {number} idx
+     * @return {number}
+     */
+    listProto.hasValue = function (idx) {
+        var dimensions = this.dimensions;
+        for (var i = 0, len = dimensions.length; i < len; i++) {
+            if (isNaN(this.get(dimensions[i], idx))) {
                 return false;
             }
         }
@@ -26,380 +251,370 @@ define(function(require) {
     }
 
     /**
-     * @name echarts/data/List~Entry
-     * @extends {module:echarts/model/Model}
-     *
-     * @param {Object} option
-     * @param {module:echarts/model/Model} parentModel
-     * @param {number} dataIndex
-     * @param {Array.<string>} [independentVar=['x']]
-     * @param {Array.<string>} [dependentVar='y']
+     * Get extent of data in one dimension
+     * @param {string} dim
+     * @param {boolean} stack
      */
-    var Entry = Model.extend({
-
-        layout: null,
-
-        /**
-         * @type {number}
-         * @protected
-         */
-        xIndex: 0,
-
-        /**
-         * @type {number}
-         * @protected
-         */
-        yIndex: 1,
-
-        /**
-         * @type {number}
-         * @protected
-         */
-        zIndex: -1,
-
-        /**
-         * @type {number}
-         * @protected
-         */
-        radiusIndex: 0,
-
-        /**
-         * @type {number}
-         * @protected
-         */
-        angleIndex: 1,
-
-        /**
-         * @type {number}
-         * @protected
-         */
-        valueIndex: 1,
-
-        /**
-         * @type {module:echarts/data/List~Entry}
-         */
-        stackedOn: null,
-
-        init: function (option, parentModel, rawDataIndex, independentVar, dependentVar) {
-
-            // Normalize option to { value: [] }
-            var value = option.value;
-            // Pending
-            if (value == null
-                && (zrUtil.isArray(option)
-                || typeof (option) === 'number')
-            ) {
-                value = option;
-                option = {
-                    value: option
-                }
+    listProto.getDataExtent = function (dim, stack) {
+        var dimData = this._storage[dim];
+        var min = Infinity;
+        var max = -Infinity;
+        var value;
+        if (dimData) {
+            for (var i = 0, len = this.count(); i < len; i++) {
+                value = this.get(dim, i, stack);
+                value < min && (min = value);
+                value > max && (max = value);
             }
-
-            /**
-             * @type {string}
-             * @memeberOf module:echarts/data/List~Entry
-             * @public
-             */
-            this.name = option.name || '';
-
-            /**
-             * this.option **MUST NOT** be modified in List!
-             * Different lists might share this option instance.
-             *
-             * @readOnly
-             * @type {*}
-             */
-            this.option = option;
-
-            if (value === '-' || value == null) {
-                value = [rawDataIndex, null];
-            }
-            else if (!isNaN(value)) {
-                value = [rawDataIndex, +value];
-                /**
-                 * If dataIndex is persistent in entry, it should be udpated when modifying list.
-                 * So use this.dataIndexIndex to mark that.
-                 *
-                 * @readOnly
-                 * @type {number}
-                 */
-                this.dataIndexIndex = 0;
-            }
-
-            if (independentVar) {
-                for (var i = 0; i < independentVar.length; i++) {
-                    this[independentVar[i] + 'Index'] = i;
-                }
-                this.valueIndex = value.length - 1;
-
-                this[dependentVar + 'Index'] = this.valueIndex;
-            }
-
-            /**
-             * All of the content **MUST NOT** be modified,
-             * (because they are the same instance with option.value)
-             * except this._value[this.dataIndexIndex].
-             *
-             * @type {Array.<number>}
-             * @memeberOf module:echarts/data/List~Entry
-             * @private
-             */
-            this._value = value;
-
-            /**
-             * Data index before modifying list (filterSelf).
-             *
-             * @readOnly
-             */
-            this.rawDataIndex = rawDataIndex;
-        },
-
-        /**
-         * Get raw value which is given by option
-         */
-        getRawValue: function () {
-            return this.get('value') || this.get();
-        },
-
-        setDataIndex: function (index) {
-            if (this.dataIndexIndex != null) {
-                this._value[this.dataIndexIndex] = index;
-            }
-        },
-
-        clone: function (dataIndex, independentVar, dependentVar) {
-            var entry = new Entry(this.option, this.parentModel, dataIndex, independentVar, dependentVar);
-            entry.name = this.name;
-            entry.stackedOn = this.stackedOn;
-
-            return entry;
         }
-    });
+        return [min, max];
+    };
 
-    zrUtil.each(POSSIBLE_DIMENSIONS, function (dim) {
-        var capitalized = dim[0].toUpperCase() + dim.substr(1);
-        var indexKey = dim + 'Index';
-        var getterName = 'get' + capitalized;
-
-        Entry.prototype[getterName] = function (stack) {
-            var index = this[indexKey];
-            if (index >= 0) {
-                var val = this._value[index];
-                var stackedOn = this.stackedOn;
-
-                // Normalize empty value
-                if (val === '-' || val == null) {
-                    val = null;
-                }
-                if (val != null
-                    // Has stack
-                    && stack && stackedOn
-                    // Is getValue
-                    && index === this.valueIndex
-                    // Has same dimensions shape on stack
-                    // PENDING If check the two stacking entries have same shape
-                    && isEntrySameShape(this, stackedOn)
-                ) {
-                    var stackValue = stackedOn[getterName](stack);
-                    if (
-                        // Positive stack
-                        val > 0 && stackValue > 0
-                        // Negative stack
-                        || (val < 0 && stackValue < 0)
-                    ) {
-                        val += stackValue;
-                    }
-                }
-                return val;
+    /**
+     * Get raw value
+     * @param {number} idx
+     * @return {number}
+     */
+    listProto.getRawValue = function (idx) {
+        var rawValueDims = this._rawValueDims;
+        var storage = this._storage;
+        if (rawValueDims.length === 1) {
+            var dimData = storage[rawValueDims[0]];
+            return dimData && dimData[idx];
+        }
+        else {
+            var value = [];
+            for (var i = 0; i < rawValueDims.length; i++) {
+                value[i] = this.get(rawValueDims[i], idx);
             }
-        };
-    });
-
-    function List(dimensions, value) {
-        /**
-         * @readOnly
-         * @type {Array}
-         */
-        this.elements = [];
-
-        /**
-         * @readOnly
-         * @type {Array.<string>}
-         */
-        this.dimensions = dimensions || ['x']
-
-        /**
-         * @readOnly
-         * @type {string}
-         */
-        this.value = value || 'y';
-    }
-
-    List.prototype = {
-
-        constructor: List,
-
-        type: 'list',
-
-        /**
-         * @type {module:echarts/data/List~Entry}
-         */
-        at: function (idx) {
-            return this.elements[idx];
-        },
-
-        /**
-         * Create and add a new entry
-         * @param {Object} option
-         * @param {module:echarts/model/Model} parentModel
-         * @return {module:echarts/data/List~Entry}
-         */
-        add: function (option, parentModel) {
-            var elements = this.elements;
-            var entry = new Entry(option, parentModel, elements.length, this.dimensions, this.value);
-            elements.push(entry);
-            return entry;
-        },
-
-        /**
-         * Get elements count
-         * @return {number}
-         */
-        count: function () {
-            return this.elements.length;
-        },
-
-        /**
-         * Iterate each element
-         * @param {Function} cb
-         * @param {*} context
-         */
-        each: function (cb, context) {
-            zrUtil.each(this.elements, cb, context || this);
-        },
-
-        /**
-         * Map elemements to a new created array
-         * @param {Function} cb
-         * @param {*} context
-         */
-        map: function (cb, context) {
-            var ret = [];
-            var elements = this.elements;
-            context = context || this;
-            for (var i = 0; i < elements.length; i++) {
-                ret.push(cb && cb.call(context, elements[i], i));
-            }
-            return ret;
-        },
-
-        /**
-         * Filter elements in place
-         * @param {Function} cb
-         * @param {*} context
-         */
-        filterSelf: function (cb, context) {
-            this.elements = zrUtil.filter(this.elements, cb, context || this);
-        },
-
-        /**
-         * @return {module:echarts/data/List~Entry}
-         */
-        getByName: function (name) {
-            var elements = this.elements;
-            for (var i = 0; i < elements.length; i++) {
-                if (elements[i].name === name) {
-                    return elements[i];
-                }
-            }
-        },
-
-        /**
-         * Get the diff result with the old list data
-         * @param {module:echarts/data/List} oldList
-         * @return {module:echarts/data/DataDiffer}
-         * @example
-         *  data.diff(this._data)
-         *      .add(function (item) { // Add a new shape})
-         *      .update(function (newItem, oldItem) { // Update the shape})
-         *      .remove(function (item) { // Remove unused shape})
-         *      .execute()
-         */
-        diff: function (oldList) {
-            return new DataDiffer(oldList ? oldList.elements : [], this.elements);
-        },
-
-        /**
-         * Clone a new list and all its' entries
-         * @return {module:echarts/data/List}
-         */
-        clone: function () {
-            var list = new List(this.dimensions, this.value);
-            var elements = this.elements;
-            for (var i = 0; i < elements.length; i++) {
-                list.elements.push(elements[i].clone(i, this.dimensions, this.value));
-            }
-            return list;
-        },
-
-        /**
-         * Clone a new list
-         */
-        cloneShallow: function () {
-            var list = new List(this.dimensions, this.value);
-            list.elements = this.elements.slice();
-            // FIXME
-            // All list have the same entries may have problem
-            // When processor modify the data besides data index
-
-            // Reset data index
-            for (var i = 0; i < list.elements.length; i++) {
-                var el = list.elements[i];
-                // Reset
-                el.setDataIndex(i);
-                el.clearVisual();
-                el.layout = null;
-            }
-            return list;
+            return value;
         }
     };
 
-    zrUtil.each(POSSIBLE_DIMENSIONS, function (dim) {
-        var capitalized = dim[0].toUpperCase() + dim.substr(1);
+    /**
+     * Get raw data index
+     */
+    listProto.getDataIndex = function (idx) {
+        return this.indices[idx];
+    };
 
-        List.prototype['each' + capitalized] = function (cb, stack, context) {
-            this.each(function (item, idx) {
-                cb && cb.call(context || this, item['get' + capitalized](stack));
-            }, context);
-        };
+    function normalizeDimensions(dimensions) {
+        if (typeof (dimensions) === 'string') {
+            dimensions = [dimensions];
+        }
+        return dimensions;
+    }
 
-        List.prototype['map' + capitalized] = function (cb, stack, context) {
-            var ret = [];
-            this.each(function (item) {
-                ret.push(cb && cb.call(context || this, item['get' + capitalized](stack)));
-            }, context);
-            return ret;
-        };
+    function getStackDimMap(stackDim, dimensions) {
+        if (! stackDim) {
+            return {};
+        }
+        if (typeof stackDim === 'string') {
+            stackDim = [stackDim];
+        }
+        var stackDimMap = {};
+        // Avoid get the undefined value
+        for (var i = 0; i < dimensions.length; i++) {
+            stackDimMap[dimensions[i]] = false;
+        }
+        for (var i = 0; i < stackDim.length; i++) {
+            stackDimMap[stackDim[i]] = true;
+        }
+        return stackDimMap;
+    }
+    /**
+     * Data iteration
+     * @param {string|Array.<string>}
+     * @param {Function} cb
+     * @param {boolean} [stack=false]
+     * @param {*} [context=this]
+     *
+     * @example
+     *  list.each('x', function (x, idx) {});
+     *  list.each(['x', 'y'], function (x, y, idx) {});
+     *  list.each(function (idx) {})
+     */
+    listProto.each = function (dimensions, cb, stack, context) {
+        if (typeof dimensions === 'function') {
+            context = stack;
+            stack = cb;
+            cb = dimensions;
+            dimensions = [];
+        }
 
-        List.prototype['getExtent' + capitalized] = function () {
-            var min = Number.MAX_VALUE;
-            var max = Number.MIN_VALUE;
-            this.each(function (item) {
-                var value = item['get' + capitalized]();
-                if (value != null) {
-                    value > max && (max = value);
-                    value < min && (min = value);
+        dimensions = normalizeDimensions(dimensions);
+
+        var value = [];
+        var dimSize = dimensions.length;
+        var indices = this.indices;
+
+        // Only stacked on the value axis
+        var stackDimMap = getStackDimMap(this._rawValueDims, dimensions);
+        // Optimizing for 1 dim case
+        var firstDimStack = stackDimMap[dimensions[0]];
+
+        context = context || this;
+
+        for (var i = 0; i < indices.length; i++) {
+            if (dimSize === 0) {
+                // FIXME Pass value as parameter ?
+                cb && cb.call(context, i);
+            }
+            // Simple optimization
+            else if (dimSize === 1) {
+                cb && cb.call(context, this.get(dimensions[0], i, firstDimStack), i);
+            }
+            else {
+                for (var k = 0; k < dimSize; k++) {
+                    value[k] = this.get(dimensions[k], i, stackDimMap[dimensions[k]]);
                 }
-            });
-            return [min, max];
-        };
+                // Index
+                value[k] = i;
+                cb.apply(context, value);
+            }
+        }
+    };
 
-    });
+    /**
+     * Data filter
+     * @param {string|Array.<string>}
+     * @param {Function} cb
+     * @param {boolean} [stack=false]
+     * @param {*} [context=this]
+     */
+    listProto.filterSelf = function (dimensions, cb, stack, context) {
+        dimensions = normalizeDimensions(dimensions);
 
+        var newIndices = [];
+        var value = [];
+        var dimSize = dimensions.length;
+        var indices = this.indices;
+
+        // Only stacked on the value axis
+        var stackDimMap = getStackDimMap(this._rawValueDims, dimensions);
+        // Optimizing for 1 dim case
+        var firstDimStack = stackDimMap[dimensions[0]];
+
+        context = context || this;
+
+        for (var i = 0; i < indices.length; i++) {
+            var keep;
+            // Simple optimization
+            if (dimSize === 1) {
+                keep = cb && cb.call(
+                    context, this.get(dimensions[0], i, firstDimStack), i
+                );
+            }
+            else {
+                for (var k = 0; k < dimSize; k++) {
+                    value[k] = this.get(dimensions[k], i, stackDimMap[dimensions[k]]);
+                }
+                value[k] = i;
+                keep = cb.apply(context, value);
+            }
+            if (keep) {
+                newIndices.push(indices[i]);
+            }
+        }
+
+        this.indices = newIndices;
+
+        return this;
+    };
+
+    /**
+     * Data mapping
+     * @param {string|Array.<string>}
+     * @param {Function} cb
+     * @param {boolean} [stack=false]
+     * @param {*} [context=this]
+     */
+    listProto.map = function (dimensions, cb, stack, context) {
+        if (typeof dimensions === 'function') {
+            context = stack;
+            stack = cb;
+            cb = dimensions;
+            dimensions = [];
+        }
+
+        var result = [];
+        this.each(dimensions, function () {
+            result.push(cb && cb.apply(this, arguments));
+        }, stack, context);
+        return result;
+    };
+
+    var temporaryModel = new Model(null);
+    /**
+     * Get model of one data item.
+     * It will create a temporary model if value on idx is not an option.
+     */
+    listProto.getItemModel = function (idx) {
+        var storage = this._storage;
+        var optionModelIndices = storage.$optionModelIndices;
+        var modelIndex = optionModelIndices && optionModelIndices[idx];
+
+        var model = this._optionModels[modelIndex];
+
+        if (! model) {
+            // Use a temporary model proxy if value on idx is not an option.
+            // FIXME Create a new one may cause memory leak
+            model = temporaryModel;
+            model.parentModel = this.seriesModel;
+        }
+        return model;
+    };
+
+    /**
+     * Create a data differ
+     * @param {module:echarts/data/List} oldList
+     * @return {module:echarts/data/DataDiffer}
+     */
+    listProto.diff = function (oldList) {
+        return new DataDiffer(oldList ? oldList.indices : [], this.indices);
+    };
+
+    /**
+     * Get visual property.
+     * @param {string} key
+     */
+    listProto.getVisual = function (key) {
+        var visual = this._visual;
+        return visual && visual[key];
+    };
+
+    /**
+     * Set visual property
+     * @param {string|Object} key
+     * @param {*} [value]
+     *
+     * @example
+     *  setVisual('color', color);
+     *  setVisual({
+     *      'color': color
+     *  });
+     */
+    listProto.setVisual = function (key, val) {
+        if (isObject(key)) {
+            for (var name in key) {
+                if (key.hasOwnProperty(name)) {
+                    this.setVisual(name, key[name]);
+                }
+            }
+            return;
+        }
+        this._visual = this._visual || {};
+        this._visual[key] = val;
+    };
+
+    /**
+     * Get layout of single data item
+     * @param {number} idx
+     */
+    listProto.getItemLayout = function (idx) {
+        return this._itemLayouts[idx];
+    },
+
+    /**
+     * Set layout of single data item
+     * @param {number} idx
+     * @param {Object} layout
+     */
+    listProto.setItemLayout = function (idx, layout) {
+        this._itemLayouts[idx] = layout;
+    },
+
+    /**
+     * Get visual property of single data item
+     * @param {number} idx
+     * @param {string} key
+     */
+    listProto.getItemVisual = function (idx, key) {
+        var itemVisual = this._itemVisuals[idx];
+        var val = itemVisual && itemVisual[key];
+        if (val == null) {
+            // Use global visual property
+            return this.getVisual(key);
+        }
+        return val;
+    },
+
+    /**
+     * Set visual property of single data item
+     *
+     * @param {number} idx
+     * @param {string|Object} key
+     * @param {*} [value]
+     *
+     * @example
+     *  setItemVisual(0, 'color', color);
+     *  setItemVisual(0, {
+     *      'color': color
+     *  });
+     */
+    listProto.setItemVisual = function (idx, key, value) {
+        var itemVisual = this._itemVisuals[idx] || {};
+        this._itemVisuals[idx] = itemVisual;
+
+        if (isObject(key)) {
+            for (var name in key) {
+                if (key.hasOwnProperty(name)) {
+                    itemVisual[key] = key[name];
+                }
+            }
+            return;
+        }
+        itemVisual[key] = value;
+    };
+
+    /**
+     * @param {number} idx
+     * @param {module:zrender/Element} el
+     */
+    listProto.setItemGraphicEl = function (idx, el) {
+        this._graphicEls[idx] = el;
+    };
+
+    /**
+     * @param {number} idx
+     * @return {module:zrender/Element}
+     */
+    listProto.getItemGraphicEl = function (idx) {
+        return this._graphicEls[idx];
+    };
+
+    /**
+     * @param {Function} cb
+     * @param {*} context
+     */
+    listProto.eachItemGraphicEl = function (cb, context) {
+        zrUtil.each(this._graphicEls, cb, context);
+    };
+
+    /**
+     * Shallow clone a new list except visual and layout properties, and graph elements.
+     * New list only change the indices.
+     */
+    listProto.cloneShallow = function () {
+        var list = new List(this._dimensionInfos, this.seriesModel);
+        list.stackedOn = this.stackedOn;
+
+        // FIXME
+        list._storage = this._storage;
+        list._optionModels = this._optionModels;
+        list._rawValueDims = this._rawValueDims;
+
+        list.indices = this.indices.slice();
+
+        return list;
+    };
+
+    /**
+     * Helper function to create a list from option data
+     */
     List.fromArray = function (data, seriesModel, ecModel) {
         var coordinateSystem = seriesModel.get('coordinateSystem');
-        var independentVar;
-        var dependentVar;
+        var dimensions;
 
         var categoryAxisModel;
         // FIXME
@@ -408,27 +623,23 @@ define(function(require) {
             var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
             var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
             if (xAxisModel.get('type') === 'category') {
-                independentVar = ['x'];
-                dependentVar = 'y';
+                dimensions = ['x', 'y'];
 
                 categoryAxisModel = xAxisModel;
             }
             else if (yAxisModel.get('type') === 'category') {
-                independentVar = ['y'];
-                dependentVar = 'x';
+                dimensions = ['y', 'x'];
 
                 categoryAxisModel = yAxisModel;
             }
             else {
                 // PENDING
-                var dim = data[0] && data[0].length;
-                if (dim === 2) {
-                    independentVar = ['x'];
-                    dependentVar = 'y';
+                var dimSize = data[0] && data[0].length;
+                if (dimSize === 2) {
+                    dimensions = ['x', 'y'];
                 }
-                else if (dim === 3) {
-                    independentVar = ['x', 'y'];
-                    dependentVar = 'z';
+                else if (dimSize === 3) {
+                    dimensions = ['x', 'y', 'z'];
                 }
             }
         }
@@ -441,46 +652,33 @@ define(function(require) {
             var radiusAxisModel = ecModel.findComponent('radiusAxis', axisFinder);
 
             if (angleAxisModel.get('type') === 'category') {
-                independentVar = ['angle'];
-                dependentVar = 'radius';
+                dimensions = ['angle', 'radius'];
 
                 categoryAxisModel = angleAxisModel;
             }
             else if (radiusAxisModel.get('type') === 'category') {
-                independentVar = ['radius'];
-                dependentVar = 'angle';
+                dimensions = ['radius', 'angle'];
 
                 categoryAxisModel = radiusAxisModel;
             }
             else {
                 // PENDING
-                var dim = data[0] && data[0].length;
-                if (dim === 2) {
-                    independentVar = ['radius'];
-                    dependentVar = 'angle';
+                var dimSize = data[0] && data[0].length;
+                if (dimSize === 2) {
+                    dimensions = ['radius', 'angle'];
                 }
-                else if (dim === 3) {
-                    independentVar = ['radius', 'angle'];
-                    dependentVar = 'value';
+                else if (dimSize === 3) {
+                    dimensions = ['radius', 'angle', 'value'];
                 }
             }
         }
 
-        var list = new List(independentVar, dependentVar);
+        var list = new List(dimensions, seriesModel);
 
-        var categoryAxisData = categoryAxisModel && categoryAxisModel.getData();
-        // Normalize data
-        zrUtil.each(data, function (dataItem, idx) {
-            var entry = list.add(dataItem, seriesModel);
-            if (!dataItem.name) {
-                entry.name = categoryAxisData && categoryAxisData[idx] || idx;
-            }
-            return entry;
-        });
+        list.initData(data);
+
         return list;
     };
-
-    List.Entry = Entry;
 
     return List;
 });

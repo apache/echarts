@@ -21,15 +21,17 @@ define(function (require) {
         _renderCartesian: function (seriesModel, ecModel, api) {
             var group = this.group;
             var data = seriesModel.getData();
+            var oldData = this._data;
 
-            data.diff(this._data)
-                .add(function (dataItem, dataIndex) {
+            data.diff(oldData)
+                .add(function (dataIndex) {
                     // 空数据
-                    if (dataItem.getValue() == null) {
+                    if (! data.hasValue(dataIndex)) {
                         return;
                     }
 
-                    var layout = dataItem.layout;
+                    var layout = data.getItemLayout(dataIndex);
+                    var itemModel = data.getItemModel(dataIndex);
                     var rect = new api.Rect({
                         shape: {
                             x: layout.x,
@@ -37,18 +39,15 @@ define(function (require) {
                             width: layout.width
                         },
                         style: zrUtil.extend(
-                            dataItem.getModel('itemStyle.normal').getItemStyle(),
+                            itemModel.getModel('itemStyle.normal').getItemStyle(),
                             {
-                                fill: dataItem.getVisual('color')
+                                fill: data.getItemVisual(dataIndex, 'color')
                             }
                         )
                     });
 
-                    dataItem.__el = rect;
-                    rect.__data = dataItem;
-
-                    // Attach data on the el
-                    rect.data = dataItem;
+                    data.setItemGraphicEl(dataIndex, rect);
+                    rect.dataIndex = dataIndex;
 
                     group.add(rect);
 
@@ -57,24 +56,25 @@ define(function (require) {
                         shape: layout
                     }, 1000, 300 * dataIndex / data.count(), 'cubicOut');
                 })
-                .update(function (newData, oldData) {
-                    var rect = oldData.__el;
+                .update(function (newIndex, oldIndex) {
+                    var rect = oldData.getItemGraphicEl(oldIndex);
                     // 空数据
-                    if (newData.getValue() == null) {
+                    if (! data.hasValue(newIndex)) {
                         group.remove(rect);
                         return;
                     }
                     rect.animateTo({
-                        shape: newData.layout
+                        shape: data.getItemLayout(newIndex)
                     }, 500, 'cubicOut');
 
-                    newData.__el = rect;
+                    data.setItemGraphicEl(newIndex, rect);
+                    rect.dataIndex = newIndex;
 
                     // Add back
                     group.add(rect);
                 })
-                .remove(function (dataItem, idx) {
-                    var el = dataItem.__el;
+                .remove(function (idx) {
+                    var el = oldData.getItemGraphicEl(idx);
                     el.animateTo({
                         shape: {
                             width: 0
@@ -92,8 +92,7 @@ define(function (require) {
         remove: function () {
             if (this._data) {
                 var group = this.group;
-                this._data.each(function (dataItem) {
-                    var el = dataItem.__el;
+                this._data.eachItemGraphicEl(function (el) {
                     el.animateTo({
                         shape: {
                             width: 0

@@ -1,9 +1,15 @@
 define(function(require) {
     'use strict';
 
-    function DataDiffer(oldArr, newArr) {
+    function defaultKeyGetter(item) {
+        return item;
+    }
+
+    function DataDiffer(oldArr, newArr, keyGetter) {
         this._old = oldArr;
         this._new = newArr;
+
+        this._keyGetter = keyGetter || defaultKeyGetter;
     };
 
     DataDiffer.prototype = {
@@ -37,34 +43,31 @@ define(function(require) {
         execute: function () {
             var oldArr = this._old;
             var newArr = this._new;
+            var keyGetter = this._keyGetter;
 
-            var oldDataMap = {};
-            var newDataMap = {};
+            var oldDataIndexMap = {};
             var newDataIndexMap = {};
             var i;
             for (i = 0; i < oldArr.length; i++) {
-                oldDataMap[oldArr[i].name] = oldArr[i];
+                oldDataIndexMap[keyGetter(oldArr[i])] = i;
             }
             for (i = 0; i < newArr.length; i++) {
-                newDataMap[newArr[i].name] = newArr[i];
-                newDataIndexMap[newArr[i].name] = i;
+                newDataIndexMap[keyGetter(newArr[i])] = i;
             }
 
             for (i = 0; i < oldArr.length; i++) {
-                var oldData = oldArr[i];
-                var newData = newDataMap[oldData.name];
-                if (newData) {
-                    this._update && this._update(newData, oldData);
+                var newDataIndex = newDataIndexMap[keyGetter(oldArr[i])];
+                if (newDataIndex != null) {
+                    this._update && this._update(newDataIndex, i);
                 }
                 else {
-                    this._remove && this._remove(oldData);
+                    this._remove && this._remove(i);
                 }
             }
 
             for (i = 0; i < newArr.length; i++) {
-                var newData = newArr[i];
-                if (!oldDataMap[newData.name]) {
-                    this._add && this._add(newData, newDataIndexMap[newData.name]);
+                if (oldDataIndexMap[keyGetter(newArr[i])] == null) {
+                    this._add && this._add(i);
                 }
             }
         }
