@@ -4,10 +4,6 @@ define(function (require) {
     var Group = require('zrender/container/Group');
     var symbolCreators = require('../../util/symbol');
 
-    function getSymbolElement(dataItem) {
-        return dataItem.__symbolEl;
-    }
-
     function createSymbol(data, idx, enableAnimation) {
         var point = data.getItemLayout(idx);
         var color = data.getItemVisual(idx, 'color');
@@ -63,10 +59,6 @@ define(function (require) {
             return this._data;
         },
 
-        getSymbolElements: function () {
-            return this._data.map(getSymbolElement);
-        },
-
         updateData: function (data, enableAnimation) {
 
             var group = this.group;
@@ -110,7 +102,7 @@ define(function (require) {
                     else {
                         el.attr({
                             scale: [symbolSize, symbolSize],
-                            position: point
+                            position: point.slice()
                         });
                     }
 

@@ -87,17 +87,13 @@ describe('List', function () {
 
         testCase('Data types', function (List) {
             var list = new List([{
-                name: 'name',
-                type: 'string'
-            }, {
                 name: 'x',
                 type: 'int'
             }, {
                 name: 'y',
                 type: 'float'
             }]);
-            list.initData([['foo', 1.1, 1.1]]);
-            expect(list.get('name', 0)).toEqual('foo');
+            list.initData([[1.1, 1.1]]);
             expect(list.get('x', 0)).toEqual(1);
             expect(list.get('y', 0)).toBeCloseTo(1.1, 5);
         });

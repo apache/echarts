@@ -293,7 +293,7 @@ define(function (require) {
     /**
      * Get raw data index
      */
-    listProto.getDataIndex = function (idx) {
+    listProto.getRawIndex = function (idx) {
         return this.indices[idx];
     };
 

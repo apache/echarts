@@ -38,9 +38,10 @@ define(function(require) {
             var lineStyleNormalModel = seriesModel.getModel('itemStyle.normal.lineStyle');
 
             var points = data.map(data.getItemLayout, true);
-            var pointsWithName = data.map(function (dataItem, idx) {
+            var pointsWithName = data.map(function (idx) {
                 return {
-                    name: dataItem.name,
+                    // TODO Use category names if possible
+                    name: data.getRawIndex(idx),
                     point: points[idx]
                 };
             });
@@ -95,7 +96,7 @@ define(function(require) {
                 dataSymbol.updateData(data, false);
                 // In the case data zoom triggerred refreshing frequently
                 // Data may not change if line has a category axis. So it should animate nothing
-                if (! isPointsSame(this._pointsWithName, pointsWithName)) {
+                if (!isPointsSame(this._pointsWithName, pointsWithName)) {
                     this._updateAnimation(data, pointsWithName);
                 }
                 // Add back
@@ -111,7 +112,6 @@ define(function(require) {
             var polyline = this._polyline;
             var diff = lineAnimationDiff(this._pointsWithName, pointsWithName);
             polyline.shape.points = diff.current;
-            // FIXME Handle the situation of adding and removing data
             polyline.animateTo({
                 shape: {
                     points: diff.next
@@ -120,7 +120,7 @@ define(function(require) {
 
             var updatedDataIndices = [];
             var diffStatus = diff.status;
-            var symbolElements = this._dataSymbol.getSymbolElements();
+            var data = this._dataSymbol.getData();
 
             for (var i = 0; i < diffStatus.length; i++) {
                 if (diffStatus[i] === '=') {
@@ -132,12 +132,13 @@ define(function(require) {
                 polyline.animators[0].during(function () {
                     // Symbol elements may be more than updatedDataIndices if there is new added data
                     for (var i = 0; i < updatedDataIndices.length; i++) {
+                        var el = data.getItemGraphicEl(i);
                         vector.copy(
-                            symbolElements[i].position,
-                            // synchronizing whith the point on line
+                            el.position,
+                            // synchronizing with the point on line
                             polyline.shape.points[updatedDataIndices[i]]
                         );
-                        symbolElements[i].dirty();
+                        el.dirty();
                     }
                 });
             }
