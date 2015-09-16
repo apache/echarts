@@ -5,6 +5,11 @@ define(function (require) {
     var formatUtil = require('../../util/format');
     var symbolCreator = require('../../util/symbol');
 
+    var LEGEND_DISABLE_STYLE = {
+        fill: '#ccc',
+        stroke: '#ccc'
+    };
+
     function createSelectActionDispatcher(uid, seriesName, api) {
         api.dispatch({
             type: 'legendToggleSelect',
@@ -16,6 +21,10 @@ define(function (require) {
     return require('../../echarts').extendComponentView({
 
         type: 'legend',
+
+        init: function () {
+            this._symbolElMap = {};
+        },
 
         render: function (legendModel, ecModel, api) {
             var itemGap = legendModel.get('itemGap');
@@ -46,13 +55,22 @@ define(function (require) {
                 var seriesName = itemModel.get('name');
                 var seriesModel = ecModel.getSeriesByName(seriesName, true);
                 var data = seriesModel.getData();
-                var color = legendModel.isSelected(seriesName)
-                    ? data.getVisual('color')
-                    : '#ccc';
 
-                var legendSymbol = this._createSymbol(
-                    data, x, y, width, height, color, api
-                );
+                var legendSymbol;
+                var symbolElMap = this._symbolElMap;
+                if (legendModel.isSelected(seriesName)) {
+                    legendSymbol = this._createSymbol(
+                        data, x, y, width, height, data.getVisual('color'), api
+                    );
+                }
+                else {
+                    legendSymbol = symbolElMap[seriesName];
+                    legendSymbol.eachChild(function (child) {
+                        child.style.set(LEGEND_DISABLE_STYLE);
+                    });
+                    legendSymbol.off('click');
+                }
+                symbolElMap[seriesName] = legendSymbol;
 
                 var text = new api.Text({
                     style: {
