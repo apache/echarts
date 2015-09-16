@@ -91,6 +91,10 @@ define(function (require) {
         this._storage = {};
 
         /**
+         * @type {Array.<string>}
+         */
+        this._nameList = [];
+        /**
          * Models of data option is stored sparse for optimizing memory cost
          * @type {Array.<module:echarts/model/Model>}
          * @private
@@ -137,8 +141,10 @@ define(function (require) {
 
     /**
      * Initialize from data
+     * @param {Array.<Object|number|Array>} data
+     * @param {Array.<string>} [nameList]
      */
-    listProto.initData = function (data) {
+    listProto.initData = function (data, nameList) {
         // Clear
         var optionModels = this._optionModels = [];
         var storage = this._storage = {};
@@ -200,6 +206,8 @@ define(function (require) {
         }
 
         this._rawValueDims = rawValue1D ? dimensions.slice(1, 2) : dimensions.slice();
+
+        this._nameList = nameList;
     };
 
     /**
@@ -292,10 +300,24 @@ define(function (require) {
 
     /**
      * Get raw data index
+     * @param {number} idx
+     * @return {number}
      */
     listProto.getRawIndex = function (idx) {
         return this.indices[idx];
     };
+
+    var nameQueryPath = ['name'];
+    /**
+     * @param {number} idx
+     * @return {string}
+     */
+    listProto.getName = function (idx) {
+        var nameList = this._nameList;
+        return (nameList && nameList[this.indices[idx]])
+            || this.getItemModel(idx).get(nameQueryPath, true) || '';
+    };
+
 
     function normalizeDimensions(dimensions) {
         if (typeof (dimensions) === 'string') {
@@ -447,11 +469,13 @@ define(function (require) {
     /**
      * Get model of one data item.
      * It will create a temporary model if value on idx is not an option.
+     *
+     * @param {number} idx
      */
     listProto.getItemModel = function (idx) {
         var storage = this._storage;
         var optionModelIndices = storage.$optionModelIndices;
-        var modelIndex = optionModelIndices && optionModelIndices[idx];
+        var modelIndex = optionModelIndices && optionModelIndices[this.indices[idx]];
 
         var model = this._optionModels[modelIndex];
 
@@ -571,6 +595,11 @@ define(function (require) {
      * @param {module:zrender/Element} el
      */
     listProto.setItemGraphicEl = function (idx, el) {
+        // Add data index and series index for indexing the data by element
+        // Useful in tooltip
+        el.dataIndex = idx;
+        el.seriesIndex = this.seriesModel.seriesIndex;
+
         this._graphicEls[idx] = el;
     };
 
@@ -602,6 +631,7 @@ define(function (require) {
         list._storage = this._storage;
         list._optionModels = this._optionModels;
         list._rawValueDims = this._rawValueDims;
+        list._nameList = this._nameList;
 
         list.indices = this.indices.slice();
 
@@ -616,6 +646,7 @@ define(function (require) {
         var dimensions;
 
         var categoryAxisModel;
+        var nameList = [];
         // FIXME
         // 这里 List 跟几个坐标系和坐标系 Model 耦合了
         if (coordinateSystem === 'cartesian2d') {
@@ -672,9 +703,13 @@ define(function (require) {
             }
         }
 
+        if (categoryAxisModel) {
+            nameList = categoryAxisModel.get('data');
+        }
+
         var list = new List(dimensions, seriesModel);
 
-        list.initData(data);
+        list.initData(data, nameList);
 
         return list;
     };

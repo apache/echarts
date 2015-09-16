@@ -47,7 +47,6 @@ define(function (require) {
                     });
 
                     data.setItemGraphicEl(dataIndex, rect);
-                    rect.dataIndex = dataIndex;
 
                     group.add(rect);
 
@@ -68,7 +67,6 @@ define(function (require) {
                     }, 500, 'cubicOut');
 
                     data.setItemGraphicEl(newIndex, rect);
-                    rect.dataIndex = newIndex;
 
                     // Add back
                     group.add(rect);

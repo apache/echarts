@@ -1,3 +1,4 @@
+// FIXME Better way to pack data in graphic element
 define(function (require) {
 
     var TooltipContent = require('./tooltip/TooltipContent');
@@ -69,23 +70,23 @@ define(function (require) {
             var el = e.target;
             var tooltipModel = this._tooltipModel;
             var trigger = tooltipModel.get('trigger');
+            var ecModel = this._ecModel;
 
             if (!tooltipModel) {
                 return;
             }
 
             if (trigger === 'item') {
-
-                if (!el || !el.data) {
+                if (!el || el.dataIndex == null) {
 
                     this._tooltipContent.hideLater(tooltipModel.get('hideDelay'));
 
                     return;
                 }
 
-                var dataItem = el.data;
+                var seriesModel = ecModel.getSeriesByIndex(el.seriesIndex);
 
-                this._showItemTooltip(dataItem, e);
+                this._showItemTooltip(seriesModel, el.dataIndex, e);
             }
             else {
 
@@ -347,22 +348,21 @@ define(function (require) {
 
         /**
          * Show tooltip on item
-         * @param {module:echarts/model/Model}
+         * @param {module:echarts/model/Series} seriesModel
+         * @param {number} dataIndex
          * @param {Object} e
          */
-        _showItemTooltip: function (dataItem, e) {
+        _showItemTooltip: function (seriesModel, dataIndex, e) {
+            // FIXME Graph data
+            var data = seriesModel.getData();
+            var itemModel = data.getItemModel(dataIndex);
 
-            var seriesModel = dataItem.parentModel;
-
-            if (!seriesModel) {
-                return;
-            }
             var rootTooltipModel = this._tooltipModel;
             var showContent = rootTooltipModel.get('showContent');
 
             var tooltipContent = this._tooltipContent;
 
-            var tooltipModel = dataItem.getModel('tooltip');
+            var tooltipModel = itemModel.getModel('tooltip');
 
             // If series model
             if (tooltipModel.parentModel) {
@@ -376,7 +376,7 @@ define(function (require) {
                 tooltipContent.show(tooltipModel);
 
                 tooltipContent.setContent(
-                    seriesModel.formatTooltipHTML(dataItem)
+                    seriesModel.formatTooltipHTML(dataIndex, data.getName(dataIndex))
                 );
 
                 var x = e.offsetX + 20;

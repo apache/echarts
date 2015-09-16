@@ -90,15 +90,16 @@ define(function(require) {
         /**
          * Default tooltip formatter
          *
-         * @param {module:echarts/model/Model} dataItem
+         * @param {number} dataIndex
          */
-        formatTooltipHTML: function (dataItem) {
-            var value = dataItem.getRawValue();
+        formatTooltipHTML: function (dataIndex, name) {
+            var data = this._data;
+            var value = data.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas) : addCommas(value);
 
             return encodeHTML(this.name) + '<br />'
-                + encodeHTML(dataItem.name) + ' : '
+                + encodeHTML(name) + ' : '
                 + formattedValue;
         },
 

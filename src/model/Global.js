@@ -230,6 +230,25 @@ define(function (require) {
             }
         },
 
+        // FIXME Index of series is confusing
+        /**
+         * @param {number} seriesIndex
+         * @param {boolean} beforeProcessing
+         * @return {module:echarts/model/Series}
+         */
+        getSeriesByIndex: function (seriesIndex, beforeProcessing) {
+            // return this._componentsMap.series[seriesIndex];
+            var series = beforeProcessing
+                ? this._componentsMapBeforeProcessing.series
+                : this._componentsMap.series;
+            for (var i = 0, len = series.length; i < len; i++) {
+                // name should be unique.
+                if (series[i].seriesIndex === seriesIndex) {
+                    return series[i];
+                }
+            }
+        },
+
         /**
          * @param {string} type
          * @return {Array.<module:echarts/model/Series>}
@@ -238,14 +257,6 @@ define(function (require) {
             return zrUtil.filter(this._componentsMap.series, function (series) {
                 return ComponentModel.parseComponentType(series.type).sub === type;
             });
-        },
-
-        /**
-         * @param {number} seriesIndex
-         * @return {module:echarts/model/Series}
-         */
-        getSeries: function (seriesIndex) {
-            return this._componentsMap.series[seriesIndex];
         },
 
         /**

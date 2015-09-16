@@ -76,9 +76,6 @@ define(function (require) {
 
                     data.setItemGraphicEl(newIdx, symbolEl);
 
-                    // Attach data on the el
-                    symbolEl.dataIndex = newIdx;
-
                     group.add(symbolEl);
                 })
                 .update(function (newIdx, oldIdx) {
@@ -107,7 +104,6 @@ define(function (require) {
                     }
 
                     data.setItemGraphicEl(newIdx, el);
-                    data.dataIndex = newIdx;
 
                     // Add back
                     group.add(el);
