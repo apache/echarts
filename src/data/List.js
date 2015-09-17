@@ -182,7 +182,7 @@ define(function (require) {
             }
             // Bar chart, line chart which uses category axis
             // only gives the 'y' value. 'x' value is the indices of cateogry
-            if (typeof (value) === 'number') {
+            if (!isNaN(value)) {
                 // Use a tempValue to normalize the value to be a (x, y) value
                 tempValue[0] = idx;
                 tempValue[1] = value;
@@ -193,11 +193,18 @@ define(function (require) {
             // Store the data by dimensions
             for (var k = 0; k < dimensions.length; k++) {
                 var dim = dimensions[k];
+                var dimInfo = this._dimensionInfos[k];
                 var dimStorage = storage[dim];
                 var dimValue = value[k];
                 // PENDING NULL is empty or zero
-                if (dimValue == null || dimValue === '-') {
-                    dimValue = NaN;
+                switch (dimInfo.type) {
+                    case 'float':
+                    case 'number':
+                        dimValue = +dimValue;
+                        break;
+                    case 'int':
+                        dimValue = dimValue | 0;
+                        break;
                 }
                 dimStorage[idx] = dimValue;
             }

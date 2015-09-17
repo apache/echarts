@@ -33,9 +33,9 @@
 
                 for (var i = 0; i < 10; i++) {
                     xAxisData.push('类目' + i);
-                    data1.push(Math.random() * 2);
-                    data2.push(Math.random());
-                    data3.push(Math.random());
+                    data1.push((Math.random() * 2).toFixed(3));
+                    data2.push(Math.random().toFixed(3));
+                    data3.push(Math.random().toFixed(3));
                 }
 
                 chart.setOption({
