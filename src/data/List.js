@@ -15,7 +15,7 @@ define(function (require) {
         float: Float32Array,
         int: Int32Array,
         'number': Array
-    }
+    };
 
     var Model = require('../model/Model');
     var DataDiffer = require('./DataDiffer');
@@ -296,6 +296,27 @@ define(function (require) {
             }
             return value;
         }
+    };
+
+    /**
+     * Retreive the index with given value
+     * @param {number} idx
+     * @param {number} value
+     * @return {number}
+     */
+    // FIXME Precision of float value
+    listProto.indexOf = function (dim, value) {
+        var storage = this._storage;
+        var dimData = storage[dim];
+
+        if (dimData) {
+            for (var i = 0, len = dimData.length; i < len; i++) {
+                if (dimData[i] === value) {
+                    return i;
+                }
+            }
+        }
+        return -1;
     };
 
     /**

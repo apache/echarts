@@ -3,6 +3,7 @@ define(function (require) {
 
     var TooltipContent = require('./tooltip/TooltipContent');
     var graphic = require('../util/graphic');
+    var zrUtil = require('zrender/core/util');
 
     function getAxisPointerKey(coordName, axisType) {
         return coordName + axisType;
@@ -47,7 +48,9 @@ define(function (require) {
         _axisPointers: {},
 
         init: function (ecModel, api) {
-            api.getZr().on('mousemove', this._mouseMove, this);
+            var zr = api.getZr();
+            zr.on('mousemove', this._mouseMove, this);
+            zr.on('mouseout', this._hide, this);
 
             this._tooltipContent = new TooltipContent(api.getDom());
         },
@@ -64,6 +67,19 @@ define(function (require) {
             this._api = api;
 
             this._tooltipContent.hide();
+
+            var seriesGroupByCoordinateSystem = {};
+            ecModel.eachSeries(function (seriesModel) {
+                var coordSys = seriesModel.coordinateSystem;
+                var name = coordSys.name;
+                seriesGroupByCoordinateSystem[name] = seriesGroupByCoordinateSystem[name] || {
+                    coordSys: coordSys,
+                    series: []
+                };
+                seriesGroupByCoordinateSystem[name].series.push(seriesModel);
+            }, this);
+
+            this._coordinateSystems = seriesGroupByCoordinateSystem;
         },
 
         _mouseMove: function (e) {
@@ -79,7 +95,7 @@ define(function (require) {
             if (trigger === 'item') {
                 if (!el || el.dataIndex == null) {
 
-                    this._tooltipContent.hideLater(tooltipModel.get('hideDelay'));
+                    this._hide();
 
                     return;
                 }
@@ -99,23 +115,26 @@ define(function (require) {
          * @param {Object} e
          */
         _showAxisTooltip: function (e) {
-            var ecModel = this._ecModel;
             var tooltipModel = this._tooltipModel;
             var axisPointerModel = tooltipModel.getModel('axisPointer');
 
-            ecModel.eachSeries(function (seriesModel) {
+            zrUtil.each(this._coordinateSystems, function (item) {
                 // Try show the axis pointer
                 this.group.show();
 
-                var coordSys = seriesModel.coordinateSystem;
+                var coordSys = item.coordSys;
 
                 // If mouse position is not in the grid or polar
                 var point = [e.offsetX, e.offsetY];
-                if (coordSys && ! coordSys.containPoint(point)) {
+                if (coordSys && !coordSys.containPoint(point)) {
                     // Hide axis pointer
-                    this._hideAxisTooltip();
+                    this._hide();
                     return;
                 }
+
+                // Make sure point is discrete on cateogry axis
+                var value = coordSys.pointToData(point);
+                point = coordSys.dataToPoint(value);
 
                 if (coordSys.type === 'cartesian2d') {
                     this._showCartesianPointer(axisPointerModel, coordSys, point);
@@ -123,7 +142,10 @@ define(function (require) {
                 else if (coordSys.type === 'polar') {
                     this._showPolarPointer(axisPointerModel, coordSys, point);
                 }
-            }, this)
+
+                this._showSeriesTooltip(coordSys, item.series, point, value);
+            }, this);
+
         },
 
         /**
@@ -139,13 +161,6 @@ define(function (require) {
             var cateogryAxis = cartesian.getAxesByScale('ordinal')[0];
 
             var axisPointerType = axisPointerModel.get('type');
-
-            var value = cartesian.pointToData(point);
-
-            // Make sure point is discrete on cateogry axis
-            if (cateogryAxis) {
-                point = cartesian.dataToPoint(value);
-            }
 
             if (axisPointerType === 'cross') {
                 moveGridLine('x', point, cartesian.getAxis('y').getExtent());
@@ -204,7 +219,6 @@ define(function (require) {
                     shape: targetShape
                 });
             }
-
         },
 
         /**
@@ -218,12 +232,8 @@ define(function (require) {
 
             var axisPointerType = axisPointerModel.get('type');
 
-            var value = polar.pointToData(point);
             var angleAxis = polar.getAngleAxis();
             var radiusAxis = polar.getRadiusAxis();
-
-            // Make sure point is discrete on cateogry axis
-            point = polar.dataToPoint(value);
 
             if (axisPointerType === 'cross') {
                 movePolarLine('angle', point, angleAxis.getExtent());
@@ -310,7 +320,7 @@ define(function (require) {
         /**
          * Hide axis tooltip
          */
-        _hideAxisTooltip: function () {
+        _hideAxisPointer: function () {
             this.group.hide();
         },
 
@@ -342,8 +352,28 @@ define(function (require) {
             return el;
         },
 
-        _showSeriesTooltip: function (series, e) {
+        _showSeriesTooltip: function (coordSys, seriesList, point, value) {
 
+            var rootTooltipModel = this._tooltipModel;
+            var tooltipContent = this._tooltipContent;
+
+            var data = seriesList[0].getData();
+            var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
+            if (categoryAxis && rootTooltipModel.get('showContent')) {
+                var rank = value[categoryAxis.dim === 'x' ? 0 : 1];
+                var dataIndex = data.indexOf(categoryAxis.dim, rank);
+
+                var html = data.getName(dataIndex) + '<br />'
+                    + zrUtil.map(seriesList, function (series) {
+                        return series.formatTooltip(dataIndex, true);
+                    }).join('<br />');
+
+                tooltipContent.show(rootTooltipModel);
+
+                tooltipContent.setContent(html);
+
+                tooltipContent.moveTo(point[0], point[1]);
+            }
         },
 
         /**
@@ -376,7 +406,7 @@ define(function (require) {
                 tooltipContent.show(tooltipModel);
 
                 tooltipContent.setContent(
-                    seriesModel.formatTooltipHTML(dataIndex, data.getName(dataIndex))
+                    seriesModel.formatTooltip(dataIndex)
                 );
 
                 var x = e.offsetX + 20;
@@ -385,8 +415,15 @@ define(function (require) {
             }
         },
 
+        _hide: function () {
+            this._hideAxisPointer();
+            this._tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
+        },
+
         dispose: function (api) {
-            api.getZr().off('mousemove', this._mouseMove, this);
+            var zr = api.getZr();
+            zr.off('mousemove', this._mouseMove);
+            zr.off('mouseout', this._hide);
         }
     })
 });

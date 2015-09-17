@@ -8,6 +8,8 @@ define(function(require) {
     function CoordinateSystemManager() {
 
         this._coordinateSystems = {};
+
+        this._coordinateSystemsList = [];
     }
 
     CoordinateSystemManager.prototype = {
@@ -19,6 +21,7 @@ define(function(require) {
             for (var type in coordinateSystemCreators) {
                 coordinateSystems[type] = coordinateSystemCreators[type].create(ecModel, api);
             }
+
             this._coordinateSystems = coordinateSystems;
         },
 
@@ -27,12 +30,6 @@ define(function(require) {
             if (list) {
                 return list[idx || 0];
             }
-        },
-
-        resize: function (ecModel, api) {
-            zrUtil.each(this._coordinateSystems, function (coordinateSystem) {
-                coordinateSystem.resize(ecModel, api);
-            });
         }
     }
 

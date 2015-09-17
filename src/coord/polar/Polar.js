@@ -68,6 +68,19 @@ define(function(require) {
         },
 
         /**
+         * Get axes by type of scale
+         */
+        getAxesByScale: function (scaleType) {
+            var axes = [];
+            var angleAxis = this._angleAxis;
+            var radiusAxis = this._radiusAxis;
+            angleAxis.scale.type === scaleType && axes.push(angleAxis);
+            radiusAxis.scale.type === scaleType && axes.push(radiusAxis);
+
+            return axes;
+        },
+
+        /**
          * @return {module:echarts/coord/polar/AngleAxis}
          */
         getAngleAxis: function () {

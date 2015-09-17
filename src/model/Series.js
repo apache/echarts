@@ -87,20 +87,23 @@ define(function(require) {
             return this._data;
         },
 
+        // FIXME
         /**
          * Default tooltip formatter
          *
          * @param {number} dataIndex
+         * @param {boolean} [mutipleSeries=false]
          */
-        formatTooltipHTML: function (dataIndex, name) {
+        formatTooltip: function (dataIndex, mutipleSeries) {
             var data = this._data;
             var value = data.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas) : addCommas(value);
+            var name = data.getName(dataIndex);
 
-            return encodeHTML(this.name) + '<br />'
-                + encodeHTML(name) + ' : '
-                + formattedValue;
+            return !mutipleSeries ? (encodeHTML(this.name) + '<br />'
+                + encodeHTML(name) + ' : ' + formattedValue)
+                : (encodeHTML(this.name) + ' : ' + formattedValue);
         },
 
         restoreData: function () {

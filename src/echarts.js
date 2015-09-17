@@ -144,10 +144,6 @@ define(function (require) {
 
         },
 
-        getCoordinateSystem: function (type, idx) {
-            return this._coordinateSystem.get(type, idx);
-        },
-
         /**
          * @return {number}
          */
