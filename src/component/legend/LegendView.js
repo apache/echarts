@@ -23,7 +23,7 @@ define(function (require) {
         type: 'legend',
 
         init: function () {
-            this._symbolElMap = {};
+            this._itemElMap = {};
         },
 
         render: function (legendModel, ecModel, api) {
@@ -56,32 +56,35 @@ define(function (require) {
                 var seriesModel = ecModel.getSeriesByName(seriesName, true);
                 var data = seriesModel.getData();
 
-                var legendSymbol;
-                var symbolElMap = this._symbolElMap;
+                var itemElMap = this._itemElMap;
+                var itemGroup = itemElMap[seriesName];
                 if (legendModel.isSelected(seriesName)) {
-                    legendSymbol = this._createSymbol(
-                        data, x, y, width, height, data.getVisual('color'), api
+                    itemGroup = new api.Group();
+                    this._createSymbol(
+                        data, x, y, width, height, data.getVisual('color'), itemGroup
                     );
+                    itemElMap[seriesName] = itemGroup;
                 }
                 else {
-                    legendSymbol = symbolElMap[seriesName];
-                    legendSymbol.eachChild(function (child) {
-                        child.style.set(LEGEND_DISABLE_STYLE);
+                    itemGroup.eachChild(function (child) {
+                        if (child.type !== 'text') {
+                            child.style.set(LEGEND_DISABLE_STYLE);
+                        }
                     });
-                    legendSymbol.off('click');
+                    itemGroup.off('click');
                 }
-                symbolElMap[seriesName] = legendSymbol;
 
                 var text = new api.Text({
                     style: {
                         text: seriesName,
                         x: x + width + 5,
-                        y: y,
+                        y: y + height / 2,
                         fill: '#000',
                         textAlign: 'left',
-                        textBaseline: 'top'
+                        textBaseline: 'middle'
                     }
                 });
+                itemGroup.add(text);
 
                 var textRect = text.getBoundingRect();
                 if (orient === 'horizontal') {
@@ -91,21 +94,16 @@ define(function (require) {
                     y += Math.max(height, textRect.height) + itemGap;
                 }
 
-                group.add(legendSymbol);
-                group.add(text);
+                group.add(itemGroup);
 
-                var onClick = zrUtil.curry(createSelectActionDispatcher, this.uid, seriesName, api);
-                legendSymbol.on('click', onClick, this);
-                text.on('click', onClick, this);
+                itemGroup.on('click', zrUtil.curry(createSelectActionDispatcher, this.uid, seriesName, api), this);
             }, this);
 
             var groupRect = group.getBoundingRect();
             group.position[0] -= groupRect.width / 2;
         },
 
-        _createSymbol: function (data, x, y, width, height, color, api) {
-
-            var group = new api.Group();
+        _createSymbol: function (data, x, y, width, height, color, group) {
             // Using rect symbol defaultly
             var legendSymbolType = data && data.getVisual('legendSymbol')
                 || 'roundRect';
