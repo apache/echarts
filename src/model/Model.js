@@ -80,6 +80,13 @@ define(function (require) {
             return new Model(obj, parentModel && parentModel.getModel(path));
         },
 
+        /**
+         * If model has option
+         */
+        isEmpty: function () {
+            return this.option == null;
+        },
+
         restoreData: function () {},
 
         // Pending
