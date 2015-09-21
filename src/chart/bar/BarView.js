@@ -4,6 +4,8 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
 
+    zrUtil.extend(require('../../model/Model').prototype, require('./barItemStyle'));
+
     return require('../../echarts').extendChartView({
 
         type: 'bar',
@@ -39,12 +41,16 @@ define(function (require) {
                             width: layout.width
                         },
                         style: zrUtil.extend(
-                            itemModel.getModel('itemStyle.normal').getItemStyle(),
+                            itemModel.getModel('itemStyle.normal').getBarItemStyle(),
                             {
                                 fill: data.getItemVisual(dataIndex, 'color')
                             }
                         )
                     });
+
+                    api.setHoverStyle(
+                        rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
+                    );
 
                     data.setItemGraphicEl(dataIndex, rect);
 

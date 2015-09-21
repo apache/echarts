@@ -6,6 +6,7 @@ define(function(require) {
     var matrix = require('zrender/core/matrix');
     var round = Math.round;
     var Path = require('zrender/graphic/Path');
+    var colorTool = require('zrender/tool/color');
 
     var graphic = {
 
@@ -58,6 +59,8 @@ define(function(require) {
 
         /**
          * Resize a path to fit the rect
+         * @param {module:zrender/graphic/Path} path
+         * @param {Object} rect
          */
         resizePath: function (path, rect) {
             if (! path.applyTransform) {
@@ -152,6 +155,26 @@ define(function(require) {
             return (doubledPosition + round(lineWidth)) % 2 === 0
                 ? doubledPosition / 2
                 : (doubledPosition + (positiveOrNegative ? 1 : -1)) / 2;
+        },
+
+        setHoverStyle: function (el, hoverStyle) {
+            var stroke = el.style.stroke;
+            var fill = el.style.fill;
+            hoverStyle = hoverStyle || {};
+            hoverStyle.fill = hoverStyle.fill || colorTool.lift(fill, -0.2);
+            hoverStyle.stroke = hoverStyle.stroke || colorTool.lift(stroke, -0.2);
+
+            var normalStyle = {};
+            for (var name in hoverStyle) {
+                normalStyle[name] = el.style[name];
+            }
+            el.on('mouseover', function () {
+                this.style.set(hoverStyle);
+                this.dirty();
+            }).on('mouseout', function () {
+                this.style.set(normalStyle);
+                this.dirty();
+            });
         }
     };
 
