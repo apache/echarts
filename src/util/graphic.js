@@ -157,6 +157,11 @@ define(function(require) {
                 : (doubledPosition + (positiveOrNegative ? 1 : -1)) / 2;
         },
 
+        /**
+         * Set hover style of element
+         * @param {module:zrender/graphic/Displayable} el
+         * @param {Object} hoverStyle
+         */
         setHoverStyle: function (el, hoverStyle) {
             var stroke = el.style.stroke;
             var fill = el.style.fill;
