@@ -49,7 +49,7 @@ define(function (require) {
          * @return {*}
          */
         get: function (path, ignoreParent) {
-            if (! path) {
+            if (!path) {
                 return this.option;
             }
 
@@ -58,16 +58,32 @@ define(function (require) {
             }
 
             var obj = this.option;
+            var parentModel = this.parentModel;
             for (var i = 0; i < path.length; i++) {
                 obj = obj && obj[path[i]];
                 if (obj == null) {
                     break;
                 }
             }
-            if (obj == null && this.parentModel && !ignoreParent) {
-                return this.parentModel.get(path);
+            if (obj == null && parentModel && !ignoreParent) {
+                obj = parentModel.get(path);
             }
             return obj;
+        },
+
+        /**
+         * @param {string} key
+         * @param {boolean} [ignoreParent=false]
+         * @return {*}
+         */
+        getShallow: function (key, ignoreParent) {
+            var option = this.option;
+            var val = option && option[key];
+            var parentModel = this.parentModel;
+            if (val == null && parentModel && !ignoreParent) {
+                val = parentModel.getShallow(key);
+            }
+            return val;
         },
 
         /**
@@ -78,6 +94,13 @@ define(function (require) {
             var obj = this.get(path);
             var parentModel = this.parentModel;
             return new Model(obj, parentModel && parentModel.getModel(path));
+        },
+
+        /**
+         * If model has option
+         */
+        isEmpty: function () {
+            return this.option == null;
         },
 
         restoreData: function () {},

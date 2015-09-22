@@ -214,6 +214,17 @@ define(function (require) {
 
         this._rawValueDims = rawValue1D ? dimensions.slice(1, 2) : dimensions.slice();
 
+        // Use the name in option as data id in two value axis case
+        for (var i = 0; i < optionModelIndices.length; i++) {
+            if (! nameList[i]) {
+                var modelIdx = optionModelIndices[i];
+                var model = optionModels[modelIdx];
+                if (model && model.option) {
+                    nameList[i] = model.option.name || '';
+                }
+            }
+        }
+
         this._nameList = nameList;
     };
 
@@ -335,15 +346,13 @@ define(function (require) {
         return this.indices[idx];
     };
 
-    var nameQueryPath = ['name'];
     /**
      * @param {number} idx
      * @return {string}
      */
     listProto.getName = function (idx) {
         var nameList = this._nameList;
-        return (nameList && nameList[this.indices[idx]])
-            || this.getItemModel(idx).get(nameQueryPath, true) || '';
+        return (nameList && nameList[this.indices[idx]]) || '';
     };
 
 
@@ -522,7 +531,12 @@ define(function (require) {
      * @return {module:echarts/data/DataDiffer}
      */
     listProto.diff = function (oldList) {
-        return new DataDiffer(oldList ? oldList.indices : [], this.indices);
+        var nameList = this._nameList;
+        return new DataDiffer(
+            oldList ? oldList.indices : [], this.indices, function (idx) {
+                return nameList && nameList[idx] || idx;
+            }
+        );
     };
 
     /**

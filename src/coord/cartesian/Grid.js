@@ -1,7 +1,7 @@
 /**
  * Grid is a region which contains at most 4 cartesian systems
  *
- * TODO Axis Scale
+ * TODO Default cartesian
  */
 define(function(require, factory) {
 

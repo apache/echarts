@@ -1,4 +1,5 @@
 // TODO Parse shadow style
+// TODO Only shallow path support
 define(function (require) {
     var zrUtil = require('zrender/core/util');
 
@@ -16,7 +17,7 @@ define(function (require) {
                 if (excludes && zrUtil.indexOf(excludes, propName) >= 0) {
                     continue;
                 }
-                var val = this.get(propName);
+                var val = this.getShallow(propName);
                 if (val != null) {
                     style[properties[i][0]] = val;
                 }
