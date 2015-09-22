@@ -2,7 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Group = require('zrender/container/Group');
-    var unique = require('../util/unique');
+    var componentUtil = require('../util/component');
 
     function Chart() {
 
@@ -16,7 +16,7 @@ define(function (require) {
          * @type {string}
          * @readOnly
          */
-        this.uid = unique.getUID('viewChart');
+        this.uid = componentUtil.getUID('viewChart');
     }
 
     Chart.prototype = {
@@ -34,8 +34,6 @@ define(function (require) {
         dispose: function () {}
     };
 
-    var chartClassStore = {};
-
     Chart.extend = function (proto) {
         var Super = this;
 
@@ -43,34 +41,17 @@ define(function (require) {
             Super.call(this);
         };
 
-        for (var name in proto) {
-            ExtendedChart.prototype[name] = proto[name];
-        }
+        zrUtil.extend(ExtendedChart.prototype, proto);
 
         ExtendedChart.extend = Super.extend;
 
         zrUtil.inherits(ExtendedChart, Super);
 
-        if (proto.type) {
-            if (chartClassStore[proto.type]) {
-                // Warning
-            }
-            chartClassStore[proto.type] = ExtendedChart;
-        }
-
-        return ExtendedChart;
+        return Chart.registerClass(ExtendedChart, proto.type);
     };
 
-    /**
-     * Create a chart by a given option
-     */
-    Chart.create = function (chartType) {
-        var ExtendedChart = chartClassStore[chartType];
-        if (! ExtendedChart) {
-            // Error
-        }
-        return new ExtendedChart();
-    };
+    // And capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
+    componentUtil.enableClassManagement(Chart);
 
     return Chart;
 });

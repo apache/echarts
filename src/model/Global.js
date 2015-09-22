@@ -101,7 +101,7 @@ define(function (require) {
 
             // 如果不存在对应的 component model 则直接 merge
             zrUtil.each(newOption, function (componentOption, componentType) {
-                if (!ComponentModel.has(componentType)) {
+                if (!ComponentModel.hasClass(componentType)) {
                     if (componentOption && typeof componentOption === 'object') {
                         option[componentType] = option[componentType] == null
                             ? zrUtil.clone(componentOption)
@@ -131,7 +131,10 @@ define(function (require) {
 
                 for (var i = 0; i < componentOption.length; i++) {
                     var componentModel = componentsMap[componentType][i];
-                    var ComponentModelClass = ComponentModel.getComponentModelClass(
+
+                    ComponentModel.completeSubType(componentType, componentOption[i]);
+
+                    var ComponentModelClass = ComponentModel.getClass(
                         componentType, componentOption[i], true
                     );
 
@@ -187,12 +190,32 @@ define(function (require) {
         },
 
         /**
-         * @param {string} type
+         * @usage
+         * eachComponent('legend', function (legendModel, index) {
+         *     ...
+         * });
+         * eachComponent(function (componentType, model, index) {
+         *     // componentType does not include subType
+         *     // (componentType is 'xxx' but not 'xxx.aa')
+         * });
+         *
+         * @param {string=} type
          * @param {Function} cb
          * @param {*} context
          */
         eachComponent: function (type, cb, context) {
-            zrUtil.each(this._componentsMap[type], cb, context);
+            if (typeof type === 'function') {
+                context = cb;
+                cb = type;
+                zrUtil.each(this._componentsMap, function (components, componentType) {
+                    zrUtil.each(components, function (component, index) {
+                        cb.call(this, componentType, component, index);
+                    }, this);
+                }, context);
+            }
+            else {
+                zrUtil.each(this._componentsMap[type], cb, context);
+            }
         },
 
         /**

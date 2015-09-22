@@ -2,7 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Group = require('zrender/container/Group');
-    var unique = require('../util/unique');
+    var componentUtil = require('../util/component');
 
     var Component = function () {
         /**
@@ -15,7 +15,7 @@ define(function (require) {
          * @type {string}
          * @readOnly
          */
-        this.uid = unique.getUID('viewComponent');
+        this.uid = componentUtil.getUID('viewComponent');
     };
 
     Component.prototype = {
@@ -29,9 +29,6 @@ define(function (require) {
         dispose: function () {}
     };
 
-    var componentClassStore = {};
-    var componentTypeList = [];
-
     Component.extend = function (proto) {
         var Super = this;
 
@@ -39,37 +36,17 @@ define(function (require) {
             Super.call(this);
         };
 
-        for (var name in proto) {
-            ExtendedComponent.prototype[name] = proto[name];
-        }
+        zrUtil.extend(ExtendedComponent.prototype, proto);
 
         ExtendedComponent.extend = Super.extend;
 
         zrUtil.inherits(ExtendedComponent, Super);
 
-        if (proto.type) {
-            if (componentClassStore[proto.type]) {
-                // Error exists
-                return;
-            }
-            componentClassStore[proto.type] = ExtendedComponent;
-            componentTypeList.push(proto.type);
-        }
-
-        return ExtendedComponent;
+        return Component.registerClass(ExtendedComponent, proto.type);
     };
 
-    Component.eachAvailableComponent = function (cb, context) {
-        zrUtil.each(componentTypeList, cb, context);
-    };
-
-    Component.create = function (type) {
-        var Component = componentClassStore[type];
-        if (! Component) {
-            // Error
-        }
-        return new Component();
-    }
+    // And capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
+    componentUtil.enableClassManagement(Component);
 
     return Component;
 });

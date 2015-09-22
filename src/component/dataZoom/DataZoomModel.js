@@ -6,7 +6,9 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var env = require('zrender/core/env');
     var echarts = require('../../echarts');
-    var helper = require('./helper');
+    var modelUtil = require('../../util/model');
+    var asc = require('../../util/number').asc;
+    var eachAxisDim = modelUtil.eachAxisDim;
 
     return echarts.extendComponentModel({
 
@@ -35,13 +37,14 @@ define(function(require) {
             handleColor: 'rgba(70,130,180,0.8)',    // 手柄颜色
             handleSize: 10,
             showDetail: true,
-            // xAxisIndex: [],         // 默认控制所有横向类目
-            // yAxisIndex: [],         // 默认控制所有横向类目
+            xAxisIndex: null,         // 默认控制所有横向类目
+            yAxisIndex: null,         // 默认控制所有横向类目
             start: 0,               // 默认为0
             end: 100,               // 默认为全部 100%
             start2: 0,               // 默认为0
             end2: 100,               // 默认为全部 100%
-            realtime: true
+            realtime: true,
+            inverse: false           // 默认与所控制的轴相同
             // zoomLock: false         // 是否锁定选择区域大小
         },
 
@@ -50,13 +53,15 @@ define(function(require) {
          */
         init: function (option, parentModel, ecModel) {
             this.mergeDefaultAndTheme(option, ecModel);
-            this.mergeOption({});
+            this.mergeOption({}, true);
+
+            this._autoAxisIndex = false;
         },
 
         /**
          * @override
          */
-        mergeOption: function (newOption) {
+        mergeOption: function (newOption, isInit) {
             var thisOption = this.option;
 
             newOption && zrUtil.merge(thisOption, newOption);
@@ -66,6 +71,7 @@ define(function(require) {
                 thisOption.realtime = false;
             }
 
+            this._resetAutoIndex(newOption, isInit);
             // FIXME
             // 是否有toolbox zoom控件时，自动加一个dataZoom option，而非和某个dataZoom option共用？
             // dataZoom option中可加type来判断是普通还是toolbox还是移动端需要的图面拖拽。
@@ -76,23 +82,29 @@ define(function(require) {
             this._resetInverse();
         },
 
+        _resetAutoIndex: function (newOption, isInit) {
+            // Consider this case:
+            // There is no axisIndex specified at the begining,
+            // which means that auto choise of axisIndex is required.
+            // Then user modifies series using setOption and do not specify axisIndex either.
+            // At that moment axisIndex should be re-choised.
+            var option = isInit ? this.option : newOption;
+            this._autoAxisIndex = true;
+            eachAxisDim(function (dimNames) {
+                option[dimNames.axisIndex] != null && (this._autoAxisIndex = false);
+            }, this);
+        },
+
         _resetTargetAxes: function (newOption) {
             var thisOption = this.option;
-            var noAxisDefined = true;
+            var autoAxisIndex = this._autoAxisIndex;
 
-            helper.eachAxisDim(function (dimNames) {
-                // Overlap these arrays but not merge.
-                var axisIndices = helper.toArray(helper.retrieveValue(
-                    newOption[dimNames.axisIndex], thisOption[dimNames.axisIndex], []
-                ));
-                thisOption[dimNames.axisIndex] = axisIndices;
-
-                if (axisIndices.length) {
-                    noAxisDefined = false;
-                }
+            eachAxisDim(function (dimNames) {
+                thisOption[dimNames.axisIndex] = autoAxisIndex
+                    ? [] : modelUtil.normalizeToArray(thisOption[dimNames.axisIndex]);
             }, this);
 
-            if (noAxisDefined) {
+            if (autoAxisIndex) {
                 // Find axis that parallel to dataZoom as default.
                 var dimNames = this.get('orient') === 'vertical'
                     ? {dim: 'y', axisIndex: 'yAxisIndex', axis: 'yAxis'}
@@ -100,14 +112,14 @@ define(function(require) {
 
                 if (this.dependentModels[dimNames.axis].length) {
                     thisOption[dimNames.axisIndex] = [0];
-                    noAxisDefined = false;
+                    autoAxisIndex = false;
                 }
             }
 
-            if (noAxisDefined) {
+            if (autoAxisIndex) {
                 // Find the first category axis as default. (consider polar)
-                helper.eachAxisDim(function (dimNames) {
-                    if (!noAxisDefined) {
+                eachAxisDim(function (dimNames) {
+                    if (!autoAxisIndex) {
                         return;
                     }
                     var axisIndices = [];
@@ -121,12 +133,12 @@ define(function(require) {
                     }
                     thisOption[dimNames.axisIndex] = axisIndices;
                     if (axisIndices.length) {
-                        noAxisDefined = false;
+                        autoAxisIndex = false;
                     }
                 }, this);
             }
 
-            if (noAxisDefined) {
+            if (autoAxisIndex) {
                 // FIXME
                 // 这里是兼容ec2的写法（没指定xAxisIndex和yAxisIndex时把scatter和双数值轴折柱纳入dataZoom控制），
                 // 但是实际是否需要Grid.js#getScaleByOption来判断（考虑time，log等axis type）？
@@ -136,7 +148,7 @@ define(function(require) {
                 // both xAxis and yAxis which type is 'value'.
                 this.ecModel.eachSeries(function (seriesModel) {
                     if (this._isSeriesHasAllAxesTypeOf(seriesModel, 'value')) {
-                        helper.eachAxisDim(function (dimNames) {
+                        eachAxisDim(function (dimNames) {
                             var axisIndices = thisOption[dimNames.axisIndex];
                             var axisIndex = seriesModel.get(dimNames.axisIndex);
                             if (zrUtil.indexOf(axisIndices, axisIndex) < 0) {
@@ -154,7 +166,7 @@ define(function(require) {
             // 例如series.type === scatter时。
 
             var is = true;
-            helper.eachAxisDim(function (dimNames) {
+            eachAxisDim(function (dimNames) {
                 var seriesAxisIndex = seriesModel.get(dimNames.axisIndex);
                 var axisModel = this.dependentModels[dimNames.axis][seriesAxisIndex];
 
@@ -178,9 +190,9 @@ define(function(require) {
             // When only xAxisIndex or only yAxisIndex is specified, start/end controls them.
             // targetDim === false means that both xAxisIndex and yAxisIndex are specified.
             var targetDim;
-            helper.eachAxisDim(function (dimNames) {
+            eachAxisDim(function (dimNames) {
                 if (thisOption[dimNames.axisIndex].length) {
-                    targetDim = targetDim != null ? false : dimNames.dim;
+                    targetDim = targetDim != null ? false : dimNames.name;
                 }
             });
 
@@ -199,7 +211,6 @@ define(function(require) {
             targetDim2 && (optAttrs[targetDim2] = {start: 'start2', end: 'end2'});
 
             zrUtil.each(optAttrs, function (dimItem, targetDim) {
-                var axisModels = this.dependentModels[targetDim + 'Axis'];
                 var startValue = thisOption[dimItem.start];
                 var endValue = thisOption[dimItem.end];
 
@@ -221,13 +232,9 @@ define(function(require) {
          * @private
          */
         _resetInverse: function () {
-            var orient = this.get('orient');
             // Just use the first axis to determine mapping.
             var targetAxisModel = this._getFirstTargetAxisModel();
-            var inverse = targetAxisModel && targetAxisModel.get('inverse');
-            this.option.inverse =
-                (orient === 'horizontal' && inverse)
-                || (orient === 'vertical' && !inverse);
+            this.option.inverse = targetAxisModel && targetAxisModel.get('inverse');
         },
 
         /**
@@ -235,7 +242,7 @@ define(function(require) {
          */
         _getFirstTargetAxisModel: function () {
             var firstAxisModel;
-            helper.eachAxisDim(function (dimNames) {
+            eachAxisDim(function (dimNames) {
                 if (firstAxisModel == null) {
                     var indices = this.get(dimNames.axisIndex);
                     if (indices.length) {
@@ -253,7 +260,7 @@ define(function(require) {
          */
         eachTargetAxis: function (callback, context) {
             var ecModel = this.ecModel;
-            helper.eachAxisDim(function (dimNames) {
+            eachAxisDim(function (dimNames) {
                 zrUtil.each(
                     this.get(dimNames.axisIndex),
                     function (axisIndex) {
@@ -281,19 +288,15 @@ define(function(require) {
 
         /**
          * @public
-         * @param {Object} param
-         * @param {number=} [param.start]
-         * @param {number=} [param.end]
-         * @param {number=} [param.start2]
-         * @param {number=} [param.end2]
+         * @param {Array} param [start, end]
          */
         setRange: function (param) {
+            // FIXME
+            // 接口改变
             var thisOption = this.option;
 
-            param.start != null && (thisOption.start = param.start);
-            param.end != null && (thisOption.end = param.end);
-            param.start2 != null && (thisOption.start2 = param.start2);
-            param.end2 != null && (thisOption.end2 = param.end2);
+            param[0] != null && (thisOption.start = param[0]);
+            param[1] != null && (thisOption.end = param[1]);
 
             this._resetRange();
         },
@@ -303,12 +306,15 @@ define(function(require) {
          */
         getRange: function () {
             var thisOption = this.option;
-            return {
-                start: thisOption.start,
-                end: thisOption.end,
-                star2: thisOption.star2,
-                end2: thisOption.end2
-            };
+            var range = asc([thisOption.start, thisOption.end]);
+
+            // Clamp
+            range[0] > 100 && (range[0] = 100);
+            range[1] > 100 && (range[1] = 100);
+            range[0] < 0 && (range[0] = 0);
+            range[1] < 0 && (range[1] = 0);
+
+            return range;
         }
 
     });

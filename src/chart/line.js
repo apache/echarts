@@ -6,7 +6,7 @@ define(function (require) {
     require('./line/LineSeries');
     require('./line/LineView');
 
-    echarts.registerVisualCoding(zrUtil.curry(
+    echarts.registerVisualCoding('chart', zrUtil.curry(
         require('../visual/symbol'), 'line', 'circle', 'line'
     ));
     echarts.registerLayout(zrUtil.curry(

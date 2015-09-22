@@ -9,6 +9,19 @@
     var nativeSlice = Array.prototype.slice;
 
     /**
+     * @param {*} target
+     * @param {*} source
+     */
+    helper.extend = function (target, source) {
+        for (var key in source) {
+            if (source.hasOwnProperty(key)) {
+                target[key] = source[key];
+            }
+        }
+        return target;
+    }
+
+    /**
      * @public
      */
     helper.g = function (id) {

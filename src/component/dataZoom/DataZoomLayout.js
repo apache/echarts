@@ -1,10 +1,15 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
-    var helper = require('./helper');
-    var retrieveValue = helper.retrieveValue;
-    var linearMap = require('../../util/number').linearMap;
-    var round = Math.round;
+    var modelUtil = require('../../util/model');
+    var retrieveValue = modelUtil.retrieveValue;
+    var number = require('../../util/number');
+    var linearMap = number.linearMap;
+    var asc = number.asc;
+    var mathRound = Math.round;
+    var mathMin = Math.min;
+    var mathMax = Math.max;
+    var each = zrUtil.each;
 
     // Constants
     var DEFAULT_LOCATION_EDGE_GAP = 2;
@@ -28,47 +33,30 @@ define(function (require) {
          * @private
          */
         this._orient = dataZoomModel.get('orient');
-
         /**
+         * @private
+         */
+        this._handleNames = ['handle1', 'handle2'];
+        /**
+         * {
+         *     x: {number},
+         *     y: {number},
+         *     width: {number},
+         *     height: {number},
+         *     viewRange: {
+         *         handle1,
+         *         handle2,
+         *         interval: {Array}
+         *     },
+         *     filler: {},
+         *     startFrame: {},
+         *     endFrame: {}
+         * }
+         *
          * @readOnly
          * @type {Object}
          */
-        this.layout = {
-
-            viewRange: {
-                // handle1 may less than handle2,
-                // so we dont naming them as 'start', 'end'
-                handle1: null,
-                handle2: null
-            },
-
-            /**
-             * {
-             *     x: {number},
-             *     y: {number},
-             *     width: {number},
-             *     height: {number}
-             * }
-             * @type {Object}
-             */
-            location: {},
-
-            filler: {
-                shape: {}
-            },
-            startHandle: {
-                shape: {}
-            },
-            endHandle: {
-                shape: {}
-            },
-            startFrame: {
-                shape: {}
-            },
-            endFrame: {
-                shape: {}
-            }
-        };
+        this.layout = {};
     }
 
     DataZoomLayout.prototype = {
@@ -79,6 +67,8 @@ define(function (require) {
          * @public
          */
         reset: function () {
+            this.layout.halfHandleSize = mathRound(this.dataZoomModel.get('handleSize') / 2);
+
             this._initLocation();
             this._initViewRange();
             this.update();
@@ -87,32 +77,29 @@ define(function (require) {
         /**
          * @public
          * @param  {Object} dataZoomModel
-         * @param  {Object} operation If empty, just re-calculate layout.
-         * @param  {string} [operation.rangeArgs] ['start'] or ['end'] or ['start', 'end']
+         * @param  {Object=} operation If empty, just re-calculate layout.
+         * @param  {string} [operation.rangeArg] 'handle1' or 'handle2' or null/undefined
          * @param  {number} [operation.dx]
          * @param  {number} [operation.dy]
          */
         update: function (operation) {
-            operation && this._updateViewRange(operation);
-
-            this._orient === 'horizontal'
-                ? this._updateWidgetsLayoutHorizontally()
-                : this._updateWidgetsLayoutVertically();
+            this._updateViewRange(operation);
+            this._layouters[this._orient].call(this);
         },
 
         /**
          * @public
-         * @return {Object} {start, end}
+         * @return {Array} [start, end]
          */
         normalizeToRange: function () {
             var viewRange = this.layout.viewRange;
-            var viewExtend = [0, this._getViewTotalLength()];
+            var viewExtend = this._getViewExtent(true);
             var percentExtent = [0, 100];
 
-            return this._processRange({
-                start: linearMap(viewRange.handle1, viewExtend, percentExtent, true),
-                end: linearMap(viewRange.handle2, viewExtend, percentExtent, true)
-            });
+            return asc([
+                linearMap(viewRange.handle1, viewExtend, percentExtent, true),
+                linearMap(viewRange.handle2, viewExtend, percentExtent, true)
+            ]);
         },
 
         /**
@@ -120,32 +107,26 @@ define(function (require) {
          */
         _initLocation: function () {
             var dataZoomModel = this.dataZoomModel;
-            var x;
-            var y;
-            var width;
-            var height;
-            // If some of x/y/width/height are not specified, auto-adapt according to target grid.
+            var layout = this.layout;
+            // If some of x/y/width/height are not specified,
+            // auto-adapt according to target grid.
             var gridRect = this._findCoordRectForLocating();
 
             if (this._orient === 'horizontal') { // Horizontal layout
-                width = retrieveValue(dataZoomModel.get('width'), gridRect.width);
-                height = retrieveValue(dataZoomModel.get('height'), DEFAULT_FILLER_SIZE);
-                x = retrieveValue(dataZoomModel.get('x'), gridRect.x);
-                y = retrieveValue(
+                layout.width = retrieveValue(dataZoomModel.get('width'), gridRect.width);
+                layout.height = retrieveValue(dataZoomModel.get('height'), DEFAULT_FILLER_SIZE);
+                layout.x = retrieveValue(dataZoomModel.get('x'), gridRect.x);
+                layout.y = retrieveValue(
                     dataZoomModel.get('y'),
-                    (this.api.getHeight() - height - DEFAULT_LOCATION_EDGE_GAP)
+                    (this.api.getHeight() - layout.height - DEFAULT_LOCATION_EDGE_GAP)
                 );
             }
             else { // Vertical layout
-                width = retrieveValue(dataZoomModel.get('width'), DEFAULT_FILLER_SIZE);
-                height = retrieveValue(dataZoomModel.get('height'), gridRect.height);
-                x = retrieveValue(dataZoomModel.get('x'), DEFAULT_LOCATION_EDGE_GAP);
-                y = retrieveValue(dataZoomModel.get('y'), gridRect.y);
+                layout.width = retrieveValue(dataZoomModel.get('width'), DEFAULT_FILLER_SIZE);
+                layout.height = retrieveValue(dataZoomModel.get('height'), gridRect.height);
+                layout.x = retrieveValue(dataZoomModel.get('x'), DEFAULT_LOCATION_EDGE_GAP);
+                layout.y = retrieveValue(dataZoomModel.get('y'), gridRect.y);
             }
-
-            this.layout.location = {
-                x: x, y: y, width: width, height: height
-            };
         },
 
         /**
@@ -157,7 +138,7 @@ define(function (require) {
             var dataZoomModel = this.dataZoomModel;
             var ecModel = this.ecModel;
 
-            helper.eachAxisDim(function (dimNames) {
+            modelUtil.eachAxisDim(function (dimNames) {
                 var axisIndices = dataZoomModel.get(dimNames.axisIndex);
                 if (!axisModel && axisIndices.length) {
                     axisModel = ecModel.getComponent(dimNames.axis, axisIndices[0]);
@@ -194,210 +175,181 @@ define(function (require) {
          * @private
          */
         _initViewRange: function () {
-            // Based on layout.location.
-            var range = this._processRange(this.dataZoomModel.getRange());
-            var viewExtend = [0, this._getViewTotalLength()];
+            var range = this.dataZoomModel.getRange();
+            var viewExtend = this._getViewExtent(true);
             var percentExtent = [0, 100];
+
             this.layout.viewRange = {
-                handle1: round(linearMap(range.start, percentExtent, viewExtend, true)),
-                handle2: round(linearMap(range.end, percentExtent, viewExtend, true))
+                handle1: mathRound(linearMap(range[0], percentExtent, viewExtend, true)),
+                handle2: mathRound(linearMap(range[1], percentExtent, viewExtend, true))
             };
-        },
-
-        _processRange: function (range) {
-            // Auto exchange
-            if (range.start > range.end) {
-                range.start = [range.end, range.end = range.start][0];
-            }
-
-            // Clamp
-            range.start > 100 && (range.start = 100);
-            range.end > 100 && (range.end = 100);
-            range.start < 0 && (range.start = 0);
-            range.end < 0 && (range.end = 0);
-
-            // Reverse if needed.
-            var inverse = this.dataZoomModel.get('inverse');
-            if (inverse) {
-                range.end = [100 - range.start, range.start = 100 - range.end][0];
-            }
-            return range;
         },
 
         /**
          * @private
          * @param  {Object} dataZoomModel
-         * @param  {Object} operation
-         * @param  {string} [operation.rangeArgs] ['handle1'] or ['handle2'] or ['handle1', 'handle2']
+         * @param  {Object=} operation
+         * @param  {string} [operation.rangeArg] 'handle1' or 'handle2' or null/undefined
          * @param  {number} [operation.dx]
          * @param  {number} [operation.dy]
          */
         _updateViewRange: function (operation) {
+            operation = operation || {};
             var delta = retrieveValue(
                 this._orient === 'horizontal' ? operation.dx : operation.dy,
                 0
             );
-            var standardValue = delta > 0 ? Number.MIN_VALUE : Number.MAX_VALUE;
-            var methods = ['min', 'max'];
-            var methodIndex = delta > 0 ? 1 : 0;
-            var edgeValue = delta > 0 ? this._getViewTotalLength() : 0;
+            var viewRange = this.layout.viewRange;
+            var handleNames = this._handleNames;
+            var rangeArgs = operation.rangeArg;
+            rangeArgs = !rangeArgs ? handleNames : [rangeArgs];
 
-            zrUtil.each(operation.rangeArgs, function (rangeArg) {
-                var value = this.layout.viewRange[rangeArg];
-                standardValue = Math[methods[methodIndex]](standardValue, value);
+            function compare(a, b, signal) {
+                return Math[delta * signal > 0 ? 'max' : 'min'](a, b);
+            }
+
+            // Find min or max between rangeArg as stardardValue.
+            var standardValue = delta > 0 ? -Infinity : Infinity;
+            each(rangeArgs, function (rangeArg) {
+                standardValue = compare(standardValue, viewRange[rangeArg], 1);
             }, this);
 
-            var standardValueResult = Math[methods[1 - methodIndex]](standardValue + delta, edgeValue);
-            delta = standardValueResult - standardValue;
+            // And then re-calculate delta.
+            var edgeValue = this._getViewExtent()[delta > 0 ? 1 : 0];
+            delta = compare(standardValue + delta, edgeValue, -1) - standardValue;
+            // Update handles.
+            each(rangeArgs, function (rangeArg) {
+                viewRange[rangeArg] += delta;
+            }, this);
 
-            zrUtil.each(operation.rangeArgs, function (rangeArg) {
-                this.layout.viewRange[rangeArg] += delta;
+            // Update min and max, considering all handles.
+            var interval = viewRange.interval = [Infinity, -Infinity];
+            each(handleNames, function (rangeArg) {
+                interval[0] = mathMin(interval[0], viewRange[rangeArg]);
+                interval[1] = mathMax(interval[1], viewRange[rangeArg]);
             }, this);
         },
 
         /**
          * @private
          */
-        _getViewTotalLength: function () {
-            var location = this.layout.location;
-            return this._orient === 'horizontal' ? location.width : location.height;
+        _getViewExtent: function (forMapping) {
+            // View total length.
+            var layout = this.layout;
+            var dataZoomModel = this.dataZoomModel;
+            var halfHandleSize = layout.halfHandleSize;
+            var orient = this._orient;
+            var totalLength = mathMax(
+                orient === 'horizontal' ? layout.width : layout.height,
+                halfHandleSize * 4
+            );
+            var extent = [halfHandleSize, totalLength - halfHandleSize];
+
+            var inverse = dataZoomModel.get('inverse');
+            // horizontal and inverse, or vertical and not inverse, extend will be reversed.
+            if (forMapping && (orient === 'horizontal' ? inverse : !inverse)) {
+                extent.reverse();
+            }
+            return extent;
         },
 
         /**
          * @private
          */
-        _updateWidgetsLayoutHorizontally: function () {
-            // Based on layout.viewRange and this.layout.location.
-            var dataZoomModel = this.dataZoomModel;
-            var layout = this.layout;
-            var location = layout.location;
-            var handleSize = dataZoomModel.get('handleSize');
-            var viewRange = layout.viewRange;
-            var viewRangeStart = Math.min(viewRange.handle1, viewRange.handle2);
-            var viewRangeEnd = Math.max(viewRange.handle1, viewRange.handle2);
+        _layouters: {
 
-            var fillerStyle = layout.filler.shape = {
-                x: location.x + viewRangeStart + handleSize,
-                y: location.y,
-                width: viewRangeEnd - viewRangeStart - handleSize * 2,
-                height: location.height
-            };
+            horizontal: function () {
+                var layout = this.layout;
+                var mainWidth = layout.width;
+                var mainHeight = layout.height;
+                var halfHandleSize = layout.halfHandleSize;
+                var viewRange = layout.viewRange;
+                var interval = viewRange.interval;
 
-            var handleBase = {
-                shape: {
-                    y: location.y,
-                    width: handleSize,
-                    height: location.height
-                }
-            };
+                layout.filler = {
+                    shape: {
+                        x: interval[0],
+                        y: 0,
+                        width: interval[1] - interval[0],
+                        height: mainHeight
+                    }
+                };
 
-            var handles = [
-                zrUtil.merge(
-                    {
-                        shape: {x: fillerStyle.x - handleSize}
-                    },
-                    handleBase
-                ),
-                zrUtil.merge(
-                    {
-                        shape: {x: fillerStyle.x + fillerStyle.width}
-                    },
-                    handleBase
-                )
-            ];
-            var handle1Index = viewRange.handle1 > viewRange.handle2 ? 1 : 0;
-            layout.handle1 = handles[handle1Index];
-            layout.handle2 = handles[1 - handle1Index];
+                zrUtil.each(['handle1', 'handle2'], function (handleName) {
+                    layout[handleName] = {
+                        shape: {
+                            x: viewRange[handleName] - halfHandleSize,
+                            y: 0,
+                            width: halfHandleSize * 2,
+                            height: mainHeight
+                        }
+                    };
+                });
 
-            var startHandleShape = handles[0].shape;
-            var endHandleShape = handles[1].shape;
+                var frameCfg = [
+                    {name: 'startFrame', range: [0, interval[0] - halfHandleSize]},
+                    {name: 'endFrame', range: [interval[1] + halfHandleSize, mainWidth]}
+                ];
+                zrUtil.each(frameCfg, function (cfg) {
+                    var cfgRange = cfg.range;
+                    layout[cfg.name] = {
+                        shape: {
+                            x: cfgRange[0],
+                            y: 0,
+                            width: cfgRange[1] - cfgRange[0],
+                            height: mainHeight
+                        }
+                    };
+                });
+            },
 
-            layout.startFrame = {
-                shape: {
-                    x: location.x,
-                    y: location.y,
-                    width: startHandleShape.x - location.x,
-                    height: location.height
-                }
-            };
+            /**
+             * @private
+             */
+            vertical: function () {
+                var layout = this.layout;
+                var mainWidth = layout.width;
+                var mainHeight = layout.height;
+                var halfHandleSize = layout.halfHandleSize;
+                var viewRange = layout.viewRange;
+                var interval = viewRange.interval;
 
-            layout.endFrame = {
-                shape: {
-                    x: endHandleShape.x + endHandleShape.width,
-                    y: location.y,
-                    width: location.x + location.width
-                        - (endHandleShape.x + endHandleShape.width),
-                    height: location.height
-                }
-            };
-        },
+                layout.filler = {
+                    shape: {
+                        x: 0,
+                        y: interval[0],
+                        width: mainWidth,
+                        height: interval[1] - interval[0]
+                    }
+                };
 
-        /**
-         * @private
-         */
-        _updateWidgetsLayoutVertically: function () {
-            // Based on layout.viewRange and this.layout.location.
-            var dataZoomModel = this.dataZoomModel;
-            var layout = this.layout;
-            var location = layout.location;
-            var handleSize = dataZoomModel.get('handleSize');
-            var viewRange = layout.viewRange;
-            var viewRangeStart = Math.min(viewRange.handle1, viewRange.handle2);
-            var viewRangeEnd = Math.max(viewRange.handle1, viewRange.handle2);
+                zrUtil.each(['handle1', 'handle2'], function (handleName) {
+                    layout[handleName] = {
+                        shape: {
+                            x: 0,
+                            y: viewRange[handleName] - halfHandleSize,
+                            width: mainWidth,
+                            height: halfHandleSize * 2
+                        }
+                    };
+                });
 
-            var fillerStyle = layout.filler.shape = {
-                x: location.x,
-                y: location.y + viewRangeStart + handleSize,
-                width: location.width,
-                height: viewRangeEnd - viewRangeStart - handleSize * 2
-            };
-
-            var handleBase = {
-                shape: {
-                    x: location.x,
-                    width: location.width,
-                    height: handleSize
-                }
-            };
-
-            var handles = [
-                zrUtil.merge(
-                    {
-                        shape: {y: fillerStyle.y - handleSize}
-                    },
-                    handleBase
-                ),
-                layout.endHandle = zrUtil.merge(
-                    {
-                        shape: {y: fillerStyle.y + fillerStyle.height}
-                    },
-                    handleBase
-                )
-            ];
-            var handle1Index = viewRange.handle1 > viewRange.handle2 ? 1 : 0;
-            layout.handle1 = handles[handle1Index];
-            layout.handle2 = handles[1 - handle1Index];
-
-            var startHandleShape = handles[0].shape;
-            var endHandleShape = handles[1].shape;
-
-            layout.startFrame = {
-                shape: {
-                    x: location.x,
-                    y: location.y,
-                    width: location.width,
-                    height: startHandleShape.y - location.y
-                }
-            };
-            layout.endFrame = {
-                shape: {
-                    x: location.x,
-                    y: endHandleShape.y + endHandleShape.height,
-                    width: location.width,
-                    height: location.y + location.height
-                        - (endHandleShape.y + endHandleShape.height)
-                }
-            };
+                var frameCfg = [
+                    {name: 'startFrame', range: [0, interval[0] - halfHandleSize]},
+                    {name: 'endFrame', range: [interval[1] + halfHandleSize, mainHeight]}
+                ];
+                zrUtil.each(frameCfg, function (cfg) {
+                    var cfgRange = cfg.range;
+                    layout[cfg.name] = {
+                        shape: {
+                            x: 0,
+                            y: cfgRange[0],
+                            width: mainWidth,
+                            height: cfgRange[1] - cfgRange[0]
+                        }
+                    };
+                });
+            }
         }
 
     };

@@ -36,7 +36,7 @@ define(function(require) {
         axis: null,
 
         init: function (axisOption, parentModel, ecModel) {
-            zrUtil.merge(axisOption, this.defaultOption, false);
+            zrUtil.merge(axisOption, this.getDefaultOption(), false);
 
             mergeDefault(axisOption, ecModel);
         },
@@ -62,7 +62,7 @@ define(function(require) {
         axis: null,
 
         init: function (axisOption, parentModel, ecModel) {
-            zrUtil.merge(axisOption, this.defaultOption, false);
+            zrUtil.merge(axisOption, this.getDefaultOption(), false);
 
             mergeDefault(axisOption, ecModel);
         },

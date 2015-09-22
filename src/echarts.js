@@ -21,6 +21,8 @@ define(function (require) {
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
 
+    var VISUAL_CODING_STAGES = ['echarts', 'chart', 'component'];
+
     /**
      * @inner
      */
@@ -232,11 +234,12 @@ define(function (require) {
                 var id = getSeriesId(seriesModel.option, idx);
 
                 var chart = chartsMap[id];
-                if (! chart) {
-                    chart = ChartView.create(
+                if (!chart) {
+                    var Clazz = ChartView.getClass(
                         ComponentModel.parseComponentType(seriesModel.type).sub
                     );
-                    if (chart) {
+                    if (Clazz) {
+                        chart = new Clazz();
                         chart.init(ecModel, this._extensionAPI);
                         chartsMap[id] = chart;
                         chartsList.push(chart);
@@ -274,25 +277,30 @@ define(function (require) {
                 componentsList[i].__keepAlive = true;
             }
 
-            ComponentView.eachAvailableComponent(function (componentType) {
+            ecModel.eachComponent(function (componentType, componentModel, idx) {
+                if (componentType === 'series') {
+                    return;
+                }
 
-                ecModel.eachComponent(componentType, function (componentModel, idx) {
-                    var id = componentType + '_' + idx;
-                    var component = componentsMap[id];
-                    if (! component) {
-                        // Create and add component
-                        component = ComponentView.create(componentType, componentModel);
+                var id = componentType + '_' + idx;
+                var component = componentsMap[id];
+                if (!component) {
+                    // Create and add component
+                    var Clazz = ComponentView.getClass(componentType, componentModel.option);
+
+                    if (Clazz) {
+                        component = new Clazz();
                         component.init(ecModel, this._extensionAPI);
                         componentsMap[id] = component;
                         componentsList.push(component);
 
                         this._zr.add(component.group);
                     }
-                    component.__id = id;
-                    component.__keepAlive = true;
-                    // Used in rendering
-                    component.__model = componentModel;
-                }, this);
+                }
+                component.__id = id;
+                component.__keepAlive = true;
+                // Used in rendering
+                component.__model = componentModel;
             }, this);
 
             for (var i = 0; i < componentsList.length;) {
@@ -361,8 +369,10 @@ define(function (require) {
          * @private
          */
         _doVisualCoding: function (ecModel) {
-            zrUtil.each(visualCodingFuncs, function (visualCoding) {
-                visualCoding(ecModel);
+            zrUtil.each(VISUAL_CODING_STAGES, function (stage) {
+                zrUtil.each(visualCodingFuncs[stage] || [], function (visualCoding) {
+                    visualCoding(ecModel);
+                });
             });
         },
 
@@ -417,7 +427,7 @@ define(function (require) {
 
     var layoutFuncs = [];
 
-    var visualCodingFuncs = [];
+    var visualCodingFuncs = {};
 
     /**
      * @module echarts
@@ -471,8 +481,12 @@ define(function (require) {
             }
         },
 
-        registerVisualCoding: function (visualCodingFunc) {
-            visualCodingFuncs.push(visualCodingFunc);
+        registerVisualCoding: function (stage, visualCodingFunc) {
+            if (zrUtil.indexOf(VISUAL_CODING_STAGES, stage) < 0) {
+                throw new Error('stage should be one of ' + VISUAL_CODING_STAGES);
+            }
+            var funcs = visualCodingFuncs[stage] || (visualCodingFuncs[stage] = []);
+            funcs.push(visualCodingFunc);
         },
 
         /**
@@ -504,7 +518,7 @@ define(function (require) {
         }
     };
 
-    echarts.registerVisualCoding(require('./visual/defaultColor'));
+    echarts.registerVisualCoding('echarts', require('./visual/defaultColor'));
 
     return echarts;
 });

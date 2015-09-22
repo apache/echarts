@@ -72,12 +72,21 @@ define(function (require) {
         return +(+x).toFixed(12);
     }
 
+    function asc(arr) {
+        arr.sort(function (a, b) {
+            return a - b;
+        });
+        return arr;
+    }
+
     return {
 
         linearMap: linearMap,
 
         parsePercent: parsePercent,
 
-        round: round
+        round: round,
+
+        asc: asc
     };
 });

@@ -63,7 +63,7 @@ define(function(require) {
                 option,
                 ecModel.getTheme().get(ComponentModel.parseComponentType(this.type).sub)
             );
-            zrUtil.merge(option, this.defaultOption);
+            zrUtil.merge(option, this.getDefaultOption());
         },
 
         mergeOption: function (newSeriesOption, ecModel) {

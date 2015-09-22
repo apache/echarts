@@ -45,17 +45,22 @@ define(function (require) {
             this._orient = dataZoomModel.get('orient');
 
             if (!event || event.type !== 'dataZoom' || event.from !== this.uid) {
-                this.group.removeAll();
+                var group = this.group;
+
+                group.removeAll();
 
                 if (this.dataZoomModel.get('show') === false) {
                     return;
                 }
 
                 // Layout
-                this._layout = new DataZoomLayout(dataZoomModel, ecModel, api);
-                this._layout.reset();
+                var layoutIns = this._layout = new DataZoomLayout(dataZoomModel, ecModel, api);
+                layoutIns.reset();
 
                 // Render
+                group.position[0] = layoutIns.layout.x;
+                group.position[1] = layoutIns.layout.y;
+
                 this._renderBackground();
                 this._renderDataShadow();
                 this._renderFrame();
@@ -66,18 +71,18 @@ define(function (require) {
 
         _renderBackground : function () {
             var dataZoomModel = this.dataZoomModel;
-            var location = this._layout.layout.location;
+            var layout = this._layout.layout;
 
             this.group.add(new this.api.Rect({
                 // FIXME
                 // zlevel: this.getZlevelBase(),
                 // z: this.getZBase(),
-                hoverable:false,
+                hoverable: false,
                 shape: {
-                    x: location.x,
-                    y: location.y,
-                    width: location.width,
-                    height: location.height
+                    x: 0,
+                    y: 0,
+                    width: layout.width,
+                    height: layout.height
                 },
                 style: {
                     fill: dataZoomModel.get('backgroundColor')
@@ -86,30 +91,24 @@ define(function (require) {
         },
 
         _renderFrame: function () {
-            var updatableShapes = this._updatableShapes;
-            var layout = this._layout.layout;
-            var baseFrame = {
-                // FIXME
-                // zlevel: this.getZlevelBase(),
-                // z: this.getZBase(),
-                hoverable: false,
-                style: {
-                    stroke: this.dataZoomModel.get('handleColor'),
-                    lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
-                    fill: 'rgba(0,0,0,0)'
-                }
-            };
-            this.group
-                .add(updatableShapes.startFrame = new this.api.Rect(zrUtil.mergeAll(
-                    {},
-                    baseFrame,
-                    layout.startFrame
-                )))
-                .add(updatableShapes.endFrame = new this.api.Rect(zrUtil.mergeAll(
-                    {},
-                    baseFrame,
-                    layout.endFrame
-                )));
+            zrUtil.each(['startFrame', 'endFrame'], function (name) {
+
+                var cfg = {
+                    // FIXME
+                    // zlevel: this.getZlevelBase(),
+                    // z: this.getZBase(),
+                    hoverable: false,
+                    style: {
+                        stroke: this.dataZoomModel.get('handleColor'),
+                        lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
+                        fill: 'rgba(0,0,0,0)'
+                    }
+                };
+                cfg = zrUtil.merge(cfg, this._layout.layout[name]);
+
+                this.group.add(this._updatableShapes[name] = new this.api.Rect(cfg));
+
+            }, this);
         },
 
         _renderDataShadow: function () {
@@ -118,74 +117,53 @@ define(function (require) {
         },
 
         _renderFiller: function () {
-            this.group.add(
-                this._updatableShapes.filler = new this.api.Rect(zrUtil.merge(
-                    {
-                        // FIXME
-                        // zlevel: this.getZlevelBase(),
-                        // z: this.getZBase(),
-                        draggable: this._orient,
-                        drift: zrUtil.bind(this._onDrift, this, this._getUpdateArgs()),
-                        ondragend: zrUtil.bind(this._onDragEnd, this),
-                        style: {
-                            fill: this.dataZoomModel.get('fillerColor'),
-                            text: this._orient === 'horizontal' ? ':::' : '::',
-                            textPosition : 'inside'
-                        }
-                        // FIXME
-                        // highlightStyle: {
-                        //     brushType: 'fill',
-                        //     color: 'rgba(0,0,0,0)'
-                        // }
-                    },
-                    this._layout.layout.filler
-                ))
-            );
-        },
-
-        _renderHandle: function () {
-            var dataZoomModel = this.dataZoomModel;
-            var layout = this._layout.layout;
-            var updatableShapes = this._updatableShapes;
-            // FIXME
-            // var detailInfo = this.zoomOption.showDetail ? this._getDetail() : {start: '',end: ''};
-
-            var baseHandle = {
+            var cfg = {
                 // FIXME
                 // zlevel: this.getZlevelBase(),
                 // z: this.getZBase(),
-                draggable: this._orient,
+                draggable: true,
+                cursor: 'move',
+                drift: zrUtil.bind(this._onDrift, this, this._getUpdateArg()),
+                ondragend: zrUtil.bind(this._onDragEnd, this),
                 style: {
-                    fill: dataZoomModel.get('handleColor'),
-                    textColor: DEFAULT_HANDLE_INNER_COLOR,
-                    text: '=',
-                    textPosition: 'inside'
+                    fill: this.dataZoomModel.get('fillerColor'),
+                    text: this._orient === 'horizontal' ? ':::' : '::',
+                    textPosition : 'inside'
                 }
                 // FIXME
                 // highlightStyle: {
-                //     text: detail.start,
                 //     brushType: 'fill',
-                //     textPosition: 'left'
-                // },
+                //     color: 'rgba(0,0,0,0)'
+                // }
             };
+            cfg = zrUtil.merge(cfg, this._layout.layout.filler);
 
-            this.group
-                .add(updatableShapes.handle1 = new this.api.Rect(zrUtil.mergeAll(
-                    {
-                        drift: zrUtil.bind(this._onDrift, this, this._getUpdateArgs('handle1')),
-                        ondragend: zrUtil.bind(this._onDragEnd, this)
+            this.group.add(this._updatableShapes.filler = new this.api.Rect(cfg));
+        },
+
+        _renderHandle: function () {
+            // FIXME
+            // var detailInfo = this.zoomOption.showDetail ? this._getDetail() : {start: '',end: ''};
+
+            zrUtil.each(['handle1', 'handle2'], function (name) {
+
+                var cfg = {
+                    style: {
+                        fill: this.dataZoomModel.get('handleColor'),
+                        textColor: DEFAULT_HANDLE_INNER_COLOR,
+                        text: '=',
+                        textPosition: 'inside'
                     },
-                    baseHandle,
-                    layout.handle1
-                )))
-                .add(updatableShapes.handle2 = new this.api.Rect(zrUtil.mergeAll(
-                    {
-                        drift: zrUtil.bind(this._onDrift, this, this._getUpdateArgs('handle2')),
-                        ondragend: zrUtil.bind(this._onDragEnd, this)
-                    },
-                    baseHandle,
-                    layout.handle2
-                )));
+                    cursor: 'move',
+                    draggable: true,
+                    drift: zrUtil.bind(this._onDrift, this, this._getUpdateArg(name)),
+                    ondragend: zrUtil.bind(this._onDragEnd, this)
+                };
+                cfg = zrUtil.merge(cfg, this._layout.layout[name]);
+
+                this.group.add(this._updatableShapes[name] = new this.api.Rect(cfg));
+
+            }, this);
         },
 
         _updateView: function () {
@@ -210,16 +188,15 @@ define(function (require) {
             }
         },
 
-        _getUpdateArgs: function (arg) {
-            return (!arg || this.dataZoomModel.get('zoomLock'))
-                ? ['handle1', 'handle2']
-                : [arg];
+        _getUpdateArg: function (arg) {
+            return (arg && !this.dataZoomModel.get('zoomLock'))
+                ? arg : null;
         },
 
-        _onDrift: function (rangeArgs, dx, dy) {
+        _onDrift: function (rangeArg, dx, dy) {
             var dataZoomModel = this.dataZoomModel;
 
-            this._layout.update({rangeArgs: rangeArgs, dx: dx, dy: dy});
+            this._layout.update({rangeArg: rangeArg, dx: dx, dy: dy});
 
             this._updateView();
 

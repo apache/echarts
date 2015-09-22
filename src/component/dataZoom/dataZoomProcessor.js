@@ -30,7 +30,7 @@ define(function (require) {
         // Process axis data
         var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
         var isCategoryFilter = axisModel.get('type') === 'category';
-        var seriesModels = dataZoomModel.getTargetSeriesModels(dimNames.dim, axisIndex);
+        var seriesModels = dataZoomModel.getTargetSeriesModels(dimNames.name, axisIndex);
         var dataExtent = calculateDataExtent(dimNames, axisModel, seriesModels);
         var dataWindow = calculateDataWindow(axisModel, dataZoomModel, dataExtent, isCategoryFilter);
 
@@ -66,7 +66,7 @@ define(function (require) {
             //         return value >= dataWindow[0] && value <= dataWindow[1];
             //     });
             // }
-            seriesData.filterSelf(dimNames.dim, function (value) {
+            seriesData.filterSelf(dimNames.name, function (value) {
                 return value >= dataWindow[0] && value <= dataWindow[1];
             });
 
@@ -91,7 +91,7 @@ define(function (require) {
         zrUtil.each(seriesModels, function (seriesModel) {
             var seriesData = seriesModel.getData();
             if (seriesData) {
-                var seriesExtent = seriesData.getDataExtent(dimNames.dim);
+                var seriesExtent = seriesData.getDataExtent(dimNames.name);
                 seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
                 seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
             }
@@ -106,8 +106,8 @@ define(function (require) {
         var percentExtent = [0, 100];
 
         var result = [
-            linearMap(dataZoomRange.start, percentExtent, dataExtent, true),
-            linearMap(dataZoomRange.end, percentExtent, dataExtent, true)
+            linearMap(dataZoomRange[0], percentExtent, dataExtent, true),
+            linearMap(dataZoomRange[1], percentExtent, dataExtent, true)
         ];
         if (isCategoryFilter) {
             result = [Math.floor(result[0]), Math.ceil(result[1])];

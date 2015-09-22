@@ -4,8 +4,9 @@
 define(function(require) {
 
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../../util/model');
     var echarts = require('../../echarts');
-    var helper = require('./helper');
+
 
     echarts.registerAction('dataZoom', function (event, ecModel) {
 
@@ -14,22 +15,18 @@ define(function(require) {
             return;
         }
 
-        var linkSet = helper.findLinkSet(
+        var linkedNodesFinder = modelUtil.createLinkedNodesFinder(
             zrUtil.bind(ecModel.eachComponent, ecModel, 'dataZoom'),
+            modelUtil.eachAxisDim,
             function (model, dimNames) {
                 return model.get(dimNames.axisIndex);
-            },
-            fromDataZoomModel
+            }
         );
 
-        var dataZoomRange = event.dataZoomRange;
-        zrUtil.each(linkSet.models, function (dataZoomModel) {
-            dataZoomModel.setRange({
-                start: dataZoomRange.start,
-                end: dataZoomRange.end,
-                start2: dataZoomRange.start2,
-                end2: dataZoomRange.end2
-            });
+        var effectedModels = linkedNodesFinder(fromDataZoomModel).nodes;
+
+        zrUtil.each(effectedModels, function (dataZoomModel) {
+            dataZoomModel.setRange(event.dataZoomRange);
         });
     });
 

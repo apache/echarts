@@ -6,7 +6,7 @@ define(function (require) {
     require('./scatter/ScatterSeries');
     require('./scatter/ScatterView');
 
-    echarts.registerVisualCoding(zrUtil.curry(
+    echarts.registerVisualCoding('chart', zrUtil.curry(
         require('../visual/symbol'), 'scatter', 'circle', null
     ));
     echarts.registerLayout(zrUtil.curry(
