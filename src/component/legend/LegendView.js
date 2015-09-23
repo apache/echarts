@@ -2,8 +2,9 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
-    var formatUtil = require('../../util/format');
     var symbolCreator = require('../../util/symbol');
+    var legendLayout = require('./legendLayout');
+    var graphic = require('../../util/graphic');
 
     var LEGEND_DISABLE_STYLE = {
         fill: '#ccc',
@@ -27,43 +28,53 @@ define(function (require) {
         },
 
         render: function (legendModel, ecModel, api) {
-            var itemGap = legendModel.get('itemGap');
-            var padding = formatUtil.normalizeCssArray(
-                legendModel.get('padding')
-            );
-            var orient = legendModel.get('orient');
-
+            var enableSelect = legendModel.get('selectedMode');
+            var itemWidth = legendModel.get('itemWidth');
+            var itemHeight = legendModel.get('itemHeight');
             var group = this.group;
+            var x = legendModel.get('x');
+            var y = legendModel.get('y');
+            var itemAlign = legendModel.get('align');
+            var parsePercent = numberUtil.parsePercent;
+            group.position = [
+                parsePercent(x, api.getWidth()),
+                parsePercent(y, api.getHeight())
+            ];
             group.removeAll();
 
-            group.position = [
-                numberUtil.parsePercent(
-                    legendModel.get('x'), api.getWidth()
-                ),
-                numberUtil.parsePercent(
-                    legendModel.get('y'), api.getHeight()
-                )
-            ];
-
-            var x = padding[3];
-            var y = padding[0];
-
-            var width = 20;
-            var height = 10;
+            if (itemAlign === 'auto') {
+                itemAlign = group.position[0] / api.getWidth() < 0.7 ? 'left' : 'right';
+            }
 
             zrUtil.each(legendModel.getData(), function (itemModel) {
                 var seriesName = itemModel.get('name');
                 var seriesModel = ecModel.getSeriesByName(seriesName, true);
                 var data = seriesModel.getData();
+                var color = data.getVisual('color');
 
                 var itemElMap = this._itemElMap;
                 var itemGroup = itemElMap[seriesName];
                 if (legendModel.isSelected(seriesName)) {
-                    itemGroup = new api.Group();
+                    itemGroup = new graphic.Group();
                     this._createSymbol(
-                        data, x, y, width, height, data.getVisual('color'), itemGroup
+                        data, 0, 0, itemWidth, itemHeight, color, itemGroup
                     );
                     itemElMap[seriesName] = itemGroup;
+
+                    var textX = itemAlign === 'left' ? itemWidth + 5 : -5;
+                    var textAlign = itemAlign;
+
+                    var text = new graphic.Text({
+                        style: {
+                            text: seriesName,
+                            x: textX,
+                            y: itemHeight / 2,
+                            fill: '#000',
+                            textAlign: textAlign,
+                            textBaseline: 'middle'
+                        }
+                    });
+                    itemGroup.add(text);
                 }
                 else {
                     itemGroup.eachChild(function (child) {
@@ -73,34 +84,42 @@ define(function (require) {
                     });
                     itemGroup.off('click');
                 }
-
-                var text = new api.Text({
-                    style: {
-                        text: seriesName,
-                        x: x + width + 5,
-                        y: y + height / 2,
-                        fill: '#000',
-                        textAlign: 'left',
-                        textBaseline: 'middle'
-                    }
+                itemGroup.eachChild(function (child) {
+                    child.silent = !enableSelect;
                 });
-                itemGroup.add(text);
-
-                var textRect = text.getBoundingRect();
-                if (orient === 'horizontal') {
-                    x += width + 5 + textRect.width + itemGap;
-                }
-                else {
-                    y += Math.max(height, textRect.height) + itemGap;
-                }
 
                 group.add(itemGroup);
 
                 itemGroup.on('click', zrUtil.curry(createSelectActionDispatcher, this.uid, seriesName, api), this);
             }, this);
 
+            legendLayout(group, legendModel);
+
+            this._adjustGroupPosition(group, x, y);
+        },
+
+        _adjustGroupPosition: function (group, x, y) {
+
             var groupRect = group.getBoundingRect();
-            group.position[0] -= groupRect.width / 2;
+            var position = group.position;
+            var padding = group.padding;
+
+            switch (x) {
+                case 'center':
+                    position[0] -= groupRect.width / 2;
+                    break;
+                case 'right':
+                    position[0] -= groupRect.width + groupRect.x + padding[1];
+                    break;
+            }
+            switch (y) {
+                case 'center':
+                    position[1] -= groupRect.height / 2;
+                    break;
+                case 'bottom':
+                    position[0] -= groupRect.height + groupRect.y + padding[2];
+                    break;
+            }
         },
 
         _createSymbol: function (data, x, y, width, height, color, group) {
@@ -114,7 +133,6 @@ define(function (require) {
             ));
 
             // Compose symbols
-            // PENDING Use group ?
             if (symbolType && symbolType !== legendSymbolType) {
                 var size = height * 0.8;
                 // Put symbol in the center
