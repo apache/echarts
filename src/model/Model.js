@@ -130,10 +130,11 @@ define(function (require) {
         return ExtendedModel;
     };
 
-    zrUtil.merge(Model.prototype, require('./mixin/lineStyle'));
-    zrUtil.merge(Model.prototype, require('./mixin/areaStyle'));
-    zrUtil.merge(Model.prototype, require('./mixin/textStyle'));
-    zrUtil.merge(Model.prototype, require('./mixin/itemStyle'));
+    var modelProto = Model.prototype;
+    zrUtil.merge(modelProto, require('./mixin/lineStyle'));
+    zrUtil.merge(modelProto, require('./mixin/areaStyle'));
+    zrUtil.merge(modelProto, require('./mixin/textStyle'));
+    zrUtil.merge(modelProto, require('./mixin/itemStyle'));
 
     return Model;
 });
