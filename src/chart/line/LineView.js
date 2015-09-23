@@ -38,33 +38,37 @@ define(function(require) {
             var lineStyleNormalModel = seriesModel.getModel('itemStyle.normal.lineStyle');
 
             var points = data.map(data.getItemLayout, true);
-            var pointsWithName = data.map(function (idx) {
+            var plainDataList = data.map(['x', 'y'], function (x, y, idx) {
                 return {
-                    // TODO Use category names if possible
-                    name: data.getRawIndex(idx),
-                    point: points[idx]
+                    x: x,
+                    y: y,
+                    point: points[idx],
+                    name: data.getName(idx),
+                    idx: idx,
+                    rawIdx: data.getRawIndex(idx)
                 };
             });
 
-            var coordinateSystem = seriesModel.coordinateSystem;
-            var isCoordinateSystemPolar = coordinateSystem.type === 'polar';
+            var prevCoordSys = this._coordSys
+            var coordSys = seriesModel.coordinateSystem;
+            var isCoordSysPolar = coordSys.type === 'polar';
 
             // FIXME Update after animation
-            if (
-                isCoordinateSystemPolar
-                && points.length > 2
-                && coordinateSystem.getAngleAxis().type === 'category'
-            ) {
-                // Close polyline
-                points.push(Array.prototype.slice.call(points[0]));
-            }
+            // if (
+            //     isCoordSysPolar
+            //     && points.length > 2
+            //     && coordinateSystem.getAngleAxis().type === 'category'
+            // ) {
+            //     // Close polyline
+            //     points.push(Array.prototype.slice.call(points[0]));
+            // }
 
             // Draw symbols, enable animation on the first draw
             var dataSymbol = this._dataSymbol;
             dataSymbol.z = seriesModel.get('z') + 1;
 
-            // Initialization animation
-            if (!this._data) {
+            // Initialization animation or coordinate system changed
+            if (!this._data || prevCoordSys.type !== coordSys.type) {
                 dataSymbol.updateData(data, false);
 
                 var polyline = new api.Polyline({
@@ -80,11 +84,11 @@ define(function(require) {
                     )
                 });
 
-                var removeClipPath = zrUtil.bind(polyline.removeClipPath, polyline);
+                // var removeClipPath = zrUtil.bind(polyline.removeClipPath, polyline);
 
-                var clipPath = isCoordinateSystemPolar
-                    ? this._createPolarClipShape(coordinateSystem, api, removeClipPath)
-                    : this._createGridClipShape(coordinateSystem, api, removeClipPath);
+                var clipPath = isCoordSysPolar
+                    ? this._createPolarClipShape(coordSys, api)
+                    : this._createGridClipShape(coordSys, api);
 
                 polyline.setClipPath(clipPath);
 
@@ -96,8 +100,10 @@ define(function(require) {
                 dataSymbol.updateData(data, false);
                 // In the case data zoom triggerred refreshing frequently
                 // Data may not change if line has a category axis. So it should animate nothing
-                if (!isPointsSame(this._pointsWithName, pointsWithName)) {
-                    this._updateAnimation(data, pointsWithName);
+                if (!isPointsSame(this._plainDataList, plainDataList)) {
+                    this._updateAnimation(
+                        data, plainDataList, coordSys
+                    );
                 }
                 // Add back
                 group.add(this._polyline);
@@ -105,12 +111,15 @@ define(function(require) {
 
             this._data = data;
 
-            this._pointsWithName = pointsWithName;
+            this._plainDataList = plainDataList;
+            this._coordSys = coordSys;
         },
 
-        _updateAnimation: function (data, pointsWithName) {
+        _updateAnimation: function (data, plainDataList, coordSys) {
             var polyline = this._polyline;
-            var diff = lineAnimationDiff(this._pointsWithName, pointsWithName);
+            var diff = lineAnimationDiff(
+                this._plainDataList, plainDataList, this._coordSys, coordSys
+            );
             polyline.shape.points = diff.current;
             polyline.animateTo({
                 shape: {
@@ -118,25 +127,39 @@ define(function(require) {
                 }
             }, 300, 'cubicOut');
 
-            var updatedDataIndices = [];
+            var updatedDataInfo = [];
+            var addedDataIndices = [];
             var diffStatus = diff.status;
-            var data = this._dataSymbol.getData();
 
             for (var i = 0; i < diffStatus.length; i++) {
-                if (diffStatus[i] === '=') {
-                    updatedDataIndices.push(i);
+                var cmd = diffStatus[i].cmd;
+                if (cmd === '=') {
+                    updatedDataInfo.push({
+                        el: data.getItemGraphicEl(diffStatus[i].idx1),
+                        ptIdx: i    // Index of points
+                    });
+                }
+                else if (cmd === '+') {
+                    addedDataIndices.push(diffStatus[i].idx);
                 }
             }
 
             if (polyline.animators) {
+                for (var i = 0; i < addedDataIndices.length; i++) {
+                    var el = data.getItemGraphicEl(addedDataIndices[i]);
+                    var oldScale = el.scale;
+                    el.scale = [1, 1];
+                    el.animateTo({
+                        scale: oldScale
+                    }, 300, 300, 'cubicOut');
+                }
                 polyline.animators[0].during(function () {
-                    // Symbol elements may be more than updatedDataIndices if there is new added data
-                    for (var i = 0; i < updatedDataIndices.length; i++) {
-                        var el = data.getItemGraphicEl(i);
+                    for (var i = 0; i < updatedDataInfo.length; i++) {
+                        var el = updatedDataInfo[i].el;
                         vector.copy(
                             el.position,
                             // synchronizing with the point on line
-                            polyline.shape.points[updatedDataIndices[i]]
+                            polyline.shape.points[updatedDataInfo[i].ptIdx]
                         );
                         el.dirty();
                     }
