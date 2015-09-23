@@ -18,7 +18,14 @@ define(function(require) {
             height: 0
         },
         buildPath: function (path, shape) {
-            path.moveTo(shape.cx, shape.cy - shape.h)
+            var cx = shape.cx;
+            var cy = shape.cy;
+            var width = shape.width / 2;
+            var height = shape.height / 2;
+            path.moveTo(cx, cy - height);
+            path.lineTo(cx + width, cy);
+            path.lineTo(cx, cy + height);
+            path.lineTo(cx - width, cy);
         }
     });
 
@@ -83,8 +90,8 @@ define(function(require) {
         diamond: function (x, y, w, h) {
             return new Diamond({
                 shape: {
-                    cx: x + w,
-                    cy: y + h,
+                    cx: x + w / 2,
+                    cy: y + h / 2,
                     width: w,
                     height: h
                 }
@@ -111,6 +118,12 @@ define(function(require) {
     return {
         /**
          * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
+         * @param {string} symbolConfig
+         * @param {number} x
+         * @param {number} y
+         * @param {number} w
+         * @param {number} h
+         * @param {string} color
          */
         createSymbol: function (symbolConfig, x, y, w, h, color) {
             var isEmpty = symbolConfig.indexOf('empty') === 0;
