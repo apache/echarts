@@ -1,4 +1,5 @@
 define({
+
     getFont: function () {
         return [
             this.get('fontStyle'),
@@ -6,5 +7,15 @@ define({
             this.get('fontSize') + 'px',
             this.get('fontFamily')
         ].join(' ');
+    },
+
+    getTextRect: function (text) {
+        var textStyle = this.getShallow('textStyle');
+        return require('zrender/contain/text').getBoundingRect(
+            text,
+            this.getFont(),
+            textStyle.align,
+            textStyle.baseline
+        );
     }
 });

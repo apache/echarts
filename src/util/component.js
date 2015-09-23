@@ -47,7 +47,29 @@ define(function(require) {
     /**
      * @public
      */
-    util.enableClassManagement = function (entity, enableSubTypeDefaulter) {
+    util.enableClassExtend = function (RootClass) {
+        RootClass.extend = function (proto) {
+            var ExtendedClass = function () {
+                RootClass.apply(this, arguments);
+            };
+
+            zrUtil.extend(ExtendedClass.prototype, proto);
+            ExtendedClass.extend = this.extend;
+            zrUtil.inherits(ExtendedClass, this);
+
+            return ExtendedClass;
+        };
+    };
+
+    /**
+     * @param {Object} entity
+     * @param {Object} options
+     * @param {boolean} [options.subTypeDefaulter]
+     * @param {boolean} [options.registerWhenExtend]
+     * @public
+     */
+    util.enableClassManagement = function (entity, options) {
+        options = options || {};
 
         /**
          * Component model classes
@@ -131,8 +153,18 @@ define(function(require) {
             return container;
         }
 
-        if (enableSubTypeDefaulter) {
-            enableSubTypeDefaulterManager(entity, storage);
+        if (options.subTypeDefaulter) {
+            enableSubTypeDefaulter(entity, storage);
+        }
+
+        if (options.registerWhenExtend) {
+            var originalExtend = entity.extend;
+            if (originalExtend) {
+                entity.extend = function (proto) {
+                    var ExtendedClass = originalExtend.call(this, proto);
+                    return entity.registerClass(ExtendedClass, proto.type);
+                };
+            }
         }
 
         return entity;
@@ -141,7 +173,7 @@ define(function(require) {
     /**
      * @inner
      */
-    function enableSubTypeDefaulterManager(entity, storage) {
+    function enableSubTypeDefaulter(entity, storage) {
 
         var subTypeDefaulters = {};
 

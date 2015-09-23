@@ -34,24 +34,11 @@ define(function (require) {
         dispose: function () {}
     };
 
-    Chart.extend = function (proto) {
-        var Super = this;
-
-        var ExtendedChart = function () {
-            Super.call(this);
-        };
-
-        zrUtil.extend(ExtendedChart.prototype, proto);
-
-        ExtendedChart.extend = Super.extend;
-
-        zrUtil.inherits(ExtendedChart, Super);
-
-        return Chart.registerClass(ExtendedChart, proto.type);
-    };
+    // Enable Chart.extend.
+    componentUtil.enableClassExtend(Chart);
 
     // And capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
-    componentUtil.enableClassManagement(Chart);
+    componentUtil.enableClassManagement(Chart, {registerWhenExtend: true});
 
     return Chart;
 });

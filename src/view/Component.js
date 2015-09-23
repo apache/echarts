@@ -29,24 +29,11 @@ define(function (require) {
         dispose: function () {}
     };
 
-    Component.extend = function (proto) {
-        var Super = this;
+    // Enable Component.extend.
+    componentUtil.enableClassExtend(Component);
 
-        var ExtendedComponent = function () {
-            Super.call(this);
-        };
-
-        zrUtil.extend(ExtendedComponent.prototype, proto);
-
-        ExtendedComponent.extend = Super.extend;
-
-        zrUtil.inherits(ExtendedComponent, Super);
-
-        return Component.registerClass(ExtendedComponent, proto.type);
-    };
-
-    // And capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
-    componentUtil.enableClassManagement(Component);
+    // Enable capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
+    componentUtil.enableClassManagement(Component, {registerWhenExtend: true});
 
     return Component;
 });

@@ -4,6 +4,7 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var componentUtil = require('../util/component');
 
     /**
      * @alias module:echarts/model/Model
@@ -112,23 +113,8 @@ define(function (require) {
         }
     };
 
-    Model.extend = function (proto) {
-        var ExtendedModel = function () {
-            Model.apply(this, arguments);
-        };
-
-        for (var name in proto) {
-            if (proto.hasOwnProperty(name)) {
-                ExtendedModel.prototype[name] = proto[name];
-            }
-        }
-
-        var Super = this;
-        ExtendedModel.extend = Super.extend;
-        zrUtil.inherits(ExtendedModel, Super);
-
-        return ExtendedModel;
-    };
+    // Enable Model.extend.
+    componentUtil.enableClassExtend(Model);
 
     zrUtil.merge(Model.prototype, require('./mixin/lineStyle'));
     zrUtil.merge(Model.prototype, require('./mixin/areaStyle'));

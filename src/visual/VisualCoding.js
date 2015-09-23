@@ -3,8 +3,8 @@
  */
 define(function (require) {
 
-    var echarts = require('../../echarts');
     var zrUtil = require('zrender/core/util');
+    var zrColor = require('zrender/tool/color');
     var linearMap = require('../util/number').linearMap;
 
     var VisualCoding = function (option, ecModel, extendMethods) {
@@ -18,7 +18,7 @@ define(function (require) {
 
         zrUtil.extend(this, visualHandlers[this.type]);
         zrUtil.extend(this, extendMethods);
-    }
+    };
 
     VisualCoding.prototype = {
 
@@ -34,30 +34,30 @@ define(function (require) {
 
         mapValueToVisual: zrUtil.noop,
 
-        getValueExtent: zrUtil.noop,
+        getValueExtent: zrUtil.noop
     };
 
     var visualHandlers = {
 
         color: {
-            setDataVisual: function (data) {
+            setDataVisual: function (data, dimension) {
                 // FIXME
                 // 目前只考虑了List
-                data.each(['value'], function (value, index) {
+                data.each([dimension], function (value, index) {
                     var color = this.isValueActive(value)
                         ? this.mapValueToVisual(value)
-                        : this.option.inactiveVisual // FIXME
+                        : this.option.inactiveVisual; // FIXME
 
                     data.setItemVisual(index, color);
-                })
+                }, false, this);
             },
 
             mapValueToVisual: function (value) {
                 var thisOption = this.option;
-                var visualData = thisOption.data;
-                var valueExtent = this.getValueExtent();
+                var normalizedValue = linearMap(value, this.getValueExtent(), [0, 1], true);
 
-                return linearMap()
+                return zrColor.mapToColor(normalizedValue, thisOption.data)
+                    || thisOption.inactiveVisual;
             }
         }
     };

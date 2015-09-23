@@ -93,11 +93,14 @@ define(function(require) {
         SubComponentModel.extend = Super.extend;
         zrUtil.inherits(SubComponentModel, Super);
 
-        return ComponentModel.registerClass(SubComponentModel, proto.type);
+        return SubComponentModel;
     };
 
     // And capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
-    componentUtil.enableClassManagement(ComponentModel, true);
+    componentUtil.enableClassManagement(
+        ComponentModel,
+        {subTypeDefaulter: true, registerWhenExtend: true}
+    );
 
     componentUtil.enableTopologicalTravel(ComponentModel, getDependencies);
 
