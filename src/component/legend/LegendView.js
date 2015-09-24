@@ -6,10 +6,7 @@ define(function (require) {
     var legendLayout = require('./legendLayout');
     var graphic = require('../../util/graphic');
 
-    var LEGEND_DISABLE_STYLE = {
-        fill: '#ccc',
-        stroke: '#ccc'
-    };
+    var LEGEND_DISABLE_COLOR = '#ccc';
 
     function createSelectActionDispatcher(uid, seriesName, api) {
         api.dispatch({
@@ -24,7 +21,7 @@ define(function (require) {
         type: 'legend',
 
         init: function () {
-            this._itemElMap = {};
+            this._symbolTypeStore = {};
         },
 
         render: function (legendModel, ecModel, api) {
@@ -49,41 +46,38 @@ define(function (require) {
             zrUtil.each(legendModel.getData(), function (itemModel) {
                 var seriesName = itemModel.get('name');
                 var seriesModel = ecModel.getSeriesByName(seriesName, true);
+                if (!seriesModel) {
+                    // Series not exists
+                    return;
+                }
+
                 var data = seriesModel.getData();
                 var color = data.getVisual('color');
 
-                var itemElMap = this._itemElMap;
-                var itemGroup = itemElMap[seriesName];
-                if (legendModel.isSelected(seriesName)) {
-                    itemGroup = new graphic.Group();
-                    this._createSymbol(
-                        data, 0, 0, itemWidth, itemHeight, color, itemGroup
-                    );
-                    itemElMap[seriesName] = itemGroup;
-
-                    var textX = itemAlign === 'left' ? itemWidth + 5 : -5;
-                    var textAlign = itemAlign;
-
-                    var text = new graphic.Text({
-                        style: {
-                            text: seriesName,
-                            x: textX,
-                            y: itemHeight / 2,
-                            fill: '#000',
-                            textAlign: textAlign,
-                            textBaseline: 'middle'
-                        }
-                    });
-                    itemGroup.add(text);
+                if (!legendModel.isSelected(seriesName)) {
+                    color = LEGEND_DISABLE_COLOR;
                 }
-                else {
-                    itemGroup.eachChild(function (child) {
-                        if (child.type !== 'text') {
-                            child.style.set(LEGEND_DISABLE_STYLE);
-                        }
-                    });
-                    itemGroup.off('click');
-                }
+
+                var itemGroup = new graphic.Group();
+                this._createSymbol(
+                    data, 0, 0, itemWidth, itemHeight, color, itemGroup
+                );
+
+                var textX = itemAlign === 'left' ? itemWidth + 5 : -5;
+                var textAlign = itemAlign;
+
+                var text = new graphic.Text({
+                    style: {
+                        text: seriesName,
+                        x: textX,
+                        y: itemHeight / 2,
+                        fill: '#000',
+                        textAlign: textAlign,
+                        textBaseline: 'middle'
+                    }
+                });
+                itemGroup.add(text);
+
                 itemGroup.eachChild(function (child) {
                     child.silent = !enableSelect;
                 });
