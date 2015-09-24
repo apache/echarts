@@ -77,7 +77,7 @@ define(function (require) {
                 // FIXME
                 // zlevel: this.getZlevelBase(),
                 // z: this.getZBase(),
-                hoverable: false,
+                silent: true,
                 shape: {
                     x: 0,
                     y: 0,
@@ -97,7 +97,7 @@ define(function (require) {
                     // FIXME
                     // zlevel: this.getZlevelBase(),
                     // z: this.getZBase(),
-                    hoverable: false,
+                    silent: true,
                     style: {
                         stroke: this.dataZoomModel.get('handleColor'),
                         lineWidth: DEFAULT_FRAME_BORDER_WIDTH,

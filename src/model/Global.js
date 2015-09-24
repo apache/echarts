@@ -170,12 +170,14 @@ define(function (require) {
          * @private
          */
         _determineSubType: function (componentType, newCptOption, existComponent) {
-            return newCptOption.type
+            var subType = newCptOption.type
                 ? newCptOption.type
                 : existComponent
                 ? existComponent.option.type
                 // Use determinSubType only when there is no existComponent.
                 : ComponentModel.determineSubType(componentType, newCptOption);
+
+            return newCptOption.type = subType;
         },
 
         /**

@@ -626,7 +626,7 @@ define(function (require) {
         if (isObject(key)) {
             for (var name in key) {
                 if (key.hasOwnProperty(name)) {
-                    itemVisual[key] = key[name];
+                    itemVisual[name] = key[name];
                 }
             }
             return;
@@ -709,11 +709,10 @@ define(function (require) {
             else {
                 // PENDING
                 var dimSize = data[0] && data[0].length;
-                if (dimSize === 2) {
-                    dimensions = ['x', 'y'];
-                }
-                else if (dimSize === 3) {
-                    dimensions = ['x', 'y', 'z'];
+                // FIXME
+                var dimensionNames = ['x', 'y', 'z', 'a', 'b', 'c', 'd', 'e'];
+                if (dimSize >= 2) {
+                    dimensions = dimensionNames.slice(0, dimSize);
                 }
             }
         }
