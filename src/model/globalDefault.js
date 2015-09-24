@@ -62,7 +62,6 @@ define({
         'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
     ],
     animation: true,                // 过渡动画是否开启
-    addDataAnimation: true,         // 动态数据接口是否开启动画效果
     animationThreshold: 2000,       // 动画元素阀值，产生的图形原素超过2000不出动画
     animationDuration: 2000,        // 过渡动画参数：进入
     animationDurationUpdate: 500,   // 过渡动画参数：更新

@@ -3,6 +3,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var Group = require('zrender/container/Group');
     var symbolCreators = require('../../util/symbol');
+    var graphic = require('../../util/graphic');
 
     function createSymbol(data, idx, enableAnimation) {
         var point = data.getItemLayout(idx);
@@ -127,9 +128,15 @@ define(function (require) {
             data.eachItemGraphicEl(function (el, idx) {
                 el.z = this.z;
 
+                var itemModel = data.getItemModel(idx);
                 zrUtil.extend(
                     el.style,
-                    data.getItemModel(idx).getModel('itemStyle.normal').getItemStyle()
+                    itemModel.getModel('itemStyle.normal').getItemStyle()
+                );
+
+                graphic.setHoverStyle(
+                    el,
+                    itemModel.getModel('itemStyle.emphasis').getItemStyle()
                 );
 
                 var symbolSize = data.getItemVisual(idx, 'symbolSize');

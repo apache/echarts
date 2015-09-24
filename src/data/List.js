@@ -153,6 +153,8 @@ define(function (require) {
         var dimensions = this.dimensions;
         var size = data.length;
 
+        nameList = nameList || [];
+
         // Init storage
         for (var i = 0; i < dimensions.length; i++) {
             var dimInfo = this._dimensionInfos[i];
@@ -216,7 +218,7 @@ define(function (require) {
 
         // Use the name in option as data id in two value axis case
         for (var i = 0; i < optionModelIndices.length; i++) {
-            if (! nameList[i]) {
+            if (!nameList[i]) {
                 var modelIdx = optionModelIndices[i];
                 var model = optionModels[modelIdx];
                 if (model && model.option) {
@@ -409,7 +411,7 @@ define(function (require) {
         // Only stacked on the value axis
         var stackDimMap = getStackDimMap(this._rawValueDims, dimensions);
         // Optimizing for 1 dim case
-        var firstDimStack = stackDimMap[dimensions[0]];
+        var firstDimStack = stack && stackDimMap[dimensions[0]];
 
         context = context || this;
 
@@ -424,7 +426,7 @@ define(function (require) {
             }
             else {
                 for (var k = 0; k < dimSize; k++) {
-                    value[k] = this.get(dimensions[k], i, stackDimMap[dimensions[k]]);
+                    value[k] = this.get(dimensions[k], i, stack && stackDimMap[dimensions[k]]);
                 }
                 // Index
                 value[k] = i;
@@ -451,7 +453,7 @@ define(function (require) {
         // Only stacked on the value axis
         var stackDimMap = getStackDimMap(this._rawValueDims, dimensions);
         // Optimizing for 1 dim case
-        var firstDimStack = stackDimMap[dimensions[0]];
+        var firstDimStack = stack && stackDimMap[dimensions[0]];
 
         context = context || this;
 
@@ -465,7 +467,7 @@ define(function (require) {
             }
             else {
                 for (var k = 0; k < dimSize; k++) {
-                    value[k] = this.get(dimensions[k], i, stackDimMap[dimensions[k]]);
+                    value[k] = this.get(dimensions[k], i, stack && stackDimMap[dimensions[k]]);
                 }
                 value[k] = i;
                 keep = cb.apply(context, value);

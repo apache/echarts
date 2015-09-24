@@ -166,19 +166,17 @@ define(function(require) {
             var stroke = el.style.stroke;
             var fill = el.style.fill;
             hoverStyle = hoverStyle || {};
-            hoverStyle.fill = hoverStyle.fill || colorTool.lift(fill, -0.2);
-            hoverStyle.stroke = hoverStyle.stroke || colorTool.lift(stroke, -0.2);
+            hoverStyle.fill = hoverStyle.fill || colorTool.lift(fill, -0.1);
+            hoverStyle.stroke = hoverStyle.stroke || colorTool.lift(stroke, -0.1);
 
             var normalStyle = {};
             for (var name in hoverStyle) {
                 normalStyle[name] = el.style[name];
             }
             el.on('mouseover', function () {
-                this.style.set(hoverStyle);
-                this.dirty();
+                el.setStyle(hoverStyle);
             }).on('mouseout', function () {
-                this.style.set(normalStyle);
-                this.dirty();
+                el.setStyle(normalStyle);
             });
         }
     };

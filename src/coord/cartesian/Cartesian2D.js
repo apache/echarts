@@ -38,12 +38,13 @@ define(function(require) {
 
         /**
          * @param {Array.<number>} data
+         * @param {boolean} [clamp=false]
          * @return {Array.<number>}
          */
-        dataToPoint: function (data) {
+        dataToPoint: function (data, clamp) {
             return [
-                this.getAxis('x').dataToCoord(data[0]),
-                this.getAxis('y').dataToCoord(data[1])
+                this.getAxis('x').dataToCoord(data[0], clamp),
+                this.getAxis('y').dataToCoord(data[1], clamp)
             ];
         },
 

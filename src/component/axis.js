@@ -7,9 +7,62 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
-    var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
+    var elementList = ['axisLine', 'axisTick', 'splitLine', 'splitArea'];
 
     require('../coord/cartesian/AxisModel');
+
+    /**
+     * @inner
+     */
+    function getAxisLinePosition(axisModel, gridModel) {
+        var axis = axisModel.axis;
+        var grid = gridModel.coordinateSystem;
+        var rect = grid.getRect();
+
+        var otherAxis = grid.getAxis(axis.dim === 'x' ? 'y' : 'x');
+
+        var position = 0;
+        if (axisModel.get('axisLine.onZero')) {
+            position = otherAxis.dataToCoord(0);
+        }
+
+        switch (axis.position) {
+            case 'left':
+                position = rect.x;
+                break;
+            case 'right':
+                position = rect.x + rect.width;
+                break;
+            case 'top':
+                position = rect.y;
+                break;
+            case 'bottom':
+                position = rect.y + rect.height;
+        }
+
+        return position;
+    }
+
+    /**
+     * @inner
+     */
+    function ifIgnoreOnTick(axis, i, interval) {
+        return axis.scale.type === 'ordinal'
+            && (typeof interval === 'function')
+                && !interval(i, axis.scale.getItem(i))
+                || i % (interval + 1);
+    }
+
+    /**
+     * @inner
+     */
+    function getInterval(model, labelInterval) {
+        var interval = model.get('interval');
+        if (interval == null || interval == 'auto') {
+            interval = labelInterval;
+        }
+        return interval;
+    }
 
     var AxisView = require('../echarts').extendComponentView({
 
@@ -26,46 +79,145 @@ define(function(require) {
             this.group.removeAll();
 
             var gridModel = ecModel.getComponent('grid', axisModel.get('gridIndex'));
+            var labelInterval = axisModel.get('axisLabel.interval');
 
-            this._axisLinePosition = this._getAxisLinePosition(axisModel, gridModel);
+            this._axisLinePosition = getAxisLinePosition(axisModel, gridModel);
 
-            var showList = [];
+            if (axisModel.get('axisLabel.show')) {
+                labelInterval = this._axisLabel(axisModel, gridModel, api);
+            }
             zrUtil.each(elementList, function (name) {
                 if (axisModel.get(name +'.show')) {
-                    this['_' + name](axisModel, gridModel, api, showList);
+                    this['_' + name](axisModel, gridModel, api, labelInterval);
                 }
             }, this);
         },
 
-        _getAxisLinePosition: function (axisModel, gridModel) {
-
+        /**
+         * @param {module:echarts/coord/cartesian/AxisModel} axisModel
+         * @param {module:echarts/coord/cartesian/GridModel} gridModel
+         * @param {module:echarts/ExtensionAPI} api
+         * @private
+         */
+        _axisLabel: function (axisModel, gridModel, api) {
             var axis = axisModel.axis;
-            var grid = gridModel.coordinateSystem;
-            var rect = grid.getRect();
 
-            var otherAxis = grid.getAxis(axis.dim === 'x' ? 'y' : 'x');
+            var labelModel = axisModel.getModel('axisLabel');
+            var textStyleModel = labelModel.getModel('textStyle');
 
-            var position = 0;
-            if (axisModel.get('axisLine.onZero')) {
-                position = otherAxis.dataToCoord(0);
-            }
+            var gridRect = gridModel.coordinateSystem.getRect();
 
-            switch (axis.position) {
-                case 'left':
-                    position = rect.x;
-                    break;
-                case 'right':
-                    position = rect.x + rect.width;
-                    break;
-                case 'top':
-                    position = rect.y;
-                    break;
-                case 'bottom':
-                    position = rect.y + rect.height;
-            }
+            var ticks = axis.scale.getTicks();
+            var labels = axisModel.formatLabels(axis.scale.getTicksLabels());
+            var labelMargin = labelModel.get('margin');
+            var labelRotate = labelModel.get('rotate');
+            var labelInterval = labelModel.get('interval');
+            var isLabelIntervalFunction = typeof labelInterval === 'function';
 
-             return position;
-        },
+            var textSpaceTakenRect;
+            var needsCheckTextSpace;
+
+            var autoLabelInterval = 0;
+            var accumulatedLabelInterval = 0;
+
+            var textList = [];
+            for (var i = 0; i < ticks.length; i++) {
+                needsCheckTextSpace = false;
+                var tick = ticks[i];
+
+                // Only ordinal scale support label interval
+                if (axis.scale.type === 'ordinal') {
+                    if (labelInterval === 'auto') {
+                        needsCheckTextSpace = true;
+                    }
+                    else if (isLabelIntervalFunction
+                        && !labelInterval(tick, axis.scale.getItem(tick))
+                        || tick % (labelInterval + 1)
+                    ) {
+                        continue;
+                    }
+                }
+
+                var x;
+                var y;
+                var tickCoord = axis.dataToCoord(tick);
+                var labelTextAlign = 'center';
+                var labelTextBaseline = 'middle';
+
+                switch (axis.position) {
+                    case 'top':
+                        y = gridRect.y - labelMargin;
+                        x = tickCoord;
+                        labelTextBaseline = 'bottom';
+                        break;
+                    case 'bottom':
+                        x = tickCoord;
+                        y = gridRect.y + gridRect.height + labelMargin;
+                        labelTextBaseline = 'top';
+                        break;
+                    case 'left':
+                        x = gridRect.x - labelMargin;
+                        y = tickCoord;
+                        labelTextAlign = 'right';
+                        break;
+                    case 'right':
+                        x = gridRect.x + gridRect.width + labelMargin;
+                        y = tickCoord;
+                        labelTextAlign = 'left';
+                }
+                if (axis.isHorizontal() && labelRotate) {
+                    labelTextAlign = labelRotate > 0 ? 'left' : 'right';
+                }
+
+                var textEl = new api.Text({
+                    style: {
+                        x: x,
+                        y: y,
+                        text: labels[i],
+                        textAlign: labelTextAlign,
+                        textBaseline: labelTextBaseline,
+                        font: textStyleModel.getFont()
+                    },
+                    rotation: labelRotate * Math.PI / 180,
+                    origin: [x, y],
+                    silent: true,
+                    z: axisModel.get('z')
+                });
+
+                textList.push(textEl);
+
+                // Calculate label interval
+                if (needsCheckTextSpace && !labelRotate) {
+                    var rect = textEl.getBoundingRect();
+                    if (!textSpaceTakenRect) {
+                        textSpaceTakenRect = rect.clone();
+                    }
+                    // There is no space for current label;
+                    else if (textSpaceTakenRect.intersect(rect)) {
+                        accumulatedLabelInterval++;
+                        continue;
+                    }
+                    else {
+                        textSpaceTakenRect.union(rect);
+                    }
+
+                    autoLabelInterval = Math.max(autoLabelInterval, accumulatedLabelInterval);
+                    // Reset
+                    accumulatedLabelInterval = 0;
+                }
+             }
+
+             for (var i = 0; i < textList.length; i++) {
+                 if (
+                     !(needsCheckTextSpace && !labelRotate
+                     && i % (autoLabelInterval + 1))
+                 ) {
+                    this.group.add(textList[i]);
+                 }
+             }
+
+             return needsCheckTextSpace ? autoLabelInterval : labelInterval;
+         },
 
         /**
          * @param {module:echarts/coord/cartesian/AxisModel} axisModel
@@ -111,23 +263,19 @@ define(function(require) {
          * @param {module:echarts/coord/cartesian/AxisModel} axisModel
          * @param {module:echarts/coord/cartesian/GridModel} gridModel
          * @param {module:echarts/ExtensionAPI} api
+         * @param {number|Function} labelInterval
          * @private
          */
-        _axisTick: function (axisModel, gridModel, api) {
+        _axisTick: function (axisModel, gridModel, api, labelInterval) {
             var axis = axisModel.axis;
             var tickModel = axisModel.getModel('axisTick');
 
             var lineStyleModel = tickModel.getModel('lineStyle');
             var tickLen = tickModel.get('length');
             var tickLineWidth = lineStyleModel.get('width');
-            var tickInterval = tickModel.get('interval') || 0;
             var isTickInside = tickModel.get('inside');
 
-            var isTickIntervalFunction = typeof tickInterval === 'function';
-            // PENDING Axis tick don't have the situation that don't have enough space to place
-            if (tickInterval === 'auto') {
-                tickInterval = 0;
-            }
+            var tickInterval = getInterval(tickModel, labelInterval);
 
             var axisPosition = axis.position;
             var ticksCoords = axis.getTicksCoords();
@@ -135,13 +283,7 @@ define(function(require) {
             var tickLines = [];
             for (var i = 0; i < ticksCoords.length; i++) {
                 // Only ordinal scale support tick interval
-                if (
-                    axis.scale.type === 'ordinal'
-                    && (isTickIntervalFunction
-                        && !tickInterval(i, axis.scale.getItem(i))
-                        || i % (tickInterval + 1)
-                    )
-                ) {
+                if (ifIgnoreOnTick(axis, i, tickInterval)) {
                      continue;
                 }
 
@@ -197,126 +339,18 @@ define(function(require) {
          * @param {module:echarts/coord/cartesian/AxisModel} axisModel
          * @param {module:echarts/coord/cartesian/GridModel} gridModel
          * @param {module:echarts/ExtensionAPI} api
-         * @param {Array.<boolean>} showList
+         * @param {number|Function} labelInterval
          * @private
          */
-        _axisLabel: function (axisModel, gridModel, api, showList) {
-            var axis = axisModel.axis;
-
-            var labelModel = axisModel.getModel('axisLabel');
-            var textStyleModel = labelModel.getModel('textStyle');
-
-            var gridRect = gridModel.coordinateSystem.getRect();
-
-            var ticks = axis.scale.getTicks();
-            var labels = axisModel.formatLabels(axis.scale.getTicksLabels());
-            var labelMargin = labelModel.get('margin');
-            var labelRotate = labelModel.get('rotate');
-            var labelInterval = labelModel.get('interval') || 0;
-            var isLabelIntervalFunction = typeof labelInterval === 'function';
-
-            var textSpaceTakenRect;
-            var needsCheckTextSpace;
-
-            for (var i = 0; i < ticks.length; i++) {
-                // Default is false
-                showList[i] = false;
-                needsCheckTextSpace = false;
-                var tick = ticks[i];
-
-                // Only ordinal scale support label interval
-                if (axis.scale.type === 'ordinal') {
-                    if (labelInterval === 'auto') {
-                        needsCheckTextSpace = true;
-                    }
-                    if (isLabelIntervalFunction
-                        && !labelInterval(tick, axis.scale.getItem(tick))
-                        || tick % (labelInterval + 1)
-                    ) {
-                        continue;
-                    }
-                }
-
-                var x;
-                var y;
-                var tickCoord = axis.dataToCoord(tick);
-                var labelTextAlign = 'center';
-                var labelTextBaseline = 'middle';
-
-                switch (axis.position) {
-                    case 'top':
-                        y = gridRect.y - labelMargin;
-                        x = tickCoord;
-                        labelTextBaseline = 'bottom';
-                        break;
-                    case 'bottom':
-                        x = tickCoord;
-                        y = gridRect.y + gridRect.height + labelMargin;
-                        labelTextBaseline = 'top';
-                        break;
-                    case 'left':
-                        x = gridRect.x - labelMargin;
-                        y = tickCoord;
-                        labelTextAlign = 'right';
-                        break;
-                    case 'right':
-                        x = gridRect.x + gridRect.width + labelMargin;
-                        y = tickCoord;
-                        labelTextAlign = 'left';
-                }
-                if (axis.isHorizontal() && labelRotate) {
-                    labelTextAlign = labelRotate > 0 ? 'left' : 'right';
-                }
-
-                var textEl = new api.Text({
-                    style: {
-                        x: x,
-                        y: y,
-                        text: labels[i],
-                        textAlign: labelTextAlign,
-                        textBaseline: labelTextBaseline,
-                        font: textStyleModel.getFont()
-                    },
-                    rotation: labelRotate * Math.PI / 180,
-                    origin: [x, y],
-                    silent: true,
-                    z: axisModel.get('z')
-                });
-
-                if (needsCheckTextSpace && !labelRotate) {
-                    var rect = textEl.getBoundingRect();
-                    if (!textSpaceTakenRect) {
-                        textSpaceTakenRect = rect;
-                    }
-                    // There is no space for current label;
-                    else if (textSpaceTakenRect.intersect(rect)) {
-                        continue;
-                    }
-                    else {
-                        textSpaceTakenRect.union(rect);
-                    }
-                }
-
-                showList[i] = true;
-
-                this.group.add(textEl);
-             }
-         },
-
-        /**
-         * @param {module:echarts/coord/cartesian/AxisModel} axisModel
-         * @param {module:echarts/coord/cartesian/GridModel} gridModel
-         * @param {module:echarts/ExtensionAPI} api
-         * @param {Array.<boolean>} showList
-         * @private
-         */
-        _splitLine: function (axisModel, gridModel, api, showList) {
+        _splitLine: function (axisModel, gridModel, api, labelInterval) {
             var axis = axisModel.axis;
 
             var splitLineModel = axisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
             var lineWidth = lineStyleModel.get('width');
             var lineColors = lineStyleModel.get('color');
+
+            var lineInterval = getInterval(splitLineModel, labelInterval);
 
             lineColors = lineColors instanceof Array ? lineColors : [lineColors];
 
@@ -331,6 +365,10 @@ define(function(require) {
             var p1 = [];
             var p2 = [];
             for (var i = 0; i < ticksCoords.length; i++) {
+                if (ifIgnoreOnTick(axis, i, lineInterval)) {
+                    continue;
+                }
+
                 var tickCoord = ticksCoords[i];
 
                 if (isHorizontal) {
@@ -381,10 +419,10 @@ define(function(require) {
          * @param {module:echarts/coord/cartesian/AxisModel} axisModel
          * @param {module:echarts/coord/cartesian/GridModel} gridModel
          * @param {module:echarts/ExtensionAPI} api
-         * @param {Array.<boolean>} showList
+         * @param {number|Function} labelInterval
          * @private
          */
-        _splitArea: function (axisModel, gridModel, api, showList) {
+        _splitArea: function (axisModel, gridModel, api, labelInterval) {
             var axis = axisModel.axis;
 
             var splitAreaModel = axisModel.getModel('splitArea');
@@ -399,9 +437,15 @@ define(function(require) {
             var splitAreaRects = [];
             var count = 0;
 
+            var areaInterval = getInterval(splitAreaModel, labelInterval);
+
             areaColors = areaColors instanceof Array ? areaColors : [areaColors];
 
             for (var i = 1; i < ticksCoords.length; i++) {
+                if (ifIgnoreOnTick(axis, i, areaInterval)) {
+                    continue;
+                }
+
                 var tickCoord = ticksCoords[i];
 
                 var x;
