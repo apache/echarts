@@ -105,10 +105,9 @@ define(function(require) {
 
                 // var removeClipPath = zrUtil.bind(polyline.removeClipPath, polyline);
                 var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
-                var isHorizontal = categoryAxis.isHorizontal();
                 var clipPath = isCoordSysPolar
-                    ? this._createPolarClipShape(coordSys, api, enableAnimation, isHorizontal)
-                    : this._createGridClipShape(coordSys, api, enableAnimation, isHorizontal);
+                    ? this._createPolarClipShape(coordSys, api, enableAnimation, categoryAxis)
+                    : this._createGridClipShape(coordSys, api, enableAnimation, categoryAxis);
 
                 polyline.setClipPath(clipPath);
 
@@ -194,7 +193,7 @@ define(function(require) {
             }
         },
 
-        _createGridClipShape: function (cartesian, api, animation, isHorizontal) {
+        _createGridClipShape: function (cartesian, api, animation, categoryAxis) {
             var xExtent = getAxisExtentWithGap(cartesian.getAxis('x'));
             var yExtent = getAxisExtentWithGap(cartesian.getAxis('y'));
 
@@ -208,7 +207,7 @@ define(function(require) {
             });
 
             if (animation) {
-                 clipPath.shape[isHorizontal ? 'width' : 'height'] = 0;
+                 clipPath.shape[categoryAxis.isHorizontal() ? 'width' : 'height'] = 0;
                 clipPath.animateTo({
                     shape: {
                         width: xExtent[1] - xExtent[0],
