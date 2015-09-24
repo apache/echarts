@@ -5,8 +5,6 @@
  */
 define(function(require) {
 
-    'use strict';
-
     var Model = require('./Model');
     var zrUtil = require('zrender/core/util');
     var arrayPush = Array.prototype.push;
@@ -30,7 +28,7 @@ define(function(require) {
         defaultOption: null,
 
         /**
-         * @type {Object}
+         * @type {module:echarts/model/Global}
          * @readOnly
          */
         ecModel: null,
@@ -41,7 +39,13 @@ define(function(require) {
          * @type {Object.<string, Array.<module:echarts/model/Model>>}
          * @readOnly
          */
-        dependentModel: null,
+        dependentModels: null,
+
+        /**
+         * @type {string}
+         * @readOnly
+         */
+        uid: null,
 
         init: function () {
             this.mergeDefaultAndTheme(this.option, this.ecModel);
@@ -73,35 +77,19 @@ define(function(require) {
 
     });
 
-    ComponentModel.extend = function (proto) {
-        var SubComponentModel = function (option, parentModel, ecModel, dependentModels) {
-            this.ecModel = ecModel;
-            this.dependentModels = dependentModels;
-            /**
-             * @type {string}
-             * @public
-             * @readOnly
-             */
-            this.uid = componentUtil.getUID('componentModel');
+    // Reset ComponentModel.extend, add preConstruct.
+    componentUtil.enableClassExtend(ComponentModel, function (option, parentModel, ecModel, dependentModels) {
+        this.ecModel = ecModel;
+        this.dependentModels = dependentModels;
+        this.uid = componentUtil.getUID('componentModel');
+    });
 
-            ComponentModel.apply(this, arguments);
-        };
-
-        zrUtil.extend(SubComponentModel.prototype, proto);
-
-        var Super = this;
-        SubComponentModel.extend = Super.extend;
-        zrUtil.inherits(SubComponentModel, Super);
-
-        return SubComponentModel;
-    };
-
-    // And capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
+    // Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
     componentUtil.enableClassManagement(
-        ComponentModel,
-        {subTypeDefaulter: true, registerWhenExtend: true}
+        ComponentModel, {subTypeDefaulter: true, registerWhenExtend: true}
     );
 
+    // Add capability of ComponentModel.topologicalTravel.
     componentUtil.enableTopologicalTravel(ComponentModel, getDependencies);
 
     function getDependencies(componentType) {

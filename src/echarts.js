@@ -24,12 +24,6 @@ define(function (require) {
     var VISUAL_CODING_STAGES = ['echarts', 'chart', 'component'];
 
     /**
-     * @inner
-     */
-    function getSeriesId(series, seriesIndex) {
-        return series.type + '_' + (series.name ||  seriesIndex);
-    }
-    /**
      * @module echarts~ECharts
      */
     var ECharts = function (dom, theme, opts) {
@@ -231,7 +225,7 @@ define(function (require) {
             }
 
             ecModel.eachSeries(function (seriesModel, idx) {
-                var id = getSeriesId(seriesModel.option, idx);
+                var id = seriesModel.uid;
 
                 var chart = chartsMap[id];
                 if (!chart) {
@@ -277,16 +271,18 @@ define(function (require) {
                 componentsList[i].__keepAlive = true;
             }
 
-            ecModel.eachComponent(function (componentType, componentModel, idx) {
+            ecModel.eachComponent(function (componentType, componentModel) {
                 if (componentType === 'series') {
                     return;
                 }
 
-                var id = componentType + '_' + idx;
+                var id = componentModel.uid;
                 var component = componentsMap[id];
                 if (!component) {
                     // Create and add component
-                    var Clazz = ComponentView.getClass(componentType, componentModel.option);
+                    var Clazz = ComponentView.getClass(
+                        componentType, componentModel.option.type
+                    );
 
                     if (Clazz) {
                         component = new Clazz();
@@ -392,7 +388,7 @@ define(function (require) {
 
             // Render all charts
             ecModel.eachSeries(function (seriesModel, idx) {
-                var id = getSeriesId(seriesModel.option, idx);
+                var id = seriesModel.uid;
                 var chart = this._chartsMap[id];
                 chart.__keepAlive = true;
                 chart.render(seriesModel, ecModel, api, event);

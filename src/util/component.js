@@ -47,9 +47,10 @@ define(function(require) {
     /**
      * @public
      */
-    util.enableClassExtend = function (RootClass) {
+    util.enableClassExtend = function (RootClass, preConstruct) {
         RootClass.extend = function (proto) {
             var ExtendedClass = function () {
+                preConstruct && preConstruct.apply(this, arguments);
                 RootClass.apply(this, arguments);
             };
 
@@ -99,12 +100,11 @@ define(function(require) {
             return Clazz;
         };
 
-        entity.getClass = function (componentTypeMain, option, throwWhenNotFound) {
+        entity.getClass = function (componentTypeMain, subType, throwWhenNotFound) {
             var Clazz = storage[componentTypeMain];
-            var subType = option && option.type;
 
-            if (Clazz && Clazz[IS_CONTAINER] && subType) {
-                Clazz = Clazz[subType];
+            if (Clazz && Clazz[IS_CONTAINER]) {
+                Clazz = subType ? Clazz[subType] : null;
             }
 
             if (throwWhenNotFound && !Clazz) {
@@ -182,8 +182,9 @@ define(function(require) {
             subTypeDefaulters[componentType.main] = defaulter;
         };
 
-        entity.completeSubType = function (componentType, option) {
-            if (!option.type) {
+        entity.determineSubType = function (componentType, option) {
+            var type = option.type;
+            if (!type) {
                 var componentTypeMain = parseComponentType(componentType).main;
                 var Clazz = storage[componentTypeMain];
                 Clazz
@@ -191,6 +192,7 @@ define(function(require) {
                     && subTypeDefaulters[componentTypeMain]
                     && subTypeDefaulters[componentTypeMain](option);
             }
+            return type;
         };
 
         return entity;

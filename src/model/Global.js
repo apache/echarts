@@ -119,32 +119,36 @@ define(function (require) {
             // FIXME 这里 componentTypes 是新的 Option，在依赖处理上是否会有问题
             // FIXME OPTION 同步是否要改回原来的
             ComponentModel.topologicalTravel(componentTypes, function (componentType, dependencies) {
-                var componentOption = newOption[componentType];
+                var newCptOptionList = newOption[componentType];
 
                 // Normalize
-                if (!(zrUtil.isArray(componentOption))) {
-                    componentOption = [componentOption];
+                if (!(zrUtil.isArray(newCptOptionList))) {
+                    newCptOptionList = [newCptOptionList];
                 }
                 if (!componentsMap[componentType]) {
                     componentsMap[componentType] = [];
                 }
 
-                for (var i = 0; i < componentOption.length; i++) {
-                    var componentModel = componentsMap[componentType][i];
+                var existComponents = this._mappingToExists(componentType, newCptOptionList);
 
-                    ComponentModel.completeSubType(componentType, componentOption[i]);
+                for (var i = 0; i < newCptOptionList.length; i++) {
+                    var componentModel = existComponents[i];
+                    var newCptOption = newCptOptionList[i];
 
+                    var subType = this._determineSubType(
+                        componentType, newCptOption, existComponents[i]
+                    );
                     var ComponentModelClass = ComponentModel.getClass(
-                        componentType, componentOption[i], true
+                        componentType, subType, true
                     );
 
                     if (componentModel && componentModel instanceof ComponentModelClass) {
-                        componentModel.mergeOption(componentOption[i], this);
+                        componentModel.mergeOption(newCptOption, this);
                     }
                     else {
                         // PENDING Global as parent ?
                         componentModel = new ComponentModelClass(
-                            componentOption[i], this, this,
+                            newCptOptionList[i], this, this,
                             this._getComponentsByTypes(dependencies), i
                         );
                         componentsMap[componentType][i] = componentModel;
@@ -160,6 +164,48 @@ define(function (require) {
             zrUtil.each(componentsMap, function (components, componentType) {
                 this._componentsMapBeforeProcessing[componentType] = components.slice();
             }, this);
+        },
+
+        /**
+         * @private
+         */
+        _determineSubType: function (componentType, newCptOption, existComponent) {
+            return newCptOption.type
+                ? newCptOption.type
+                : existComponent
+                ? existComponent.option.type
+                // Use determinSubType only when there is no existComponent.
+                : ComponentModel.determineSubType(componentType, newCptOption);
+        },
+
+        /**
+         * @private
+         */
+        _mappingToExists: function (componentType, newComponentOptionList) {
+            var result = [];
+            var existComponents = (this._componentsMap[componentType] || []).slice();
+
+            // Mapping by name if specified.
+            zrUtil.each(newComponentOptionList, function (componentOption, index) {
+                if (!componentOption.name) {
+                    return;
+                }
+                for (var i = 0, len = existComponents.length; i < len; i++) {
+                    if (existComponents[i].name === componentOption.name) {
+                        result[index] = existComponents.splice(i, 1)[0];
+                        break;
+                    }
+                }
+            });
+
+            // Otherwise mapping by index.
+            zrUtil.each(newComponentOptionList, function (componentOption, index) {
+                if (!result[index]) {
+                    result[index] = existComponents[index];
+                }
+            });
+
+            return result;
         },
 
         /**
