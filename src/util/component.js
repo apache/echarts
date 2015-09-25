@@ -212,7 +212,7 @@ define(function(require) {
      *
      * If 'xAxis' or 'yAxis' is absent in componentTypeList, just ignore it in topology.
      *
-     * If there are circle dependenceis, just ignore them.
+     * If there is circle dependencey, Error will be thrown.
      *
      */
     util.enableTopologicalTravel = function (entity, dependencyGetter) {
@@ -244,9 +244,14 @@ define(function(require) {
                 var currVertex = graph[currComponentType];
                 if (targetNameSet[currComponentType]) {
                     callback.call(context, currComponentType, currVertex.originalDeps.slice());
+                    delete targetNameSet[currComponentType];
                 }
                 zrUtil.each(currVertex.successor, removeEdge);
             }
+
+            zrUtil.each(targetNameSet, function () {
+                throw new Error('Circle dependency may exists');
+            });
 
             function removeEdge(succComponentType) {
                 graph[succComponentType].entryCount--;

@@ -85,14 +85,9 @@ describe('Component', function() {
             ComponentModel.extend({type: 'a2'});
             ComponentModel.extend({type: 'a3'});
             var allList = ComponentModel.getAllClassMainTypes();
-            var result = [];
-            ComponentModel.topologicalTravel(['m1', 'm2', 'a1', 'a2'], allList, function (componentType, dependencies) {
-                result.push([componentType, dependencies]);
-            });
-            expect(result).toEqual([['a2', []]]);
-            // expect(function () {
-            //     ComponentModel.topologicalTravel(['m1', 'm2', 'a1'], allList);
-            // }).toThrowError(/Circl/);
+            expect(function () {
+                ComponentModel.topologicalTravel(['m1', 'm2', 'a1'], allList);
+            }).toThrowError(/Circl/);
         });
 
         testCase('topologicalTravel_multipleEchartsInstance', function (ComponentModel) {
