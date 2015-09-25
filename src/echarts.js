@@ -126,6 +126,7 @@ define(function (require) {
                 this._model = ecModel;
             }
             else {
+                ecModel.restoreData();
                 ecModel.mergeOption(option);
             }
 

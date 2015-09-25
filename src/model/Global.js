@@ -94,7 +94,6 @@ define(function (require) {
          * @protected
          */
         mergeOption: function (newOption) {
-
             var option = this.option;
             var componentsMap = this._componentsMap;
             var newCptTypes = [];
@@ -208,7 +207,7 @@ define(function (require) {
 
             // Otherwise mapping by index.
             zrUtil.each(newComponentOptionList, function (componentOption, index) {
-                if (!result[index]) {
+                if (!result[index] && existComponents[index]) {
                     result[index] = existComponents[index];
                 }
             });
