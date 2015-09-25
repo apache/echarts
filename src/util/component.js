@@ -123,10 +123,8 @@ define(function(require) {
             var obj = storage[componentType.main];
 
             if (obj && obj[IS_CONTAINER]) {
-                zrUtil.each(obj, function (ComponentClass, componentType) {
-                    if (componentType !== IS_CONTAINER) {
-                        result.push(ComponentClass);
-                    }
+                zrUtil.each(obj, function (o, type) {
+                    type !== IS_CONTAINER && result.push(o);
                 });
             }
             else {
@@ -140,6 +138,17 @@ define(function(require) {
             // Just consider componentType.main.
             componentType = parseComponentType(componentType);
             return !!storage[componentType.main];
+        };
+
+        /**
+         * @return {Array.<string>} Like ['aa', 'bb'], but can not be ['aa.xx']
+         */
+        entity.getAllClassMainTypes = function () {
+            var types = [];
+            zrUtil.each(storage, function (obj, type) {
+                types.push(type);
+            });
+            return types;
         };
 
         entity.parseComponentType = parseComponentType;
@@ -187,10 +196,9 @@ define(function(require) {
             if (!type) {
                 var componentTypeMain = parseComponentType(componentType).main;
                 var Clazz = storage[componentTypeMain];
-                Clazz
-                    && Clazz[IS_CONTAINER]
-                    && subTypeDefaulters[componentTypeMain]
-                    && subTypeDefaulters[componentTypeMain](option);
+                if (Clazz && Clazz[IS_CONTAINER] && subTypeDefaulters[componentTypeMain]) {
+                    type = subTypeDefaulters[componentTypeMain](option);
+                }
             }
             return type;
         };
@@ -201,34 +209,42 @@ define(function(require) {
     /**
      * Topological travel on Activity Network (Activity On Vertices).
      * Dependencies is defined in Model.prototype.dependencies, like ['xAxis', 'yAxis'].
+     *
      * If 'xAxis' or 'yAxis' is absent in componentTypeList, just ignore it in topology.
+     *
+     * If there are circle dependenceis, just ignore them.
      *
      */
     util.enableTopologicalTravel = function (entity, dependencyGetter) {
 
         /**
          * @public
-         * @param {Array.<string>} componentTypeList Target Component type list.
+         * @param {Array.<string>} targetNameList Target Component type list.
          *                                           Can be ['aa', 'bb', 'aa.xx']
+         * @param {Array.<string>} fullNameList By which we can build dependency graph.
          * @param {Function} callback Params: componentType, dependencies.
          * @param {Object} context Scope of callback.
          */
-        entity.topologicalTravel = function (componentTypeList, callback, context) {
-            if (!componentTypeList.length) {
+        entity.topologicalTravel = function (targetNameList, fullNameList, callback, context) {
+            if (!targetNameList.length) {
                 return;
             }
-            var result = makeDepndencyGraph(componentTypeList);
+
+            var result = makeDepndencyGraph(fullNameList);
             var graph = result.graph;
             var stack = result.noEntryList;
 
-            if (!stack.length) {
-                throw new Error('Circle exists in dependency graph.');
-            }
+            var targetNameSet = {};
+            zrUtil.each(targetNameList, function (name) {
+                targetNameSet[name] = true;
+            });
 
             while (stack.length) {
                 var currComponentType = stack.pop();
                 var currVertex = graph[currComponentType];
-                callback.call(context, currComponentType, currVertex.originalDeps.slice());
+                if (targetNameSet[currComponentType]) {
+                    callback.call(context, currComponentType, currVertex.originalDeps.slice());
+                }
                 zrUtil.each(currVertex.successor, removeEdge);
             }
 
@@ -249,28 +265,28 @@ define(function(require) {
          *     entryCount: {number}
          * }
          */
-        function makeDepndencyGraph(componentTypeList) {
+        function makeDepndencyGraph(fullNameList) {
             var graph = {};
             var noEntryList = [];
 
-            zrUtil.each(componentTypeList, function (componentType) {
+            zrUtil.each(fullNameList, function (name) {
 
-                var thisItem = createDependencyGraphItem(graph, componentType);
-                var originalDeps = thisItem.originalDeps = dependencyGetter(componentType);
+                var thisItem = createDependencyGraphItem(graph, name);
+                var originalDeps = thisItem.originalDeps = dependencyGetter(name);
 
-                var availableDeps = getAvailableDependencies(originalDeps, componentTypeList);
+                var availableDeps = getAvailableDependencies(originalDeps, fullNameList);
                 thisItem.entryCount = availableDeps.length;
                 if (thisItem.entryCount === 0) {
-                    noEntryList.push(componentType);
+                    noEntryList.push(name);
                 }
 
-                zrUtil.each(availableDeps, function (depComponentType) {
-                    if (zrUtil.indexOf(thisItem.predecessor, depComponentType) < 0) {
-                        thisItem.predecessor.push(depComponentType);
+                zrUtil.each(availableDeps, function (dependentName) {
+                    if (zrUtil.indexOf(thisItem.predecessor, dependentName) < 0) {
+                        thisItem.predecessor.push(dependentName);
                     }
-                    var thatItem = createDependencyGraphItem(graph, depComponentType);
-                    if (zrUtil.indexOf(thatItem.successor, depComponentType) < 0) {
-                        thatItem.successor.push(componentType);
+                    var thatItem = createDependencyGraphItem(graph, dependentName);
+                    if (zrUtil.indexOf(thatItem.successor, dependentName) < 0) {
+                        thatItem.successor.push(name);
                     }
                 });
             });
@@ -278,17 +294,17 @@ define(function(require) {
             return {graph: graph, noEntryList: noEntryList};
         }
 
-        function createDependencyGraphItem(graph, componentType) {
-            if (!graph[componentType]) {
-                graph[componentType] = {predecessor: [], successor: []};
+        function createDependencyGraphItem(graph, name) {
+            if (!graph[name]) {
+                graph[name] = {predecessor: [], successor: []};
             }
-            return graph[componentType];
+            return graph[name];
         }
 
-        function getAvailableDependencies(originalDeps, componentTypeList) {
+        function getAvailableDependencies(originalDeps, fullNameList) {
             var availableDeps = [];
             zrUtil.each(originalDeps, function (dep) {
-                zrUtil.indexOf(componentTypeList, dep) >= 0 && availableDeps.push(dep);
+                zrUtil.indexOf(fullNameList, dep) >= 0 && availableDeps.push(dep);
             });
             return availableDeps;
         }

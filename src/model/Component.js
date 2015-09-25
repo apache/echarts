@@ -97,7 +97,10 @@ define(function(require) {
         zrUtil.each(ComponentModel.getClassesByMainType(componentType), function (Clazz) {
             arrayPush.apply(deps, Clazz.prototype.dependencies || []);
         });
-        return deps;
+        // Ensure main type
+        return zrUtil.map(deps, function (type) {
+            return ComponentModel.parseComponentType(type).main;
+        });
     }
 
     return ComponentModel;

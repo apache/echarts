@@ -97,7 +97,7 @@ define(function (require) {
 
             var option = this.option;
             var componentsMap = this._componentsMap;
-            var componentTypes = [];
+            var newCptTypes = [];
 
             // 如果不存在对应的 component model 则直接 merge
             zrUtil.each(newOption, function (componentOption, componentType) {
@@ -112,13 +112,16 @@ define(function (require) {
                     }
                 }
                 else {
-                    componentTypes.push(componentType);
+                    newCptTypes.push(componentType);
                 }
             });
 
-            // FIXME 这里 componentTypes 是新的 Option，在依赖处理上是否会有问题
             // FIXME OPTION 同步是否要改回原来的
-            ComponentModel.topologicalTravel(componentTypes, function (componentType, dependencies) {
+            ComponentModel.topologicalTravel(
+                newCptTypes, ComponentModel.getAllClassMainTypes(), visitComponent, this
+            );
+
+            function visitComponent(componentType, dependencies) {
                 var newCptOptionList = newOption[componentType];
 
                 // Normalize
@@ -158,7 +161,7 @@ define(function (require) {
                         this._componentsIdMap[componentModel.uid] = componentModel;
                     }
                 }
-            }, this);
+            }
 
             // Backup data
             zrUtil.each(componentsMap, function (components, componentType) {
@@ -177,7 +180,10 @@ define(function (require) {
                 // Use determinSubType only when there is no existComponent.
                 : ComponentModel.determineSubType(componentType, newCptOption);
 
-            return newCptOption.type = subType;
+            // Dont make option.type === undefined, otherwise some problem will occur in merge.
+            subType && (newCptOption.type = subType);
+
+            return subType;
         },
 
         /**
@@ -373,11 +379,15 @@ define(function (require) {
                 componentTypes.push(componentType);
             });
 
-            ComponentModel.topologicalTravel(componentTypes, function (componentType, dependencies) {
-                zrUtil.each(componentsMap[componentType], function (component) {
-                    component.restoreData();
-                });
-            });
+            ComponentModel.topologicalTravel(
+                componentTypes,
+                ComponentModel.getAllClassMainTypes(),
+                function (componentType, dependencies) {
+                    zrUtil.each(componentsMap[componentType], function (component) {
+                        component.restoreData();
+                    });
+                }
+            );
         },
 
         /**
