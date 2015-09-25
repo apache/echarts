@@ -39,6 +39,12 @@ define(function (require) {
 
         constructor: Axis2D,
 
+        /**
+         * Axis model
+         * @param {module:echarts/coord/cartesian/AxisModel}
+         */
+        model: null,
+
         isHorizontal: function () {
             var position = this.position;
             return position === 'top' || position === 'bottom';

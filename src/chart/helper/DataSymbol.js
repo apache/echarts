@@ -6,7 +6,7 @@ define(function (require) {
     var graphic = require('../../util/graphic');
 
     function createSymbol(data, idx, enableAnimation) {
-        var point = data.getItemLayout(idx);
+        var point = data.getItemLayout(idx).point;
         var color = data.getItemVisual(idx, 'color');
 
         var symbolSize = data.getItemVisual(idx, 'symbolSize');
@@ -48,8 +48,6 @@ define(function (require) {
     function DataSymbol() {
 
         this.group = new Group();
-
-        this.z = 0;
     }
 
     DataSymbol.prototype = {
@@ -80,15 +78,15 @@ define(function (require) {
                     group.add(symbolEl);
                 })
                 .update(function (newIdx, oldIdx) {
-                    var symbolSize = data.getItemVisual(newIdx, 'symbolSize');
-                    var point = data.getItemLayout(newIdx);
-                    var el = oldData.getItemGraphicEl(oldIdx);
-
                     // Empty data
                     if (!data.hasValue(newIdx)) {
                         group.remove(el);
                         return;
                     }
+
+                    var symbolSize = data.getItemVisual(newIdx, 'symbolSize');
+                    var point = data.getItemLayout(newIdx).point;
+                    var el = oldData.getItemGraphicEl(oldIdx);
 
                     // Symbol changed
                     if (oldData.getItemVisual(newIdx, 'symbol') !== data.getItemVisual(oldIdx, 'symbol')) {
@@ -134,7 +132,6 @@ define(function (require) {
 
             // Update common properties
             data.eachItemGraphicEl(function (el, idx) {
-                el.z = this.z;
 
                 var itemModel = data.getItemModel(idx);
                 zrUtil.extend(

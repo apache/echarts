@@ -9,9 +9,20 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../util/graphic');
 
-    var elementList = ['axisLine', 'axisTick', 'splitLine', 'splitArea'];
+    var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 
     require('../coord/cartesian/AxisModel');
+
+    // Mixin axis label interval calculation helper
+    var axisLabelInterval = require('../coord/cartesian/axisLabelInterval');
+    var Axis2D = require('../coord/cartesian/Axis2D');
+    Axis2D.prototype.getLabelInterval = function () {
+        var labelInterval = this._labelInterval;
+        if (!labelInterval) {
+            labelInterval = this._labelInterval = axisLabelInterval(this);
+        }
+        return labelInterval;
+    }
 
     /**
      * @inner
@@ -81,13 +92,10 @@ define(function(require) {
             this.group.removeAll();
 
             var gridModel = ecModel.getComponent('grid', axisModel.get('gridIndex'));
-            var labelInterval = axisModel.get('axisLabel.interval');
+            var labelInterval = axisModel.axis.getLabelInterval();
 
             this._axisLinePosition = getAxisLinePosition(axisModel, gridModel);
 
-            if (axisModel.get('axisLabel.show')) {
-                labelInterval = this._axisLabel(axisModel, gridModel);
-            }
             zrUtil.each(elementList, function (name) {
                 if (axisModel.get(name +'.show')) {
                     this['_' + name](axisModel, gridModel, labelInterval);
@@ -100,7 +108,7 @@ define(function(require) {
          * @param {module:echarts/coord/cartesian/GridModel} gridModel
          * @private
          */
-        _axisLabel: function (axisModel, gridModel) {
+        _axisLabel: function (axisModel, gridModel, labelInterval) {
             var axis = axisModel.axis;
 
             var labelModel = axisModel.getModel('axisLabel');
@@ -112,31 +120,11 @@ define(function(require) {
             var labels = axisModel.formatLabels(axis.scale.getTicksLabels());
             var labelMargin = labelModel.get('margin');
             var labelRotate = labelModel.get('rotate');
-            var labelInterval = labelModel.get('interval');
-            var isLabelIntervalFunction = typeof labelInterval === 'function';
 
-            var textSpaceTakenRect;
-            var needsCheckTextSpace;
-
-            var autoLabelInterval = 0;
-            var accumulatedLabelInterval = 0;
-
-            var textList = [];
             for (var i = 0; i < ticks.length; i++) {
-                needsCheckTextSpace = false;
                 var tick = ticks[i];
-
-                // Only ordinal scale support label interval
-                if (axis.scale.type === 'ordinal') {
-                    if (labelInterval === 'auto') {
-                        needsCheckTextSpace = true;
-                    }
-                    else if (isLabelIntervalFunction
-                        && !labelInterval(tick, axis.scale.getItem(tick))
-                        || tick % (labelInterval + 1)
-                    ) {
-                        continue;
-                    }
+                if (ifIgnoreOnTick(axis, i, labelInterval)) {
+                     continue;
                 }
 
                 var x;
@@ -185,39 +173,8 @@ define(function(require) {
                     z: axisModel.get('z')
                 });
 
-                textList.push(textEl);
-
-                // Calculate label interval
-                if (needsCheckTextSpace && !labelRotate) {
-                    var rect = textEl.getBoundingRect();
-                    if (!textSpaceTakenRect) {
-                        textSpaceTakenRect = rect.clone();
-                    }
-                    // There is no space for current label;
-                    else if (textSpaceTakenRect.intersect(rect)) {
-                        accumulatedLabelInterval++;
-                        continue;
-                    }
-                    else {
-                        textSpaceTakenRect.union(rect);
-                    }
-
-                    autoLabelInterval = Math.max(autoLabelInterval, accumulatedLabelInterval);
-                    // Reset
-                    accumulatedLabelInterval = 0;
-                }
+                this.group.add(textEl);
              }
-
-             for (var i = 0; i < textList.length; i++) {
-                 if (
-                     !(needsCheckTextSpace && !labelRotate
-                     && i % (autoLabelInterval + 1))
-                 ) {
-                    this.group.add(textList[i]);
-                 }
-             }
-
-             return needsCheckTextSpace ? autoLabelInterval : labelInterval;
          },
 
         /**

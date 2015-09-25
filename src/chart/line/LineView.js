@@ -45,12 +45,17 @@ define(function(require) {
         },
 
         render: function (seriesModel, ecModel) {
+            var coordSys = seriesModel.coordinateSystem;
             var group = this.group;
             var data = seriesModel.getData();
             var lineStyleNormalModel = seriesModel.getModel('itemStyle.normal.lineStyle');
 
-            var points = data.map(data.getItemLayout, true);
-            var plainDataList = data.map(['x', 'y'], function (x, y, idx) {
+            var points = data.map(function (idx) {
+                var layout = data.getItemLayout(idx);
+                return layout && layout.point;
+            }, true);
+            var dimensions = coordSys.type === 'cartesian2d' ? ['x', 'y'] : ['radius', 'angle'];
+            var plainDataList = data.map(dimensions, function (x, y, idx) {
                 return {
                     x: x,
                     y: y,
@@ -62,7 +67,6 @@ define(function(require) {
             });
 
             var prevCoordSys = this._coordSys;
-            var coordSys = seriesModel.coordinateSystem;
             var isCoordSysPolar = coordSys.type === 'polar';
 
             // FIXME Update after animation
@@ -96,21 +100,13 @@ define(function(require) {
                 polyline = new graphic.Polyline({
                     shape: {
                         points: points
-                    },
-                    style: zrUtil.extend(
-                        lineStyleNormalModel.getLineStyle(),
-                        {
-                            stroke: data.getVisual('color'),
-                            lineJoin: 'bevel'
-                        }
-                    )
+                    }
                 });
 
                 // var removeClipPath = zrUtil.bind(polyline.removeClipPath, polyline);
-                var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
                 var clipPath = isCoordSysPolar
-                    ? this._createPolarClipShape(coordSys, enableAnimation, categoryAxis)
-                    : this._createGridClipShape(coordSys, enableAnimation, categoryAxis);
+                    ? this._createPolarClipShape(coordSys, enableAnimation)
+                    : this._createGridClipShape(coordSys, enableAnimation);
 
                 polyline.setClipPath(clipPath);
 
@@ -137,6 +133,14 @@ define(function(require) {
                 group.add(polyline);
             }
 
+            polyline.setStyle(zrUtil.extend(
+                lineStyleNormalModel.getLineStyle(),
+                {
+                    stroke: data.getVisual('color'),
+                    lineJoin: 'bevel'
+                }
+            ));
+
             // Make sure symbols is on top of line
             group.remove(dataSymbol.group);
             group.add(dataSymbol.group);
@@ -146,8 +150,30 @@ define(function(require) {
             // Save the coordinate system and data for transition animation when data changed
             this._plainDataList = plainDataList;
             this._coordSys = coordSys;
+
+            !isCoordSysPolar && !seriesModel.get('showAllSymbol')
+                && this._updateSymbolDisplay(data, coordSys);
         },
 
+        /**
+         * @private
+         */
+        _updateSymbolDisplay: function (data, coordSys) {
+            var categoryAxis = coordSys.getAxesByScale('ordinal')[0]
+            // `getLabelInterval` is provided by echarts/component/axis
+            if (categoryAxis && categoryAxis.getLabelInterval) {
+                var labelInterval = categoryAxis.getLabelInterval();
+                data.eachItemGraphicEl(function (el, idx) {
+                    el.ignore = (typeof labelInterval === 'function')
+                        && !labelInterval(idx, categoryAxis.scale.getItem(idx))
+                        || idx % (labelInterval + 1);
+                });
+            }
+        },
+
+        /**
+         * @private
+         */
         _updateAnimation: function (data, plainDataList, coordSys) {
             var polyline = this._polyline;
             var diff = lineAnimationDiff(
@@ -214,7 +240,7 @@ define(function(require) {
             });
 
             if (animation) {
-                clipPath.shape[categoryAxis.isHorizontal() ? 'width' : 'height'] = 0;
+                clipPath.shape[cartesian.getBaseAxis().isHorizontal() ? 'width' : 'height'] = 0;
                 clipPath.animateTo({
                     shape: {
                         width: xExtent[1] - xExtent[0],
@@ -232,6 +258,8 @@ define(function(require) {
 
             var radiusExtent = radiusAxis.getExtent();
 
+            var PI2 = Math.PI * 2;
+
             var clipPath = new graphic.Sector({
                 shape: {
                     cx: polar.cx,
@@ -239,7 +267,7 @@ define(function(require) {
                     r0: radiusExtent[0],
                     r: radiusExtent[1],
                     startAngle: 0,
-                    endAngle: Math.PI * 2
+                    endAngle: PI2
                 }
             });
 
@@ -247,7 +275,7 @@ define(function(require) {
                 clipPath.shape.endAngle = 0;
                 clipPath.animateTo({
                     shape: {
-                        endAngle: Math.PI * 2
+                        endAngle: PI2
                     }
                 }, 1500, animation);
             }

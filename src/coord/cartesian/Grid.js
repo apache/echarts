@@ -236,6 +236,9 @@ define(function(require, factory) {
                     // Inject axis into axisModel
                     axisModel.axis = axis;
 
+                    // Inject axisModel into axis
+                    axis.model = axisModel;
+
                     this._axesList.push(axis);
                     this._axesMap[axisType + idx] = axis;
 
