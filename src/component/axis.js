@@ -7,6 +7,8 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var graphic = require('../util/graphic');
+
     var elementList = ['axisLine', 'axisTick', 'splitLine', 'splitArea'];
 
     require('../coord/cartesian/AxisModel');
@@ -74,7 +76,7 @@ define(function(require) {
          */
         _axisLinePosition: 0,
 
-        render: function (axisModel, ecModel, api) {
+        render: function (axisModel, ecModel) {
 
             this.group.removeAll();
 
@@ -84,11 +86,11 @@ define(function(require) {
             this._axisLinePosition = getAxisLinePosition(axisModel, gridModel);
 
             if (axisModel.get('axisLabel.show')) {
-                labelInterval = this._axisLabel(axisModel, gridModel, api);
+                labelInterval = this._axisLabel(axisModel, gridModel);
             }
             zrUtil.each(elementList, function (name) {
                 if (axisModel.get(name +'.show')) {
-                    this['_' + name](axisModel, gridModel, api, labelInterval);
+                    this['_' + name](axisModel, gridModel, labelInterval);
                 }
             }, this);
         },
@@ -96,10 +98,9 @@ define(function(require) {
         /**
          * @param {module:echarts/coord/cartesian/AxisModel} axisModel
          * @param {module:echarts/coord/cartesian/GridModel} gridModel
-         * @param {module:echarts/ExtensionAPI} api
          * @private
          */
-        _axisLabel: function (axisModel, gridModel, api) {
+        _axisLabel: function (axisModel, gridModel) {
             var axis = axisModel.axis;
 
             var labelModel = axisModel.getModel('axisLabel');
@@ -169,7 +170,7 @@ define(function(require) {
                     labelTextAlign = labelRotate > 0 ? 'left' : 'right';
                 }
 
-                var textEl = new api.Text({
+                var textEl = new graphic.Text({
                     style: {
                         x: x,
                         y: y,
@@ -222,10 +223,9 @@ define(function(require) {
         /**
          * @param {module:echarts/coord/cartesian/AxisModel} axisModel
          * @param {module:echarts/coord/cartesian/GridModel} gridModel
-         * @param {module:echarts/ExtensionAPI} api
          * @private
          */
-        _axisLine: function (axisModel, gridModel, api) {
+        _axisLine: function (axisModel, gridModel) {
             var axis = axisModel.axis;
             var p1 = [];
             var p2 = [];
@@ -244,7 +244,7 @@ define(function(require) {
                 p1[0] = p2[0] = this._axisLinePosition;
             }
 
-            this.group.add(new api.Line(api.subPixelOptimizeLine({
+            this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
                 shape: {
                     x1: p1[0],
                     y1: p1[1],
@@ -262,11 +262,10 @@ define(function(require) {
         /**
          * @param {module:echarts/coord/cartesian/AxisModel} axisModel
          * @param {module:echarts/coord/cartesian/GridModel} gridModel
-         * @param {module:echarts/ExtensionAPI} api
          * @param {number|Function} labelInterval
          * @private
          */
-        _axisTick: function (axisModel, gridModel, api, labelInterval) {
+        _axisTick: function (axisModel, gridModel, labelInterval) {
             var axis = axisModel.axis;
             var tickModel = axisModel.getModel('axisTick');
 
@@ -314,7 +313,7 @@ define(function(require) {
                 var p2 = [x + offX, y + offY];
 
                 // Tick line
-                tickLines.push(new api.Line(api.subPixelOptimizeLine({
+                tickLines.push(new graphic.Line(graphic.subPixelOptimizeLine({
                     shape: {
                         x1: p1[0],
                         y1: p1[1],
@@ -327,7 +326,7 @@ define(function(require) {
                     silent: true
                 })));
             }
-            var tickEl = api.mergePath(tickLines, {
+            var tickEl = graphic.mergePath(tickLines, {
                 style: lineStyleModel.getLineStyle(),
                 silent: true,
                 z: axisModel.get('z')
@@ -338,11 +337,10 @@ define(function(require) {
         /**
          * @param {module:echarts/coord/cartesian/AxisModel} axisModel
          * @param {module:echarts/coord/cartesian/GridModel} gridModel
-         * @param {module:echarts/ExtensionAPI} api
          * @param {number|Function} labelInterval
          * @private
          */
-        _splitLine: function (axisModel, gridModel, api, labelInterval) {
+        _splitLine: function (axisModel, gridModel, labelInterval) {
             var axis = axisModel.axis;
 
             var splitLineModel = axisModel.getModel('splitLine');
@@ -386,7 +384,7 @@ define(function(require) {
 
                 var colorIndex = (lineCount++) % lineColors.length;
                 splitLines[colorIndex] = splitLines[colorIndex] || [];
-                splitLines[colorIndex].push(new api.Line(api.subPixelOptimizeLine({
+                splitLines[colorIndex].push(new graphic.Line(graphic.subPixelOptimizeLine({
                     shape: {
                         x1: p1[0],
                         y1: p1[1],
@@ -403,7 +401,7 @@ define(function(require) {
             // Simple optimization
             // Batching the lines if color are the same
             for (var i = 0; i < splitLines.length; i++) {
-                this.group.add(api.mergePath(splitLines[i], {
+                this.group.add(graphic.mergePath(splitLines[i], {
                     style: {
                         stroke: lineColors[i % lineColors.length],
                         lineDash: lineStyleModel.getLineDash(),
@@ -418,11 +416,10 @@ define(function(require) {
         /**
          * @param {module:echarts/coord/cartesian/AxisModel} axisModel
          * @param {module:echarts/coord/cartesian/GridModel} gridModel
-         * @param {module:echarts/ExtensionAPI} api
          * @param {number|Function} labelInterval
          * @private
          */
-        _splitArea: function (axisModel, gridModel, api, labelInterval) {
+        _splitArea: function (axisModel, gridModel, labelInterval) {
             var axis = axisModel.axis;
 
             var splitAreaModel = axisModel.getModel('splitArea');
@@ -467,7 +464,7 @@ define(function(require) {
 
                 var colorIndex = (count++) % areaColors.length;
                 splitAreaRects[colorIndex] = splitAreaRects[colorIndex] || [];
-                splitAreaRects[colorIndex].push(new api.Rect({
+                splitAreaRects[colorIndex].push(new graphic.Rect({
                     shape: {
                         x: x,
                         y: y,
@@ -484,7 +481,7 @@ define(function(require) {
             // Simple optimization
             // Batching the rects if color are the same
             for (var i = 0; i < splitAreaRects.length; i++) {
-                this.group.add(api.mergePath(splitAreaRects[i], {
+                this.group.add(graphic.mergePath(splitAreaRects[i], {
                     style: {
                         fill: areaColors[i % areaColors.length]
                     },

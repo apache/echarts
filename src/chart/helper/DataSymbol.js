@@ -50,8 +50,6 @@ define(function (require) {
         this.group = new Group();
 
         this.z = 0;
-
-        this.zlevel = 0;
     }
 
     DataSymbol.prototype = {
@@ -73,7 +71,9 @@ define(function (require) {
                         return;
                     }
 
-                    var symbolEl = createSymbol(data, newIdx, enableAnimation);
+                    var symbolEl = createSymbol(
+                        data, newIdx, enableAnimation
+                    );
 
                     data.setItemGraphicEl(newIdx, symbolEl);
 
@@ -84,10 +84,17 @@ define(function (require) {
                     var point = data.getItemLayout(newIdx);
                     var el = oldData.getItemGraphicEl(oldIdx);
 
-                    // 空数据
-                    // TODO
+                    // Empty data
                     if (!data.hasValue(newIdx)) {
+                        group.remove(el);
                         return;
+                    }
+
+                    // Symbol changed
+                    if (oldData.getItemVisual(newIdx, 'symbol') !== data.getItemVisual(oldIdx, 'symbol')) {
+                        // Remove the old one
+                        group.remove(el);
+                        el = createSymbol(data, newIdx, enableAnimation);
                     }
 
                     // TODO Merge animateTo and attr methods into one
@@ -119,6 +126,7 @@ define(function (require) {
                         });
                     }
                     else {
+                        // console.log(oldIdx);
                         group.remove(el);
                     }
                 })

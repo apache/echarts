@@ -8,6 +8,7 @@ define(function(require) {
     var vector = require('zrender/core/vector');
     var DataSymbol = require('../helper/DataSymbol');
     var lineAnimationDiff = require('./lineAnimationDiff');
+    var graphic = require('../../util/graphic');
 
     function isPointsSame(points1, points2) {
         if (points1.length !== points2.length) {
@@ -41,10 +42,9 @@ define(function(require) {
 
         init: function () {
             this._dataSymbol = new DataSymbol();
-            this.group.add(this._dataSymbol.group);
         },
 
-        render: function (seriesModel, ecModel, api) {
+        render: function (seriesModel, ecModel) {
             var group = this.group;
             var data = seriesModel.getData();
             var lineStyleNormalModel = seriesModel.getModel('itemStyle.normal.lineStyle');
@@ -61,7 +61,7 @@ define(function(require) {
                 };
             });
 
-            var prevCoordSys = this._coordSys
+            var prevCoordSys = this._coordSys;
             var coordSys = seriesModel.coordinateSystem;
             var isCoordSysPolar = coordSys.type === 'polar';
 
@@ -80,8 +80,6 @@ define(function(require) {
             var polyline = this._polyline;
             var enableAnimation = ecModel.get('animation');
 
-            dataSymbol.z = seriesModel.get('z') + 1;
-
             // Initialization animation or coordinate system changed
             if (
                 !(polyline
@@ -90,7 +88,7 @@ define(function(require) {
             ) {
                 dataSymbol.updateData(data, false);
 
-                polyline = new api.Polyline({
+                polyline = new graphic.Polyline({
                     shape: {
                         points: points
                     },
@@ -106,8 +104,8 @@ define(function(require) {
                 // var removeClipPath = zrUtil.bind(polyline.removeClipPath, polyline);
                 var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
                 var clipPath = isCoordSysPolar
-                    ? this._createPolarClipShape(coordSys, api, enableAnimation, categoryAxis)
-                    : this._createGridClipShape(coordSys, api, enableAnimation, categoryAxis);
+                    ? this._createPolarClipShape(coordSys, enableAnimation, categoryAxis)
+                    : this._createGridClipShape(coordSys, enableAnimation, categoryAxis);
 
                 polyline.setClipPath(clipPath);
 
@@ -118,8 +116,8 @@ define(function(require) {
             else {
                 // Update clipPath
                 var clipPath = isCoordSysPolar
-                    ? this._createPolarClipShape(coordSys, api)
-                    : this._createGridClipShape(coordSys, api);
+                    ? this._createPolarClipShape(coordSys)
+                    : this._createGridClipShape(coordSys);
                 polyline.setClipPath(clipPath);
 
                 dataSymbol.updateData(data, false);
@@ -133,6 +131,10 @@ define(function(require) {
                 // Add back
                 group.add(polyline);
             }
+
+            // Make sure symbols is on top of line
+            group.remove(dataSymbol.group);
+            group.add(dataSymbol.group);
 
             this._data = data;
 
@@ -193,11 +195,11 @@ define(function(require) {
             }
         },
 
-        _createGridClipShape: function (cartesian, api, animation, categoryAxis) {
+        _createGridClipShape: function (cartesian, animation, categoryAxis) {
             var xExtent = getAxisExtentWithGap(cartesian.getAxis('x'));
             var yExtent = getAxisExtentWithGap(cartesian.getAxis('y'));
 
-            var clipPath = new api.Rect({
+            var clipPath = new graphic.Rect({
                 shape: {
                     x: xExtent[0],
                     y: yExtent[0],
@@ -207,7 +209,7 @@ define(function(require) {
             });
 
             if (animation) {
-                 clipPath.shape[categoryAxis.isHorizontal() ? 'width' : 'height'] = 0;
+                clipPath.shape[categoryAxis.isHorizontal() ? 'width' : 'height'] = 0;
                 clipPath.animateTo({
                     shape: {
                         width: xExtent[1] - xExtent[0],
@@ -219,28 +221,31 @@ define(function(require) {
             return clipPath;
         },
 
-        _createPolarClipShape: function (polar, api, animation) {
+        _createPolarClipShape: function (polar, animation) {
             // var angleAxis = polar.getAngleAxis();
             var radiusAxis = polar.getRadiusAxis();
 
             var radiusExtent = radiusAxis.getExtent();
 
-            var clipPath = new api.Sector({
+            var clipPath = new graphic.Sector({
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,
                     r0: radiusExtent[0],
                     r: radiusExtent[1],
                     startAngle: 0,
-                    endAngle: 0
+                    endAngle: Math.PI * 2
                 }
             });
 
-            clipPath.animateTo({
-                shape: {
-                    endAngle: Math.PI * 2
-                }
-            }, 1500, animation);
+            if (animation) {
+                clipPath.shape.endAngle = 0;
+                clipPath.animateTo({
+                    shape: {
+                        endAngle: Math.PI * 2
+                    }
+                }, 1500, animation);
+            }
 
             return clipPath;
         },

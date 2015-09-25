@@ -191,7 +191,7 @@ define(function(require, factory) {
             ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
 
             if (! axesCount.x || ! axesCount.y) {
-                api.log('Grid must has at least one x axis and one y axis');
+                // api.log('Grid must has at least one x axis and one y axis');
                 // Roll back
                 this._axesMap = {};
                 this._axesList = [];

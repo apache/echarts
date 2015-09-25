@@ -325,6 +325,7 @@ define(function (require) {
         },
 
         _getPointerElement: function (coordSys, pointerModel, axisType) {
+            var z = this._tooltipModel.get('z');
             var axisPointers = this._axisPointers;
             var key = getAxisPointerKey(coordSys.name, axisType);
             if (axisPointers[key]) {
@@ -345,6 +346,7 @@ define(function (require) {
 
             var el = axisPointers[key] = new graphic[elementType]({
                 style: style,
+                z: z,
                 silent: true
             });
 

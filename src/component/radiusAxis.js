@@ -3,6 +3,7 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var vector = require('zrender/core/vector');
+    var graphic = require('../util/graphic');
 
     var elementList = ['splitLine', 'splitArea', 'axisLine', 'axisTick', 'axisLabel'];
 
@@ -12,7 +13,7 @@ define(function(require) {
 
         type: 'radiusAxis',
 
-        render: function (radiusAxisModel, ecModel, api) {
+        render: function (radiusAxisModel, ecModel) {
             this.group.removeAll();
 
             var polarModel = ecModel.getComponent('polar', radiusAxisModel.get('polarIndex'));
@@ -23,23 +24,18 @@ define(function(require) {
             var radiusExtent = radiusAxis.getExtent();
             zrUtil.each(elementList, function (name) {
                 if (radiusAxisModel.get(name +'.show')) {
-                    this['_' + name](radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api);
+                    this['_' + name](radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords);
                 }
             }, this);
-
-            var z = radiusAxisModel.get('z');
-            this.group.eachChild(function (child) {
-                child.z = z;
-            });
         },
 
         /**
          * @private
          */
-        _axisLine: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api) {
+        _axisLine: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
             var p1 = polar.coordToPoint([radiusExtent[0], axisAngle]);
             var p2 = polar.coordToPoint([radiusExtent[1], axisAngle]);
-            var arc = new api.Line({
+            var arc = new graphic.Line({
                 shape: {
                     x1: p1[0],
                     y1: p1[1],
@@ -55,7 +51,7 @@ define(function(require) {
         /**
          * @private
          */
-        _axisTick: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api) {
+        _axisTick: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
             var tickModel = radiusAxisModel.getModel('axisTick');
 
             var start = polar.coordToPoint([radiusExtent[0], axisAngle]);
@@ -75,7 +71,7 @@ define(function(require) {
                 // Get point on axis
                 vector.lerp(p1, start, end, tickPosition / len);
                 vector.scaleAndAdd(p2, p1, direction, tickLen);
-                return new api.Line({
+                return new graphic.Line({
                     shape: {
                         x1: p1[0],
                         y1: p1[1],
@@ -84,7 +80,7 @@ define(function(require) {
                     }
                 });
             });
-            this.group.add(api.mergePath(
+            this.group.add(graphic.mergePath(
                 lines, {
                     style: tickModel.getModel('lineStyle').getLineStyle(),
                     silent: true
@@ -95,7 +91,7 @@ define(function(require) {
         /**
          * @private
          */
-        _axisLabel: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api) {
+        _axisLabel: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
             var axis = radiusAxisModel.axis;
             var labelModel = radiusAxisModel.getModel('axisLabel');
             var textStyleModel = labelModel.getModel('textStyle');
@@ -121,7 +117,7 @@ define(function(require) {
                 // Get point on axis
                 vector.lerp(p, start, end, labelsPositions[i] / len);
                 vector.scaleAndAdd(p, p, direction, labelMargin);
-                this.group.add(new api.Text({
+                this.group.add(new graphic.Text({
                     style: {
                         x: p[0],
                         y: p[1],
@@ -138,7 +134,7 @@ define(function(require) {
         /**
          * @private
          */
-        _splitLine: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api) {
+        _splitLine: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
             var splitLineModel = radiusAxisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
             var lineColors = lineStyleModel.get('color');
@@ -152,7 +148,7 @@ define(function(require) {
             for (var i = 0; i < ticksCoords.length; i++) {
                 var colorIndex = (lineCount++) % lineColors.length;
                 splitLines[colorIndex] = splitLines[colorIndex] || [];
-                splitLines[colorIndex].push(new api.Circle({
+                splitLines[colorIndex].push(new graphic.Circle({
                     shape: {
                         cx: polar.cx,
                         cy: polar.cy,
@@ -165,7 +161,7 @@ define(function(require) {
             // Simple optimization
             // Batching the lines if color are the same
             for (var i = 0; i < splitLines.length; i++) {
-                this.group.add(api.mergePath(splitLines[i], {
+                this.group.add(graphic.mergePath(splitLines[i], {
                     style: {
                         stroke: lineColors[i % lineColors.length],
                         lineType: lineStyleModel.getLineDash(),
@@ -180,7 +176,7 @@ define(function(require) {
         /**
          * @private
          */
-        _splitArea: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords, api) {
+        _splitArea: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
 
         }
     });

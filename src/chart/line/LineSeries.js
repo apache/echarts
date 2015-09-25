@@ -58,10 +58,14 @@ define(function(require) {
                 }
             },
             // smooth: false,
-            symbol: 'emptyCircle',         // 拐点图形类型
-            symbolSize: 4,           // 拐点图形大小
-            // symbolRotate: null,   // 拐点图形旋转控制
-            showAllSymbol: false     // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
+            // 拐点图形类型
+            symbol: 'emptyCircle',
+            // 拐点图形大小
+            symbolSize: 4,
+            // 拐点图形旋转控制
+            // symbolRotate: null,
+            // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
+            showAllSymbol: false
         }
     });
 });

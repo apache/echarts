@@ -175,9 +175,9 @@ define(function (require) {
 
             this._coordinateSystem.update(ecModel, this._extensionAPI);
 
-            this._doVisualCoding(ecModel);
-
             this._doLayout(ecModel, event);
+
+            this._doVisualCoding(ecModel);
 
             this._doRender(ecModel, event);
 
