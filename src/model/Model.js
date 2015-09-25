@@ -41,7 +41,7 @@ define(function (require) {
          * 从新的 Option merge
          */
         mergeOption: function (option) {
-            zrUtil.merge(this.option, option);
+            zrUtil.merge(this.option, option, true);
         },
 
         /**

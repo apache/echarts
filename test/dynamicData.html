@@ -1,0 +1,107 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                var xAxisData = [];
+                var data1 = [];
+                var count = 0;
+                for (; count < 100; count++) {
+                    xAxisData.push('类目' + count);
+                    data1.push(+Math.random().toFixed(3));
+                }
+
+                var itemStyle = {
+                    normal: {
+                        borderColor: 'white',
+                        borderWidth: 3,
+                        // shadowBlur: 10,
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 5,
+                        // shadowColor: 'rgba(0, 0, 0, 0.4)',
+                        lineStyle: {
+                            width: 3,
+                            // shadowBlur: 10,
+                            // shadowOffsetX: 0,
+                            // shadowOffsetY: 5,
+                            // shadowColor: 'rgba(0, 0, 0, 0.4)'
+                        }
+                    }
+                };
+
+                chart.setOption({
+                    legend: {
+                        data: ['line']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    // animation: false,
+                    xAxis: {
+                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        data: xAxisData,
+                        // boundaryGap: false
+                    },
+                    yAxis: {
+                        splitLine: {
+                            // show: false
+                        }
+                    },
+                    series: [{
+                        name: 'line',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        data: data1,
+                        itemStyle: itemStyle
+                    }]
+                });
+
+                setInterval(function () {
+                    data1.shift();
+                    data1.push(+Math.random().toFixed(3));
+
+                    xAxisData.shift();
+                    xAxisData.push('类目' + count++);
+
+                    chart.setOption({
+                        xAxis: {
+                            data: xAxisData
+                        },
+                        series: [{
+                            name: 'line',
+                            data: data1
+                        }]
+                    });
+                }, 100);
+            })
+
+        </script>
+    </body>
+</html>

@@ -13,7 +13,7 @@ define(function (require) {
 
         type: 'dataZoom',
 
-        init: function () {
+        init: function (ecModel, api) {
             /**
              * @private
              * @type {Object}
@@ -31,6 +31,8 @@ define(function (require) {
              * @type {string}
              */
             this._orient;
+
+            this.api = api;
         },
 
         render: function (dataZoomModel, ecModel, api, event) {
@@ -40,7 +42,6 @@ define(function (require) {
 
             this.dataZoomModel = dataZoomModel;
             this.ecModel = ecModel;
-            this.api = api;
 
             this._orient = dataZoomModel.get('orient');
 
@@ -73,7 +74,7 @@ define(function (require) {
             var dataZoomModel = this.dataZoomModel;
             var layout = this._layout.layout;
 
-            this.group.add(new this.api.Rect({
+            this.group.add(new graphic.Rect({
                 // FIXME
                 // zlevel: this.getZlevelBase(),
                 // z: this.getZBase(),
@@ -106,7 +107,7 @@ define(function (require) {
                 };
                 cfg = zrUtil.merge(cfg, this._layout.layout[name]);
 
-                this.group.add(this._updatableShapes[name] = new this.api.Rect(cfg));
+                this.group.add(this._updatableShapes[name] = new graphic.Rect(cfg));
 
             }, this);
         },
@@ -138,7 +139,7 @@ define(function (require) {
             };
             cfg = zrUtil.merge(cfg, this._layout.layout.filler);
 
-            this.group.add(this._updatableShapes.filler = new this.api.Rect(cfg));
+            this.group.add(this._updatableShapes.filler = new graphic.Rect(cfg));
         },
 
         _renderHandle: function () {
@@ -161,7 +162,7 @@ define(function (require) {
                 };
                 cfg = zrUtil.merge(cfg, this._layout.layout[name]);
 
-                this.group.add(this._updatableShapes[name] = new this.api.Rect(cfg));
+                this.group.add(this._updatableShapes[name] = new graphic.Rect(cfg));
 
             }, this);
         },

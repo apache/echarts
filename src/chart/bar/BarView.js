@@ -3,6 +3,7 @@ define(function (require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var graphic = require('../../util/graphic');
 
     zrUtil.extend(require('../../model/Model').prototype, require('./barItemStyle'));
 
@@ -10,17 +11,17 @@ define(function (require) {
 
         type: 'bar',
 
-        render: function (seriesModel, ecModel, api) {
+        render: function (seriesModel, ecModel) {
             var coordinateSystemType = seriesModel.get('coordinateSystem');
 
             if (coordinateSystemType === 'cartesian2d') {
-                this._renderCartesian(seriesModel, ecModel, api);
+                this._renderCartesian(seriesModel, ecModel);
             }
 
             return this.group;
         },
 
-        _renderCartesian: function (seriesModel, ecModel, api) {
+        _renderCartesian: function (seriesModel, ecModel) {
             var group = this.group;
             var data = seriesModel.getData();
             var oldData = this._data;
@@ -28,29 +29,18 @@ define(function (require) {
             data.diff(oldData)
                 .add(function (dataIndex) {
                     // 空数据
-                    if (! data.hasValue(dataIndex)) {
+                    if (!data.hasValue(dataIndex)) {
                         return;
                     }
 
                     var layout = data.getItemLayout(dataIndex);
-                    var itemModel = data.getItemModel(dataIndex);
-                    var rect = new api.Rect({
+                    var rect = new graphic.Rect({
                         shape: {
                             x: layout.x,
                             y: layout.y + layout.height,
                             width: layout.width
-                        },
-                        style: zrUtil.extend(
-                            itemModel.getModel('itemStyle.normal').getBarItemStyle(),
-                            {
-                                fill: data.getItemVisual(dataIndex, 'color')
-                            }
-                        )
+                        }
                     });
-
-                    api.setHoverStyle(
-                        rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
-                    );
 
                     data.setItemGraphicEl(dataIndex, rect);
 
@@ -64,10 +54,11 @@ define(function (require) {
                 .update(function (newIndex, oldIndex) {
                     var rect = oldData.getItemGraphicEl(oldIndex);
                     // 空数据
-                    if (! data.hasValue(newIndex)) {
+                    if (!data.hasValue(newIndex)) {
                         group.remove(rect);
                         return;
                     }
+
                     rect.animateTo({
                         shape: data.getItemLayout(newIndex)
                     }, 500, 'cubicOut');
@@ -89,6 +80,19 @@ define(function (require) {
                     });
                 })
                 .execute();
+
+            data.eachItemGraphicEl(function (rect, idx) {
+                var itemModel = data.getItemModel(idx);
+                rect.setStyle(zrUtil.defaults(
+                    {
+                        fill: data.getItemVisual(idx, 'color')
+                    },
+                    itemModel.getModel('itemStyle.normal').getBarItemStyle()
+                ));
+                graphic.setHoverStyle(
+                    rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
+                );
+            });
 
             this._data = data;
         },

@@ -24,7 +24,7 @@ define(function (require) {
         ecModel.eachComponent(axisType, function (model) {
             if (model.get('polarIndex') === polarIndex) {
                 if (axisModel) {
-                    api.log('Polar ' + polarIndex + ' has more than one ' + axisType);
+                    // api.log('Polar ' + polarIndex + ' has more than one ' + axisType);
                     return;
                 }
                 axisModel = model;
@@ -96,7 +96,7 @@ define(function (require) {
 
                 var polar = polarList[polarIndex];
                 if (! polar) {
-                    api.log('Polar configuration not exist for series ' + seriesModel.name + '.');
+                    // api.log('Polar configuration not exist for series ' + seriesModel.name + '.');
                     return;
                 }
                 // Inject polar instance

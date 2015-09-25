@@ -2,6 +2,7 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var graphic = require('../util/graphic');
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 
@@ -24,7 +25,7 @@ define(function(require) {
 
         type: 'angleAxis',
 
-        render: function (angleAxisModel, ecModel, api) {
+        render: function (angleAxisModel, ecModel) {
             this.group.removeAll();
 
             var polarModel = ecModel.getComponent('polar', angleAxisModel.get('polarIndex'));
@@ -40,7 +41,7 @@ define(function(require) {
 
             zrUtil.each(elementList, function (name) {
                 if (angleAxisModel.get(name +'.show')) {
-                    this['_' + name](angleAxisModel, polar, ticksAngles, radiusExtent, api);
+                    this['_' + name](angleAxisModel, polar, ticksAngles, radiusExtent);
                 }
             }, this);
         },
@@ -48,10 +49,10 @@ define(function(require) {
         /**
          * @private
          */
-        _axisLine: function (angleAxisModel, polar, ticksAngles, radiusExtent, api) {
+        _axisLine: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
             var lineStyleModel = angleAxisModel.getModel('axisLine.lineStyle');
 
-            var circle = new api.Circle({
+            var circle = new graphic.Circle({
                 shape: {
                     cx: polar.cx,
                     cy: polar.cy,
@@ -67,17 +68,17 @@ define(function(require) {
         /**
          * @private
          */
-        _axisTick: function (angleAxisModel, polar, ticksAngles, radiusExtent, api) {
+        _axisTick: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
             var tickModel = angleAxisModel.getModel('axisTick');
 
             var tickLen = (tickModel.get('inside') ? -1 : 1) * tickModel.get('length');
 
             var lines = zrUtil.map(ticksAngles, function (tickAngle) {
-                return new api.Line({
+                return new graphic.Line({
                     shape: getAxisLineShape(polar, radiusExtent[1], radiusExtent[1] + tickLen, tickAngle)
                 });
             });
-            this.group.add(api.mergePath(
+            this.group.add(graphic.mergePath(
                 lines, {
                     style: tickModel.getModel('lineStyle').getLineStyle()
                 }
@@ -87,7 +88,7 @@ define(function(require) {
         /**
          * @private
          */
-        _axisLabel: function (angleAxisModel, polar, ticksAngles, radiusExtent, api) {
+        _axisLabel: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
             var axis = angleAxisModel.axis;
 
             var labelModel = angleAxisModel.getModel('axisLabel');
@@ -110,7 +111,7 @@ define(function(require) {
                 var labelTextBaseline = Math.abs(p[1] - cy) / r < 0.3
                     ? 'middle' : (p[1] > cy ? 'top' : 'bottom');
 
-                this.group.add(new api.Text({
+                this.group.add(new graphic.Text({
                     style: {
                         x: p[0],
                         y: p[1],
@@ -127,7 +128,7 @@ define(function(require) {
         /**
          * @private
          */
-        _splitLine: function (angleAxisModel, polar, ticksAngles, radiusExtent, api) {
+        _splitLine: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
             var splitLineModel = angleAxisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
             var lineColors = lineStyleModel.get('color');
@@ -141,7 +142,7 @@ define(function(require) {
             for (var i = 0; i < ticksAngles.length; i++) {
                 var colorIndex = (lineCount++) % lineColors.length;
                 splitLines[colorIndex] = splitLines[colorIndex] || [];
-                splitLines[colorIndex].push(new api.Line({
+                splitLines[colorIndex].push(new graphic.Line({
                     shape: getAxisLineShape(polar, radiusExtent[0], radiusExtent[1], ticksAngles[i])
                 }))
             }
@@ -149,7 +150,7 @@ define(function(require) {
             // Simple optimization
             // Batching the lines if color are the same
             for (var i = 0; i < splitLines.length; i++) {
-                this.group.add(api.mergePath(splitLines[i], {
+                this.group.add(graphic.mergePath(splitLines[i], {
                     style: {
                         stroke: lineColors[i % lineColors.length],
                         lineType: lineStyleModel.getLineDash(),
@@ -164,7 +165,7 @@ define(function(require) {
         /**
          * @private
          */
-        _splitArea: function (angleAxisModel, polar, ticksAngles, radiusExtent, api) {
+        _splitArea: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
 
         }
     });

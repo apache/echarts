@@ -1,6 +1,8 @@
 define(function(require) {
     'use strict';
 
+    var graphic = require('../util/graphic');
+
     require('../coord/cartesian/Grid');
 
     require('./axis');
@@ -10,10 +12,10 @@ define(function(require) {
 
         type: 'grid',
 
-        render: function (gridModel, ecModel, api) {
+        render: function (gridModel, ecModel) {
             this.group.removeAll();
             if (gridModel.get('show')) {
-                this.group.add(new api.Rect({
+                this.group.add(new graphic.Rect({
                     shape:gridModel.coordinateSystem.getRect(),
                     style: {
                         stroke: gridModel.get('borderColor'),
