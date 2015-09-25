@@ -86,6 +86,11 @@ define(function(require) {
                 && prevCoordSys.type === coordSys.type
                 && enableAnimation)
             ) {
+                // Remove previous created polyline
+                if (polyline) {
+                    group.remove(polyline);
+                }
+
                 dataSymbol.updateData(data, false);
 
                 polyline = new graphic.Polyline({

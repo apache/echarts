@@ -71,6 +71,7 @@ define(function(require) {
             // TODO Merge data?
             if (data) {
                 this._data = data;
+                this._dataBeforeProcessing = data.cloneShallow();
             }
         },
 
