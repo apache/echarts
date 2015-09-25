@@ -9,7 +9,9 @@ define(function (require) {
             data.each(dims, function (x, y, idx) {
                 if (!isNaN(y) && !isNaN(x)) {
                     var point = coordSys.dataToPoint([x, y]);
-                    data.setItemLayout(idx, point);
+                    data.setItemLayout(idx, {
+                        point: point
+                    });
                 }
             }, true);
         });

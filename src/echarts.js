@@ -379,7 +379,16 @@ define(function (require) {
             var api = this._extensionAPI;
             // Render all components
             zrUtil.each(this._componentsList, function (component) {
-                component.render(component.__model, ecModel, api, event);
+                var componentModel = component.__model;
+                component.render(componentModel, ecModel, api, event);
+
+                var z = componentModel.get('z');
+                var zlevel = componentModel.get('zlevel');
+                // Set z and zlevel
+                component.group.traverse(function (el) {
+                    el.z = z;
+                    el.zlevel = zlevel;
+                });
             }, this);
 
             zrUtil.each(this._chartsList, function (chart) {
@@ -392,6 +401,14 @@ define(function (require) {
                 var chart = this._chartsMap[id];
                 chart.__keepAlive = true;
                 chart.render(seriesModel, ecModel, api, event);
+
+                var z = seriesModel.get('z');
+                var zlevel = seriesModel.get('zlevel');
+                // Set z and zlevel
+                chart.group.traverse(function (el) {
+                    el.z = z;
+                    el.zlevel = zlevel
+                });
             }, this);
 
             // Remove groups of charts

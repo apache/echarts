@@ -95,6 +95,28 @@ define(function(require) {
         },
 
         /**
+         * @param {module:echarts/coord/polar/Axis}
+         * @return {module:echarts/coord/polar/Axis}
+         */
+        getOtherAxis: function (axis) {
+            var angleAxis = this._angleAxis;
+            return axis === angleAxis ? this._radiusAxis : angleAxis;
+        },
+
+        /**
+         * Base axis is the category axis if exists.
+         * If don't, angle axis will be the base axis.
+         *
+         * Base axis will be used on stacking.
+         *
+         * @return {module:echarts/coord/polar/Axis}
+         */
+        getBaseAxis: function () {
+            var radiusAxis = this._radiusAxis;
+            return radiusAxis.scale.type === 'ordinal' ? radiusAxis : this._angleAxis;
+        },
+
+        /**
          * Convert series data to a list of (x, y) points
          * @param {module:echarts/data/List} data
          * @return {Array}

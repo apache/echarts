@@ -26,12 +26,15 @@ define(function (require) {
     /**
      * @constructor
      * @alias module:echarts/data/List
+     *
+     * @param {Array.<string>} dimensions
+     * @param {module:echarts/model/Model} seriesModel
      */
     var List = function (dimensions, seriesModel) {
 
         dimensions = dimensions || ['x', 'y'];
 
-        var dimensionInfos = [];
+        var dimensionInfos = {};
         var dimensionNames = [];
         for (var i = 0; i < dimensions.length; i++) {
             var dimensionName;
@@ -40,6 +43,7 @@ define(function (require) {
                 dimensionName = dimensions[i];
                 dimensionInfo = {
                     name: dimensionName,
+                    stackable: false,
                     // Type can be 'float', 'int', 'number'
                     // Default is number, Precision of float may not enough
                     type: 'number'
@@ -51,7 +55,7 @@ define(function (require) {
                 dimensionInfo.type = dimensionInfo.type || 'float'
             }
             dimensionNames.push(dimensionName);
-            dimensionInfos.push(dimensionInfo);
+            dimensionInfos[dimensionName] = dimensionInfo;
         }
         /**
          * @readOnly
@@ -61,6 +65,7 @@ define(function (require) {
 
         /**
          * Infomation of each data dimension, like data type.
+         * @type {Object}
          */
         this._dimensionInfos = dimensionInfos;
 
@@ -152,12 +157,13 @@ define(function (require) {
 
         var dimensions = this.dimensions;
         var size = data.length;
+        var dimensionInfoMap = this._dimensionInfos
 
         nameList = nameList || [];
 
         // Init storage
         for (var i = 0; i < dimensions.length; i++) {
-            var dimInfo = this._dimensionInfos[i];
+            var dimInfo = dimensionInfoMap[dimensions[i]];
             var DataCtor = dataCtors[dimInfo.type];
             storage[dimensions[i]] = new DataCtor(size);
         }
@@ -195,7 +201,7 @@ define(function (require) {
             // Store the data by dimensions
             for (var k = 0; k < dimensions.length; k++) {
                 var dim = dimensions[k];
-                var dimInfo = this._dimensionInfos[k];
+                var dimInfo = dimensionInfoMap[dim];
                 var dimStorage = storage[dim];
                 var dimValue = value[k];
                 // PENDING NULL is empty or zero
@@ -222,7 +228,7 @@ define(function (require) {
                 var modelIdx = optionModelIndices[i];
                 var model = optionModels[modelIdx];
                 if (model && model.option) {
-                    nameList[i] = model.option.name || '';
+                    nameList[i] = model.option.name || ('' + i);
                 }
             }
         }
@@ -365,20 +371,16 @@ define(function (require) {
         return dimensions;
     }
 
-    function getStackDimMap(stackDim, dimensions) {
-        if (! stackDim) {
-            return {};
-        }
-        if (typeof stackDim === 'string') {
-            stackDim = [stackDim];
-        }
+    /**
+     * @private
+     */
+    listProto._getStackDimMap = function (dimensions) {
         var stackDimMap = {};
+        var dimensionsInfoMap = this._dimensionInfos;
         // Avoid get the undefined value
         for (var i = 0; i < dimensions.length; i++) {
-            stackDimMap[dimensions[i]] = false;
-        }
-        for (var i = 0; i < stackDim.length; i++) {
-            stackDimMap[stackDim[i]] = true;
+            var dim = dimensions[i]
+            stackDimMap[dim] = !!dimensionsInfoMap[dim].stackable;
         }
         return stackDimMap;
     }
@@ -409,7 +411,7 @@ define(function (require) {
         var indices = this.indices;
 
         // Only stacked on the value axis
-        var stackDimMap = getStackDimMap(this._rawValueDims, dimensions);
+        var stackDimMap = this._getStackDimMap(dimensions);
         // Optimizing for 1 dim case
         var firstDimStack = stack && stackDimMap[dimensions[0]];
 
@@ -451,7 +453,7 @@ define(function (require) {
         var indices = this.indices;
 
         // Only stacked on the value axis
-        var stackDimMap = getStackDimMap(this._rawValueDims, dimensions);
+        var stackDimMap = this._getStackDimMap(dimensions);
         // Optimizing for 1 dim case
         var firstDimStack = stack && stackDimMap[dimensions[0]];
 
@@ -660,7 +662,11 @@ define(function (require) {
      * @param {*} context
      */
     listProto.eachItemGraphicEl = function (cb, context) {
-        zrUtil.each(this._graphicEls, cb, context);
+        zrUtil.each(this._graphicEls, function (el, idx) {
+            if (el) {
+                cb && cb.call(context, el, idx);
+            }
+        });
     };
 
     /**
@@ -668,7 +674,10 @@ define(function (require) {
      * New list only change the indices.
      */
     listProto.cloneShallow = function () {
-        var list = new List(this._dimensionInfos, this.seriesModel);
+        var dimensionInfoList = zrUtil.map(this.dimensions, function (dim) {
+            return this._dimensionInfos[dim];
+        }, this);
+        var list = new List(dimensionInfoList, this.seriesModel);
         list.stackedOn = this.stackedOn;
 
         // FIXME
@@ -690,19 +699,30 @@ define(function (require) {
         var dimensions;
 
         var categoryAxisModel;
-        var nameList = [];
         // FIXME
         // 这里 List 跟几个坐标系和坐标系 Model 耦合了
         if (coordinateSystem === 'cartesian2d') {
             var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
             var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
             if (xAxisModel.get('type') === 'category') {
-                dimensions = ['x', 'y'];
+                dimensions = [{
+                    name: 'x',
+                    type: 'int'
+                }, {
+                    name: 'y',
+                    stackable: true
+                }];
 
                 categoryAxisModel = xAxisModel;
             }
             else if (yAxisModel.get('type') === 'category') {
-                dimensions = ['y', 'x'];
+                dimensions = [{
+                    name: 'y',
+                    type: 'int'
+                }, {
+                    name: 'x',
+                    stackable: true
+                }];
 
                 categoryAxisModel = yAxisModel;
             }
@@ -725,12 +745,24 @@ define(function (require) {
             var radiusAxisModel = ecModel.findComponent('radiusAxis', axisFinder);
 
             if (angleAxisModel.get('type') === 'category') {
-                dimensions = ['angle', 'radius'];
+                dimensions = [{
+                    name: 'angle',
+                    type: 'int'
+                }, {
+                    name: 'radius',
+                    stackable: true
+                }];
 
                 categoryAxisModel = angleAxisModel;
             }
             else if (radiusAxisModel.get('type') === 'category') {
-                dimensions = ['radius', 'angle'];
+                dimensions = [{
+                    name: 'radius',
+                    type: 'int'
+                }, {
+                    name: 'angle',
+                    stackable: true
+                }];
 
                 categoryAxisModel = radiusAxisModel;
             }
@@ -746,8 +778,24 @@ define(function (require) {
             }
         }
 
+        var nameList = [];
         if (categoryAxisModel) {
-            nameList = categoryAxisModel.get('data');
+            var categories = categoryAxisModel.get('data');
+            if (categories) {
+                var dataLen = data.length;
+                // Ordered data is given explicitly like
+                // [[1, 0.2], [2, 0.3], [3, 0.15]]
+                // Pick the category
+                if (data[0] && data[0].length > 1 && categories.length > dataLen) {
+                    nameList = [];
+                    for (var i = 0; i < dataLen; i++) {
+                        nameList[i] = categories[data[i][0]];
+                    }
+                }
+                else {
+                    nameList = categories.slice();
+                }
+            }
         }
 
         var list = new List(dimensions, seriesModel);

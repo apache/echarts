@@ -19,8 +19,7 @@ define(function (require) {
 
         for (var i = 0; i < diff.length; i++) {
             var diffItem = diff[i];
-
-            status.push(diffItem);
+            var pointAdded = true;
 
             // FIXME, animation is not so perfect when dataZoom window moves fast
             // Which is in case remvoing or add more than one data in the tail or head
@@ -38,13 +37,23 @@ define(function (require) {
                     break;
                 case '-':
                     var oldDataItem = oldData[diffItem.idx];
-                    oldPoints.push(oldDataItem.point);
-                    newPoints.push(newCoordSys.dataToPoint([oldDataItem.x, oldDataItem.y]));
-                    rawIndices.push(oldDataItem.rawIdx);
+                    // Data is replaced. In the case of dynamic data queue
+                    // FIXME FIXME FIXME
+                    if (oldDataItem.rawIdx !== diffItem.idx) {
+                        oldPoints.push(oldDataItem.point);
+                        newPoints.push(newCoordSys.dataToPoint([oldDataItem.x, oldDataItem.y]));
+                        rawIndices.push(oldDataItem.rawIdx);
+                    }
+                    else {
+                        pointAdded = false;
+                    }
             }
 
             // Original indices
-            sortedIndices.push(i);
+            if (pointAdded) {
+                status.push(diffItem);
+                sortedIndices.push(sortedIndices.length);
+            }
         }
 
         // Diff result may be crossed if all items are changed
