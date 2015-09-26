@@ -240,8 +240,31 @@ define(function(require) {
         },
 
         polyline: function(xmlNode, scale) {
-            var obj = shapeBuilders.polygon(xmlNode, scale);
-            return obj;
+            var points = xmlNode.getAttribute('points');
+            var min = [Infinity, Infinity];
+            var max = [-Infinity, -Infinity];
+            if (points) {
+                points = parsePoints(points);
+
+                for (var i = 0; i < points.length; i++) {
+                    var p = points[i];
+                    
+                    min[0] = Math.min(p[0], min[0]);
+                    min[1] = Math.min(p[1], min[1]);
+
+                    max[0] = Math.max(p[0], max[0]);
+                    max[1] = Math.max(p[1], max[1]);
+
+                }
+                return {
+                    shapeType: 'polyline',
+                    pointList: points,
+                    cp: [
+                        (min[0] + max[0]) / 2 * scale[0],
+                        (min[1] + max[1]) / 2 * scale[0]
+                    ]
+                };
+            }
         }
     };
     
