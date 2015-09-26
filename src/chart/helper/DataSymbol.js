@@ -6,7 +6,7 @@ define(function (require) {
     var graphic = require('../../util/graphic');
 
     function createSymbol(data, idx, enableAnimation) {
-        var point = data.getItemLayout(idx).point;
+        var point = data.getItemLayout(idx);
         var color = data.getItemVisual(idx, 'color');
 
         var symbolSize = data.getItemVisual(idx, 'symbolSize');
@@ -85,7 +85,7 @@ define(function (require) {
                     }
 
                     var symbolSize = data.getItemVisual(newIdx, 'symbolSize');
-                    var point = data.getItemLayout(newIdx).point;
+                    var point = data.getItemLayout(newIdx);
                     var el = oldData.getItemGraphicEl(oldIdx);
 
                     // Symbol changed

@@ -6,6 +6,7 @@ define(function (require) {
                 ['shadowBlur'],
                 ['shadowOffsetX'],
                 ['shadowOffsetY'],
+                ['opacity'],
                 ['shadowColor']
             ]
         )

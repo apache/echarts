@@ -164,7 +164,7 @@ define(function(require) {
         this.setStyle(this.__normalStyle);
     }
     var MOUSEOVER = 'mouseover';
-    var MOUSEOUT = 'mouseover';
+    var MOUSEOUT = 'mouseout';
     /**
      * Set hover style of element
      * @param {module:zrender/graphic/Displayable} el
