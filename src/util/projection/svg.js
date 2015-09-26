@@ -124,25 +124,33 @@ define(function(require) {
 
     // Regular svg shapes
     var shapeBuilders = {
-        path: function(xmlNode, scale) {
+		transScale : function(xmlNode, scale){
+    		if(xmlNode.getAttribute('transform')!=null){
+    			var tStr = xmlNode.getAttribute('transform');
+    			return tStr.replace("translate(","").replace(")","").split(",");
+        	}else{
+        		return [0,0];
+        	}
+    	},
+    	path: function (xmlNode, scale) {
+			var tScale = shapeBuilders.transScale(xmlNode, scale);
             var path = xmlNode.getAttribute('d');
-            var rect = PathShape.prototype.getRect({ path : path });
+            var rect = PathShape.prototype.getRect({ path: path });
             return {
                 shapeType: 'path',
                 path: path,
                 cp: [
-                    (rect.x + rect.width / 2) * scale[0], 
-                    (rect.y + rect.height / 2) * scale[1]
+                    (rect.x + rect.width / 2) * scale[0] + toFloat(tScale[0]),
+                    (rect.y + rect.height / 2) * scale[1] + toFloat(tScale[1])
                 ]
             };
         },
-
-        rect: function(xmlNode, scale) {
-            var x = toFloat(xmlNode.getAttribute('x'));
-            var y = toFloat(xmlNode.getAttribute('y'));
+        rect: function (xmlNode, scale) {
+			var tScale = shapeBuilders.transScale(xmlNode, scale);
+            var x = toFloat(xmlNode.getAttribute('x')) + toFloat(tScale[0]);
+            var y = toFloat(xmlNode.getAttribute('y')) + toFloat(tScale[1]);
             var width = toFloat(xmlNode.getAttribute('width'));
             var height = toFloat(xmlNode.getAttribute('height'));
-
             return {
                 shapeType: 'rectangle',
                 x: x,
@@ -150,18 +158,17 @@ define(function(require) {
                 width: width,
                 height: height,
                 cp: [
-                    (x + width / 2) * scale[0], 
+                    (x + width / 2) * scale[0],
                     (y + height / 2) * scale[1]
                 ]
             };
         },
-
-        line: function(xmlNode, scale) {
-            var x1 = toFloat(xmlNode.getAttribute('x1'));
-            var y1 = toFloat(xmlNode.getAttribute('y1'));
-            var x2 = toFloat(xmlNode.getAttribute('x2'));
-            var y2 = toFloat(xmlNode.getAttribute('y2'));
-
+        line: function (xmlNode, scale) {
+			var tScale = shapeBuilders.transScale(xmlNode, scale);
+            var x1 = toFloat(xmlNode.getAttribute('x1')) + toFloat(tScale[0]);
+            var y1 = toFloat(xmlNode.getAttribute('y1')) + toFloat(tScale[1]);
+            var x2 = toFloat(xmlNode.getAttribute('x2')) + toFloat(tScale[0]);
+            var y2 = toFloat(xmlNode.getAttribute('y2')) + toFloat(tScale[1]);
             return {
                 shapeType: 'line',
                 xStart: x1,
@@ -169,17 +176,16 @@ define(function(require) {
                 xEnd: x2,
                 yEnd: y2,
                 cp: [
-                    (x1 + x2) * 0.5 * scale[0], 
+                    (x1 + x2) * 0.5 * scale[0],
                     (y1 + y2) * 0.5 * scale[1]
                 ]
             };
         },
-
-        circle: function(xmlNode, scale) {
-            var cx = toFloat(xmlNode.getAttribute('cx'));
-            var cy = toFloat(xmlNode.getAttribute('cy'));
+        circle: function (xmlNode, scale) {
+			var tScale = shapeBuilders.transScale(xmlNode, scale);
+            var cx = toFloat(xmlNode.getAttribute('cx')) + toFloat(tScale[0]);
+            var cy = toFloat(xmlNode.getAttribute('cy')) + toFloat(tScale[1]);
             var r = toFloat(xmlNode.getAttribute('r'));
-
             return {
                 shapeType: 'circle',
                 x: cx,
@@ -191,13 +197,12 @@ define(function(require) {
                 ]
             };
         },
-
-        ellipse: function(xmlNode, scale) {
-            var cx = parseFloat(xmlNode.getAttribute('cx') || 0);
-            var cy = parseFloat(xmlNode.getAttribute('cy') || 0);
-            var rx = parseFloat(xmlNode.getAttribute('rx') || 0);
-            var ry = parseFloat(xmlNode.getAttribute('ry') || 0);
-
+        ellipse: function (xmlNode, scale) {
+			var tScale = shapeBuilders.transScale(xmlNode, scale);
+            var cx = parseFloat(xmlNode.getAttribute('cx') || 0) + toFloat(tScale[0]);
+            var cy = parseFloat(xmlNode.getAttribute('cy') || 0) + toFloat(tScale[1]);
+            var rx = parseFloat(xmlNode.getAttribute('rx') || 0) + toFloat(tScale[0]);
+            var ry = parseFloat(xmlNode.getAttribute('ry') || 0) + toFloat(tScale[1]);
             return {
                 shapeType: 'ellipse',
                 x: cx,
@@ -210,23 +215,26 @@ define(function(require) {
                 ]
             };
         },
-
-        polygon: function(xmlNode, scale) {
+        polygon: function (xmlNode, scale) {
+			var tScale = shapeBuilders.transScale(xmlNode, scale);
             var points = xmlNode.getAttribute('points');
-            var min = [Infinity, Infinity];
-            var max = [-Infinity, -Infinity];
+            var min = [
+                Infinity,
+                Infinity
+            ];
+            var max = [
+                -Infinity,
+                -Infinity
+            ];
             if (points) {
                 points = parsePoints(points);
-
                 for (var i = 0; i < points.length; i++) {
+                    points[i] = [points[i][0] + toFloat(tScale[0]), points[i][1] + toFloat(tScale[1])];
                     var p = points[i];
-                    
                     min[0] = Math.min(p[0], min[0]);
                     min[1] = Math.min(p[1], min[1]);
-
                     max[0] = Math.max(p[0], max[0]);
                     max[1] = Math.max(p[1], max[1]);
-
                 }
                 return {
                     shapeType: 'polygon',
@@ -238,11 +246,55 @@ define(function(require) {
                 };
             }
         },
-
-        polyline: function(xmlNode, scale) {
-            var obj = shapeBuilders.polygon(xmlNode, scale);
-            return obj;
-        }
+        polyline: function (xmlNode, scale) {
+			var tScale = shapeBuilders.transScale(xmlNode, scale);
+			var points = xmlNode.getAttribute('points');
+            var min = [
+                Infinity,
+                Infinity
+            ];
+            var max = [
+                -Infinity,
+                -Infinity
+            ];
+            if (points) {
+                points = parsePoints(points);
+                for (var i = 0; i < points.length; i++) {
+					points[i] = [points[i][0] + toFloat(tScale[0]), points[i][1] + toFloat(tScale[1])];
+                    var p = points[i];
+                    min[0] = Math.min(p[0], min[0]);
+                    min[1] = Math.min(p[1], min[1]);
+                    max[0] = Math.max(p[0], max[0]);
+                    max[1] = Math.max(p[1], max[1]);
+                }
+                return {
+                    shapeType: 'polyline',
+                    pointList: points,
+                    cp: [
+                        (min[0] + max[0]) / 2 * scale[0],
+                        (min[1] + max[1]) / 2 * scale[0]
+                    ]
+                };
+            }
+        },
+		text: function (xmlNode, scale){
+			var tScale = shapeBuilders.transScale(xmlNode, scale);
+			var x = parseFloat(xmlNode.getAttribute('x') || 0) + toFloat(tScale[0]);
+            var y = parseFloat(xmlNode.getAttribute('y') || 0) + toFloat(tScale[1]);
+			return {
+                shapeType: 'text',
+                x : x * scale[0],
+				y : y * scale[1],
+				brushType : 'fill',
+				color : xmlNode.getAttribute('fill'),
+				shadowBlur : 10,
+				lineWidth : 3,
+				text : xmlNode.getAttribute('name'),
+				textFont : 'normal 50px verdana',
+				textAlign : 'center',
+				textBaseline : 'top'
+            };
+		}
     };
     
     return {
