@@ -84,7 +84,7 @@ define(function (require) {
 
                         oldStackedPoints.push(oldStackedDataItem.point);
                         newStackedPoints.push(
-                            getStackedOnPoint(newCoordSys, oldStackedDataItem)
+                            getStackedOnPoint(newCoordSys, oldStackedDataItem, oldDataItem)
                         );
 
                         rawIndices.push(oldDataItem.rawIdx);

@@ -308,10 +308,13 @@ define(function(require) {
             for (var i = 0; i < diffStatus.length; i++) {
                 var cmd = diffStatus[i].cmd;
                 if (cmd === '=') {
-                    updatedDataInfo.push({
-                        el: data.getItemGraphicEl(diffStatus[i].idx1),
-                        ptIdx: i    // Index of points
-                    });
+                    var el = data.getItemGraphicEl(diffStatus[i].idx1);
+                    if (el) {
+                        updatedDataInfo.push({
+                            el: el,
+                            ptIdx: i    // Index of points
+                        });
+                    }
                 }
                 else if (cmd === '+') {
                     addedDataIndices.push(diffStatus[i].idx);
@@ -321,11 +324,13 @@ define(function(require) {
             if (polyline.animators) {
                 for (var i = 0; i < addedDataIndices.length; i++) {
                     var el = data.getItemGraphicEl(addedDataIndices[i]);
-                    var oldScale = el.scale;
-                    el.scale = [1, 1];
-                    el.animateTo({
-                        scale: oldScale
-                    }, 300, 300, 'cubicOut');
+                    if (el) {
+                        var oldScale = el.scale;
+                        el.scale = [1, 1];
+                        el.animateTo({
+                            scale: oldScale
+                        }, 300, 300, 'cubicOut');
+                    }
                 }
                 polyline.animators[0].during(function () {
                     for (var i = 0; i < updatedDataInfo.length; i++) {
