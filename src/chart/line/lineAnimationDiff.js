@@ -6,19 +6,20 @@ define(function (require) {
         return a.name === b.name;
     }
 
-    function getStackedOnPoint(coordSys, dataItem) {
-        if ('x' in dataItem) {
-            return coordSys.dataToPoint([dataItem.x, dataItem.y]);
+    function getStackedOnPoint(coordSys, stackedItem, item) {
+        if ('x' in stackedItem) {
+            return coordSys.dataToPoint([stackedItem.x, stackedItem.y]);
         }
         else {
-            var valueAxis = coordSys.getOtherAxis(coordSys.getBaseAxis());
+            var baseAxis = coordSys.getBaseAxis();
+            var valueAxis = coordSys.getOtherAxis(baseAxis);
             var valueStart = valueAxis.getExtent()[0];
             var dim = valueAxis.dim;
             dim === 'radius' && (dim = 'x');
             dim === 'angle' && (dim = 'y');
             var baseCoordOffset = dim === 'x' ? 1 : 0;
             var pt = [];
-            pt[baseCoordOffset] = valueAxis.dataToCoord(dataItem[dim]);
+            pt[baseCoordOffset] = baseAxis.dataToCoord(item[dim === 'y' ? 'x' : 'y']);
             pt[1 - baseCoordOffset] = valueStart;
             return pt;
         }
@@ -65,9 +66,9 @@ define(function (require) {
                     newPoints.push(newDataItem.point);
 
                     oldStackedPoints.push(
-                        getStackedOnPoint(oldCoordSys, newStackedDataItem)
+                        getStackedOnPoint(oldCoordSys, newStackedDataItem, newDataItem)
                     );
-                    newStackedPoints.push(newStackedPoints)
+                    newStackedPoints.push(newStackedDataItem.point);
 
                     rawIndices.push(newDataItem.rawIdx);
                     break;
