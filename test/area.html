@@ -31,7 +31,7 @@
                 var data2 = [];
                 var data3 = [];
 
-                for (var i = 0; i < 100; i++) {
+                for (var i = 0; i < 10; i++) {
                     xAxisData.push('类目' + i);
                     data1.push(+Math.random().toFixed(3));
                     data2.push(+Math.random().toFixed(3));
@@ -52,6 +52,8 @@
                             // shadowOffsetX: 0,
                             // shadowOffsetY: 5,
                             // shadowColor: 'rgba(0, 0, 0, 0.4)'
+                        },
+                        areaStyle: {
                         }
                     }
                 };
@@ -103,18 +105,6 @@
                         symbol: 'circle',
                         symbolSize: 10,
                         data: data3,
-                        itemStyle: itemStyle
-                    }]
-                });
-
-                chart.setOption({
-                    series: [{
-                        name: 'line',
-                        type: 'line',
-                        stack: 'all',
-                        symbol: 'circle',
-                        symbolSize: 10,
-                        data: data1,
                         itemStyle: itemStyle
                     }]
                 });

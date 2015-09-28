@@ -10,6 +10,6 @@ define(function (require) {
         require('../visual/symbol'), 'line', 'circle', 'line'
     ));
     echarts.registerLayout(zrUtil.curry(
-        require('../layout/line'), 'line'
+        require('../layout/points'), 'line'
     ));
 });

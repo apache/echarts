@@ -6,11 +6,15 @@ define(function (require) {
     var graphic = require('../../util/graphic');
 
     function createSymbol(data, idx, enableAnimation) {
-        var point = data.getItemLayout(idx).point;
+        var point = data.getItemLayout(idx);
         var color = data.getItemVisual(idx, 'color');
 
         var symbolSize = data.getItemVisual(idx, 'symbolSize');
         var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
+
+        if (!symbolType || symbolType === 'none') {
+            return;
+        }
 
         var symbolEl = symbolCreators.createSymbol(
             symbolType, -0.5, -0.5, 1, 1, color
@@ -73,11 +77,15 @@ define(function (require) {
                         data, newIdx, enableAnimation
                     );
 
-                    data.setItemGraphicEl(newIdx, symbolEl);
+                    if (symbolEl) {
+                        data.setItemGraphicEl(newIdx, symbolEl);
 
-                    group.add(symbolEl);
+                        group.add(symbolEl);
+                    }
                 })
                 .update(function (newIdx, oldIdx) {
+                    var el = oldData.getItemGraphicEl(oldIdx);
+
                     // Empty data
                     if (!data.hasValue(newIdx)) {
                         group.remove(el);
@@ -85,14 +93,17 @@ define(function (require) {
                     }
 
                     var symbolSize = data.getItemVisual(newIdx, 'symbolSize');
-                    var point = data.getItemLayout(newIdx).point;
-                    var el = oldData.getItemGraphicEl(oldIdx);
+                    var point = data.getItemLayout(newIdx);
 
                     // Symbol changed
                     if (oldData.getItemVisual(newIdx, 'symbol') !== data.getItemVisual(oldIdx, 'symbol')) {
                         // Remove the old one
-                        group.remove(el);
+                        el && group.remove(el);
                         el = createSymbol(data, newIdx, enableAnimation);
+                    }
+                    // Disable symbol by setting `symbol: 'none'`
+                    if (!el) {
+                        return;
                     }
 
                     // Color changed

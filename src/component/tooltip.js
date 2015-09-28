@@ -68,18 +68,20 @@ define(function (require) {
 
             this._tooltipContent.hide();
 
-            var seriesGroupByCoordinateSystem = {};
+            var seriesGroupByCoordSys = {};
             ecModel.eachSeries(function (seriesModel) {
                 var coordSys = seriesModel.coordinateSystem;
-                var name = coordSys.name;
-                seriesGroupByCoordinateSystem[name] = seriesGroupByCoordinateSystem[name] || {
-                    coordSys: coordSys,
-                    series: []
-                };
-                seriesGroupByCoordinateSystem[name].series.push(seriesModel);
+                if (coordSys) {
+                    var name = coordSys.name;
+                    seriesGroupByCoordSys[name] = seriesGroupByCoordSys[name] || {
+                        coordSys: coordSys,
+                        series: []
+                    };
+                    seriesGroupByCoordSys[name].series.push(seriesModel);
+                }
             }, this);
 
-            this._coordinateSystems = seriesGroupByCoordinateSystem;
+            this._coordinateSystems = seriesGroupByCoordSys;
         },
 
         _mouseMove: function (e) {

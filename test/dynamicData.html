@@ -28,7 +28,7 @@
                 var xAxisData = [];
                 var data1 = [];
                 var count = 0;
-                for (; count < 100; count++) {
+                for (; count < 200; count++) {
                     xAxisData.push('类目' + count);
                     data1.push(+Math.random().toFixed(3));
                 }
@@ -42,11 +42,14 @@
                         // shadowOffsetY: 5,
                         // shadowColor: 'rgba(0, 0, 0, 0.4)',
                         lineStyle: {
-                            width: 3,
+                            width: 2,
                             // shadowBlur: 10,
                             // shadowOffsetX: 0,
                             // shadowOffsetY: 5,
                             // shadowColor: 'rgba(0, 0, 0, 0.4)'
+                        },
+                        areaStyle: {
+                            
                         }
                     }
                 };
@@ -63,9 +66,11 @@
                     },
                     // animation: false,
                     xAxis: {
-                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        axisLabel: {
+                            interval: 20
+                        },
                         data: xAxisData,
-                        // boundaryGap: false
+                        boundaryGap: false
                     },
                     yAxis: {
                         splitLine: {
@@ -84,12 +89,13 @@
                 });
 
                 setInterval(function () {
-                    data1.shift();
-                    data1.push(+Math.random().toFixed(3));
-
-                    xAxisData.shift();
-                    xAxisData.push('类目' + count++);
-console.log('before setoption');
+                    for (var i = 0; i < 1; i++) {
+                        xAxisData.shift();
+                        xAxisData.push('类目' + count);
+                        data1.shift();
+                        data1.push(+Math.random().toFixed(3));
+                        count++;
+                    }
                     chart.setOption({
                         xAxis: {
                             data: xAxisData
@@ -99,8 +105,7 @@ console.log('before setoption');
                             data: data1
                         }]
                     });
-console.log('after setoption');
-                }, 2000);
+                }, 1000);
             })
 
         </script>
