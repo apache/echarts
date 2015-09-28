@@ -351,11 +351,12 @@ define(function (require) {
          * @private
          */
         _doLayout: function (ecModel, event) {
+            var api = this._extensionAPI;
             zrUtil.each(this._layouts, function (layout) {
-                layout.update(ecModel, event);
+                layout.update(ecModel, api, event);
             });
             zrUtil.each(layoutFuncs, function (layout) {
-                layout(ecModel, event);
+                layout(ecModel, api, event);
             });
         },
 

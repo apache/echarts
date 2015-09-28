@@ -19,7 +19,7 @@ define(function(require) {
         coordinateSystem: null,
 
         defaultOption: {
-            show: true,
+            show: false,
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
             x: 80,

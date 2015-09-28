@@ -9,7 +9,7 @@ define(function(require) {
 
         type: 'legend',
 
-        dependencies: ['series'],
+        // dependencies: ['series'],
 
         init: function (option, parentModel, ecModel) {
             this.mergeDefaultAndTheme(option, ecModel);
@@ -29,10 +29,9 @@ define(function(require) {
              * @type {Array.<string>}
              * @private
              */
-            this._seriesNames = zrUtil.map(ecModel.getSeriesAll(), function (series) {
-                return series.name;
-            });
-
+            // this._seriesNames = zrUtil.map(ecModel.getSeriesAll(), function (series) {
+            //     return series.name;
+            // });
         },
 
         /**
@@ -72,8 +71,8 @@ define(function(require) {
          */
         isSelected: function (name) {
             var selected = this.option.selected;
-            return !((name in selected) && !selected[name])
-                && this._seriesNames.indexOf(name) >= 0
+            return !((name in selected) && !selected[name]);
+                // && this._seriesNames.indexOf(name) >= 0
         },
 
         defaultOption: {

@@ -1,9 +1,9 @@
 define(function (require) {
 
     return function (seriesType, ecModel, api) {
-        ecModel.eachSeriesByType(seriesType, function (lineSeries) {
-            var data = lineSeries.getData();
-            var coordSys = lineSeries.coordinateSystem;
+        ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+            var data = seriesModel.getData();
+            var coordSys = seriesModel.coordinateSystem;
 
             var dims = coordSys.type === 'cartesian2d' ? ['x', 'y'] : ['radius', 'angle'];
             data.each(dims, function (x, y, idx) {

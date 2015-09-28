@@ -127,7 +127,7 @@ define(function (require) {
             ));
 
             // Compose symbols
-            if (symbolType && symbolType !== legendSymbolType) {
+            if (symbolType && symbolType !== legendSymbolType && symbolType != 'none') {
                 var size = height * 0.8;
                 // Put symbol in the center
                 group.add(symbolCreator.createSymbol(

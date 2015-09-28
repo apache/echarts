@@ -1,5 +1,5 @@
-// TODO Area
-// TODO Null data
+// TODO Smooth
+// TODO '-' data
 define(function(require) {
 
     'use strict';

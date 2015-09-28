@@ -9,6 +9,20 @@ define(function (require) {
     var DEFAULT_FRAME_BORDER_WIDTH = 1;
     var DEFAULT_HANDLE_INNER_COLOR = '#fff';
 
+    function subPixelOptimize(shape, name) {
+        var subPixelOptimizeLineWidth = {
+            startFrame: DEFAULT_FRAME_BORDER_WIDTH,
+            endFrame: DEFAULT_FRAME_BORDER_WIDTH
+        };
+        if (subPixelOptimizeLineWidth.hasOwnProperty(name)) {
+            shape = graphic.subPixelOptimizeRect({
+                shape: shape,
+                style: {lineWidth: subPixelOptimizeLineWidth[name]}
+            }).shape;
+        }
+        return shape;
+    }
+
     return echarts.extendComponentView({
 
         type: 'dataZoom',
@@ -173,20 +187,6 @@ define(function (require) {
             zrUtil.each(this._updatableShapes, function (shape, name) {
                 shape.attr('shape', subPixelOptimize(this._layout.layout[name].shape, name));
             }, this);
-
-            function subPixelOptimize(shape, name) {
-                var subPixelOptimizeLineWidth = {
-                    startFrame: DEFAULT_FRAME_BORDER_WIDTH,
-                    endFrame: DEFAULT_FRAME_BORDER_WIDTH
-                };
-                if (subPixelOptimizeLineWidth.hasOwnProperty(name)) {
-                    shape = graphic.subPixelOptimizeRect({
-                        shape: shape,
-                        style: {lineWidth: subPixelOptimizeLineWidth[name]}
-                    }).shape;
-                }
-                return shape;
-            }
         },
 
         _getUpdateArg: function (arg) {

@@ -157,7 +157,7 @@ define(function (require) {
 
         var dimensions = this.dimensions;
         var size = data.length;
-        var dimensionInfoMap = this._dimensionInfos
+        var dimensionInfoMap = this._dimensionInfos;
 
         nameList = nameList || [];
 
@@ -173,7 +173,8 @@ define(function (require) {
         var optionModelIndices = storage.$optionModelIndices = new Int32Array(size);
 
         var tempValue = [];
-        var rawValue1D = false;
+        var rawValueTo1D = false;
+        var value1D = dimensions.length === 1;
         for (var idx = 0; idx < data.length; idx++) {
             var value = data[idx];
             // Each data item contains value and option
@@ -190,12 +191,19 @@ define(function (require) {
             }
             // Bar chart, line chart which uses category axis
             // only gives the 'y' value. 'x' value is the indices of cateogry
+            // Use a tempValue to normalize the value to be a (x, y) value
             if (!isNaN(value)) {
-                // Use a tempValue to normalize the value to be a (x, y) value
-                tempValue[0] = idx;
-                tempValue[1] = value;
-                value = tempValue;
-                rawValue1D = true;
+                if (!value1D) {
+                    tempValue[0] = idx;
+                    tempValue[1] = value;
+                    value = tempValue;
+                    rawValueTo1D = true;
+                }
+                // Pie chart is 1D
+                else {
+                    tempValue[0] = value;
+                    value = tempValue;
+                }
             }
 
             // Store the data by dimensions
@@ -220,7 +228,7 @@ define(function (require) {
             indices.push(idx);
         }
 
-        this._rawValueDims = rawValue1D ? dimensions.slice(1, 2) : dimensions.slice();
+        this._rawValueDims = rawValueTo1D ? dimensions.slice(1, 2) : dimensions.slice();
 
         // Use the name in option as data id in two value axis case
         for (var i = 0; i < optionModelIndices.length; i++) {
@@ -303,6 +311,24 @@ define(function (require) {
         return [min, max];
     };
 
+    /**
+     * Get sum of data in one dimension
+     * @param {string} dim
+     * @param {boolean} stack
+     */
+    listProto.getSum = function (dim, stack) {
+        var dimData = this._storage[dim];
+        var sum = 0;
+        if (dimData) {
+            for (var i = 0, len = this.count(); i < len; i++) {
+                var value = this.get(dim, i, stack);
+                if (!isNaN(value)) {
+                    sum += value;
+                }
+            }
+        }
+        return sum;
+    };
     /**
      * Get raw value
      * @param {number} idx
