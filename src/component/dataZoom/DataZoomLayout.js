@@ -3,9 +3,10 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
     var retrieveValue = modelUtil.retrieveValue;
-    var number = require('../../util/number');
-    var linearMap = number.linearMap;
-    var asc = number.asc;
+    var numberUtil = require('../../util/number');
+    var linearMap = numberUtil.linearMap;
+    var parsePercent = numberUtil.parsePercent;
+    var asc = numberUtil.asc;
     var mathRound = Math.round;
     var mathMin = Math.min;
     var mathMax = Math.max;
@@ -112,20 +113,28 @@ define(function (require) {
             // auto-adapt according to target grid.
             var gridRect = this._findCoordRectForLocating();
 
+            var api = this.api;
+            var ecWidth = api.getWidth();
+            var ecHeight = api.getHeight();
+            var x = dataZoomModel.get('x');
+            var y = dataZoomModel.get('y');
+            var width = dataZoomModel.get('width');
+            var height = dataZoomModel.get('height');
+
             if (this._orient === 'horizontal') { // Horizontal layout
-                layout.width = retrieveValue(dataZoomModel.get('width'), gridRect.width);
-                layout.height = retrieveValue(dataZoomModel.get('height'), DEFAULT_FILLER_SIZE);
-                layout.x = retrieveValue(dataZoomModel.get('x'), gridRect.x);
-                layout.y = retrieveValue(
-                    dataZoomModel.get('y'),
+                layout.width = parsePercent(retrieveValue(width, gridRect.width), ecWidth);
+                layout.height = parsePercent(retrieveValue(height, DEFAULT_FILLER_SIZE), ecHeight);
+                layout.x = parsePercent(retrieveValue(x, gridRect.x), ecWidth);
+                layout.y = parsePercent(retrieveValue(
+                    y,
                     (this.api.getHeight() - layout.height - DEFAULT_LOCATION_EDGE_GAP)
-                );
+                ), ecHeight);
             }
             else { // Vertical layout
-                layout.width = retrieveValue(dataZoomModel.get('width'), DEFAULT_FILLER_SIZE);
-                layout.height = retrieveValue(dataZoomModel.get('height'), gridRect.height);
-                layout.x = retrieveValue(dataZoomModel.get('x'), DEFAULT_LOCATION_EDGE_GAP);
-                layout.y = retrieveValue(dataZoomModel.get('y'), gridRect.y);
+                layout.width = parsePercent(retrieveValue(width, DEFAULT_FILLER_SIZE), ecWidth);
+                layout.height = parsePercent(retrieveValue(height, gridRect.height), ecHeight);
+                layout.x = parsePercent(retrieveValue(x, DEFAULT_LOCATION_EDGE_GAP), ecWidth);
+                layout.y = parsePercent(retrieveValue(y, gridRect.y), ecHeight);
             }
         },
 

@@ -3,7 +3,7 @@ define(function (require) {
     var echarts = require('../../echarts');
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
-    var textContain = require('zrender/contain/text');
+    var parsePercent = require('../../util/number').parsePercent;
 
     return echarts.extendComponentView({
 
@@ -15,7 +15,7 @@ define(function (require) {
          */
         autoPositionValues: {left: 1, right: 1, top: 1, bottom: 1},
 
-        init: function (api) {
+        init: function () {
             /**
              * @private
              * @type {Object}
@@ -38,27 +38,14 @@ define(function (require) {
         /**
          * @protected
          */
-        getTextRect: function (text) {
-            var textStyleModel = this.textStyleModel;
-            return textContain.getTextRect(
-                text,
-                textStyleModel.get('font'),
-                textStyleModel.get('align'),
-                textStyleModel.get('baseline')
-            );
-        },
-
-        /**
-         * @protected
-         */
         initLayout: function () {
             var dataRangeModel = this.dataRangeModel;
             var orient = dataRangeModel.get('orient');
-            var x = dataRangeModel.get('x');
-            var y = dataRangeModel.get('y');
             var api = this.api;
             var ecWidth = api.getWidth();
             var ecHeight = api.getHeight();
+            var x = dataRangeModel.get('x');
+            var y = dataRangeModel.get('y');
 
             this.layout = {
                 orient: orient,
@@ -66,31 +53,35 @@ define(function (require) {
                 ecWidth: ecWidth,
                 ecHeight: ecHeight,
                 x: x,
-                y: y
+                y: y,
+                itemWidth: parsePercent(dataRangeModel.get('itemWidth'), ecWidth),
+                itemHeight: parsePercent(dataRangeModel.get('itemHeight'), ecHeight)
             };
         },
 
         /**
-         * @private
+         * @protected
          */
-        _layoutOuter: function () {
+        layoutOuter: function () {
             // Depends on contentLayout
             var layout = this.layout;
             var contentLayout = layout.content;
             var dataRangeModel = this.dataRangeModel;
-            var x = dataRangeModel.get('x');
-            var y = dataRangeModel.get('y');
+            var x = layout.x;
+            var y = layout.y;
+            var ecWidth = layout.ecWidth;
+            var ecHeight = layout.ecHeight;
 
             layout.x = x === 'left'
                 ? 0
                 : x === 'right'
-                ? layout.ecWidth - contentLayout.width
-                : x;
+                ? ecWidth - contentLayout.width
+                : parsePercent(x, ecWidth);
             layout.y = y === 'top'
                 ? 0
                 : y === 'bottom'
-                ? layout.ecHeight - contentLayout.height
-                : y;
+                ? ecHeight - contentLayout.height
+                : parsePercent(y, ecHeight);
 
             // TODO
             // 考虑padding boder
@@ -99,7 +90,18 @@ define(function (require) {
         /**
          * @protected
          */
-        render: function () {
+        render: function (dataRangeModel, ecModel, api) {
+
+            this.dataRangeModel = dataRangeModel;
+            this.ecModel = ecModel;
+            this.api = api;
+
+            this.group.removeAll();
+
+            if (!dataRangeModel.get('show')) {
+                return;
+            }
+
             // FIXME
             // padding
             // var padding = this.reformCssArray(this.dataRangeOption.padding);
@@ -107,32 +109,42 @@ define(function (require) {
             // TODO : TEST
             // 文字不超出边界，例如x 'right' orient 'vertical'时。
 
-            var dataRangeModel = this.dataRangeModel;
-            var layout = this.layout;
-
             this.initLayout();
             this.layoutContent();
-            this._layoutOuter();
+            this.layoutOuter();
 
-            this.group.push(new graphic.Rect({
+            this.renderOuter();
+            this.renderContent();
+        },
+
+        /**
+         * @protected
+         */
+        renderOuter: function () {
+            var layout = this.layout;
+            var contentLayout = layout.content;
+            var dataRangeModel = this.dataRangeModel;
+            var group = this.group;
+
+            group.add(new graphic.Rect({
                 // zlevel: this.getZlevelBase(),
                 // z: this.getZBase(),
-                hoverable: false,
+                silent: true,
                 shape: {
-                    x: layout.x,
-                    y: layout.y,
-                    width: layout.width,
-                    height: layout.height
+                    x: -layout.offsetX,
+                    y: -layout.offsetY,
+                    width: contentLayout.width,
+                    height: contentLayout.height
                 },
                 style: {
-                    brushType: dataRangeModel.get('borderWidth') === 0 ? 'fill' : 'both',
-                    color: dataRangeModel.get('backgroundColor'),
-                    strokeColor: dataRangeModel.get('borderColor'),
+                    fill: dataRangeModel.get('backgroundColor'),
+                    stroke: dataRangeModel.get('borderColor'),
                     lineWidth: dataRangeModel.get('borderWidth')
                 }
             }));
 
-            this.rendercontent();
+            group.position[0] = layout.x + layout.offsetX;
+            group.position[1] = layout.y + layout.offsetY;
         },
 
         /**

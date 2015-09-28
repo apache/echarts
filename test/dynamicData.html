@@ -89,7 +89,7 @@
 
                     xAxisData.shift();
                     xAxisData.push('类目' + count++);
-
+console.log('before setoption');
                     chart.setOption({
                         xAxis: {
                             data: xAxisData
@@ -99,7 +99,8 @@
                             data: data1
                         }]
                     });
-                }, 100);
+console.log('after setoption');
+                }, 2000);
             })
 
         </script>

@@ -7,7 +7,8 @@ define(function(require) {
     var env = require('zrender/core/env');
     var echarts = require('../../echarts');
     var modelUtil = require('../../util/model');
-    var asc = require('../../util/number').asc;
+    var numberUtil = require('../../util/number');
+    var asc = numberUtil.asc;
     var eachAxisDim = modelUtil.eachAxisDim;
 
     return echarts.extendComponentModel({

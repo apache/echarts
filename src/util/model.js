@@ -16,9 +16,9 @@ define(function(require) {
      */
     util.createNameEach = function (names, attrs) {
         names = names.slice();
-        var capitalNames = zrUtil.map(names, util.capticalFirst);
+        var capitalNames = zrUtil.map(names, util.capitalFirst);
         attrs = (attrs || []).slice();
-        var capitalAttrs = zrUtil.map(attrs, util.capticalFirst);
+        var capitalAttrs = zrUtil.map(attrs, util.capitalFirst);
 
         return function (callback, context) {
             zrUtil.each(names, function (name, index) {
@@ -36,7 +36,7 @@ define(function(require) {
     /**
      * @public
      */
-    util.capticalFirst = function (str) {
+    util.capitalFirst = function (str) {
         return str ? str[0].toUpperCase() + str.substr(1) : str;
     };
 

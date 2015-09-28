@@ -95,6 +95,12 @@ define(function (require) {
                         el = createSymbol(data, newIdx, enableAnimation);
                     }
 
+                    // Color changed
+                    var newColor = data.getItemVisual(newIdx, 'color');
+                    if (oldData.getItemVisual(newIdx, 'color') !== newColor) {
+                        el.setStyle('fill', newColor);
+                    }
+
                     // TODO Merge animateTo and attr methods into one
                     if (enableAnimation) {
                         el.animateTo({
@@ -134,11 +140,11 @@ define(function (require) {
             data.eachItemGraphicEl(function (el, idx) {
 
                 var itemModel = data.getItemModel(idx);
-                zrUtil.extend(
-                    el.style,
-                    itemModel.getModel('itemStyle.normal').getItemStyle()
-                );
+                var itemStyle = itemModel.getModel('itemStyle.normal').getItemStyle();
+                // delete itemStyle.color;
+                // delete itemStyle.symbolSize;
 
+                zrUtil.extend(el.style, itemStyle);
                 graphic.setHoverStyle(
                     el,
                     itemModel.getModel('itemStyle.emphasis').getItemStyle()

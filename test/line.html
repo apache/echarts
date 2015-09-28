@@ -99,6 +99,18 @@
                         itemStyle: itemStyle
                     }]
                 });
+
+                chart.setOption({
+                    series: [{
+                        name: 'line',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        data: data1,
+                        itemStyle: itemStyle
+                    }]
+                });
             })
 
         </script>
