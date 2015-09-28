@@ -127,13 +127,6 @@ define(function(require) {
          * @param {string} color
          */
         createSymbol: function (symbolConfig, x, y, w, h, color) {
-            if (symbolConfig === 'none') {
-                symbolConfig = 'rect';
-                w = 0;
-                h = 0;
-                color = 'rgba(0,0,0,0)';
-            }
-
             var isEmpty = symbolConfig.indexOf('empty') === 0;
             if (isEmpty) {
                 symbolConfig = symbolConfig.substr(5, 1).toLowerCase() + symbolConfig.substr(6);

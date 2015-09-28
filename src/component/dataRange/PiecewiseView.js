@@ -271,9 +271,10 @@ define(function(require) {
                     var symbol = itemSymbolCreators[visualMapping.type].call(
                         this, symbolCfg, index, visualResult, dataRangeModel
                     );
-                    symbol.onclick = onclick;
-
-                    this.group.add(symbol);
+                    if (symbol) {
+                        symbol.onclick = onclick;
+                        this.group.add(symbol);
+                    }
                 }
 
                 if (itemCfg.label) {
