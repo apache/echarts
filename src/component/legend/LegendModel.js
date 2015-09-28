@@ -9,7 +9,7 @@ define(function(require) {
 
         type: 'legend',
 
-        // dependencies: ['series'],
+        dependencies: ['series'],
 
         init: function (option, parentModel, ecModel) {
             this.mergeDefaultAndTheme(option, ecModel);
@@ -25,13 +25,20 @@ define(function(require) {
                 return new Model(dataItem, this);
             }, this);
 
+            var availableNames = zrUtil.map(ecModel.getSeriesAll(), function (series) {
+                return series.name;
+            });
+            ecModel.eachSeries(function (seriesModel) {
+                if (seriesModel.legendDataProvider) {
+                    var data = seriesModel.legendDataProvider();
+                    availableNames = availableNames.concat(data.map(data.getName));
+                }
+            });
             /**
              * @type {Array.<string>}
              * @private
              */
-            // this._seriesNames = zrUtil.map(ecModel.getSeriesAll(), function (series) {
-            //     return series.name;
-            // });
+            this._availableNames = availableNames;
         },
 
         /**
@@ -60,7 +67,8 @@ define(function(require) {
          */
         toggleSelected: function (name) {
             var selected = this.option.selected;
-            if (! (name in selected)) {
+            // Default is true
+            if (!(name in selected)) {
                 selected[name] = true;
             }
             selected[name] = !selected[name];
@@ -71,8 +79,8 @@ define(function(require) {
          */
         isSelected: function (name) {
             var selected = this.option.selected;
-            return !((name in selected) && !selected[name]);
-                // && this._seriesNames.indexOf(name) >= 0
+            return !((name in selected) && !selected[name])
+                && this._availableNames.indexOf(name) >= 0;
         },
 
         defaultOption: {

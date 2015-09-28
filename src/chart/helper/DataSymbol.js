@@ -151,11 +151,11 @@ define(function (require) {
             data.eachItemGraphicEl(function (el, idx) {
 
                 var itemModel = data.getItemModel(idx);
-                var itemStyle = itemModel.getModel('itemStyle.normal').getItemStyle();
-                // delete itemStyle.color;
-                // delete itemStyle.symbolSize;
+                zrUtil.extend(
+                    el.style,
+                    itemModel.getModel('itemStyle.normal').getItemStyle(['color'])
+                );
 
-                zrUtil.extend(el.style, itemStyle);
                 graphic.setHoverStyle(
                     el,
                     itemModel.getModel('itemStyle.emphasis').getItemStyle()

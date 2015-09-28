@@ -31,35 +31,42 @@
                 var data2 = [];
                 var data3 = [];
 
-                for (var i = 0; i < 100; i++) {
-                    data1.push([Math.random() * 5, Math.random() * 4, Math.random()]);
-                    data2.push([Math.random() * 10, Math.random() * 5, Math.random()]);
+                for (var i = 0; i < 100000; i++) {
+                    data1.push([Math.random() * 15, Math.random() * 10, Math.random()]);
+                    data2.push([Math.random() * 10, Math.random() * 10, Math.random()]);
                     data3.push([Math.random() * 15, Math.random() * 10, Math.random()]);
                 }
 
+                // console.profile('setOption');
+
                 chart.setOption({
+                    animation: false,
                     legend: {
                         data: ['scatter', 'scatter2', 'scatter3']
                     },
                     xAxis: {
                         type: 'value',
                         splitLine: {
-                            show: false
+                            show: true
                         }
                     },
                     yAxis: {
                         type: 'value',
                         splitLine: {
-                            show: false
+                            show: true
                         }
                     },
                     dataZoom: [
                         {
                             show: true,
-                            orient: 'vertical'
+                            orient: 'vertical',
+                            start: 1,
+                            end: 3
                         }, {
                             show: true,
-                            orient: 'horizontal'
+                            orient: 'horizontal',
+                            start: 1,
+                            end: 5
                         }
                     ],
                     series: [{
@@ -68,10 +75,10 @@
                         itemStyle: {
                             normal: {
                                 opacity: 0.8,
-                                shadowBlur: 10,
-                                shadowOffsetX: 0,
-                                shadowOffsetY: 0,
-                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                // shadowBlur: 10,
+                                // shadowOffsetX: 0,
+                                // shadowOffsetY: 0,
+                                // shadowColor: 'rgba(0, 0, 0, 0.5)'
                             }
                         },
                         symbolSize: function (val) {
@@ -84,10 +91,10 @@
                         itemStyle: {
                             normal: {
                                 opacity: 0.8,
-                                shadowBlur: 10,
-                                shadowOffsetX: 0,
-                                shadowOffsetY: 0,
-                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                // shadowBlur: 10,
+                                // shadowOffsetX: 0,
+                                // shadowOffsetY: 0,
+                                // shadowColor: 'rgba(0, 0, 0, 0.5)'
                             }
                         },
                         symbolSize: function (val) {
@@ -100,10 +107,10 @@
                         itemStyle: {
                             normal: {
                                 opacity: 0.8,
-                                shadowBlur: 10,
-                                shadowOffsetX: 0,
-                                shadowOffsetY: 0,
-                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                // shadowBlur: 10,
+                                // shadowOffsetX: 0,
+                                // shadowOffsetY: 0,
+                                // shadowColor: 'rgba(0, 0, 0, 0.5)'
                             }
                         },
                         symbolSize: function (val) {
@@ -112,6 +119,7 @@
                         data: data3
                     }]
                 });
+                // console.profileEnd('setOption');
             })
 
         </script>

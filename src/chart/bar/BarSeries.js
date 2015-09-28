@@ -2,8 +2,8 @@ define(function(require) {
 
     'use strict';
 
-    var List = require('../../data/List');
     var SeriesModel = require('../../model/Series');
+    var createListFromArray = require('../helper/createListFromArray');
 
     return SeriesModel.extend({
 
@@ -12,7 +12,7 @@ define(function(require) {
         dependencies: ['grid', 'polar'],
 
         getInitialData: function (option, ecModel) {
-            return List.fromArray(option.data, this, ecModel);
+            return createListFromArray(option.data, this, ecModel);
         },
 
         defaultOption: {

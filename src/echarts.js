@@ -121,7 +121,7 @@ define(function (require) {
             option = zrUtil.clone(option, true);
 
             var ecModel = this._model;
-            if (! ecModel || notMerge) {
+            if (!ecModel || notMerge) {
                 ecModel = new GlobalModel(option, null, this._theme);
                 this._model = ecModel;
             }

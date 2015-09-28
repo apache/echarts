@@ -4,9 +4,13 @@ define(function (require) {
         ecModel.eachSeriesByType('pie', function (seriesModel) {
             var colorList = ecModel.get('color');
             var data = seriesModel.getData();
-
+            var dataAll = seriesModel.getDataAll();
             data.each(function (idx) {
-                data.setItemVisual(idx, 'color', colorList[idx]);
+                var rawIdx = data.getRawIndex(idx);
+                var color = colorList[rawIdx % colorList.length];
+                // Legend use the visual info in data before processed
+                dataAll.setItemVisual(rawIdx, 'color', color);
+                data.setItemVisual(idx, 'color', color);
             });
         });
     }

@@ -9,6 +9,11 @@
             html, body, #main {
                 width: 100%;
                 height: 100%;
+                margin: 0;
+            }
+            #main {
+                width: 1000px;
+                background: #999;
             }
         </style>
         <div id="main"></div>
@@ -38,20 +43,27 @@
                     data3.push(Math.random());
                 }
 
+                var itemStyle = {
+                    normal: {
+                    },
+                    emphasis: {
+                        barBorderColor: 'red',
+                        barBorderWidth: 1
+                    }
+                };
+
                 console.profile('setOption');
                 chart.setOption({
                     legend: {
                         data: [{
-                            name: 'bar',
-                            itemStyle: {
-                                normal: {
-                                    // color: 'blue'
-                                }
-                            }
+                            name: 'bar'
                         }, 'bar2', 'bar3'],
                         selected: {
                             // 'bar': false
-                        }
+                        },
+                        orient: 'vertical',
+                        x: 'right',
+                        align: 'left'
                     },
                     tooltip: {},
                     xAxis: {
@@ -70,16 +82,19 @@
                         name: 'bar',
                         type: 'bar',
                         stack: 'one',
+                        itemStyle: itemStyle,
                         data: data1
                     }, {
                         name: 'bar2',
                         type: 'bar',
                         stack: 'one',
+                        itemStyle: itemStyle,
                         data: data2
                     }, {
                         name: 'bar3',
                         type: 'bar',
                         stack: 'two',
+                        itemStyle: itemStyle,
                         data: data3
                     }]
                 });

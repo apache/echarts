@@ -1,9 +1,13 @@
 define(function () {
     return function (ecModel) {
-        var legendModel = legendModel.getComponent('legend');
+        var legendModel = ecModel.getComponent('legend');
+        if (!legendModel) {
+            return;
+        }
         ecModel.eachSeriesByType('pie', function (series) {
-            series.getData().filterSelf(function (dataItem) {
-                return legendModel.isSelected(dataItem.name);
+            var data = series.getData();
+            data.filterSelf(function (idx) {
+                return legendModel.isSelected(data.getName(idx));
             }, this);
         }, this);
     };

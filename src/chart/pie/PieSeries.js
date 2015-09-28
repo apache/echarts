@@ -4,10 +4,32 @@ define(function(require) {
 
     var List = require('../../data/List');
     var SeriesModel = require('../../model/Series');
+    var zrUtil = require('zrender/core/util');
 
     return SeriesModel.extend({
 
         type: 'series.pie',
+
+        init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
+            SeriesModel.prototype.init.call(
+                this, option, parentModel, ecModel, dependentModels, seriesIndex
+            );
+
+            // FIXME Keep selected status?
+            var dataOptMap = {};
+
+            zrUtil.each(option.data, function (dataOpt) {
+                dataOptMap[dataOpt.name] = dataOpt;
+            });
+
+            this._dataOptMap = dataOptMap;
+
+            // Enable legend selection for each data item
+            // Use a function instead of direct access because data reference may changed
+            this.legendDataProvider = function () {
+                return this._dataBeforeProcessed;
+            }
+        },
 
         getInitialData: function (option, ecModel) {
             var list = new List([{
@@ -16,6 +38,40 @@ define(function(require) {
             }], this);
             list.initData(option.data);
             return list;
+        },
+
+        /**
+         * @param {string} name
+         */
+        select: function (name) {
+            var dataOpt = this._dataOptMap[name];
+            dataOpt && (dataOpt.selected = true);
+        },
+
+        /**
+         * @param {string} name
+         */
+        unSelect: function (name) {
+            var dataOpt = this._dataOptMap[name];
+            dataOpt && (dataOpt.selected = false);
+        },
+
+        /**
+         * @param {string} name
+         */
+        toggleSelected: function (name) {
+            var dataOpt = this._dataOptMap[name];
+            if (dataOpt != null) {
+                return dataOpt.selected = !dataOpt.selected;
+            }
+        },
+
+        /**
+         * @param {string} name
+         */
+        isSelected: function (name) {
+            var dataOpt = this._dataOptMap[name];
+            return dataOpt && dataOpt.selected;
         },
 
         defaultOption: {

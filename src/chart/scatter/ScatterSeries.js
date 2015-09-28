@@ -2,7 +2,7 @@ define(function (require) {
 
     'use strict';
 
-    var List = require('../../data/List');
+    var createListFromArray = require('../helper/createListFromArray');
     var SeriesModel = require('../../model/Series');
 
     return SeriesModel.extend({
@@ -12,7 +12,7 @@ define(function (require) {
         dependencies: ['grid', 'polar'],
 
         getInitialData: function (option, ecModel) {
-            var list = List.fromArray(option.data, this, ecModel);
+            var list = createListFromArray(option.data, this, ecModel);
             // Not holding the data anymore so it can be removed in momory
             // PENDING
             option.data = null;

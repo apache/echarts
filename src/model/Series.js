@@ -32,6 +32,12 @@ define(function(require) {
          */
         defaultOption: null,
 
+        /**
+         * Data provided for legend
+         * @type {Function}
+         */
+        legendDataProvider: null,
+
         init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
             /**
              * @type {number}
@@ -44,7 +50,7 @@ define(function(require) {
             if (seriesName == null) {
                 seriesName = this.get('type') + '' + seriesIndex;
             }
-            this.name += seriesName + '';
+            this.name = seriesName + '';
 
             /**
              * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
@@ -52,10 +58,7 @@ define(function(require) {
              */
             this._data = this.getInitialData(option, ecModel);
 
-            this._dataBeforeProcessing = this._data.cloneShallow();
-
-            this._itemVisuals = [];
-            this._itemLayouts = [];
+            this._dataBeforeProcessed = this._data.cloneShallow();
         },
 
         mergeDefaultAndTheme: function (option, ecModel) {
@@ -71,7 +74,7 @@ define(function(require) {
             // TODO Merge data?
             if (data) {
                 this._data = data;
-                this._dataBeforeProcessing = data.cloneShallow();
+                this._dataBeforeProcessed = data.cloneShallow();
             }
         },
 
@@ -82,10 +85,18 @@ define(function(require) {
         getInitialData: function () {},
 
         /**
-         * @return {module:echarts/data/List|module:echarts/data/Graph|module:echarts/data/Tree}
+         * @return {module:echarts/data/List}
          */
         getData: function () {
             return this._data;
+        },
+
+        /**
+         * Get data before processed
+         * @return {module:echarts/data/List}
+         */
+        getDataAll: function () {
+            return this._dataBeforeProcessed;
         },
 
         // FIXME
@@ -108,7 +119,7 @@ define(function(require) {
         },
 
         restoreData: function () {
-            this._data = this._dataBeforeProcessing.cloneShallow();
+            this._data = this._dataBeforeProcessed.cloneShallow();
         }
     });
 

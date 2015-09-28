@@ -11,4 +11,6 @@ define(function (require) {
     echarts.registerLayout(zrUtil.curry(
         require('../layout/pie'), 'pie'
     ));
+
+    echarts.registerProcessor(require('./pie/dataItemFilter'));
 });
