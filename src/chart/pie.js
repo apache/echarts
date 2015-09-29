@@ -9,7 +9,7 @@ define(function (require) {
     echarts.registerVisualCoding('chart', require('./pie/pieVisual'));
 
     echarts.registerLayout(zrUtil.curry(
-        require('../layout/pie'), 'pie'
+        require('./pie/pieLayout'), 'pie'
     ));
 
     echarts.registerProcessor(require('./pie/dataItemFilter'));

@@ -1,7 +1,6 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
-    var numberUtil = require('../../util/number');
     var symbolCreator = require('../../util/symbol');
     var graphic = require('../../util/graphic');
 
