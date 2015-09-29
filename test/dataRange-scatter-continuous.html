@@ -20,7 +20,7 @@
                 'echarts/chart/scatter',
                 'echarts/component/legend',
                 'echarts/component/grid',
-                'echarts/component/dataRangePiecewise'
+                'echarts/component/dataRangeContinuous'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -71,18 +71,10 @@
                     },
                     dataRange: [
                         {
-                            splitNumber: 6,
-                            x: 'right',
-                            // selectedMode: 'single',
-                            selectedMode: 'multiple',
-                            dimension: 'a',
+                            show: true,
                             backgroundColor: '#eee',
-                            selected: [],
-                            inRange: { // visual for short cut
-                                color: ['rgb(20,1,0)']
-                            },
-                            outOfRange: {
-                                colorA: [0.3, 1]
+                            visualSelected: {
+                                data: ['red', 'pink', 'black']
                             }
                         }
                     ],

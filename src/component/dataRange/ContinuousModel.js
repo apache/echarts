@@ -11,7 +11,7 @@ define(function(require) {
 
     return DataRangeModel.extend({
 
-        type: 'dataRange.continuity',
+        type: 'dataRange.continuous',
 
         /**
          * @protected
@@ -31,25 +31,22 @@ define(function(require) {
         mergeOption: function (newOption, isInit) {
             this.baseMergeOption(newOption);
 
-            var thisOption = this.option;
-
             this.resetTargetSeries(newOption, isInit);
             this.resetExtent();
 
-            this._resetVisual('selected');
-            this._resetVisual('unselected');
-            this._resetVisual('hovered');
+            this.resetVisual(function (mappingOption) {
+                mappingOption.dataNormalizer = 'linear';
+            });
         },
 
-        _resetVisual: function () {
-            var visualOption = this.option['visual' + modelUtil.capitalFirst(visualState)];
-            if (!visualOption) {
-                visualOption = zrUtil.clone(this.option.visualSelected, true);
-            }
-            visualOption.dataNormalizer = 'linear';
-            visualOption.dataExtent = this.getExtent();
-
-            this.visualMapping = new VisualMapping(visualOption);
+        /**
+         * @public
+         * @override
+         */
+        getValueState: function (value) {
+            var dataExtent = this.getExtent();
+            return dataExtent[0] <= value && value <= dataExtent[1]
+                ? 'inRange' : 'outOfRange';
         }
 
     });

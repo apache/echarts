@@ -1,14 +1,9 @@
-
-// color colorList symbol
-
-
 define(function(require) {
 
     var DataRangeView = require('./DataRangeView');
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var symbolCreators = require('../../util/symbol');
-    var zrColor = require('zrender/tool/color');
     var mathMax = Math.max;
     var mathMin = Math.min;
 
@@ -257,36 +252,66 @@ define(function(require) {
             var dataRangeModel = this.dataRangeModel;
 
             zrUtil.each(contentLayout.items, function (itemCfg, index) {
-                var onclick = zrUtil.bind(this._onItemClick, this, index);
 
                 var symbolCfg = itemCfg.symbol;
                 if (symbolCfg) {
                     var pieceInterval = dataRangeModel.getPieceInterval(index);
                     var representValue = (pieceInterval[0] + pieceInterval[1]) / 2;
-                    var visualMapping = dataRangeModel.visualMappings[
+                    var mappings = dataRangeModel.controllerVisuals[
                         dataRangeModel.getValueState(representValue)
                     ];
-                    var visualResult = visualMapping.mapValueToVisual(representValue);
 
-                    var symbol = itemSymbolCreators[visualMapping.type].call(
-                        this, symbolCfg, index, visualResult, dataRangeModel
+                    var visualWrap = this._createDefaultVisual();
+                    zrUtil.each(mappings, function (visualMapping, visualKey) {
+                        visualMapping && visualMapping.applyVisual(
+                            representValue, visualWrap.getter, visualWrap.setter
+                        );
+                    });
+
+                    var shape = symbolCfg.shape;
+                    var symbol = symbolCreators.createSymbol(
+                        visualWrap.visual.symbol,
+                        shape.x, shape.y, shape.width, shape.height,
+                        visualWrap.visual.color
                     );
-                    if (symbol) {
-                        symbol.onclick = onclick;
-                        this.group.add(symbol);
-                    }
+
+                    // FIXME
+                    // group onclick
+                    symbol.onclick = zrUtil.bind(this._onItemClick, this, index);
+
+                    this.group.add(symbol);
                 }
 
                 if (itemCfg.label) {
-                    group.add(new graphic.Text(zrUtil.merge({
-                        onclick: onclick
-                    }, itemCfg.label)));
+                    group.add(new graphic.Text(itemCfg.label));
                 }
 
             }, this);
 
             contentLayout.textHead && group.add(new graphic.Text(contentLayout.textHead));
             contentLayout.textTail && group.add(new graphic.Text(contentLayout.textTail));
+        },
+
+        /**
+         * @private
+         */
+        _createDefaultVisual: function () {
+            var dataRangeModel = this.dataRangeModel;
+            var visual = {
+                symbol: dataRangeModel.get('itemSymbol'),
+                color: dataRangeModel.get('contentColor')
+            };
+            return {
+                visual: visual,
+                getter: function (key) {
+                    return visual[key];
+                },
+                setter: function (key, value) {
+                    zrUtil.isObject(key)
+                        ? zrUtil.extend(visual, key)
+                        : (visual[key] = value);
+                }
+            };
         },
 
         /**
@@ -311,65 +336,6 @@ define(function(require) {
             });
         }
     });
-
-    /**
-     * @inner
-     */
-    var itemSymbolCreators = {
-
-        color: function (symbolCfg, index, visualResult, dataRangeModel) {
-            var shapeShape = symbolCfg.shape;
-            return symbolCreators.createSymbol(
-                dataRangeModel.get('itemSymbol'),
-                shapeShape.x, shapeShape.y, shapeShape.width, shapeShape.height,
-                visualResult
-            );
-        },
-
-        colorS: makePartialColorSymbolCreater(function (color, value) {
-            return zrColor.modifyHSL(color, null, value);
-        }),
-
-        colorL: makePartialColorSymbolCreater(function (color, value) {
-            return zrColor.modifyHSL(color, null, null, value);
-        }),
-
-        colorA: makePartialColorSymbolCreater(function (color, value) {
-            return zrColor.modifyAlpha(color, value);
-        }),
-
-        symbol: function (symbolCfg, index, visualResult, dataRangeModel) {
-            var shapeShape = symbolCfg.shape;
-            var symbolType = (
-                zrUtil.isObject(visualResult) ? visualResult.symbol : visualResult
-            ) || 'rect';
-
-            if (symbolType === 'square') {
-                symbolType = 'rect';
-            }
-
-            return symbolCreators.createSymbol(
-                symbolType,
-                shapeShape.x, shapeShape.y, shapeShape.width, shapeShape.height,
-                dataRangeModel.get('selected')[index]
-                // FIXME
-                // 是否不要这么配置
-                    ? dataRangeModel.get('contentColor')
-                    : dataRangeModel.get('unselectedColor')
-            );
-        }
-    };
-
-    function makePartialColorSymbolCreater(applyValue) {
-        return function (symbolCfg, index, visualResult, dataRangeModel) {
-            var shapeShape = symbolCfg.shape;
-            return symbolCreators.createSymbol(
-                dataRangeModel.get('itemSymbol'),
-                shapeShape.x, shapeShape.y, shapeShape.width, shapeShape.height,
-                applyValue(dataRangeModel.get('contentColor'), visualResult)
-            );
-        };
-    }
 
     return PiecewiseDataRangeView;
 });

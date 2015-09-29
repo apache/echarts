@@ -4,9 +4,7 @@
 define(function(require) {
 
     var DataRangeModel = require('./DataRangeModel');
-    var VisualMapping = require('../../visual/VisualMapping');
     var zrUtil = require('zrender/core/util');
-    var modelUtil = require('../../util/model');
 
     return DataRangeModel.extend({
 
@@ -49,47 +47,18 @@ define(function(require) {
                 : this._resetForAutoSplit();
 
             this._inverse();
-
             this._resetSelected();
-            this._resetVisual('selected');
-            this._resetVisual('unselected');
-            this._resetVisual('hovered');
-        },
 
-        _resetVisual: function (visualState) {
-            var visualOption = this.option['visual' + modelUtil.capitalFirst(visualState)];
-            if (!visualOption) {
-                visualOption = {type: this.option.visualSelected.type};
-            }
+            this.resetVisual(function (mappingOption) {
+                mappingOption.dataNormalizer = 'piecewise';
 
-            // Visual capatible ec2 option
-            if (visualState === 'selected'
-                && visualOption.type === 'color'
-                && !visualOption.data
-            ) {
-                visualOption.data = (this.option.color || []).slice();
-            }
-
-            if (!visualOption.data) {
-                visualOption.data = zrUtil.clone(
-                    VisualMapping.defaultOption[visualOption.type][
-                        visualState === 'selected' ? 'active' : 'inactive'
-                    ],
-                    true
-                );
-            }
-
-            visualOption.dataNormalizer = 'piecewise';
-            visualOption.dataExtent = this.getExtent();
-
-            var intervals = visualOption.intervals = [];
-            var intervalVisuals = visualOption.intervalVisuals = [];
-            zrUtil.each(this._pieceList, function (piece, index) {
-                intervals[index] = piece.interval;
-                intervalVisuals[index] = piece.visualValue;
+                var intervals = mappingOption.intervals = [];
+                var intervalVisuals = mappingOption.intervalVisuals = [];
+                zrUtil.each(this._pieceList, function (piece, index) {
+                    intervals[index] = piece.interval;
+                    intervalVisuals[index] = piece.visualValue;
+                });
             });
-
-            this.visualMappings[visualState] = new VisualMapping(visualOption);
         },
 
         _resetSelected: function () {
@@ -225,18 +194,17 @@ define(function(require) {
 
         /**
          * @public
-         * @abstract
+         * @override
          */
         getValueState: function (value) {
             var pieceList = this._pieceList;
-
             for (var i = 0, len = pieceList.length; i < len; i++) {
                 var targetPiece = pieceList[i];
                 if (targetPiece.interval[0] <= value && value <= targetPiece.interval[1]) {
-                    return this.option.selected[i] ? 'selected' : 'unselected';
+                    return this.option.selected[i] ? 'inRange' : 'outOfRange';
                 }
             }
-            return 'unselected';
+            return 'outOfRange';
         },
 
         /**

@@ -25,12 +25,27 @@ define(function (require) {
     function processSingleDataRange(dataRangeModel, ecModel) {
         dataRangeModel.eachTargetSeries(function (seriesModel) {
             var dimension = dataRangeModel.get('dimension');
-            var visualMappings = dataRangeModel.visualMappings;
+            var visualMappings = dataRangeModel.targetVisuals;
             var data = seriesModel.getData();
+            var dataIndex;
+
+            function getVisual(key) {
+                return data.getItemVisual(dataIndex, key);
+            }
+
+            function setVisual(key, value) {
+                data.setItemVisual(dataIndex, key, value);
+            }
 
             data.each([dimension], function (value, index) {
-                visualMappings[dataRangeModel.getValueState(value)]
-                    .applyVisual(value, data, index);
+                // For performance consideration, do not use curry.
+                dataIndex = index;
+                var mappings = visualMappings[dataRangeModel.getValueState(value)];
+                for (var key in mappings) {
+                    if (mappings.hasOwnProperty(key)) {
+                        mappings[key] && mappings[key].applyVisual(value, getVisual, setVisual);
+                    }
+                }
             });
         });
     }

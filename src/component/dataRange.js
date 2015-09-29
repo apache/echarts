@@ -3,7 +3,7 @@
  */
 define(function (require) {
 
-    require('./dataRangeContinuity');
+    require('./dataRangeContinuous');
     require('./dataRangePiecewise');
 
 });

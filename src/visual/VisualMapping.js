@@ -50,6 +50,10 @@ define(function (require) {
 
         mapValueToVisual: null,
 
+        getData: function () {
+            return this.option.data;
+        },
+
         _getIntervalVisual: function(normalized) {
             var intervalVisuals = this.option.intervalVisuals;
             return (intervalVisuals && intervalVisuals.length)
@@ -62,8 +66,8 @@ define(function (require) {
 
         color: {
 
-            applyVisual: function (value, data, index) {
-                data.setItemVisual(index, 'color', this.mapValueToVisual(value));
+            applyVisual: function (value, getter, setter) {
+                setter('color', this.mapValueToVisual(value));
             },
 
             mapValueToVisual: function (value) {
@@ -90,12 +94,12 @@ define(function (require) {
 
         symbol: {
 
-            applyVisual: function (value, data, index) {
+            applyVisual: function (value, getter, setter) {
                 var symbolCfg = this.mapValueToVisual(value);
                 if (typeof symbolCfg === 'string') {
                     symbolCfg = {symbol: symbolCfg};
                 }
-                data.setItemVisual(index, symbolCfg);
+                setter(symbolCfg);
             },
 
             mapValueToVisual: function (value) {
@@ -111,10 +115,12 @@ define(function (require) {
 
     function makePartialColorVisualHandler(applyValue) {
         return {
-            applyVisual: function (value, data, index) {
-                var color = data.getItemVisual(index, 'color');
-                color = applyValue(color, this.mapValueToVisual(value));
-                data.setItemVisual(index, 'color', color);
+
+            applyVisual: function (value, getter, setter) {
+                setter(
+                    'color',
+                    applyValue(getter('color'), this.mapValueToVisual(value))
+                );
             },
 
             mapValueToVisual: function (value) {
@@ -169,11 +175,22 @@ define(function (require) {
         visualHandlers[name] = handler;
     };
 
+    /**
+     * @public
+     */
+    VisualMapping.isValidType = function (visualType) {
+        return visualHandlers.hasOwnProperty(visualType);
+    };
 
     /**
      * @public
      */
-    VisualMapping.defaultOption = {
+    VisualMapping.getDefault = function (visualType, key) {
+        var value = (defaultOption[visualType] || {})[key];
+        return value != null ? zrUtil.clone(value, true) : null;
+    };
+
+    var defaultOption = {
 
         color: {
             active: ['#006edd', '#e0ffff'],

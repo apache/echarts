@@ -9,7 +9,7 @@ define(function (require) {
                 )
                 || option.calculable
             )
-            ? 'continuity' : 'piecewise';
+            ? 'continuous' : 'piecewise';
     });
 
 });

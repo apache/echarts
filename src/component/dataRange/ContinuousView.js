@@ -1,16 +1,10 @@
-
-
-// color colorH symbolSize
-
-
-// color colorList symbol
-
 define(function(require) {
 
     var DataRangeView = require('./DataRangeView');
     var zrUtil = require('zrender/core/util');
     var zrColor = require('zrender/tool/color');
     var graphic = require('../../util/graphic');
+    var symbolCreators = require('../../util/symbol');
     var numberUtil = require('../../util/number');
     var asc = numberUtil.asc;
     var extend = zrUtil.extend;
@@ -19,7 +13,7 @@ define(function(require) {
 
     var PiecewiseDataRangeView = DataRangeView.extend({
 
-        type: 'dataRange.continuity',
+        type: 'dataRange.continuous',
 
         /**
          * @override
@@ -84,8 +78,9 @@ define(function(require) {
          */
         _contentLayouters: {
 
-            vertical: function (dataRangeModel) {
+            vertical: function () {
                 var layout = this.layout;
+                var dataRangeModel = this.dataRangeModel;
                 var contentLayout = layout.content = {};
 
                 var itemWidth = layout.itemWidth;
@@ -137,7 +132,7 @@ define(function(require) {
                     var barCfgs = {
                         mainBar: {y: lastY, height: itemHeight},
                         maskHead: {y: contentLayout.extent[0], height: contentLayout.interval[0]},
-                        maskTail: {y: contentLayout.interval[1], height: contentLayout.extend[1]}
+                        maskTail: {y: contentLayout.interval[1], height: contentLayout.extent[1]}
                     };
                     zrUtil.each(barCfgs, function (barCfg, name) {
                         contentLayout[name] = {shape: extend({x: baseX, width: itemWidth}, barCfg)};
@@ -146,8 +141,9 @@ define(function(require) {
                 }
             },
 
-            horizontal: function (dataRangeModel) {
+            horizontal: function () {
                 var layout = this.layout;
+                var dataRangeModel = this.dataRangeModel;
                 var contentLayout = layout.content = {};
 
                 var itemWidth = layout.itemWidth;
@@ -265,18 +261,18 @@ define(function(require) {
                 mainBarLayoutShape.x, mainBarLayoutShape.y,
                 mainBarLayoutShape.x, mainBarLayoutShape.y + mainBarLayoutShape.height,
                 // FIXME
-                dataRangeModel.visualMappings.selected.get('data')
+                dataRangeModel.controllerVisuals.selected.getData()
             );
-            var unselectedColor = dataRangeModel.get('unselectedColor');
+            var inactiveColor = dataRangeModel.get('inactiveColor');
 
             contentGroup.add(new graphic.Rect(zrUtil.merge(
                 {style: {color: gradientColor}}, mainBarLayout, true
             )));
             contentGroup.add(new graphic.Rect(zrUtil.merge(
-                {style: {color: unselectedColor}}, contentLayout.maskHead, true
+                {style: {color: inactiveColor}}, contentLayout.maskHead, true
             )));
             contentGroup.add(new graphic.Rect(zrUtil.merge(
-                {style: {color: unselectedColor}}, contentLayout.maskTail, true
+                {style: {color: inactiveColor}}, contentLayout.maskTail, true
             )));
 
             contentLayout.textHead && contentGroup.add(new graphic.Text(contentLayout.textHead));
@@ -301,6 +297,54 @@ define(function(require) {
             // FIXME
         }
     });
+
+    /**
+     * @inner
+     */
+    var colorCreater = {
+
+        color: function (symbolCfg, index, visualResult, dataRangeModel) {
+            var shapeShape = symbolCfg.shape;
+            return symbolCreators.createSymbol(
+                dataRangeModel.get('itemSymbol'),
+                shapeShape.x, shapeShape.y, shapeShape.width, shapeShape.height,
+                visualResult
+            );
+        },
+
+        colorS: makePartialColorSymbolCreater(function (color, value) {
+            return zrColor.modifyHSL(color, null, value);
+        }),
+
+        colorL: makePartialColorSymbolCreater(function (color, value) {
+            return zrColor.modifyHSL(color, null, null, value);
+        }),
+
+        colorA: makePartialColorSymbolCreater(function (color, value) {
+            return zrColor.modifyAlpha(color, value);
+        }),
+
+        symbol: function (symbolCfg, index, visualResult, dataRangeModel) {
+            var shapeShape = symbolCfg.shape;
+            var symbolType = (
+                zrUtil.isObject(visualResult) ? visualResult.symbol : visualResult
+            ) || 'rect';
+
+            if (symbolType === 'square') {
+                symbolType = 'rect';
+            }
+
+            return symbolCreators.createSymbol(
+                symbolType,
+                shapeShape.x, shapeShape.y, shapeShape.width, shapeShape.height,
+                dataRangeModel.get('selected')[index]
+                // FIXME
+                // 是否不要这么配置
+                    ? dataRangeModel.get('contentColor')
+                    : dataRangeModel.get('inactiveColor')
+            );
+        }
+    };
 
     return PiecewiseDataRangeView;
 });

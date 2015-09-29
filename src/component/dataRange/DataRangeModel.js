@@ -7,6 +7,7 @@ define(function(require) {
     var env = require('zrender/core/env');
     var echarts = require('../../echarts');
     var modelUtil = require('../../util/model');
+    var VisualMapping = require('../../visual/VisualMapping');
     var numberUtil = require('../../util/number');
     var asc = numberUtil.asc;
 
@@ -25,6 +26,12 @@ define(function(require) {
         dataBound: [-Infinity, Infinity],
 
         /**
+         * @readOnly
+         * @type {Array.<string>}
+         */
+        stateList: ['inRange', 'outOfRange'],
+
+        /**
          * @protected
          */
         defaultOption: {
@@ -38,7 +45,7 @@ define(function(require) {
             dimension: 'z',
 
             visualSelected: {
-                type: 'color'        // 'color', 'colorH', 'colorS', 'colorL',
+                                     // 'color', 'colorH', 'colorS', 'colorL',
                                      // 'colorA',
                                      // 'symbol', 'symbolSize'
             },
@@ -57,7 +64,7 @@ define(function(require) {
             backgroundColor: 'rgba(0,0,0,0)',
             borderColor: '#ccc',       // 值域边框颜色
             contentColor: '#5793f3',
-            unselectedColor: '#aaa',
+            inactiveColor: '#aaa',
             borderWidth: 0,            // 值域边框线宽，单位px，默认为0（无边框）
             padding: 5,                // 值域内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
@@ -92,7 +99,12 @@ define(function(require) {
             /**
              * @readOnly
              */
-            this.visualMappings = {};
+            this.controllerVisuals = {};
+
+            /**
+             * @readOnly
+             */
+            this.targetVisuals = {};
 
             /**
              * @readOnly
@@ -123,6 +135,8 @@ define(function(require) {
             }
 
             this.textStyleModel = this.getModel('textStyle');
+
+            this._completeVisualOption();
         },
 
         /**
@@ -228,6 +242,117 @@ define(function(require) {
          */
         getExtent: function () {
             return this._dataExtent.slice();
+        },
+
+        /**
+         * @protected
+         */
+        resetVisual: function (fillVisualOption) {
+            var dataExtent = this.getExtent();
+
+            doReset.call(this, 'controller', this.controllerVisuals);
+            doReset.call(this, 'target', this.targetVisuals);
+
+            function doReset(baseAttr, visualMappings) {
+                zrUtil.each(this.stateList, function (state) {
+                    var mappings = visualMappings[state] || (visualMappings[state] = {});
+                    var visaulOption = this.option[baseAttr][state] || {};
+                    zrUtil.each(visaulOption, function (visualData, visualType) {
+                        if (!VisualMapping.isValidType(visualType)) {
+                            return;
+                        }
+                        var mappingOption = {
+                            type: visualType,
+                            dataExtent: dataExtent,
+                            data: visualData
+                        };
+                        fillVisualOption && fillVisualOption.call(this, mappingOption, state);
+                        mappings[visualType] = new VisualMapping(mappingOption);
+                    }, this);
+                }, this);
+            }
+        },
+
+        /**
+         * @private
+         */
+        _completeVisualOption: function () {
+            var thisOption = this.option;
+            var base = {inRange: thisOption.inRange, outOfRange: thisOption.outOfRange};
+
+            var target = thisOption.target || (thisOption.target = {});
+            var controller = thisOption.controller || (thisOption.controller = {});
+            zrUtil.merge(target, base);
+            zrUtil.merge(controller, base);
+
+            completeSingle.call(this, target);
+            completeSingle.call(this, controller);
+            completeInactive.call(this, target, 'inRange', 'outOfRange');
+            completeInactive.call(this, target, 'outOfRange', 'inRange');
+            completeController.call(this, controller);
+
+            function completeSingle(base) {
+                // Compatible with ec2 dataRange.color.
+                if (zrUtil.isArray(thisOption.color)
+                    // If there has been inRange: {symbol: ...}, adding color is a mistake.
+                    // So adding color only when no inRange defined.
+                    && !base.inRange
+                ) {
+                    base.inRange = {color: thisOption.color.slice()};
+                }
+
+                // If using shortcut like: {inRange: 'symbol'}, complete default value.
+                zrUtil.each(this.stateList, function (state) {
+                    var visualType = base[state];
+
+                    if (zrUtil.isString(visualType)) {
+                        var defa = VisualMapping.getDefault(visualType, 'active');
+                        if (defa) {
+                            base[state] = {};
+                            base[state][visualType] = defa;
+                        }
+                        else {
+                            delete base[state];
+                        }
+                    }
+                }, this);
+            }
+
+            function completeInactive(base, stateExist, stateAbsent) {
+                var optExist = base[stateExist];
+                var optAbsent = base[stateAbsent];
+                if (optExist && !optAbsent) {
+                    optAbsent = base[stateAbsent] = {};
+                    zrUtil.each(optExist, function (visualData, visualType) {
+                        var defa = VisualMapping.getDefault(visualType, 'inactive');
+                        if (VisualMapping.isValidType(visualType) && defa) {
+                            optAbsent[visualType] = defa;
+                        }
+                    });
+                }
+            }
+
+            function completeController(controller) {
+                var symbolExists = (controller.inRange || {}).symbol
+                    || (controller.outOfRange || {}).symbol;
+
+                zrUtil.each(this.stateList, function (state) {
+                    var visuals = controller[state];
+                    // Set inactive color for controller if no other color attr (like colorA) specified.
+                    if (!visuals) {
+                        visuals = controller[state] = {color: [this.get('inactiveColor')]};
+                    }
+                    // Consistent symbol if not specified.
+                    if (!visuals.symbol) {
+                        visuals.symbol = symbolExists || ['roundRect'];
+                    }
+                    // Filter square and none.
+                    visuals.symbol = zrUtil.map(visuals.symbol, function (symbol) {
+                        return (symbol === 'none' || symbol === 'square')
+                            ? 'roundRect' : symbol;
+                    });
+                }, this);
+            }
         },
 
         /**

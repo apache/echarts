@@ -5,8 +5,8 @@ define(function (require) {
 
     require('./dataRange/typeDefaulter');
     require('./dataRange/visualCoding');
-    require('./dataRange/ContinuityModel');
-    require('./dataRange/ContinuityView');
+    require('./dataRange/ContinuousModel');
+    require('./dataRange/ContinuousView');
     require('./dataRange/dataRangeAction');
 
 });
