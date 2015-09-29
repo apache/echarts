@@ -3,8 +3,9 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
     var symbolCreator = require('../../util/symbol');
-    var legendLayout = require('./legendLayout');
     var graphic = require('../../util/graphic');
+
+    var layout = require('../../util/layout');
 
     var LEGEND_DISABLE_COLOR = '#ccc';
 
@@ -14,6 +15,32 @@ define(function (require) {
             from: uid,
             seriesName: seriesName
         });
+    }
+
+    function positionGroup(group, legendModel, api) {
+        var x = legendModel.get('x');
+        var y = legendModel.get('y');
+        var x2 = legendModel.get('x2');
+        var y2 = legendModel.get('y2');
+        if (!x && !x2) {
+            x = 'center';
+        }
+        if (!y && !y2) {
+            y = 'top';
+        }
+        layout.positionGroup(
+            group, {
+                x: x,
+                y: y,
+                x2: x2,
+                y2: y2
+            },
+            {
+                width: api.getWidth(),
+                height: api.getHeight()
+            },
+            legendModel.get('padding')
+        );
     }
 
     return require('../../echarts').extendComponentView({
@@ -31,13 +58,6 @@ define(function (require) {
             var itemAlign = legendModel.get('align');
 
             var group = this.group;
-            var x = legendModel.get('x');
-            var y = legendModel.get('y');
-            var parsePercent = numberUtil.parsePercent;
-            group.position = [
-                parsePercent(x, api.getWidth()),
-                parsePercent(y, api.getHeight())
-            ];
             group.removeAll();
 
             if (itemAlign === 'auto') {
@@ -101,9 +121,12 @@ define(function (require) {
                 }
             }, this);
 
-            legendLayout(group, legendModel);
+            layout.box(
+                legendModel.get('orient'), group,
+                legendModel.get('itemGap')
+            );
 
-            this._adjustGroupPosition(group, x, y);
+            positionGroup(group, legendModel, api);
         },
 
         _createItem: function (
@@ -151,30 +174,6 @@ define(function (require) {
             this.group.add(itemGroup);
 
             itemGroup.on('click', zrUtil.curry(createSelectActionDispatcher, this.uid, name, api), this);
-        },
-
-        _adjustGroupPosition: function (group, x, y) {
-
-            var groupRect = group.getBoundingRect();
-            var position = group.position;
-            var padding = group.padding;
-
-            switch (x) {
-                case 'center':
-                    position[0] -= groupRect.width / 2;
-                    break;
-                case 'right':
-                    position[0] -= groupRect.width + groupRect.x + padding[1];
-                    break;
-            }
-            switch (y) {
-                case 'center':
-                    position[1] -= groupRect.height / 2;
-                    break;
-                case 'bottom':
-                    position[0] -= groupRect.height + groupRect.y + padding[2];
-                    break;
-            }
         }
     });
 });

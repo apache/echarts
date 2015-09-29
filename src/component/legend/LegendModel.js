@@ -94,13 +94,15 @@ define(function(require) {
             // 'horizontal' | 'vertical'
             orient: 'horizontal',
 
-            // 水平安放位置，默认为全图居中，可选为：
+            // x, x2 为水平安放位置，默认为全图居中，可选为：
             // 'center' | 'left' | 'right' | {number}（x坐标，单位px）
-            x: 'center',
+            // x: 'center',
+            // x2: 'center',
 
-            // 垂直安放位置，默认为全图顶端，可选为：
+            // y, y2 为垂直安放位置，默认为全图顶端，可选为：
             // 'top' | 'bottom' | 'center' | {number}（y坐标，单位px）
-            y: 'top',
+            // y: 'top',
+            // y2: 'top'
 
             // 水平对齐
             // 'auto' | 'left' | 'right'
