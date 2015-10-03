@@ -81,7 +81,9 @@ define(function(require) {
         type: 'line',
 
         init: function () {
-            this._dataSymbol = new DataSymbol();
+            var dataSymbol = new DataSymbol();
+            this.group.add(dataSymbol.group);
+            this._dataSymbol = dataSymbol;
         },
 
         render: function (seriesModel, ecModel) {
@@ -176,10 +178,6 @@ define(function(require) {
                 ));
             }
 
-            // Make sure symbols is on top of line
-            group.remove(dataSymbol.group);
-            group.add(dataSymbol.group);
-
             this._data = data;
 
             // Save the coordinate system and data for transition animation when data changed
@@ -209,7 +207,8 @@ define(function(require) {
                 shape: {
                     points: points
                 },
-                silent: true
+                silent: true,
+                z2: 10
             });
 
             var clipPath = this._createClipShape(coordSys, hasAnimation);
@@ -372,7 +371,7 @@ define(function(require) {
                         width: xExtent[1] - xExtent[0],
                         height: yExtent[1] - yExtent[0]
                     }
-                }, 1500, animation);
+                }, 1500);
             }
 
             return clipPath;

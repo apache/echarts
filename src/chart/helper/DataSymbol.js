@@ -22,6 +22,8 @@ define(function (require) {
 
         symbolEl.position = point;
 
+        symbolEl.z2 = 100;
+
         if (enableAnimation) {
 
             symbolEl.scale = [0.1, 0.1];

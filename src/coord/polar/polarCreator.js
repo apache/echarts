@@ -11,29 +11,6 @@ define(function (require) {
     require('./PolarModel');
 
     /**
-     * Retrieve angle axis or radius axis belongs to the given polar
-     * @param {string} axisType
-     * @param {number} polarIndex
-     * @param {module:echarts/model/Global} ecModel
-     * @param {module:echarts/ExtensionAPI} api
-     * @return {module:echarts/coord/polar/AxisModel}
-     * @inner
-     */
-    function retrieveAxisModelForPolar(axisType, polarIndex, ecModel, api) {
-        var axisModel;
-        ecModel.eachComponent(axisType, function (model) {
-            if (model.get('polarIndex') === polarIndex) {
-                if (axisModel) {
-                    // api.log('Polar ' + polarIndex + ' has more than one ' + axisType);
-                    return;
-                }
-                axisModel = model;
-            }
-        });
-        return axisModel;
-    }
-
-    /**
      * Resize methods bound to the polar
      * @param {module:echarts/coord/polar/PolarModel} polarModel
      * @param {module:echarts/ExtensionAPI} api
@@ -134,8 +111,8 @@ define(function (require) {
                 var radiusAxis = polar.getRadiusAxis();
                 var angleAxis = polar.getAngleAxis();
 
-                var radiusAxisModel = retrieveAxisModelForPolar('radiusAxis', idx, ecModel, api);
-                var angleAxisModel = retrieveAxisModelForPolar('angleAxis', idx, ecModel, api);
+                var radiusAxisModel = polarModel.findAxisModel('radiusAxis');
+                var angleAxisModel = polarModel.findAxisModel('angleAxis');
 
                 setAxis(radiusAxis, radiusAxisModel);
                 setAxis(angleAxis, angleAxisModel);
