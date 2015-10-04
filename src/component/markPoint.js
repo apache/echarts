@@ -82,9 +82,9 @@ define(function (require) {
         var min = extent[0];
         var max = extent[1];
         var val = (max - min) * percent + min;
-        valueArr[valueIndex] = val;
         var dataIndex = data.indexOfNearest(valueAxisDim, val);
         valueArr[1 - valueIndex] = data.get(baseAxisDim, dataIndex);
+        valueArr[valueIndex] = data.get(valueAxisDim, dataIndex, true);
         return valueArr;
     };
 

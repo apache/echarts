@@ -25,14 +25,14 @@ define(function (require) {
 
         symbolSize = normalizeSymbolSize(symbolSize);
 
-        // FIXME
         var x = -0.5;
         var y = -0.5;
         var w = 1;
         var h = 1;
+        // FIXME
         if (symbolType.match(/(pin|Pin)$/)) {
-            y = -1;
-            h = 2;
+            y = -0.8;
+            h = 1.6;
         }
         var symbolEl = symbolCreators.createSymbol(
             symbolType, x, y, w, h, color
@@ -70,7 +70,6 @@ define(function (require) {
     }
 
     function DataSymbol() {
-
         this.group = new Group();
     }
 
@@ -131,7 +130,7 @@ define(function (require) {
                     // Update color
                     // FIXME emptyXXX ?
                     var newColor = data.getItemVisual(newIdx, 'color');
-                    el.setStyle('fill', newColor);
+                    el.setColor(newColor);
 
                     // TODO Merge animateTo and attr methods into one
                     if (enableAnimation) {
@@ -141,8 +140,10 @@ define(function (require) {
                         }, 300, 'cubicOut');
                     }
                     else {
+                        // May still have animation. Must stop
+                        el.stopAnimation();
                         el.attr({
-                            scale: symbolSize,
+                            scale: symbolSize.slice(),
                             position: point.slice()
                         });
                     }

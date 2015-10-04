@@ -32,11 +32,10 @@
                 var data2 = [];
                 var data3 = [];
 
-                for (var i = 0; i < 100; i++) {
+                for (var i = 0; i < 10; i++) {
                     xAxisData.push('类目' + i);
                     data1.push(+Math.random().toFixed(3));
                     data2.push(+Math.random().toFixed(3));
-                    data3.push(+Math.random().toFixed(3));
                 }
 
                 chart.setOption({
@@ -67,12 +66,26 @@
                         name: 'line',
                         type: 'line',
                         stack: 'all',
-                        symbol: 'none',
-                        symbolSize: 10,
+                        symbolSize: 6,
                         data: data1,
 
                         markPoint: {
                             data: [{
+                                name: '最大值',
+                                type: 'max',
+                                value: 1
+                            }]
+                        }
+                    }, {
+                        name: 'line2',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 6,
+                        data: data2,
+
+                        markPoint: {
+                            data: [{
+                                name: '最大值',
                                 type: 'max',
                                 value: 1
                             }]

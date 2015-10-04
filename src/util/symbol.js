@@ -5,6 +5,7 @@ define(function(require) {
 
     var graphic = require('./graphic');
     var BoundingRect = require('zrender/core/BoundingRect');
+    var zrUtil = require('zrender/core/util');
 
     /**
      * Diamond shape
@@ -56,6 +57,9 @@ define(function(require) {
             // Dist on x with tangent point and circle center
             var dx = Math.cos(angle) * r;
 
+            var tanX = Math.sin(angle);
+            var tanY = Math.cos(angle);
+
             path.arc(
                 x,
                 cy,
@@ -64,14 +68,16 @@ define(function(require) {
                 Math.PI * 2 + angle
             );
 
+            var cpLen = r * 0.6;
+            var cpLen2 = r * 0.7;
             path.bezierCurveTo(
-                x + dx, cy + dy,
-                x, y - r * 0.6,
+                x + dx - tanX * cpLen, cy + dy + tanY * cpLen,
+                x, y - cpLen2,
                 x, y
             );
             path.bezierCurveTo(
-                x, y - r * 0.6,
-                x - dx, cy + dy,
+                x, y - cpLen2,
+                x - dx + tanX * cpLen, cy + dy + tanY * cpLen,
                 x - dx, cy + dy
             );
         }
@@ -176,6 +182,20 @@ define(function(require) {
 
     };
 
+    // Provide setColor helper method to avoid determine if set the fill or stroke outside
+    var symbolPathSetColor = function (color) {
+        var symbolStyle = this.style;
+        if (this.__isEmptyBrush) {
+            symbolStyle.stroke = color;
+        }
+        else {
+            // FIXME 判断图形默认是填充还是描边，使用 onlyStroke ?
+            symbolStyle.fill && (symbolStyle.fill = color);
+            symbolStyle.stroke && (symbolStyle.stroke = color);
+        }
+        this.dirty();
+    };
+
     return {
         /**
          * Create a symbol element with given symbol configuration: shape, x, y, width, height, color
@@ -211,16 +231,16 @@ define(function(require) {
             var symbolStyle = symbolPath.style;
             if (isEmpty) {
                 symbolStyle.set({
-                    stroke: color,
                     fill: '#fff',
                     lineWidth: 2
                 });
             }
-            else {
-                // FIXME 判断图形默认是填充还是描边，使用 onlyStroke ?
-                symbolStyle.fill && (symbolStyle.fill = color);
-                symbolStyle.stroke && (symbolStyle.stroke = color);
-            }
+
+            symbolPath.__isEmptyBrush = isEmpty;
+
+            symbolPath.setColor = symbolPathSetColor;
+
+            symbolPath.setColor(color);
 
             return symbolPath;
         }

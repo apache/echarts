@@ -377,19 +377,18 @@ define(function (require) {
      * Retreive the index of nearest value
      * @param {number} idx
      * @param {number} value
+     * @param {boolean} stack If given value is after stacked
      * @return {number}
      */
-    listProto.indexOfNearest = function (dim, value) {
+    listProto.indexOfNearest = function (dim, value, stack) {
         var storage = this._storage;
         var dimData = storage[dim];
-        var indices = this.indices;
 
         if (dimData) {
             var minDist = Number.MAX_VALUE;
             var nearestIdx = -1;
-            for (var i = 0, len = indices.length; i < len; i++) {
-                var rawIndex = indices[i];
-                var dist = Math.abs(dimData[rawIndex] - value);
+            for (var i = 0, len = this.count(); i < len; i++) {
+                var dist = Math.abs(this.get(dim, i, stack) - value);
                 if (dist <= minDist) {
                     minDist = dist;
                     nearestIdx = i;
