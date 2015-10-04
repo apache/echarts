@@ -1,112 +1,14 @@
 define(function (require) {
 
-    var List = require('../../data/List');
-
     var zrUtil = require('zrender/core/util');
+
+    var Model = require('../../model/Model');
 
     // Default enable markpoint
     var globalDefault = require('../../model/globalDefault');
     globalDefault.markPoint = {};
 
-    var geoCoordDataTransform = function (item) {
-
-    }
-
-    var specialTypeCalculatorWithExtent = function (percent, data, mainAxisDim, valueAxisDim) {
-        var extent = data.getDataExtent(valueAxisDim);
-        var valueIndex = (valueAxisDim === 'radius' || valueAxisDim === 'x') ? 0 : 1;
-        var valueArr = [];
-        var min = extent[0];
-        var max = extent[1];
-        var val = (max - min) * percent + min;
-        valueArr[valueIndex] = val;
-        var dataIndex = data.indexOfNearest(valueAxisDim, val);
-        valueArr[1 - valueIndex] = data.get(mainAxisDim, dataIndex);
-        return valueArr;
-    };
-
-    var specialTypeCalculator = {
-        /**
-         * @method
-         * @param {module:echarts/data/List} data
-         * @param {string} mainAxisDim
-         * @param {string} valueAxisDim
-         */
-        min: zrUtil.curry(specialTypeCalculatorWithExtent, 0),
-        /**
-         * @method
-         * @param {module:echarts/data/List} data
-         * @param {string} mainAxisDim
-         * @param {string} valueAxisDim
-         */
-        max: zrUtil.curry(specialTypeCalculatorWithExtent, 1),
-        /**
-         * @method
-         * @param {module:echarts/data/List} data
-         * @param {string} mainAxisDim
-         * @param {string} valueAxisDim
-         */
-        average: zrUtil.curry(specialTypeCalculatorWithExtent, 0.5)
-    }
-
-    var dataTransform = function (data, mainAxisDim, valueAxisDim, item) {
-        // If not specify the position with pixel directly
-        if (isNaN(item.x) || isNaN(item.y)) {
-            // Special types, Compatible with 2.0
-            if (item.type && specialTypeCalculator[item.type]
-                && mainAxisDim && valueAxisDim) {
-                var value = specialTypeCalculator[item.type](
-                    data, mainAxisDim, valueAxisDim
-                );
-                value.push(+item.value);
-                item.value = value;
-            }
-            else if (!isNaN(item.value)) {
-                item.value = [
-                    item.xAxis || item.radiusAxis,
-                    item.yAxis || item.angleAxis,
-                    item.value
-                ];
-            }
-        }
-        return item;
-    };
-
-    // FIXME 公用？
-    var getAxesDimMap = function (ecModel, seriesModel) {
-        var coordSysType = seriesModel.get('coordinateSystem');
-        var mainAxisDim;
-        var valueAxisDim;
-        if (coordSysType === 'cartesian2d') {
-            var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
-            if (xAxisModel.type === 'category') {
-                mainAxisDim = 'y';
-                valueAxisDim = 'x';
-            }
-            else {
-                mainAxisDim = 'x';
-                valueAxisDim = 'y';
-            }
-        }
-        else if (coordSysType === 'polar') {
-            var polarModel = ecModel.getComponent(seriesModel.get('polarIndex'));
-            var radiusAxisModel = polarModel.findAxisModel('radiusAxis');
-            if (radiusAxisModel.type === 'category') {
-                mainAxisDim = 'radius';
-                valueAxisDim = 'angle';
-            }
-            else {
-                mainAxisDim = 'angle';
-                valueAxisDim = 'radius';
-            }
-        }
-        return {
-            main: mainAxisDim,
-            value: valueAxisDim
-        };
-    }
-
-    var MarkPointModel = require('../../echarts').extendSeriesModel({
+    var MarkPointModel = require('../../echarts').extendComponentModel({
 
         type: 'markPoint',
 
@@ -133,29 +35,10 @@ define(function (require) {
                             );
                         }
                         else {
-                            // FIXME 后面 data transform 是否会对新的 merge 有影响
                             mpModel.mergeOption(markPointOpt, true);
                         }
-                        var seriesData = seriesModel.getData();
-                        var dimensions = seriesData.dimensions.slice();
-                        // Polar and cartesian with category axis may have dimensions inversed
-                        if (dimensions[0] === 'y' || dimensions[0] === 'angle') {
-                            dimensions.inverse();
-                        }
-                        var mpData = new List(dimensions, mpModel);
-
-                        // Dim of axis of calculating min, max
-                        var axesDims = getAxesDimMap(ecModel, seriesModel);
-                        mpData.initData(
-                            zrUtil.map(markPointOpt.data, zrUtil.curry(
-                                dataTransform, seriesData,
-                                axesDims.main, axesDims.value
-                            ))
-                        );
-                        mpModel.getData = function () {
-                            return mpData;
-                        }
-
+                        // Use the same series index
+                        mpModel.seriesIndex = seriesModel.seriesIndex;
                         seriesModel.markPointModel = mpModel;
                     }
                     else {
@@ -163,10 +46,6 @@ define(function (require) {
                     }
                 }, this);
             }
-        },
-
-        restoreData: function () {
-            // FIXME dataZoom needs to know markPoint model
         },
 
         defaultOption: {

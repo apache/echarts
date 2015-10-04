@@ -9,6 +9,8 @@ define(function (require) {
     /**
      * @alias module:echarts/model/Model
      * @constructor
+     * @param {Object} option
+     * @param {module:echarts/model/Model} parentModel
      */
     function Model(option, parentModel) {
 

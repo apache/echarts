@@ -29,7 +29,56 @@ define(function(require) {
         }
     });
 
+    /**
+     * Pin shape
+     */
+    var Pin = graphic.extendShape({
+        type: 'diamond',
+        shape: {
+            // x, y on the cusp
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+        },
+        buildPath: function (path, shape) {
+            var x = shape.x;
+            var y = shape.y;
+            var w = shape.width;
+            // Height must be larger than width
+            var h = Math.max(w, shape.height);
+            var r = w / 2;
+
+            // Dist on y with tangent point and circle center
+            var dy = r * r / (h - r);
+            var cy = y - h + r + dy;
+            var angle = Math.asin(dy / r);
+            // Dist on x with tangent point and circle center
+            var dx = Math.cos(angle) * r;
+
+            path.arc(
+                x,
+                cy,
+                r,
+                Math.PI - angle,
+                Math.PI * 2 + angle
+            );
+
+            path.bezierCurveTo(
+                x + dx, cy + dy,
+                x, y - r * 0.6,
+                x, y
+            );
+            path.bezierCurveTo(
+                x, y - r * 0.6,
+                x - dx, cy + dy,
+                x - dx, cy + dy
+            );
+        }
+    });
+
     var symbolCreators = {
+
         line: function (x, y, w, h) {
             return new graphic.Line({
                 shape: {
@@ -108,6 +157,17 @@ define(function(require) {
                     height: h
                 }
             })
+        },
+
+        pin: function (x, y, w, h) {
+            return new Pin({
+                shape: {
+                    x: x + w / 2,
+                    y: y + h / 2,
+                    width: w,
+                    height: h
+                }
+            });
         },
 
         path: function (pathStr, x, y, w, h) {

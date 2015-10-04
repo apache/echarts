@@ -704,10 +704,11 @@ define(function (require) {
      * @param {module:zrender/Element} el
      */
     listProto.setItemGraphicEl = function (idx, el) {
+        var hostModel = this.hostModel;
         // Add data index and series index for indexing the data by element
         // Useful in tooltip
         el.dataIndex = idx;
-        el.seriesIndex = this.hostModel.seriesIndex;
+        el.seriesIndex = hostModel && hostModel.seriesIndex;
 
         this._graphicEls[idx] = el;
     };

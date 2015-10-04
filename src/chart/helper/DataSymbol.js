@@ -5,6 +5,13 @@ define(function (require) {
     var symbolCreators = require('../../util/symbol');
     var graphic = require('../../util/graphic');
 
+    function normalizeSymbolSize(symbolSize) {
+        if (!zrUtil.isArray(symbolSize)) {
+            symbolSize = [+symbolSize, +symbolSize];
+        }
+        return symbolSize;
+    }
+
     function createSymbol(data, idx, enableAnimation) {
         var point = data.getItemLayout(idx);
         var color = data.getItemVisual(idx, 'color');
@@ -16,8 +23,19 @@ define(function (require) {
             return;
         }
 
+        symbolSize = normalizeSymbolSize(symbolSize);
+
+        // FIXME
+        var x = -0.5;
+        var y = -0.5;
+        var w = 1;
+        var h = 1;
+        if (symbolType.match(/(pin|Pin)$/)) {
+            y = -1;
+            h = 2;
+        }
         var symbolEl = symbolCreators.createSymbol(
-            symbolType, -0.5, -0.5, 1, 1, color
+            symbolType, x, y, w, h, color
         );
 
         symbolEl.position = point;
@@ -29,7 +47,7 @@ define(function (require) {
             symbolEl.scale = [0.1, 0.1];
 
             symbolEl.animateTo({
-                scale: [symbolSize, symbolSize]
+                scale: symbolSize
             }, 500);
 
             // symbolEl
@@ -94,7 +112,9 @@ define(function (require) {
                         return;
                     }
 
-                    var symbolSize = data.getItemVisual(newIdx, 'symbolSize');
+                    var symbolSize = normalizeSymbolSize(
+                        data.getItemVisual(newIdx, 'symbolSize')
+                    );
                     var point = data.getItemLayout(newIdx);
 
                     // Symbol changed
@@ -108,22 +128,21 @@ define(function (require) {
                         return;
                     }
 
-                    // Color changed
+                    // Update color
+                    // FIXME emptyXXX ?
                     var newColor = data.getItemVisual(newIdx, 'color');
-                    if (oldData.getItemVisual(newIdx, 'color') !== newColor) {
-                        el.setStyle('fill', newColor);
-                    }
+                    el.setStyle('fill', newColor);
 
                     // TODO Merge animateTo and attr methods into one
                     if (enableAnimation) {
                         el.animateTo({
-                            scale: [symbolSize, symbolSize],
+                            scale: symbolSize,
                             position: point
                         }, 300, 'cubicOut');
                     }
                     else {
                         el.attr({
-                            scale: [symbolSize, symbolSize],
+                            scale: symbolSize,
                             position: point.slice()
                         });
                     }
@@ -166,7 +185,7 @@ define(function (require) {
                 var symbolSize = data.getItemVisual(idx, 'symbolSize');
                 // Adjust the line width
                 el.__lineWidth = el.__lineWidth || el.style.lineWidth;
-                el.style.lineWidth = el.__lineWidth / symbolSize;
+                el.style.lineWidth = el.__lineWidth / (symbolSize[0] || symbolSize);
             }, this);
 
             this._data = data;
