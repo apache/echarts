@@ -19,7 +19,7 @@ define(function(require) {
             if (xAxisModel.get('type') === 'category') {
                 dimensions = [{
                     name: 'x',
-                    type: 'int'
+                    type: 'ordinal'
                 }, {
                     name: 'y',
                     stackable: true
@@ -30,7 +30,7 @@ define(function(require) {
             else if (yAxisModel.get('type') === 'category') {
                 dimensions = [{
                     name: 'y',
-                    type: 'int'
+                    type: 'ordinal'
                 }, {
                     name: 'x',
                     stackable: true
@@ -59,7 +59,7 @@ define(function(require) {
             if (angleAxisModel.get('type') === 'category') {
                 dimensions = [{
                     name: 'angle',
-                    type: 'int'
+                    type: 'ordinal'
                 }, {
                     name: 'radius',
                     stackable: true
@@ -70,7 +70,7 @@ define(function(require) {
             else if (radiusAxisModel.get('type') === 'category') {
                 dimensions = [{
                     name: 'radius',
-                    type: 'int'
+                    type: 'ordinal'
                 }, {
                     name: 'angle',
                     stackable: true

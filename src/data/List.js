@@ -14,6 +14,8 @@ define(function (require) {
     var dataCtors = {
         float: Float32Array,
         int: Int32Array,
+        // Ordinal data type can be string or int
+        ordinal: Array,
         'number': Array
     };
 
@@ -145,6 +147,13 @@ define(function (require) {
     listProto.type = 'list';
 
     /**
+     * Get type and stackable info of particular dimension
+     */
+    listProto.getDimensionInfo = function (dim) {
+        return this._dimensionInfos[dim];
+    };
+
+    /**
      * Initialize from data
      * @param {Array.<Object|number|Array>} data
      * @param {Array.<string>} [nameList]
@@ -263,6 +272,7 @@ define(function (require) {
         var dataIndex = this.indices[idx];
 
         var value = storage[dim] && storage[dim][dataIndex];
+        // FIXME ordinal data type is not stackable
         if (stack && this.stackedOn) {
             var stackedValue = this.stackedOn.get(dim, idx, stack);
             // Considering positive stack, negative stack and empty data
@@ -283,8 +293,13 @@ define(function (require) {
      */
     listProto.hasValue = function (idx) {
         var dimensions = this.dimensions;
+        var dimensionInfos = this._dimensionInfos;
         for (var i = 0, len = dimensions.length; i < len; i++) {
-            if (isNaN(this.get(dimensions[i], idx))) {
+            if (
+                // Ordinal type can be string or number
+                dimensionInfos[dimensions[i]].type !== 'ordinal'
+                && isNaN(this.get(dimensions[i], idx))
+            ) {
                 return false;
             }
         }

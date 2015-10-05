@@ -67,6 +67,7 @@ define(function (require) {
                 });
             });
 
+            // TODO Text and dataIndex are wrong
             dataSymbol.updateData(mpData, true);
 
             this.group.add(dataSymbol.group);
@@ -155,7 +156,9 @@ define(function (require) {
             dimensions.inverse();
         }
 
-        var mpData = new List(dimensions, mpModel);
+        var mpData = new List(zrUtil.map(
+            seriesData.dimensions, seriesData.getDimensionInfo, seriesData
+        ), mpModel);
         mpData.initData(zrUtil.map(mpModel.get('data'), zrUtil.curry(
             dataTransform, seriesData, baseAxis && baseAxis.dim, valueAxis && valueAxis.dim
         )));

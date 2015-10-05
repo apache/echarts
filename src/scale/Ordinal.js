@@ -8,6 +8,8 @@
 // FIXME only one data
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
+
     /**
      * @alias module:echarts/coord/scale/Ordinal
      * @param {Array} data
@@ -39,10 +41,14 @@ define(function (require) {
         },
 
         /**
-         * Normalize given rank to linear [0, 1]
-         * @return {number} [val]
+         * Normalize given rank or name to linear [0, 1]
+         * @param {number|string} [val]
+         * @return {number}
          */
         normalize: function (val) {
+            if (isNaN(val)) { // Is string
+                val = zrUtil.indexOf(this._data, val);
+            }
             var extent = this._extent;
             // Only one data
             if (extent[1] === extent[0]) {
