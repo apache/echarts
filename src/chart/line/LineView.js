@@ -150,7 +150,9 @@ define(function(require) {
 
                 // In the case data zoom triggerred refreshing frequently
                 // Data may not change if line has a category axis. So it should animate nothing
-                if (!isPointsSame(this._dataArray, dataArray)) {
+                if (!isPointsSame(this._dataArray, dataArray)
+                    || !isPointsSame(this._stackedOnDataArray, stackedOnDataArray)
+                ) {
                     this._updateAnimation(
                         data, dataArray, stackedOnDataArray, coordSys
                     );

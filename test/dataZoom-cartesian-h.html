@@ -21,7 +21,8 @@
                 'echarts/component/grid',
                 'echarts/component/axis',
                 'echarts/component/dataZoom',
-                'echarts/component/tooltip'
+                'echarts/component/tooltip',
+                'echarts/component/markPoint'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -64,6 +65,11 @@
                                 normal: {
                                     areaStyle: {}
                                 }
+                            },
+                            markPoint: {
+                                data: [{
+                                    type: 'max'
+                                }]
                             }
                         },
                         {
