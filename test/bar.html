@@ -13,7 +13,7 @@
             }
             #main {
                 width: 1000px;
-                background: #999;
+                background: #fff;
             }
         </style>
         <div id="main"></div>
@@ -38,17 +38,23 @@
 
                 for (var i = 0; i < 10; i++) {
                     xAxisData.push('类目' + i);
-                    data1.push(Math.random() * 5);
-                    data2.push(Math.random());
-                    data3.push(Math.random());
+                    data1.push((Math.random() * 5).toFixed(2));
+                    data2.push((Math.random() + 0.2).toFixed(2));
+                    data3.push((Math.random() + 0.5).toFixed(2));
                 }
 
                 var itemStyle = {
                     normal: {
+                        label: {
+                            show: true,
+                            position: 'outside'
+                        }
                     },
                     emphasis: {
-                        barBorderColor: 'red',
-                        barBorderWidth: 1
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowColor: 'rgba(0,0,0,0.5)'
                     }
                 };
 
@@ -63,13 +69,17 @@
                         },
                         orient: 'vertical',
                         x: 'right',
+                        y: 'bottom',
                         align: 'right'
                     },
                     tooltip: {},
                     xAxis: {
                         data: xAxisData,
+                        splitLine: {
+                            show: false
+                        },
                         splitArea: {
-                            show: true
+                            show: false
                         }
                     },
                     yAxis: {
