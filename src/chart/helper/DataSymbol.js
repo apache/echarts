@@ -31,8 +31,8 @@ define(function (require) {
         var h = 1;
         // FIXME
         if (symbolType.match(/(pin|Pin)$/)) {
-            y = -0.8;
-            h = 1.6;
+            y = -0.9;
+            h = 1.8;
         }
         var symbolEl = symbolCreators.createSymbol(
             symbolType, x, y, w, h, color

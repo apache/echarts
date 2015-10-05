@@ -52,7 +52,7 @@ define(function (require) {
             else {
                 dimensionInfo = dimensions[i];
                 dimensionName = dimensionInfo.name;
-                dimensionInfo.type = dimensionInfo.type || 'float'
+                dimensionInfo.type = dimensionInfo.type || 'number'
             }
             dimensionNames.push(dimensionName);
             dimensionInfos[dimensionName] = dimensionInfo;
@@ -698,6 +698,10 @@ define(function (require) {
         itemVisual[key] = value;
     };
 
+    var setItemDataAndSeriesIndex = function (child) {
+        child.seriesIndex = this.seriesIndex;
+        child.dataIndex = this.dataIndex;
+    }
     /**
      * @param {number} idx
      * @param {module:zrender/Element} el
@@ -707,7 +711,10 @@ define(function (require) {
         // Add data index and series index for indexing the data by element
         // Useful in tooltip
         el.dataIndex = idx;
-        el.seriesIndex = hostModel && hostModel.seriesIndex;
+        el.seriesIndex = hostModel && hostModel.seriesIndex;;
+        if (el.type === 'group') {
+            el.traverse(setItemDataAndSeriesIndex, this)
+        }
 
         this._graphicEls[idx] = el;
     };

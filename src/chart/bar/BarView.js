@@ -70,6 +70,7 @@ define(function (require) {
                 })
                 .remove(function (idx) {
                     var el = oldData.getItemGraphicEl(idx);
+                    el.style.text = '';
                     el.animateTo({
                         shape: {
                             width: 0
@@ -83,12 +84,25 @@ define(function (require) {
 
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
+                var labelModel = itemModel.getModel('itemStyle.normal.label');
+                var color = data.getItemVisual(idx, 'color');
                 rect.setStyle(zrUtil.defaults(
                     {
-                        fill: data.getItemVisual(idx, 'color')
+                        fill: color
                     },
                     itemModel.getModel('itemStyle.normal').getBarItemStyle()
                 ));
+                if (labelModel.get('show')) {
+                    var labelPosition = labelModel.get('position') || 'inside';
+                    // FIXME
+                    var labelColor = labelPosition === 'inside' ? 'white' : color;
+                    rect.setStyle({
+                        text: data.getRawValue(idx),
+                        textFont: labelModel.getModel('textStyle').getFont(),
+                        textPosition: labelModel.get('position') === 'outside' ? 'top' : 'inside',
+                        textFill: labelColor
+                    });
+                }
                 graphic.setHoverStyle(
                     rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
                 );
@@ -101,6 +115,8 @@ define(function (require) {
             if (this._data) {
                 var group = this.group;
                 this._data.eachItemGraphicEl(function (el) {
+                    // Not show text when animating
+                    el.style.text = '';
                     el.animateTo({
                         shape: {
                             width: 0
