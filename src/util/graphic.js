@@ -24,7 +24,7 @@ define(function(require) {
 
     graphic.Polyline = require('zrender/graphic/shape/Polyline');
 
-    graphic.Rect = require('zrender/graphic/shape/Rectangle');
+    graphic.Rect = require('zrender/graphic/shape/Rect');
 
     graphic.Line = require('zrender/graphic/shape/Line');
 

@@ -324,10 +324,9 @@ define(function(require) {
                 for (var i = 0; i < addedDataIndices.length; i++) {
                     var el = data.getItemGraphicEl(addedDataIndices[i]);
                     if (el) {
-                        var oldScale = el.scale;
-                        el.scale = [1, 1];
+                        el.scale = [0, 0];
                         el.animateTo({
-                            scale: oldScale
+                            scale: [1, 1]
                         }, 300, 300, 'cubicOut');
                     }
                 }

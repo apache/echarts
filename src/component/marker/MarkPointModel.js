@@ -53,7 +53,7 @@ define(function (require) {
             z: 5,
             clickable: true,
             symbol: 'pin',         // 标注类型
-            symbolSize: 25,        // 标注大小
+            symbolSize: [30, 50],        // 标注大小
             // symbolRotate: null, // 标注旋转控制
             large: false,
             effect: {

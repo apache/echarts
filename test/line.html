@@ -72,12 +72,15 @@
                         boundaryGap: false,
                         // inverse: true,
                         splitArea: {
-                            show: true
+                            show: false
+                        },
+                        splitLine: {
+                            show: false
                         }
                     },
                     yAxis: {
-                        splitLine: {
-                            // show: false
+                        splitArea: {
+                            show: true
                         }
                     },
                     series: [{
@@ -103,18 +106,6 @@
                         symbol: 'circle',
                         symbolSize: 10,
                         data: data3,
-                        itemStyle: itemStyle
-                    }]
-                });
-
-                chart.setOption({
-                    series: [{
-                        name: 'line',
-                        type: 'line',
-                        stack: 'all',
-                        symbol: 'circle',
-                        symbolSize: 10,
-                        data: data1,
                         itemStyle: itemStyle
                     }]
                 });
