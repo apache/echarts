@@ -194,7 +194,7 @@ define(function (require) {
                         // FIXME
                         text: data.get(lastDim, idx),
                         textFont: labelModel.getModel('textStyle').getFont(),
-                        textPosition: labelModel.get('position') === 'outside' ? 'top' : 'inside',
+                        textPosition: labelPosition,
                         textFill: labelColor
                     });
                 }

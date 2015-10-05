@@ -26,6 +26,13 @@ define(function (require) {
             var data = seriesModel.getData();
             var oldData = this._data;
 
+            var cartesian = seriesModel.coordinateSystem;
+            var baseAxis = cartesian.getBaseAxis();
+            var isInverse = cartesian.getOtherAxis(baseAxis).inverse;
+            var isHorizontal = baseAxis.isHorizontal();
+
+            var enableAnimation = ecModel.get('animation');
+
             data.diff(oldData)
                 .add(function (dataIndex) {
                     // 空数据
@@ -35,11 +42,7 @@ define(function (require) {
 
                     var layout = data.getItemLayout(dataIndex);
                     var rect = new graphic.Rect({
-                        shape: {
-                            x: layout.x,
-                            y: layout.y + layout.height,
-                            width: layout.width
-                        }
+                        shape: zrUtil.extend({}, layout)
                     });
 
                     data.setItemGraphicEl(dataIndex, rect);
@@ -47,9 +50,24 @@ define(function (require) {
                     group.add(rect);
 
                     // Animation
-                    rect.animateTo({
-                        shape: layout
-                    }, 1000, 300 * dataIndex / data.count(), 'cubicOut');
+                    if (enableAnimation) {
+                        var rectShape = rect.shape;
+                        if (isHorizontal) {
+                            rectShape.height = 0;
+                            if (!isInverse) {
+                                rectShape.y = layout.y + layout.height;
+                            }
+                        }
+                        else {
+                            rectShape.width = 0;
+                            if (isInverse) {
+                                rectShape.x = layout.x + layout.width;
+                            }
+                        }
+                        rect.animateTo({
+                            shape: layout
+                        }, 1000, 300 * dataIndex / data.count(), 'cubicOut');
+                    }
                 })
                 .update(function (newIndex, oldIndex) {
                     var rect = oldData.getItemGraphicEl(oldIndex);
@@ -82,6 +100,9 @@ define(function (require) {
                 })
                 .execute();
 
+            var labelPositionOutside = isHorizontal
+                ? (isInverse ? 'bottom' : 'top')
+                : (isInverse ? 'left' : 'right');
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
                 var labelModel = itemModel.getModel('itemStyle.normal.label');
@@ -96,10 +117,11 @@ define(function (require) {
                     var labelPosition = labelModel.get('position') || 'inside';
                     // FIXME
                     var labelColor = labelPosition === 'inside' ? 'white' : color;
+
                     rect.setStyle({
                         text: data.getRawValue(idx),
                         textFont: labelModel.getModel('textStyle').getFont(),
-                        textPosition: labelModel.get('position') === 'outside' ? 'top' : 'inside',
+                        textPosition: labelPosition === 'outside' ? labelPositionOutside : 'inside',
                         textFill: labelColor
                     });
                 }
