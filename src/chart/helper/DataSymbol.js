@@ -95,7 +95,6 @@ define(function (require) {
                 })
                 .update(function (newIdx, oldIdx) {
                     var el = oldData.getItemGraphicEl(oldIdx);
-
                     // Empty data
                     if (!data.hasValue(newIdx)) {
                         group.remove(el);
@@ -119,6 +118,10 @@ define(function (require) {
                         }
                     }
                     else {
+                        // Update animation
+                        if (!el) {
+                            return;
+                        }
                         var newTarget = {};
                         if (!isSymbolSizeSame(
                             symbolSize, normalizeSymbolSize(
