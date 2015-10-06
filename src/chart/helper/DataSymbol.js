@@ -2,8 +2,23 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Group = require('zrender/container/Group');
-    var symbolCreators = require('../../util/symbol');
+    var symbolUtil = require('../../util/symbol');
     var graphic = require('../../util/graphic');
+
+    function normalizeSymbolSize(symbolSize) {
+        if (!zrUtil.isArray(symbolSize)) {
+            symbolSize = [+symbolSize, +symbolSize];
+        }
+        return symbolSize;
+    }
+
+    function isAroundEqual(a, b) {
+        return Math.abs(a - b) < 1e-4;
+    }
+
+    function isSymbolSizeSame(a, b) {
+        return isAroundEqual(a[0], b[0]) && isAroundEqual(a[1], b[1]);
+    }
 
     function createSymbol(data, idx, enableAnimation) {
         var point = data.getItemLayout(idx);
@@ -16,41 +31,36 @@ define(function (require) {
             return;
         }
 
-        var symbolEl = symbolCreators.createSymbol(
-            symbolType, -0.5, -0.5, 1, 1, color
+        symbolSize = normalizeSymbolSize(symbolSize);
+
+        var x = -symbolSize[0] / 2;
+        var y = -symbolSize[1] / 2;
+        var w = symbolSize[0];
+        var h = symbolSize[1];
+        var symbolEl = symbolUtil.createSymbol(
+            symbolType, x, y, w, h, color
         );
 
         symbolEl.position = point;
 
+        symbolEl.z2 = 100;
+
         if (enableAnimation) {
 
-            symbolEl.scale = [0.1, 0.1];
+            symbolEl.scale = [0, 0];
 
             symbolEl.animateTo({
-                scale: [symbolSize, symbolSize]
+                scale: [1, 1]
             }, 500);
-
-            // symbolEl
-            //     .on('mouseover', function () {
-            //         this.animateTo({
-            //             scale: [symbolSize * 1.4, symbolSize * 1.4]
-            //         }, 400, 'elasticOut');
-            //     })
-            //     .on('mouseout', function () {
-            //         this.animateTo({
-            //             scale: [symbolSize, symbolSize]
-            //         }, 400, 'elasticOut');
-            //     });
         }
         else {
-            symbolEl.scale = [symbolSize, symbolSize];
+            symbolEl.scale = [1, 1];
         }
 
         return symbolEl;
     }
 
     function DataSymbol() {
-
         this.group = new Group();
     }
 
@@ -85,45 +95,62 @@ define(function (require) {
                 })
                 .update(function (newIdx, oldIdx) {
                     var el = oldData.getItemGraphicEl(oldIdx);
-
                     // Empty data
                     if (!data.hasValue(newIdx)) {
                         group.remove(el);
                         return;
                     }
 
-                    var symbolSize = data.getItemVisual(newIdx, 'symbolSize');
+                    var symbolSize = normalizeSymbolSize(
+                        data.getItemVisual(newIdx, 'symbolSize')
+                    );
                     var point = data.getItemLayout(newIdx);
 
+                    var symbolType = data.getItemVisual(newIdx, 'symbol');
                     // Symbol changed
-                    if (oldData.getItemVisual(newIdx, 'symbol') !== data.getItemVisual(oldIdx, 'symbol')) {
+                    if (oldData.getItemVisual(oldIdx, 'symbol') !== symbolType) {
                         // Remove the old one
                         el && group.remove(el);
                         el = createSymbol(data, newIdx, enableAnimation);
-                    }
-                    // Disable symbol by setting `symbol: 'none'`
-                    if (!el) {
-                        return;
-                    }
-
-                    // Color changed
-                    var newColor = data.getItemVisual(newIdx, 'color');
-                    if (oldData.getItemVisual(newIdx, 'color') !== newColor) {
-                        el.setStyle('fill', newColor);
-                    }
-
-                    // TODO Merge animateTo and attr methods into one
-                    if (enableAnimation) {
-                        el.animateTo({
-                            scale: [symbolSize, symbolSize],
-                            position: point
-                        }, 300, 'cubicOut');
+                        // Disable symbol by setting `symbol: 'none'`
+                        if (!el) {
+                            return;
+                        }
                     }
                     else {
-                        el.attr({
-                            scale: [symbolSize, symbolSize],
-                            position: point.slice()
-                        });
+                        // Update animation
+                        if (!el) {
+                            return;
+                        }
+                        var newTarget = {};
+                        if (!isSymbolSizeSame(
+                            symbolSize, normalizeSymbolSize(
+                                oldData.getItemVisual(oldIdx, 'symbolSize')
+                            )
+                        )) {
+                            // FIXME symbol created with pathStr has symbolSizeChanged
+                            newTarget = symbolUtil.getSymbolShape(
+                                symbolType,
+                                -symbolSize[0] / 2, -symbolSize[1] / 2,
+                                symbolSize[0], symbolSize[1]
+                            ) || {};
+                        }
+                        var newColor = data.getItemVisual(newIdx, 'color');
+                        el.setColor(newColor);
+
+                        // TODO Merge animateTo and attr methods into one
+                        newTarget.position = point.slice();
+                        if (!isAroundEqual(el.scale[0], 1)) {    // May have scale 0
+                            newTarget.scale = [1, 1];
+                        }
+                        if (enableAnimation) {
+                            el.animateTo(newTarget, 300, 'cubicOut');
+                        }
+                        else {
+                            // May still have animation. Must stop
+                            el.stopAnimation();
+                            el.attr(newTarget);
+                        }
                     }
 
                     data.setItemGraphicEl(newIdx, el);
@@ -149,22 +176,33 @@ define(function (require) {
 
             // Update common properties
             data.eachItemGraphicEl(function (el, idx) {
-
                 var itemModel = data.getItemModel(idx);
+                var labelModel = itemModel.getModel('itemStyle.normal.label');
+                var color = data.getItemVisual(idx, 'color');
+
                 zrUtil.extend(
                     el.style,
                     itemModel.getModel('itemStyle.normal').getItemStyle(['color'])
                 );
 
+                if (labelModel.get('show')) {
+                    var labelPosition = labelModel.get('position') || 'inside';
+                    var labelColor = labelPosition === 'inside' ? 'white' : color;
+                    // Text use the value of last dimension
+                    var lastDim = data.dimensions[data.dimensions.length - 1];
+                    el.setStyle({
+                        // FIXME
+                        text: data.get(lastDim, idx),
+                        textFont: labelModel.getModel('textStyle').getFont(),
+                        textPosition: labelPosition,
+                        textFill: labelColor
+                    });
+                }
+
                 graphic.setHoverStyle(
                     el,
                     itemModel.getModel('itemStyle.emphasis').getItemStyle()
                 );
-
-                var symbolSize = data.getItemVisual(idx, 'symbolSize');
-                // Adjust the line width
-                el.__lineWidth = el.__lineWidth || el.style.lineWidth;
-                el.style.lineWidth = el.__lineWidth / symbolSize;
             }, this);
 
             this._data = data;

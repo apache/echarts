@@ -33,15 +33,18 @@ define(function(require) {
         type: 'xAxis',
 
         init: function (axisOption, parentModel, ecModel) {
-            AxisModel.prototype.init.call(this);
 
-            axisOption.type = axisOption.type || 'category';
-
-            axisOption.position = axisOption.position || 'bottom';
-
-            axisOption.gridIndex = axisOption.gridIndex || 0;
+            zrUtil.merge(axisOption, this.getDefaultOption(), false);
 
             mergeDefault(axisOption, ecModel);
+        },
+
+        defaultOption: {
+            type: 'category',
+
+            gridIndex: 0,
+
+            position: 'bottom'
         }
     });
 
@@ -51,15 +54,18 @@ define(function(require) {
         type: 'yAxis',
 
         init: function (axisOption, parentModel, ecModel) {
-            AxisModel.prototype.init.call(this);
 
-            axisOption.type = axisOption.type || 'value';
-
-            axisOption.position = axisOption.position || 'left';
-
-            axisOption.gridIndex = axisOption.gridIndex || 0;
+            zrUtil.merge(axisOption, this.getDefaultOption(), false);
 
             mergeDefault(axisOption, ecModel);
+        },
+
+        defaultOption: {
+            type: 'value',
+
+            gridIndex: 0,
+
+            position: 'left'
         }
     });
 

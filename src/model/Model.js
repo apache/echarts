@@ -9,6 +9,8 @@ define(function (require) {
     /**
      * @alias module:echarts/model/Model
      * @constructor
+     * @param {Object} option
+     * @param {module:echarts/model/Model} parentModel
      */
     function Model(option, parentModel) {
 
@@ -89,12 +91,15 @@ define(function (require) {
 
         /**
          * @param {string} path
+         * @param {module:echarts/model/Model} [parentModel]
          * @return {module:echarts/model/Model}
          */
-        getModel: function (path) {
+        getModel: function (path, parentModel) {
             var obj = this.get(path);
-            var parentModel = this.parentModel;
-            return new Model(obj, parentModel && parentModel.getModel(path));
+            var thisParentModel = this.parentModel;
+            return new Model(
+                obj, parentModel || (thisParentModel && thisParentModel.getModel(path))
+            );
         },
 
         /**

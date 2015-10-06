@@ -4,7 +4,9 @@ define(function (require) {
         ecModel.eachSeries(function (seriesModel) {
             var colorList = ecModel.get('color');
             var data = seriesModel.getData();
-            data.setVisual('color', colorList[seriesModel.seriesIndex]);
+            var color = seriesModel.get('itemStyle.normal.color') // Set in itemStyle
+                || colorList[seriesModel.seriesIndex];  // Default color
+            data.setVisual('color', color);
         });
     }
 });

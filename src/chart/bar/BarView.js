@@ -26,6 +26,13 @@ define(function (require) {
             var data = seriesModel.getData();
             var oldData = this._data;
 
+            var cartesian = seriesModel.coordinateSystem;
+            var baseAxis = cartesian.getBaseAxis();
+            var isInverse = cartesian.getOtherAxis(baseAxis).inverse;
+            var isHorizontal = baseAxis.isHorizontal();
+
+            var enableAnimation = ecModel.get('animation');
+
             data.diff(oldData)
                 .add(function (dataIndex) {
                     // 空数据
@@ -35,11 +42,7 @@ define(function (require) {
 
                     var layout = data.getItemLayout(dataIndex);
                     var rect = new graphic.Rect({
-                        shape: {
-                            x: layout.x,
-                            y: layout.y + layout.height,
-                            width: layout.width
-                        }
+                        shape: zrUtil.extend({}, layout)
                     });
 
                     data.setItemGraphicEl(dataIndex, rect);
@@ -47,9 +50,16 @@ define(function (require) {
                     group.add(rect);
 
                     // Animation
-                    rect.animateTo({
-                        shape: layout
-                    }, 1000, 300 * dataIndex / data.count(), 'cubicOut');
+                    if (enableAnimation) {
+                        var rectShape = rect.shape;
+                        var animateProperty = isHorizontal ? 'height' : 'width';
+                        var animateTarget = {};
+                        rectShape[animateProperty] = 0;
+                        animateTarget[animateProperty] = layout[animateProperty];
+                        rect.animateTo({
+                            shape: animateTarget
+                        }, 1000, 300 * dataIndex / data.count(), 'cubicOut');
+                    }
                 })
                 .update(function (newIndex, oldIndex) {
                     var rect = oldData.getItemGraphicEl(oldIndex);
@@ -70,6 +80,7 @@ define(function (require) {
                 })
                 .remove(function (idx) {
                     var el = oldData.getItemGraphicEl(idx);
+                    el.style.text = '';
                     el.animateTo({
                         shape: {
                             width: 0
@@ -83,12 +94,30 @@ define(function (require) {
 
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
+                var labelModel = itemModel.getModel('itemStyle.normal.label');
+                var color = data.getItemVisual(idx, 'color');
+                var layout = data.getItemLayout(idx);
                 rect.setStyle(zrUtil.defaults(
                     {
-                        fill: data.getItemVisual(idx, 'color')
+                        fill: color
                     },
                     itemModel.getModel('itemStyle.normal').getBarItemStyle()
                 ));
+                if (labelModel.get('show')) {
+                    var labelPosition = labelModel.get('position') || 'inside';
+                    // FIXME
+                    var labelColor = labelPosition === 'inside' ? 'white' : color;
+                    var labelPositionOutside = isHorizontal
+                        ? (layout.height > 0 ? 'bottom' : 'top')
+                        : (layout.width > 0 ? 'left' : 'right');
+
+                    rect.setStyle({
+                        text: data.getRawValue(idx),
+                        textFont: labelModel.getModel('textStyle').getFont(),
+                        textPosition: labelPosition === 'outside' ? labelPositionOutside : 'inside',
+                        textFill: labelColor
+                    });
+                }
                 graphic.setHoverStyle(
                     rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
                 );
@@ -101,6 +130,8 @@ define(function (require) {
             if (this._data) {
                 var group = this.group;
                 this._data.eachItemGraphicEl(function (el) {
+                    // Not show text when animating
+                    el.style.text = '';
                     el.animateTo({
                         shape: {
                             width: 0

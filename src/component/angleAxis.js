@@ -18,7 +18,6 @@ define(function(require) {
         };
     }
 
-
     require('../coord/polar/polarCreator');
 
     require('../echarts').extendComponentView({

@@ -1,6 +1,8 @@
 define(function(require) {
     'use strict';
 
+    var smoothBezier = require('zrender/graphic/helper/smoothBezier');
+
     return require('zrender/graphic/Path').extend({
 
         type: 'ec-area',
@@ -17,7 +19,7 @@ define(function(require) {
 
             var i = 0;
             var len = points.length;
-            while (i < points.length) {
+            while (i < len) {
                 for (var k = i; k < len; k++) {
                     var p = points[k];
                     if (p == null || isNaN(p[0]) || isNaN(p[1])) {

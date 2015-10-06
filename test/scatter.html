@@ -31,9 +31,9 @@
                 var data3 = [];
 
                 for (var i = 0; i < 100; i++) {
-                    data1.push([Math.random() * 5, Math.random() * 4, Math.random()]);
-                    data2.push([Math.random() * 10, Math.random() * 5, Math.random()]);
-                    data3.push([Math.random() * 15, Math.random() * 10, Math.random()]);
+                    data1.push([Math.random() * 5, Math.random() * 4, Math.random().toFixed(2)]);
+                    data2.push([Math.random() * 10, Math.random() * 5, (Math.random() + 0.3).toFixed(2)]);
+                    data3.push([Math.random() * 15, Math.random() * 10, Math.random().toFixed(2)]);
                 }
 
                 chart.setOption({
@@ -74,6 +74,13 @@
                         type: 'scatter',
                         symbolSize: function (val) {
                             return val[2] * 40;
+                        },
+                        itemStyle: {
+                            normal: {
+                                label: {
+                                    show: true
+                                }
+                            }
                         },
                         data: data2
                     }, {

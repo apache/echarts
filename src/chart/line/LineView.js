@@ -16,8 +16,8 @@ define(function(require) {
             return;
         }
         for (var i = 0; i < points1.length; i++) {
-            var p1 = points1[i].point;
-            var p2 = points2[i].point;
+            var p1 = points1[i];
+            var p2 = points2[i];
             if (p1[0] !== p2[0] || p1[1] !== p2[1]) {
                 return;
             }
@@ -37,20 +37,9 @@ define(function(require) {
         return extent;
     }
 
-    function getDataArray(coordSys, data, points) {
-        var dimensions = coordSys.type === 'cartesian2d' ? ['x', 'y'] : ['radius', 'angle'];
-        return data.map(dimensions, function (x, y, idx) {
-            return {
-                x: x,
-                y: y,
-                point: points[idx],
-                name: data.getName(idx),
-                idx: idx,
-                rawIdx: data.getRawIndex(idx)
-            };
-        });
+    function sign(val) {
+        return val >= 0 ? 1 : -1;
     }
-
     /**
      * @param {module:echarts/coord/cartesian/Cartesian2D|module:echarts/coord/polar/Polar} coordSys
      * @param {module:echarts/data/List} data
@@ -58,22 +47,33 @@ define(function(require) {
      * @private
      */
     function getStackedOnPoints(coordSys, data, points) {
-        var stackedOnData = data.stackedOn;
-        if (stackedOnData) {
-            return stackedOnData.map(stackedOnData.getItemLayout, true);
-        }
-        else {
-            var valueAxis = coordSys.getOtherAxis(coordSys.getBaseAxis());
-            var valueStart = valueAxis.getExtent()[0];
-            var dim = valueAxis.dim;
-            var baseCoordOffset = dim === 'x' || dim === 'radius' ? 1 : 0;
-            return zrUtil.map(points, function (point, idx) {
-                var pt = [];
-                pt[baseCoordOffset] = point[baseCoordOffset];
-                pt[1 - baseCoordOffset] = valueStart;
-                return pt;
-            });
-        }
+        var baseAxis = coordSys.getBaseAxis();
+        var valueAxis = coordSys.getOtherAxis(baseAxis);
+        var valueAxisStart = baseAxis.onZero
+            ? valueAxis.dataToCoord(0) : valueAxis.getExtent()[0];
+
+        var valueDim = valueAxis.dim;
+        var baseCoordOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
+
+        return data.map([valueDim], function (val, idx) {
+            var stackedOnSameSign;
+            var stackedOn = data.stackedOn;
+            if (val > 0) {
+                // Find first stacked value with same sign
+                while (stackedOn &&
+                    sign(stackedOn.get(valueDim, idx)) === sign(val)
+                ) {
+                    stackedOnSameSign = stackedOn;
+                    break;
+                }
+            }
+            var pt = [];
+            pt[baseCoordOffset] = points[idx][baseCoordOffset];
+            pt[1 - baseCoordOffset] = stackedOnSameSign
+                ? stackedOnSameSign.getItemLayout(idx)[1 - baseCoordOffset]
+                : valueAxisStart;
+            return pt;
+        }, true);
     }
 
     return require('../../echarts').extendChartView({
@@ -81,7 +81,9 @@ define(function(require) {
         type: 'line',
 
         init: function () {
-            this._dataSymbol = new DataSymbol();
+            var dataSymbol = new DataSymbol();
+            this.group.add(dataSymbol.group);
+            this._dataSymbol = dataSymbol;
         },
 
         render: function (seriesModel, ecModel) {
@@ -92,7 +94,6 @@ define(function(require) {
             var areaStyleModel = seriesModel.getModel('itemStyle.normal.areaStyle');
 
             var points = data.map(data.getItemLayout, true);
-            var dataArray = getDataArray(coordSys, data, points);
 
             var isCoordSysPolar = coordSys.type === 'polar';
             var prevCoordSys = this._coordSys;
@@ -107,14 +108,6 @@ define(function(require) {
             var stackedOnPoints = getStackedOnPoints(
                 coordSys, data, points
             );
-
-            var stackedOnDataArray = data.stackedOn ? getDataArray(
-                    coordSys, data.stackedOn, stackedOnPoints
-                ) : zrUtil.map(stackedOnPoints, function (pt) {
-                    return {
-                        point: pt
-                    };
-                });
 
             // Initialization animation or coordinate system changed
             if (
@@ -148,11 +141,11 @@ define(function(require) {
 
                 // In the case data zoom triggerred refreshing frequently
                 // Data may not change if line has a category axis. So it should animate nothing
-                if (!isPointsSame(this._dataArray, dataArray)) {
+                // if (!isDataSame(this._data, data)) {
                     this._updateAnimation(
-                        data, dataArray, stackedOnDataArray, coordSys
+                        data, stackedOnPoints, coordSys
                     );
-                }
+                // }
                 // Add back
                 group.add(polyline);
                 group.add(polygon);
@@ -167,7 +160,7 @@ define(function(require) {
             ));
             if (polygon) {
                 polygon.style.opacity = 0.7;
-                polygon.setStyle(zrUtil.extend(
+                polygon.setStyle(zrUtil.defaults(
                     areaStyleModel.getAreaStyle(),
                     {
                         fill: data.getVisual('color'),
@@ -176,16 +169,11 @@ define(function(require) {
                 ));
             }
 
-            // Make sure symbols is on top of line
-            group.remove(dataSymbol.group);
-            group.add(dataSymbol.group);
-
             this._data = data;
 
-            // Save the coordinate system and data for transition animation when data changed
-            this._dataArray = dataArray;
-            this._stackedOnDataArray = stackedOnDataArray;
+            // Save the coordinate system for transition animation when data changed
             this._coordSys = coordSys;
+            this._stackedOnPoints = stackedOnPoints;
 
             !isCoordSysPolar && !seriesModel.get('showAllSymbol')
                 && this._updateSymbolDisplay(data, coordSys);
@@ -209,7 +197,8 @@ define(function(require) {
                 shape: {
                     points: points
                 },
-                silent: true
+                silent: true,
+                z2: 10
             });
 
             var clipPath = this._createClipShape(coordSys, hasAnimation);
@@ -272,13 +261,13 @@ define(function(require) {
         /**
          * @private
          */
-        _updateAnimation: function (data, dataArray, stackedOnDataArray, coordSys) {
+        _updateAnimation: function (data, stackedOnPoints, coordSys) {
             var polyline = this._polyline;
             var polygon = this._polygon;
 
             var diff = lineAnimationDiff(
-                this._dataArray, dataArray,
-                this._stackedOnDataArray, stackedOnDataArray,
+                this._data, data,
+                this._stackedOnPoints, stackedOnPoints,
                 this._coordSys, coordSys
             );
             polyline.shape.points = diff.current;
@@ -325,10 +314,9 @@ define(function(require) {
                 for (var i = 0; i < addedDataIndices.length; i++) {
                     var el = data.getItemGraphicEl(addedDataIndices[i]);
                     if (el) {
-                        var oldScale = el.scale;
-                        el.scale = [1, 1];
+                        el.scale = [0, 0];
                         el.animateTo({
-                            scale: oldScale
+                            scale: [1, 1]
                         }, 300, 300, 'cubicOut');
                     }
                 }
@@ -372,7 +360,7 @@ define(function(require) {
                         width: xExtent[1] - xExtent[0],
                         height: yExtent[1] - yExtent[0]
                     }
-                }, 1500, animation);
+                }, 1500);
             }
 
             return clipPath;

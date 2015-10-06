@@ -8,17 +8,20 @@ define(function (require) {
         var dataIndex = this.dataIndex;
         var name = data.getName(dataIndex);
 
-        updateSelected(this, seriesModel.toggleSelected(name));
+        updateSelected(this,
+            seriesModel.toggleSelected(name),
+            seriesModel.get('selectedOffset')
+        );
     }
 
-    function updateSelected(el, isSelected) {
+    function updateSelected(el, isSelected, selectedOffset) {
         var shape = el.shape;
         var midAngle = (shape.startAngle + shape.endAngle) / 2;
 
         var dx = Math.cos(midAngle);
         var dy = (shape.clockwise ? 1 : -1) * Math.sin(midAngle);
 
-        var offset = isSelected ? shape.r * 0.1 : 0;
+        var offset = isSelected ? selectedOffset : 0;
 
         // animateTo will stop revious animation like update transition
         el.animate()
@@ -28,13 +31,60 @@ define(function (require) {
             .start('bounceOut');
     }
 
+    function createSectorAndLabel(layout, text, hasAnimation) {
+        var shape = zrUtil.extend({}, layout);
+        delete shape.label;
+
+        var sector = new graphic.Sector({
+            shape: shape
+        });
+
+        var labelLayout = layout.label;
+        var labelLine = new graphic.Polyline({
+            shape: {
+                points: labelLayout.linePoints
+            }
+        });
+
+        var labelText = new graphic.Text({
+            style: {
+                x: labelLayout.x,
+                y: labelLayout.y,
+                text: text,
+                textAlign: labelLayout.textAlign,
+                textBaseline: labelLayout.textBaseline,
+                font: labelLayout.font
+            }
+        });
+
+        sector.__labelLine = labelLine;
+        sector.__labelText = labelText;
+
+        if (hasAnimation) {
+            sector.shape.endAngle = layout.startAngle;
+            sector.animateTo({
+                shape: {
+                    endAngle: layout.endAngle
+                }
+            }, 300, 'cubicOut');
+        }
+
+        return sector;
+    }
+
     var Pie = require('../../view/Chart').extend({
 
         type: 'pie',
 
+        init: function () {
+            var sectorGroup = new graphic.Group();
+            this._sectorGroup = sectorGroup;
+        },
+
         render: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();
             var oldData = this._data;
+            var sectorGroup = this._sectorGroup;
             var group = this.group;
 
             var hasAnimation = ecModel.get('animation');
@@ -46,38 +96,67 @@ define(function (require) {
             data.diff(oldData)
                 .add(function (idx) {
                     var layout = data.getItemLayout(idx);
-                    var sector = new graphic.Sector({
-                        shape: zrUtil.extend({}, layout)
-                    });
 
-                    if (hasAnimation && !isFirstRender) {
-                        sector.shape.endAngle = layout.startAngle;
-                        sector.animateTo({
-                            shape: {
-                                endAngle: layout.endAngle
-                            }
-                        }, 300, 'cubicOut');
-                    }
+                    var sector = createSectorAndLabel(
+                        layout, data.getName(idx),
+                        hasAnimation && !isFirstRender
+                    );
 
                     sector.on('click', onSectorClick);
 
                     data.setItemGraphicEl(idx, sector);
-                    group.add(sector);
+
+                    sectorGroup.add(sector);
+
+                    group.add(sector.__labelLine);
+                    group.add(sector.__labelText);
 
                     firstSector = firstSector || sector;
                 })
                 .update(function (newIdx, oldIdx) {
                     var sector = oldData.getItemGraphicEl(oldIdx);
+                    var layout = data.getItemLayout(newIdx);
+                    var labelLayout = layout.label;
+
                     sector.animateTo({
-                        shape: data.getItemLayout(newIdx)
+                        shape: layout
                     }, 300, 'cubicOut');
 
-                    group.add(sector);
+                    var labelLine = sector.__labelLine;
+                    var labelText = sector.__labelText;
+
+
+                    labelLine.animateTo({
+                        shape: {
+                            points: labelLayout.linePoints
+                        }
+                    }, 300, 'cubicOut');
+                    labelText.animateTo({
+                        style: {
+                            x: labelLayout.x,
+                            y: labelLayout.y
+                        }
+                    }, 300, 'cubicOut');
+
+                    labelText.setStyle({
+                        text: data.getName(newIdx),
+                        textAlign: labelLayout.textAlign,
+                        textBaseline: labelLayout.textBaseline,
+                        font: labelLayout.font
+                    });
+
+                    sectorGroup.add(sector);
                     data.setItemGraphicEl(newIdx, sector);
+
+                    group.add(labelLine);
+                    group.add(labelText);
                 })
                 .remove(function (idx) {
                     var sector = oldData.getItemGraphicEl(idx);
-                    group.remove(sector);
+                    sectorGroup.remove(sector);
+
+                    group.remove(sector.__labelLine);
+                    group.remove(sector.__labelText);
                 })
                 .execute();
 
@@ -85,11 +164,15 @@ define(function (require) {
                 var shape = firstSector.shape;
                 var r = Math.max(api.getWidth(), api.getHeight()) / 2;
 
-                var removeClipPath = zrUtil.bind(group.removeClipPath, group);
-                group.setClipPath(this._createClipPath(
+                var removeClipPath = zrUtil.bind(sectorGroup.removeClipPath, sectorGroup);
+                sectorGroup.setClipPath(this._createClipPath(
                     shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath
                 ));
             }
+
+            // Make sure sectors is on top of labels
+            group.remove(sectorGroup);
+            group.add(sectorGroup);
 
             this._updateAll(data, seriesModel);
 
@@ -97,6 +180,7 @@ define(function (require) {
         },
 
         _updateAll: function (data, seriesModel) {
+            var selectedOffset = seriesModel.get('selectedOffset');
             data.eachItemGraphicEl(function (sector, idx) {
                 var itemModel = data.getItemModel(idx);
 
@@ -113,7 +197,7 @@ define(function (require) {
                     itemModel.getModel('itemStyle.emphasis').getItemStyle()
                 );
 
-                updateSelected(sector, itemModel.get('selected'));
+                updateSelected(sector, itemModel.get('selected'), selectedOffset);
             });
         },
 

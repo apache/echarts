@@ -14,6 +14,8 @@ define(function (require) {
     var dataCtors = {
         float: Float32Array,
         int: Int32Array,
+        // Ordinal data type can be string or int
+        ordinal: Array,
         'number': Array
     };
 
@@ -28,9 +30,9 @@ define(function (require) {
      * @alias module:echarts/data/List
      *
      * @param {Array.<string>} dimensions
-     * @param {module:echarts/model/Model} seriesModel
+     * @param {module:echarts/model/Model} hostModel
      */
-    var List = function (dimensions, seriesModel) {
+    var List = function (dimensions, hostModel) {
 
         dimensions = dimensions || ['x', 'y'];
 
@@ -52,7 +54,7 @@ define(function (require) {
             else {
                 dimensionInfo = dimensions[i];
                 dimensionName = dimensionInfo.name;
-                dimensionInfo.type = dimensionInfo.type || 'float'
+                dimensionInfo.type = dimensionInfo.type || 'number'
             }
             dimensionNames.push(dimensionName);
             dimensionInfos[dimensionName] = dimensionInfo;
@@ -72,7 +74,7 @@ define(function (require) {
         /**
          * @type {module:echarts/model/Model}
          */
-        this.seriesModel = seriesModel;
+        this.hostModel = hostModel;
 
         /**
          * Indices stores the indices of data subset after filtered.
@@ -145,6 +147,13 @@ define(function (require) {
     listProto.type = 'list';
 
     /**
+     * Get type and stackable info of particular dimension
+     */
+    listProto.getDimensionInfo = function (dim) {
+        return this._dimensionInfos[dim];
+    };
+
+    /**
      * Initialize from data
      * @param {Array.<Object|number|Array>} data
      * @param {Array.<string>} [nameList]
@@ -180,7 +189,7 @@ define(function (require) {
             // Each data item contains value and option
             if (data[idx] != null && data[idx].hasOwnProperty('value')) {
                 value = data[idx].value;
-                var model = new Model(data[idx], this.seriesModel);
+                var model = new Model(data[idx], this.hostModel);
                 var modelIdx = optionModels.length;
                 optionModelIndices[idx] = modelIdx;
                 optionModels.push(model);
@@ -263,6 +272,7 @@ define(function (require) {
         var dataIndex = this.indices[idx];
 
         var value = storage[dim] && storage[dim][dataIndex];
+        // FIXME ordinal data type is not stackable
         if (stack && this.stackedOn) {
             var stackedValue = this.stackedOn.get(dim, idx, stack);
             // Considering positive stack, negative stack and empty data
@@ -283,8 +293,13 @@ define(function (require) {
      */
     listProto.hasValue = function (idx) {
         var dimensions = this.dimensions;
+        var dimensionInfos = this._dimensionInfos;
         for (var i = 0, len = dimensions.length; i < len; i++) {
-            if (isNaN(this.get(dimensions[i], idx))) {
+            if (
+                // Ordinal type can be string or number
+                dimensionInfos[dimensions[i]].type !== 'ordinal'
+                && isNaN(this.get(dimensions[i], idx))
+            ) {
                 return false;
             }
         }
@@ -360,16 +375,44 @@ define(function (require) {
     listProto.indexOf = function (dim, value) {
         var storage = this._storage;
         var dimData = storage[dim];
+        var indices = this.indices;
 
         if (dimData) {
-            for (var i = 0, len = dimData.length; i < len; i++) {
-                if (dimData[i] === value) {
+            for (var i = 0, len = indices.length; i < len; i++) {
+                var rawIndex = indices[i];
+                if (dimData[rawIndex] === value) {
                     return i;
                 }
             }
         }
         return -1;
     };
+
+    /**
+     * Retreive the index of nearest value
+     * @param {number} idx
+     * @param {number} value
+     * @param {boolean} stack If given value is after stacked
+     * @return {number}
+     */
+    listProto.indexOfNearest = function (dim, value, stack) {
+        var storage = this._storage;
+        var dimData = storage[dim];
+
+        if (dimData) {
+            var minDist = Number.MAX_VALUE;
+            var nearestIdx = -1;
+            for (var i = 0, len = this.count(); i < len; i++) {
+                var dist = Math.abs(this.get(dim, i, stack) - value);
+                if (dist <= minDist) {
+                    minDist = dist;
+                    nearestIdx = i;
+                }
+            }
+            return nearestIdx;
+        }
+        return -1;
+    }
 
     /**
      * Get raw data index
@@ -558,7 +601,7 @@ define(function (require) {
             // Use a temporary model proxy if value on idx is not an option.
             // FIXME Create a new one may cause memory leak
             model = temporaryModel;
-            model.parentModel = this.seriesModel;
+            model.parentModel = this.hostModel;
         }
         return model;
     };
@@ -670,15 +713,23 @@ define(function (require) {
         itemVisual[key] = value;
     };
 
+    var setItemDataAndSeriesIndex = function (child) {
+        child.seriesIndex = this.seriesIndex;
+        child.dataIndex = this.dataIndex;
+    }
     /**
      * @param {number} idx
      * @param {module:zrender/Element} el
      */
     listProto.setItemGraphicEl = function (idx, el) {
+        var hostModel = this.hostModel;
         // Add data index and series index for indexing the data by element
         // Useful in tooltip
         el.dataIndex = idx;
-        el.seriesIndex = this.seriesModel.seriesIndex;
+        el.seriesIndex = hostModel && hostModel.seriesIndex;;
+        if (el.type === 'group') {
+            el.traverse(setItemDataAndSeriesIndex, this)
+        }
 
         this._graphicEls[idx] = el;
     };
@@ -711,7 +762,7 @@ define(function (require) {
         var dimensionInfoList = zrUtil.map(this.dimensions, function (dim) {
             return this._dimensionInfos[dim];
         }, this);
-        var list = new List(dimensionInfoList, this.seriesModel);
+        var list = new List(dimensionInfoList, this.hostModel);
         list.stackedOn = this.stackedOn;
 
         // FIXME

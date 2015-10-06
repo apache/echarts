@@ -101,10 +101,10 @@ define(function(require) {
         }
         switch (positionInfo.y || positionInfo.y2) {
             case 'middle':
-                y -= containerHeight / 2 - height / 2;
+                y = containerHeight / 2 - height / 2;
                 break;
             case 'bottom':
-                y -= containerHeight - height;
+                y = containerHeight - height;
                 break;
         }
 

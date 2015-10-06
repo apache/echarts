@@ -144,10 +144,12 @@ define(function(require) {
             var columnLayoutInfo = barWidthAndOffset[cartesian.name][stackId];
             var columnOffset = columnLayoutInfo.offset;
             var columnWidth = columnLayoutInfo.width;
-            var valueAxis = cartesian.getOtherAxis(columnLayoutInfo.axis);
+            var baseAxis = columnLayoutInfo.axis;
+            var valueAxis = cartesian.getOtherAxis(baseAxis);
 
             if (data.type === 'list') {
-                var valueAxisStart = valueAxis.getExtent()[0];
+                var valueAxisStart = baseAxis.onZero
+                    ? valueAxis.dataToCoord(0) : valueAxis.getExtent()[0];
                 var coords = cartesian.dataToPoints(data, true);
                 lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 
@@ -156,25 +158,31 @@ define(function(require) {
                     if (isNaN(value)) {
                         return;
                     }
-
+                    if (!lastStackCoords[stackId][idx]) {
+                        lastStackCoords[stackId][idx] = {
+                            // Positive stack
+                            p: valueAxisStart,
+                            // Negative stack
+                            n: valueAxisStart
+                        }
+                    }
+                    var sign = value >= 0 ? 'p' : 'n';
                     var coord = coords[idx];
-                    var lastCoord = lastStackCoords[stackId][idx] || valueAxisStart;
+                    var lastCoord = lastStackCoords[stackId][idx][sign];
                     var x, y, width, height;
                     if (valueAxis.isHorizontal()) {
-                        x = Math.min(lastCoord, coord[0]);
+                        x = lastCoord;
                         y = coord[1] + columnOffset;
-                        width = Math.abs(coord[0] - lastCoord);
+                        width = coord[0] - lastCoord;
                         height = columnWidth;
-                        lastCoord += coord[0] - lastCoord;
                     }
                     else {
                         x = coord[0] + columnOffset;
-                        y = Math.min(lastCoord, coord[1]);
+                        y = lastCoord;
                         width = columnWidth;
-                        height = Math.abs(coord[1] - lastCoord);
-                        lastCoord += coord[1] - lastCoord;
+                        height = coord[1] - lastCoord;
                     }
-                    lastStackCoords[stackId][idx] = lastCoord;
+                    lastStackCoords[stackId][idx][sign] += height;
 
                     data.setItemLayout(idx, {
                         x: x,

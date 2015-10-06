@@ -19,7 +19,8 @@
                 'echarts/chart/line',
                 'echarts/component/legend',
                 'echarts/component/grid',
-                'echarts/component/tooltip'
+                'echarts/component/tooltip',
+                'echarts/component/markPoint'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -31,30 +32,11 @@
                 var data2 = [];
                 var data3 = [];
 
-                for (var i = 0; i < 100; i++) {
+                for (var i = 0; i < 10; i++) {
                     xAxisData.push('类目' + i);
-                    data1.push(+Math.random().toFixed(3));
-                    data2.push(+Math.random().toFixed(3));
-                    data3.push(+Math.random().toFixed(3));
+                    data1.push(+Math.random().toFixed(2));
+                    data2.push(+Math.random().toFixed(2));
                 }
-
-                var itemStyle = {
-                    normal: {
-                        borderColor: 'white',
-                        borderWidth: 3,
-                        // shadowBlur: 10,
-                        // shadowOffsetX: 0,
-                        // shadowOffsetY: 5,
-                        // shadowColor: 'rgba(0, 0, 0, 0.4)',
-                        lineStyle: {
-                            width: 3,
-                            // shadowBlur: 10,
-                            // shadowOffsetX: 0,
-                            // shadowOffsetY: 5,
-                            // shadowColor: 'rgba(0, 0, 0, 0.4)'
-                        }
-                    }
-                };
 
                 chart.setOption({
                     legend: {
@@ -72,41 +54,46 @@
                         boundaryGap: false,
                         // inverse: true,
                         splitArea: {
-                            show: false
-                        },
-                        splitLine: {
-                            show: false
+                            show: true
                         }
                     },
                     yAxis: {
-                        splitArea: {
-                            show: true
+                        splitLine: {
+                            // show: false
                         }
                     },
                     series: [{
                         name: 'line',
                         type: 'line',
                         stack: 'all',
-                        symbol: 'circle',
-                        symbolSize: 10,
+                        symbolSize: 6,
                         data: data1,
-                        itemStyle: itemStyle
+
+                        markPoint: {
+                            data: [{
+                                name: '最大值',
+                                type: 'max',
+                                value: 1
+                            }, {
+                                xAxis: '类目3',
+                                yAxis: 0.5,
+                                value: 2
+                            }]
+                        }
                     }, {
                         name: 'line2',
                         type: 'line',
                         stack: 'all',
-                        symbol: 'circle',
-                        symbolSize: 10,
+                        symbolSize: 6,
                         data: data2,
-                        itemStyle: itemStyle
-                    }, {
-                        name: 'line3',
-                        type: 'line',
-                        stack: 'all',
-                        symbol: 'circle',
-                        symbolSize: 10,
-                        data: data3,
-                        itemStyle: itemStyle
+
+                        markPoint: {
+                            data: [{
+                                name: '最大值',
+                                type: 'max',
+                                value: 1
+                            }]
+                        }
                     }]
                 });
             })

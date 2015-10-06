@@ -6,39 +6,60 @@ define(function (require) {
         return a.name === b.name;
     }
 
-    function getStackedOnPoint(coordSys, stackedItem, item) {
-        if ('x' in stackedItem) {
-            return coordSys.dataToPoint([stackedItem.x, stackedItem.y]);
-        }
-        else {
-            var baseAxis = coordSys.getBaseAxis();
-            var valueAxis = coordSys.getOtherAxis(baseAxis);
-            var valueStart = valueAxis.getExtent()[0];
-            var dim = valueAxis.dim;
-            dim === 'radius' && (dim = 'x');
-            dim === 'angle' && (dim = 'y');
-            var baseCoordOffset = dim === 'x' ? 1 : 0;
-            var pt = [];
-            pt[baseCoordOffset] = baseAxis.dataToCoord(item[dim === 'y' ? 'x' : 'y']);
-            pt[1 - baseCoordOffset] = valueStart;
-            return pt;
-        }
+    function sign(val) {
+        return val >= 0 ? 1 : -1;
     }
 
-    return function (oldData, newData, oldStackedData, newStackedData, oldCoordSys, newCoordSys) {
+    function getStackedOnPoint(coordSys, data, idx) {
+        var baseAxis = coordSys.getBaseAxis();
+        var valueAxis = coordSys.getOtherAxis(baseAxis);
+        var valueAxisStart = baseAxis.onZero
+            ? valueAxis.dataToCoord(0) : valueAxis.getExtent()[0];
 
-        var oldPoints = [];
-        var newPoints = [];
+        var valueDim = valueAxis.dim;
+        var baseCoordOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
+
+        var stackedOnSameSign;
+        var stackedOn = data.stackedOn;
+        var val = data.get(valueDim, idx);
+        if (val > 0) {
+            // Find first stacked value with same sign
+            while (stackedOn &&
+                sign(stackedOn.get(valueDim, idx)) === sign(val)
+            ) {
+                stackedOnSameSign = stackedOn;
+                break;
+            }
+        }
+        var pt = [];
+        pt[baseCoordOffset] = data.getItemLayout(idx)[baseCoordOffset];
+        pt[1 - baseCoordOffset] = stackedOnSameSign
+            ? stackedOnSameSign.getItemLayout(idx)[1 - baseCoordOffset]
+            : valueAxisStart;
+        return pt;
+    }
+
+    return function (
+        oldData, newData,
+        oldStackedOnPoints, newStackedOnPoints,
+        oldCoordSys, newCoordSys
+    ) {
+
+        var newNameList = newData.map(newData.getName);
+        var oldNameList = oldData.map(oldData.getName);
+
+        var currPoints = [];
+        var nextPoints = [];
         // Points for stacking base line
-        var oldStackedPoints = [];
-        var newStackedPoints = [];
+        var currStackedPoints = [];
+        var nextStackedPoints = [];
 
         var status = [];
         var sortedIndices = [];
         var rawIndices = [];
 
         // FIXME One data ?
-        var diff = arrayDiff(oldData, newData, nameCompare);
+        var diff = arrayDiff(oldNameList, newNameList);
 
         for (var i = 0; i < diff.length; i++) {
             var diffItem = diff[i];
@@ -48,46 +69,49 @@ define(function (require) {
             // Which is in case remvoing or add more than one data in the tail or head
             switch (diffItem.cmd) {
                 case '=':
-                    oldPoints.push(oldData[diffItem.idx].point);
-                    newPoints.push(newData[diffItem.idx1].point);
+                    currPoints.push(oldData.getItemLayout(diffItem.idx));
+                    nextPoints.push(newData.getItemLayout(diffItem.idx1));
 
-                    oldStackedPoints.push(oldStackedData[diffItem.idx].point);
-                    newStackedPoints.push(newStackedData[diffItem.idx1].point);
+                    currStackedPoints.push(oldStackedOnPoints[diffItem.idx]);
+                    nextStackedPoints.push(newStackedOnPoints[diffItem.idx1]);
 
-                    rawIndices.push(newData[diffItem.idx1].rawIdx);
+                    rawIndices.push(newData.getRawIndex(diffItem.idx));
                     break;
                 case '+':
-                    var newDataItem = newData[diffItem.idx];
-                    var newStackedDataItem = newStackedData[diffItem.idx];
-
-                    oldPoints.push(
-                        oldCoordSys.dataToPoint([newDataItem.x, newDataItem.y])
+                    var idx = diffItem.idx;
+                    currPoints.push(
+                        oldCoordSys.dataToPoint([
+                            newData.get('x', idx), newData.get('y', idx)
+                        ])
                     );
-                    newPoints.push(newDataItem.point);
+                    nextPoints.push(newData.getItemLayout(idx));
 
-                    oldStackedPoints.push(
-                        getStackedOnPoint(oldCoordSys, newStackedDataItem, newDataItem)
+                    currStackedPoints.push(
+                        getStackedOnPoint(oldCoordSys, newData, idx)
                     );
-                    newStackedPoints.push(newStackedDataItem.point);
+                    nextStackedPoints.push(newStackedOnPoints[idx]);
 
-                    rawIndices.push(newDataItem.rawIdx);
+                    rawIndices.push(newData.getRawIndex(idx));
                     break;
                 case '-':
-                    var oldDataItem = oldData[diffItem.idx];
-                    var oldStackedDataItem = oldStackedData[diffItem.idx];
-
+                    var idx = diffItem.idx;
+                    var rawIndex = oldData.getRawIndex(idx);
                     // Data is replaced. In the case of dynamic data queue
                     // FIXME FIXME FIXME
-                    if (oldDataItem.rawIdx !== diffItem.idx) {
-                        oldPoints.push(oldDataItem.point);
-                        newPoints.push(newCoordSys.dataToPoint([oldDataItem.x, oldDataItem.y]));
+                    if (rawIndex !== idx) {
+                        currPoints.push(oldData.getItemLayout(idx));
+                        nextPoints.push(newCoordSys.dataToPoint([
+                            oldData.get('x', idx), oldData.get('y', idx)
+                        ]));
 
-                        oldStackedPoints.push(oldStackedDataItem.point);
-                        newStackedPoints.push(
-                            getStackedOnPoint(newCoordSys, oldStackedDataItem, oldDataItem)
+                        currStackedPoints.push(oldStackedOnPoints[idx]);
+                        nextStackedPoints.push(
+                            getStackedOnPoint(
+                                newCoordSys, newData, idx
+                            )
                         );
 
-                        rawIndices.push(oldDataItem.rawIdx);
+                        rawIndices.push(rawIndex);
                     }
                     else {
                         pointAdded = false;
@@ -107,30 +131,30 @@ define(function (require) {
             return rawIndices[a] - rawIndices[b];
         });
 
-        var sortedOldPoints = [];
-        var sortedNewPoints = [];
+        var sortedCurrPoints = [];
+        var sortedNextPoints = [];
 
-        var sortedOldStackedPoints = [];
-        var sortedNewStackedPoints = [];
+        var sortedCurrStackedPoints = [];
+        var sortedNextStackedPoints = [];
 
         var sortedStatus = [];
         for (var i = 0; i < sortedIndices.length; i++) {
             var idx = sortedIndices[i];
-            sortedOldPoints[i] = oldPoints[idx];
-            sortedNewPoints[i] = newPoints[idx];
+            sortedCurrPoints[i] = currPoints[idx];
+            sortedNextPoints[i] = nextPoints[idx];
 
-            sortedOldStackedPoints[i] = oldStackedPoints[idx];
-            sortedNewStackedPoints[i] = newStackedPoints[idx];
+            sortedCurrStackedPoints[i] = currStackedPoints[idx];
+            sortedNextStackedPoints[i] = nextStackedPoints[idx];
 
             sortedStatus[i] = status[idx];
         }
 
         return {
-            current: sortedOldPoints,
-            next: sortedNewPoints,
+            current: sortedCurrPoints,
+            next: sortedNextPoints,
 
-            stackedOnCurrent: sortedOldStackedPoints,
-            stackedOnNext: sortedNewStackedPoints,
+            stackedOnCurrent: sortedCurrStackedPoints,
+            stackedOnNext: sortedNextStackedPoints,
 
             status: sortedStatus
         };

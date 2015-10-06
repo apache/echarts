@@ -89,6 +89,7 @@ define(function(require) {
             minAngle: 0,
             // 选中是扇区偏移量
             selectedOffset: 10,
+            avoidLabelOverlap: true,
             // 选择模式，默认关闭，可选single，multiple
             // selectedMode: false,
             // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
@@ -107,7 +108,10 @@ define(function(require) {
                     },
                     labelLine: {
                         show: true,
+                        // 引导线两段中的第一段长度
                         length: 20,
+                        // 引导线两段中的第二段长度
+                        length2: 5,
                         lineStyle: {
                             // color: 各异,
                             width: 1,

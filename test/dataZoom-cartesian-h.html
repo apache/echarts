@@ -21,7 +21,8 @@
                 'echarts/component/grid',
                 'echarts/component/axis',
                 'echarts/component/dataZoom',
-                'echarts/component/tooltip'
+                'echarts/component/tooltip',
+                'echarts/component/markPoint'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -35,7 +36,7 @@
 
                 for (var i = 0; i < 200; i++) {
                     xAxisData.push('类目' + i);
-                    data1.push(Math.random() * 4);
+                    data1.push((Math.random() * 4).toFixed(2));
                     data2.push(Math.random());
                     data3.push(Math.random());
                 }
@@ -64,6 +65,11 @@
                                 normal: {
                                     areaStyle: {}
                                 }
+                            },
+                            markPoint: {
+                                data: [{
+                                    type: 'max'
+                                }]
                             }
                         },
                         {

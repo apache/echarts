@@ -21,16 +21,22 @@
                 'echarts/component/grid'
             ], function (echarts) {
 
+                function randomData() {
+                    return (Math.random() + 3).toFixed(3);
+                }
+
                 var chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
                 });
 
                 var xAxisData = [];
                 var data1 = [];
+                var data2 = [];
                 var count = 0;
                 for (; count < 500; count++) {
                     xAxisData.push('类目' + count);
-                    data1.push(+Math.random().toFixed(3));
+                    data1.push(randomData());
+                    data2.push(-randomData());
                 }
 
                 var itemStyle = {
@@ -56,7 +62,7 @@
 
                 chart.setOption({
                     legend: {
-                        data: ['line']
+                        data: ['line', 'line2']
                     },
                     tooltip: {
                         trigger: 'axis',
@@ -73,6 +79,7 @@
                         boundaryGap: false
                     },
                     yAxis: {
+                        scale: true,
                         splitLine: {
                             // show: false
                         }
@@ -85,6 +92,20 @@
                         symbolSize: 10,
                         data: data1,
                         itemStyle: itemStyle
+                    }, {
+                        name: 'line2',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'none',
+                        symbolSize: 10,
+                        data: data2,
+                        itemStyle: {
+                            normal: {
+                                areaStyle: {
+                                    color: 'black'
+                                }
+                            }
+                        }
                     }]
                 });
 
@@ -93,7 +114,11 @@
                         xAxisData.shift();
                         xAxisData.push('类目' + count);
                         data1.shift();
-                        data1.push(+Math.random().toFixed(3));
+                        data1.push(randomData());
+
+                        data2.shift();
+                        data2.push(-randomData());
+
                         count++;
                     }
                     chart.setOption({
@@ -103,6 +128,9 @@
                         series: [{
                             name: 'line',
                             data: data1
+                        }, {
+                            name: 'line2',
+                            data: data2
                         }]
                     });
                 }, 500);

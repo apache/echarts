@@ -53,6 +53,8 @@ define(function(require) {
 
         /**
          * If contain coord
+         * @param {Array.<number>} point
+         * @return {boolean}
          */
         containPoint: function (point) {
             var coord = this.pointToCoord(point);
@@ -61,6 +63,17 @@ define(function(require) {
         },
 
         /**
+         * If contain data
+         * @param {Array.<number>} data
+         * @return {boolean}
+         */
+        containData: function (data) {
+            return this._radiusAxis.containData(data[0])
+                && this._angleAxis.containData(data[1]);
+        },
+
+        /**
+         * @param {string} axisType
          * @return {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
          */
         getAxis: function (axisType) {
@@ -69,6 +82,8 @@ define(function(require) {
 
         /**
          * Get axes by type of scale
+         * @param {string} scaleType
+         * @return {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
          */
         getAxesByScale: function (scaleType) {
             var axes = [];

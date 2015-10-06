@@ -12,6 +12,8 @@ define(function(require, factory) {
     var IntervalScale = require('../../scale/Interval');
     var numberUtil = require('../../util/number');
 
+    var CATEGORY_AXIS_TYPE = 'category';
+
     // 依赖 GridModel, AxisModel 做预处理
     require('./GridModel');
 
@@ -23,7 +25,7 @@ define(function(require, factory) {
     function createScaleByModel(axisModel) {
         var axisType = axisModel.get('type');
         if (axisType) {
-            return axisType === 'category'
+            return axisType === CATEGORY_AXIS_TYPE
                 // Give [Infinity, -Infinity] extent to make the unionExtent is right
                 ? new OrdinalScale(axisModel.get('data'), [Infinity, -Infinity])
                 : new IntervalScale();
@@ -205,6 +207,14 @@ define(function(require, factory) {
                     this._coordsMap[key] = cartesian;
                     this._coordsList.push(cartesian);
 
+                    // On zero can not be used when other axis is a category axis
+                    if (xAxis.type === CATEGORY_AXIS_TYPE) {
+                        yAxis.onZero = false;
+                    }
+                    if (yAxis.type === CATEGORY_AXIS_TYPE) {
+                        xAxis.onZero = false;
+                    }
+
                     cartesian.addAxis(xAxis);
                     cartesian.addAxis(yAxis);
                 }, this);
@@ -230,8 +240,11 @@ define(function(require, factory) {
                         axisPosition
                     );
 
-                    axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
+                    var isCategory = axis.type === CATEGORY_AXIS_TYPE;
+                    axis.onBand = isCategory && axisModel.get('boundaryGap');
                     axis.inverse = axisModel.get('inverse');
+
+                    axis.onZero = axisModel.get('axisLine.onZero');
 
                     // Inject axis into axisModel
                     axisModel.axis = axis;
