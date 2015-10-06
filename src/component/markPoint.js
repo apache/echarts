@@ -67,7 +67,7 @@ define(function (require) {
                 });
             });
 
-            // TODO Text and dataIndex are wrong
+            // TODO Text are wrong
             dataSymbol.updateData(mpData, true);
 
             this.group.add(dataSymbol.group);
@@ -113,7 +113,7 @@ define(function (require) {
         average: zrUtil.curry(markPointTypeCalculatorWithExtent, 0.5)
     };
 
-    var dataTransform = function (data, baseAxisDim, valueAxisDim, item) {
+    var dataTransform = function (data, baseAxis, valueAxis, item) {
         // If not specify the position with pixel directly
         if (isNaN(item.x) || isNaN(item.y) && !zrUtil.isArray(item.value)) {
             // Clone the option
@@ -123,14 +123,15 @@ define(function (require) {
 
             // Special types, Compatible with 2.0
             if (item.type && markPointTypeCalculator[item.type]
-                && baseAxisDim && valueAxisDim) {
+                && baseAxis && valueAxis) {
                 var value = markPointTypeCalculator[item.type](
-                    data, baseAxisDim, valueAxisDim
+                    data, baseAxis.dim, valueAxis.dim
                 );
                 value.push(+item.value);
                 item.value = value;
             }
             else if (!isNaN(item.value)) {
+                // FIXME Only has one of xAxis and yAxis.
                 item.value = [
                     item.xAxis || item.radiusAxis,
                     item.yAxis || item.angleAxis,
@@ -140,6 +141,13 @@ define(function (require) {
         }
         return item;
     };
+
+    // Filter data which is out of coordinateSystem range
+    var dataFilter = function (coordSys, dimensionInverse, item) {
+        var value = [item.value[0], item.value[1]];
+        dimensionInverse && value.inverse();
+        return coordSys.containData(value);
+    }
 
     /**
      * @inner
@@ -152,16 +160,23 @@ define(function (require) {
         var valueAxis = coordSys && coordSys.getOtherAxis(baseAxis);
         var dimensions = seriesData.dimensions.slice();
         // Polar and cartesian with category axis may have dimensions inversed
-        if (dimensions[0] === 'y' || dimensions[0] === 'angle') {
+        var dimensionInverse = dimensions[0] === 'y' || dimensions[0] === 'angle';
+        if (dimensionInverse) {
             dimensions.inverse();
         }
 
         var mpData = new List(zrUtil.map(
-            seriesData.dimensions, seriesData.getDimensionInfo, seriesData
+            dimensions, seriesData.getDimensionInfo, seriesData
         ), mpModel);
-        mpData.initData(zrUtil.map(mpModel.get('data'), zrUtil.curry(
-            dataTransform, seriesData, baseAxis && baseAxis.dim, valueAxis && valueAxis.dim
-        )));
+
+        mpData.initData(
+            zrUtil.filter(
+                zrUtil.map(mpModel.get('data'), zrUtil.curry(
+                    dataTransform, seriesData, baseAxis, valueAxis
+                )),
+                zrUtil.curry(dataFilter, coordSys, dimensionInverse)
+            )
+        );
 
         return mpData;
     };

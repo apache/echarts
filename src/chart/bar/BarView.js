@@ -52,20 +52,12 @@ define(function (require) {
                     // Animation
                     if (enableAnimation) {
                         var rectShape = rect.shape;
-                        if (isHorizontal) {
-                            rectShape.height = 0;
-                            if (!isInverse) {
-                                rectShape.y = layout.y + layout.height;
-                            }
-                        }
-                        else {
-                            rectShape.width = 0;
-                            if (isInverse) {
-                                rectShape.x = layout.x + layout.width;
-                            }
-                        }
+                        var animateProperty = isHorizontal ? 'height' : 'width';
+                        var animateTarget = {};
+                        rectShape[animateProperty] = 0;
+                        animateTarget[animateProperty] = layout[animateProperty];
                         rect.animateTo({
-                            shape: layout
+                            shape: animateTarget
                         }, 1000, 300 * dataIndex / data.count(), 'cubicOut');
                     }
                 })
@@ -100,13 +92,11 @@ define(function (require) {
                 })
                 .execute();
 
-            var labelPositionOutside = isHorizontal
-                ? (isInverse ? 'bottom' : 'top')
-                : (isInverse ? 'left' : 'right');
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
                 var labelModel = itemModel.getModel('itemStyle.normal.label');
                 var color = data.getItemVisual(idx, 'color');
+                var layout = data.getItemLayout(idx);
                 rect.setStyle(zrUtil.defaults(
                     {
                         fill: color
@@ -117,6 +107,9 @@ define(function (require) {
                     var labelPosition = labelModel.get('position') || 'inside';
                     // FIXME
                     var labelColor = labelPosition === 'inside' ? 'white' : color;
+                    var labelPositionOutside = isHorizontal
+                        ? (layout.height > 0 ? 'bottom' : 'top')
+                        : (layout.width > 0 ? 'left' : 'right');
 
                     rect.setStyle({
                         text: data.getRawValue(idx),

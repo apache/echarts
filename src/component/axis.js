@@ -35,22 +35,23 @@ define(function(require) {
         var otherAxis = grid.getAxis(axis.dim === 'x' ? 'y' : 'x');
 
         var position = 0;
-        if (axisModel.get('axisLine.onZero')) {
+        if (axis.onZero) {
             position = otherAxis.dataToCoord(0);
         }
-
-        switch (axis.position) {
-            case 'left':
-                position = rect.x;
-                break;
-            case 'right':
-                position = rect.x + rect.width;
-                break;
-            case 'top':
-                position = rect.y;
-                break;
-            case 'bottom':
-                position = rect.y + rect.height;
+        else {
+            switch (axis.position) {
+                case 'left':
+                    position = rect.x;
+                    break;
+                case 'right':
+                    position = rect.x + rect.width;
+                    break;
+                case 'top':
+                    position = rect.y;
+                    break;
+                case 'bottom':
+                    position = rect.y + rect.height;
+            }
         }
 
         return position;

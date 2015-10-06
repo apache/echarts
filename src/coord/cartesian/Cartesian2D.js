@@ -39,6 +39,16 @@ define(function(require) {
         },
 
         /**
+         * If contain data
+         * @param {Array.<number>} data
+         * @return {boolean}
+         */
+        containData: function (data) {
+            return this.getAxis('x').containData(data[0])
+                && this.getAxis('y').containData(data[1]);
+        },
+
+        /**
          * Convert series data to a list of points
          * @param {module:echarts/data/List} data
          * @param {boolean} stack

@@ -51,14 +51,24 @@ define(function (require) {
         constructor: Axis,
 
         /**
-         * If axis extent contain give coord
-         * @param {number}
+         * If axis extent contain given coord
+         * @param {number} coord
+         * @return {boolean}
          */
         contain: function (coord) {
             var extent = this._extent;
             var min = Math.min(extent[0], extent[1]);
             var max = Math.max(extent[0], extent[1]);
             return coord >= min && coord <= max;
+        },
+
+        /**
+         * If axis extent contain given data
+         * @param {number} data
+         * @return {boolean}
+         */
+        containData: function (data) {
+            return this.contain(this.dataToCoord(data))
         },
 
         /**

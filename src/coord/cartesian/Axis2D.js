@@ -40,6 +40,12 @@ define(function (require) {
         constructor: Axis2D,
 
         /**
+         * If axis is on the zero position of the other axis
+         * @type {boolean}
+         */
+        onZero: false,
+
+        /**
          * Axis model
          * @param {module:echarts/coord/cartesian/AxisModel}
          */
