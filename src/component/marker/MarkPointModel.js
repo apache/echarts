@@ -1,10 +1,5 @@
 define(function (require) {
-
-    var zrUtil = require('zrender/core/util');
-
-    var Model = require('../../model/Model');
-
-    // Default enable markpoint
+    // Default enable markPoint
     var globalDefault = require('../../model/globalDefault');
     globalDefault.markPoint = {};
 
@@ -22,7 +17,6 @@ define(function (require) {
         },
 
         mergeOption: function (newOpt, createdBySelf) {
-            // If not created by self for each series
             if (!createdBySelf) {
                 var ecModel = this.ecModel;
                 ecModel.eachSeries(function (seriesModel) {
@@ -53,7 +47,7 @@ define(function (require) {
             z: 5,
             clickable: true,
             symbol: 'pin',         // 标注类型
-            symbolSize: [30, 50],        // 标注大小
+            symbolSize: [30, 50],  // 标注大小
             // symbolRotate: null, // 标注旋转控制
             large: false,
             effect: {

@@ -42,7 +42,8 @@ define(function(require) {
                     x2: p2[0],
                     y2: p2[1]
                 },
-                style: radiusAxisModel.getModel('axisLine.lineStyle').getLineStyle()
+                style: radiusAxisModel.getModel('axisLine.lineStyle').getLineStyle(),
+                z2: 1
             });
 
             this.group.add(arc);
