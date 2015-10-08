@@ -61,6 +61,7 @@ define(function (require) {
         // FIXME One data ?
         var diff = arrayDiff(oldNameList, newNameList);
 
+        var dims = newCoordSys.type === 'cartesian2d' ? ['x', 'y'] : ['radius', 'angle'];
         for (var i = 0; i < diff.length; i++) {
             var diffItem = diff[i];
             var pointAdded = true;
@@ -75,15 +76,16 @@ define(function (require) {
                     currStackedPoints.push(oldStackedOnPoints[diffItem.idx]);
                     nextStackedPoints.push(newStackedOnPoints[diffItem.idx1]);
 
-                    rawIndices.push(newData.getRawIndex(diffItem.idx));
+                    rawIndices.push(newData.getRawIndex(diffItem.idx1));
                     break;
                 case '+':
                     var idx = diffItem.idx;
                     currPoints.push(
                         oldCoordSys.dataToPoint([
-                            newData.get('x', idx), newData.get('y', idx)
+                            newData.get(dims[0], idx), newData.get(dims[1], idx)
                         ])
                     );
+
                     nextPoints.push(newData.getItemLayout(idx));
 
                     currStackedPoints.push(
@@ -101,13 +103,13 @@ define(function (require) {
                     if (rawIndex !== idx) {
                         currPoints.push(oldData.getItemLayout(idx));
                         nextPoints.push(newCoordSys.dataToPoint([
-                            oldData.get('x', idx), oldData.get('y', idx)
+                            oldData.get(dims[0], idx), oldData.get(dims[1], idx)
                         ]));
 
                         currStackedPoints.push(oldStackedOnPoints[idx]);
                         nextStackedPoints.push(
                             getStackedOnPoint(
-                                newCoordSys, newData, idx
+                                newCoordSys, oldData, idx
                             )
                         );
 
