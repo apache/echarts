@@ -47,7 +47,7 @@ define(function (require) {
          *     viewRange: {
          *         handle1,
          *         handle2,
-         *         interval: {Array}
+         *         interval: [handle1, handle2] or [handle2, handle1]
          *     },
          *     filler: {},
          *     startFrame: {},
@@ -204,39 +204,37 @@ define(function (require) {
          */
         _updateViewRange: function (operation) {
             operation = operation || {};
-            var delta = retrieveValue(
-                this._orient === 'horizontal' ? operation.dx : operation.dy,
-                0
-            );
             var viewRange = this.layout.viewRange;
             var handleNames = this._handleNames;
-            var rangeArgs = operation.rangeArg;
-            rangeArgs = !rangeArgs ? handleNames : [rangeArgs];
+            var delta = this._orient === 'horizontal' ? operation.dx : operation.dy;
+
+            if (delta) {
+                var rangeArgs = operation.rangeArg;
+                rangeArgs = !rangeArgs ? handleNames : [rangeArgs];
+
+                // Find min or max between rangeArg as stardardValue.
+                var standardValue = delta > 0 ? -Infinity : Infinity;
+                each(rangeArgs, function (rangeArg) {
+                    standardValue = compare(standardValue, viewRange[rangeArg], 1);
+                }, this);
+
+                // And then re-calculate delta.
+                var edgeValue = this._getViewExtent()[delta < 0 ? 0 : 1];
+                delta = compare(standardValue + delta, edgeValue, -1) - standardValue;
+                // Update handles.
+                each(rangeArgs, function (rangeArg) {
+                    viewRange[rangeArg] += delta;
+                }, this);
+            }
+
+            // Update min and max, considering all handles.
+            var interval = viewRange.interval = numberUtil.asc(
+                [viewRange.handle1, viewRange.handle2]
+            );
 
             function compare(a, b, signal) {
                 return Math[delta * signal > 0 ? 'max' : 'min'](a, b);
             }
-
-            // Find min or max between rangeArg as stardardValue.
-            var standardValue = delta > 0 ? -Infinity : Infinity;
-            each(rangeArgs, function (rangeArg) {
-                standardValue = compare(standardValue, viewRange[rangeArg], 1);
-            }, this);
-
-            // And then re-calculate delta.
-            var edgeValue = this._getViewExtent()[delta > 0 ? 1 : 0];
-            delta = compare(standardValue + delta, edgeValue, -1) - standardValue;
-            // Update handles.
-            each(rangeArgs, function (rangeArg) {
-                viewRange[rangeArg] += delta;
-            }, this);
-
-            // Update min and max, considering all handles.
-            var interval = viewRange.interval = [Infinity, -Infinity];
-            each(handleNames, function (rangeArg) {
-                interval[0] = mathMin(interval[0], viewRange[rangeArg]);
-                interval[1] = mathMax(interval[1], viewRange[rangeArg]);
-            }, this);
         },
 
         /**

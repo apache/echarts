@@ -112,7 +112,7 @@ define(function(require) {
          */
         _onItemClick: function (index) {
             var dataRangeModel = this.dataRangeModel;
-            var selected = dataRangeModel.get('selected');
+            var selected = zrUtil.clone(dataRangeModel.get('selected'), true);
 
             if (dataRangeModel.get('selectedMode') === 'single') {
                 zrUtil.each(selected, function (item, index) {
@@ -122,10 +122,10 @@ define(function(require) {
             selected[index] = !selected[index];
 
             this.api.dispatch({
-                type: 'dataRangeSelected',
+                type: 'selectDataRange',
                 from: this.uid,
                 dataRangeModelId: this.dataRangeModel.uid,
-                selected: selected.slice()
+                selected: selected
             });
         }
     });

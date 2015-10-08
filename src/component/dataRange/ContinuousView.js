@@ -230,7 +230,7 @@ define(function(require) {
             this._updateInterval(handleIndex, dx, dy);
 
             !silent && this.api.dispatch({
-                type: 'dataRangeSelected',
+                type: 'selectDataRange',
                 from: this.uid,
                 dataRangeModelId: this.dataRangeModel.uid,
                 selected: this._dataInterval

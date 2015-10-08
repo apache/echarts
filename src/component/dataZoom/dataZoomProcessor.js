@@ -13,15 +13,6 @@ define(function (require) {
         });
     });
 
-    // FIXME
-    // originalData是放在原来的data中（这样不会被接下来的processor处理）
-    // 还是新创建个series(type="dataZoom")专门存originalData（这样会被processor处理，但是一些地方得特别判断type=='dataZoom'）
-    // 同样，Axis的originalData放在哪里。
-    // 其中：
-    // originalData在ec2中的用途：
-    // （1）画dataZoom组件（包括具体数值）
-    // （2）在packData时会用getRealDataIndex
-
     // TODO
     // undo redo
 

@@ -53,7 +53,6 @@ define(function (require) {
             // FIXME
             // 需要区别用户事件在本component上触发的render和其他render。
             // 后者不重新构造shape。否则难于实现拖拽。
-
             this.dataZoomModel = dataZoomModel;
             this.ecModel = ecModel;
 
@@ -194,6 +193,10 @@ define(function (require) {
                 ? arg : null;
         },
 
+        _getDetailInfo: function () {
+
+        },
+
         _onDrift: function (rangeArg, dx, dy) {
             var dataZoomModel = this.dataZoomModel;
 
@@ -209,7 +212,7 @@ define(function (require) {
                 this.api.dispatch({
                     type: 'dataZoom',
                     from: this.uid,
-                    dataZoomModelId: this.dataZoomModel.uid,
+                    dataZoomModelId: dataZoomModel.uid,
                     dataZoomRange: this._layout.normalizeToRange()
                 });
             }
@@ -221,6 +224,16 @@ define(function (require) {
             // FIXME
             // if (this.zoomOption.showDetail) {
             // }
+            var dataZoomModel = this.dataZoomModel;
+
+            if (!dataZoomModel.get('realtime')) {
+                this.api.dispatch({
+                    type: 'dataZoom',
+                    from: this.uid,
+                    dataZoomModelId: dataZoomModel.uid,
+                    dataZoomRange: this._layout.normalizeToRange()
+                });
+            }
         }
 
     });

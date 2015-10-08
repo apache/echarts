@@ -409,7 +409,7 @@ define(function (require) {
                 // Set z and zlevel
                 chart.group.traverse(function (el) {
                     el.z = z;
-                    el.zlevel = zlevel
+                    el.zlevel = zlevel;
                 });
             }, this);
 
@@ -463,12 +463,24 @@ define(function (require) {
         },
 
         /**
-         * @param {Function}
+         * Usage:
+         * registerAction('someAction', 'someEvent', function () { ... });
+         * registerAction('someAction', function () { ... });
+         *
+         * @param {string} actionName
+         * @param {string=} eventName Can be ignored
+         * @param {Function=} action
          */
-        registerAction: function (actionName, action) {
+        registerAction: function (actionName, eventName, action) {
+            if (typeof eventName === 'function') {
+                action = eventName;
+                eventName = null;
+            }
             if (!actions[actionName]) {
                 actions[actionName] = action;
             }
+            // TODO
+            // event
         },
 
         /**
