@@ -1,5 +1,5 @@
 /**
- * @file Data zoom model
+ * @file DataRange model
  */
 define(function(require) {
 
@@ -15,7 +15,7 @@ define(function(require) {
          */
         defaultOption: {
             selected: null,
-            labelPosition: 'auto',      // 'auto', 'left', 'right'
+            align: 'auto',             // 'auto', 'left', 'right'
             splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
             itemWidth: 20,             // 值域图形宽度，线性渐变水平布局宽度为该值 * 10
             itemHeight: 14,            // 值域图形高度，线性渐变垂直布局高度为该值 * 10
@@ -46,7 +46,6 @@ define(function(require) {
                 ? this._resetForCustomizedSplit()
                 : this._resetForAutoSplit();
 
-            this._inverse();
             this._resetSelected();
 
             this.resetVisual(function (mappingOption) {
@@ -156,18 +155,6 @@ define(function(require) {
             }
         },
 
-        _inverse: function () {
-            var thisOption = this.option;
-            var orient = thisOption.orient;
-            var inverse = thisOption.inverse;
-
-            if ((orient === 'vertical' && !inverse)
-                || orient === 'horizontal' && inverse
-            ) {
-                this._pieceList.reverse();
-            }
-        },
-
         /**
          * @public
          */
@@ -205,13 +192,6 @@ define(function(require) {
                 }
             }
             return 'outOfRange';
-        },
-
-        /**
-         * @public
-         */
-        getPieceInterval: function (pieceIndex) {
-            return (this._pieceList[pieceIndex] || {}).interval.slice();
         }
 
     });

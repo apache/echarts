@@ -64,7 +64,7 @@ define(function(require) {
     layout.positionGroup = function (
         group, positionInfo, containerRect, margin
     ) {
-        margin = formatUtil.normalizeCssArray(margin);
+        margin = formatUtil.normalizeCssArray(margin || 0);
 
         var groupRect = group.getBoundingRect();
 

@@ -3,7 +3,9 @@ define(function (require) {
     var echarts = require('../../echarts');
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
-    var parsePercent = require('../../util/number').parsePercent;
+    var modelUtil = require('../../util/model');
+    var formatUtil = require('../../util/format');
+    var layout = require('../../util/layout');
 
     return echarts.extendComponentView({
 
@@ -15,126 +17,62 @@ define(function (require) {
          */
         autoPositionValues: {left: 1, right: 1, top: 1, bottom: 1},
 
-        init: function () {
+        init: function (ecModel, api) {
+            /**
+             * @readOnly
+             * @type {module:echarts/model/Global}
+             */
+            this.ecModel = ecModel;
+
+            /**
+             * @readOnly
+             * @type {module:echarts/ExtensionAPI}
+             */
+            this.api = api;
+
+            /**
+             * @readOnly
+             * @type {module:echarts/component/dataRange/DataRangeModel}
+             */
+            this.dataRangeModel;
+
             /**
              * @private
              * @type {Object}
              */
             this._updatableShapes = {};
-
-            /**
-             * @protected
-             * @type {module:echarts/component/dataZoom/DataZoomLayout}
-             */
-            this.layout;
-
-            /**
-             * @private
-             * @type {string}
-             */
-            this._orient;
         },
 
         /**
          * @protected
          */
-        initLayout: function () {
-            var dataRangeModel = this.dataRangeModel;
-            var orient = dataRangeModel.get('orient');
-            var api = this.api;
-            var ecWidth = api.getWidth();
-            var ecHeight = api.getHeight();
-            var x = dataRangeModel.get('x');
-            var y = dataRangeModel.get('y');
-
-            this.layout = {
-                orient: orient,
-                maxWidth: this.autoPositionValues[x] ? ecWidth : ecWidth - x,
-                ecWidth: ecWidth,
-                ecHeight: ecHeight,
-                x: x,
-                y: y,
-                itemWidth: parsePercent(dataRangeModel.get('itemWidth'), ecWidth),
-                itemHeight: parsePercent(dataRangeModel.get('itemHeight'), ecHeight)
-            };
-        },
-
-        /**
-         * @protected
-         */
-        layoutOuter: function () {
-            // Depends on contentLayout
-            var layout = this.layout;
-            var contentLayout = layout.content;
-            var dataRangeModel = this.dataRangeModel;
-            var x = layout.x;
-            var y = layout.y;
-            var ecWidth = layout.ecWidth;
-            var ecHeight = layout.ecHeight;
-
-            layout.x = x === 'left'
-                ? 0
-                : x === 'right'
-                ? ecWidth - contentLayout.width
-                : parsePercent(x, ecWidth);
-            layout.y = y === 'top'
-                ? 0
-                : y === 'bottom'
-                ? ecHeight - contentLayout.height
-                : parsePercent(y, ecHeight);
-
-            // TODO
-            // 考虑padding boder
-        },
-
-        /**
-         * @protected
-         */
-        render: function (dataRangeModel, ecModel, api) {
-
+        render: function (dataRangeModel, ecModel, api, event) {
             this.dataRangeModel = dataRangeModel;
-            this.ecModel = ecModel;
-            this.api = api;
-
-            this.group.removeAll();
 
             if (!dataRangeModel.get('show')) {
+                this.group.removeAll();
                 return;
             }
 
-            // FIXME
-            // padding
-            // var padding = this.reformCssArray(this.dataRangeOption.padding);
-
-            // TODO : TEST
-            // 文字不超出边界，例如x 'right' orient 'vertical'时。
-
-            this.initLayout();
-            this.layoutContent();
-            this.layoutOuter();
-
-            this.renderOuter();
-            this.renderContent();
+            this.doRender.apply(this, arguments);
         },
 
         /**
          * @protected
          */
-        renderOuter: function () {
-            var layout = this.layout;
-            var contentLayout = layout.content;
+        renderBackground: function (group) {
             var dataRangeModel = this.dataRangeModel;
-            var group = this.group;
+            var padding = formatUtil.normalizeCssArray(dataRangeModel.get('padding') || 0);
+            var rect = group.getBoundingRect();
 
             group.add(new graphic.Rect({
-                // zlevel: this.getZlevelBase(),
-                // z: this.getZBase(),
+                z2: -1, // Lay background rect on the lowest layer.
                 silent: true,
                 shape: {
-                    x: -layout.offsetX,
-                    y: -layout.offsetY,
-                    width: contentLayout.width,
-                    height: contentLayout.height
+                    x: rect.x - padding[3],
+                    y: rect.y - padding[0],
+                    width: rect.width + padding[3] + padding[1],
+                    height: rect.height + padding[0] + padding[2]
                 },
                 style: {
                     fill: dataRangeModel.get('backgroundColor'),
@@ -142,22 +80,125 @@ define(function (require) {
                     lineWidth: dataRangeModel.get('borderWidth')
                 }
             }));
+        },
 
-            group.position[0] = layout.x + layout.offsetX;
-            group.position[1] = layout.y + layout.offsetY;
+        /**
+         * @protected
+         */
+        renderEndsText: function (group, text, itemWidth, itemHeight) {
+            if (!text) {
+                return;
+            }
+            var itemGroup = new graphic.Group();
+            itemGroup.add(new graphic.Text({
+                style: {
+                    x: itemWidth / 2,
+                    y: itemHeight / 2,
+                    textBaseline: 'middle',
+                    textAlign: 'center',
+                    text: text,
+                    font: this.dataRangeModel.textStyleModel.getFont()
+                }
+            }));
+
+            group.add(itemGroup);
+        },
+
+        /**
+         * @protected
+         */
+        getControllerVisual: function (representValue, forceState) {
+            var dataRangeModel = this.dataRangeModel;
+            var mappings = dataRangeModel.controllerVisuals[
+                forceState || dataRangeModel.getValueState(representValue)
+            ];
+            var visualObj = {
+                symbol: dataRangeModel.get('itemSymbol'),
+                color: dataRangeModel.get('contentColor')
+            };
+
+            function getter(key) {
+                return visualObj[key];
+            }
+
+            function setter(key, value) {
+                zrUtil.isObject(key)
+                    ? zrUtil.extend(visualObj, key)
+                    : (visualObj[key] = value);
+            }
+
+            zrUtil.each(mappings, function (visualMapping) {
+                visualMapping && visualMapping.applyVisual(
+                    representValue, getter, setter
+                );
+            });
+
+            return visualObj;
+        },
+
+        /**
+         * @protected
+         */
+        getItemAlignByOrient: function (itemOrient, ecSize) {
+            var modelOption = this.dataRangeModel.option;
+            var itemAlign = modelOption.align;
+            var orient = modelOption.orient;
+
+            return itemOrient === 'horizontal'
+                ? getAlign('x', ['left', 'right'])
+                : getAlign('y', ['top', 'bottom']);
+
+            function getAlign(dim, values) {
+                var dim2 = dim + '2';
+                var v = modelUtil.retrieveValue(modelOption[dim], modelOption[dim2], 0);
+                if (!itemAlign || itemAlign === 'auto') {
+                    itemAlign = (orient === 'horizontal' && orient === itemOrient)
+                        ? 'right'
+                        : has(dim, dim2, values[1])
+                        ? values[0]
+                        : has(dim, dim2, values[0])
+                        ? values[1]
+                        : (v > ecSize * 0.6 ? values[0] : values[1]);
+                }
+
+                return itemAlign;
+            }
+
+            function has(attr1, attr2, value) {
+                return modelOption[attr1] === value || modelOption[attr2] === value;
+            }
+        },
+
+        /**
+         * @protected
+         */
+        positionGroup: function (group) {
+            var model = this.dataRangeModel;
+            var x = model.get('x');
+            var y = model.get('y');
+            var x2 = model.get('x2');
+            var y2 = model.get('y2');
+            var api = this.api;
+
+            if (!x && !x2) {
+                x = 'center';
+            }
+            if (!y && !y2) {
+                y = 'bottom';
+            }
+
+            layout.positionGroup(
+                group,
+                {x: x, y: y, x2: x2, y2: y2},
+                {width: api.getWidth(), height: api.getHeight()}
+            );
         },
 
         /**
          * @protected
          * @abstract
          */
-        layoutContent: zrUtil.noop,
-
-        /**
-         * @protected
-         * @abstract
-         */
-        renderContent: zrUtil.noop
+        doRender: zrUtil.noop
 
     });
 });

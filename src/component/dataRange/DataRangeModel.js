@@ -41,7 +41,6 @@ define(function(require) {
 
             min: -Infinity,            // 最小值，如果不指定，则是所控制的series的最小值，兼容ec2而保留，不推荐指定
             max: Infinity,             // 最大值，如果不指定，则是所控制的series的最大值，兼容ec2而保留，不推荐指定
-            interval: [-Infinity, Infinity], // [intervalMin, intervalMax]
             dimension: 'z',
 
             visualSelected: {
@@ -69,10 +68,10 @@ define(function(require) {
             padding: 5,                // 值域内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
             textGap: 10,               //
-            itemWidth: 0,              // 值域图形宽度
-            itemHeight: 0,             // 值域图形高度
+            itemWidth: null,              // 值域图形宽度
+            itemHeight: null,             // 值域图形高度
             precision: 0,              // 小数精度，默认为0，无小数点
-            color: ['#006edd','#e0ffff'],//颜色（deprecated，兼容ec2）
+            color: ['#e0ffff', '#006edd'],//颜色（deprecated，兼容ec2）
             // formatter: null,
             // text:['高','低'],         // 文本，默认为数值文本
             textStyle: {
@@ -227,11 +226,10 @@ define(function(require) {
                 }
             }, this);
 
-            var interval = asc(thisOption.interval);
             var extent = asc([thisOption.min, thisOption.max]);
 
-            extent[0] = Math.max(extent[0], interval[0], dataExtent[0]);
-            extent[1] = Math.min(extent[1], interval[1], dataExtent[1]);
+            extent[0] = Math.max(extent[0], dataExtent[0]);
+            extent[1] = Math.min(extent[1], dataExtent[1]);
 
             this._dataExtent = extent;
         },

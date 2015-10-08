@@ -20,7 +20,7 @@
                 'echarts/chart/scatter',
                 'echarts/component/legend',
                 'echarts/component/grid',
-                'echarts/component/dataRangePiecewise'
+                'echarts/component/dataRangeContinuous'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -91,6 +91,7 @@
                             selectedMode: 'multiple',
                             backgroundColor: '#eee',
                             padding: [10, 30, 5, 40],
+                            calculable: true,
                             visualSelected: {
                                 data: ['red', 'pink']
                             }
@@ -104,6 +105,8 @@
                                 {min: 35, max: 55},
                                 {min: 55}
                             ],
+                            inverse: true,
+                            calculable: true,
                             x: 200,
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
@@ -114,6 +117,7 @@
                         },
                         {
                             splitNumber: 5,
+                            calculable: true,
                             x: 'right',
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
@@ -126,11 +130,13 @@
                         },
                         {
                             splitNumber: 6,
+                            calculable: true,
                             y: 'top',
                             x: 'left',
                             orient: 'horizontal',
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
+                            inverse: true,
                             dimension: 'a',
                             backgroundColor: '#eee',
                             visualSelected: {
@@ -139,6 +145,7 @@
                         },
                         {
                             splitNumber: 5,
+                            calculable: true,
                             y: 20,
                             x: 'right',
                             orient: 'horizontal',
@@ -152,7 +159,22 @@
                         },
                         {
                             splitNumber: 6,
+                            calculable: true,
                             y: 40,
+                            orient: 'horizontal',
+                            // selectedMode: 'single',
+                            selectedMode: 'multiple',
+                            dimension: 'a',
+                            backgroundColor: '#eee',
+                            visualSelected: {
+                                type: 'colorA'
+                            }
+                        },
+                        {
+                            splitNumber: 6,
+                            calculable: true,
+                            x: 'center',
+                            y: 'bottom',
                             orient: 'horizontal',
                             // selectedMode: 'single',
                             selectedMode: 'multiple',

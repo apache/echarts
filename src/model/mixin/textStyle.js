@@ -10,7 +10,7 @@ define({
     },
 
     getTextRect: function (text) {
-        var textStyle = this.getShallow('textStyle');
+        var textStyle = this.get('textStyle') || {};
         return require('zrender/contain/text').getBoundingRect(
             text,
             this.getFont(),
