@@ -298,7 +298,7 @@ define(function(require) {
 
             param[0] != null && (thisOption.start = param[0]);
             param[1] != null && (thisOption.end = param[1]);
-console.log(param);
+
             this._resetRange();
         },
 
