@@ -58,14 +58,12 @@ define(function(require) {
         return data.map([valueDim], function (val, idx) {
             var stackedOnSameSign;
             var stackedOn = data.stackedOn;
-            if (val > 0) {
-                // Find first stacked value with same sign
-                while (stackedOn &&
-                    sign(stackedOn.get(valueDim, idx)) === sign(val)
-                ) {
-                    stackedOnSameSign = stackedOn;
-                    break;
-                }
+            // Find first stacked value with same sign
+            while (stackedOn &&
+                sign(stackedOn.get(valueDim, idx)) === sign(val)
+            ) {
+                stackedOnSameSign = stackedOn;
+                break;
             }
             var pt = [];
             pt[baseCoordOffset] = points[idx][baseCoordOffset];
