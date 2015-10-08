@@ -46,14 +46,16 @@ define(function(require) {
      * @param {Array.<Array.<number>>} points
      * @private
      */
-    function getStackedOnPoints(coordSys, data, points) {
+    function getStackedOnPoints(coordSys, data) {
         var baseAxis = coordSys.getBaseAxis();
         var valueAxis = coordSys.getOtherAxis(baseAxis);
-        var valueAxisStart = baseAxis.onZero
-            ? valueAxis.dataToCoord(0) : valueAxis.getExtent()[0];
+        var valueStart = baseAxis.onZero
+            ? 0 : valueAxis.scale.getExtent()[0];
 
         var valueDim = valueAxis.dim;
-        var baseCoordOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
+
+        // var dims = coordSys.type === 'cartesian2d' ? ['x', 'y'] : ['radius', 'angle'];
+        var baseDataOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
 
         return data.map([valueDim], function (val, idx) {
             var stackedOnSameSign;
@@ -65,12 +67,12 @@ define(function(require) {
                 stackedOnSameSign = stackedOn;
                 break;
             }
-            var pt = [];
-            pt[baseCoordOffset] = points[idx][baseCoordOffset];
-            pt[1 - baseCoordOffset] = stackedOnSameSign
-                ? stackedOnSameSign.getItemLayout(idx)[1 - baseCoordOffset]
-                : valueAxisStart;
-            return pt;
+            var stackedData = [];
+            stackedData[baseDataOffset] = data.get(baseAxis.dim, idx);
+            stackedData[1 - baseDataOffset] = stackedOnSameSign
+                ? stackedOnSameSign.get(valueDim, idx, true) : valueStart;
+
+            return coordSys.dataToPoint(stackedData);
         }, true);
     }
 
@@ -103,9 +105,7 @@ define(function(require) {
             var hasAnimation = ecModel.get('animation');
 
             var isAreaChart = !areaStyleModel.isEmpty();
-            var stackedOnPoints = getStackedOnPoints(
-                coordSys, data, points
-            );
+            var stackedOnPoints = getStackedOnPoints(coordSys, data);
 
             // Initialization animation or coordinate system changed
             if (
@@ -139,11 +139,13 @@ define(function(require) {
 
                 // In the case data zoom triggerred refreshing frequently
                 // Data may not change if line has a category axis. So it should animate nothing
-                // if (!isDataSame(this._data, data)) {
+                if (!isPointsSame(this._stackedOnPoints, stackedOnPoints)
+                    || !isPointsSame(this._points, points)
+                ) {
                     this._updateAnimation(
                         data, stackedOnPoints, coordSys
                     );
-                // }
+                }
                 // Add back
                 group.add(polyline);
                 group.add(polygon);
@@ -172,6 +174,7 @@ define(function(require) {
             // Save the coordinate system for transition animation when data changed
             this._coordSys = coordSys;
             this._stackedOnPoints = stackedOnPoints;
+            this._points = points;
 
             !isCoordSysPolar && !seriesModel.get('showAllSymbol')
                 && this._updateSymbolDisplay(data, coordSys);

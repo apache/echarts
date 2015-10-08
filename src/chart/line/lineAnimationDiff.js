@@ -13,11 +13,11 @@ define(function (require) {
     function getStackedOnPoint(coordSys, data, idx) {
         var baseAxis = coordSys.getBaseAxis();
         var valueAxis = coordSys.getOtherAxis(baseAxis);
-        var valueAxisStart = baseAxis.onZero
-            ? valueAxis.dataToCoord(0) : valueAxis.getExtent()[0];
+        var valueStart = baseAxis.onZero
+            ? 0 : valueAxis.scale.getExtent()[0];
 
         var valueDim = valueAxis.dim;
-        var baseCoordOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
+        var baseDataOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
 
         var stackedOnSameSign;
         var stackedOn = data.stackedOn;
@@ -29,12 +29,12 @@ define(function (require) {
             stackedOnSameSign = stackedOn;
             break;
         }
-        var pt = [];
-        pt[baseCoordOffset] = baseAxis.dataToCoord(data.get(baseAxis.dim, idx));
-        pt[1 - baseCoordOffset] = stackedOnSameSign
-            ? valueAxis.dataToCoord(stackedOnSameSign.get(valueDim, idx, true))
-            : valueAxisStart;
-        return pt;
+        var stackedData = [];
+        stackedData[baseDataOffset] = data.get(baseAxis.dim, idx);
+        stackedData[1 - baseDataOffset] = stackedOnSameSign
+            ? stackedOnSameSign.get(valueDim, idx, true) : valueStart;
+
+        return coordSys.dataToPoint(stackedData);
     }
 
     return function (
