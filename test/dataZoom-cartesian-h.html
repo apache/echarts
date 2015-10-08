@@ -22,7 +22,8 @@
                 'echarts/component/axis',
                 'echarts/component/dataZoom',
                 'echarts/component/tooltip',
-                'echarts/component/markPoint'
+                'echarts/component/markPoint',
+                'echarts/component/markLine'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -36,9 +37,9 @@
 
                 for (var i = 0; i < 200; i++) {
                     xAxisData.push('类目' + i);
-                    data1.push((Math.random() * 4).toFixed(2));
-                    data2.push(Math.random());
-                    data3.push(Math.random());
+                    data1.push((Math.random() + 0.5).toFixed(2));
+                    data2.push(Math.random().toFixed(2));
+                    data3.push(Math.random().toFixed(2));
                 }
 
                 chart.setOption({
@@ -58,9 +59,22 @@
                     },
                     series: [
                         {
+                            name: 'line2',
+                            type: 'line',
+                            stack: 'all',
+                            data: data2
+                        },
+                        {
+                            name: 'line3',
+                            type: 'line',
+                            stack: 'all',
+                            data: data3
+                        },
+                        {
                             name: 'line',
                             type: 'line',
                             data: data1,
+                            stack: 'all',
                             itemStyle: {
                                 normal: {
                                     areaStyle: {}
@@ -70,17 +84,12 @@
                                 data: [{
                                     type: 'max'
                                 }]
+                            },
+                            markLine: {
+                                data: [{
+                                    type: 'average'
+                                }]
                             }
-                        },
-                        {
-                            name: 'line2',
-                            type: 'line',
-                            data: data2
-                        },
-                        {
-                            name: 'line3',
-                            type: 'line',
-                            data: data3
                         }
                     ],
                     dataZoom: {

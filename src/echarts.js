@@ -388,8 +388,8 @@ define(function (require) {
                 var zlevel = componentModel.get('zlevel');
                 // Set z and zlevel
                 component.group.traverse(function (el) {
-                    el.z = z;
-                    el.zlevel = zlevel;
+                    z != null && (el.z = z);
+                    zlevel != null && (el.zlevel = zlevel);
                 });
             }, this);
 
@@ -408,8 +408,8 @@ define(function (require) {
                 var zlevel = seriesModel.get('zlevel');
                 // Set z and zlevel
                 chart.group.traverse(function (el) {
-                    el.z = z;
-                    el.zlevel = zlevel;
+                    z != null && (el.z = z);
+                    zlevel != null && (el.zlevel = zlevel);
                 });
             }, this);
 

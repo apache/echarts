@@ -15,6 +15,7 @@ define(function (require) {
         return valueArr;
     };
 
+    // TODO Specified percent
     var markerTypeCalculator = {
         /**
          * @method
@@ -40,7 +41,8 @@ define(function (require) {
     };
 
     var dataTransform = function (data, baseAxis, valueAxis, item) {
-        // If not specify the position with pixel directly
+        // 1. If not specify the position with pixel directly
+        // 2. If value is not a data array. Which uses xAxis, yAxis to specify the value on each dimension
         if (isNaN(item.x) || isNaN(item.y) && !zrUtil.isArray(item.value)) {
             // Clone the option
             // Transform the properties xAxis, yAxis, radiusAxis, angleAxis, geoCoord to value
@@ -56,11 +58,11 @@ define(function (require) {
                 value.push(+item.value);
                 item.value = value;
             }
-            else if (!isNaN(item.value)) {
+            else {
                 // FIXME Only has one of xAxis and yAxis.
                 item.value = [
-                    item.xAxis || item.radiusAxis,
-                    item.yAxis || item.angleAxis,
+                    item.xAxis != null ? item.xAxis : item.radiusAxis,
+                    item.yAxis != null ? item.yAxis : item.angleAxis,
                     +item.value
                 ];
             }

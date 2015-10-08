@@ -10,8 +10,8 @@ define({
 
 
     // https://dribbble.com/shots/1065960-Infographic-Pie-chart-visualization
-    color: ['#5793f3', '#5578c2', '#d4df5a', '#fd9c35', '#fec42c',
-            '#dd4444', '#bd3b47', '#bd3b47', '#cd4870'],
+    color: ['#5793f3', '#d14a61', '#fd9c35', '#675bba', '#fec42c',
+            '#dd4444', '#d4df5a', '#cd4870'],
 
     // 默认需要 Grid 配置项
     grid: {},

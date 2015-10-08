@@ -99,13 +99,14 @@
                         symbol: 'none',
                         symbolSize: 10,
                         data: data2,
-                        itemStyle: {
-                            normal: {
-                                areaStyle: {
-                                    color: 'black'
-                                }
-                            }
-                        }
+                        // itemStyle: {
+                        //     normal: {
+                        //         areaStyle: {
+                        //             color: 'black'
+                        //         }
+                        //     }
+                        // }
+                        itemStyle: itemStyle
                     }]
                 });
 
@@ -117,7 +118,7 @@
                         data1.push(randomData());
 
                         data2.shift();
-                        data2.push(-randomData());
+                        data2.push(randomData());
 
                         count++;
                     }

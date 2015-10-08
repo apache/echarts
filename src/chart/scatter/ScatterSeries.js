@@ -39,6 +39,7 @@ define(function (require) {
             // symbolRotate: null,  // 图形旋转控制
             itemStyle: {
                 normal: {
+                    opacity: 0.8,
                     // color: 各异,
                     label: {
                         show: false
