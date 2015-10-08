@@ -57,7 +57,8 @@ define(function(require) {
                     cy: polar.cy,
                     r: radiusExtent[1]
                 },
-                style: lineStyleModel.getLineStyle()
+                style: lineStyleModel.getLineStyle(),
+                z2: 1
             });
             circle.style.fill = null;
 

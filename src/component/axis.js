@@ -170,8 +170,7 @@ define(function(require) {
                     },
                     rotation: labelRotate * Math.PI / 180,
                     origin: [x, y],
-                    silent: true,
-                    z: axisModel.get('z')
+                    silent: true
                 });
 
                 this.group.add(textEl);
@@ -212,8 +211,8 @@ define(function(require) {
                 style: zrUtil.extend({
                     lineCap: 'round'
                 }, lineStyleModel.getLineStyle()),
-                z: axisModel.get('z'),
-                silent: true
+                silent: true,
+                z2: 1
             })));
         },
 
@@ -286,8 +285,7 @@ define(function(require) {
             }
             var tickEl = graphic.mergePath(tickLines, {
                 style: lineStyleModel.getLineStyle(),
-                silent: true,
-                z: axisModel.get('z')
+                silent: true
             });
             this.group.add(tickEl);
         },
@@ -365,8 +363,7 @@ define(function(require) {
                         lineDash: lineStyleModel.getLineDash(),
                         lineWidth: lineWidth
                     },
-                    silent: true,
-                    z: axisModel.get('z')
+                    silent: true
                 }));
             }
         },
@@ -443,8 +440,7 @@ define(function(require) {
                     style: {
                         fill: areaColors[i % areaColors.length]
                     },
-                    silent: true,
-                    z: axisModel.get('z')
+                    silent: true
                 }));
             }
         }

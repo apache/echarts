@@ -35,12 +35,14 @@
                 var data1 = [];
                 var data2 = [];
                 var data3 = [];
+                var data4 = [];
 
                 for (var i = 0; i < 10; i++) {
                     xAxisData.push('类目' + i);
                     data1.push((Math.random() * 5).toFixed(2));
-                    data2.push((Math.random() + 0.2).toFixed(2));
+                    data2.push(-Math.random().toFixed(2));
                     data3.push((Math.random() + 0.5).toFixed(2));
+                    data4.push((Math.random() + 0.3).toFixed(2));
                 }
 
                 var itemStyle = {
@@ -63,7 +65,7 @@
                     legend: {
                         data: [{
                             name: 'bar'
-                        }, 'bar2', 'bar3'],
+                        }, 'bar2', 'bar3', 'bar4'],
                         selected: {
                             // 'bar': false
                         },
@@ -75,6 +77,9 @@
                     tooltip: {},
                     xAxis: {
                         data: xAxisData,
+                        axisLine: {
+                            onZero: true
+                        },
                         splitLine: {
                             show: false
                         },
@@ -83,7 +88,7 @@
                         }
                     },
                     yAxis: {
-                        // inverse: true,
+                        inverse: true,
                         splitArea: {
                             show: false
                         }
@@ -106,6 +111,12 @@
                         stack: 'two',
                         itemStyle: itemStyle,
                         data: data3
+                    }, {
+                        name: 'bar4',
+                        type: 'bar',
+                        stack: 'two',
+                        itemStyle: itemStyle,
+                        data: data4
                     }]
                 });
                 console.profileEnd('setOption');

@@ -215,6 +215,14 @@ define(function(require, factory) {
                         xAxis.onZero = false;
                     }
 
+                    // Force scale to be true so the axis can contain `0`
+                    if (xAxis.onZero || yAxis.model.get('scale')) {
+                        yAxis.scale.unionExtent([0, 0]);
+                    }
+                    if (yAxis.onZero || xAxis.model.get('scale')) {
+                        xAxis.scale.unionExtent([0, 0]);
+                    }
+
                     cartesian.addAxis(xAxis);
                     cartesian.addAxis(yAxis);
                 }, this);
