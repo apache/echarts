@@ -1,7 +1,6 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
-    var Group = require('zrender/container/Group');
     var symbolUtil = require('../../util/symbol');
     var graphic = require('../../util/graphic');
 
@@ -61,7 +60,7 @@ define(function (require) {
     }
 
     function DataSymbol() {
-        this.group = new Group();
+        this.group = new graphic.Group();
     }
 
     DataSymbol.prototype = {

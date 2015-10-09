@@ -12,7 +12,7 @@ define(function (require) {
         var mlType = item.type;
         if (!zrUtil.isArray(item)
             && mlType === 'min' || mlType === 'max' || mlType === 'average'
-        ) {
+            ) {
             var baseAxisKey = baseAxis.dim + 'Axis';
             var valueAxisKey = valueAxis.dim + 'Axis';
             var baseScaleExtent = baseAxis.scale.getExtent();
@@ -96,19 +96,31 @@ define(function (require) {
             var mlData = createList(coordSys, seriesData, mlModel)
             var dims = mlData.from.dimensions.slice(0, 2);
 
+            var fromData = mlData.from;
+            var toData = mlData.to;
+
+            var symbolType = mlModel.get('symbol');
+            var symbolSize = mlModel.get('symbolSize');
+            if (!zrUtil.isArray(symbolType)) {
+                symbolType = [symbolType, symbolType];
+            }
+            if (typeof (+symbolSize) === 'number') {
+                symbolSize = [symbolSize, symbolSize];
+            }
+
             mlData.from.each(function (idx) {
-                updateDataVisualAndLayout(mlData.from, idx);
-                updateDataVisualAndLayout(mlData.to, idx);
+                updateDataVisualAndLayout(fromData, idx, true);
+                updateDataVisualAndLayout(toData, idx);
             });
 
-            seriesMarkLine.update(mlData.from, mlData.to);
+            seriesMarkLine.update(fromData, toData);
 
-            function updateDataVisualAndLayout(data, idx) {
+            function updateDataVisualAndLayout(data, idx, isFrom) {
                 var itemModel = data.getItemModel(idx);
 
                 var point;
-                var xPx = itemModel.getShallow('x');
-                var yPx = itemModel.getShallow('y');
+                var xPx = itemModel.get('x');
+                var yPx = itemModel.get('y');
                 if (xPx != null && yPx != null) {
                     point = [xPx, yPx];
                 }
@@ -121,8 +133,10 @@ define(function (require) {
                 data.setItemLayout(idx, point);
 
                 data.setItemVisual(idx, {
-                    // symbolSize: itemModel.getShallow('symbolSize'),
-                    // symbol: itemModel.getShallow('symbol'),
+                    symbolSize: itemModel.get('symbolSize')
+                        || symbolSize[isFrom ? 0 : 1],
+                    symbol: itemModel.get('symbol', true)
+                        || symbolType[isFrom ? 0 : 1],
                     color: itemModel.get('itemStyle.normal.color')
                         || seriesData.getVisual('color')
                 });
@@ -138,7 +152,7 @@ define(function (require) {
      * @param {module:echarts/data/List} seriesData
      * @param {module:echarts/model/Model} mpModel
      */
-    function createList (coordSys, seriesData, mlModel) {
+    function createList(coordSys, seriesData, mlModel) {
         var baseAxis = coordSys && coordSys.getBaseAxis();
         var valueAxis = coordSys && coordSys.getOtherAxis(baseAxis);
         var dimensions = seriesData.dimensions.slice();
@@ -150,24 +164,24 @@ define(function (require) {
 
         var dimensionInfosMap = zrUtil.map(
             dimensions, seriesData.getDimensionInfo, seriesData
-        );
+            );
         var fromData = new List(dimensionInfosMap, mlModel);
         var toData = new List(dimensionInfosMap, mlModel);
 
         var optData = zrUtil.filter(
             zrUtil.map(mlModel.get('data'), zrUtil.curry(
                 markLineTransform, seriesData, baseAxis, valueAxis
-            )),
+                )),
             zrUtil.curry(
                 markLineFilter, coordSys, dimensionInverse
-            )
-        );
+                )
+            );
         fromData.initData(
             zrUtil.map(optData, function (item) { return item[0]; })
-        );
+            );
         toData.initData(
             zrUtil.map(optData, function (item) { return item[1]; })
-        );
+            );
 
         return {
             from: fromData,

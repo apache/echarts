@@ -13,14 +13,15 @@ define(function (require) {
     return {
         getLineStyle: function () {
             var style = getLineStyle.call(this);
-            style.lineDash = this.getLineDash();
+            var lineDash = this.getLineDash();
+            lineDash && (style.lineDash = lineDash);
             return style;
         },
 
         getLineDash: function () {
-            var type = this.get('type');
-            return (type === 'solid' || type == null) ? null
-                : (type === 'dashed' ? [5, 5] : [1, 1]);
+            var lineType = this.get('type');
+            return (lineType === 'solid' || lineType == null) ? null
+                : (lineType === 'dashed' ? [5, 5] : [1, 1]);
         }
     };
 });

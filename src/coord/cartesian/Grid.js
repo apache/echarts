@@ -215,11 +215,18 @@ define(function(require, factory) {
                         xAxis.onZero = false;
                     }
 
-                    // Force scale to be true so the axis can contain `0`
-                    if (xAxis.onZero || yAxis.model.get('scale')) {
+                    // Force scale to be false so the axis can contain `0`
+                    // Only value axis support scale to be set fasle
+                    if (
+                        xAxis.onZero || !yAxis.model.get('scale')
+                        && yAxis.type !== CATEGORY_AXIS_TYPE
+                    ) {
                         yAxis.scale.unionExtent([0, 0]);
                     }
-                    if (yAxis.onZero || xAxis.model.get('scale')) {
+                    if (
+                        yAxis.onZero || !xAxis.model.get('scale')
+                        && xAxis.type !== CATEGORY_AXIS_TYPE
+                    ) {
                         xAxis.scale.unionExtent([0, 0]);
                     }
 
