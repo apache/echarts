@@ -217,25 +217,13 @@ define(function(require) {
             var extent = [0, this.dataRangeModel.itemSize[1]];
 
             if (handleIndex === 'all') {
+                delta = getRealDelta(delta, handleEnds, extent);
                 handleEnds[0] += delta;
                 handleEnds[1] += delta;
-
-                if (handleEnds[0] < extent[0]
-                    || handleEnds[0] > extent[1]
-                    || handleEnds[1] < extent[0]
-                    || handleEnds[1] > extent[1]
-                ) {
-                    return;
-                }
             }
             else {
+                delta = getRealDelta(delta, handleEnds[handleIndex], extent);
                 handleEnds[handleIndex] += delta;
-
-                if (handleEnds[handleIndex] < extent[0]
-                    || handleEnds[handleIndex] > extent[1]
-                ) {
-                    return;
-                }
 
                 if (handleEnds[0] > handleEnds[1]) {
                     handleEnds[1 - handleIndex] = handleEnds[handleIndex];
@@ -244,6 +232,18 @@ define(function(require) {
 
             // Update data interval.
             this._dataInterval = this._mapHandleToData(handleEnds);
+
+            function getRealDelta(delta, handleEnds, extent) {
+                !handleEnds.length && (handleEnds = [handleEnds, handleEnds]);
+
+                if (delta < 0 && handleEnds[0] + delta < extent[0]) {
+                    delta = extent[0] - handleEnds[0];
+                }
+                if (delta > 0 && handleEnds[1] + delta > extent[1]) {
+                    delta = extent[1] - handleEnds[1];
+                }
+                return delta;
+            }
         },
 
         /**

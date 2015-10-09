@@ -92,8 +92,8 @@
                             backgroundColor: '#eee',
                             padding: [10, 30, 5, 40],
                             calculable: true,
-                            visualSelected: {
-                                data: ['red', 'pink']
+                            inRange: {
+                                color: ['red', 'pink']
                             }
                         },
                         {
@@ -111,8 +111,8 @@
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
                             backgroundColor: '#eee',
-                            visualSelected: {
-                                data: ['red', 'pink']
+                            inRange: {
+                                color: ['red', 'pink']
                             }
                         },
                         {
@@ -123,9 +123,8 @@
                             selectedMode: 'multiple',
                             dimension: 'a',
                             backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'symbol',
-                                data: ['roundRect', 'rect', 'diamond', 'line', 'circle']
+                            inRange: {
+                                color: ['red', 'pink']
                             }
                         },
                         {
@@ -139,9 +138,7 @@
                             inverse: true,
                             dimension: 'a',
                             backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'colorS'
-                            }
+                            inRange: 'colorS'
                         },
                         {
                             x: 'right',
@@ -153,9 +150,7 @@
                             selectedMode: 'multiple',
                             dimension: 'a',
                             backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'colorL'
-                            }
+                            inRange: 'colorL'
                         },
                         {
                             y: 40,
@@ -166,9 +161,7 @@
                             selectedMode: 'multiple',
                             dimension: 'a',
                             backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'colorA'
-                            }
+                            inRange: 'colorA'
                         },
                         {
                             x: 'center',
@@ -180,9 +173,7 @@
                             selectedMode: 'multiple',
                             dimension: 'a',
                             backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'colorA'
-                            }
+                            inRange: 'colorA'
                         }
                     ],
                     series: [

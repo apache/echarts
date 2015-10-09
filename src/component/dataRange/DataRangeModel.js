@@ -45,11 +45,11 @@ define(function(require) {
             max: Infinity,             // 最大值，如果不指定，则是所控制的series的最大值，兼容ec2而保留，不推荐指定
             dimension: 'z',
 
-            visualSelected: {
-                                     // 'color', 'colorH', 'colorS', 'colorL',
-                                     // 'colorA',
-                                     // 'symbol', 'symbolSize'
-            },
+            inRange: null,             // 'color', 'colorH', 'colorS', 'colorL', 'colorA',
+                                       // 'symbol', 'symbolSize'
+
+            outOfRange: null,          // 'color', 'colorH', 'colorS', 'colorL', 'colorA',
+                                       // 'symbol', 'symbolSize'
 
             orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
@@ -291,6 +291,7 @@ define(function(require) {
 
             var target = thisOption.target || (thisOption.target = {});
             var controller = thisOption.controller || (thisOption.controller = {});
+
             zrUtil.merge(target, base);
             zrUtil.merge(controller, base);
 
@@ -321,6 +322,7 @@ define(function(require) {
                             base[state][visualType] = defa;
                         }
                         else {
+                            // Mark as not specified.
                             delete base[state];
                         }
                     }
@@ -351,6 +353,7 @@ define(function(require) {
 
                     var itemSize = this.itemSize;
                     var visuals = controller[state];
+
                     // Set inactive color for controller if no other color attr (like colorA) specified.
                     if (!visuals) {
                         visuals = controller[state] = {color: [this.get('inactiveColor')]};
