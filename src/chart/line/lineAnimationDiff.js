@@ -13,30 +13,28 @@ define(function (require) {
     function getStackedOnPoint(coordSys, data, idx) {
         var baseAxis = coordSys.getBaseAxis();
         var valueAxis = coordSys.getOtherAxis(baseAxis);
-        var valueAxisStart = baseAxis.onZero
-            ? valueAxis.dataToCoord(0) : valueAxis.getExtent()[0];
+        var valueStart = baseAxis.onZero
+            ? 0 : valueAxis.scale.getExtent()[0];
 
         var valueDim = valueAxis.dim;
-        var baseCoordOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
+        var baseDataOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
 
         var stackedOnSameSign;
         var stackedOn = data.stackedOn;
         var val = data.get(valueDim, idx);
-        if (val > 0) {
-            // Find first stacked value with same sign
-            while (stackedOn &&
-                sign(stackedOn.get(valueDim, idx)) === sign(val)
-            ) {
-                stackedOnSameSign = stackedOn;
-                break;
-            }
+        // Find first stacked value with same sign
+        while (stackedOn &&
+            sign(stackedOn.get(valueDim, idx)) === sign(val)
+        ) {
+            stackedOnSameSign = stackedOn;
+            break;
         }
-        var pt = [];
-        pt[baseCoordOffset] = data.getItemLayout(idx)[baseCoordOffset];
-        pt[1 - baseCoordOffset] = stackedOnSameSign
-            ? stackedOnSameSign.getItemLayout(idx)[1 - baseCoordOffset]
-            : valueAxisStart;
-        return pt;
+        var stackedData = [];
+        stackedData[baseDataOffset] = data.get(baseAxis.dim, idx);
+        stackedData[1 - baseDataOffset] = stackedOnSameSign
+            ? stackedOnSameSign.get(valueDim, idx, true) : valueStart;
+
+        return coordSys.dataToPoint(stackedData);
     }
 
     return function (
@@ -82,11 +80,11 @@ define(function (require) {
                     var idx = diffItem.idx;
                     currPoints.push(
                         oldCoordSys.dataToPoint([
-                            newData.get(dims[0], idx), newData.get(dims[1], idx)
+                            newData.get(dims[0], idx, true), newData.get(dims[1], idx, true)
                         ])
                     );
 
-                    nextPoints.push(newData.getItemLayout(idx));
+                    nextPoints.push(newData.getItemLayout(idx).slice());
 
                     currStackedPoints.push(
                         getStackedOnPoint(oldCoordSys, newData, idx)
@@ -103,7 +101,7 @@ define(function (require) {
                     if (rawIndex !== idx) {
                         currPoints.push(oldData.getItemLayout(idx));
                         nextPoints.push(newCoordSys.dataToPoint([
-                            oldData.get(dims[0], idx), oldData.get(dims[1], idx)
+                            oldData.get(dims[0], idx, true), oldData.get(dims[1], idx, true)
                         ]));
 
                         currStackedPoints.push(oldStackedOnPoints[idx]);

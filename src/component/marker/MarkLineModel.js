@@ -50,7 +50,7 @@ define(function (require) {
             // 标线起始和结束的symbol介绍类型，如果都一样，可以直接传string
             symbol: ['circle', 'arrow'],
             // 标线起始和结束的symbol大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
-            symbolSize: [2, 4],
+            symbolSize: [8, 16],
             // 标线起始和结束的symbol旋转控制
             //symbolRotate: null,
             //smooth: false,
@@ -73,22 +73,29 @@ define(function (require) {
             },
             itemStyle: {
                 normal: {
-                    // color: 各异,               // 标线主色，线色，symbol主色
-                    // borderColor: 随color,     // 标线symbol边框颜色，优先于color
-                    borderWidth: 1.5,           // 标线symbol边框线宽，单位px，默认为2
+                    // 标线主色，线色，symbol主色
+                    // color: 各异,
+                    // 标线symbol边框颜色，优先于color
+                    // borderColor: 随color,
+                    // 标线symbol边框线宽，单位px，默认为2
+                    borderWidth: 2,
                     label: {
                         show: true,
                         // 标签文本格式器，同Tooltip.formatter，不支持回调
                         // formatter: null,
                         // 可选为 'start'|'end'|'left'|'right'|'top'|'bottom'
                         position: 'end'
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                        // 默认使用全局文本样式，详见TEXTSTYLE
+                        // textStyle: null
                     },
                     lineStyle: {
-                        // color: 随borderColor, // 主色，线色，优先级高于borderColor和color
-                        // width: 随borderWidth, // 优先于borderWidth
+                        // 主色，线色，优先级高于borderColor和color
+                        // color: 随borderColor,
+                        // 优先于borderWidth
+                        // width: 随borderWidth,
                         type: 'dashed'
-                        // shadowColor: 'rgba(0,0,0,0)', //默认透明
+                        //默认透明
+                        // shadowColor: 'rgba(0,0,0,0)',
                         // shadowBlur: 0,
                         // shadowOffsetX: 0,
                         // shadowOffsetY: 0
@@ -103,7 +110,9 @@ define(function (require) {
                         // position: 'inside' // 'left'|'right'|'top'|'bottom'
                         // textStyle: null    // 默认使用全局文本样式，详见TEXTSTYLE
                     },
-                    lineStyle: {}
+                    lineStyle: {
+                        width: 3
+                    }
                 }
             }
         }

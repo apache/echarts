@@ -5,7 +5,6 @@ define(function(require) {
 
     var graphic = require('./graphic');
     var BoundingRect = require('zrender/core/BoundingRect');
-    var zrUtil = require('zrender/core/util');
 
     /**
      * Diamond shape
@@ -45,7 +44,7 @@ define(function(require) {
         buildPath: function (path, shape) {
             var x = shape.x;
             var y = shape.y;
-            var w = shape.width;
+            var w = shape.width / 5 * 3;
             // Height must be larger than width
             var h = Math.max(w, shape.height);
             var r = w / 2;
@@ -83,19 +82,56 @@ define(function(require) {
         }
     });
 
+    /**
+     * Arrow shape
+     */
+    var Arrow = graphic.extendShape({
+
+        type: 'arrow',
+
+        shape: {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+        },
+
+        buildPath: function (ctx, shape) {
+            var height = shape.height;
+            var width = shape.width;
+            var x = shape.x;
+            var y = shape.y;
+            var dx = width / 3 * 2;
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + dx, y + height);
+            ctx.lineTo(x, y + height / 4 * 3);
+            ctx.lineTo(x - dx, y + height);
+            ctx.lineTo(x, y);
+        }
+    });
+
     var symbolCtors = {
         line: graphic.Line,
+
         rect: graphic.Rect,
+
         roundRect: graphic.Rect,
+
         square: graphic.Rect,
+
         circle: graphic.Circle,
+
         diamond: Diamond,
-        pin: Pin
+
+        pin: Pin,
+
+        arrow: Arrow
     };
 
     var symbolShapeMakers = {
 
         line: function (x, y, w, h) {
+            // FIXME
             return {
                 x1: x,
                 y1: y + h / 2,
@@ -159,8 +195,16 @@ define(function(require) {
                 width: w,
                 height: h
             };
-        }
+        },
 
+        arrow: function (x, y, w, h) {
+            return {
+                x: x + w / 2,
+                y: y + h / 2,
+                width: w,
+                height: h
+            }
+        }
     };
 
     // Provide setColor helper method to avoid determine if set the fill or stroke outside

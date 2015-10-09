@@ -272,8 +272,12 @@ define(function (require) {
         var dataIndex = this.indices[idx];
 
         var value = storage[dim] && storage[dim][dataIndex];
+        var dimensionInfo = this._dimensionInfos[dim];
         // FIXME ordinal data type is not stackable
-        if (stack && this.stackedOn) {
+        if (
+            stack && this.stackedOn
+            && dimensionInfo && dimensionInfo.stackable
+        ) {
             var stackedValue = this.stackedOn.get(dim, idx, stack);
             // Considering positive stack, negative stack and empty data
             if ((value >= 0 && stackedValue > 0)  // Positive stack
@@ -441,19 +445,6 @@ define(function (require) {
     }
 
     /**
-     * @private
-     */
-    listProto._getStackDimMap = function (dimensions) {
-        var stackDimMap = {};
-        var dimensionsInfoMap = this._dimensionInfos;
-        // Avoid get the undefined value
-        for (var i = 0; i < dimensions.length; i++) {
-            var dim = dimensions[i]
-            stackDimMap[dim] = !!dimensionsInfoMap[dim].stackable;
-        }
-        return stackDimMap;
-    }
-    /**
      * Data iteration
      * @param {string|Array.<string>}
      * @param {Function} cb
@@ -479,11 +470,6 @@ define(function (require) {
         var dimSize = dimensions.length;
         var indices = this.indices;
 
-        // Only stacked on the value axis
-        var stackDimMap = this._getStackDimMap(dimensions);
-        // Optimizing for 1 dim case
-        var firstDimStack = stack && stackDimMap[dimensions[0]];
-
         context = context || this;
 
         for (var i = 0; i < indices.length; i++) {
@@ -493,11 +479,11 @@ define(function (require) {
             }
             // Simple optimization
             else if (dimSize === 1) {
-                cb.call(context, this.get(dimensions[0], i, firstDimStack), i);
+                cb.call(context, this.get(dimensions[0], i, stack), i);
             }
             else {
                 for (var k = 0; k < dimSize; k++) {
-                    value[k] = this.get(dimensions[k], i, stack && stackDimMap[dimensions[k]]);
+                    value[k] = this.get(dimensions[k], i, stack);
                 }
                 // Index
                 value[k] = i;
@@ -528,11 +514,6 @@ define(function (require) {
         var dimSize = dimensions.length;
         var indices = this.indices;
 
-        // Only stacked on the value axis
-        var stackDimMap = this._getStackDimMap(dimensions);
-        // Optimizing for 1 dim case
-        var firstDimStack = stack && stackDimMap[dimensions[0]];
-
         context = context || this;
 
         for (var i = 0; i < indices.length; i++) {
@@ -540,12 +521,12 @@ define(function (require) {
             // Simple optimization
             if (dimSize === 1) {
                 keep = cb.call(
-                    context, this.get(dimensions[0], i, firstDimStack), i
+                    context, this.get(dimensions[0], i, stack), i
                 );
             }
             else {
                 for (var k = 0; k < dimSize; k++) {
-                    value[k] = this.get(dimensions[k], i, stack && stackDimMap[dimensions[k]]);
+                    value[k] = this.get(dimensions[k], i, stack);
                 }
                 value[k] = i;
                 keep = cb.apply(context, value);

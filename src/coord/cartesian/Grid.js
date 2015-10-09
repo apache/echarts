@@ -40,6 +40,25 @@ define(function(require, factory) {
         return ecModel.getComponent('grid', axisModel.get('gridIndex')) === gridModel;
     }
 
+    /**
+     * Check if the axis corss 0
+     * @inner
+     */
+    function ifAxisCrossZero (axis) {
+        var dataExtent = axis.scale.getExtent();
+        return (dataExtent[0] > 0 && dataExtent[1] > 0)
+            || (dataExtent[0] < 0 && dataExtent[1] < 0)
+            || ifAxisNeedsCrossZero(axis);
+    }
+    /**
+     * Check if the axis scale needs include data 0
+     * @inner
+     */
+    function ifAxisNeedsCrossZero(axis) {
+        return !axis.model.get('scale')
+            && axis.type !== CATEGORY_AXIS_TYPE
+    }
+
     function Grid(gridModel, ecModel, api) {
 
         /**
@@ -207,19 +226,24 @@ define(function(require, factory) {
                     this._coordsMap[key] = cartesian;
                     this._coordsList.push(cartesian);
 
-                    // On zero can not be used when other axis is a category axis
-                    if (xAxis.type === CATEGORY_AXIS_TYPE) {
+                    // onZero can not be used in these two situations
+                    // 1. When other axis is a category axis
+                    // 2. When other axis not across 0 point
+                    if (xAxis.type === CATEGORY_AXIS_TYPE
+                        || !ifAxisCrossZero(xAxis)
+                    ) {
                         yAxis.onZero = false;
                     }
-                    if (yAxis.type === CATEGORY_AXIS_TYPE) {
+                    if (yAxis.type === CATEGORY_AXIS_TYPE
+                      || !ifAxisCrossZero(yAxis)
+                    ) {
                         xAxis.onZero = false;
                     }
 
-                    // Force scale to be true so the axis can contain `0`
-                    if (xAxis.onZero || yAxis.model.get('scale')) {
+                    if (ifAxisNeedsCrossZero(yAxis, xAxis)) {
                         yAxis.scale.unionExtent([0, 0]);
                     }
-                    if (yAxis.onZero || xAxis.model.get('scale')) {
+                    if (ifAxisNeedsCrossZero(xAxis, yAxis)) {
                         xAxis.scale.unionExtent([0, 0]);
                     }
 
