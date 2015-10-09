@@ -5,7 +5,6 @@ define(function(require) {
 
     var graphic = require('./graphic');
     var BoundingRect = require('zrender/core/BoundingRect');
-    var zrUtil = require('zrender/core/util');
 
     /**
      * Diamond shape
@@ -91,8 +90,8 @@ define(function(require) {
         type: 'arrow',
 
         shape: {
-            cx: 0,
-            cy: 0,
+            x: 0,
+            y: 0,
             width: 0,
             height: 0
         },
@@ -100,8 +99,8 @@ define(function(require) {
         buildPath: function (ctx, shape) {
             var height = shape.height;
             var width = shape.width;
-            var x = shape.cx;
-            var y = shape.cy - height / 2;
+            var x = shape.x;
+            var y = shape.y;
             var dx = width / 3 * 2;
             ctx.moveTo(x, y);
             ctx.lineTo(x + dx, y + height);
@@ -132,6 +131,7 @@ define(function(require) {
     var symbolShapeMakers = {
 
         line: function (x, y, w, h) {
+            // FIXME
             return {
                 x1: x,
                 y1: y + h / 2,
@@ -199,8 +199,8 @@ define(function(require) {
 
         arrow: function (x, y, w, h) {
             return {
-                cx: x + w / 2,
-                cy: y + h / 2,
+                x: x + w / 2,
+                y: y + h / 2,
                 width: w,
                 height: h
             }

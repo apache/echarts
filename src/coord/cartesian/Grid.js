@@ -40,6 +40,24 @@ define(function(require, factory) {
         return ecModel.getComponent('grid', axisModel.get('gridIndex')) === gridModel;
     }
 
+    /**
+     * Check if the data corss 0
+     * @inner
+     */
+    // function ifDataCrossZero(dataExtent) {
+    //     return (dataExtent[0] > 0 && dataExtent[1] > 0)
+    //         || (dataExtent[0] < 0 && dataExtent[1] < 0);
+    // }
+    /**
+     * Check if the axis scale needs include data 0
+     * @inner
+     */
+    function ifNeedsCrossZero(axis, otherAxis) {
+        return otherAxis.onZero
+            || !axis.model.get('scale')
+            && axis.type !== CATEGORY_AXIS_TYPE
+    }
+
     function Grid(gridModel, ecModel, api) {
 
         /**
@@ -215,18 +233,12 @@ define(function(require, factory) {
                         xAxis.onZero = false;
                     }
 
-                    // Force scale to be false so the axis can contain `0`
+                    // Force scale to be false so the axis can cross `0`
                     // Only value axis support scale to be set fasle
-                    if (
-                        xAxis.onZero || !yAxis.model.get('scale')
-                        && yAxis.type !== CATEGORY_AXIS_TYPE
-                    ) {
+                    if (ifNeedsCrossZero(yAxis, xAxis)) {
                         yAxis.scale.unionExtent([0, 0]);
                     }
-                    if (
-                        yAxis.onZero || !xAxis.model.get('scale')
-                        && xAxis.type !== CATEGORY_AXIS_TYPE
-                    ) {
+                    if (ifNeedsCrossZero(xAxis, yAxis)) {
                         xAxis.scale.unionExtent([0, 0]);
                     }
 

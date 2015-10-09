@@ -43,7 +43,7 @@ define(function (require) {
         }
 
         // Rotate the arrow
-        // FIXME Glue code ?
+        // FIXME Hard coded ?
         if (symbolType === 'arrow') {
             symbolPath.rotation = tangentRotation(p1, p2);
         }
