@@ -10,6 +10,8 @@ define(function(require) {
     var VisualMapping = require('../../visual/VisualMapping');
     var numberUtil = require('../../util/number');
     var asc = numberUtil.asc;
+    var linearMap = numberUtil.linearMap;
+    var parsePercent = require('../../util/number').parsePercent;
 
     return echarts.extendComponentModel({
 
@@ -110,6 +112,13 @@ define(function(require) {
              */
             this.textStyleModel;
 
+            /**
+             * [width, height]
+             * @readOnly
+             * @type {Array.<number>}
+             */
+            this.itemSize;
+
             this.mergeDefaultAndTheme(option, ecModel);
             this.mergeOption({}, true);
         },
@@ -135,7 +144,9 @@ define(function(require) {
 
             this.textStyleModel = this.getModel('textStyle');
 
-            this._completeVisualOption();
+            this.resetItemSize();
+
+            this.completeVisualOption();
         },
 
         /**
@@ -272,9 +283,9 @@ define(function(require) {
         },
 
         /**
-         * @private
+         * @protected
          */
-        _completeVisualOption: function () {
+        completeVisualOption: function () {
             var thisOption = this.option;
             var base = {inRange: thisOption.inRange, outOfRange: thisOption.outOfRange};
 
@@ -333,22 +344,45 @@ define(function(require) {
             function completeController(controller) {
                 var symbolExists = (controller.inRange || {}).symbol
                     || (controller.outOfRange || {}).symbol;
+                var symbolSizeExists = (controller.inRange || {}).symbolSize
+                    || (controller.outOfRange || {}).symbolSize;
 
                 zrUtil.each(this.stateList, function (state) {
+
+                    var itemSize = this.itemSize;
                     var visuals = controller[state];
                     // Set inactive color for controller if no other color attr (like colorA) specified.
                     if (!visuals) {
                         visuals = controller[state] = {color: [this.get('inactiveColor')]};
                     }
-                    // Consistent symbol if not specified.
+
+                    // Consistent symbol and symbolSize if not specified.
                     if (!visuals.symbol) {
-                        visuals.symbol = symbolExists || ['roundRect'];
+                        visuals.symbol = symbolExists && symbolExists.slice() || ['roundRect'];
                     }
+                    if (!visuals.symbolSize) {
+                        visuals.symbolSize = symbolSizeExists
+                            && symbolSizeExists.slice()
+                            || [itemSize[0], itemSize[0]];
+                    }
+
                     // Filter square and none.
                     visuals.symbol = zrUtil.map(visuals.symbol, function (symbol) {
                         return (symbol === 'none' || symbol === 'square')
                             ? 'roundRect' : symbol;
                     });
+
+                    // Normalize symbolSize
+                    var symbolSize = visuals.symbolSize;
+                    if (symbolSize) {
+                        symbolSize[0] = linearMap(
+                            symbolSize[0], [0, symbolSize[1]], [0, itemSize[0]], true
+                        );
+                        symbolSize[1] = linearMap(
+                            symbolSize[1], [0, symbolSize[1]], [0, itemSize[0]], true
+                        );
+                    }
+
                 }, this);
             }
         },
@@ -360,6 +394,17 @@ define(function(require) {
             zrUtil.each(this.option.seriesIndex, function (seriesIndex) {
                 callback.call(context, this.ecModel.getSeriesByIndex(seriesIndex, true));
             }, this);
+        },
+
+        /**
+         * @protected
+         */
+        resetItemSize: function () {
+            var api = this.api;
+            this.itemSize = [
+                parsePercent(this.get('itemWidth'), api.getWidth()),
+                parsePercent(this.get('itemHeight'), api.getHeight())
+            ];
         },
 
         /**

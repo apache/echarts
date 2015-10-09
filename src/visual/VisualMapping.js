@@ -93,7 +93,6 @@ define(function (require) {
         }),
 
         symbol: {
-
             applyVisual: function (value, getter, setter) {
                 var symbolCfg = this.mapValueToVisual(value);
                 if (typeof symbolCfg === 'string') {
@@ -109,6 +108,21 @@ define(function (require) {
                 return specifiedVisual != null
                     ? specifiedVisual
                     : (arrayGetByNormalizedValue(this.option.data, normalized) || {});
+            }
+        },
+
+        symbolSize: {
+            applyVisual: function (value, getter, setter) {
+                setter('symbolSize', this.mapValueToVisual(value));
+            },
+
+            mapValueToVisual: function (value) {
+                var normalized = this._normalizeData(value);
+                var specifiedVisual = this._getIntervalVisual(normalized);
+
+                return specifiedVisual != null
+                    ? specifiedVisual
+                    : linearMap(normalized, [0, 1], this.option.data, true);
             }
         }
     };
@@ -215,6 +229,11 @@ define(function (require) {
         symbol: {
             active: ['circle', 'roundRect', 'diamond'],
             inactive: ['none']
+        },
+
+        symbolSize: {
+            active: [10, 50],
+            inactive: [0, 0]
         }
     };
 

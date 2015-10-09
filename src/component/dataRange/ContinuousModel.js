@@ -5,6 +5,10 @@
 define(function(require) {
 
     var DataRangeModel = require('./DataRangeModel');
+    var zrUtil = require('zrender/core/util');
+
+    // Constant
+    var DEFAULT_BAR_BOUND = [20, 140];
 
     return DataRangeModel.extend({
 
@@ -40,6 +44,21 @@ define(function(require) {
         },
 
         /**
+         * @protected
+         * @override
+         */
+        resetItemSize: function () {
+            DataRangeModel.prototype.resetItemSize.apply(this, arguments);
+
+            var itemSize = this.itemSize;
+
+            this._orient === 'horizontal' && itemSize.reverse();
+
+            (itemSize[0] == null || isNaN(itemSize[0])) && (itemSize[0] = DEFAULT_BAR_BOUND[0]);
+            (itemSize[1] == null || isNaN(itemSize[1])) && (itemSize[1] = DEFAULT_BAR_BOUND[1]);
+        },
+
+        /**
          * @private
          */
         _resetRange: function () {
@@ -50,6 +69,21 @@ define(function(require) {
             }
             range[0] = Math.max(range[0], dataExtent[0]);
             range[1] = Math.min(range[1], dataExtent[1]);
+        },
+
+        /**
+         * @protected
+         * @override
+         */
+        completeVisualOption: function () {
+            DataRangeModel.prototype.completeVisualOption.apply(this, arguments);
+
+            zrUtil.each(this.stateList, function (state) {
+                var symbolSize = this.option.controller[state].symbolSize;
+                if (symbolSize && symbolSize[0] !== symbolSize[1]) {
+                    symbolSize[0] = 0; // For good looking.
+                }
+            }, this);
         },
 
         /**

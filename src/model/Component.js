@@ -47,6 +47,11 @@ define(function(require) {
          */
         uid: null,
 
+        /**
+         * @readOnly
+         */
+        api: null,
+
         init: function () {
             this.mergeDefaultAndTheme(this.option, this.ecModel);
         },
@@ -78,11 +83,15 @@ define(function(require) {
     });
 
     // Reset ComponentModel.extend, add preConstruct.
-    componentUtil.enableClassExtend(ComponentModel, function (option, parentModel, ecModel, dependentModels) {
-        this.ecModel = ecModel;
-        this.dependentModels = dependentModels;
-        this.uid = componentUtil.getUID('componentModel');
-    });
+    componentUtil.enableClassExtend(
+        ComponentModel,
+        function (option, parentModel, ecModel, dependentModels, index, api) {
+            this.ecModel = ecModel;
+            this.dependentModels = dependentModels;
+            this.uid = componentUtil.getUID('componentModel');
+            this.api = api;
+        }
+    );
 
     // Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
     componentUtil.enableClassManagement(
