@@ -41,20 +41,21 @@ define(function(require, factory) {
     }
 
     /**
-     * Check if the data corss 0
+     * Check if the axis corss 0
      * @inner
      */
-    // function ifDataCrossZero(dataExtent) {
-    //     return (dataExtent[0] > 0 && dataExtent[1] > 0)
-    //         || (dataExtent[0] < 0 && dataExtent[1] < 0);
-    // }
+    function ifAxisCrossZero (axis) {
+        var dataExtent = axis.scale.getExtent();
+        return (dataExtent[0] > 0 && dataExtent[1] > 0)
+            || (dataExtent[0] < 0 && dataExtent[1] < 0)
+            || ifAxisNeedsCrossZero(axis);
+    }
     /**
      * Check if the axis scale needs include data 0
      * @inner
      */
-    function ifNeedsCrossZero(axis, otherAxis) {
-        return otherAxis.onZero
-            || !axis.model.get('scale')
+    function ifAxisNeedsCrossZero(axis) {
+        return !axis.model.get('scale')
             && axis.type !== CATEGORY_AXIS_TYPE
     }
 
@@ -225,20 +226,24 @@ define(function(require, factory) {
                     this._coordsMap[key] = cartesian;
                     this._coordsList.push(cartesian);
 
-                    // On zero can not be used when other axis is a category axis
-                    if (xAxis.type === CATEGORY_AXIS_TYPE) {
+                    // onZero can not be used in these two situations
+                    // 1. When other axis is a category axis
+                    // 2. When other axis not across 0 point
+                    if (xAxis.type === CATEGORY_AXIS_TYPE
+                        || !ifAxisCrossZero(xAxis)
+                    ) {
                         yAxis.onZero = false;
                     }
-                    if (yAxis.type === CATEGORY_AXIS_TYPE) {
+                    if (yAxis.type === CATEGORY_AXIS_TYPE
+                      || !ifAxisCrossZero(yAxis)
+                    ) {
                         xAxis.onZero = false;
                     }
 
-                    // Force scale to be false so the axis can cross `0`
-                    // Only value axis support scale to be set fasle
-                    if (ifNeedsCrossZero(yAxis, xAxis)) {
+                    if (ifAxisNeedsCrossZero(yAxis, xAxis)) {
                         yAxis.scale.unionExtent([0, 0]);
                     }
-                    if (ifNeedsCrossZero(xAxis, yAxis)) {
+                    if (ifAxisNeedsCrossZero(xAxis, yAxis)) {
                         xAxis.scale.unionExtent([0, 0]);
                     }
 
