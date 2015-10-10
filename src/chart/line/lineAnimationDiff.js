@@ -43,8 +43,8 @@ define(function (require) {
         oldCoordSys, newCoordSys
     ) {
 
-        var newNameList = newData.map(newData.getName);
-        var oldNameList = oldData.map(oldData.getName);
+        var newNameList = newData.mapArray(newData.getName);
+        var oldNameList = oldData.mapArray(oldData.getName);
 
         var currPoints = [];
         var nextPoints = [];

@@ -46,8 +46,8 @@ define(function(require, factory) {
      */
     function ifAxisCrossZero (axis) {
         var dataExtent = axis.scale.getExtent();
-        return (dataExtent[0] > 0 && dataExtent[1] > 0)
-            || (dataExtent[0] < 0 && dataExtent[1] < 0)
+        return !((dataExtent[0] > 0 && dataExtent[1] > 0)
+                || (dataExtent[0] < 0 && dataExtent[1] < 0))
             || ifAxisNeedsCrossZero(axis);
     }
     /**
@@ -226,6 +226,17 @@ define(function(require, factory) {
                     this._coordsMap[key] = cartesian;
                     this._coordsList.push(cartesian);
 
+                    cartesian.addAxis(xAxis);
+                    cartesian.addAxis(yAxis);
+                }, this);
+            }, this);
+
+            this._updateCartesianFromSeries(ecModel, gridModel);
+
+
+            // Fix configuration
+            zrUtil.each(axesMap.x, function (xAxis) {
+                zrUtil.each(axesMap.y, function (yAxis) {
                     // onZero can not be used in these two situations
                     // 1. When other axis is a category axis
                     // 2. When other axis not across 0 point
@@ -247,13 +258,8 @@ define(function(require, factory) {
                         xAxis.scale.unionExtent([0, 0]);
                     }
 
-                    cartesian.addAxis(xAxis);
-                    cartesian.addAxis(yAxis);
                 }, this);
             }, this);
-
-            this._updateCartesianFromSeries(ecModel, gridModel);
-
 
             function createAxisCreator(axisType) {
                 return function (axisModel, idx) {

@@ -57,8 +57,14 @@ describe('List', function () {
         });
 
         testCase('Stacked data', function (List) {
-            var list1 = new List(['x', 'y']);
-            var list2 = new List(['x', 'y']);
+            var list1 = new List(['x', {
+                name: 'y',
+                stackable: true
+            }]);
+            var list2 = new List(['x', {
+                name: 'y',
+                stackable: true
+            }]);
             list1.initData([1, '-', 2, -2]);
             list2.initData([1, 2,   3, 2]);
 
@@ -102,6 +108,16 @@ describe('List', function () {
             var list = new List(['x', 'y']);
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.map(['x', 'y'], function (x, y) {
+                return [x + 2, y + 2];
+            }).mapArray('x', function (x) {
+                return x;
+            })).toEqual([12, 22, 32]);
+        });
+
+        testCase('mapArray', function (List) {
+            var list = new List(['x', 'y']);
+            list.initData([[10, 15], [20, 25], [30, 35]]);
+            expect(list.mapArray(['x', 'y'], function (x, y) {
                 return [x, y];
             })).toEqual([[10, 15], [20, 25], [30, 35]]);
         });
@@ -111,7 +127,7 @@ describe('List', function () {
             list.initData([[10, 15], [20, 25], [30, 35]]);
             expect(list.filterSelf(['x', 'y'], function (x, y) {
                 return x < 30 && x > 10;
-            }).map('x', function (x) {
+            }).mapArray('x', function (x) {
                 return x;
             })).toEqual([20]);
         });

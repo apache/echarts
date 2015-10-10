@@ -104,7 +104,7 @@ define(function (require) {
             if (!zrUtil.isArray(symbolType)) {
                 symbolType = [symbolType, symbolType];
             }
-            if (typeof (+symbolSize) === 'number') {
+            if (typeof symbolSize === 'number') {
                 symbolSize = [symbolSize, symbolSize];
             }
 

@@ -59,7 +59,7 @@ define(function(require) {
          *  `[[10, 10], [20, 20], [30, 30]]`
          */
         dataToPoints: function (data, stack) {
-            return data.map(['x', 'y'], function (x, y) {
+            return data.mapArray(['x', 'y'], function (x, y) {
                 return this.dataToPoint([x, y]);
             }, stack, this);
         },

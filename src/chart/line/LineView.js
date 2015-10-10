@@ -57,7 +57,7 @@ define(function(require) {
         // var dims = coordSys.type === 'cartesian2d' ? ['x', 'y'] : ['radius', 'angle'];
         var baseDataOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
 
-        return data.map([valueDim], function (val, idx) {
+        return data.mapArray([valueDim], function (val, idx) {
             var stackedOnSameSign;
             var stackedOn = data.stackedOn;
             // Find first stacked value with same sign
@@ -93,7 +93,7 @@ define(function(require) {
             var lineStyleModel = seriesModel.getModel('itemStyle.normal.lineStyle');
             var areaStyleModel = seriesModel.getModel('itemStyle.normal.areaStyle');
 
-            var points = data.map(data.getItemLayout, true);
+            var points = data.mapArray(data.getItemLayout, true);
 
             var isCoordSysPolar = coordSys.type === 'polar';
             var prevCoordSys = this._coordSys;
