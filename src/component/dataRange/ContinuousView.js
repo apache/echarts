@@ -43,6 +43,11 @@ define(function(require) {
             /**
              * @private
              */
+            this._handleEnds = [];
+
+            /**
+             * @private
+             */
             this._orient;
         },
 
@@ -69,10 +74,7 @@ define(function(require) {
 
             this._orient = dataRangeModel.get('orient');
 
-            // Reset data range.
-            this._dataInterval = numberUtil.asc(
-                (dataRangeModel.get('range') || [])
-            .slice());
+            this._resetInterval();
 
             var itemSize = dataRangeModel.itemSize;
 
@@ -201,20 +203,37 @@ define(function(require) {
                 type: 'selectDataRange',
                 from: this.uid,
                 dataRangeModelId: this.dataRangeModel.uid,
-                selected: this._dataInterval
+                selected: this._dataInterval.slice()
             });
         },
 
         /**
          * @private
-         * @param {number} handleIndex 0 or 1
+         */
+        _resetInterval: function () {
+            var dataRangeModel = this.dataRangeModel;
+
+            var dataInterval = this._dataInterval = dataRangeModel.getSelected();
+
+            this._handleEnds = linearMap(
+                dataInterval,
+                dataRangeModel.getExtent(),
+                [0, dataRangeModel.itemSize[1]],
+                true
+            );
+        },
+
+        /**
+         * @private
+         * @param {(number|string)} handleIndex 0 or 1 or 'all'
          * @param {number} dx
          * @param {number} dy
          */
         _updateInterval: function (handleIndex, delta) {
             delta = delta || 0;
-            var handleEnds = this._mapDataToHandle(this._dataInterval);
-            var extent = [0, this.dataRangeModel.itemSize[1]];
+            var dataRangeModel = this.dataRangeModel;
+            var handleEnds = this._handleEnds;
+            var extent = [0, dataRangeModel.itemSize[1]];
 
             if (handleIndex === 'all') {
                 delta = getRealDelta(delta, handleEnds, extent);
@@ -231,7 +250,12 @@ define(function(require) {
             }
 
             // Update data interval.
-            this._dataInterval = this._mapHandleToData(handleEnds);
+            this._dataInterval = linearMap(
+                handleEnds,
+                [0, dataRangeModel.itemSize[1]],
+                dataRangeModel.getExtent(),
+                true
+            );
 
             function getRealDelta(delta, handleEnds, extent) {
                 !handleEnds.length && (handleEnds = [handleEnds, handleEnds]);
@@ -286,7 +310,7 @@ define(function(require) {
         _createBarVisual: function (dataInterval, dataExtent, forceState) {
             var handleEnds = forceState
                 ? [0, this.dataRangeModel.itemSize[1]]
-                : this._mapDataToHandle(dataInterval);
+                : this._handleEnds;
 
             var visuals = [
                 this.getControllerVisual(dataInterval[0], forceState),
@@ -323,36 +347,6 @@ define(function(require) {
                 [itemSize[0], handleEnds[0]],
                 [itemSize[0], handleEnds[1]],
                 [itemSize[0] - widths1, handleEnds[1]]
-            ];
-        },
-
-        /**
-         * @private
-         * @param {Array} dataInterval Always be [little, big]
-         * @return {number} handleEnds: [handle0 coord, handle1 coord]
-         */
-        _mapDataToHandle: function (dataInterval) {
-            var dataExtent = this.dataRangeModel.getExtent();
-            var handleEndsMax = [0, this.dataRangeModel.itemSize[1]];
-
-            return [
-                linearMap(dataInterval[0], dataExtent, handleEndsMax, true),
-                linearMap(dataInterval[1], dataExtent, handleEndsMax, true)
-            ];
-        },
-
-        /**
-         * @private
-         * @param {Array} handleEnds
-         * @return {number} Always be [little, big]
-         */
-        _mapHandleToData: function (handleEnds) {
-            var dataExtent = this.dataRangeModel.getExtent();
-            var handleEndsMax = [0, this.dataRangeModel.itemSize[1]];
-
-            return [
-                linearMap(handleEnds[0], handleEndsMax, dataExtent, true),
-                linearMap(handleEnds[1], handleEndsMax, dataExtent, true)
             ];
         },
 

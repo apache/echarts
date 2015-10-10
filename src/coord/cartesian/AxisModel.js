@@ -21,7 +21,15 @@ define(function(require) {
         /**
          * @type {module:echarts/coord/cartesian/Axis2D}
          */
-        axis: null
+        axis: null,
+
+        /**
+         * @public
+         * @param {boolean} needs Whether axis needs cross zero.
+         */
+        setNeedsCrossZero: function (needs) {
+            this.option.scale = !needs;
+        }
     });
 
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));

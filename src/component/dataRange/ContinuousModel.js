@@ -6,6 +6,7 @@ define(function(require) {
 
     var DataRangeModel = require('./DataRangeModel');
     var zrUtil = require('zrender/core/util');
+    var numberUtil = require('../../util/number');
 
     // Constant
     var DEFAULT_BAR_BOUND = [20, 140];
@@ -93,6 +94,25 @@ define(function(require) {
         setSelected: function (selected) {
             this.option.range = selected.slice();
             this._resetRange();
+        },
+
+        /**
+         * @public
+         */
+        getSelected: function () {
+            var dataExtent = this.getExtent();
+
+            var dataInterval = numberUtil.asc(
+                (this.get('range') || []).slice()
+            );
+
+            // Clamp
+            dataInterval[0] > dataExtent[1] && (dataInterval[0] = dataExtent[1]);
+            dataInterval[1] > dataExtent[1] && (dataInterval[1] = dataExtent[1]);
+            dataInterval[0] < dataExtent[0] && (dataInterval[0] = dataExtent[0]);
+            dataInterval[1] < dataExtent[0] && (dataInterval[1] = dataExtent[0]);
+
+            return dataInterval;
         },
 
         /**

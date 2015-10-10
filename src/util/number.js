@@ -5,6 +5,8 @@
 
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
+
     function _trim(str) {
         return str.replace(/^\s+/, '').replace(/\s+$/, '');
     }
@@ -12,13 +14,20 @@ define(function (require) {
     /**
      * Linear mapping a value from domain to range
      * @memberOf module:echarts/util/number
-     * @param  {number} val
+     * @param  {(number|Array.<number>)} val
      * @param  {Array.<number>} domain Domain extent
      * @param  {Array.<number>} range  Range extent
      * @param  {boolean} clamp
-     * @return {number}
+     * @return {(number|Array.<number>}
      */
-    function linearMap (val, domain, range, clamp) {
+    function linearMap(val, domain, range, clamp) {
+
+        if (zrUtil.isArray(val)) {
+            return zrUtil.map(val, function (v) {
+                return linearMap(v, domain, range, clamp);
+            });
+        }
+
         var sub = domain[1] - domain[0];
 
         if (sub === 0) {

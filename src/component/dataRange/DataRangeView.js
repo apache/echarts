@@ -49,7 +49,7 @@ define(function (require) {
         render: function (dataRangeModel, ecModel, api, event) {
             this.dataRangeModel = dataRangeModel;
 
-            if (!dataRangeModel.get('show')) {
+            if (dataRangeModel.get('show') === false) {
                 this.group.removeAll();
                 return;
             }

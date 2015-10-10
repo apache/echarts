@@ -53,10 +53,22 @@ define(function(require) {
          * @override
          */
         init: function (option, parentModel, ecModel) {
+
+            /**
+             * @private
+             * @type {Boolean}
+             */
+            this._autoAxisIndex = false;
+
+            /**
+             * key like x_0, y_1
+             * @private
+             * @type {Object}
+             */
+            this._needsCrossZeroBackup = {};
+
             this.mergeDefaultAndTheme(option, ecModel);
             this.mergeOption({}, true);
-
-            this._autoAxisIndex = false;
         },
 
         /**
@@ -79,8 +91,12 @@ define(function(require) {
             // optionMerge时根据type进行merge。
             this._resetTargetAxes(newOption);
             // this._resetTargetSeries(newOption);
+
+            this._backup();
+
             this._resetRange();
             this._resetInverse();
+
         },
 
         _resetAutoIndex: function (newOption, isInit) {
@@ -178,6 +194,13 @@ define(function(require) {
             return is;
         },
 
+        _backup: function () {
+            this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
+                this._needsCrossZeroBackup[dimNames.axis + '_' + axisIndex] =
+                    ecModel.getComponent(dimNames.axis, axisIndex).get('scale');
+            }, this);
+        },
+
         _resetRange: function () {
             var thisOption = this.option;
 
@@ -227,6 +250,16 @@ define(function(require) {
             if (!targetDim2) {
                 thisOption.start2 = thisOption.end2 = null;
             }
+
+            // Set "needsCrossZero" to axes
+            this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
+                var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
+                axisModel.setNeedsCrossZero && axisModel.setNeedsCrossZero(
+                    thisOption.start === 0 && thisOption.end === 100
+                        ? this._needsCrossZeroBackup[dimNames.axis + '_' + axisIndex]
+                        : false
+                );
+            }, this);
         },
 
         /**
