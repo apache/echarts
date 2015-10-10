@@ -122,7 +122,9 @@ define(function (require) {
 
             var ecModel = this._model;
             if (!ecModel || notMerge) {
-                ecModel = new GlobalModel(option, null, this._theme);
+                ecModel = new GlobalModel(
+                    option, null, this._theme, this._extensionAPI
+                );
                 this._model = ecModel;
             }
             else {

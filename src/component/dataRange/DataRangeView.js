@@ -85,15 +85,15 @@ define(function (require) {
         /**
          * @protected
          */
-        renderEndsText: function (group, text, itemWidth, itemHeight) {
+        renderEndsText: function (group, text, itemSize) {
             if (!text) {
                 return;
             }
             var itemGroup = new graphic.Group();
             itemGroup.add(new graphic.Text({
                 style: {
-                    x: itemWidth / 2,
-                    y: itemHeight / 2,
+                    x: itemSize[0] / 2,
+                    y: itemSize[1] / 2,
                     textBaseline: 'middle',
                     textAlign: 'center',
                     text: text,

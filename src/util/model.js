@@ -1,6 +1,7 @@
 define(function(require) {
 
     var zrUtil = require('zrender/core/util');
+    var matrix = require('zrender/core/matrix');
 
     var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
 
@@ -80,6 +81,46 @@ define(function(require) {
             : value == null
             ? []
             : [value];
+    };
+
+    /**
+     * Get transform matrix of target (param target),
+     * in coordinate of its ancestor (param ancestor)
+     *
+     * @param {module:zrender/mixin/Transformable} target
+     * @param {module:zrender/mixin/Transformable} ancestor
+     */
+    util.getTransform = function (target, ancestor) {
+        var node = target;
+        var nodeList = [];
+
+        while (node && node !== ancestor) {
+            nodeList.push(node);
+            node = node.parent;
+        }
+
+        var mat = matrix.identity([]);
+
+        for (var i = nodeList.length - 1; i >= 0; i--) {
+            mat = matrix.mul(mat, mat, nodeList[i].getLocalTransform());
+        }
+        return mat;
+    };
+
+    /**
+     * Apply transform to an vertex.
+     * @param {Array.<number>} vertex [x, y]
+     * @param {Array.<number>} transform Transform matrix: like [1, 0, 0, 1, 0, 0]
+     * @param {boolean=} invert Whether use invert matrix.
+     * @return {Array.<number>} [x, y]
+     */
+    util.applyTransform = function (vertex, tansform, invert) {
+        var mat = [1, 0, 0, 1, vertex[0], vertex[1]];
+        if (invert) {
+            tansform = matrix.invert([], tansform);
+        }
+        matrix.mul(mat, tansform, mat);
+        return [mat[4], mat[5]];
     };
 
     /**

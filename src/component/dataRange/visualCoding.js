@@ -14,14 +14,6 @@ define(function (require) {
     // TODO
     // undo redo
 
-    // function processSingleDataRange(dataRangeModel, ecModel) {
-    //     dataRangeModel.eachTargetSeries(function (seriesModel) {
-    //         dataRangeModel.visualMapping.applyVisual(
-    //             seriesModel.getData(), dataRangeModel.get('dimension')
-    //         );
-    //     });
-    // }
-
     function processSingleDataRange(dataRangeModel, ecModel) {
         dataRangeModel.eachTargetSeries(function (seriesModel) {
             var dimension = dataRangeModel.get('dimension');

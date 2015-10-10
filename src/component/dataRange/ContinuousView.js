@@ -4,13 +4,20 @@ define(function(require) {
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
+    var modelUtil = require('../../util/model');
     var linearMap = numberUtil.linearMap;
-    var asc = numberUtil.asc;
     var LinearGradient = require('zrender/graphic/LinearGradient');
-    var parsePercent = numberUtil.parsePercent;
 
     // Constants
-    var DEFAULT_BAR_BOUND = [20, 140];
+    var NO_COLOR = 'rgba(0,0,0,0)';
+
+    // Notice:
+    // Any "interval" should be by the order of [low, high].
+    // "handle0" (handleIndex === 0) maps to
+    // low data value: this._dataInterval[0] and has low coord.
+    // "handle1" (handleIndex === 1) maps to
+    // high data value: this._dataInterval[1] and has high coord.
+    // The logic of transform is implemented in this._createBarGroup.
 
     var PiecewiseDataRangeView = DataRangeView.extend({
 
@@ -20,6 +27,7 @@ define(function(require) {
          * @override
          */
         init: function () {
+
             DataRangeView.prototype.init.apply(this, arguments);
 
             /**
@@ -30,17 +38,12 @@ define(function(require) {
             /**
              * @private
              */
-            this._barBound = [];
-
-            /**
-             * @private
-             */
-            this._textSize;
-
-            /**
-             * @private
-             */
             this._dataInterval = [];
+
+            /**
+             * @private
+             */
+            this._orient;
         },
 
         /**
@@ -64,80 +67,24 @@ define(function(require) {
             var dataRangeText = dataRangeModel.get('text');
             var thisGroup = this.group;
 
+            this._orient = dataRangeModel.get('orient');
+
             // Reset data range.
-            this._dataInterval = dataRangeModel.get('range');
+            this._dataInterval = numberUtil.asc(
+                (dataRangeModel.get('range') || [])
+            .slice());
 
-            var barBound = this._resetBarBound();
+            var itemSize = dataRangeModel.itemSize;
 
-            dataRangeText && this.renderEndsText(
-                thisGroup, dataRangeText[0], barBound[0], barBound[1]
-            );
+            dataRangeText && this.renderEndsText(thisGroup, dataRangeText[0], itemSize);
+
             this._renderBar(thisGroup, !dataRangeText);
-            dataRangeText && this.renderEndsText(
-                thisGroup, dataRangeText[1], barBound[0], barBound[1]
-            );
+
+            dataRangeText && this.renderEndsText(thisGroup, dataRangeText[1], itemSize);
 
             this.renderBackground(thisGroup);
 
             this.positionGroup(thisGroup);
-
-            this._modifyHandle(0, 0, 0, true);
-            this._modifyHandle(1, 0, 0, true);
-        },
-
-        /**
-         * @private
-         */
-        _resetBarBound: function () {
-            var dataRangeModel = this.dataRangeModel;
-            var api = this.api;
-            var itemWidth = parsePercent(dataRangeModel.get('itemWidth'), api.getWidth());
-            var itemHeight = parsePercent(dataRangeModel.get('itemHeight'), api.getHeight());
-
-            var barBound = this._barBound = [itemWidth, itemHeight];
-            dataRangeModel.get('orient') === 'horizontal' && barBound.reverse();
-
-            (barBound[0] == null || isNaN(barBound[0])) && (barBound[0] = DEFAULT_BAR_BOUND[0]);
-            (barBound[1] == null || isNaN(barBound[1])) && (barBound[1] = DEFAULT_BAR_BOUND[1]);
-
-            return barBound;
-        },
-
-        /**
-         * @private
-         * @param {number|Array} source
-         * @param {string} direction 'value2Coord' or 'coord2Value'
-         * @return {number} target
-         */
-        _mapViewValue: function (source, direction) {
-            var handleExtent = this._handleInfoReverse([0, this._barBound[1]]);
-
-            var extents = [this.dataRangeModel.getExtent(), handleExtent];
-            if (direction === 'coord2Value') {
-                extents.reverse();
-            }
-
-            if (zrUtil.isArray(source)) {
-                return asc([
-                    linearMap(source[0], extents[0], extents[1], true),
-                    linearMap(source[1], extents[0], extents[1], true)
-                ]);
-            }
-            else {
-                return linearMap(source, extents[0], extents[1], true);
-            }
-        },
-
-        /**
-         * @private
-         */
-        _handleInfoReverse: function (handleInfoArr) {
-            var dataRangeModel = this.dataRangeModel;
-            var inverse = dataRangeModel.get('inverse');
-            if (dataRangeModel.get('orient') === 'horizontal' ? inverse : !inverse) {
-                handleInfoArr = handleInfoArr.slice().reverse();
-            }
-            return handleInfoArr;
         },
 
         /**
@@ -145,53 +92,40 @@ define(function(require) {
          */
         _renderBar: function (targetGroup, renderHandle) {
             var dataRangeModel = this.dataRangeModel;
-            var orient = dataRangeModel.get('orient');
-            var api = this.api;
             var shapes = this._shapes;
-            var ecSize = orient === 'horizontal' ? api.getWidth() : api.getHeight();
+            var itemSize = dataRangeModel.itemSize;
+            var handleEndsMax = [0, itemSize[1]];
+            var api = this.api;
+            var orient = this._orient;
+
             var itemAlign = this.getItemAlignByOrient(
                 orient === 'horizontal' ? 'vertical' : 'horizontal',
-                ecSize
+                orient === 'horizontal' ? api.getWidth() : api.getHeight()
             );
-            var barBound = this._barBound;
-            var handleInterval = [0, barBound[1]];
 
-            var barGroup = new graphic.Group({
-                rotation: orient === 'horizontal' ? Math.PI / 2 : 0,
-                scale: (itemAlign === 'left' || itemAlign === 'bottom') ? [-1, 1] : [1, 1]
-            });
+            var barGroup = shapes.barGroup = this._createBarGroup(itemAlign);
 
             // Bar
-            barGroup.add(shapes.outOfRange = createPolygon(
-                createBarPoints(barBound, handleInterval)
-            ));
+            barGroup.add(shapes.outOfRange = createPolygon());
             barGroup.add(shapes.inRange = createPolygon(
-                createBarPoints(barBound, handleInterval),
-                zrUtil.bind(this._modifyHandle, this, 'all'),
-                'move'
+                null, zrUtil.bind(this._modifyHandle, this, 'all'), 'move'
             ));
 
             var textRect = dataRangeModel.textStyleModel.getTextRect('国');
-            var textSize = this._textSize = Math.max(textRect.width, textRect.height);
+            var textSize = Math.max(textRect.width, textRect.height);
 
             // Handle
             if (renderHandle) {
                 shapes.handleGroups = [];
                 shapes.handleThumbs = [];
                 shapes.handleLabels = [];
+                shapes.handleLabelPoints = [];
 
-                this._createHandle(barGroup, 0, barBound, textSize, orient, itemAlign);
-                this._createHandle(barGroup, 1, barBound, textSize, orient, itemAlign);
+                this._createHandle(barGroup, 0, itemSize, textSize, orient, itemAlign);
+                this._createHandle(barGroup, 1, itemSize, textSize, orient, itemAlign);
 
-                updateHandlePosition(shapes.handleGroups, handleInterval);
-
-                // var font = dataRangeModel.textStyleModel.getFont();
-                // barGroup.add(shapes.label0 = createLabels(
-                //     barBound, textSize, handleInterval, orient, itemAlign, font
-                // ));
-                // barGroup.add(shapes.label1 = createLabel(
-                //     barBound, textSize, handleInterval, orient, itemAlign, font
-                // ));
+                // Do this for background size calculation.
+                this._updateHandlePosition(handleEndsMax);
             }
 
             // Indicator
@@ -203,33 +137,67 @@ define(function(require) {
         /**
          * @private
          */
-        _createBarColor: function (dataInterval, dataExtent, forceState) {
-            var viewOrderDataInterval = this._handleInfoReverse(dataInterval);
-            var colors = [
-                this.getControllerVisual(viewOrderDataInterval[0], forceState).color,
-                this.getControllerVisual(viewOrderDataInterval[1], forceState).color
-            ];
+        _createHandle: function (barGroup, handleIndex, itemSize, textSize, orient, itemAlign) {
+            var handleGroup = new graphic.Group({position: [itemSize[0], 0]});
+            var handleThumb = createPolygon(
+                createHandlePoints(handleIndex, textSize),
+                zrUtil.bind(this._modifyHandle, this, handleIndex),
+                'move'
+            );
+            handleGroup.add(handleThumb);
 
-            var colorStops = [];
-            var handles = [];
-            zrUtil.each(viewOrderDataInterval, function (value, index) {
-                colorStops.push({offset: index, color: colors[index]});
-                handles.push(colors[index]);
+            // For text locating. Text is always horizontal layout
+            // but should not be effected by transform.
+            var handleLabelPoint = new graphic.Rect({
+                silent: true,
+                shape: {
+                    width: 1,
+                    height: 1,
+                    x: orient === 'horizontal'
+                        ? textSize / 2
+                        : textSize + 3,
+                    y: orient === 'horizontal'
+                        ? (handleIndex === 0 ? -textSize - 3 : textSize + 3)
+                        : (handleIndex === 0 ? -textSize / 2 : textSize / 2)
+                },
+                style: {fill: NO_COLOR, stroke: NO_COLOR}
             });
 
-            return {
-                bar: new LinearGradient(0, 0, 1, 1, colorStops),
-                handles: handles
-            };
+            var directionH = this._applyBarTransform([0, handleIndex === 0 ? -1 : 1]);
+
+            var handleLabel = new graphic.Text({
+                silent: true,
+                style: {
+                    x: 0, y: 0, text: '',
+                    textBaseline: 'middle',
+                    textAlign: orient === 'horizontal'
+                        ? (directionH[0] > 0 ? 'left' : 'right')
+                        : (itemAlign === 'right' ? 'left' : 'right'),
+                    font: this.dataRangeModel.textStyleModel.getFont()
+                }
+            });
+
+            handleGroup.add(handleLabelPoint);
+            this.group.add(handleLabel); // Text do not transform
+
+            var shapes = this._shapes;
+            shapes.handleThumbs[handleIndex] = handleThumb;
+            shapes.handleGroups[handleIndex] = handleGroup;
+            shapes.handleLabelPoints[handleIndex] = handleLabelPoint;
+            shapes.handleLabels[handleIndex] = handleLabel;
+
+            barGroup.add(handleGroup);
         },
 
         /**
          * @private
          */
-        _modifyHandle: function (handleIndex, dx, dy, silent) {
-            this._updateInterval(handleIndex, dx, dy);
+        _modifyHandle: function (handleIndex, dx, dy) {
+            // Transform dx, dy to bar coordination.
+            var vertex = this._applyBarTransform([dx, dy], true);
+            this._updateInterval(handleIndex, vertex[1]);
 
-            !silent && this.api.dispatch({
+            this.api.dispatch({
                 type: 'selectDataRange',
                 from: this.uid,
                 dataRangeModelId: this.dataRangeModel.uid,
@@ -239,41 +207,43 @@ define(function(require) {
 
         /**
          * @private
+         * @param {number} handleIndex 0 or 1
+         * @param {number} dx
+         * @param {number} dy
          */
-        _updateInterval: function (handleIndex, dx, dy) {
-            var dataRangeModel = this.dataRangeModel;
-            var delta = (dataRangeModel.get('orient') === 'horizontal' ? dx : dy) || 0;
-            var handleInterval = this._mapViewValue(this._dataInterval, 'value2Coord');
-            var extent = [0, this._barBound[1]];
+        _updateInterval: function (handleIndex, delta) {
+            delta = delta || 0;
+            var handleEnds = this._mapDataToHandle(this._dataInterval);
+            var extent = [0, this.dataRangeModel.itemSize[1]];
 
             if (handleIndex === 'all') {
-                handleInterval[0] += delta;
-                handleInterval[1] += delta;
-
-                if (handleInterval[0] < extent[0]
-                    || handleInterval[0] > extent[1]
-                    || handleInterval[1] < extent[0]
-                    || handleInterval[1] > extent[1]
-                ) {
-                    return;
-                }
+                delta = getRealDelta(delta, handleEnds, extent);
+                handleEnds[0] += delta;
+                handleEnds[1] += delta;
             }
             else {
-                handleInterval[handleIndex] += delta;
+                delta = getRealDelta(delta, handleEnds[handleIndex], extent);
+                handleEnds[handleIndex] += delta;
 
-                if (handleInterval[handleIndex] < extent[0]
-                    || handleInterval[handleIndex] > extent[1]
-                ) {
-                    return;
-                }
-
-                if (handleInterval[0] > handleInterval[1]) {
-                    handleInterval[1 - handleIndex] = handleInterval[handleIndex];
+                if (handleEnds[0] > handleEnds[1]) {
+                    handleEnds[1 - handleIndex] = handleEnds[handleIndex];
                 }
             }
 
             // Update data interval.
-            this._dataInterval = this._mapViewValue(handleInterval, 'coord2Value');
+            this._dataInterval = this._mapHandleToData(handleEnds);
+
+            function getRealDelta(delta, handleEnds, extent) {
+                !handleEnds.length && (handleEnds = [handleEnds, handleEnds]);
+
+                if (delta < 0 && handleEnds[0] + delta < extent[0]) {
+                    delta = extent[0] - handleEnds[0];
+                }
+                if (delta > 0 && handleEnds[1] + delta > extent[1]) {
+                    delta = extent[1] - handleEnds[1];
+                }
+                return delta;
+            }
         },
 
         /**
@@ -284,87 +254,157 @@ define(function(require) {
             var dataExtent = dataRangeModel.getExtent();
             var shapes = this._shapes;
             var dataInterval = this._dataInterval;
-            var handleInterval = this._mapViewValue(dataInterval, 'value2Coord');
-            var colorsInRange = this._createBarColor(dataInterval, dataExtent);
-            var colorsOutOfRange = this._createBarColor(dataExtent, dataExtent, 'outOfRange');
-            var barBound = this._barBound;
+
+            var visualInRange = this._createBarVisual(dataInterval, dataExtent);
+            var visualOutOfRange = this._createBarVisual(dataExtent, dataExtent, 'outOfRange');
 
             shapes.inRange
-                .setStyle('fill', colorsInRange.bar)
-                .setShape('points', createBarPoints(barBound, handleInterval));
-            shapes.outOfRange.setStyle('fill', colorsOutOfRange.bar);
+                .setStyle('fill', visualInRange.barColor)
+                .setShape('points', visualInRange.barPoints);
+            shapes.outOfRange
+                .setStyle('fill', visualOutOfRange.barColor)
+                .setShape('points', visualOutOfRange.barPoints);
 
             var handleThumbs = shapes.handleThumbs;
             if (handleThumbs) {
-                handleThumbs[0].setStyle('fill', colorsInRange.handles[0]);
-                handleThumbs[1].setStyle('fill', colorsInRange.handles[1]);
+                handleThumbs[0].setStyle('fill', visualInRange.handlesColor[0]);
+                handleThumbs[1].setStyle('fill', visualInRange.handlesColor[1]);
             }
 
             var handleLabels = shapes.handleLabels;
             if (handleLabels) {
-                handleLabels[0].setStyle('text', '' + dataInterval[0]);
-                handleLabels[1].setStyle('text', '' + dataInterval[1]);
+                handleLabels[0].setStyle('text', dataRangeModel.formatValueText(dataInterval[0]));
+                handleLabels[1].setStyle('text', dataRangeModel.formatValueText(dataInterval[1]));
             }
 
-            updateHandlePosition(shapes.handleGroups, handleInterval);
+            this._updateHandlePosition(visualInRange.handleEnds);
         },
 
         /**
          * @private
          */
-        _createHandle: function (barGroup, handleIndex, barBound, textSize, orient, itemAlign) {
-            var handleGroup = new graphic.Group({position: [barBound[0], 0]});
-            var handleThumb = createPolygon(
-                createHandlePoints(handleIndex, textSize),
-                zrUtil.bind(this._modifyHandle, this, handleIndex),
-                'move'
-            );
-            handleGroup.add(handleThumb);
+        _createBarVisual: function (dataInterval, dataExtent, forceState) {
+            var handleEnds = forceState
+                ? [0, this.dataRangeModel.itemSize[1]]
+                : this._mapDataToHandle(dataInterval);
 
-            // Is there any neat approach to position text?
-            var handleLabel = new graphic.Text({
-                silent: true,
-                rotation: orient === 'horizontal' ? -Math.PI / 2 : 0,
-                scale: orient === 'horizontal'
-                    ? (itemAlign === 'bottom' ? [1, -1] : [1, 1])
-                    : (itemAlign === 'left' ? [-1, 1] : [1, 1]),
-                style: {
-                    x: orient === 'horizontal'
-                        ? (handleIndex === 0 ? -textSize - 3 : textSize + 3)
-                        : (itemAlign === 'left' ? -textSize - 3 : textSize + 3),
-                    y: 0,
-                    // FIXME
-                    // 如果是空字符串，画不出来，可能哪里空判断的问题。
-                    text: ' ',
-                    textBaseline: orient === 'horizontal'
-                        ? (itemAlign === 'bottom' ? 'top' : 'bottom')
-                        : (handleIndex === 0 ? 'bottom' : 'top'),
-                    textAlign: orient === 'horizontal'
-                        ? (handleIndex === 0 ? 'right' : 'left')
-                        : (itemAlign === 'left' ? 'right' : 'left'),
-                    font: this.dataRangeModel.textStyleModel.getFont()
-                }
+            var visuals = [
+                this.getControllerVisual(dataInterval[0], forceState),
+                this.getControllerVisual(dataInterval[1], forceState)
+            ];
+
+            var colorStops = [];
+            var handles = [];
+            zrUtil.each(dataInterval, function (value, index) {
+                colorStops.push({offset: index, color: visuals[index].color});
+                handles.push(visuals[index].color);
             });
-            handleGroup.add(handleLabel);
 
+            var barPoints = this._createBarPoints(handleEnds, visuals);
+
+            return {
+                barColor: new LinearGradient(0, 0, 1, 1, colorStops),
+                barPoints: barPoints,
+                handlesColor: handles,
+                handleEnds: handleEnds
+            };
+        },
+
+        /**
+         * @private
+         */
+        _createBarPoints: function (handleEnds, visuals) {
+            var itemSize = this.dataRangeModel.itemSize;
+            var widths0 = visuals[0].symbolSize;
+            var widths1 = visuals[1].symbolSize;
+
+            return [
+                [itemSize[0] - widths0, handleEnds[0]],
+                [itemSize[0], handleEnds[0]],
+                [itemSize[0], handleEnds[1]],
+                [itemSize[0] - widths1, handleEnds[1]]
+            ];
+        },
+
+        /**
+         * @private
+         * @param {Array} dataInterval Always be [little, big]
+         * @return {number} handleEnds: [handle0 coord, handle1 coord]
+         */
+        _mapDataToHandle: function (dataInterval) {
+            var dataExtent = this.dataRangeModel.getExtent();
+            var handleEndsMax = [0, this.dataRangeModel.itemSize[1]];
+
+            return [
+                linearMap(dataInterval[0], dataExtent, handleEndsMax, true),
+                linearMap(dataInterval[1], dataExtent, handleEndsMax, true)
+            ];
+        },
+
+        /**
+         * @private
+         * @param {Array} handleEnds
+         * @return {number} Always be [little, big]
+         */
+        _mapHandleToData: function (handleEnds) {
+            var dataExtent = this.dataRangeModel.getExtent();
+            var handleEndsMax = [0, this.dataRangeModel.itemSize[1]];
+
+            return [
+                linearMap(handleEnds[0], handleEndsMax, dataExtent, true),
+                linearMap(handleEnds[1], handleEndsMax, dataExtent, true)
+            ];
+        },
+
+        /**
+         * @private
+         */
+        _createBarGroup: function (itemAlign) {
+            var orient = this._orient;
+            var inverse = this.dataRangeModel.get('inverse');
+
+            return new graphic.Group(
+                (orient === 'horizontal' && !inverse)
+                ? {rotation: Math.PI / 2, scale: itemAlign === 'top' ? [1, 1] : [-1, 1]}
+                : (orient === 'horizontal' && inverse)
+                ? {rotation: -Math.PI / 2, scale: itemAlign === 'top' ? [1, -1] : [1, 1]}
+                : (orient === 'vertical' && !inverse)
+                ? {scale: itemAlign === 'right' ? [1, -1] : [-1, -1]}
+                : {scale: itemAlign === 'right' ? [1, 1] : [-1, 1]}
+            );
+        },
+
+        /**
+         * @private
+         */
+        _updateHandlePosition: function (handleEnds) {
             var shapes = this._shapes;
-            shapes.handleThumbs[handleIndex] = handleThumb;
-            shapes.handleGroups[handleIndex] = handleGroup;
-            shapes.handleLabels[handleIndex] = handleLabel;
 
-            barGroup.add(handleGroup);
+            zrUtil.each([0, 1], function (handleIndex) {
+                shapes.handleGroups[handleIndex].position[1] = handleEnds[handleIndex];
+
+                // Update handle label location
+                var labelPoint = shapes.handleLabelPoints[handleIndex];
+                var textPoint = modelUtil.applyTransform(
+                    [labelPoint.shape.x, labelPoint.shape.y],
+                    modelUtil.getTransform(labelPoint, this.group)
+                );
+
+                shapes.handleLabels[handleIndex].setStyle({
+                    x: textPoint[0], y: textPoint[1]
+                });
+            }, this);
+        },
+
+        /**
+         * @private
+         */
+        _applyBarTransform: function (vertex, inverse) {
+            var barTransform = this._shapes.barGroup.getLocalTransform();
+            return modelUtil.applyTransform(vertex, barTransform, inverse);
         }
 
     });
-
-    function createBarPoints(barBound, handleInterval) {
-        return [
-            [0, handleInterval[0]],
-            [barBound[0], handleInterval[0]],
-            [barBound[0], handleInterval[1]],
-            [0, handleInterval[1]]
-        ];
-    }
 
     function createPolygon(points, onDrift, cursor) {
         return new graphic.Polygon({
@@ -377,56 +417,9 @@ define(function(require) {
 
     function createHandlePoints(handleIndex, textSize) {
         return handleIndex === 0
-            ? [
-                [0, 0],
-                [textSize, 0],
-                [textSize, -textSize]
-            ]
-            : [
-                [0, 0],
-                [textSize, 0],
-                [textSize, textSize]
-            ];
+            ? [[0, 0], [textSize, 0], [textSize, -textSize]]
+            : [[0, 0], [textSize, 0], [textSize, textSize]];
     }
-
-    function updateHandlePosition(handleGroups, handleInterval) {
-        handleGroups[0].position[1] = handleInterval[0];
-        handleGroups[1].position[1] = handleInterval[1];
-    }
-
-    // function createLabels(font, orient, itemAlign) {
-    //     return [
-    //         new graphic.Text({
-    //             style: {
-    //                 text: '',
-    //                 textBaseline: 'bottom',
-    //                 textAlign: 'left',
-    //                 font: font
-    //             }
-    //         }),
-    //         new graphic.Text({
-    //             style: {
-    //                 text: '',
-    //                 textBaseline: 'top',
-    //                 textAlign: 'right',
-    //                 font: font
-    //             }
-    //         });
-    //     ];
-    // }
-
-    // function createLabelStyle(barBound, textSize, handleInterval, ) {
-    //     return new graphic.Text({
-    //         style: {
-    //             x: barBound[0] + textSize,
-    //             y: handleInterval[0],
-    //             text: '哈士大夫asdf',
-    //             textBaseline: 'bottom',
-    //             textAlign: 'left',
-    //             font: font
-    //         }
-    //     });
-    // }
 
     return PiecewiseDataRangeView;
 });
