@@ -13,7 +13,6 @@ define(function(require) {
         dependencies: ['xAxis', 'yAxis'],
 
         /**
-        /**
          * @type {module:echarts/coord/cartesian/Grid}
          */
         coordinateSystem: null,

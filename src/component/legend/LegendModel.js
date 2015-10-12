@@ -31,7 +31,7 @@ define(function(require) {
             ecModel.eachSeries(function (seriesModel) {
                 if (seriesModel.legendDataProvider) {
                     var data = seriesModel.legendDataProvider();
-                    availableNames = availableNames.concat(data.map(data.getName));
+                    availableNames = availableNames.concat(data.mapArray(data.getName));
                 }
             });
             /**

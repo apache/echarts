@@ -139,7 +139,7 @@ define(function(require) {
          *  `[[10, 10], [20, 20], [30, 30]]`
          */
         dataToPoints: function (data) {
-            return data.map(['radius', 'angle'], function (radius, angle) {
+            return data.mapArray(['radius', 'angle'], function (radius, angle) {
                 return this.dataToPoint([radius, angle]);
             }, this);
         },

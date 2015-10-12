@@ -12,6 +12,8 @@ define(function(require) {
 
     Cartesian2D.prototype = {
 
+        constructor: Cartesian2D,
+
         type: 'cartesian2d',
 
         /**
@@ -49,15 +51,15 @@ define(function(require) {
         },
 
         /**
-         * Convert series data to a list of points
+         * Convert series data to an array of points
          * @param {module:echarts/data/List} data
          * @param {boolean} stack
          * @return {Array}
-         *  Return list of coordinates. For example:
+         *  Return array of points. For example:
          *  `[[10, 10], [20, 20], [30, 30]]`
          */
         dataToPoints: function (data, stack) {
-            return data.map(['x', 'y'], function (x, y) {
+            return data.mapArray(['x', 'y'], function (x, y) {
                 return this.dataToPoint([x, y]);
             }, stack, this);
         },

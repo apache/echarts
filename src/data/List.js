@@ -542,13 +542,14 @@ define(function (require) {
     };
 
     /**
-     * Data mapping
-     * @param {string|Array.<string>}
+     * Data mapping to a plain array
+     * @param {string|Array.<string>} [dimensions]
      * @param {Function} cb
      * @param {boolean} [stack=false]
      * @param {*} [context=this]
+     * @return {Array}
      */
-    listProto.map = function (dimensions, cb, stack, context) {
+    listProto.mapArray = function (dimensions, cb, stack, context) {
         if (typeof dimensions === 'function') {
             context = stack;
             stack = cb;
@@ -561,6 +562,72 @@ define(function (require) {
             result.push(cb && cb.apply(this, arguments));
         }, stack, context);
         return result;
+    };
+
+    /**
+     * Data mapping to a new List with given dimensions
+     * @param {string|Array.<string>} dimensions
+     * @param {Function} cb
+     * @param {boolean} [stack=false]
+     * @param {*} [context=this]
+     * @return {Array}
+     */
+    listProto.map = function (dimensions, cb, stack, context) {
+        var list = new List(
+            zrUtil.map(dimensions, this.getDimensionInfo, this),
+            this.hostModel
+        );
+
+        // Following properties are all immutable.
+        // So we can reference to the same value
+        list._nameList = this._nameList;
+
+        var indices = list.indices = this.indices;
+
+        list._rawValueDims = this._rawValueDims;
+        list._optionModels = this._optionModels;
+
+        var storage = list._storage = {};
+        var thisStorage = this._storage;
+
+        // Init storage
+        for (var i = 0; i < dimensions.length; i++) {
+            var dim = dimensions[i];
+            var dimStore = thisStorage[dim];
+            if (dimStore) {
+                storage[dim] = new dimStore.constructor(
+                    thisStorage[dim].length
+                );
+            }
+        }
+
+        storage.$optionModelIndices = thisStorage.$optionModelIndices;
+
+        var tmpRetValue = [];
+        this.each(dimensions, function () {
+            var idx = arguments[arguments.length - 1];
+            var retValue = cb && cb.apply(this, arguments);
+            if (retValue != null) {
+                // a number
+                if (typeof retValue === 'number') {
+                    tmpRetValue[0] = retValue;
+                    retValue = tmpRetValue;
+                }
+                for (var i = 0; i < retValue.length; i++) {
+                    var dim = dimensions[i];
+                    var dimStore = storage[dim];
+                    var rawIdx = indices[idx];
+                    if (dimStore) {
+                        dimStore[rawIdx] = retValue[i];
+                    }
+                }
+            }
+        });
+
+        // FIXME Value may already been stacked
+        list.stackedOn = this.stackedOn;
+
+        return list;
     };
 
     var temporaryModel = new Model(null);

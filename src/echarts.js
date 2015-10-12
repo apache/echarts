@@ -510,6 +510,10 @@ define(function (require) {
             }
         },
 
+        /**
+         * @param {string} stage
+         * @param {Function} visualCodingFunc
+         */
         registerVisualCoding: function (stage, visualCodingFunc) {
             if (zrUtil.indexOf(VISUAL_CODING_STAGES, stage) < 0) {
                 throw new Error('stage should be one of ' + VISUAL_CODING_STAGES);
