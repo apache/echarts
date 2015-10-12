@@ -33,11 +33,12 @@ define(function(require) {
             // width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
             // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
             backgroundColor: 'rgba(0,0,0,0)',       // 背景颜色
-            dataBackgroundColor: '#eee',            // 数据背景颜色
+            dataBackgroundColor: '#ddd',            // 数据背景颜色
             fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
             handleColor: 'rgba(70,130,180,0.7)',    // 手柄颜色
             handleSize: 10,
             showDetail: true,
+            showDataShadow: null,     // 默认只有line bar k 默认显示dataShadow，其他默认不显示。
             xAxisIndex: null,         // 默认控制所有横向类目
             yAxisIndex: null,         // 默认控制所有横向类目
             start: 0,               // 默认为0
@@ -67,6 +68,18 @@ define(function(require) {
              */
             this._needsCrossZeroBackup = {};
 
+            /**
+             * key like x_0, y_1
+             * @private
+             * @type {Object}
+             */
+            this._dataIntervalByAxis = {};
+
+            /**
+             * @readOnly
+             */
+            this.textStyleModel;
+
             this.mergeDefaultAndTheme(option, ecModel);
             this.mergeOption({}, true);
         },
@@ -83,6 +96,8 @@ define(function(require) {
             if (!env.canvasSupported) {
                 thisOption.realtime = false;
             }
+
+            this.textStyleModel = this.getModel('textStyle');
 
             this._resetAutoIndex(newOption, isInit);
             // FIXME
@@ -309,6 +324,7 @@ define(function(require) {
          * @public
          * @param {string} dimName 'x', 'y', 'z'
          * @param {number} axisIndex
+         * @return {Array} seriesModels
          */
         getTargetSeriesModels: function (dimName, axisIndex) {
             var seriesModels = [];

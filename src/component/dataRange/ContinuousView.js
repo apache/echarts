@@ -8,9 +8,6 @@ define(function(require) {
     var linearMap = numberUtil.linearMap;
     var LinearGradient = require('zrender/graphic/LinearGradient');
 
-    // Constants
-    var NO_COLOR = 'rgba(0,0,0,0)';
-
     // Notice:
     // Any "interval" should be by the order of [low, high].
     // "handle0" (handleIndex === 0) maps to
@@ -150,20 +147,14 @@ define(function(require) {
 
             // For text locating. Text is always horizontal layout
             // but should not be effected by transform.
-            var handleLabelPoint = new graphic.Rect({
-                silent: true,
-                shape: {
-                    width: 1,
-                    height: 1,
-                    x: orient === 'horizontal'
-                        ? textSize / 2
-                        : textSize + 3,
-                    y: orient === 'horizontal'
-                        ? (handleIndex === 0 ? -textSize - 3 : textSize + 3)
-                        : (handleIndex === 0 ? -textSize / 2 : textSize / 2)
-                },
-                style: {fill: NO_COLOR, stroke: NO_COLOR}
-            });
+            var handleLabelPoint = {
+                x: orient === 'horizontal'
+                    ? textSize / 2
+                    : textSize + 3,
+                y: orient === 'horizontal'
+                    ? (handleIndex === 0 ? -textSize - 3 : textSize + 3)
+                    : (handleIndex === 0 ? -textSize / 2 : textSize / 2)
+            };
 
             var directionH = this._applyBarTransform([0, handleIndex === 0 ? -1 : 1]);
 
@@ -179,7 +170,6 @@ define(function(require) {
                 }
             });
 
-            handleGroup.add(handleLabelPoint);
             this.group.add(handleLabel); // Text do not transform
 
             var shapes = this._shapes;
@@ -375,13 +365,14 @@ define(function(require) {
             var shapes = this._shapes;
 
             zrUtil.each([0, 1], function (handleIndex) {
-                shapes.handleGroups[handleIndex].position[1] = handleEnds[handleIndex];
+                var handleGroup = shapes.handleGroups[handleIndex];
+                handleGroup.position[1] = handleEnds[handleIndex];
 
                 // Update handle label location
                 var labelPoint = shapes.handleLabelPoints[handleIndex];
                 var textPoint = modelUtil.applyTransform(
-                    [labelPoint.shape.x, labelPoint.shape.y],
-                    modelUtil.getTransform(labelPoint, this.group)
+                    [labelPoint.x, labelPoint.y],
+                    modelUtil.getTransform(handleGroup, this.group)
                 );
 
                 shapes.handleLabels[handleIndex].setStyle({

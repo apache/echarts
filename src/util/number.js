@@ -15,8 +15,8 @@ define(function (require) {
      * Linear mapping a value from domain to range
      * @memberOf module:echarts/util/number
      * @param  {(number|Array.<number>)} val
-     * @param  {Array.<number>} domain Domain extent
-     * @param  {Array.<number>} range  Range extent
+     * @param  {Array.<number>} domain Domain extent domain[0] can be bigger than domain[1]
+     * @param  {Array.<number>} range  Range extent range[0] can be bigger than range[1]
      * @param  {boolean} clamp
      * @return {(number|Array.<number>}
      */
@@ -34,9 +34,11 @@ define(function (require) {
             return domain[0];
         }
         var t = (val - domain[0]) / sub;
+
         if (clamp) {
             t = Math.min(Math.max(t, 0), 1);
         }
+
         return t * (range[1] - range[0]) + range[0];
     };
 

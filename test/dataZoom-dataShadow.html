@@ -40,9 +40,12 @@
 
                 for (var i = 0; i < 200; i++) {
                     xAxisData.push('类目' + i);
-                    data1.push((Math.random() + 0.1).toFixed(2));
-                    data2.push(Math.random().toFixed(2));
-                    data3.push(Math.random().toFixed(2));
+                    if (i < 150) {
+                        data2.push(Math.log(i + 4));
+                    }
+                    else {
+                        data2.push(-Math.log(i + 19));
+                    }
                 }
 
                 chart.setOption({
@@ -67,43 +70,18 @@
                             type: 'line',
                             stack: 'all',
                             data: data2
-                        },
-                        {
-                            name: 'line3',
-                            type: 'line',
-                            stack: 'all',
-                            data: data3
-                        },
-                        {
-                            name: 'line',
-                            type: 'line',
-                            data: data1,
-                            stack: 'all',
-                            itemStyle: {
-                                normal: {
-                                    areaStyle: {}
-                                }
-                            },
-                            markPoint: {
-                                data: [{
-                                    type: 'max'
-                                }]
-                            },
-                            markLine: {
-                                data: [
-                                    [{
-                                        type: 'average'
-                                    }, {
-                                        type: 'max'
-                                    }]
-                                ]
-                            }
                         }
                     ],
-                    dataZoom: {
-                        show: true,
-                        end: 30
-                    }
+                    dataZoom: [
+                        {
+                            show: true,
+                            start: 60
+                        },
+                        // {
+                        //     show: true,
+                        //     orient: 'vertical'
+                        // }
+                    ]
                 });
             })
 
