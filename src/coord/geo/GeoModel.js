@@ -30,11 +30,8 @@ define(function (require) {
             itemStyle: {
                 normal: {
                     // color: 各异,
-                    borderColor: 'rgba(0,0,0,0)',
-                    borderWidth: 1,
-                    areaStyle: {
-                        color: '#ccc'
-                    },
+                    borderWidth: 0,
+                    color: '#ccc',
                     label: {
                         show: false,
                         textStyle: {
@@ -44,11 +41,8 @@ define(function (require) {
                 },
                 emphasis: {                 // 也是选中样式
                     // color: 各异,
-                    borderColor: 'rgba(0,0,0,0)',
-                    borderWidth: 1,
-                    areaStyle: {
-                        color: 'rgba(255,215,0,0.8)'
-                    },
+                    borderWidth: 0,
+                    color: 'rgba(255,215,0,0.8)',
                     label: {
                         show: false,
                         textStyle: {

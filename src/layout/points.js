@@ -5,7 +5,7 @@ define(function (require) {
             var data = seriesModel.getData();
             var coordSys = seriesModel.coordinateSystem;
 
-            var dims = coordSys.type === 'cartesian2d' ? ['x', 'y'] : ['radius', 'angle'];
+            var dims = data.dimensions.slice(0, 2);
             data.each(dims, function (x, y, idx) {
                 if (!isNaN(y) && !isNaN(x)) {
                     var point = coordSys.dataToPoint([x, y]);

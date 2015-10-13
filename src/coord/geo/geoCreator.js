@@ -70,6 +70,14 @@ define(function (require) {
                 geo.resize(geoModel, api);
             });
 
+            ecModel.eachSeries(function (seriesModel) {
+                var coordSys = seriesModel.get('coordinateSystem');
+                if (coordSys === 'geo') {
+                    var geoIndex = seriesModel.get('geoIndex') || 0;
+                    seriesModel.coordinateSystem = geoList[geoIndex];
+                }
+            });
+
             // If has map series
             ecModel.eachSeriesByType('map', function (seriesModel) {
                 var mapType = seriesModel.get('mapType');

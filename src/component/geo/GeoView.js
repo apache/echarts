@@ -12,17 +12,20 @@ define(function (require) {
         render: function (geoModel, ecModel, api) {
             var geo = geoModel.coordinateSystem;
 
-            var areaStyleModel = geoModel.getModel('itemStyle.normal');
+            var itemStyleModel = geoModel.getModel('itemStyle.normal');
 
-            var hoverAreaStyleModel = geoModel.getModel('itemStyle.emphasis');
+            var hoverItemStyleModel = geoModel.getModel('itemStyle.emphasis');
 
-            var areaStyle = areaStyleModel.getAreaStyle();
-            var hoverAreaStyle = hoverAreaStyleModel.getAreaStyle();
+            var itemStyle = itemStyleModel.getItemStyle();
+            var hoverItemStyle = hoverItemStyleModel.getItemStyle();
 
             var mapGroup = new graphic.Group();
             var group = this.group;
 
             group.add(mapGroup);
+
+            mapGroup.position = geo.position.slice();
+            mapGroup.scale = geo.scale.slice();
 
             zrUtil.each(geo.regions, function (region) {
 
@@ -36,9 +39,9 @@ define(function (require) {
                         }
                     });
 
-                    polygon.setStyle(areaStyle);
+                    polygon.setStyle(itemStyle);
 
-                    graphic.setHoverStyle(polygon, hoverAreaStyle);
+                    graphic.setHoverStyle(polygon, hoverItemStyle);
 
                     regionGroup.add(polygon);
                 });

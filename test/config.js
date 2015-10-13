@@ -1,4 +1,7 @@
 require.config({
+    paths: {
+        'geoJson': '../geoData/geoJson'
+    },
     packages: [
         {
             main: 'echarts',
