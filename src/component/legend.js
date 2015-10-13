@@ -9,5 +9,5 @@ define(function (require) {
 
     var echarts = require('../echarts');
     // Series Filter
-    echarts.registerProcessor(require('./legend/legendFilter'));
+    echarts.registerProcessor('filter', require('./legend/legendFilter'));
 });

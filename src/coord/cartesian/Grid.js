@@ -59,6 +59,16 @@ define(function(require, factory) {
             && axis.type !== CATEGORY_AXIS_TYPE
     }
 
+    function niceScaleExent(axis, model) {
+        if (axis.scale.type === 'ordinal') {
+            return;
+        }
+        var min = model.get('min');
+        var max = model.get('max');
+        axis.scale.setExtent(min, max);
+        axis.scale.niceExtent(model.get('splitNumber'), !!min, !!max);
+    }
+
     function Grid(gridModel, ecModel, api) {
 
         /**
@@ -233,7 +243,6 @@ define(function(require, factory) {
 
             this._updateCartesianFromSeries(ecModel, gridModel);
 
-
             // Fix configuration
             zrUtil.each(axesMap.x, function (xAxis) {
                 zrUtil.each(axesMap.y, function (yAxis) {
@@ -253,9 +262,13 @@ define(function(require, factory) {
 
                     if (ifAxisNeedsCrossZero(yAxis, xAxis)) {
                         yAxis.scale.unionExtent([0, 0]);
+
+                        niceScaleExent(yAxis, yAxis.model);
                     }
                     if (ifAxisNeedsCrossZero(xAxis, yAxis)) {
                         xAxis.scale.unionExtent([0, 0]);
+
+                        niceScaleExent(xAxis, xAxis.model);
                     }
 
                 }, this);
@@ -337,16 +350,6 @@ define(function(require, factory) {
                     }
                 }
             }, this);
-
-            function niceScaleExent(axis, model) {
-                if (axis.scale.type === 'ordinal') {
-                    return;
-                }
-                var min = model.get('min');
-                var max = model.get('max');
-                axis.scale.setExtent(min, max);
-                axis.scale.niceExtent(model.get('splitNumber'), !!min, !!max);
-            }
         }
     };
 

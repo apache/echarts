@@ -1,6 +1,5 @@
 /**
- * TODO visualCoding 的优先级
- *      setTheme
+ * TODO setTheme
  *      axis position 统一处理
  *      规范 Symbol 配置和绘制, customPath
  *
@@ -22,6 +21,8 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
 
     var VISUAL_CODING_STAGES = ['echarts', 'chart', 'component'];
+
+    var PROCESSOR_STAGES = ['transform', 'filter', 'statistic'];
 
     /**
      * @module echarts~ECharts
@@ -253,7 +254,7 @@ define(function (require) {
 
             for (var i = 0; i < chartsList.length;) {
                 var chart = chartsList[i];
-                if (! chart.__keepAlive) {
+                if (!chart.__keepAlive) {
                     zr.remove(chart.group);
                     chart.dispose(this._extensionAPI);
                     chartsList.splice(i, 1);
@@ -323,8 +324,10 @@ define(function (require) {
          * @private
          */
         _processData: function (ecModel) {
-            zrUtil.each(dataProcessorFuncs, function (processor) {
-                processor(ecModel);
+            zrUtil.each(PROCESSOR_STAGES, function (stage) {
+                zrUtil.each(dataProcessorFuncs[stage] || [], function (process) {
+                    process(ecModel);
+                });
             });
         },
 
@@ -436,14 +439,36 @@ define(function (require) {
     };
 
 
-    var dataProcessorFuncs = [];
-
+    /**
+     * @type {Array.<Function>}
+     * @inner
+     */
     var actions = [];
 
+    /**
+     * @type {Array.<Function>}
+     * @inner
+     */
     var layoutClasses = [];
 
+    /**
+     * @type {Array.<Function>}
+     * @inner
+     */
     var layoutFuncs = [];
 
+    /**
+     * Data processor functions of each stage
+     * @type {Array.<Object.<string, Function>>}
+     * @inner
+     */
+    var dataProcessorFuncs = {};
+
+    /**
+     * Visual coding functions of each stage
+     * @type {Array.<Object.<string, Function>>}
+     * @inner
+     */
     var visualCodingFuncs = {};
 
     /**
@@ -451,17 +476,25 @@ define(function (require) {
      */
     var echarts = {
 
+        /**
+         * @param {HTMLDomElement} dom
+         * @param {Object} [theme]
+         * @param {Object} opts
+         */
         init: function (dom, theme, opts) {
             return new ECharts(dom, theme, opts);
         },
 
         /**
-         * @param {Function}
+         * @param {string} stage
+         * @param {Function} processorFunc
          */
-        registerProcessor: function (processorFunc) {
-            if (zrUtil.indexOf(dataProcessorFuncs, processorFunc) < 0) {
-                dataProcessorFuncs.push(processorFunc);
+        registerProcessor: function (stage, processorFunc) {
+            if (zrUtil.indexOf(PROCESSOR_STAGES, stage) < 0) {
+                throw new Error('stage should be one of ' + PROCESSOR_STAGES);
             }
+            var funcs = dataProcessorFuncs[stage] || (dataProcessorFuncs[stage] = []);
+            funcs.push(processorFunc);
         },
 
         /**

@@ -12,8 +12,7 @@ define(function(require) {
         var labelModel = axisModel.getModel('axisLabel');
         var labelInterval = labelModel.get('interval');
         if (
-            !(axis.isHorizontal()
-            && axis.type === 'category'
+            !(axis.type === 'category'
             && labelInterval === 'auto'
             && !labelModel.get('rotate'))
         ) {
@@ -29,13 +28,15 @@ define(function(require) {
         var autoLabelInterval = 0;
         var accumulatedLabelInterval = 0;
 
+        var isAxisHorizontal = axis.isHorizontal();
+
         for (var i = 0; i < ticks.length; i++) {
             var tick = ticks[i];
             var tickCoord = axis.dataToCoord(tick);
             var rect = textContain.getBoundingRect(
                 labels[i], font, 'center', 'top'
             );
-            rect.x += tickCoord;
+            rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
             if (!textSpaceTakenRect) {
                 textSpaceTakenRect = rect.clone();
             }
