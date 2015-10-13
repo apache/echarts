@@ -349,9 +349,9 @@ define(function(require) {
 
             return new graphic.Group(
                 (orient === 'horizontal' && !inverse)
-                ? {rotation: Math.PI / 2, scale: itemAlign === 'top' ? [1, 1] : [-1, 1]}
+                ? {scale: itemAlign === 'top' ? [1, 1] : [-1, 1], rotation: Math.PI / 2}
                 : (orient === 'horizontal' && inverse)
-                ? {rotation: -Math.PI / 2, scale: itemAlign === 'top' ? [1, -1] : [1, 1]}
+                ? {scale: itemAlign === 'top' ? [-1, 1] : [1, 1], rotation: -Math.PI / 2}
                 : (orient === 'vertical' && !inverse)
                 ? {scale: itemAlign === 'right' ? [1, -1] : [-1, -1]}
                 : {scale: itemAlign === 'right' ? [1, 1] : [-1, 1]}

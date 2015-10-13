@@ -10,6 +10,7 @@ define(function (require) {
     var retrieveValue = modelUtil.retrieveValue;
     var parsePercent = numberUtil.parsePercent;
     var asc = numberUtil.asc;
+    var bind = zrUtil.bind;
     var mathRound = Math.round;
     var mathMax = Math.max;
     var each = zrUtil.each;
@@ -22,7 +23,8 @@ define(function (require) {
     var HORIZONTAL = 'horizontal';
     var VERTICAL = 'vertical';
     var LABEL_GAP = 5;
-    var DEFAULT_SHOW_DATA_SHADOW = ['line', 'bar', 'k'];
+    var SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'k'];
+    var SHOW_DATA_SHADOW_AXIS_TYPE = ['category', 'time'];
 
     return echarts.extendComponentView({
 
@@ -34,7 +36,7 @@ define(function (require) {
              * @private
              * @type {Object}
              */
-            this._displables = {};
+            this._displayables = {};
 
             /**
              * @private
@@ -72,6 +74,16 @@ define(function (require) {
              */
             this._location;
 
+            /**
+             * @private
+             */
+            this._dragging;
+
+            /**
+             * @private
+             */
+            this._dataShadowInfo;
+
             this.api = api;
         },
 
@@ -101,11 +113,11 @@ define(function (require) {
             this._resetLocation();
             this._resetInterval();
 
-            var barGroup = this._displables.barGroup = this._createBarGroup();
+            var barGroup = this._displayables.barGroup = new graphic.Group();
 
-            this._renderBackground(barGroup);
-            this._renderDataShadow(barGroup);
-            this._renderHandle(barGroup);
+            this._renderBackground();
+            this._renderDataShadow();
+            this._renderHandle();
 
             thisGroup.add(barGroup);
 
@@ -156,11 +168,28 @@ define(function (require) {
         /**
          * @private
          */
-        _positionGroup: function (group, location) {
+        _positionGroup: function (barGroup) {
             var thisGroup = this.group;
             var location = this._location;
-            var rect = thisGroup.getBoundingRect([this._displables.barGroup]);
+            var orient = this._orient;
+            var inverse = this.dataZoomModel.get('inverse');
+            var barGroup = this._displayables.barGroup;
+            var otherAxisInverse = (this._dataShadowInfo || {}).otherAxisInverse;
 
+            // Transform barGroup.
+            barGroup.attr(
+                (orient === HORIZONTAL && !inverse)
+                ? {scale: otherAxisInverse ? [1, 1] : [1, -1]}
+                : (orient === HORIZONTAL && inverse)
+                ? {scale: otherAxisInverse ? [-1, 1] : [-1, -1]}
+                : (orient === VERTICAL && !inverse)
+                ? {scale: otherAxisInverse ? [1, -1] : [1, 1], rotation: Math.PI / 2}
+                // Dont use Math.PI, considering shadow direction.
+                : {scale: otherAxisInverse ? [-1, -1] : [-1, 1], rotation: Math.PI / 2}
+            );
+
+            // Position barGroup
+            var rect = thisGroup.getBoundingRect([barGroup]);
             thisGroup.position[0] = location.x - rect.x;
             thisGroup.position[1] = location.y - rect.y;
         },
@@ -177,11 +206,11 @@ define(function (require) {
             return extent;
         },
 
-        _renderBackground : function (barGroup) {
+        _renderBackground : function () {
             var dataZoomModel = this.dataZoomModel;
             var size = this._size;
 
-            barGroup.add(new Rect({
+            this._displayables.barGroup.add(new Rect({
                 silent: true,
                 shape: {
                     x: 0, y: 0, width: size[0], height: size[1]
@@ -192,40 +221,44 @@ define(function (require) {
             }));
         },
 
-        _renderDataShadow: function (barGroup) {
-            var info = this._findDataShadowInfo();
+        _renderDataShadow: function () {
+            var info = this._dataShadowInfo = this._findDataShadowInfo();
 
-            if (!info.series) {
+            if (!info) {
                 return;
             }
 
             var size = this._size;
             var data = info.series.getDataAll();
 
-            var vDataExtent = data.getDataExtent(info.dim, false);
-            var vDataOffset = (vDataExtent[1] - vDataExtent[0]) * 0.3; // For nice extent.
-            vDataExtent = [vDataExtent[0] - vDataOffset, vDataExtent[1] + vDataOffset];
-            var vDataShadowExtent = info.vInverse ? [size[1], 0] : [0, size[1]];
+            var otherDataExtent = data.getDataExtent(info.otherDim);
+            // Nice extent.
+            var otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
+            otherDataExtent = [
+                otherDataExtent[0] - otherOffset,
+                otherDataExtent[1] + otherOffset
+            ];
+            var otherShadowExtent = [0, size[1]];
 
-            var hDataExtent = [0, data.count()];
-            var hDataShadowExtent = [0, size[0]];
+            var thisDataExtent = data.getDataExtent(info.thisDim);
+            var thisShadowExtent = [0, size[0]];
 
-            var points = [[size[0], size[1]], [0, size[1]]];
-            data.each([info.dim], function (value, index) {
-                var xValue = linearMap(index, hDataExtent, hDataShadowExtent, true);
+            var points = [[size[0], 0], [0, 0]];
+            data.each([info.otherDim], function (value, index) {
+                var thisCoord = linearMap(index, thisDataExtent, thisShadowExtent, true);
                 // FIXME
                 // 应该使用统计的空判断？还是在list里进行空判断？
-                var yValue = (value == null || isNaN(value) || value === '')
+                var otherCoord = (value == null || isNaN(value) || value === '')
                     ? null
-                    : linearMap(value, vDataExtent, vDataShadowExtent, true);
-                yValue != null && points.push([xValue, yValue]);
-            }, false, this);
+                    : linearMap(value, otherDataExtent, otherShadowExtent, true);
+                otherCoord != null && points.push([thisCoord, otherCoord]);
+            });
 
-            this._displables.barGroup.add(new graphic.Polyline({
+            this._displayables.barGroup.add(new graphic.Polyline({
                 shape: {points: points},
                 style: {fill: this.dataZoomModel.get('dataBackgroundColor'), lineWidth: 0},
                 silent: true,
-                z2: -2
+                z2: -20
             }));
         },
 
@@ -238,27 +271,40 @@ define(function (require) {
             }
 
             // Find a representative series.
-            var result = {};
+            var result;
             dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
-                if (result.series) {
-                    return;
-                }
                 var seriesModels = dataZoomModel.getTargetSeriesModels(dimNames.name, axisIndex);
 
                 zrUtil.each(seriesModels, function (seriesModel) {
-                    if (showDataShadow
-                        || zrUtil.indexOf(DEFAULT_SHOW_DATA_SHADOW, seriesModel.get('type')) >= 0
-                    ) {
-                        result.series = seriesModel;
-                        // FIXME
-                        // 这个逻辑和getOtherAxis里一致，但是写在这里是否不好
-                        var dim = result.dim = dimNames.name === 'x' ? 'y' : 'x';
-                        var axis = result.axis = seriesModel.coordinateSystem.getOtherAxis(
-                            this.ecModel.getComponent(dimNames.axis, axisIndex).axis
-                        );
-                        result.vInverse = (dim === 'y' && !axis.inverse)
-                            || (dim === 'x' && axis.inverse);
+                    if (result) {
+                        return;
                     }
+
+                    if (!showDataShadow && zrUtil.indexOf(
+                            SHOW_DATA_SHADOW_SERIES_TYPE, seriesModel.get('type')
+                        ) < 0
+                    ) {
+                        return;
+                    }
+
+                    var thisAxis = this.ecModel.getComponent(dimNames.axis, axisIndex).axis;
+
+                    if (!showDataShadow && zrUtil.indexOf(
+                            SHOW_DATA_SHADOW_AXIS_TYPE, thisAxis.type
+                        ) < 0
+                    ) {
+                        return;
+                    }
+
+                    result = {
+                        thisAxis: thisAxis,
+                        series: seriesModel,
+                        thisDim: dimNames.name,
+                        otherDim: getOtherDim(dimNames.name),
+                        otherAxisInverse: seriesModel
+                            .coordinateSystem.getOtherAxis(thisAxis).inverse
+                    };
+
                 }, this);
 
             }, this);
@@ -266,17 +312,20 @@ define(function (require) {
             return result;
         },
 
-        _renderHandle: function (barGroup) {
-            var displables = this._displables;
+        _renderHandle: function () {
+            var displables = this._displayables;
             var frames = displables.frames = [];
             var handles = displables.handles = [];
             var handleLabels = displables.handleLabels = [];
+            var barGroup = this._displayables.barGroup;
 
             barGroup.add(displables.filler = new Rect({
                 draggable: true,
                 cursor: 'move',
-                drift: zrUtil.bind(this._onDragMove, this, 'all'),
-                ondragend: zrUtil.bind(this._dispatchAction, this),
+                drift: bind(this._onDragMove, this, 'all'),
+                ondragend: bind(this._onDragEnd, this),
+                onmouseover: bind(this._showDataInfo, this, true),
+                onmouseout: bind(this._showDataInfo, this, false),
                 style: {
                     fill: this.dataZoomModel.get('fillerColor'),
                     text: ':::',
@@ -304,13 +353,16 @@ define(function (require) {
                     },
                     cursor: 'move',
                     draggable: true,
-                    drift: zrUtil.bind(this._onDragMove, this, handleIndex),
-                    ondragend: zrUtil.bind(this._dispatchAction, this)
+                    drift: bind(this._onDragMove, this, handleIndex),
+                    ondragend: bind(this._onDragEnd, this),
+                    onmouseover: bind(this._showDataInfo, this, true),
+                    onmouseout: bind(this._showDataInfo, this, false)
                 }));
 
                 this.group.add(
                     handleLabels[handleIndex] = new graphic.Text({
                     silent: true,
+                    invisible: true,
                     style: {
                         x: 0, y: 0, text: '',
                         textBaseline: 'middle',
@@ -370,8 +422,11 @@ define(function (require) {
             }
         },
 
+        /**
+         * @private
+         */
         _updateView: function () {
-            var displables = this._displables;
+            var displables = this._displayables;
             var handleEnds = this._handleEnds;
             var handleInterval = asc(handleEnds.slice());
             var size = this._size;
@@ -423,19 +478,22 @@ define(function (require) {
          */
         _updateDataInfo: function () {
             var dataZoomModel = this.dataZoomModel;
-            var displables = this._displables;
+            var displables = this._displayables;
+            var handleLabels = displables.handleLabels;
             var orient = this._orient;
+
             // FIXME
             // date型，支持formatter，autoformatter（ec2 date.getAutoFormatter）
             var shouldShow = dataZoomModel.get('showDetail');
             var dataInterval;
+            var axis;
 
             if (shouldShow) {
                 dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
                     // Using dataInterval of the first axis.
                     if (!dataInterval) {
-                        dataInterval = this.ecModel.getComponent(dimNames.axis, axisIndex)
-                            .axis.scale.getExtent();
+                        dataInterval = dataZoomModel.getDataInfo(dimNames.name, axisIndex);
+                        axis = this.ecModel.getComponent(dimNames.axis, axisIndex).axis;
                     }
                 }, this);
             }
@@ -460,22 +518,57 @@ define(function (require) {
                     ],
                     barTransform
                 );
-                displables.handleLabels[handleIndex].setStyle({
+                handleLabels[handleIndex].setStyle({
                     x: textPoint[0],
                     y: textPoint[1],
                     textBaseline: orient === HORIZONTAL ? 'middle' : direction,
                     textAlign: orient === HORIZONTAL ? direction : 'center'
                 });
 
-                var text = (shouldShow && dataInterval) ? dataInterval[handleIndex] : null;
-                text = (text != null && isFinite(text)) ? text + '' : null;
+                var text = (shouldShow && dataInterval)
+                    ? this._formatLabel(dataInterval[handleIndex], axis) : null;
 
-                this._displables.handleLabels[handleIndex].setStyle('text', text);
+                handleLabels[handleIndex].setStyle('text', text);
 
             }, this);
         },
 
+        /**
+         * @private
+         */
+        _formatLabel: function (value, axis) {
+            var labelFormatter = this.dataZoomModel.get('labelFormatter');
+            if (labelFormatter) {
+                return labelFormatter(value);
+            }
+
+            var labelPrecise = this.dataZoomModel.get('labelPrecise') || 0;
+            return (value == null && isNaN(value))
+                ? ''
+                : axis.type === 'category'
+                ? axis.scale.getLabel(Math.round(value))
+                : value.toFixed(labelPrecise);
+        },
+
+        /**
+         * @private
+         * @param {boolean} showOrHide true: show, false: hide
+         */
+        _showDataInfo: function (showOrHide) {
+            // Always show when drgging.
+            showOrHide = this._dragging || showOrHide;
+
+            var handleLabels = this._displayables.handleLabels;
+            handleLabels[0].invisible = !showOrHide;
+            handleLabels[1].invisible = !showOrHide;
+
+            handleLabels[0].dirty();
+            handleLabels[1].dirty();
+        },
+
         _onDragMove: function (handleIndex, dx, dy) {
+            this._dragging = true;
+
             // Transform dx, dy to bar coordination.
             var vertex = this._applyBarTransform([dx, dy], true);
 
@@ -485,6 +578,12 @@ define(function (require) {
             if (this.dataZoomModel.get('realtime')) {
                 this._dispatchAction();
             }
+        },
+
+        _onDragEnd: function () {
+            this._dragging = false;
+            this._showDataInfo(false);
+            this._dispatchAction();
         },
 
         _dispatchAction: function () {
@@ -499,26 +598,8 @@ define(function (require) {
         /**
          * @private
          */
-        _createBarGroup: function () {
-            var orient = this._orient;
-            var inverse = this.dataZoomModel.get('inverse');
-
-            return new graphic.Group(
-                (orient === HORIZONTAL && !inverse)
-                ? {} // Do nothing.
-                : (orient === HORIZONTAL && inverse)
-                ? {scale: [-1, 1]}
-                : (orient === VERTICAL && !inverse)
-                ? {rotation: Math.PI / 2}
-                : {rotation: -Math.PI / 2}
-            );
-        },
-
-        /**
-         * @private
-         */
         _applyBarTransform: function (vertex, inverse) {
-            var barTransform = this._displables.barGroup.getLocalTransform();
+            var barTransform = this._displayables.barGroup.getLocalTransform();
             return modelUtil.applyTransform(vertex, barTransform, inverse);
         },
 
@@ -565,4 +646,15 @@ define(function (require) {
         }
 
     });
+
+    function getOtherDim(thisDim) {
+        // FIXME
+        // 这个逻辑和getOtherAxis里一致，但是写在这里是否不好
+        return thisDim === 'x' ? 'y' : 'x';
+    }
+
+    function shadowInverses(dim, axis) {
+        return (dim === 'y' && !axis.inverse)
+            || (dim === 'x' && axis.inverse);
+    }
 });

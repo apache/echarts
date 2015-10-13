@@ -25,6 +25,8 @@ define(function (require) {
         var dataExtent = calculateDataExtent(dimNames, axisModel, seriesModels);
         var dataWindow = calculateDataWindow(axisModel, dataZoomModel, dataExtent, isCategoryFilter);
 
+        dataZoomModel.recordDataInfo(dimNames.name, axisIndex, dataWindow);
+
         // Process series data
         zrUtil.each(seriesModels, function (seriesModel) {
             // FIXME

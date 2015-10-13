@@ -44,14 +44,14 @@
                     if (i < 150) {
                         var v = Math.log(i + 4) + offset;
                         data1dim.push(v);
-                        // data2dim.push([i, v]);
-                        data2dim.push([v, i]);
+                        data2dim.push([i, v]);
+                        // data2dim.push([v, i]);
                     }
                     else {
                         var v = -Math.log(i + 19) + offset;
                         data1dim.push(v);
-                        // data2dim.push([i, v]);
-                        data2dim.push([v, i]);
+                        data2dim.push([i, v]);
+                        // data2dim.push([v, i]);
                     }
                 }
 
@@ -65,14 +65,14 @@
                     },
                     xAxis: {
                         // position: 'top',
-                        type: 'value',
-                        // data: xAxisData,
+                        // type: 'value',
+                        data: xAxisData,
                         // boundaryGap: false
                     },
                     yAxis: {
-                        type: 'category',
+                        // type: 'value',
                         // inverse: true
-                        data: xAxisData
+                        // data: xAxisData
                     },
                     series: [
                         {

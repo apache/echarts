@@ -34,9 +34,11 @@ define(function(require) {
             // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
             backgroundColor: 'rgba(0,0,0,0)',       // 背景颜色
             dataBackgroundColor: '#ddd',            // 数据背景颜色
-            fillerColor: 'rgba(144,197,237,0.2)',   // 填充颜色
+            fillerColor: 'rgba(144,197,237,0.3)',   // 填充颜色
             handleColor: 'rgba(70,130,180,0.7)',    // 手柄颜色
             handleSize: 10,
+            labelPrecise: 0,           // label小数精度
+            labelFormatter: null,
             showDetail: true,
             showDataShadow: null,     // 默认只有line bar k 默认显示dataShadow，其他默认不显示。
             xAxisIndex: null,         // 默认控制所有横向类目
@@ -74,6 +76,11 @@ define(function(require) {
              * @type {Object}
              */
             this._dataIntervalByAxis = {};
+
+            /**
+             * @private
+             */
+            this._dataInfo = {};
 
             /**
              * @readOnly
@@ -334,6 +341,21 @@ define(function(require) {
                 }
             });
             return seriesModels;
+        },
+
+        /**
+         * @public
+         */
+        recordDataInfo: function (dimName, axisIndex, dataWindow) {
+            this._dataInfo[dimName + '_' + axisIndex] = dataWindow.slice();
+        },
+
+        /**
+         * @public
+         */
+        getDataInfo: function (dimName, axisIndex) {
+            var ret = this._dataInfo[dimName + '_' + axisIndex];
+            return ret && ret.slice();
         },
 
         /**
