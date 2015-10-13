@@ -36,6 +36,19 @@
                     renderer: 'canvas'
                 });
 
+                var itemStyle = {
+                    normal:{
+                        label:{show:true}
+                    },
+                    emphasis:{
+                        label:{show:true},
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowBlur: 20,
+                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                    }
+                }
+
                 chart.setOption({
                     title : {
                         text: 'iphone销量',
@@ -61,10 +74,7 @@
                             type: 'map',
                             mapType: 'china',
                             roam: false,
-                            itemStyle:{
-                                normal:{label:{show:true}},
-                                emphasis:{label:{show:true}}
-                            },
+                            itemStyle: itemStyle,
                             data:[
                                 {name: '北京',value: Math.round(Math.random()*1000)},
                                 {name: '天津',value: Math.round(Math.random()*1000)},
@@ -106,10 +116,7 @@
                             name: 'iphone4',
                             type: 'map',
                             mapType: 'china',
-                            itemStyle:{
-                                normal:{label:{show:true}},
-                                emphasis:{label:{show:true}}
-                            },
+                            itemStyle: itemStyle,
                             data:[
                                 {name: '北京',value: Math.round(Math.random()*1000)},
                                 {name: '天津',value: Math.round(Math.random()*1000)},
@@ -136,10 +143,7 @@
                             name: 'iphone5',
                             type: 'map',
                             mapType: 'china',
-                            itemStyle:{
-                                normal:{label:{show:true}},
-                                emphasis:{label:{show:true}}
-                            },
+                            itemStyle: itemStyle,
                             data:[
                                 {name: '北京',value: Math.round(Math.random()*1000)},
                                 {name: '天津',value: Math.round(Math.random()*1000)},

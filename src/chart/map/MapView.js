@@ -13,12 +13,6 @@ define(function (require) {
         },
 
         _renderMap: function (mapModel, ecModel, api) {
-            var areaStyleModel = mapModel.getModel('itemStyle.normal.areaStyle');
-            var hoverAreaStyleModel = mapModel.getModel('itemStyle.emphasis.areaStyle');
-
-            var areaStyle = areaStyleModel.getAreaStyle();
-            var hoverAreaStyle = hoverAreaStyleModel.getAreaStyle();
-
             var data = mapModel.getData();
 
             var geo = mapModel.coordinateSystem;
@@ -35,14 +29,25 @@ define(function (require) {
 
                 var regionGroup = new graphic.Group();
 
+                var dataIdx = data.indexOfName(region.name);
+                var itemModel = data.getItemModel(dataIdx);
+
+                var itemStyleModel = itemModel.getModel('itemStyle.normal');
+                var hoverItemStyleModel = itemModel.getModel('itemStyle.emphasis');
+
+                var itemStyle = itemStyleModel.getItemStyle();
+                var hoverItemStyle = hoverItemStyleModel.getItemStyle();
+
+                // FIXME 兼容 2.0
+                var areaStylePath = 'areaStyle.color';
+                itemStyle.fill = itemStyleModel.get(areaStylePath);
+                hoverItemStyle.fill = hoverItemStyleModel.get(areaStylePath);
+
                 var styleObj = zrUtil.defaults(
                     {
-                        color: data.getItemVisual(
-                            data.indexOfName(region.name),
-                            'color'
-                        )
+                        fill: data.getItemVisual(dataIdx, 'color')
                     },
-                    areaStyle
+                    itemStyle
                 );
 
                 zrUtil.each(region.contours, function (contour) {
@@ -55,7 +60,7 @@ define(function (require) {
 
                     polygon.setStyle(styleObj);
 
-                    graphic.setHoverStyle(polygon, hoverAreaStyle);
+                    graphic.setHoverStyle(polygon, hoverItemStyle);
 
                     regionGroup.add(polygon);
                 });

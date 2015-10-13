@@ -154,9 +154,11 @@ define(function(require) {
 
     function onElementMouseOver() {
         this.setStyle(this.__hoverStyle);
+        this.z2 += 1;
     }
     function onElementMouseOut() {
         this.setStyle(this.__normalStyle);
+        this.z2 -= 1;
     }
     var MOUSEOVER = 'mouseover';
     var MOUSEOUT = 'mouseout';
