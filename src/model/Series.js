@@ -36,6 +36,7 @@ define(function(require) {
          * Data provided for legend
          * @type {Function}
          */
+        // PENDING
         legendDataProvider: null,
 
         init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
@@ -89,6 +90,13 @@ define(function(require) {
          */
         getData: function () {
             return this._data;
+        },
+
+        /**
+         * @param {module:echarts/data/List} data
+         */
+        setData: function (data) {
+            this._data = data;
         },
 
         /**

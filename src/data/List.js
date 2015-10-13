@@ -393,6 +393,26 @@ define(function (require) {
     };
 
     /**
+     * Retreive the index with given name
+     * @param {number} idx
+     * @param {number} name
+     * @return {number}
+     */
+    listProto.indexOfName = function (name) {
+        var indices = this.indices;
+        var nameList = this._nameList;
+
+        for (var i = 0, len = indices.length; i < len; i++) {
+            var rawIndex = indices[i];
+            if (nameList[rawIndex] === name) {
+                return i;
+            }
+        }
+
+        return -1;
+    };
+
+    /**
      * Retreive the index of nearest value
      * @param {number} idx
      * @param {number} value
@@ -433,7 +453,8 @@ define(function (require) {
      */
     listProto.getName = function (idx) {
         var nameList = this._nameList;
-        return (nameList && nameList[this.indices[idx]]) || '';
+        var rawIndex = this.indices[idx];
+        return nameList[rawIndex] || (rawIndex + '');
     };
 
 

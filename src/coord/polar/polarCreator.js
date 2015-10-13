@@ -11,7 +11,7 @@ define(function (require) {
     require('./PolarModel');
 
     /**
-     * Resize methods bound to the polar
+     * Resize method bound to the polar
      * @param {module:echarts/coord/polar/PolarModel} polarModel
      * @param {module:echarts/ExtensionAPI} api
      */

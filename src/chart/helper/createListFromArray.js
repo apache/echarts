@@ -89,6 +89,17 @@ define(function(require) {
                 }
             }
         }
+        else if (coordinateSystem === 'geo') {
+            // TODO Region
+            // 多个散点图系列在同一个地区的时候
+            dimensions = [{
+                name: 'lon'
+            }, {
+                name: 'lat'
+            }, {
+                name: 'value'
+            }]
+        }
 
         var nameList = [];
         if (categoryAxisModel) {
