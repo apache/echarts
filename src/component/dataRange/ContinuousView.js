@@ -7,6 +7,7 @@ define(function(require) {
     var modelUtil = require('../../util/model');
     var linearMap = numberUtil.linearMap;
     var LinearGradient = require('zrender/graphic/LinearGradient');
+    var each = zrUtil.each;
 
     // Notice:
     // Any "interval" should be by the order of [low, high].
@@ -73,17 +74,51 @@ define(function(require) {
 
             this._resetInterval();
 
-            var itemSize = dataRangeModel.itemSize;
-
-            dataRangeText && this.renderEndsText(thisGroup, dataRangeText[0], itemSize);
-
             this._renderBar(thisGroup, !dataRangeText);
 
-            dataRangeText && this.renderEndsText(thisGroup, dataRangeText[1], itemSize);
+            dataRangeText && this._renderEndsText(thisGroup, dataRangeText, 0);
+            dataRangeText && this._renderEndsText(thisGroup, dataRangeText, 1);
 
             this.renderBackground(thisGroup);
 
             this.positionGroup(thisGroup);
+        },
+
+        /**
+         * @private
+         */
+        _renderEndsText: function (group, dataRangeText, endsIndex) {
+            var text = dataRangeText[endsIndex];
+            text = text != null ? text + '' : '';
+
+            var dataRangeModel = this.dataRangeModel;
+            var textGap = dataRangeModel.get('textGap');
+            var itemSize = dataRangeModel.itemSize;
+
+            var barGroup = this._shapes.barGroup;
+            var position = this._applyTransform(
+                [
+                    itemSize[0] / 2,
+                    endsIndex === 0 ? -textGap : itemSize[1] + textGap
+                ],
+                barGroup
+            );
+            var align = this._applyTransform(
+                endsIndex === 0 ? 'bottom' : 'top',
+                barGroup
+            );
+            var orient = this._orient;
+
+            this.group.add(new graphic.Text({
+                style: {
+                    x: position[0],
+                    y: position[1],
+                    textBaseline: orient === 'horizontal' ? 'middle' : align,
+                    textAlign: orient === 'horizontal' ? align : 'center',
+                    text: text,
+                    font: this.dataRangeModel.textStyleModel.getFont()
+                }
+            }));
         },
 
         /**
@@ -156,16 +191,11 @@ define(function(require) {
                     : (handleIndex === 0 ? -textSize / 2 : textSize / 2)
             };
 
-            var directionH = this._applyBarTransform([0, handleIndex === 0 ? -1 : 1]);
-
             var handleLabel = new graphic.Text({
                 silent: true,
                 style: {
                     x: 0, y: 0, text: '',
                     textBaseline: 'middle',
-                    textAlign: orient === 'horizontal'
-                        ? (directionH[0] > 0 ? 'left' : 'right')
-                        : (itemAlign === 'right' ? 'left' : 'right'),
                     font: this.dataRangeModel.textStyleModel.getFont()
                 }
             });
@@ -186,7 +216,7 @@ define(function(require) {
          */
         _modifyHandle: function (handleIndex, dx, dy) {
             // Transform dx, dy to bar coordination.
-            var vertex = this._applyBarTransform([dx, dy], true);
+            var vertex = this._applyTransform([dx, dy], this._shapes.barGroup, true);
             this._updateInterval(handleIndex, vertex[1]);
 
             this.api.dispatch({
@@ -279,17 +309,29 @@ define(function(require) {
                 .setStyle('fill', visualOutOfRange.barColor)
                 .setShape('points', visualOutOfRange.barPoints);
 
-            var handleThumbs = shapes.handleThumbs;
-            if (handleThumbs) {
-                handleThumbs[0].setStyle('fill', visualInRange.handlesColor[0]);
-                handleThumbs[1].setStyle('fill', visualInRange.handlesColor[1]);
-            }
+            each([0, 1], function (handleIndex) {
 
-            var handleLabels = shapes.handleLabels;
-            if (handleLabels) {
-                handleLabels[0].setStyle('text', dataRangeModel.formatValueText(dataInterval[0]));
-                handleLabels[1].setStyle('text', dataRangeModel.formatValueText(dataInterval[1]));
-            }
+                var handleThumbs = shapes.handleThumbs;
+                if (handleThumbs) {
+                    handleThumbs[handleIndex].setStyle(
+                        'fill', visualInRange.handlesColor[handleIndex]
+                    );
+                }
+
+                var handleLabels = shapes.handleLabels;
+                if (handleLabels) {
+                    handleLabels[handleIndex].setStyle({
+                        text: dataRangeModel.formatValueText(dataInterval[handleIndex]),
+                        textAlign: this._applyTransform(
+                            this._orient === 'horizontal'
+                                ? (handleIndex === 0 ? 'bottom' : 'top')
+                                : 'left',
+                            shapes.barGroup
+                        )
+                    });
+                }
+
+            }, this);
 
             this._updateHandlePosition(visualInRange.handleEnds);
         },
@@ -309,7 +351,7 @@ define(function(require) {
 
             var colorStops = [];
             var handles = [];
-            zrUtil.each(dataInterval, function (value, index) {
+            each(dataInterval, function (value, index) {
                 colorStops.push({offset: index, color: visuals[index].color});
                 handles.push(visuals[index].color);
             });
@@ -363,9 +405,14 @@ define(function(require) {
          */
         _updateHandlePosition: function (handleEnds) {
             var shapes = this._shapes;
+            var handleGroups = shapes.handleGroups;
 
-            zrUtil.each([0, 1], function (handleIndex) {
-                var handleGroup = shapes.handleGroups[handleIndex];
+            if (!handleGroups) {
+                return;
+            }
+
+            each([0, 1], function (handleIndex) {
+                var handleGroup = handleGroups[handleIndex];
                 handleGroup.position[1] = handleEnds[handleIndex];
 
                 // Update handle label location
@@ -384,9 +431,13 @@ define(function(require) {
         /**
          * @private
          */
-        _applyBarTransform: function (vertex, inverse) {
-            var barTransform = this._shapes.barGroup.getLocalTransform();
-            return modelUtil.applyTransform(vertex, barTransform, inverse);
+        _applyTransform: function (vertex, element, inverse) {
+            var transform = modelUtil.getTransform(element, this.group);
+
+            return modelUtil[
+                zrUtil.isArray(vertex)
+                    ? 'applyTransform' : 'transformDirection'
+            ](vertex, transform, inverse);
         }
 
     });

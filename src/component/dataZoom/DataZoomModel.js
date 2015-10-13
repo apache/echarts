@@ -48,8 +48,8 @@ define(function(require) {
             start2: 0,               // 默认为0
             end2: 100,               // 默认为全部 100%
             realtime: true,
-            inverse: false           // 默认与所控制的轴相同
-            // zoomLock: false         // 是否锁定选择区域大小
+            inverse: false,           // 默认与所控制的轴相同
+            zoomLock: false         // 是否锁定选择区域大小
         },
 
         /**

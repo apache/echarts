@@ -30,11 +30,11 @@ define(function(require) {
             var itemAlign = this.getItemAlignByOrient('horizontal', ecWidth);
             var itemSize = dataRangeModel.itemSize;
 
-            showEndsText && this.renderEndsText(thisGroup, dataRangeText[0], itemSize);
+            showEndsText && this._renderEndsText(thisGroup, dataRangeText[0], itemSize);
 
             zrUtil.each(this._getViewPieceList(), renderItem, this);
 
-            showEndsText && this.renderEndsText(thisGroup, dataRangeText[1], itemSize);
+            showEndsText && this._renderEndsText(thisGroup, dataRangeText[1], itemSize);
 
             layout.box(
                 dataRangeModel.get('orient'), thisGroup, dataRangeModel.get('itemGap')
@@ -65,6 +65,28 @@ define(function(require) {
 
                 thisGroup.add(itemGroup);
             }
+        },
+
+        /**
+         * @private
+         */
+        _renderEndsText: function (group, text, itemSize) {
+            if (!text) {
+                return;
+            }
+            var itemGroup = new graphic.Group();
+            itemGroup.add(new graphic.Text({
+                style: {
+                    x: itemSize[0] / 2,
+                    y: itemSize[1] / 2,
+                    textBaseline: 'middle',
+                    textAlign: 'center',
+                    text: text,
+                    font: this.dataRangeModel.textStyleModel.getFont()
+                }
+            }));
+
+            group.add(itemGroup);
         },
 
         /**

@@ -85,28 +85,6 @@ define(function (require) {
         /**
          * @protected
          */
-        renderEndsText: function (group, text, itemSize) {
-            if (!text) {
-                return;
-            }
-            var itemGroup = new graphic.Group();
-            itemGroup.add(new graphic.Text({
-                style: {
-                    x: itemSize[0] / 2,
-                    y: itemSize[1] / 2,
-                    textBaseline: 'middle',
-                    textAlign: 'center',
-                    text: text,
-                    font: this.dataRangeModel.textStyleModel.getFont()
-                }
-            }));
-
-            group.add(itemGroup);
-        },
-
-        /**
-         * @protected
-         */
         getControllerVisual: function (representValue, forceState) {
             var dataRangeModel = this.dataRangeModel;
             var mappings = dataRangeModel.controllerVisuals[
