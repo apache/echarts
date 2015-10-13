@@ -52,8 +52,7 @@ define(function (require) {
             itemStyle: {
                 normal: {
                     // color: 各异,
-                    borderColor: 'rgba(0,0,0,0)',
-                    borderWidth: 1,
+                    borderWidth: 0,
                     areaStyle: {
                         color: '#ccc'
                     },
@@ -67,8 +66,7 @@ define(function (require) {
                 // 也是选中样式
                 emphasis: {
                     // color: 各异,
-                    borderColor: 'rgba(0,0,0,0)',
-                    borderWidth: 1,
+                    borderWidth: 0,
                     areaStyle: {
                         color: 'rgba(255,215,0,0.8)'
                     },

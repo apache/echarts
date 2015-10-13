@@ -6,5 +6,7 @@ define(function (require) {
 
     require('./map/MapView');
 
+    echarts.registerVisualCoding('chart', require('./map/mapVisual'));
+
     echarts.registerProcessor('statistic', require('./map/mapDataStatistic'));
 });

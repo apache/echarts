@@ -19,10 +19,20 @@
         'echarts/chart/line',
         'echarts/chart/bar',
         'echarts/chart/scatter',
-        'echarts/component/legend',
+        'echarts/chart/pie',
+        'echarts/chart/map',
+
+        'echarts/component/geo',
         'echarts/component/grid',
         'echarts/component/polar',
-        'echarts/component/dataZoom'
+
+        'echarts/component/legend',
+        'echarts/component/dataZoom',
+        'echarts/component/tooltip',
+        'echarts/component/dataRange',
+
+        'echarts/component/markPoint',
+        'echarts/component/markLine'
     ],
     out: 'echarts.js'
 }
