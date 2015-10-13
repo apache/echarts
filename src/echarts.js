@@ -22,6 +22,7 @@ define(function (require) {
 
     var VISUAL_CODING_STAGES = ['echarts', 'chart', 'component'];
 
+    // TODO Transform first or filter first
     var PROCESSOR_STAGES = ['transform', 'filter', 'statistic'];
 
     /**
