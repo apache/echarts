@@ -43,7 +43,7 @@ define(function(require) {
 
             min: -Infinity,            // 最小值，如果不指定，则是所控制的series的最小值，兼容ec2而保留，不推荐指定
             max: Infinity,             // 最大值，如果不指定，则是所控制的series的最大值，兼容ec2而保留，不推荐指定
-            dimension: 'z',
+            dimension: null,
 
             inRange: null,             // 'color', 'colorH', 'colorS', 'colorL', 'colorA',
                                        // 'symbol', 'symbolSize'
@@ -213,7 +213,7 @@ define(function(require) {
 
                 // FIXME
                 // 这里可能应该这么判断：data.dimensions中有超出其所属coordSystem的量。
-                if (data.type === 'list' && data.dimensions.length > 2) {
+                if (data.type === 'list') {
                     thisOption.seriesIndex.push(index);
                 }
             });
@@ -231,7 +231,7 @@ define(function(require) {
                 // FIXME
                 // 只考虑了list
                 if (data.type === 'list') {
-                    var oneExtent = data.getDataExtent(thisOption.dimension);
+                    var oneExtent = data.getDataExtent(this.getDataDimension(data));
                     oneExtent[0] < dataExtent[0] && (dataExtent[0] = oneExtent[0]);
                     oneExtent[1] > dataExtent[1] && (dataExtent[1] = oneExtent[1]);
                 }
@@ -243,6 +243,18 @@ define(function(require) {
             extent[1] = Math.min(extent[1], dataExtent[1]);
 
             this._dataExtent = extent;
+
+
+        },
+
+        /**
+         * @protected
+         */
+        getDataDimension: function (list) {
+            var optDim = this.option.dimension;
+            return optDim != null
+                ? optDim
+                : list.dimensions[list.dimensions.length - 1]
         },
 
         /**
