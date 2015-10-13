@@ -7,7 +7,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var linearMap = require('../../util/number').linearMap;
 
-    echarts.registerProcessor(function (ecModel) {
+    echarts.registerProcessor('filter', function (ecModel) {
         ecModel.eachComponent('dataZoom', function (dataZoomModel) {
             dataZoomModel.eachTargetAxis(processSingleAxis);
         });

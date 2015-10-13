@@ -12,5 +12,5 @@ define(function (require) {
         require('./pie/pieLayout'), 'pie'
     ));
 
-    echarts.registerProcessor(require('./pie/dataItemFilter'));
+    echarts.registerProcessor('filter', require('./pie/dataItemFilter'));
 });
