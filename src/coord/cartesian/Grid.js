@@ -59,12 +59,23 @@ define(function(require, factory) {
             && axis.type !== CATEGORY_AXIS_TYPE
     }
 
+    /**
+     * @inner
+     */
     function niceScaleExent(axis, model) {
         if (axis.scale.type === 'ordinal') {
             return;
         }
         var min = model.get('min');
         var max = model.get('max');
+        var originalExtent = axis.scale.getExtent();
+        // TODO Only one data
+        if (min === 'dataMin') {
+            min = originalExtent[0];
+        }
+        else if (max === 'dataMax') {
+            max = originalExtent[1];
+        }
         axis.scale.setExtent(min, max);
         axis.scale.niceExtent(model.get('splitNumber'), !!min, !!max);
     }

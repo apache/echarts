@@ -239,18 +239,27 @@ define(function (require) {
             ];
             var otherShadowExtent = [0, size[1]];
 
-            var thisDataExtent = data.getDataExtent(info.thisDim);
             var thisShadowExtent = [0, size[0]];
 
             var points = [[size[0], 0], [0, 0]];
+            var step = thisShadowExtent[1] / data.count();
+            var thisCoord = 0;
+
+            // Optimize for large data shadow
+            var stride = Math.round(data.count() / size[0]);
             data.each([info.otherDim], function (value, index) {
-                var thisCoord = linearMap(index, thisDataExtent, thisShadowExtent, true);
+                if (index % stride) {
+                    thisCoord += step;
+                    return;
+                }
                 // FIXME
                 // 应该使用统计的空判断？还是在list里进行空判断？
                 var otherCoord = (value == null || isNaN(value) || value === '')
                     ? null
                     : linearMap(value, otherDataExtent, otherShadowExtent, true);
                 otherCoord != null && points.push([thisCoord, otherCoord]);
+
+                thisCoord += step;
             });
 
             this._displayables.barGroup.add(new graphic.Polyline({

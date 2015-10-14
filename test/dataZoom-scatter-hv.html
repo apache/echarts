@@ -31,10 +31,14 @@
                 var data2 = [];
                 var data3 = [];
 
+                var random = function (max) {
+                    return (Math.random() * max).toFixed(3);
+                }
+
                 for (var i = 0; i < 100000; i++) {
-                    data1.push([Math.random() * 15, Math.random() * 10, Math.random()]);
-                    data2.push([Math.random() * 10, Math.random() * 10, Math.random()]);
-                    data3.push([Math.random() * 15, Math.random() * 10, Math.random()]);
+                    data1.push([random(15), random(10), random(1)]);
+                    data2.push([random(10), random(10), random(1)]);
+                    data3.push([random(15), random(10), random(1)]);
                 }
 
                 // console.profile('setOption');
@@ -46,12 +50,16 @@
                     },
                     xAxis: {
                         type: 'value',
+                        min: 'dataMin',
+                        max: 'dataMax',
                         splitLine: {
                             show: true
                         }
                     },
                     yAxis: {
                         type: 'value',
+                        min: 'dataMin',
+                        max: 'dataMax',
                         splitLine: {
                             show: true
                         }
