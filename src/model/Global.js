@@ -78,11 +78,11 @@ define(function (require) {
         _mergeTheme: function (option, theme) {
             for (var name in theme) {
                 // 如果有 component model 则把具体的 merge 逻辑交给该 model 处理
-                if (! ComponentModel.has[name]) {
+                if (!ComponentModel.hasClass(name)) {
                     if (typeof theme[name] === 'object') {
-                        option[name] = option[name]
+                        option[name] = !option[name]
                             ? zrUtil.clone(theme[name])
-                            : zrUtil.merge(option[name], theme[name]);
+                            : zrUtil.merge(option[name], theme[name], false);
                     }
                     else {
                         option[name] = theme[name];

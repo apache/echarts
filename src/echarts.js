@@ -188,6 +188,9 @@ define(function (require) {
 
             this._needsUpdate = false;
 
+            // Set background
+            this._dom.style.backgroundColor = ecModel.get('backgroundColor');
+
             console.timeEnd('update');
         },
 
