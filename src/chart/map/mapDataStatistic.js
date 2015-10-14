@@ -2,6 +2,8 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
 
+    var List = require('../../data/List');
+
     // FIXME 公用？
     /**
      * @param {Array.<module:echarts/data/List>} datas
@@ -9,15 +11,30 @@ define(function (require) {
      * @inner
      */
     function dataStatistics(datas, statisticsType) {
-        var len = datas.length;
-        return datas[0].map(['value'], function (value, idx) {
-            for (var i = 1; i < len; i++) {
-                value += datas[i].get('value', idx);
+        var dataNameMap = {};
+        var dims = ['value'];
+
+        for (var i = 0; i < datas.length; i++) {
+            datas[i].each(dims, function (value, idx) {
+                var name = datas[i].getName(idx);
+                dataNameMap[name] = dataNameMap[name] || [];
+                if (!isNaN(value)) {
+                    dataNameMap[name].push(value);
+                }
+            });
+        }
+
+        return datas[0].map(dims, function (value, idx) {
+            var name = datas[0].getName(idx);
+            var sum = 0;
+            var len = dataNameMap[name].length;
+            for (var i = 0; i < len; i++) {
+                sum += dataNameMap[name][i];
             }
             if (statisticsType === 'average') {
-                value /= len;
+                sum /= len;
             }
-            return value;
+            return sum;
         });
     }
 

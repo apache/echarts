@@ -1,10 +1,29 @@
 define(function (require) {
 
-    // var SeriesModel = require('../../model/Series');
-
     var List = require('../../data/List');
 
-    return require('../../echarts').extendSeriesModel({
+    var echarts = require('../../echarts');
+
+    function fillData(dataOpt, geoJson) {
+        var dataNameMap = {};
+        var features = geoJson.features;
+        for (var i = 0; i < dataOpt.length; i++) {
+            dataNameMap[dataOpt[i].name] = dataOpt[i];
+        }
+
+        for (var i = 0; i < features.length; i++) {
+            var name = features[i].properties.name;
+            if (!dataNameMap[name]) {
+                dataOpt.push({
+                    value: NaN,
+                    name: name
+                });
+            }
+        }
+        return dataOpt;
+    }
+
+    return echarts.extendSeriesModel({
 
         type: 'series.map',
 
@@ -13,7 +32,20 @@ define(function (require) {
                 name: 'value'
             }], this);
 
-            list.initData(option.data);
+            var geoJson = echarts.getMap(option.mapType);
+
+            var dataOpt = option.data || [];
+
+            // https://jsperf.com/try-catch-performance-overhead
+            if (geoJson) {
+                try {
+                    dataOpt = fillData(dataOpt, geoJson);
+                }
+                catch (e) {
+                    throw 'Invalid geoJson format\n' + e;
+                }
+            }
+            list.initData(dataOpt);
 
             return list;
         },

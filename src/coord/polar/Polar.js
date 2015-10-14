@@ -33,6 +33,12 @@ define(function(require) {
         this.cy = 0;
 
         /**
+         * @param {Array.<string>}
+         * @readOnly
+         */
+        this.dimensions = ['radius', 'angle'];
+
+        /**
          * @type {module:echarts/coord/polar/RadiusAxis}
          * @private
          */
@@ -139,7 +145,7 @@ define(function(require) {
          *  `[[10, 10], [20, 20], [30, 30]]`
          */
         dataToPoints: function (data) {
-            return data.mapArray(['radius', 'angle'], function (radius, angle) {
+            return data.mapArray(this.dimensions, function (radius, angle) {
                 return this.dataToPoint([radius, angle]);
             }, this);
         },

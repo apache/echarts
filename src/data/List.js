@@ -657,20 +657,27 @@ define(function (require) {
      * It will create a temporary model if value on idx is not an option.
      *
      * @param {number} idx
+     * @param {boolean} [createNew=false]
      */
     // FIXME Model proxy ?
-    listProto.getItemModel = function (idx) {
+    listProto.getItemModel = function (idx, createNew) {
         var storage = this._storage;
         var optionModelIndices = storage.$optionModelIndices;
         var modelIndex = optionModelIndices && optionModelIndices[this.indices[idx]];
 
         var model = this._optionModels[modelIndex];
 
+        var hostModel = this.hostModel;
         if (!model) {
             // Use a temporary model proxy if value on idx is not an option.
             // FIXME Create a new one may cause memory leak
-            model = temporaryModel;
-            model.parentModel = this.hostModel;
+            if (createNew) {
+                model = new Model(null, hostModel);
+            }
+            else {
+                model = temporaryModel;
+                model.parentModel = hostModel;
+            }
         }
         return model;
     };

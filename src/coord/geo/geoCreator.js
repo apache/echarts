@@ -5,7 +5,6 @@ define(function (require) {
     var Geo = require('./Geo');
 
     var numberUtil = require('../../util/number');
-    var zrUtil = require('zrender/core/util');
 
     var mapDataStores = {};
 
@@ -99,14 +98,29 @@ define(function (require) {
             return geoList;
         },
 
+        /**
+         * @param {string} mapName
+         * @param {Object} geoJson
+         */
         registerMap: function (mapName, geoJson) {
             mapDataStores[mapName] = geoJson;
+        },
+
+        /**
+         * @param {string} mapName
+         * @return {Object}
+         */
+        getMap: function (mapName) {
+            return mapDataStores[mapName];
         }
     };
 
     // Inject methods into echarts
     var echarts = require('../../echarts');
+
     echarts.registerMap = geoCreator.registerMap;
+
+    echarts.getMap = geoCreator.getMap;
 
     // TODO
     echarts.loadMap = function () {

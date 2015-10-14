@@ -7,12 +7,14 @@ define(function(require) {
      * Helper function to create a list from option data
      */
     return function (data, seriesModel, ecModel) {
+        // If data is undefined
+        data = data || [];
+
         var coordinateSystem = seriesModel.get('coordinateSystem');
         var dimensions;
 
         var categoryAxisModel;
-        // FIXME
-        // 这里 List 跟几个坐标系和坐标系 Model 耦合了
+
         if (coordinateSystem === 'cartesian2d') {
             var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
             var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));

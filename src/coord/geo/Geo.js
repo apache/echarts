@@ -12,7 +12,19 @@ define(function (require) {
 
         this.name = name;
 
-        this.regions = geoJson ? parseGeoJson(geoJson) : [];
+        // https://jsperf.com/try-catch-performance-overhead
+        try {
+            this.regions = geoJson ? parseGeoJson(geoJson) : [];
+        }
+        catch (e) {
+            throw 'Invalid geoJson format\n' + e;
+        }
+
+        /**
+         * @param {Array.<string>}
+         * @readOnly
+         */
+        this.dimensions = ['lon', 'lat'];
 
         Transformable.call(this);
 
