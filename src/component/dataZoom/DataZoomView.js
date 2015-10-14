@@ -239,10 +239,8 @@ define(function (require) {
             ];
             var otherShadowExtent = [0, size[1]];
 
-            var thisShadowExtent = [0, size[0]];
-
             var points = [[size[0], 0], [0, 0]];
-            var step = thisShadowExtent[1] / data.count();
+            var step = size[0] / data.count();
             var thisCoord = 0;
 
             // Optimize for large data shadow
@@ -654,8 +652,4 @@ define(function (require) {
         return thisDim === 'x' ? 'y' : 'x';
     }
 
-    function shadowInverses(dim, axis) {
-        return (dim === 'y' && !axis.inverse)
-            || (dim === 'x' && axis.inverse);
-    }
 });
