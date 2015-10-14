@@ -90,9 +90,10 @@ define(function (require) {
             itemStyle: {
                 normal: {
                     // color: 各异,
-                    borderWidth: 0,
+                    borderWidth: 0.5,
+                    borderColor: '#444',
                     areaStyle: {
-                        color: '#ccc'
+                        color: '#eee'
                     },
                     label: {
                         show: false,
@@ -104,7 +105,6 @@ define(function (require) {
                 // 也是选中样式
                 emphasis: {
                     // color: 各异,
-                    borderWidth: 0,
                     areaStyle: {
                         color: 'rgba(255,215,0,0.8)'
                     },
