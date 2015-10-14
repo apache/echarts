@@ -226,21 +226,21 @@ define(function(require) {
             var thisOption = this.option;
             var dataExtent = [Infinity, -Infinity];
 
-            zrUtil.each(thisOption.seriesIndex, function (seriesIndex) {
-                var data = this.ecModel.getSeriesByIndex(seriesIndex).getData();
-                // FIXME
-                // 只考虑了list
-                if (data.type === 'list') {
-                    var oneExtent = data.getDataExtent(this.getDataDimension(data));
-                    oneExtent[0] < dataExtent[0] && (dataExtent[0] = oneExtent[0]);
-                    oneExtent[1] > dataExtent[1] && (dataExtent[1] = oneExtent[1]);
-                }
-            }, this);
+            // zrUtil.each(thisOption.seriesIndex, function (seriesIndex) {
+            //     var data = this.ecModel.getSeriesByIndex(seriesIndex).getData();
+            //     // FIXME
+            //     // 只考虑了list
+            //     if (data.type === 'list') {
+            //         var oneExtent = data.getDataExtent(this.getDataDimension(data));
+            //         oneExtent[0] < dataExtent[0] && (dataExtent[0] = oneExtent[0]);
+            //         oneExtent[1] > dataExtent[1] && (dataExtent[1] = oneExtent[1]);
+            //     }
+            // }, this);
 
             var extent = asc([thisOption.min, thisOption.max]);
 
-            extent[0] = Math.max(extent[0], dataExtent[0]);
-            extent[1] = Math.min(extent[1], dataExtent[1]);
+            // extent[0] = Math.max(extent[0], dataExtent[0]);
+            // extent[1] = Math.min(extent[1], dataExtent[1]);
 
             this._dataExtent = extent;
 
