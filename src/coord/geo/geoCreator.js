@@ -14,14 +14,12 @@ define(function (require) {
      * @param {module:echarts/ExtensionAPI} api
      */
     var resizeGeo = function (locModel, api) {
-        var center;
         if (locModel.type === 'series.map') {
             locModel = locModel.getModel('mapLocation');
-            center = [locModel.get('x'), locModel.get('y')];
         }
-        else {
-            center = locModel.get('center');
-        }
+
+        var x = locModel.get('x');
+        var y = locModel.get('y');
         var width = locModel.get('width');
         var height = locModel.get('height');
 
@@ -29,8 +27,9 @@ define(function (require) {
         var viewHeight = api.getHeight();
 
         var parsePercent = numberUtil.parsePercent;
-        var cx = parsePercent(center[0], viewWidth);
-        var cy = parsePercent(center[1], viewHeight);
+        var cx = parsePercent(x, viewWidth);
+        var cy = parsePercent(y, viewHeight);
+
         width = parsePercent(width, viewWidth);
         height = parsePercent(height, viewHeight);
 
@@ -42,6 +41,29 @@ define(function (require) {
         }
         else if (isNaN(width)) {
             width = rect.width / rect.height * height;
+        }
+
+        // Special position
+        // FIXME
+        switch (x) {
+            case 'center':
+                break;
+            case 'right':
+                cx -= width;
+                break;
+            default:
+                cx += width / 2;
+                break;
+        }
+        switch (y) {
+            case 'center':
+                break;
+            case 'bottom':
+                cy -= height;
+                break;
+            default:
+                cy += height / 2;
+                break;
         }
 
         this.transformTo(cx, cy, width, height);

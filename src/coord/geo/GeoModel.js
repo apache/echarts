@@ -17,7 +17,9 @@ define(function (require) {
 
             z: 0,
 
-            center: ['50%', '50%'],
+            x: 'center',
+
+            y: 'center',
 
             width: '70%',
 

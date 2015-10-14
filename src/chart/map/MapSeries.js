@@ -77,7 +77,7 @@ define(function (require) {
             // mapValueCalculation: 'sum',
             // 地图数值计算结果小数精度
             // mapValuePrecision: 0,
-            // 显示图例颜色标识（系列标识的小圆点）
+            // 显示图例颜色标识（系列标识的小圆点），图例开启时有效
             showLegendSymbol: true,
             // 选择模式，默认关闭，可选single，multiple
             // selectedMode: false,

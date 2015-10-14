@@ -13,7 +13,7 @@ define(function (require) {
             mapModel.needsDrawMap &&
                 this._renderArea(mapModel, ecModel, api);
 
-            mapModel.get('showLegendSymbol')
+            mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
                 && this._renderSymbols(mapModel, ecModel, api);
         },
 
