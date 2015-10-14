@@ -47,6 +47,11 @@ define(function(require) {
              * @private
              */
             this._orient;
+
+            /**
+             * @private
+             */
+            this._useHandle;
         },
 
         /**
@@ -57,7 +62,9 @@ define(function(require) {
             if (!event || event.type !== 'dataRangeSelected' || event.from !== this.uid) {
                 this._buildView();
             }
-            this._updateView();
+            else {
+                this._updateView();
+            }
         },
 
         /**
@@ -67,17 +74,22 @@ define(function(require) {
             this.group.removeAll();
 
             var dataRangeModel = this.dataRangeModel;
-            var dataRangeText = dataRangeModel.get('text');
             var thisGroup = this.group;
 
             this._orient = dataRangeModel.get('orient');
+            this._useHandle = dataRangeModel.get('calculable');
 
             this._resetInterval();
 
-            this._renderBar(thisGroup, !dataRangeText);
+            this._renderBar(thisGroup);
 
+            var dataRangeText = dataRangeModel.get('text');
             dataRangeText && this._renderEndsText(thisGroup, dataRangeText, 0);
             dataRangeText && this._renderEndsText(thisGroup, dataRangeText, 1);
+
+            // After updating view, inner shapes is built completely,
+            // and then background can be rendered.
+            this._updateView();
 
             this.renderBackground(thisGroup);
 
@@ -124,13 +136,13 @@ define(function(require) {
         /**
          * @private
          */
-        _renderBar: function (targetGroup, renderHandle) {
+        _renderBar: function (targetGroup) {
             var dataRangeModel = this.dataRangeModel;
             var shapes = this._shapes;
             var itemSize = dataRangeModel.itemSize;
-            var handleEndsMax = [0, itemSize[1]];
             var api = this.api;
             var orient = this._orient;
+            var useHandle = this._useHandle;
 
             var itemAlign = this.getItemAlignByOrient(
                 orient === 'horizontal' ? 'vertical' : 'horizontal',
@@ -142,14 +154,18 @@ define(function(require) {
             // Bar
             barGroup.add(shapes.outOfRange = createPolygon());
             barGroup.add(shapes.inRange = createPolygon(
-                null, zrUtil.bind(this._modifyHandle, this, 'all'), 'move'
+                null,
+                zrUtil.bind(this._modifyHandle, this, 'all'),
+                useHandle ? 'move' : null
             ));
 
             var textRect = dataRangeModel.textStyleModel.getTextRect('国');
             var textSize = Math.max(textRect.width, textRect.height);
 
             // Handle
-            if (renderHandle) {
+            if (useHandle) {
+                var handleEndsMax = [0, itemSize[1]];
+
                 shapes.handleGroups = [];
                 shapes.handleThumbs = [];
                 shapes.handleLabels = [];
@@ -215,6 +231,10 @@ define(function(require) {
          * @private
          */
         _modifyHandle: function (handleIndex, dx, dy) {
+            if (!this._useHandle) {
+                return;
+            }
+
             // Transform dx, dy to bar coordination.
             var vertex = this._applyTransform([dx, dy], this._shapes.barGroup, true);
             this._updateInterval(handleIndex, vertex[1]);
@@ -309,27 +329,21 @@ define(function(require) {
                 .setStyle('fill', visualOutOfRange.barColor)
                 .setShape('points', visualOutOfRange.barPoints);
 
-            each([0, 1], function (handleIndex) {
+            this._useHandle && each([0, 1], function (handleIndex) {
 
-                var handleThumbs = shapes.handleThumbs;
-                if (handleThumbs) {
-                    handleThumbs[handleIndex].setStyle(
-                        'fill', visualInRange.handlesColor[handleIndex]
-                    );
-                }
+                shapes.handleThumbs[handleIndex].setStyle(
+                    'fill', visualInRange.handlesColor[handleIndex]
+                );
 
-                var handleLabels = shapes.handleLabels;
-                if (handleLabels) {
-                    handleLabels[handleIndex].setStyle({
-                        text: dataRangeModel.formatValueText(dataInterval[handleIndex]),
-                        textAlign: this._applyTransform(
-                            this._orient === 'horizontal'
-                                ? (handleIndex === 0 ? 'bottom' : 'top')
-                                : 'left',
-                            shapes.barGroup
-                        )
-                    });
-                }
+                shapes.handleLabels[handleIndex].setStyle({
+                    text: dataRangeModel.formatValueText(dataInterval[handleIndex]),
+                    textAlign: this._applyTransform(
+                        this._orient === 'horizontal'
+                            ? (handleIndex === 0 ? 'bottom' : 'top')
+                            : 'left',
+                        shapes.barGroup
+                    )
+                });
 
             }, this);
 
@@ -404,15 +418,14 @@ define(function(require) {
          * @private
          */
         _updateHandlePosition: function (handleEnds) {
-            var shapes = this._shapes;
-            var handleGroups = shapes.handleGroups;
-
-            if (!handleGroups) {
+            if (!this._useHandle) {
                 return;
             }
 
+            var shapes = this._shapes;
+
             each([0, 1], function (handleIndex) {
-                var handleGroup = handleGroups[handleIndex];
+                var handleGroup = shapes.handleGroups[handleIndex];
                 handleGroup.position[1] = handleEnds[handleIndex];
 
                 // Update handle label location

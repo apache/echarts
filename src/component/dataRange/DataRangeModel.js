@@ -41,8 +41,8 @@ define(function(require) {
             z: 4,                       // 二级层叠
             show: true,
 
-            min: -Infinity,            // 最小值，如果不指定，则是所控制的series的最小值，兼容ec2而保留，不推荐指定
-            max: Infinity,             // 最大值，如果不指定，则是所控制的series的最大值，兼容ec2而保留，不推荐指定
+            min: 0,                     // 最小值，
+            max: 200,                   // 最大值，
             dimension: null,
 
             inRange: null,             // 'color', 'colorH', 'colorS', 'colorL', 'colorA',
@@ -62,6 +62,7 @@ define(function(require) {
             inverse: false,
 
             seriesIndex: null,          // 所控制的series indices，默认所有有value的series.
+            splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变 (contimous)
             backgroundColor: 'rgba(0,0,0,0)',
             borderColor: '#ccc',       // 值域边框颜色
             contentColor: '#5793f3',
@@ -224,8 +225,12 @@ define(function(require) {
          */
         resetExtent: function () {
             var thisOption = this.option;
-            var dataExtent = [Infinity, -Infinity];
 
+            // Can not calculate data extent by data here.
+            // Because series and data may be modified in processing stage.
+            // So we do not support the feature "auto min/max".
+
+            // var dataExtent = [Infinity, -Infinity];
             // zrUtil.each(thisOption.seriesIndex, function (seriesIndex) {
             //     var data = this.ecModel.getSeriesByIndex(seriesIndex).getData();
             //     // FIXME
@@ -254,7 +259,7 @@ define(function(require) {
             var optDim = this.option.dimension;
             return optDim != null
                 ? optDim
-                : list.dimensions[list.dimensions.length - 1]
+                : list.dimensions[list.dimensions.length - 1];
         },
 
         /**

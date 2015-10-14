@@ -16,10 +16,10 @@ define(function(require) {
         defaultOption: {
             selected: null,
             align: 'auto',             // 'auto', 'left', 'right'
-            splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变
             itemWidth: 20,             // 值域图形宽度，线性渐变水平布局宽度为该值 * 10
             itemHeight: 14,            // 值域图形高度，线性渐变垂直布局高度为该值 * 10
             itemSymbol: 'roundRect',
+            splitList: null,
             selectedMode: 'multiple',
             itemGap: 10                // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
