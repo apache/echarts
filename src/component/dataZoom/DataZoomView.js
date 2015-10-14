@@ -280,6 +280,8 @@ define(function (require) {
 
             // Find a representative series.
             var result;
+            var ecModel = this.ecModel;
+
             dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
                 var seriesModels = dataZoomModel.getTargetSeriesModels(dimNames.name, axisIndex);
 
@@ -295,13 +297,15 @@ define(function (require) {
                         return;
                     }
 
-                    var thisAxis = this.ecModel.getComponent(dimNames.axis, axisIndex).axis;
+                    var otherDim = getOtherDim(dimNames.name);
+
+                    var thisAxis = ecModel.getComponent(dimNames.axis, axisIndex).axis;
 
                     result = {
                         thisAxis: thisAxis,
                         series: seriesModel,
                         thisDim: dimNames.name,
-                        otherDim: getOtherDim(dimNames.name),
+                        otherDim: otherDim,
                         otherAxisInverse: seriesModel
                             .coordinateSystem.getOtherAxis(thisAxis).inverse
                     };
@@ -538,17 +542,25 @@ define(function (require) {
          * @private
          */
         _formatLabel: function (value, axis) {
-            var labelFormatter = this.dataZoomModel.get('labelFormatter');
+            var dataZoomModel = this.dataZoomModel;
+            var labelFormatter = dataZoomModel.get('labelFormatter');
             if (labelFormatter) {
                 return labelFormatter(value);
             }
 
-            var labelPrecise = this.dataZoomModel.get('labelPrecise') || 0;
+            var labelPrecision = dataZoomModel.get('labelPrecision');
+            if (labelPrecision == null) {
+                var dataExtent = axis.scale.getExtent();
+                labelPrecision = Math.abs(
+                    Math.floor(Math.log(dataExtent[1] - dataExtent[0]) / Math.LN10)
+                );
+            }
+
             return (value == null && isNaN(value))
                 ? ''
                 : axis.type === 'category'
                 ? axis.scale.getLabel(Math.round(value))
-                : value.toFixed(labelPrecise);
+                : value.toFixed(labelPrecision);
         },
 
         /**
@@ -560,11 +572,8 @@ define(function (require) {
             showOrHide = this._dragging || showOrHide;
 
             var handleLabels = this._displayables.handleLabels;
-            handleLabels[0].invisible = !showOrHide;
-            handleLabels[1].invisible = !showOrHide;
-
-            handleLabels[0].dirty();
-            handleLabels[1].dirty();
+            handleLabels[0].attr('invisible', !showOrHide);
+            handleLabels[1].attr('invisible', !showOrHide);
         },
 
         _onDragMove: function (handleIndex, dx, dy) {
@@ -654,8 +663,8 @@ define(function (require) {
         return thisDim === 'x' ? 'y' : 'x';
     }
 
-    function shadowInverses(dim, axis) {
-        return (dim === 'y' && !axis.inverse)
-            || (dim === 'x' && axis.inverse);
-    }
+    // function shadowInverses(dim, axis) {
+    //     return (dim === 'y' && !axis.inverse)
+    //         || (dim === 'x' && axis.inverse);
+    // }
 });

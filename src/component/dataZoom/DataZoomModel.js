@@ -37,7 +37,7 @@ define(function(require) {
             fillerColor: 'rgba(144,197,237,0.3)',   // 填充颜色
             handleColor: 'rgba(70,130,180,0.7)',    // 手柄颜色
             handleSize: 10,
-            labelPrecise: 0,           // label小数精度
+            // labelPrecision: 'auto',           // label小数精度
             labelFormatter: null,
             showDetail: true,
             showDataShadow: null,     // 默认只有line bar k 默认显示dataShadow，其他默认不显示。
