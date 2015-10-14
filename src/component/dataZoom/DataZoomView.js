@@ -23,8 +23,7 @@ define(function (require) {
     var HORIZONTAL = 'horizontal';
     var VERTICAL = 'vertical';
     var LABEL_GAP = 5;
-    var SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'k'];
-    var SHOW_DATA_SHADOW_AXIS_TYPE = ['category', 'time'];
+    var SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'k', 'scatter'];
 
     return echarts.extendComponentView({
 
@@ -222,7 +221,7 @@ define(function (require) {
         },
 
         _renderDataShadow: function () {
-            var info = this._dataShadowInfo = this._findDataShadowInfo();
+            var info = this._dataShadowInfo = this._prepareDataShadowInfo();
 
             if (!info) {
                 return;
@@ -262,7 +261,7 @@ define(function (require) {
             }));
         },
 
-        _findDataShadowInfo: function () {
+        _prepareDataShadowInfo: function () {
             var dataZoomModel = this.dataZoomModel;
             var showDataShadow = dataZoomModel.get('showDataShadow');
 
@@ -288,13 +287,6 @@ define(function (require) {
                     }
 
                     var thisAxis = this.ecModel.getComponent(dimNames.axis, axisIndex).axis;
-
-                    if (!showDataShadow && zrUtil.indexOf(
-                            SHOW_DATA_SHADOW_AXIS_TYPE, thisAxis.type
-                        ) < 0
-                    ) {
-                        return;
-                    }
 
                     result = {
                         thisAxis: thisAxis,
