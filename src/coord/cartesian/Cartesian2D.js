@@ -8,6 +8,12 @@ define(function(require) {
     function Cartesian2D(name) {
 
         Cartesian.call(this, name);
+
+        /**
+         * @param {Array.<string>}
+         * @readOnly
+         */
+        this.dimensions = ['x', 'y'];
     }
 
     Cartesian2D.prototype = {

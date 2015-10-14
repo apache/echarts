@@ -54,7 +54,6 @@ define(function(require) {
 
         var valueDim = valueAxis.dim;
 
-        // var dims = coordSys.type === 'cartesian2d' ? ['x', 'y'] : ['radius', 'angle'];
         var baseDataOffset = valueDim === 'x' || valueDim === 'radius' ? 1 : 0;
 
         return data.mapArray([valueDim], function (val, idx) {

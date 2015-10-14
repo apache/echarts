@@ -14,6 +14,12 @@ define(function (require) {
 
         this.regions = geoJson ? parseGeoJson(geoJson) : [];
 
+        /**
+         * @param {Array.<string>}
+         * @readOnly
+         */
+        this.dimensions = ['lon', 'lat'];
+
         Transformable.call(this);
 
         this._nameCoordMap = {};

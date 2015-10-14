@@ -59,7 +59,7 @@ define(function (require) {
         // FIXME One data ?
         var diff = arrayDiff(oldNameList, newNameList);
 
-        var dims = newCoordSys.type === 'cartesian2d' ? ['x', 'y'] : ['radius', 'angle'];
+        var dims = newCoordSys.dimensions;
         for (var i = 0; i < diff.length; i++) {
             var diffItem = diff[i];
             var pointAdded = true;
