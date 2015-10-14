@@ -248,7 +248,7 @@ define(function (require) {
             // Optimize for large data shadow
             var stride = Math.round(data.count() / size[0]);
             data.each([info.otherDim], function (value, index) {
-                if (index % stride) {
+                if (stride > 0 && (index % stride)) {
                     thisCoord += step;
                     return;
                 }
