@@ -12,14 +12,7 @@ define(function (require) {
 
         this.name = name;
 
-        // https://jsperf.com/try-catch-performance-overhead
-        try {
-            this.regions = geoJson ? parseGeoJson(geoJson) : [];
-        }
-        catch (e) {
-            throw 'Invalid geoJson format\n' + e;
-        }
-
+        this.loadGeoJson(geoJson);
         /**
          * @param {Array.<string>}
          * @readOnly
@@ -36,6 +29,36 @@ define(function (require) {
         constructor: Geo,
 
         type: 'geo',
+
+        /**
+         * @param {Object} geoJson
+         */
+        loadGeoJson: function (geoJson) {
+            // https://jsperf.com/try-catch-performance-overhead
+            try {
+                this.regions = geoJson ? parseGeoJson(geoJson) : [];
+            }
+            catch (e) {
+                throw 'Invalid geoJson format\n' + e;
+            }
+            var regions = this.regions;
+            var regionsMap = {};
+            for (var i = 0; i < regions.length; i++) {
+                regionsMap[regions[i].name] = regions[i];
+            }
+
+            this._regionsMap = regionsMap;
+
+            this._rect = null;
+        },
+
+        /**
+         * @param {string} name
+         * @return {module:echarts/coord/geo/Region}
+         */
+        getRegion: function (name) {
+            return this._regionsMap[name];
+        },
 
         /**
          * Add geoCoord for indexing by name
@@ -95,14 +118,6 @@ define(function (require) {
             }
             // FIXME Always return new ?
             return this._rect = rect || new BoundingRect(0, 0, 0, 0);
-        },
-
-        /**
-         * @param {Object} geoJson
-         */
-        loadGeoJson: function (geoJson) {
-            this.regions = parseGeoJson(geoJson);
-            this._rect = null;
         },
 
         /**

@@ -54,17 +54,19 @@ define(function (require) {
                 seriesList[0].get('mapValueCalculation')
             );
 
-            zrUtil.each(seriesList, function (seriesModel) {
-                seriesModel.setData(data);
-            });
+            seriesList[0].seriesGroup = [];
+
+            seriesList[0].setData(data);
         });
 
         ecModel.filterSeries(function (seriesModel, idx) {
             var mapType = seriesModel.get('mapType');
+            var seriesList = seriesGroupByMapType[mapType];
+            var firstSeries = seriesList[0];
+            // Only use the first series and save other series in the seriesGroup
+            firstSeries.seriesGroup.push(seriesModel);
 
-            return zrUtil.indexOf(
-                seriesGroupByMapType[mapType], seriesModel
-            ) === 0;
+            return firstSeries === seriesModel;
         });
     };
 });

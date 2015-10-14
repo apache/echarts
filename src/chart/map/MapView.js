@@ -8,11 +8,18 @@ define(function (require) {
         type: 'map',
 
         render: function (mapModel, ecModel, api) {
+            this.group.removeAll();
 
-            this._renderMap(mapModel, ecModel, api);
+            this._renderArea(mapModel, ecModel, api);
+
+            var offset = 0;
+            zrUtil.each(mapModel.seriesGroup, function (subMapModel) {
+                subMapModel.get('showLegendSymbol')
+                    && this._renderSymbols(mapModel, subMapModel, ecModel, api, offset++);
+            }, this);
         },
 
-        _renderMap: function (mapModel, ecModel, api) {
+        _renderArea: function (mapModel, ecModel, api) {
             var data = mapModel.getData();
 
             var geo = mapModel.coordinateSystem;
@@ -66,6 +73,50 @@ define(function (require) {
                 });
 
                 mapGroup.add(regionGroup);
+            });
+        },
+
+        _renderSymbols: function (mapModel, subMapModel, ecModel, api, offset) {
+            var coordSys = mapModel.coordinateSystem;
+            var data = subMapModel.getData();
+            var group = this.group;
+
+            data.each(function (idx) {
+                var itemModel = data.getItemModel(idx);
+                var labelModel = itemModel.getModel('itemStyle.normal.label');
+                var textStyleModel = labelModel.getModel('textStyle');
+
+                var name = data.getName(idx);
+                var region = coordSys.getRegion(name);
+                if (!region) {
+                    return;
+                }
+                var point = coordSys.dataToPoint(
+                    region.getCenter()
+                );
+                var circle = new graphic.Circle({
+                    style: {
+                        fill: data.getVisual('symbolColor')
+                    },
+                    shape: {
+                        cx: point[0] + offset * 9,
+                        cy: point[1],
+                        r: 3
+                    },
+
+                    z2: 10
+                });
+
+                if (labelModel.get('show')) {
+                    circle.setStyle({
+                        text: offset === 0 ? name : '',
+                        textFill: textStyleModel.get('color'),
+                        textPosition: 'bottom',
+                        textFont: textStyleModel.getFont()
+                    });
+                }
+
+                group.add(circle);
             });
         }
     });

@@ -71,7 +71,7 @@ define(function (require) {
             // mapValueCalculation: 'sum',
             // 地图数值计算结果小数精度
             // mapValuePrecision: 0,
-            // 显示图例颜色标识（系列标识的小圆点），存在legend时生效
+            // 显示图例颜色标识（系列标识的小圆点）
             showLegendSymbol: true,
             // 选择模式，默认关闭，可选single，multiple
             // selectedMode: false,
@@ -91,7 +91,7 @@ define(function (require) {
                     label: {
                         show: false,
                         textStyle: {
-                            color: 'rgb(139,69,19)'
+                            color: '#000'
                         }
                     }
                 },
@@ -105,7 +105,7 @@ define(function (require) {
                     label: {
                         show: false,
                         textStyle: {
-                            color: 'rgb(100,0,0)'
+                            color: '#000'
                         }
                     }
                 }
