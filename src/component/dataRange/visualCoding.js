@@ -16,9 +16,9 @@ define(function (require) {
 
     function processSingleDataRange(dataRangeModel, ecModel) {
         dataRangeModel.eachTargetSeries(function (seriesModel) {
-            var dimension = dataRangeModel.get('dimension');
             var visualMappings = dataRangeModel.targetVisuals;
             var data = seriesModel.getData();
+            var dimension = dataRangeModel.getDataDimension(data);
             var dataIndex;
 
             function getVisual(key) {
