@@ -57,16 +57,10 @@ define(function (require) {
             seriesList[0].seriesGroup = [];
 
             seriesList[0].setData(data);
-        });
 
-        ecModel.filterSeries(function (seriesModel, idx) {
-            var mapType = seriesModel.get('mapType');
-            var seriesList = seriesGroupByMapType[mapType];
-            var firstSeries = seriesList[0];
-            // Only use the first series and save other series in the seriesGroup
-            firstSeries.seriesGroup.push(seriesModel);
-
-            return firstSeries === seriesModel;
+            for (var i = 0; i < seriesList.length; i++) {
+                seriesList[i].needsDrawMap = i === 0;
+            }
         });
     };
 });

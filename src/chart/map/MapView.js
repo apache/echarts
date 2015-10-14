@@ -10,13 +10,11 @@ define(function (require) {
         render: function (mapModel, ecModel, api) {
             this.group.removeAll();
 
-            this._renderArea(mapModel, ecModel, api);
+            mapModel.needsDrawMap &&
+                this._renderArea(mapModel, ecModel, api);
 
-            var offset = 0;
-            zrUtil.each(mapModel.seriesGroup, function (subMapModel) {
-                subMapModel.get('showLegendSymbol')
-                    && this._renderSymbols(mapModel, subMapModel, ecModel, api, offset++);
-            }, this);
+            mapModel.get('showLegendSymbol')
+                && this._renderSymbols(mapModel, ecModel, api);
         },
 
         _renderArea: function (mapModel, ecModel, api) {
@@ -52,7 +50,10 @@ define(function (require) {
 
                 var styleObj = zrUtil.defaults(
                     {
-                        fill: data.getItemVisual(dataIdx, 'color')
+                        // Global visual color is used by symbol
+                        // item visual color may be coded by dataRange
+                        fill: data.getItemVisual(dataIdx, 'color', true)
+                            || data.getVisual('areaColor')
                     },
                     itemStyle
                 );
@@ -76,27 +77,25 @@ define(function (require) {
             });
         },
 
-        _renderSymbols: function (mapModel, subMapModel, ecModel, api, offset) {
-            var coordSys = mapModel.coordinateSystem;
-            var data = subMapModel.getData();
+        _renderSymbols: function (mapModel, ecModel, api) {
+            var data = mapModel.getData();
             var group = this.group;
 
-            data.each(function (idx) {
+            data.each('value', function (value, idx) {
+                if (isNaN(value)) {
+                    return;
+                }
                 var itemModel = data.getItemModel(idx);
                 var labelModel = itemModel.getModel('itemStyle.normal.label');
                 var textStyleModel = labelModel.getModel('textStyle');
 
-                var name = data.getName(idx);
-                var region = coordSys.getRegion(name);
-                if (!region) {
-                    return;
-                }
-                var point = coordSys.dataToPoint(
-                    region.getCenter()
-                );
+                var layout = data.getItemLayout(idx);
+                var point = layout.point;
+                var offset = layout.offset;
+
                 var circle = new graphic.Circle({
                     style: {
-                        fill: data.getVisual('symbolColor')
+                        fill: data.getVisual('color')
                     },
                     shape: {
                         cx: point[0] + offset * 9,
@@ -107,9 +106,9 @@ define(function (require) {
                     z2: 10
                 });
 
-                if (labelModel.get('show')) {
+                if (labelModel.get('show') && !offset) {
                     circle.setStyle({
-                        text: offset === 0 ? name : '',
+                        text: data.getName(idx),
                         textFill: textStyleModel.get('color'),
                         textPosition: 'bottom',
                         textFont: textStyleModel.getFont()

@@ -27,6 +27,12 @@ define(function (require) {
 
         type: 'series.map',
 
+        /**
+         * Only first map series of same mapType will drawMap
+         * @type {boolean}
+         */
+        needsDrawMap: false,
+
         getInitialData: function (option) {
             var list = new List([{
                 name: 'value'
