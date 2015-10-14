@@ -6,6 +6,8 @@ define(function (require) {
 
     require('./map/MapView');
 
+    echarts.registerLayout(require('./map/mapSymbolLayout'));
+
     echarts.registerVisualCoding('chart', require('./map/mapVisual'));
 
     echarts.registerProcessor('statistic', require('./map/mapDataStatistic'));

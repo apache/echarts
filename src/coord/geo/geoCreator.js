@@ -78,6 +78,7 @@ define(function (require) {
             });
 
             // If has map series
+            // PENDING Create new geo component dynamically
             ecModel.eachSeriesByType('map', function (seriesModel) {
                 var mapType = seriesModel.get('mapType');
                 var geoJson = mapDataStores[mapType];

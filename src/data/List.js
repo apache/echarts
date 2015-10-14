@@ -25,6 +25,17 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var isObject = zrUtil.isObject;
 
+    var IMMUTABLE_PROPERTIES = [
+        'stackedOn', '_nameList',
+        '_rawValueDims', '_optionModels'
+    ];
+
+    var transferImmuProperties = function (a, b) {
+        zrUtil.each(IMMUTABLE_PROPERTIES, function (propName) {
+            a[propName] = b[propName];
+        })
+    }
+
     /**
      * @constructor
      * @alias module:echarts/data/List
@@ -601,12 +612,10 @@ define(function (require) {
 
         // Following properties are all immutable.
         // So we can reference to the same value
-        list._nameList = this._nameList;
-
         var indices = list.indices = this.indices;
 
-        list._rawValueDims = this._rawValueDims;
-        list._optionModels = this._optionModels;
+        // FIXME If needs stackedOn, value may already been stacked
+        transferImmuProperties(list, this);
 
         var storage = list._storage = {};
         var thisStorage = this._storage;
@@ -644,9 +653,6 @@ define(function (require) {
                 }
             }
         });
-
-        // FIXME Value may already been stacked
-        list.stackedOn = this.stackedOn;
 
         return list;
     };
@@ -750,11 +756,12 @@ define(function (require) {
      * Get visual property of single data item
      * @param {number} idx
      * @param {string} key
+     * @param {boolean} ignoreParent
      */
-    listProto.getItemVisual = function (idx, key) {
+    listProto.getItemVisual = function (idx, key, ignoreParent) {
         var itemVisual = this._itemVisuals[idx];
         var val = itemVisual && itemVisual[key];
-        if (val == null) {
+        if (val == null && !ignoreParent) {
             // Use global visual property
             return this.getVisual(key);
         }
@@ -839,13 +846,11 @@ define(function (require) {
             return this._dimensionInfos[dim];
         }, this);
         var list = new List(dimensionInfoList, this.hostModel);
-        list.stackedOn = this.stackedOn;
 
         // FIXME
         list._storage = this._storage;
-        list._optionModels = this._optionModels;
-        list._rawValueDims = this._rawValueDims;
-        list._nameList = this._nameList;
+
+        transferImmuProperties(list, this);
 
         list.indices = this.indices.slice();
 

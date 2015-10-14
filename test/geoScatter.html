@@ -16,14 +16,14 @@
 
             require([
                 'echarts',
-                'geoJson/china_geo',
+                'geoJson/world_geo',
 
                 'echarts/chart/scatter',
                 'echarts/component/legend',
                 'echarts/component/geo'
-            ], function (echarts, chinaJson) {
+            ], function (echarts, worldJson) {
 
-                echarts.registerMap('china', chinaJson);
+                echarts.registerMap('world', worldJson);
 
                 var placeList = [
                     {name:'海门', geoCoord:[121.15, 31.89]},
@@ -216,33 +216,43 @@
                     {name:'合肥', geoCoord:[117.27, 31.86]},
                     {name:'武汉', geoCoord:[114.31, 30.52]},
                     {name:'大庆', geoCoord:[125.03, 46.58]}
-                ]
+                ];
 
                 var chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
                 });
 
                 var data = [];
-                var len = 2000;
-                var geoCoord
+                var data2 = [];
+                var len = 200;
+
+                var randomValue = function (geoCoord) {
+                    return [
+                        geoCoord[0] + Math.random() * 1 - 0.5,
+                        geoCoord[1] + Math.random() * 1 - 0.5,
+                        Math.random()
+                    ];
+                }
+
                 while(len--) {
-                    geoCoord = placeList[len % placeList.length].geoCoord;
+                    var geoCoord = placeList[len % placeList.length].geoCoord;
                     data.push({
-                        name : placeList[len % placeList.length].name + len,
-                        value : [
-                            geoCoord[0] + Math.random() * 1 - 0.5,
-                            geoCoord[1] + Math.random() * 1 - 0.5,
-                            Math.random()
-                        ]
+                        name: placeList[len % placeList.length].name + len,
+                        value: randomValue(geoCoord)
+                    });
+
+                    data2.push({
+                        name: placeList[len % placeList.length].name + len,
+                        value: randomValue(geoCoord)
                     })
                 }
 
                 chart.setOption({
                     legend: {
-                        data: ['scatter']
+                        data: ['scatter', 'scatter2']
                     },
                     geo: {
-                        map: 'china'
+                        map: 'world'
                     },
                     tooltip: {
                         trigger: 'axis',
@@ -255,9 +265,17 @@
                         name: 'scatter',
                         type: 'scatter',
                         symbolSize: function (val) {
-                            return val[2] * 10;
+                            return val[2] * 20;
                         },
                         data: data
+                    }, {
+                        coordinateSystem: 'geo',
+                        name: 'scatter2',
+                        type: 'scatter',
+                        symbolSize: function (val) {
+                            return val[2] * 20;
+                        },
+                        data: data2
                     }]
                 });
             })

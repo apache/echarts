@@ -54,17 +54,13 @@ define(function (require) {
                 seriesList[0].get('mapValueCalculation')
             );
 
-            zrUtil.each(seriesList, function (seriesModel) {
-                seriesModel.setData(data);
-            });
-        });
+            seriesList[0].seriesGroup = [];
 
-        ecModel.filterSeries(function (seriesModel, idx) {
-            var mapType = seriesModel.get('mapType');
+            seriesList[0].setData(data);
 
-            return zrUtil.indexOf(
-                seriesGroupByMapType[mapType], seriesModel
-            ) === 0;
+            for (var i = 0; i < seriesList.length; i++) {
+                seriesList[i].needsDrawMap = i === 0;
+            }
         });
     };
 });

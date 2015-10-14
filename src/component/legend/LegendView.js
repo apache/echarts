@@ -68,7 +68,7 @@ define(function (require) {
                 var seriesName = itemModel.get('name');
                 var seriesModel = ecModel.getSeriesByName(seriesName, true);
 
-                legendDataMap[seriesName] = true;
+                legendDataMap[seriesName] = itemModel;
 
                 if (!seriesModel) {
                     // Series not exists
@@ -87,7 +87,8 @@ define(function (require) {
                 var symbolType = data.getVisual('symbol');
 
                 this._createItem(
-                    seriesName, legendSymbolType, symbolType,
+                    seriesName, itemModel,
+                    legendSymbolType, symbolType,
                     itemWidth, itemHeight, itemAlign, color,
                     selectMode, api
                 );
@@ -112,7 +113,8 @@ define(function (require) {
                         var legendSymbolType = 'roundRect';
 
                         this._createItem(
-                            name, legendSymbolType, null,
+                            name, legendDataMap[name],
+                            legendSymbolType, null,
                             itemWidth, itemHeight, itemAlign, color,
                             selectMode, api
                         );
@@ -129,12 +131,14 @@ define(function (require) {
         },
 
         _createItem: function (
-            name,
+            name, itemModel,
             legendSymbolType, symbolType,
             itemWidth, itemHeight, itemAlign, color,
             selectMode, api
         ) {
             var itemGroup = new graphic.Group();
+
+            var textStyleModel = itemModel.getModel('textStyle');
 
             legendSymbolType = legendSymbolType;
             itemGroup.add(symbolCreator.createSymbol(
@@ -159,7 +163,8 @@ define(function (require) {
                     text: name,
                     x: textX,
                     y: itemHeight / 2,
-                    fill: '#000',
+                    fill: textStyleModel.get('color'),
+                    textFont: textStyleModel.getFont(),
                     textAlign: textAlign,
                     textBaseline: 'middle'
                 }

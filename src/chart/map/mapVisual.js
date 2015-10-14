@@ -1,12 +1,17 @@
 define(function (require) {
-
     return function (ecModel) {
         ecModel.eachSeriesByType('map', function (seriesModel) {
             var colorList = ecModel.get('color');
-            var data = seriesModel.getData();
-            var color = seriesModel.get('itemStyle.normal.areaStyle.color') // Set in itemStyle
-                || colorList[seriesModel.seriesIndex];  // Default color
-            data.setVisual('color', color);
+            var itemStyleModel = seriesModel.getModel('itemStyle.normal');
+
+            var areaColor = itemStyleModel.get('areaStyle.color');
+            var color = itemStyleModel.get('color')
+                || colorList[seriesModel.seriesIndex % colorList.length];
+
+            seriesModel.getData().setVisual({
+                'areaColor': areaColor,
+                'color': color
+            });
         });
     }
 });

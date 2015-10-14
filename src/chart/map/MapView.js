@@ -8,11 +8,16 @@ define(function (require) {
         type: 'map',
 
         render: function (mapModel, ecModel, api) {
+            this.group.removeAll();
 
-            this._renderMap(mapModel, ecModel, api);
+            mapModel.needsDrawMap &&
+                this._renderArea(mapModel, ecModel, api);
+
+            mapModel.get('showLegendSymbol')
+                && this._renderSymbols(mapModel, ecModel, api);
         },
 
-        _renderMap: function (mapModel, ecModel, api) {
+        _renderArea: function (mapModel, ecModel, api) {
             var data = mapModel.getData();
 
             var geo = mapModel.coordinateSystem;
@@ -45,7 +50,10 @@ define(function (require) {
 
                 var styleObj = zrUtil.defaults(
                     {
-                        fill: data.getItemVisual(dataIdx, 'color')
+                        // Global visual color is used by symbol
+                        // item visual color may be coded by dataRange
+                        fill: data.getItemVisual(dataIdx, 'color', true)
+                            || data.getVisual('areaColor')
                     },
                     itemStyle
                 );
@@ -66,6 +74,48 @@ define(function (require) {
                 });
 
                 mapGroup.add(regionGroup);
+            });
+        },
+
+        _renderSymbols: function (mapModel, ecModel, api) {
+            var data = mapModel.getData();
+            var group = this.group;
+
+            data.each('value', function (value, idx) {
+                if (isNaN(value)) {
+                    return;
+                }
+                var itemModel = data.getItemModel(idx);
+                var labelModel = itemModel.getModel('itemStyle.normal.label');
+                var textStyleModel = labelModel.getModel('textStyle');
+
+                var layout = data.getItemLayout(idx);
+                var point = layout.point;
+                var offset = layout.offset;
+
+                var circle = new graphic.Circle({
+                    style: {
+                        fill: data.getVisual('color')
+                    },
+                    shape: {
+                        cx: point[0] + offset * 9,
+                        cy: point[1],
+                        r: 3
+                    },
+
+                    z2: 10
+                });
+
+                if (labelModel.get('show') && !offset) {
+                    circle.setStyle({
+                        text: data.getName(idx),
+                        textFill: textStyleModel.get('color'),
+                        textPosition: 'bottom',
+                        textFont: textStyleModel.getFont()
+                    });
+                }
+
+                group.add(circle);
             });
         }
     });
