@@ -756,11 +756,12 @@ define(function (require) {
      * Get visual property of single data item
      * @param {number} idx
      * @param {string} key
+     * @param {boolean} ignoreParent
      */
-    listProto.getItemVisual = function (idx, key) {
+    listProto.getItemVisual = function (idx, key, ignoreParent) {
         var itemVisual = this._itemVisuals[idx];
         var val = itemVisual && itemVisual[key];
-        if (val == null) {
+        if (val == null && !ignoreParent) {
             // Use global visual property
             return this.getVisual(key);
         }
