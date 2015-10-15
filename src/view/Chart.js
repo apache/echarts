@@ -1,6 +1,5 @@
 define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
     var Group = require('zrender/container/Group');
     var componentUtil = require('../util/component');
 

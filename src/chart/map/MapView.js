@@ -44,7 +44,7 @@ define(function (require) {
                 var itemStyle = itemStyleModel.getItemStyle();
                 var hoverItemStyle = hoverItemStyleModel.getItemStyle();
 
-                // FIXME 兼容 2.0
+                // Competitable with 2.0
                 var areaStylePath = 'areaStyle.color';
                 itemStyle.fill = itemStyleModel.get(areaStylePath);
                 hoverItemStyle.fill = hoverItemStyleModel.get(areaStylePath);
@@ -106,6 +106,7 @@ define(function (require) {
                         cy: point[1],
                         r: 3
                     },
+                    silent: true,
 
                     z2: 10
                 });

@@ -76,7 +76,11 @@ var theme = {
     // 类目轴
     categoryAxis: {
         axisLine: {            // 坐标轴线
-            show: false
+            show: true,
+            lineStyle: {
+                width: 1,
+                color: ['#aaa']
+            }
         },
         axisTick: {            // 坐标轴小标记
             show: false
