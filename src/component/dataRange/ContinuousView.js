@@ -58,8 +58,8 @@ define(function(require) {
          * @protected
          * @override
          */
-        doRender: function (dataRangeModel, ecModel, api, event) {
-            if (!event || event.type !== 'dataRangeSelected' || event.from !== this.uid) {
+        doRender: function (dataRangeModel, ecModel, api, payload) {
+            if (!payload || payload.type !== 'selectDataRange' || payload.from !== this.uid) {
                 this._buildView();
             }
             else {
@@ -84,14 +84,18 @@ define(function(require) {
             this._renderBar(thisGroup);
 
             var dataRangeText = dataRangeModel.get('text');
-            dataRangeText && this._renderEndsText(thisGroup, dataRangeText, 0);
-            dataRangeText && this._renderEndsText(thisGroup, dataRangeText, 1);
+            this._renderEndsText(thisGroup, dataRangeText, 0);
+            this._renderEndsText(thisGroup, dataRangeText, 1);
+
+            // Do this for background size calculation.
+            this._updateView(true);
 
             // After updating view, inner shapes is built completely,
             // and then background can be rendered.
-            this._updateView();
-
             this.renderBackground(thisGroup);
+
+            // Real update view
+            this._updateView();
 
             this.positionGroup(thisGroup);
         },
@@ -100,7 +104,12 @@ define(function(require) {
          * @private
          */
         _renderEndsText: function (group, dataRangeText, endsIndex) {
-            var text = dataRangeText[endsIndex];
+            if (!dataRangeText) {
+                return;
+            }
+
+            // Compatible with ec2, text[0] map to high value, text[1] map low value.
+            var text = dataRangeText[1 - endsIndex];
             text = text != null ? text + '' : '';
 
             var dataRangeModel = this.dataRangeModel;
@@ -164,8 +173,6 @@ define(function(require) {
 
             // Handle
             if (useHandle) {
-                var handleEndsMax = [0, itemSize[1]];
-
                 shapes.handleGroups = [];
                 shapes.handleThumbs = [];
                 shapes.handleLabels = [];
@@ -173,9 +180,6 @@ define(function(require) {
 
                 this._createHandle(barGroup, 0, itemSize, textSize, orient, itemAlign);
                 this._createHandle(barGroup, 1, itemSize, textSize, orient, itemAlign);
-
-                // Do this for background size calculation.
-                this._updateHandlePosition(handleEndsMax);
             }
 
             // Indicator
@@ -313,14 +317,21 @@ define(function(require) {
         /**
          * @private
          */
-        _updateView: function () {
+        _updateView: function (forSketch) {
             var dataRangeModel = this.dataRangeModel;
             var dataExtent = dataRangeModel.getExtent();
             var shapes = this._shapes;
             var dataInterval = this._dataInterval;
 
-            var visualInRange = this._createBarVisual(dataInterval, dataExtent);
-            var visualOutOfRange = this._createBarVisual(dataExtent, dataExtent, 'outOfRange');
+            var outOfRangeHandleEnds = [0, dataRangeModel.itemSize[1]];
+            var inRangeHandleEnds = forSketch ? outOfRangeHandleEnds : this._handleEnds;
+
+            var visualInRange = this._createBarVisual(
+                dataInterval, dataExtent, inRangeHandleEnds, 'inRange'
+            );
+            var visualOutOfRange = this._createBarVisual(
+                dataExtent, dataExtent, outOfRangeHandleEnds, 'outOfRange'
+            );
 
             shapes.inRange
                 .setStyle('fill', visualInRange.barColor)
@@ -347,52 +358,42 @@ define(function(require) {
 
             }, this);
 
-            this._updateHandlePosition(visualInRange.handleEnds);
+            this._updateHandlePosition(inRangeHandleEnds);
         },
 
         /**
          * @private
          */
-        _createBarVisual: function (dataInterval, dataExtent, forceState) {
-            var handleEnds = forceState
-                ? [0, this.dataRangeModel.itemSize[1]]
-                : this._handleEnds;
+        _createBarVisual: function (dataInterval, dataExtent, handleEnds, forceState) {
+            var colorStops = this.getControllerVisual(dataInterval, forceState, 'color').color;
 
-            var visuals = [
-                this.getControllerVisual(dataInterval[0], forceState),
-                this.getControllerVisual(dataInterval[1], forceState)
+            var symbolSizes = [
+                this.getControllerVisual(dataInterval[0], forceState, 'symbolSize').symbolSize,
+                this.getControllerVisual(dataInterval[1], forceState, 'symbolSize').symbolSize
             ];
-
-            var colorStops = [];
-            var handles = [];
-            each(dataInterval, function (value, index) {
-                colorStops.push({offset: index, color: visuals[index].color});
-                handles.push(visuals[index].color);
-            });
-
-            var barPoints = this._createBarPoints(handleEnds, visuals);
+            var barPoints = this._createBarPoints(handleEnds, symbolSizes);
 
             return {
                 barColor: new LinearGradient(0, 0, 1, 1, colorStops),
                 barPoints: barPoints,
-                handlesColor: handles,
-                handleEnds: handleEnds
+                handlesColor: [
+                    colorStops[0].color,
+                    colorStops[colorStops.length - 1].color
+                ]
             };
         },
 
         /**
          * @private
          */
-        _createBarPoints: function (handleEnds, visuals) {
+        _createBarPoints: function (handleEnds, symbolSizes) {
             var itemSize = this.dataRangeModel.itemSize;
-            var widths0 = visuals[0].symbolSize;
-            var widths1 = visuals[1].symbolSize;
 
             return [
-                [itemSize[0] - widths0, handleEnds[0]],
+                [itemSize[0] - symbolSizes[0], handleEnds[0]],
                 [itemSize[0], handleEnds[0]],
                 [itemSize[0], handleEnds[1]],
-                [itemSize[0] - widths1, handleEnds[1]]
+                [itemSize[0] - symbolSizes[1], handleEnds[1]]
             ];
         },
 
@@ -428,7 +429,7 @@ define(function(require) {
                 var handleGroup = shapes.handleGroups[handleIndex];
                 handleGroup.position[1] = handleEnds[handleIndex];
 
-                // Update handle label location
+                // Update handle label position.
                 var labelPoint = shapes.handleLabelPoints[handleIndex];
                 var textPoint = modelUtil.applyTransform(
                     [labelPoint.x, labelPoint.y],

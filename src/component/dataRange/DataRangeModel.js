@@ -74,9 +74,9 @@ define(function(require) {
             itemWidth: null,              // 值域图形宽度
             itemHeight: null,             // 值域图形高度
             precision: 0,              // 小数精度，默认为0，无小数点
-            color: ['#e0ffff', '#006edd'],//颜色（deprecated，兼容ec2）
+            color: ['#e0ffff', '#006edd'], //颜色（deprecated，兼容ec2，对应数值由高到低）
             // formatter: null,
-            // text:['高','低'],         // 文本，默认为数值文本
+            text: null,                // 文本，如['高', '低']，兼容ec2，text[0]对应高值，text[1]对应低值
             textStyle: {
                 color: '#333'          // 值域文字颜色
             }
@@ -320,12 +320,14 @@ define(function(require) {
 
             function completeSingle(base) {
                 // Compatible with ec2 dataRange.color.
+                // The mapping order of dataRange.color is: [high value, ..., low value]
+                // whereas inRange.color and outOfRange.color is [low value, ..., high value]
                 if (zrUtil.isArray(thisOption.color)
                     // If there has been inRange: {symbol: ...}, adding color is a mistake.
                     // So adding color only when no inRange defined.
                     && !base.inRange
                 ) {
-                    base.inRange = {color: thisOption.color.slice()};
+                    base.inRange = {color: thisOption.color.slice().reverse()};
                 }
 
                 // If using shortcut like: {inRange: 'symbol'}, complete default value.
@@ -420,11 +422,7 @@ define(function(require) {
          * @protected
          */
         resetItemSize: function () {
-            var api = this.api;
-            this.itemSize = [
-                parsePercent(this.get('itemWidth'), api.getWidth()),
-                parsePercent(this.get('itemHeight'), api.getHeight())
-            ];
+            this.itemSize = [+this.get('itemWidth'), +this.get('itemHeight')];
         },
 
         /**

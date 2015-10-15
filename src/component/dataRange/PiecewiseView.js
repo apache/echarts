@@ -23,18 +23,19 @@ define(function(require) {
             var api = this.api;
             var ecWidth = api.getWidth();
             var textGap = dataRangeModel.get('textGap');
-            var dataRangeText = dataRangeModel.get('text');
             var font = dataRangeModel.textStyleModel.getFont();
-            var showLabel = !dataRangeText;
-            var showEndsText = !showLabel;
             var itemAlign = this.getItemAlignByOrient('horizontal', ecWidth);
             var itemSize = dataRangeModel.itemSize;
 
-            showEndsText && this._renderEndsText(thisGroup, dataRangeText[0], itemSize);
+            var viewData = this._getViewData();
+            var showLabel = !viewData.endsText;
+            var showEndsText = !showLabel;
 
-            zrUtil.each(this._getViewPieceList(), renderItem, this);
+            showEndsText && this._renderEndsText(thisGroup, viewData.endsText[1], itemSize);
 
-            showEndsText && this._renderEndsText(thisGroup, dataRangeText[1], itemSize);
+            zrUtil.each(viewData.pieceList, renderItem, this);
+
+            showEndsText && this._renderEndsText(thisGroup, viewData.endsText[0], itemSize);
 
             layout.box(
                 dataRangeModel.get('orient'), thisGroup, dataRangeModel.get('itemGap')
@@ -91,20 +92,30 @@ define(function(require) {
 
         /**
          * @private
+         * @return {Object} {peiceList, endsText} value order is [low, ..., high]
          */
-        _getViewPieceList: function () {
+        _getViewData: function () {
             var dataRangeModel = this.dataRangeModel;
-            var list = zrUtil.map(dataRangeModel.getPieceList(), function (piece, index) {
+
+            var pieceList = zrUtil.map(dataRangeModel.getPieceList(), function (piece, index) {
                 return {piece: piece, index: index};
             });
+            var endsText = dataRangeModel.get('text');
+
+            // Consider orient and inverse.
             var orient = dataRangeModel.get('orient');
             var inverse = dataRangeModel.get('inverse');
 
             if (orient === 'horizontal' ? inverse : !inverse) {
-                list.reverse();
+                // Value order of pieceList is [high, ..., low]
+                pieceList.reverse();
+                // Value order of endsText is [high, low]
+                if (endsText) {
+                    endsText = endsText.slice().reverse();
+                }
             }
 
-            return list;
+            return {pieceList: pieceList, endsText: endsText};
         },
 
         /**

@@ -86,7 +86,7 @@ define(function (require) {
             this.api = api;
         },
 
-        render: function (dataZoomModel, ecModel, api, event) {
+        render: function (dataZoomModel, ecModel, api, payload) {
             this.dataZoomModel = dataZoomModel;
             this.ecModel = ecModel;
             this._orient = dataZoomModel.get('orient');
@@ -97,7 +97,7 @@ define(function (require) {
                 return;
             }
 
-            if (!event || event.type !== 'dataZoom' || event.from !== this.uid) {
+            if (!payload || payload.type !== 'dataZoom' || payload.from !== this.uid) {
                 this._buildView();
             }
 
