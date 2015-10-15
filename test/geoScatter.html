@@ -16,14 +16,14 @@
 
             require([
                 'echarts',
-                'geoJson/world_geo',
+                'geoJson/china_geo',
 
                 'echarts/chart/scatter',
                 'echarts/component/legend',
                 'echarts/component/geo'
-            ], function (echarts, worldJson) {
+            ], function (echarts, chinaJson) {
 
-                echarts.registerMap('world', worldJson);
+                echarts.registerMap('china', chinaJson);
 
                 var placeList = [
                     {name:'海门', geoCoord:[121.15, 31.89]},
@@ -252,7 +252,7 @@
                         data: ['scatter', 'scatter2']
                     },
                     geo: {
-                        map: 'world'
+                        map: 'china'
                     },
                     tooltip: {
                         trigger: 'axis',

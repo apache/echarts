@@ -45,7 +45,6 @@ define(function(require) {
      */
     layout.hbox = zrUtil.curry(boxLayout, 'horizontal');
 
-
     /**
      * Position group of component in viewport
      *  Group position is specified by either

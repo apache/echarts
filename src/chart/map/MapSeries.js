@@ -77,7 +77,7 @@ define(function (require) {
             // mapValueCalculation: 'sum',
             // 地图数值计算结果小数精度
             // mapValuePrecision: 0,
-            // 显示图例颜色标识（系列标识的小圆点）
+            // 显示图例颜色标识（系列标识的小圆点），图例开启时有效
             showLegendSymbol: true,
             // 选择模式，默认关闭，可选single，multiple
             // selectedMode: false,
@@ -90,9 +90,10 @@ define(function (require) {
             itemStyle: {
                 normal: {
                     // color: 各异,
-                    borderWidth: 0,
+                    borderWidth: 0.5,
+                    borderColor: '#444',
                     areaStyle: {
-                        color: '#ccc'
+                        color: '#eee'
                     },
                     label: {
                         show: false,
@@ -104,7 +105,6 @@ define(function (require) {
                 // 也是选中样式
                 emphasis: {
                     // color: 各异,
-                    borderWidth: 0,
                     areaStyle: {
                         color: 'rgba(255,215,0,0.8)'
                     },

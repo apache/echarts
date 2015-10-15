@@ -33,14 +33,16 @@
 
                 var itemStyle = {
                     normal:{
+                        borderWidth: 0.5,
+                        borderColor: 'black',
                         label:{show:true}
                     },
                     emphasis:{
                         label:{show:true},
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0,
-                        shadowBlur: 20,
-                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 0,
+                        // shadowBlur: 20,
+                        // shadowColor: 'rgba(0, 0, 0, 0.3)'
                     }
                 }
 
@@ -75,7 +77,8 @@
                             type: 'map',
                             mapType: 'world',
                             mapLocation: {
-                                // y : 60
+                                y : 60,
+                                width: '80%'
                             },
                             itemStyle: itemStyle,
                             data:[

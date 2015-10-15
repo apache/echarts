@@ -13,7 +13,7 @@ define(function (require) {
             mapModel.needsDrawMap &&
                 this._renderArea(mapModel, ecModel, api);
 
-            mapModel.get('showLegendSymbol')
+            mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
                 && this._renderSymbols(mapModel, ecModel, api);
         },
 
@@ -27,8 +27,9 @@ define(function (require) {
 
             group.add(mapGroup);
 
+            var scale = geo.scale;
             mapGroup.position = geo.position.slice();
-            mapGroup.scale = geo.scale.slice();
+            mapGroup.scale = scale.slice();
 
             zrUtil.each(geo.regions, function (region) {
 
@@ -57,6 +58,9 @@ define(function (require) {
                     },
                     itemStyle
                 );
+
+                styleObj.lineWidth && (styleObj.lineWidth /= scale[0]);
+                hoverItemStyle.lineWidth && (hoverItemStyle.lineWidth /= scale[0]);
 
                 zrUtil.each(region.contours, function (contour) {
 
