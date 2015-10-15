@@ -93,10 +93,10 @@ define(function (require) {
          */
         setExtent: function (start, end) {
             var thisExtent = this._extent;
-            if (! isNaN(start)) {
+            if (!isNaN(start)) {
                 thisExtent[0] = start;
             }
-            if (! isNaN(end)) {
+            if (!isNaN(end)) {
                 thisExtent[1] = end;
             }
         },
@@ -156,6 +156,15 @@ define(function (require) {
                 labels.push(ticks[i].toString());
             }
             return labels;
+        },
+
+        /**
+         * @param {number} n
+         * @return {number}
+         */
+        // FIXME addCommas
+        getLabel: function (data) {
+            return data;
         },
 
         /**

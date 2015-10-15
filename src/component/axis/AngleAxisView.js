@@ -55,7 +55,8 @@ define(function (require) {
                     r: radiusExtent[1]
                 },
                 style: lineStyleModel.getLineStyle(),
-                z2: 1
+                z2: 1,
+                silent: true
             });
             circle.style.fill = null;
 

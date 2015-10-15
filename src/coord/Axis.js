@@ -1,6 +1,7 @@
 define(function (require) {
 
-    var linearMap = require('../util/number').linearMap;
+    var numberUtil = require('../util/number')
+    var linearMap = numberUtil.linearMap;
     var zrUtil = require('zrender/core/util');
 
     function fixExtentWithBands(extent, nTick) {
@@ -80,6 +81,23 @@ define(function (require) {
             this.inverse && ret.reverse();
 
             return ret;
+        },
+
+        /**
+         * Get precision used for formatting
+         * @return {number}
+         */
+        getFormatPrecision: function () {
+            var log = Math.log;
+            var LN10 = Math.LN10;
+            var dataExtent = this.scale.getExtent();
+            var extent = this._extent;
+            var dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
+            var sizeQuantity = Math.ceil(log(Math.abs(extent[1] - extent[0])) / LN10);
+            return Math.max(
+                -dataQuantity + sizeQuantity,
+                0
+            );
         },
 
         /**

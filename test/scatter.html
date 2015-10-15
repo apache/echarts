@@ -30,10 +30,14 @@
                 var data2 = [];
                 var data3 = [];
 
-                for (var i = 0; i < 100; i++) {
-                    data1.push([Math.random() * 5, Math.random() * 4, Math.random().toFixed(2)]);
-                    data2.push([Math.random() * 10, Math.random() * 5, (Math.random() + 0.3).toFixed(2)]);
-                    data3.push([Math.random() * 15, Math.random() * 10, Math.random().toFixed(2)]);
+                var random = function (max) {
+                    return (Math.random() * max).toFixed(3);
+                }
+
+                for (var i = 0; i < 200; i++) {
+                    data1.push([random(5), random(5), random(1)]);
+                    data2.push([random(10), random(10), random(1)]);
+                    data3.push([random(15), random(10), random(1)]);
                 }
 
                 chart.setOption({

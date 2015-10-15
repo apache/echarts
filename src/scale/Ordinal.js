@@ -142,6 +142,8 @@ define(function (require) {
 
         /**
          * Get item on rank n
+         * @param {number} n
+         * @return {string}
          */
         getLabel: function (n) {
             return this._data[n];

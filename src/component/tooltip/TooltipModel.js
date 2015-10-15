@@ -80,7 +80,11 @@ define(function (require) {
                 crossStyle: {
                     color: '#1e90ff',
                     width: 1,
-                    type: 'dashed'
+                    type: 'dashed',
+
+                    // TODO formatter
+
+                    textStyle: {}
                 },
 
                 // 阴影指示器样式设置
