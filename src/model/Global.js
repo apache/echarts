@@ -27,12 +27,11 @@ define(function (require) {
 
         constructor: GlobalModel,
 
-        init: function (option, parentModel, theme, api) {
+        init: function (option, parentModel, theme) {
 
             theme = theme || {};
 
             this.option = {};
-            this.api = api;
 
             /**
              * @type {Array.<module:echarts/model/Model}
@@ -152,7 +151,7 @@ define(function (require) {
                         // PENDING Global as parent ?
                         componentModel = new ComponentModelClass(
                             newCptOptionList[i], this, this,
-                            this._getComponentsByTypes(dependencies), i, this.api
+                            this._getComponentsByTypes(dependencies), i
                         );
                         componentsMap[componentType][i] = componentModel;
 

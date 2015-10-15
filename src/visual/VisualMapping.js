@@ -71,12 +71,24 @@ define(function (require) {
             },
 
             mapValueToVisual: function (value) {
-                var normalized = this._normalizeData(value);
-                var specifiedVisual = this._getIntervalVisual(normalized);
+                var optionData = this.option.data;
 
-                return specifiedVisual != null
-                    ? specifiedVisual
-                    : zrColor.mapToColor(normalized, this.option.data);
+                if (zrUtil.isArray(value)) {
+                    value = [
+                        this._normalizeData(value[0]),
+                        this._normalizeData(value[1])
+                    ];
+                    // For creating graduate color list.
+                    return zrColor.mapIntervalToColor(value, optionData);
+                }
+                else {
+                    var normalized = this._normalizeData(value);
+                    var specifiedVisual = this._getIntervalVisual(normalized);
+
+                    return specifiedVisual != null
+                        ? specifiedVisual
+                        : zrColor.mapToColor(normalized, optionData);
+                }
             }
         },
 

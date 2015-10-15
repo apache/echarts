@@ -124,9 +124,7 @@ define(function (require) {
 
             var ecModel = this._model;
             if (!ecModel || notMerge) {
-                ecModel = new GlobalModel(
-                    option, null, this._theme, this._extensionAPI
-                );
+                ecModel = new GlobalModel(option, null, this._theme);
                 this._model = ecModel;
             }
             else {
@@ -210,15 +208,15 @@ define(function (require) {
 
         /**
          * @pubilc
-         * @param {Object} event
-         * @param {string} [event.type] Event type
-         * @param {number} [event.from] From uid
+         * @param {Object} payload
+         * @param {string} [payload.type] Event type
+         * @param {number} [payload.from] From uid
          */
-        dispatch: function (event) {
-            var action = actions[event.type];
+        dispatch: function (payload) {
+            var action = actions[payload.type];
             if (action) {
-                action(event, this._model);
-                this.updateImmediately(event);
+                action(payload, this._model);
+                this.updateImmediately(payload);
             }
         },
 

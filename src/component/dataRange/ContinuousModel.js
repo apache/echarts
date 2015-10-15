@@ -121,8 +121,14 @@ define(function(require) {
          */
         getValueState: function (value) {
             var range = this.option.range;
-            return (range[0] <= value && value <= range[1])
-                ? 'inRange' : 'outOfRange';
+            var dataExtent = this.getExtent();
+
+            // When range[0] === dataExtent[0], any value larger than dataExtent[0] maps to 'inRange'.
+            // range[1] is processed likewise.
+            return (
+                (range[0] <= dataExtent[0] || range[0] <= value)
+                && (range[1] >= dataExtent[1] || value <= range[1])
+            ) ? 'inRange' : 'outOfRange';
         }
 
     });

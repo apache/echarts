@@ -46,7 +46,7 @@ define(function (require) {
         /**
          * @protected
          */
-        render: function (dataRangeModel, ecModel, api, event) {
+        render: function (dataRangeModel, ecModel, api, payload) {
             this.dataRangeModel = dataRangeModel;
 
             if (dataRangeModel.get('show') === false) {
@@ -84,15 +84,29 @@ define(function (require) {
 
         /**
          * @protected
+         * @param {(number|Array)} targetValue
+         * @param {string=} forceState Specify state, instead of using getValueState method.
+         * @param {string=} visualType Specify visual type, defualt all available visualTypes.
          */
-        getControllerVisual: function (representValue, forceState) {
+        getControllerVisual: function (targetValue, forceState, visualType) {
             var dataRangeModel = this.dataRangeModel;
+            var targetIsArray = zrUtil.isArray(targetValue);
+
+            // targetValue is array when caculate gradient color,
+            // where forceState is required.
+            if (targetIsArray && (!forceState || visualType !== 'color')) {
+                throw new Error(targetValue);
+            }
+
             var mappings = dataRangeModel.controllerVisuals[
-                forceState || dataRangeModel.getValueState(representValue)
+                forceState || dataRangeModel.getValueState(targetValue)
             ];
+            var defaultColor = dataRangeModel.get('contentColor');
             var visualObj = {
                 symbol: dataRangeModel.get('itemSymbol'),
-                color: dataRangeModel.get('contentColor')
+                color: targetIsArray
+                    ? [{color: defaultColor, offset: 0}, {color: defaultColor, offset: 1}]
+                    : defaultColor
             };
 
             function getter(key) {
@@ -105,10 +119,12 @@ define(function (require) {
                     : (visualObj[key] = value);
             }
 
-            zrUtil.each(mappings, function (visualMapping) {
-                visualMapping && visualMapping.applyVisual(
-                    representValue, getter, setter
-                );
+            zrUtil.each(mappings, function (visualMapping, type) {
+                (!visualType || type === visualType)
+                    && visualMapping
+                    && visualMapping.applyVisual(
+                        targetValue, getter, setter
+                    );
             });
 
             return visualObj;
