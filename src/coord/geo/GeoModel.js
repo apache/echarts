@@ -32,8 +32,9 @@ define(function (require) {
             itemStyle: {
                 normal: {
                     // color: 各异,
-                    borderWidth: 0,
-                    color: '#ccc',
+                    borderWidth: 0.5,
+                    borderColor: '#444',
+                    color: '#eee',
                     label: {
                         show: false,
                         textStyle: {
@@ -42,8 +43,6 @@ define(function (require) {
                     }
                 },
                 emphasis: {                 // 也是选中样式
-                    // color: 各异,
-                    borderWidth: 0,
                     color: 'rgba(255,215,0,0.8)',
                     label: {
                         show: false,

@@ -197,7 +197,7 @@ define(function (require) {
         var value1D = dimensions.length === 1;
 
         // Use the first data to indicate data type;
-        var isValueArray = zrUtil.isArray(data[0]);
+        var isValueArray = zrUtil.isArray(data[0].value == null ? data[0] : data[0].value);
         for (var idx = 0; idx < data.length; idx++) {
             var value = data[idx];
             // Each data item contains value and option
