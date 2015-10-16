@@ -1,5 +1,3 @@
-// TODO Smooth
-// TODO '-' data
 define(function(require) {
 
     'use strict';
@@ -24,6 +22,10 @@ define(function(require) {
             }
         }
         return true;
+    }
+
+    function getSmooth(smooth) {
+        return typeof (smooth) === 'number' ? smooth : (smooth ? 0.2 : 0);
     }
 
     function getAxisExtentWithGap(axis) {
@@ -158,7 +160,16 @@ define(function(require) {
                     lineJoin: 'bevel'
                 }
             ));
+
+            var smooth = seriesModel.get('smooth');
+            smooth = getSmooth(seriesModel.get('smooth'));
+            polyline.shape.smooth = smooth;
+
             if (polygon) {
+                var polygonShape = polygon.shape;
+                var stackedOn = data.stackedOn;
+                var stackedOnSmooth = 0;
+
                 polygon.style.opacity = 0.7;
                 polygon.setStyle(zrUtil.defaults(
                     areaStyleModel.getAreaStyle(),
@@ -167,6 +178,14 @@ define(function(require) {
                         lineJoin: 'bevel'
                     }
                 ));
+                polygonShape.smooth = smooth;
+
+                if (stackedOn) {
+                    var stackedOnSeries = stackedOn.hostModel;
+                    stackedOnSmooth = getSmooth(stackedOnSeries.get('smooth'))
+                }
+
+                polygonShape.stackedOnSmooth = stackedOnSmooth;
             }
 
             this._data = data;
