@@ -154,25 +154,27 @@ define(function(require) {
          * Convert a single data item to (x, y) point.
          * Parameter data is an array which the first element is radius and the second is angle
          * @param {Array.<number>} data
+         * @param {boolean} [clamp=false]
          * @return {Array.<number>}
          */
-        dataToPoint: function (data) {
+        dataToPoint: function (data, clamp) {
             return this.coordToPoint([
-                this._radiusAxis.dataToRadius(data[0]),
-                this._angleAxis.dataToAngle(data[1])
+                this._radiusAxis.dataToRadius(data[0], clamp),
+                this._angleAxis.dataToAngle(data[1], clamp)
             ])
         },
 
         /**
          * Convert a (x, y) point to data
          * @param {Array.<number>} point
+         * @param {boolean} [clamp=false]
          * @return {Array.<number>}
          */
-        pointToData: function (point) {
+        pointToData: function (point, clamp) {
             var coord = this.pointToCoord(point);
             return [
-                this._radiusAxis.radiusToData(coord[0]),
-                this._angleAxis.angleToData(coord[1])
+                this._radiusAxis.radiusToData(coord[0], clamp),
+                this._angleAxis.angleToData(coord[1], clamp)
             ];
         },
 

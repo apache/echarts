@@ -59,9 +59,12 @@ define(function(require) {
      * @param {number|string} [positionInfo.y2]
      * @param {Object} containerRect
      * @param {string|number} margin
+     * @param {boolean} [notAlignX=false]
+     * @param {boolean} [notAlignY=false]
      */
     layout.positionGroup = function (
-        group, positionInfo, containerRect, margin
+        group, positionInfo, containerRect, margin,
+        notAlignX, notAlignY
     ) {
         margin = formatUtil.normalizeCssArray(margin || 0);
 
@@ -89,22 +92,26 @@ define(function(require) {
             y = y2 - height;
         }
 
-        switch (positionInfo.x || positionInfo.x2) {
-            case 'center':
-                x = containerWidth / 2 - width / 2;
-                break;
-            case 'right':
-                x = containerWidth - width;
-                break;
+        if (!notAlignX) {
+            switch (positionInfo.x || positionInfo.x2) {
+                case 'center':
+                    x = containerWidth / 2 - width / 2;
+                    break;
+                case 'right':
+                    x = containerWidth - width;
+                    break;
 
+            }
         }
-        switch (positionInfo.y || positionInfo.y2) {
-            case 'middle':
-                y = containerHeight / 2 - height / 2;
-                break;
-            case 'bottom':
-                y = containerHeight - height;
-                break;
+        if (!notAlignY) {
+            switch (positionInfo.y || positionInfo.y2) {
+                case 'middle':
+                    y = containerHeight / 2 - height / 2;
+                    break;
+                case 'bottom':
+                    y = containerHeight - height;
+                    break;
+            }
         }
 
         group.position = [

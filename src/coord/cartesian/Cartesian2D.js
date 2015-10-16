@@ -84,12 +84,13 @@ define(function(require) {
 
         /**
          * @param {Array.<number>} point
+         * @param {boolean} [clamp=false]
          * @return {Array.<number>}
          */
-        pointToData: function (point) {
+        pointToData: function (point, clamp) {
             return [
-                this.getAxis('x').coordToData(point[0]),
-                this.getAxis('y').coordToData(point[1])
+                this.getAxis('x').coordToData(point[0], clamp),
+                this.getAxis('y').coordToData(point[1], clamp)
             ];
         },
 

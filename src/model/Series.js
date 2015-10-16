@@ -118,11 +118,15 @@ define(function(require) {
             var data = this._data;
             var value = data.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
-                ? zrUtil.map(value, addCommas) : addCommas(value);
-            var name = data.getName(dataIndex);
+                ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
+            var name = data.getName(dataIndex, true);
 
-            return !mutipleSeries ? (encodeHTML(this.name) + '<br />'
-                + encodeHTML(name) + ' : ' + formattedValue)
+            return !mutipleSeries
+                ? (encodeHTML(this.name) + '<br />'
+                    + (name
+                        ? encodeHTML(name) + ' : ' + formattedValue
+                        : formattedValue)
+                  )
                 : (encodeHTML(this.name) + ' : ' + formattedValue);
         },
 

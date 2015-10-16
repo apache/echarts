@@ -1,6 +1,5 @@
 define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
     var Group = require('zrender/container/Group');
     var componentUtil = require('../util/component');
 
@@ -27,7 +26,7 @@ define(function (require) {
 
         render: function (seriesModel, ecModel, api) {},
 
-        remove: function () {
+        remove: function (ecModel, api) {
             this.group.removeAll();
         },
 

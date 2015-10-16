@@ -28,7 +28,6 @@ define(function (require) {
 
             var cartesian = seriesModel.coordinateSystem;
             var baseAxis = cartesian.getBaseAxis();
-            var isInverse = cartesian.getOtherAxis(baseAxis).inverse;
             var isHorizontal = baseAxis.isHorizontal();
 
             var enableAnimation = ecModel.get('animation');
@@ -126,21 +125,26 @@ define(function (require) {
             this._data = data;
         },
 
-        remove: function () {
-            if (this._data) {
-                var group = this.group;
-                this._data.eachItemGraphicEl(function (el) {
-                    // Not show text when animating
-                    el.style.text = '';
-                    el.animateTo({
-                        shape: {
-                            width: 0
-                        }
-                    }, 300, 'cubicOut',
-                    function () {
-                        group.remove(el);
+        remove: function (ecModel) {
+            var group = this.group;
+            if (ecModel.get('animation')) {
+                if (this._data) {
+                    this._data.eachItemGraphicEl(function (el) {
+                        // Not show text when animating
+                        el.style.text = '';
+                        el.animateTo({
+                            shape: {
+                                width: 0
+                            }
+                        }, 300, 'cubicOut',
+                        function () {
+                            group.remove(el);
+                        });
                     });
-                });
+                }
+            }
+            else {
+                group.removeAll();
             }
         }
     });

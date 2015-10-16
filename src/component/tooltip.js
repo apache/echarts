@@ -4,6 +4,9 @@ define(function (require) {
     var TooltipContent = require('./tooltip/TooltipContent');
     var graphic = require('../util/graphic');
     var zrUtil = require('zrender/core/util');
+    var formatUtil = require('../util/format');
+
+    require('./tooltip/TooltipModel');
 
     function getAxisPointerKey(coordName, axisType) {
         return coordName + axisType;
@@ -39,8 +42,6 @@ define(function (require) {
         };
     }
 
-    require('./tooltip/TooltipModel');
-
     require('../echarts').extendComponentView({
 
         type: 'tooltip',
@@ -68,22 +69,59 @@ define(function (require) {
 
             this._tooltipContent.hide();
 
-            var seriesGroupByCoordSys = {};
+            // Prepare data for axis trigger
+            var seriesGroupByAxis = {};
             ecModel.eachSeries(function (seriesModel) {
                 var coordSys = seriesModel.coordinateSystem;
-                if (coordSys) {
-                    var name = coordSys.name;
-                    seriesGroupByCoordSys[name] = seriesGroupByCoordSys[name] || {
-                        coordSys: coordSys,
-                        series: []
-                    };
-                    seriesGroupByCoordSys[name].series.push(seriesModel);
+                if (!coordSys) {
+                    return;
                 }
+
+                var coordSysType = coordSys.type;
+
+                var baseAxis;
+                var key;
+
+                // Only cartesian2d and polar support axis trigger
+                if (coordSysType === 'cartesian2d') {
+                    // FIXME `axisPointer.axis` is not baseAxis
+                    baseAxis = coordSys.getBaseAxis();
+                    var baseDim = baseAxis.dim;
+                    var axisIndex = seriesModel.get(baseDim + 'AxisIndex');
+
+                    key = baseDim + axisIndex;
+                }
+                else if (coordSysType === 'polar') {
+                    baseAxis = coordSys.getBaseAxis();
+                    key = baseAxis.dim + coordSys.name;
+                }
+
+                if (!key) {
+                    return;
+                }
+
+                seriesGroupByAxis[key] = seriesGroupByAxis[key] || {
+                    coordSys: [],
+                    series: []
+                };
+                seriesGroupByAxis[key].coordSys.push(coordSys);
+                seriesGroupByAxis[key].series.push(seriesModel);
+
             }, this);
 
-            this._coordinateSystems = seriesGroupByCoordSys;
+            this._seriesGroupByAxis = seriesGroupByAxis;
+
+            var crossText = this._crossText;
+            if (crossText) {
+                this.group.add(crossText);
+            }
         },
 
+        /**
+         * mousemove handler
+         * @param {Object} e
+         * @private
+         */
         _mouseMove: function (e) {
             var el = e.target;
             var tooltipModel = this._tooltipModel;
@@ -101,51 +139,60 @@ define(function (require) {
 
                     return;
                 }
-
-                var seriesModel = ecModel.getSeriesByIndex(el.seriesIndex);
-
-                this._showItemTooltip(seriesModel, el.dataIndex, e);
             }
             else {
 
                 this._showAxisTooltip(e);
+            }
+
+            // Always show item tooltip if mouse is on the element with dataIndex
+            if (el && el.dataIndex) {
+
+                var seriesModel = ecModel.getSeriesByIndex(el.seriesIndex);
+
+                this._showItemTooltip(seriesModel, el.dataIndex, e);
             }
         },
 
         /**
          * Show tooltip on axis
          * @param {Object} e
+         * @private
          */
         _showAxisTooltip: function (e) {
             var tooltipModel = this._tooltipModel;
             var axisPointerModel = tooltipModel.getModel('axisPointer');
 
-            zrUtil.each(this._coordinateSystems, function (item) {
+            zrUtil.each(this._seriesGroupByAxis, function (item) {
                 // Try show the axis pointer
                 this.group.show();
 
-                var coordSys = item.coordSys;
+                var allCoordSys = item.coordSys;
+                var coordSys = allCoordSys[0];
 
                 // If mouse position is not in the grid or polar
                 var point = [e.offsetX, e.offsetY];
-                if (coordSys && !coordSys.containPoint(point)) {
+                if (!coordSys.containPoint(point)) {
                     // Hide axis pointer
                     this._hide();
                     return;
                 }
 
                 // Make sure point is discrete on cateogry axis
-                var value = coordSys.pointToData(point);
+
+                var value = coordSys.pointToData(point, true);
                 point = coordSys.dataToPoint(value);
 
                 if (coordSys.type === 'cartesian2d') {
-                    this._showCartesianPointer(axisPointerModel, coordSys, point);
+                    this._showCartesianPointer(axisPointerModel, allCoordSys, point);
                 }
                 else if (coordSys.type === 'polar') {
-                    this._showPolarPointer(axisPointerModel, coordSys, point);
+                    this._showPolarPointer(axisPointerModel, allCoordSys, point);
                 }
 
-                this._showSeriesTooltip(coordSys, item.series, point, value);
+                if (axisPointerModel.get('type') !== 'cross') {
+                    this._showSeriesTooltip(coordSys, item.series, point, value);
+                }
             }, this);
 
         },
@@ -153,25 +200,30 @@ define(function (require) {
         /**
          * Show tooltip on axis of cartesian coordinate
          * @param {module:echarts/model/Model} axisPointerModel
-         * @param {module:echarts/coord/cartesian/Cartesian2D} cartesian
+         * @param {Array.<module:echarts/coord/cartesian/Cartesian2D>} cartesians
          * @param {Array.<number>} point
          * @private
          */
-        _showCartesianPointer: function (axisPointerModel, cartesian, point) {
+        _showCartesianPointer: function (axisPointerModel, cartesians, point) {
             var self = this;
 
-            var cateogryAxis = cartesian.getAxesByScale('ordinal')[0];
-
             var axisPointerType = axisPointerModel.get('type');
+
+            var cartesian = cartesians[0];
 
             if (axisPointerType === 'cross') {
                 moveGridLine('x', point, cartesian.getAxis('y').getExtent());
                 moveGridLine('y', point, cartesian.getAxis('x').getExtent());
+
+                this._updateCrossText(cartesian, point, axisPointerModel);
             }
             else {
+                // Use the first cartesian
+                var baseAxis = cartesian.getBaseAxis();
+
                 var axisType = axisPointerModel.get('axis');
                 if (axisType === 'auto') {
-                    axisType = (cateogryAxis && cateogryAxis.dim) || 'x';
+                    axisType = (baseAxis && baseAxis.dim) || 'x';
                 }
 
                 var otherAxis = cartesian.getAxis(axisType === 'x' ? 'y' : 'x');
@@ -226,20 +278,24 @@ define(function (require) {
         /**
          * Show tooltip on axis of polar coordinate
          * @param {module:echarts/model/Model} axisPointerModel
-         * @param {module:echarts/coord/polar/Polar} polar
+         * @param {Array.<module:echarts/coord/polar/Polar>} polars
          * @param {Array.<number>} point
          */
-        _showPolarPointer: function (axisPointerModel, polar, point) {
+        _showPolarPointer: function (axisPointerModel, polars, point) {
             var self = this;
 
             var axisPointerType = axisPointerModel.get('type');
+
+            var polar = polars[0];
 
             var angleAxis = polar.getAngleAxis();
             var radiusAxis = polar.getRadiusAxis();
 
             if (axisPointerType === 'cross') {
-                movePolarLine('angle', point, angleAxis.getExtent());
-                movePolarLine('radius', point, radiusAxis.getExtent());
+                movePolarLine('angle', point, radiusAxis.getExtent());
+                movePolarLine('radius', point, angleAxis.getExtent());
+
+                this._updateCrossText(polar, point, axisPointerModel);
             }
             else {
                 var axisType = axisPointerModel.get('axis');
@@ -319,6 +375,50 @@ define(function (require) {
             }
         },
 
+        _updateCrossText: function (coordSys, point, axisPointerModel) {
+            var crossStyleModel = axisPointerModel.getModel('crossStyle');
+            var textStyleModel = crossStyleModel.getModel('textStyle');
+
+            var tooltipModel = this._tooltipModel;
+
+            var text = this._crossText;
+            if (!text) {
+                text = this._crossText = new graphic.Text({
+                    style: {
+                        textAlign: 'left',
+                        textBaseline: 'bottom'
+                    }
+                });
+                this.group.add(text);
+            }
+
+            var value = coordSys.pointToData(point);
+
+            var dims = coordSys.dimensions;
+            value = zrUtil.map(value, function (val, idx) {
+                var axis = coordSys.getAxis(dims[idx]);
+                if (axis.type === 'category') {
+                    val = axis.scale.getLabel(val);
+                }
+                else {
+                    val = formatUtil.addCommas(
+                        val.toFixed(axis.getFormatPrecision())
+                    );
+                }
+                return val;
+            });
+
+            text.setStyle({
+                fill: textStyleModel.get('color') || crossStyleModel.get('color'),
+                textFont: textStyleModel.getFont(),
+                text: value.join(', '),
+                x: point[0] + 5,
+                y: point[1] - 5
+            });
+            text.z = tooltipModel.get('z');
+            text.zlevel = tooltipModel.get('zlevel');
+        },
+
         /**
          * Hide axis tooltip
          */
@@ -327,7 +427,9 @@ define(function (require) {
         },
 
         _getPointerElement: function (coordSys, pointerModel, axisType) {
-            var z = this._tooltipModel.get('z');
+            var tooltipModel = this._tooltipModel;
+            var z = tooltipModel.get('z');
+            var zlevel = tooltipModel.get('zlevel');
             var axisPointers = this._axisPointers;
             var key = getAxisPointerKey(coordSys.name, axisType);
             if (axisPointers[key]) {
@@ -341,7 +443,7 @@ define(function (require) {
             var style = styleModel[isShadow ? 'getAreaStyle' : 'getLineStyle']();
 
             var elementType = coordSys.type === 'polar'
-                ? (isShadow ? 'Sector' : 'Circle')
+                ? (isShadow ? 'Sector' : (axisType === 'radius' ? 'Circle' : 'Line'))
                 : (isShadow ? 'Rect' : 'Line');
 
            isShadow ? (style.stroke = null) : (style.fill = null);
@@ -349,6 +451,7 @@ define(function (require) {
             var el = axisPointers[key] = new graphic[elementType]({
                 style: style,
                 z: z,
+                zlevel: zlevel,
                 silent: true
             });
 
@@ -362,10 +465,10 @@ define(function (require) {
             var tooltipContent = this._tooltipContent;
 
             var data = seriesList[0].getData();
-            var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
-            if (categoryAxis && rootTooltipModel.get('showContent')) {
-                var rank = value[categoryAxis.dim === 'x' ? 0 : 1];
-                var dataIndex = data.indexOf(categoryAxis.dim, rank);
+            var baseAxis = coordSys.getBaseAxis();
+            if (baseAxis && rootTooltipModel.get('showContent')) {
+                var rank = value[baseAxis.dim === 'x' ? 0 : 1];
+                var dataIndex = data.indexOf(baseAxis.dim, rank);
 
                 var html = data.getName(dataIndex) + '<br />'
                     + zrUtil.map(seriesList, function (series) {

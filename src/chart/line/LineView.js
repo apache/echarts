@@ -397,11 +397,11 @@ define(function(require) {
             return clipPath;
         },
 
-        remove: function () {
+        remove: function (ecModel) {
             var group = this.group;
             group.remove(this._polyline);
             group.remove(this._polygon);
-            this._dataSymbol.remove(true);
+            this._dataSymbol.remove(ecModel.get('animation'));
         }
     });
 });

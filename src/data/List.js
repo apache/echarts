@@ -460,12 +460,14 @@ define(function (require) {
 
     /**
      * @param {number} idx
+     * @param {boolean} [notDefaultIdx=false]
      * @return {string}
      */
-    listProto.getName = function (idx) {
+    listProto.getName = function (idx, notDefaultIdx) {
         var nameList = this._nameList;
         var rawIndex = this.indices[idx];
-        return nameList[rawIndex] || (rawIndex + '');
+        return nameList[rawIndex]
+            || (notDefaultIdx ? '' : (rawIndex + ''));
     };
 
 

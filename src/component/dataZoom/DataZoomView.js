@@ -550,10 +550,7 @@ define(function (require) {
 
             var labelPrecision = dataZoomModel.get('labelPrecision');
             if (labelPrecision == null) {
-                var dataExtent = axis.scale.getExtent();
-                labelPrecision = Math.abs(
-                    Math.floor(Math.log(dataExtent[1] - dataExtent[0]) / Math.LN10)
-                );
+                labelPrecision = axis.getFormatPrecision();
             }
 
             return (value == null && isNaN(value))
