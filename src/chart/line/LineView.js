@@ -9,7 +9,8 @@ define(function(require) {
     var DataSymbol = require('../helper/DataSymbol');
     var lineAnimationDiff = require('./lineAnimationDiff');
     var graphic = require('../../util/graphic');
-    var AreaPath = require('./Area');
+
+    var polyHelper = require('./poly');
 
     function isPointsSame(points1, points2) {
         if (points1.length !== points2.length) {
@@ -193,7 +194,7 @@ define(function(require) {
                 group.remove(polyline);
             }
 
-            polyline = new graphic.Polyline({
+            polyline = new polyHelper.Polyline({
                 shape: {
                     points: points
                 },
@@ -226,7 +227,7 @@ define(function(require) {
                 group.remove(polygon);
             }
 
-            polygon = new AreaPath({
+            polygon = new polyHelper.Polygon({
                 shape: {
                     points: points,
                     stackedOnPoints: stackedOnPoints

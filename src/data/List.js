@@ -195,6 +195,9 @@ define(function (require) {
         var tempValue = [];
         var rawValueTo1D = false;
         var value1D = dimensions.length === 1;
+
+        // Use the first data to indicate data type;
+        var isValueArray = zrUtil.isArray(data[0]);
         for (var idx = 0; idx < data.length; idx++) {
             var value = data[idx];
             // Each data item contains value and option
@@ -212,7 +215,7 @@ define(function (require) {
             // Bar chart, line chart which uses category axis
             // only gives the 'y' value. 'x' value is the indices of cateogry
             // Use a tempValue to normalize the value to be a (x, y) value
-            if (!isNaN(value)) {
+            if (!isValueArray) {
                 if (!value1D) {
                     tempValue[0] = idx;
                     tempValue[1] = value;

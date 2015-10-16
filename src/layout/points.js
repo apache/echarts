@@ -7,10 +7,16 @@ define(function (require) {
 
             var dims = coordSys.dimensions;
             data.each(dims, function (x, y, idx) {
+                var point;
                 if (!isNaN(y) && !isNaN(x)) {
-                    var point = coordSys.dataToPoint([x, y]);
-                    data.setItemLayout(idx, point);
+                    point = coordSys.dataToPoint([x, y]);
                 }
+                else {
+                    // Also {Array.<number>}, not undefined to avoid if...else... statement
+                    point = [NaN, NaN];
+                }
+
+                data.setItemLayout(idx, point);
             }, true);
         });
     }

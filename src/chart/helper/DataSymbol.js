@@ -174,14 +174,16 @@ define(function (require) {
                 .execute();
 
             // Update common properties
+            var itemStyleAccessPath = ['itemStyle', 'normal'];
             data.eachItemGraphicEl(function (el, idx) {
                 var itemModel = data.getItemModel(idx);
-                var labelModel = itemModel.getModel('itemStyle.normal.label');
+                var normalItemStyleModel = itemModel.getModel(itemStyleAccessPath);
+                var labelModel = normalItemStyleModel.getModel('label');
                 var color = data.getItemVisual(idx, 'color');
 
                 zrUtil.extend(
                     el.style,
-                    itemModel.getModel('itemStyle.normal').getItemStyle(['color'])
+                    normalItemStyleModel.getItemStyle(['color'])
                 );
 
                 if (labelModel.get('show')) {
