@@ -46,7 +46,7 @@ define(function (require) {
             }
 
             var mpData = createList(coordSys, seriesData, mpModel);
-            var dims = mpData.dimensions.slice(0, 2);
+            var dims = coordSys.dimensions;
 
             mpData.each(function (idx) {
                 var itemModel = mpData.getItemModel(idx);
@@ -88,29 +88,35 @@ define(function (require) {
      * @param {module:echarts/model/Model} mpModel
      */
     function createList (coordSys, seriesData, mpModel) {
-        var baseAxis = coordSys && coordSys.getBaseAxis();
-        var valueAxis = coordSys && coordSys.getOtherAxis(baseAxis);
-        var dimensions = seriesData.dimensions.slice();
-        // Polar and cartesian with category axis may have dimensions inversed
-        var dimensionInverse = dimensions[0] === 'y' || dimensions[0] === 'angle';
-        if (dimensionInverse) {
-            dimensions.inverse();
-        }
+        var dataDimensions = seriesData.dimensions;
 
         var mpData = new List(zrUtil.map(
-            dimensions, seriesData.getDimensionInfo, seriesData
+            dataDimensions, seriesData.getDimensionInfo, seriesData
         ), mpModel);
 
-        mpData.initData(
-            zrUtil.filter(
-                zrUtil.map(mpModel.get('data'), zrUtil.curry(
-                    markerHelper.dataTransform, seriesData, baseAxis, valueAxis
-                )),
-                zrUtil.curry(
-                    markerHelper.dataFilter, coordSys, dimensionInverse
+        if (coordSys) {
+            var baseAxis = coordSys.getBaseAxis();
+            var valueAxis = coordSys.getOtherAxis(baseAxis);
+            var coordDimensions = coordSys.dimensions;
+
+            var indexOf = zrUtil.indexOf;
+            // FIXME 公用？
+            var coordDataIdx = [
+                indexOf(dataDimensions, coordDimensions[0]),
+                indexOf(dataDimensions, coordDimensions[1])
+            ];
+
+            mpData.initData(
+                zrUtil.filter(
+                    zrUtil.map(mpModel.get('data'), zrUtil.curry(
+                        markerHelper.dataTransform, seriesData, baseAxis, valueAxis
+                    )),
+                    zrUtil.curry(
+                        markerHelper.dataFilter, coordSys, coordDataIdx
+                    )
                 )
-            )
-        );
+            );
+        }
 
         return mpData;
     };

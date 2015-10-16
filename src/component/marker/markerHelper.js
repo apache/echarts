@@ -4,7 +4,7 @@ define(function (require) {
 
     var markerTypeCalculatorWithExtent = function (percent, data, baseAxisDim, valueAxisDim) {
         var extent = data.getDataExtent(valueAxisDim);
-        var valueIndex = (valueAxisDim === 'radius' || valueAxisDim === 'x') ? 0 : 1;
+        var valueIndex = (valueAxisDim === 'angle' || valueAxisDim === 'x') ? 0 : 1;
         var valueArr = [];
         var min = extent[0];
         var max = extent[1];
@@ -71,9 +71,9 @@ define(function (require) {
     };
 
     // Filter data which is out of coordinateSystem range
-    var dataFilter = function (coordSys, dimensionInverse, item) {
-        var value = [item.value[0], item.value[1]];
-        dimensionInverse && value.inverse();
+    var dataFilter = function (coordSys, coordDataIdx, item) {
+        var value = item.value;
+        value = [value[coordDataIdx[0]], value[coordDataIdx[1]]];
         return coordSys.containData(value);
     }
 

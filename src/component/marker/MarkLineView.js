@@ -24,6 +24,7 @@ define(function (require) {
 
             delete mlFrom.type; // Remove type
 
+            // FIXME Polar should use circle
             mlFrom[baseAxisKey] = baseScaleExtent[0];
             mlTo[baseAxisKey] = baseScaleExtent[1];
 
@@ -94,7 +95,7 @@ define(function (require) {
             this.group.add(seriesMarkLine.group);
 
             var mlData = createList(coordSys, seriesData, mlModel)
-            var dims = mlData.from.dimensions.slice(0, 2);
+            var dims = coordSys.dimensions;
 
             var fromData = mlData.from;
             var toData = mlData.to;
@@ -153,36 +154,42 @@ define(function (require) {
      * @param {module:echarts/model/Model} mpModel
      */
     function createList(coordSys, seriesData, mlModel) {
-        var baseAxis = coordSys && coordSys.getBaseAxis();
-        var valueAxis = coordSys && coordSys.getOtherAxis(baseAxis);
-        var dimensions = seriesData.dimensions.slice();
-        // Polar and cartesian with category axis may have dimensions inversed
-        var dimensionInverse = dimensions[0] === 'y' || dimensions[0] === 'angle';
-        if (dimensionInverse) {
-            dimensions.inverse();
-        }
+        var dataDimensions = seriesData.dimensions;
 
         var dimensionInfosMap = zrUtil.map(
-            dimensions, seriesData.getDimensionInfo, seriesData
+                dataDimensions, seriesData.getDimensionInfo, seriesData
             );
         var fromData = new List(dimensionInfosMap, mlModel);
         var toData = new List(dimensionInfosMap, mlModel);
 
-        var optData = zrUtil.filter(
-            zrUtil.map(mlModel.get('data'), zrUtil.curry(
-                markLineTransform, seriesData, baseAxis, valueAxis
+        if (coordSys) {
+            var baseAxis = coordSys.getBaseAxis();
+            var valueAxis = coordSys.getOtherAxis(baseAxis);
+            var coordDimensions = coordSys.dimensions;
+
+            var indexOf = zrUtil.indexOf;
+            // FIXME 公用？
+            var coordDataIdx = [
+                indexOf(dataDimensions, coordDimensions[0]),
+                indexOf(dataDimensions, coordDimensions[1])
+            ];
+
+            var optData = zrUtil.filter(
+                zrUtil.map(mlModel.get('data'), zrUtil.curry(
+                    markLineTransform, seriesData, baseAxis, valueAxis
                 )),
-            zrUtil.curry(
-                markLineFilter, coordSys, dimensionInverse
+                zrUtil.curry(
+                    markLineFilter, coordSys, coordDataIdx
                 )
             );
-        fromData.initData(
-            zrUtil.map(optData, function (item) { return item[0]; })
+            fromData.initData(
+                zrUtil.map(optData, function (item) { return item[0]; })
             );
-        toData.initData(
-            zrUtil.map(optData, function (item) { return item[1]; })
+            toData.initData(
+                zrUtil.map(optData, function (item) { return item[1]; })
             );
 
+        }
         return {
             from: fromData,
             to: toData
