@@ -35,15 +35,21 @@
 
                 for (var i = 0; i < 100; i++) {
                     data1.push([
-                        Math.random() * 5, Math.random() * 4, Math.random() * 20,
+                        Math.random() * 5,
+                        Math.random() * 4,
+                        Math.random() * 20,
                         Math.round(Math.random() * (symbolCount - 1))
                     ]);
                     data2.push([
-                        Math.random() * 10, Math.random() * 5, Math.random() * 20,
+                        Math.random() * 10,
+                        Math.random() * 5,
+                        Math.random() * 20,
                         Math.round(Math.random() * (symbolCount - 1))
                     ]);
                     data3.push([
-                        Math.random() * 15, Math.random() * 10, Math.random() * 20,
+                        Math.random() * 15,
+                        Math.random() * 10,
+                        Math.random() * 20,
                         Math.round(Math.random() * (symbolCount - 1))
                     ]);
                 }
@@ -75,9 +81,12 @@
                             x: 'right',
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
-                            dimension: 'a',
                             backgroundColor: '#eee',
+                            dimension: 'z',
                             selected: [],
+                            min: 0,
+                            max: 24,
+                            precision: 0,
                             inRange: { // visual for short cut
                                 color: ['rgb(20,1,0)']
                             },
