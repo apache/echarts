@@ -17,8 +17,8 @@ define(function (require) {
             );
         },
 
-        remove: function () {
-            this._dataSymbol.remove(true);
+        remove: function (ecModel) {
+            this._dataSymbol.remove(ecModel.get('animation'));
         }
     });
 });

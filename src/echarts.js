@@ -423,7 +423,7 @@ define(function (require) {
             // Remove groups of charts
             zrUtil.each(this._chartsList, function (chart) {
                 if (!chart.__keepAlive) {
-                    chart.remove();
+                    chart.remove(ecModel, api);
                 }
             }, this);
         },

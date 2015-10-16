@@ -26,7 +26,7 @@ define(function (require) {
 
         render: function (seriesModel, ecModel, api) {},
 
-        remove: function () {
+        remove: function (ecModel, api) {
             this.group.removeAll();
         },
 
