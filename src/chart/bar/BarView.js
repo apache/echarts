@@ -124,57 +124,14 @@ define(function (require) {
                         text: seriesModel.getFormattedLabel(idx, 'normal')
                             || data.getRawValue(idx),
                         textFont: labelModel.getModel('textStyle').getFont(),
-                        textPosition: labelPosition === 'outside' ? labelPositionOutside : 'inside',
+                        textPosition: labelPosition === 'outside' ? labelPositionOutside : labelPosition,
                         textFill: labelColor
                     });
 
-                    // Calculate label layout of insideLeft, insideTop, insideBottom, insideRight
-                    var textX;
-                    var textY;
-                    var textAlign;
-                    var textBaseline;
-                    var gap = 5;
-
-                    var width = Math.abs(layout.width);
-                    var height = Math.abs(layout.height);
-                    switch (labelPosition) {
-                        case 'insideLeft':
-                            textX = gap;
-                            textY = height / 2;
-                            textAlign = 'left';
-                            textBaseline = 'middle';
-                            break;
-                        case 'insideRight':
-                            textX = width - gap;
-                            textY = height / 2;
-                            textAlign = 'right';
-                            textBaseline = 'middle';
-                            break;
-                        case 'insideTop':
-                            textX = width / 2;
-                            textY = gap;
-                            textAlign = 'center';
-                            textBaseline = 'top';
-                            break;
-                        case 'insideBottom':
-                            textX = width / 2;
-                            textY = height - gap;
-                            textAlign = 'center';
-                            textBaseline = 'bottom';
-                            break;
-                    }
+                    graphic.setHoverStyle(
+                        rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
+                    );
                 }
-                if (textX != null) {
-                    rect.setStyle({
-                        textPosition: [textX, textY],
-                        textAlign: textAlign,
-                        textBaseline: textBaseline
-                    });
-                }
-
-                graphic.setHoverStyle(
-                    rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
-                );
             });
         },
 
