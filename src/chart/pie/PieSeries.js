@@ -81,7 +81,7 @@ define(function(require) {
             legendHoverLink: true,
             // 默认全局居中
             center: ['50%', '50%'],
-            radius: [0, '75%'],
+            radius: [0, '40%'],
             // 默认顺时针
             clockWise: true,
             startAngle: 90,
@@ -101,6 +101,7 @@ define(function(require) {
                     borderWidth: 1,
                     label: {
                         show: true,
+                        // 'outer', 'inside', 'center'
                         position: 'outer'
                         // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                         // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE

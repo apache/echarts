@@ -4,8 +4,8 @@ define({
         return [
             this.get('fontStyle'),
             this.get('fontWeight'),
-            this.get('fontSize') + 'px',
-            this.get('fontFamily')
+            (this.get('fontSize') || 12) + 'px',
+            this.get('fontFamily') || 'sans-serif'
         ].join(' ');
     },
 

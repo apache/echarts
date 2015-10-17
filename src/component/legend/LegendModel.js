@@ -25,7 +25,7 @@ define(function(require) {
                 return new Model(dataItem, this);
             }, this);
 
-            var availableNames = zrUtil.map(ecModel.getSeriesAll(), function (series) {
+            var availableNames = zrUtil.map(ecModel.getSeries(), function (series) {
                 return series.name;
             });
             ecModel.eachSeries(function (seriesModel) {
