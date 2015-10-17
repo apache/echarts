@@ -1,6 +1,8 @@
 define(function (require) {
 
     return function (seriesType, defaultSymbolType, legendSymbol, ecModel, api) {
+
+        // Encoding visual for all series include which is filtered for legend drawing
         ecModel.eachSeriesByTypeAll(seriesType, function (seriesModel) {
             var data = seriesModel.getData();
 

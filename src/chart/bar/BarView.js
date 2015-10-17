@@ -5,6 +5,9 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
 
+    var mathMin = Math.min;
+    var mathMax = Math.max;
+
     zrUtil.extend(require('../../model/Model').prototype, require('./barItemStyle'));
 
     return require('../../echarts').extendChartView({
@@ -91,11 +94,18 @@ define(function (require) {
                 })
                 .execute();
 
+            this._updateStyle(seriesModel, data, isHorizontal);
+
+            this._data = data;
+        },
+
+        _updateStyle: function (seriesModel, data, isHorizontal) {
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
                 var labelModel = itemModel.getModel('itemStyle.normal.label');
                 var color = data.getItemVisual(idx, 'color');
                 var layout = data.getItemLayout(idx);
+
                 rect.setStyle(zrUtil.defaults(
                     {
                         fill: color
@@ -105,24 +115,67 @@ define(function (require) {
                 if (labelModel.get('show')) {
                     var labelPosition = labelModel.get('position') || 'inside';
                     // FIXME
-                    var labelColor = labelPosition === 'inside' ? 'white' : color;
+                    var labelColor = labelPosition.indexOf('inside') === 0 ? 'white' : color;
                     var labelPositionOutside = isHorizontal
                         ? (layout.height > 0 ? 'bottom' : 'top')
                         : (layout.width > 0 ? 'left' : 'right');
 
                     rect.setStyle({
-                        text: data.getRawValue(idx),
+                        text: seriesModel.getFormattedLabel(idx, 'normal')
+                            || data.getRawValue(idx),
                         textFont: labelModel.getModel('textStyle').getFont(),
                         textPosition: labelPosition === 'outside' ? labelPositionOutside : 'inside',
                         textFill: labelColor
                     });
+
+                    // Calculate label layout of insideLeft, insideTop, insideBottom, insideRight
+                    var textX;
+                    var textY;
+                    var textAlign;
+                    var textBaseline;
+                    var gap = 5;
+
+                    var width = Math.abs(layout.width);
+                    var height = Math.abs(layout.height);
+                    switch (labelPosition) {
+                        case 'insideLeft':
+                            textX = gap;
+                            textY = height / 2;
+                            textAlign = 'left';
+                            textBaseline = 'middle';
+                            break;
+                        case 'insideRight':
+                            textX = width - gap;
+                            textY = height / 2;
+                            textAlign = 'right';
+                            textBaseline = 'middle';
+                            break;
+                        case 'insideTop':
+                            textX = width / 2;
+                            textY = gap;
+                            textAlign = 'center';
+                            textBaseline = 'top';
+                            break;
+                        case 'insideBottom':
+                            textX = width / 2;
+                            textY = height - gap;
+                            textAlign = 'center';
+                            textBaseline = 'bottom';
+                            break;
+                    }
                 }
+                if (textX != null) {
+                    rect.setStyle({
+                        textPosition: [textX, textY],
+                        textAlign: textAlign,
+                        textBaseline: textBaseline
+                    });
+                }
+
                 graphic.setHoverStyle(
                     rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
                 );
             });
-
-            this._data = data;
         },
 
         remove: function (ecModel) {

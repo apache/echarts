@@ -98,8 +98,7 @@ define(function (require) {
                     var layout = data.getItemLayout(idx);
 
                     var sector = createSectorAndLabel(
-                        layout, data.getName(idx),
-                        hasAnimation && !isFirstRender
+                        layout, '', hasAnimation && !isFirstRender
                     );
 
                     sector.on('click', onSectorClick);
@@ -125,7 +124,6 @@ define(function (require) {
                     var labelLine = sector.__labelLine;
                     var labelText = sector.__labelText;
 
-
                     labelLine.animateTo({
                         shape: {
                             points: labelLayout.linePoints
@@ -139,7 +137,6 @@ define(function (require) {
                     }, 300, 'cubicOut');
 
                     labelText.setStyle({
-                        text: data.getName(newIdx),
                         textAlign: labelLayout.textAlign,
                         textBaseline: labelLayout.textBaseline,
                         font: labelLayout.font
@@ -183,19 +180,28 @@ define(function (require) {
             var selectedOffset = seriesModel.get('selectedOffset');
             data.eachItemGraphicEl(function (sector, idx) {
                 var itemModel = data.getItemModel(idx);
+                var itemStyleModel = itemModel.getModel('itemStyle');
 
                 sector.setStyle(
                     zrUtil.extend(
                         {
                             fill: data.getItemVisual(idx, 'color')
                         },
-                        itemModel.getModel('itemStyle.normal').getItemStyle()
+                        itemStyleModel.getModel('normal').getItemStyle()
                     )
                 );
                 graphic.setHoverStyle(
                     sector,
-                    itemModel.getModel('itemStyle.emphasis').getItemStyle()
+                    itemStyleModel.getModel('emphasis').getItemStyle()
                 );
+
+                var labelText = sector.__labelText;
+                if (labelText) {
+                    labelText.setStyle({
+                        text: seriesModel.getFormattedLabel(idx, 'normal')
+                            || data.getName(idx)
+                    });
+                }
 
                 updateSelected(sector, itemModel.get('selected'), selectedOffset);
             });
