@@ -109,13 +109,19 @@ define(function(require) {
             var isAreaChart = !areaStyleModel.isEmpty();
             var stackedOnPoints = getStackedOnPoints(coordSys, data);
 
+
+            var symbolIgnoreMap = !isCoordSysPolar && !seriesModel.get('showAllSymbol')
+                && this._getSymbolIgnored(data, coordSys);
+
             // Initialization animation or coordinate system changed
             if (
                 !(polyline
                 && prevCoordSys.type === coordSys.type
                 && hasAnimation)
             ) {
-                dataSymbol.updateData(data, seriesModel, hasAnimation);
+                dataSymbol.updateData(
+                    data, seriesModel, hasAnimation, symbolIgnoreMap
+                );
 
                 polyline = this._newPolyline(group, points, coordSys, hasAnimation);
                 if (isAreaChart) {
@@ -128,7 +134,9 @@ define(function(require) {
             }
             else {
 
-                dataSymbol.updateData(data, seriesModel, false);
+                dataSymbol.updateData(
+                    data, seriesModel, false, symbolIgnoreMap
+                );
 
                 // Update clipPath
                 // FIXME Clip path used by more than one elements
@@ -194,9 +202,6 @@ define(function(require) {
             this._coordSys = coordSys;
             this._stackedOnPoints = stackedOnPoints;
             this._points = points;
-
-            !isCoordSysPolar && !seriesModel.get('showAllSymbol')
-                && this._updateSymbolDisplay(data, coordSys);
         },
 
         /**
@@ -265,17 +270,20 @@ define(function(require) {
         /**
          * @private
          */
-        _updateSymbolDisplay: function (data, coordSys) {
-            var categoryAxis = coordSys.getAxesByScale('ordinal')[0]
+        _getSymbolIgnored: function (data, coordSys) {
+            var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
+            var ignoreMap;
             // `getLabelInterval` is provided by echarts/component/axis
             if (categoryAxis && categoryAxis.getLabelInterval) {
+                ignoreMap = [];
                 var labelInterval = categoryAxis.getLabelInterval();
-                data.eachItemGraphicEl(function (el, idx) {
-                    el.ignore = (typeof labelInterval === 'function')
+                data.each(function (idx) {
+                    ignoreMap[idx] = (typeof labelInterval === 'function')
                         && !labelInterval(idx, categoryAxis.scale.getItem(idx))
                         || idx % (labelInterval + 1);
                 });
             }
+            return ignoreMap;
         },
 
         /**
