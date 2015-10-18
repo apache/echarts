@@ -115,7 +115,7 @@ define(function(require) {
                 && prevCoordSys.type === coordSys.type
                 && hasAnimation)
             ) {
-                dataSymbol.updateData(data, hasAnimation);
+                dataSymbol.updateData(data, seriesModel, hasAnimation);
 
                 polyline = this._newPolyline(group, points, coordSys, hasAnimation);
                 if (isAreaChart) {
@@ -128,7 +128,7 @@ define(function(require) {
             }
             else {
 
-                dataSymbol.updateData(data, false);
+                dataSymbol.updateData(data, seriesModel, false);
 
                 // Update clipPath
                 // FIXME Clip path used by more than one elements

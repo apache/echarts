@@ -39,6 +39,9 @@ define(function(require) {
              * @private
              */
             this._availableNames = availableNames;
+
+            // Try select the first if selectedMode is single
+            this.select(availableNames[0]);
         },
 
         /**
@@ -52,14 +55,24 @@ define(function(require) {
          * @param {string} name
          */
         select: function (name) {
-            this.option.selected[name] = true;
+            var selected = this.option.selected;
+            var selectedMode = this.get('selectedMode');
+            if (selectedMode === 'single') {
+                var availableNames = this._availableNames;
+                zrUtil.each(availableNames, function (name) {
+                    selected[name] = false;
+                });
+            }
+            selected[name] = true;
         },
 
         /**
          * @param {string} name
          */
         unSelect: function (name) {
-            this.option.selected[name] = false;
+            if (this.get('selectedMode') !== 'single') {
+                this.option.selected[name] = false;
+            }
         },
 
         /**
@@ -71,7 +84,7 @@ define(function(require) {
             if (!(name in selected)) {
                 selected[name] = true;
             }
-            selected[name] = !selected[name];
+            this[selected[name] ? 'unSelect' : 'select'](name);
         },
 
         /**
@@ -80,7 +93,7 @@ define(function(require) {
         isSelected: function (name) {
             var selected = this.option.selected;
             return !((name in selected) && !selected[name])
-                && this._availableNames.indexOf(name) >= 0;
+                && zrUtil.indexOf(this._availableNames, name) >= 0;
         },
 
         defaultOption: {

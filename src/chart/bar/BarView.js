@@ -5,9 +5,6 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
 
-    var mathMin = Math.min;
-    var mathMax = Math.max;
-
     zrUtil.extend(require('../../model/Model').prototype, require('./barItemStyle'));
 
     return require('../../echarts').extendChartView({

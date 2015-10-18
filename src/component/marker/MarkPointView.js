@@ -73,7 +73,7 @@ define(function (require) {
             });
 
             // TODO Text are wrong
-            dataSymbol.updateData(mpData, true);
+            dataSymbol.updateData(mpData, seriesModel, true);
 
             this.group.add(dataSymbol.group);
 

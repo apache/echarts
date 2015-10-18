@@ -69,7 +69,7 @@ define(function (require) {
             return this._data;
         },
 
-        updateData: function (data, enableAnimation) {
+        updateData: function (data, seriesModel, enableAnimation) {
 
             var group = this.group;
             var oldData = this._data;
@@ -193,7 +193,8 @@ define(function (require) {
                     var lastDim = data.dimensions[data.dimensions.length - 1];
                     el.setStyle({
                         // FIXME
-                        text: data.get(lastDim, idx),
+                        text: seriesModel.getFormattedLabel(idx, 'normal')
+                            || data.get(lastDim, idx),
                         textFont: labelModel.getModel('textStyle').getFont(),
                         textPosition: labelPosition,
                         textFill: labelColor

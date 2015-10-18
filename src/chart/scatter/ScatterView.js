@@ -13,7 +13,7 @@ define(function (require) {
 
         render: function (seriesModel, ecModel) {
             this._dataSymbol.updateData(
-                seriesModel.getData(), ecModel.get('animation')
+                seriesModel.getData(), seriesModel, ecModel.get('animation')
             );
         },
 
