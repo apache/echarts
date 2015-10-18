@@ -7,16 +7,23 @@ define(function (require) {
         var data = seriesModel.getData();
         var dataIndex = this.dataIndex;
         var name = data.getName(dataIndex);
+        var selectedOffset = seriesModel.get('selectedOffset');
 
-        updateSelected(this,
-            seriesModel.toggleSelected(name),
-            seriesModel.get('selectedOffset')
-        );
+        seriesModel.toggleSelected(name);
+
+        data.each(function (idx) {
+            updateSelected(
+                data.getItemGraphicEl(idx),
+                data.getItemLayout(idx),
+                seriesModel.isSelected(data.getName(idx)),
+                selectedOffset
+            );
+        });
     }
 
-    function updateSelected(el, isSelected, selectedOffset) {
+    function updateSelected(el, layout, isSelected, selectedOffset) {
         var shape = el.shape;
-        var midAngle = (shape.startAngle + shape.endAngle) / 2;
+        var midAngle = (layout.startAngle + layout.endAngle) / 2;
 
         var dx = Math.cos(midAngle);
         var dy = (shape.clockwise ? 1 : -1) * Math.sin(midAngle);
@@ -93,6 +100,8 @@ define(function (require) {
             var firstSector;
             var onSectorClick = zrUtil.curry(selectData, seriesModel);
 
+            var selectedMode = seriesModel.get('selectedMode');
+
             data.diff(oldData)
                 .add(function (idx) {
                     var layout = data.getItemLayout(idx);
@@ -101,7 +110,8 @@ define(function (require) {
                         layout, '', hasAnimation && !isFirstRender
                     );
 
-                    sector.on('click', onSectorClick);
+                    selectedMode
+                        && sector.on('click', onSectorClick);
 
                     data.setItemGraphicEl(idx, sector);
 
@@ -117,12 +127,16 @@ define(function (require) {
                     var layout = data.getItemLayout(newIdx);
                     var labelLayout = layout.label;
 
+                    var labelLine = sector.__labelLine;
+                    var labelText = sector.__labelText;
+
                     sector.animateTo({
                         shape: layout
                     }, 300, 'cubicOut');
 
-                    var labelLine = sector.__labelLine;
-                    var labelText = sector.__labelText;
+                    selectedMode
+                        ? sector.on('click', onSectorClick)
+                        : sector.off('click');
 
                     labelLine.animateTo({
                         shape: {
@@ -203,7 +217,12 @@ define(function (require) {
                     });
                 }
 
-                updateSelected(sector, itemModel.get('selected'), selectedOffset);
+                updateSelected(
+                    sector,
+                    data.getItemLayout(idx),
+                    itemModel.get('selected'),
+                    selectedOffset
+                );
             });
         },
 
