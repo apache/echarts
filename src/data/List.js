@@ -336,8 +336,23 @@ define(function (require) {
         var min = Infinity;
         var max = -Infinity;
         var value;
+        var dimInfo = this._dimensionInfos[dim];
         if (dimData) {
-            for (var i = 0, len = this.count(); i < len; i++) {
+            var count = this.count();
+            if (dimInfo.type === 'ordinal') {
+                // Ordinal data must be incremental
+                var first = this.get(dim, 0);
+                var last = this.get(dim, count - 1);
+                var indexOf = zrUtil.indexOf;
+                if (isNaN(first)) { // Is string
+                    first = indexOf(dimData, first);
+                }
+                if (isNaN(last)) { // Is string
+                    last = indexOf(dimData, last);
+                }
+                return [first, last];
+            }
+            for (var i = 0, len = count; i < len; i++) {
                 value = this.get(dim, i, stack);
                 value < min && (min = value);
                 value > max && (max = value);

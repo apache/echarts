@@ -14,6 +14,8 @@ define(function(require, factory) {
 
     var CATEGORY_AXIS_TYPE = 'category';
 
+    var each = zrUtil.each;
+
     // 依赖 GridModel, AxisModel 做预处理
     require('./GridModel');
 
@@ -175,7 +177,7 @@ define(function(require, factory) {
             this._width = gridWidth;
             this._height = gridHeight;
 
-            zrUtil.each(this._axesList, function (axis) {
+            each(this._axesList, function (axis) {
                 var extent;
                 switch (axis.position) {
                     case 'top':
@@ -232,7 +234,7 @@ define(function(require, factory) {
 
             ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
 
-            if (! axesCount.x || ! axesCount.y) {
+            if (!axesCount.x || ! axesCount.y) {
                 // api.log('Grid must has at least one x axis and one y axis');
                 // Roll back
                 this._axesMap = {};
@@ -240,8 +242,8 @@ define(function(require, factory) {
                 return;
             }
 
-            zrUtil.each(axesMap.x, function (xAxis, xAxisIndex) {
-                zrUtil.each(axesMap.y, function (yAxis, yAxisIndex) {
+            each(axesMap.x, function (xAxis, xAxisIndex) {
+                each(axesMap.y, function (yAxis, yAxisIndex) {
                     var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
                     var cartesian = new Cartesian2D(key);
                     this._coordsMap[key] = cartesian;
@@ -255,8 +257,8 @@ define(function(require, factory) {
             this._updateCartesianFromSeries(ecModel, gridModel);
 
             // Fix configuration
-            zrUtil.each(axesMap.x, function (xAxis) {
-                zrUtil.each(axesMap.y, function (yAxis) {
+            each(axesMap.x, function (xAxis) {
+                each(axesMap.y, function (yAxis) {
                     // onZero can not be used in these two situations
                     // 1. When other axis is a category axis
                     // 2. When other axis not across 0 point
