@@ -77,6 +77,8 @@ define(function(require) {
                 this._data = data;
                 this._dataBeforeProcessed = data.cloneShallow();
             }
+
+            zrUtil.merge(this.option, newSeriesOption, true);
         },
 
         /**

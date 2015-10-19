@@ -25,7 +25,7 @@ define(function(require) {
     }
 
     function getSmooth(smooth) {
-        return typeof (smooth) === 'number' ? smooth : (smooth ? 0.2 : 0);
+        return typeof (smooth) === 'number' ? smooth : (smooth ? 0.3 : 0);
     }
 
     function getAxisExtentWithGap(axis) {
