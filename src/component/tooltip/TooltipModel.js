@@ -6,7 +6,7 @@ define(function (require) {
 
         defaultOption: {
             // 一级层叠，频繁变化的tooltip指示器在pc上独立一层
-            zlevel: 1,
+            zlevel: 0,
 
             // 二级层叠
             z: 8,

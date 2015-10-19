@@ -40,7 +40,9 @@ define(function (require) {
             symbolType, x, y, w, h, color
         );
 
-        symbolEl.position = point;
+        var symbolElPos = symbolEl.position;
+        symbolElPos[0] = point[0];
+        symbolElPos[1] = point[1];
 
         symbolEl.z2 = 100;
 
@@ -69,7 +71,15 @@ define(function (require) {
             return this._data;
         },
 
-        updateData: function (data, enableAnimation) {
+        /**
+         * @param {module:echarts/data/List} data
+         * @param {module:echarts/model/Series} seriesModel
+         * @param {boolean} enableAnimation
+         * @param {Array.<boolean>} [ignoreMap]
+         */
+        updateData: function (
+            data, seriesModel, enableAnimation, ignoreMap
+        ) {
 
             var group = this.group;
             var oldData = this._data;
@@ -82,20 +92,24 @@ define(function (require) {
                         return;
                     }
 
-                    var symbolEl = createSymbol(
-                        data, newIdx, enableAnimation
-                    );
+                    if (!(ignoreMap && ignoreMap[newIdx])) {
+                        var symbolEl = createSymbol(
+                            data, newIdx, enableAnimation
+                        );
 
-                    if (symbolEl) {
-                        data.setItemGraphicEl(newIdx, symbolEl);
+                        if (symbolEl) {
+                            data.setItemGraphicEl(newIdx, symbolEl);
 
-                        group.add(symbolEl);
+                            group.add(symbolEl);
+                        }
                     }
                 })
                 .update(function (newIdx, oldIdx) {
                     var el = oldData.getItemGraphicEl(oldIdx);
                     // Empty data
-                    if (!data.hasValue(newIdx)) {
+                    if (!data.hasValue(newIdx)
+                        || (ignoreMap && ignoreMap[newIdx])
+                    ) {
                         group.remove(el);
                         return;
                     }
@@ -107,7 +121,10 @@ define(function (require) {
 
                     var symbolType = data.getItemVisual(newIdx, 'symbol');
                     // Symbol changed
-                    if (oldData.getItemVisual(oldIdx, 'symbol') !== symbolType) {
+                    if (
+                        oldData.getItemVisual(oldIdx, 'symbol') !== symbolType
+                        || (!el && !(ignoreMap && ignoreMap[newIdx]))
+                    ) {
                         // Remove the old one
                         el && group.remove(el);
                         el = createSymbol(data, newIdx, enableAnimation);
@@ -138,7 +155,7 @@ define(function (require) {
                         el.setColor(newColor);
 
                         // TODO Merge animateTo and attr methods into one
-                        newTarget.position = point.slice();
+                        newTarget.position = point;
                         if (!isAroundEqual(el.scale[0], 1)) {    // May have scale 0
                             newTarget.scale = [1, 1];
                         }
@@ -146,6 +163,7 @@ define(function (require) {
                             el.animateTo(newTarget, 300, 'cubicOut');
                         }
                         else {
+                            newTarget.position = point.slice();
                             // May still have animation. Must stop
                             el.stopAnimation();
                             el.attr(newTarget);
@@ -174,14 +192,16 @@ define(function (require) {
                 .execute();
 
             // Update common properties
+            var itemStyleAccessPath = ['itemStyle', 'normal'];
             data.eachItemGraphicEl(function (el, idx) {
                 var itemModel = data.getItemModel(idx);
-                var labelModel = itemModel.getModel('itemStyle.normal.label');
+                var normalItemStyleModel = itemModel.getModel(itemStyleAccessPath);
+                var labelModel = normalItemStyleModel.getModel('label');
                 var color = data.getItemVisual(idx, 'color');
 
                 zrUtil.extend(
                     el.style,
-                    itemModel.getModel('itemStyle.normal').getItemStyle(['color'])
+                    normalItemStyleModel.getItemStyle(['color'])
                 );
 
                 if (labelModel.get('show')) {
@@ -191,7 +211,8 @@ define(function (require) {
                     var lastDim = data.dimensions[data.dimensions.length - 1];
                     el.setStyle({
                         // FIXME
-                        text: data.get(lastDim, idx),
+                        text: seriesModel.getFormattedLabel(idx, 'normal')
+                            || data.get(lastDim, idx),
                         textFont: labelModel.getModel('textStyle').getFont(),
                         textPosition: labelPosition,
                         textFill: labelColor

@@ -16,8 +16,8 @@ define(function (require) {
             var size = Math.min(width, height);
             var cx = parsePercent(center[0], width);
             var cy = parsePercent(center[1], height);
-            var r0 = parsePercent(radius[0], size) / 2;
-            var r = parsePercent(radius[1], size) / 2;
+            var r0 = parsePercent(radius[0], size);
+            var r = parsePercent(radius[1], size);
 
             var data = seriesModel.getData();
 

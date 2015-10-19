@@ -72,7 +72,7 @@ define(function (require) {
                 var polarIndex = seriesModel.get('polarIndex') || 0;
 
                 var polar = polarList[polarIndex];
-                if (! polar) {
+                if (!polar) {
                     // api.log('Polar configuration not exist for series ' + seriesModel.name + '.');
                     return;
                 }
@@ -117,11 +117,6 @@ define(function (require) {
                 setAxis(radiusAxis, radiusAxisModel);
                 setAxis(angleAxis, angleAxisModel);
 
-                if (angleAxis.type === 'category' && ! angleAxis.onBand) {
-                    var angle = 360 - 360 / (angleAxis.scale.count() + 1);
-                    angleAxis.setExtent(0, angle);
-                }
-
                 polar.resize(polarModel, api);
                 polarList.push(polar);
 
@@ -129,6 +124,15 @@ define(function (require) {
             });
 
             setPolarAxisFromSeries(polarList, ecModel, api);
+
+            // Fix extent of category angle axis
+            zrUtil.each(polarList, function (polar) {
+                var angleAxis = polar.getAngleAxis();
+                if (angleAxis.type === 'category' && !angleAxis.onBand) {
+                    var angle = 360 - 360 / (angleAxis.scale.count() + 1);
+                    angleAxis.setExtent(0, angle);
+                }
+            });
 
             return polarList;
         }

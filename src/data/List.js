@@ -195,6 +195,11 @@ define(function (require) {
         var tempValue = [];
         var rawValueTo1D = false;
         var value1D = dimensions.length === 1;
+
+        // Use the first data to indicate data type;
+        var isValueArray = data[0] != null && zrUtil.isArray(
+            data[0].value == null ? data[0] : data[0].value
+        );
         for (var idx = 0; idx < data.length; idx++) {
             var value = data[idx];
             // Each data item contains value and option
@@ -212,7 +217,7 @@ define(function (require) {
             // Bar chart, line chart which uses category axis
             // only gives the 'y' value. 'x' value is the indices of cateogry
             // Use a tempValue to normalize the value to be a (x, y) value
-            if (!isNaN(value)) {
+            if (!isValueArray) {
                 if (!value1D) {
                     tempValue[0] = idx;
                     tempValue[1] = value;
@@ -331,8 +336,23 @@ define(function (require) {
         var min = Infinity;
         var max = -Infinity;
         var value;
+        var dimInfo = this._dimensionInfos[dim];
         if (dimData) {
-            for (var i = 0, len = this.count(); i < len; i++) {
+            var count = this.count();
+            if (dimInfo.type === 'ordinal') {
+                // Ordinal data must be incremental
+                var first = this.get(dim, 0);
+                var last = this.get(dim, count - 1);
+                var indexOf = zrUtil.indexOf;
+                if (isNaN(first)) { // Is string
+                    first = indexOf(dimData, first);
+                }
+                if (isNaN(last)) { // Is string
+                    last = indexOf(dimData, last);
+                }
+                return [first, last];
+            }
+            for (var i = 0, len = count; i < len; i++) {
                 value = this.get(dim, i, stack);
                 value < min && (min = value);
                 value > max && (max = value);

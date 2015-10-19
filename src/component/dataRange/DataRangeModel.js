@@ -11,7 +11,6 @@ define(function(require) {
     var numberUtil = require('../../util/number');
     var asc = numberUtil.asc;
     var linearMap = numberUtil.linearMap;
-    var parsePercent = require('../../util/number').parsePercent;
 
     return echarts.extendComponentModel({
 

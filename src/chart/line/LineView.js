@@ -1,5 +1,3 @@
-// TODO Smooth
-// TODO '-' data
 define(function(require) {
 
     'use strict';
@@ -9,7 +7,8 @@ define(function(require) {
     var DataSymbol = require('../helper/DataSymbol');
     var lineAnimationDiff = require('./lineAnimationDiff');
     var graphic = require('../../util/graphic');
-    var AreaPath = require('./Area');
+
+    var polyHelper = require('./poly');
 
     function isPointsSame(points1, points2) {
         if (points1.length !== points2.length) {
@@ -23,6 +22,10 @@ define(function(require) {
             }
         }
         return true;
+    }
+
+    function getSmooth(smooth) {
+        return typeof (smooth) === 'number' ? smooth : (smooth ? 0.3 : 0);
     }
 
     function getAxisExtentWithGap(axis) {
@@ -106,13 +109,19 @@ define(function(require) {
             var isAreaChart = !areaStyleModel.isEmpty();
             var stackedOnPoints = getStackedOnPoints(coordSys, data);
 
+
+            var symbolIgnoreMap = !isCoordSysPolar && !seriesModel.get('showAllSymbol')
+                && this._getSymbolIgnored(data, coordSys);
+
             // Initialization animation or coordinate system changed
             if (
                 !(polyline
                 && prevCoordSys.type === coordSys.type
                 && hasAnimation)
             ) {
-                dataSymbol.updateData(data, hasAnimation);
+                dataSymbol.updateData(
+                    data, seriesModel, hasAnimation, symbolIgnoreMap
+                );
 
                 polyline = this._newPolyline(group, points, coordSys, hasAnimation);
                 if (isAreaChart) {
@@ -125,7 +134,9 @@ define(function(require) {
             }
             else {
 
-                dataSymbol.updateData(data, false);
+                dataSymbol.updateData(
+                    data, seriesModel, false, symbolIgnoreMap
+                );
 
                 // Update clipPath
                 // FIXME Clip path used by more than one elements
@@ -157,7 +168,16 @@ define(function(require) {
                     lineJoin: 'bevel'
                 }
             ));
+
+            var smooth = seriesModel.get('smooth');
+            smooth = getSmooth(seriesModel.get('smooth'));
+            polyline.shape.smooth = smooth;
+
             if (polygon) {
+                var polygonShape = polygon.shape;
+                var stackedOn = data.stackedOn;
+                var stackedOnSmooth = 0;
+
                 polygon.style.opacity = 0.7;
                 polygon.setStyle(zrUtil.defaults(
                     areaStyleModel.getAreaStyle(),
@@ -166,6 +186,14 @@ define(function(require) {
                         lineJoin: 'bevel'
                     }
                 ));
+                polygonShape.smooth = smooth;
+
+                if (stackedOn) {
+                    var stackedOnSeries = stackedOn.hostModel;
+                    stackedOnSmooth = getSmooth(stackedOnSeries.get('smooth'))
+                }
+
+                polygonShape.stackedOnSmooth = stackedOnSmooth;
             }
 
             this._data = data;
@@ -174,9 +202,6 @@ define(function(require) {
             this._coordSys = coordSys;
             this._stackedOnPoints = stackedOnPoints;
             this._points = points;
-
-            !isCoordSysPolar && !seriesModel.get('showAllSymbol')
-                && this._updateSymbolDisplay(data, coordSys);
         },
 
         /**
@@ -193,7 +218,7 @@ define(function(require) {
                 group.remove(polyline);
             }
 
-            polyline = new graphic.Polyline({
+            polyline = new polyHelper.Polyline({
                 shape: {
                     points: points
                 },
@@ -226,7 +251,7 @@ define(function(require) {
                 group.remove(polygon);
             }
 
-            polygon = new AreaPath({
+            polygon = new polyHelper.Polygon({
                 shape: {
                     points: points,
                     stackedOnPoints: stackedOnPoints
@@ -245,17 +270,20 @@ define(function(require) {
         /**
          * @private
          */
-        _updateSymbolDisplay: function (data, coordSys) {
-            var categoryAxis = coordSys.getAxesByScale('ordinal')[0]
+        _getSymbolIgnored: function (data, coordSys) {
+            var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
+            var ignoreMap;
             // `getLabelInterval` is provided by echarts/component/axis
             if (categoryAxis && categoryAxis.getLabelInterval) {
+                ignoreMap = [];
                 var labelInterval = categoryAxis.getLabelInterval();
-                data.eachItemGraphicEl(function (el, idx) {
-                    el.ignore = (typeof labelInterval === 'function')
+                data.each(function (idx) {
+                    ignoreMap[idx] = (typeof labelInterval === 'function')
                         && !labelInterval(idx, categoryAxis.scale.getItem(idx))
                         || idx % (labelInterval + 1);
                 });
             }
+            return ignoreMap;
         },
 
         /**

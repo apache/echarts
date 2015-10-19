@@ -11,6 +11,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Model = require('./Model');
+    var each = zrUtil.each;
 
     var ComponentModel = require('./Component');
 
@@ -52,10 +53,11 @@ define(function (require) {
             this._componentsIdMap = {};
 
             /**
+             * All components before processing
              * @type {Object.<string, module:echarts/model/Model>}
              * @private
              */
-            this._componentsMapBeforeProcessing = {};
+            this._componentsMapAll = {};
 
             /**
              * @type {module:echarts/model/Model}
@@ -99,7 +101,7 @@ define(function (require) {
             var newCptTypes = [];
 
             // 如果不存在对应的 component model 则直接 merge
-            zrUtil.each(newOption, function (componentOption, componentType) {
+            each(newOption, function (componentOption, componentType) {
                 if (!ComponentModel.hasClass(componentType)) {
                     if (componentOption && typeof componentOption === 'object') {
                         option[componentType] = option[componentType] == null
@@ -163,8 +165,8 @@ define(function (require) {
             }
 
             // Backup data
-            zrUtil.each(componentsMap, function (components, componentType) {
-                this._componentsMapBeforeProcessing[componentType] = components.slice();
+            each(componentsMap, function (components, componentType) {
+                this._componentsMapAll[componentType] = components.slice();
             }, this);
         },
 
@@ -193,7 +195,7 @@ define(function (require) {
             var existComponents = (this._componentsMap[componentType] || []).slice();
 
             // Mapping by name if specified.
-            zrUtil.each(newComponentOptionList, function (componentOption, index) {
+            each(newComponentOptionList, function (componentOption, index) {
                 if (!componentOption.name) {
                     return;
                 }
@@ -206,7 +208,7 @@ define(function (require) {
             });
 
             // Otherwise mapping by index.
-            zrUtil.each(newComponentOptionList, function (componentOption, index) {
+            each(newComponentOptionList, function (componentOption, index) {
                 if (!result[index] && existComponents[index]) {
                     result[index] = existComponents[index];
                 }
@@ -260,14 +262,14 @@ define(function (require) {
             if (typeof type === 'function') {
                 context = cb;
                 cb = type;
-                zrUtil.each(this._componentsMap, function (components, componentType) {
-                    zrUtil.each(components, function (component, index) {
+                each(this._componentsMap, function (components, componentType) {
+                    each(components, function (component, index) {
                         cb.call(this, componentType, component, index);
                     }, this);
                 }, context);
             }
             else {
-                zrUtil.each(this._componentsMap[type], cb, context);
+                each(this._componentsMap[type], cb, context);
             }
         },
 
@@ -295,9 +297,7 @@ define(function (require) {
          * @return {module:echarts/model/Series}
          */
         getSeriesByName: function (name, beforeProcessing) {
-            var series = beforeProcessing
-                ? this._componentsMapBeforeProcessing.series
-                : this._componentsMap.series;
+            var series = this['_componentsMap' + (beforeProcessing ? 'All' : '')].series;
             for (var i = 0, len = series.length; i < len; i++) {
                 // name should be unique.
                 if (series[i].name === name) {
@@ -314,9 +314,7 @@ define(function (require) {
          */
         getSeriesByIndex: function (seriesIndex, beforeProcessing) {
             // return this._componentsMap.series[seriesIndex];
-            var series = beforeProcessing
-                ? this._componentsMapBeforeProcessing.series
-                : this._componentsMap.series;
+            var series = this['_componentsMap' + (beforeProcessing ? 'All' : '')].series;
             for (var i = 0, len = series.length; i < len; i++) {
                 // name should be unique.
                 if (series[i].seriesIndex === seriesIndex) {
@@ -327,18 +325,20 @@ define(function (require) {
 
         /**
          * @param {string} type
+         * @param {boolean} beforeProcessing
          * @return {Array.<module:echarts/model/Series>}
          */
-        getSeriesByType: function (type) {
-            return zrUtil.filter(this._componentsMap.series, function (series) {
-                return ComponentModel.parseComponentType(series.type).sub === type;
+        getSeriesByType: function (type, beforeProcessing) {
+            var series = this['_componentsMap' + (beforeProcessing ? 'All' : '')].series;
+            return zrUtil.filter(series, function (oneSeries) {
+                return ComponentModel.parseComponentType(oneSeries.type).sub === type;
             });
         },
 
         /**
          * @return {Array.<module:echarts/model/Series>}
          */
-        getSeriesAll: function () {
+        getSeries: function () {
             return this._componentsMap.series.slice();
         },
 
@@ -347,7 +347,16 @@ define(function (require) {
          * @param {*} context
          */
         eachSeries: function (cb, context) {
-            zrUtil.each(this._componentsMap.series, cb, context);
+            each(this._componentsMap.series, cb, context);
+        },
+
+        /**
+         * Iterate all series before filtered
+         * @param {Function} cb
+         * @param {*} context
+         */
+        eachSeriesAll: function (cb, context) {
+            each(this._componentsMapAll.series, cb, context);
         },
 
         /**
@@ -356,7 +365,24 @@ define(function (require) {
          * @param {*} context
          */
         eachSeriesByType: function (type, cb, context) {
-            return zrUtil.each(this.getSeriesByType(type), cb, context);
+            return each(this.getSeriesByType(type), cb, context);
+        },
+
+        /**
+         * Iterate all series before filtered of given type
+         * @parma {string} type
+         * @param {Function} cb
+         * @param {*} context
+         */
+        eachSeriesByTypeAll: function (type, cb, context) {
+            return each(this.getSeriesByType(type, true), cb, context);
+        },
+
+        /**
+         * @param {}
+         */
+        isSeriesFiltered: function (seriesModel) {
+            return zrUtil.indexOf(this._componentsMap.series, seriesModel) < 0;
         },
 
         /**
@@ -385,7 +411,7 @@ define(function (require) {
             var componentsMap = this._componentsMap;
             var componentTypes = [];
 
-            zrUtil.each(this._componentsMapBeforeProcessing, function (components, componentType) {
+            each(this._componentsMapAll, function (components, componentType) {
                 componentsMap[componentType] = components.slice();
                 componentTypes.push(componentType);
             });
@@ -394,7 +420,7 @@ define(function (require) {
                 componentTypes,
                 ComponentModel.getAllClassMainTypes(),
                 function (componentType, dependencies) {
-                    zrUtil.each(componentsMap[componentType], function (component) {
+                    each(componentsMap[componentType], function (component) {
                         component.restoreData();
                     });
                 }
@@ -412,7 +438,7 @@ define(function (require) {
             }
 
             var ret = {};
-            zrUtil.each(types, function (type) {
+            each(types, function (type) {
                 ret[type] = (this._componentsMap[type] || []).slice();
             }, this);
 

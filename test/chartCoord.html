@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                chart.setOption({
+                    legend: {
+                        data: ['Chart coord']
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: ['Line', 'Bar', 'Scatter']
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: ['Cartesian', 'Polar', 'Geo']
+                    },
+                    series: [{
+                        name: 'Chart coord',
+                        type: 'scatter',
+                        symbolSize: 100,
+                        data: [
+                            ['Line', 'Cartesian'],
+                            ['Line', 'Polar'],
+                            ['Bar', 'Cartesian'],
+                            ['Scatter', 'Cartesian'],
+                            ['Scatter', 'Polar'],
+                            ['Scatter', 'Geo']
+                        ]
+                    }]
+                });
+            })
+
+        </script>
+    </body>
+</html>

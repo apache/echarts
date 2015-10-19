@@ -22,10 +22,15 @@ define(function (require) {
             var mapGroup = new graphic.Group();
             var group = this.group;
 
+            var scale = geo.scale;
+
             group.add(mapGroup);
 
             mapGroup.position = geo.position.slice();
-            mapGroup.scale = geo.scale.slice();
+            mapGroup.scale = scale.slice();
+
+            itemStyle.lineWidth && (itemStyle.lineWidth /= scale[0]);
+            hoverItemStyle.lineWidth && (hoverItemStyle.lineWidth /= scale[0]);
 
             zrUtil.each(geo.regions, function (region) {
 

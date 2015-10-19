@@ -77,6 +77,8 @@ define(function(require) {
                 this._data = data;
                 this._dataBeforeProcessed = data.cloneShallow();
             }
+
+            zrUtil.merge(this.option, newSeriesOption, true);
         },
 
         /**
@@ -128,6 +130,53 @@ define(function(require) {
                         : formattedValue)
                   )
                 : (encodeHTML(this.name) + ' : ' + formattedValue);
+        },
+
+        /**
+         * Format label
+         * @param {number} dataIndex
+         * @param {string} [status='normal'] 'normal' or 'emphasis'
+         * @param {Function|string} [formatter] Default use the `itemStyle[status].label.formatter`
+         * @return {string}
+         */
+        getFormattedLabel: function (dataIndex, status, formatter) {
+            var data = this._data;
+            var itemModel = data.getItemModel(dataIndex);
+            var value = data.getRawValue(dataIndex);
+            var rawIndex = data.getRawIndex(dataIndex)
+
+            var seriesOpt = this.option;
+            var dataItemOpt = seriesOpt.data[rawIndex];
+
+            var seriesIndex = this.seriesIndex;
+            var seriesName = this.name;
+
+            var name = data.getName(dataIndex);
+
+            if (!formatter) {
+                formatter = itemModel.get('itemStyle.' + status + '.label.formatter')
+            }
+
+            if (typeof formatter === 'function') {
+                return formatter({
+                    seriesIndex: seriesIndex,
+                    seriesName: seriesName,
+                    series: seriesOpt,
+                    name: name,
+                    value: value,
+                    data: dataItemOpt,
+                    status: status || 'normal'
+                });
+            }
+            else if (typeof formatter === 'string') {
+                // TODO ETPL ?
+                return formatter.replace('{a}','{a0}')
+                                .replace('{b}','{b0}')
+                                .replace('{c}','{c0}')
+                                .replace('{a0}', seriesName)
+                                .replace('{b0}', name)
+                                .replace('{c0}', addCommas(value));
+            }
         },
 
         restoreData: function () {

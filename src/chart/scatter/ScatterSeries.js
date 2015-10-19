@@ -15,7 +15,7 @@ define(function (require) {
             var list = createListFromArray(option.data, this, ecModel);
             // Not holding the data anymore so it can be removed in momory
             // PENDING
-            option.data = null;
+            // option.data = null;
 
             return list;
         },

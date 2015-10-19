@@ -104,7 +104,6 @@ define(function (require) {
                 },
                 // 也是选中样式
                 emphasis: {
-                    // color: 各异,
                     areaStyle: {
                         color: 'rgba(255,215,0,0.8)'
                     },

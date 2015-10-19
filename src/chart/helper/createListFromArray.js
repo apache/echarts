@@ -18,18 +18,24 @@ define(function(require) {
         if (coordinateSystem === 'cartesian2d') {
             var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
             var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
-            if (xAxisModel.get('type') === 'category') {
+            var xAxisType = xAxisModel.get('type');
+            var yAxisType = yAxisModel.get('type');
+            var isYAxisCategory = yAxisType === 'category';
+            if (xAxisType === 'category') {
                 dimensions = [{
                     name: 'x',
                     type: 'ordinal'
-                }, {
-                    name: 'y',
-                    stackable: true
                 }];
+                dimensions.push({
+                    name: 'y',
+                    // If two category axes
+                    type: isYAxisCategory ? 'ordinal' : 'number',
+                    stackable: !isYAxisCategory
+                });
 
                 categoryAxisModel = xAxisModel;
             }
-            else if (yAxisModel.get('type') === 'category') {
+            else if (yAxisType === 'category') {
                 dimensions = [{
                     name: 'y',
                     type: 'ordinal'

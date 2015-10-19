@@ -146,7 +146,7 @@ define(function (require) {
             }
 
             // Always show item tooltip if mouse is on the element with dataIndex
-            if (el && el.dataIndex) {
+            if (el && el.dataIndex != null) {
 
                 var seriesModel = ecModel.getSeriesByIndex(el.seriesIndex);
 

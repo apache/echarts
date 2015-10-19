@@ -91,11 +91,18 @@ define(function (require) {
                 })
                 .execute();
 
+            this._updateStyle(seriesModel, data, isHorizontal);
+
+            this._data = data;
+        },
+
+        _updateStyle: function (seriesModel, data, isHorizontal) {
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
                 var labelModel = itemModel.getModel('itemStyle.normal.label');
                 var color = data.getItemVisual(idx, 'color');
                 var layout = data.getItemLayout(idx);
+
                 rect.setStyle(zrUtil.defaults(
                     {
                         fill: color
@@ -105,24 +112,24 @@ define(function (require) {
                 if (labelModel.get('show')) {
                     var labelPosition = labelModel.get('position') || 'inside';
                     // FIXME
-                    var labelColor = labelPosition === 'inside' ? 'white' : color;
+                    var labelColor = labelPosition.indexOf('inside') === 0 ? 'white' : color;
                     var labelPositionOutside = isHorizontal
                         ? (layout.height > 0 ? 'bottom' : 'top')
                         : (layout.width > 0 ? 'left' : 'right');
 
                     rect.setStyle({
-                        text: data.getRawValue(idx),
+                        text: seriesModel.getFormattedLabel(idx, 'normal')
+                            || data.getRawValue(idx),
                         textFont: labelModel.getModel('textStyle').getFont(),
-                        textPosition: labelPosition === 'outside' ? labelPositionOutside : 'inside',
+                        textPosition: labelPosition === 'outside' ? labelPositionOutside : labelPosition,
                         textFill: labelColor
                     });
-                }
-                graphic.setHoverStyle(
-                    rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
-                );
-            });
 
-            this._data = data;
+                    graphic.setHoverStyle(
+                        rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
+                    );
+                }
+            });
         },
 
         remove: function (ecModel) {
