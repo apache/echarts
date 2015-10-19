@@ -769,9 +769,12 @@ define(function (require) {
      * Set layout of single data item
      * @param {number} idx
      * @param {Object} layout
+     * @param {boolean=} merge
      */
-    listProto.setItemLayout = function (idx, layout) {
-        this._itemLayouts[idx] = layout;
+    listProto.setItemLayout = function (idx, layout, merge) {
+        this._itemLayouts[idx] = merge
+            ? zrUtil.extend(this._itemLayouts[idx] || {}, layout)
+            : layout;
     },
 
     /**

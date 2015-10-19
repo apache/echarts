@@ -3,64 +3,72 @@
  *
  * @module echarts/data/Tree
  * @author Yi Shen(https://www.github.com/pissang)
- *
- * TODO clone
  */
 define(function(require) {
 
     var zrUtil = require('zrender/tool/util');
     var Model = require('../model/Model');
+    var List = require('./List');
+    var arraySlice = Array.prototype.slice;
 
     /**
      * @constructor module:echarts/data/Tree~TreeNode
-     * @param {Object} option
+     * @param {number} dataIndex
      */
     var TreeNode = Model.extend({
 
-        init: function (option) {
+        init: function (name, dataIndex, hostTree) {
+
             /**
-            * @type {string}
-            * @memberOf {module:echarts/data/Tree~TreeNode}
-            * @readOnly
-            */
-            this.name = option.name || '';
+             * @type {string}
+             */
+            this.name = name || '';
+
             /**
-            * 节点的深度
-            * @type {number}
-            * @readOnly
-            */
+             * Depth of node
+             *
+             * @type {number}
+             * @readOnly
+             */
             this.depth = 0;
+
             /**
-            * 以当前节点为根节点的子树的高度
-            * @type {number}
-            * @readOnly
-            */
+             * Height of the subtree rooted at this node.
+             * @type {number}
+             * @readOnly
+             */
             this.height = 0;
 
             /**
-            * @type {module:echarts/data/Tree~TreeNode}
-            * @readOnly
-            */
+             * @type {module:echarts/data/Tree~TreeNode}
+             * @readOnly
+             */
             this.parentNode = null;
 
             /**
-            * 存储的用户数据
-            * @type {Object}
-            */
-            this.option = option || null;
+             * Reference to list item.
+             *
+             * @type {Object}
+             * @readOnly
+             */
+            this.dataIndex = dataIndex;
 
             /**
-            * 子节点列表
-            * @type {Array.<module:echarts/data/Tree~TreeNode>}
-            * @readOnly
-            */
+             * @type {Array.<module:echarts/data/Tree~TreeNode>}
+             * @readOnly
+             */
             this.children = [];
+
+            /**
+             * @type {moduel:echarts/data/Tree}
+             * @readOnly
+             */
+            this.hostTree = hostTree;
         },
 
         /**
-        * 添加子节点
-        * @param {module:echarts/data/Tree~TreeNode} child
-        */
+         * @param {(module:echarts/data/Tree~TreeNode|Object)} child
+         */
         add: function (child) {
             var children = this.children;
             if (child.parentNode === this) {
@@ -69,38 +77,42 @@ define(function(require) {
 
             children.push(child);
             child.parentNode = this;
+
+            this.hostTree._nodes.push(child);
         },
 
         /**
-        * 移除子节点
-        * @param {module:echarts/data/Tree~TreeNode} child
-        */
-        remove: function (child) {
-            var children = this.children;
-            var idx = zrUtil.indexOf(children, child);
-            if (idx >= 0) {
-                children.splice(idx, 1);
-                child.parentNode = null;
+         * Travel this subtree (include this node).
+         * Usage:
+         *    node.eachNode(function () { ... }); // preorder
+         *    node.eachNode('preorder', function () { ... }); // preorder
+         *    node.eachNode('postorder', function () { ... }); // postorder
+         *
+         * @param {string} order 'preorder' or 'postorder'
+         * @param {Function} cb
+         * @param {Object} [context]
+         */
+        eachNode: function (order, cb, context) {
+            if (typeof order === 'function') {
+                context = cb;
+                cb = order;
+                order = 'preorder';
             }
-        },
 
-        /**
-        * 遍历当前节点及其所有子节点
-        * @param  {Function} cb
-        * @param  {Object}   [context]
-        */
-        eachNode: function (cb, context) {
-            cb.call(context, this);
+            order === 'preorder' && cb.call(context, this);
 
             for (var i = 0; i < this.children.length; i++) {
-                this.children[i].eachNode(cb, context);
+                this.children[i].eachNode(order, cb, context);
             }
+
+            order === 'postorder' && cb.call(context, this);
         },
 
         /**
-        * 更新当前树及所有子树的高度和深度
-        * @param  {number} depth
-        */
+         * Update depth and height of this subtree.
+         *
+         * @param  {number} depth
+         */
         updateDepthAndHeight: function (depth) {
             var height = 0;
             this.depth = depth;
@@ -115,9 +127,9 @@ define(function(require) {
         },
 
         /**
-        * @param  {string} name
-        * @return module:echarts/data/Tree~TreeNode
-        */
+         * @param  {string} name
+         * @return module:echarts/data/Tree~TreeNode
+         */
         getNodeByName: function (name) {
             if (this.name === name) {
                 return this;
@@ -128,89 +140,191 @@ define(function(require) {
                     return res;
                 }
             }
+        },
+
+        /**
+         * @return {number} Value.
+         */
+        getValue: function () {
+            return this.hostTree.list.get('value', this.dataIndex);
+        },
+
+        /**
+         * @param {Object} layout
+         * @param {boolean=} merge
+         */
+        setLayout: function (layout, merge) {
+            return this.hostTree.list.setItemLayout(this.dataIndex, layout, merge);
+        },
+
+        /**
+         * @return {Object} layout
+         */
+        getLayout: function () {
+            return this.hostTree.list.getItemLayout(this.dataIndex);
         }
     });
 
     /**
      * @constructor
      * @alias module:echarts/data/Tree
-     * @param {string} name
+     * @param {string=} name Root name
      */
     function Tree(name) {
         /**
          * @type {module:echarts/data/Tree~TreeNode}
+         * @readOnly
          */
         this.root = new TreeNode(name);
+
+        /**
+         * @type {module:echarts/data/List}
+         * @readOnly
+         */
+        this.list;
+
+        /**
+         * @private
+         * @type {Array.<module:echarts/data/Tree~TreeNode}
+         */
+        this._nodes = [];
     }
 
-    Tree.prototype.type = 'tree';
+    Tree.prototype = {
 
-    /**
-     * 遍历树的所有子节点
-     * @param  {Function} cb
-     * @param  {Object}   [context]
-     */
-    Tree.prototype.eachNode = function(cb, context) {
-        this.root.eachNode(cb, context);
-    };
+        constructor: Tree,
 
-    /**
-     * 生成子树
-     * @param  {string} name 子树根节点 name
-     * @return {module:echarts/data/Tree}
-     */
-    Tree.prototype.getSubTree = function(name) {
-        var root = this.getNodeByName(name);
-        if (root) {
-            var tree = new Tree(root.name);
-            tree.root = root;
+        type: 'tree',
+
+        /**
+         * Travel this subtree (include this node).
+         * Usage:
+         *    node.eachNode(function () { ... }); // preorder
+         *    node.eachNode('preorder', function () { ... }); // preorder
+         *    node.eachNode('postorder', function () { ... }); // postorder
+         *
+         * @param {string} order 'preorder' or 'postorder'
+         * @param {Function} cb
+         * @param {Object}   [context]
+         */
+        eachNode: function(order, cb, context) {
+            if (typeof order === 'function') {
+                context = cb;
+                cb = order;
+                order = 'preorder';
+            }
+
+            this.root.eachNode(order, cb, context);
+        },
+
+        /**
+         * @param {string} name
+         * @return module:echarts/data/Tree~TreeNode
+         */
+        getNodeByName: function (name) {
+            return this.root.getNodeByName(name);
+        },
+
+        /**
+         * Update item available by list,
+         * when list has been performed options like 'filterSelf' or 'map'.
+         */
+        update: function () {
+            var list = this.list;
+            var nodes = this._nodes;
+
+            for (var i = 0, len = nodes.length; i < len; i++) {
+                nodes[i].dataIndex = null;
+            }
+
+            for (var i = 0, len = list.count(); i < len; i++) {
+                nodes[list.getRawIndex(i)].dataIndex = i;
+            }
+        },
+
+        /**
+         * data format:
+         * [
+         *     {
+         *         name: ...
+         *         value: ...
+         *         children: [
+         *             {
+         *                 name: ...
+         *                 value: ...
+         *                 children: ...
+         *             },
+         *             ...
+         *         ]
+         *     },
+         *     ...
+         * ]
+         *
+         * @param {Array.<Object>} data
+         * @param {module:echarts/model/Model} hostModel
+         * @return module:echarts/data/Tree
+         */
+        createTree: function (data, hostModel) {
+            var listData = [];
+
+            var tree = new Tree();
+            var rootNode = tree.root;
+            var dataIndex = 0;
+
+            function buildHierarchy(dataNode, parentNode) {
+                var node = new TreeNode(dataNode.name, dataIndex, tree);
+                parentNode.add(node);
+
+                listData[dataIndex] = dataNode;
+
+                var children = dataNode.children;
+                if (children) {
+                    for (var i = 0; i < children.length; i++) {
+                        buildHierarchy(children[i], node);
+                    }
+                }
+            }
+
+            for (var i = 0; i < data.length; i++) {
+                buildHierarchy(data[i], rootNode);
+            }
+
+            tree.root.updateDepthAndHeight(0);
+
+            var list = new List(['value'], hostModel);
+            list.initData(listData);
+
+            tree.list = list;
+            list.tree = tree;
+
+            proxyList(list, tree);
+
             return tree;
         }
     };
 
-    /**
-     * @param  {string} name
-     * @return module:echarts/data/Tree~TreeNode
-     */
-    Tree.prototype.getNodeByName = function (name) {
-        return this.root.getNodeByName(name);
-    };
+    function proxyList(list, tree) {
+        zrUtil.each(listProxyMethods, function (method, methodName) {
+            var originMethod = list[methodName];
+            list[methodName] = zrUtil.curry(method, originMethod, tree);
+        });
+        return list;
+    }
 
-
-    /**
-     * 从 option 里的 data 数据构建树
-     * @param {string} name
-     * @param {Array.<Object>} data
-     * @return module:echarts/data/Tree
-     */
-    Tree.fromOptionData = function (name, data) {
-        var tree = new Tree(name);
-        var rootNode = tree.root;
-        // Root node
-        rootNode.data = {
-            name: name,
-            children: data
-        };
-
-        function buildHierarchy(dataNode, parentNode) {
-            var node = new TreeNode(dataNode);
-            parentNode.add(node);
-            // 遍历添加子节点
-            var children = dataNode.children;
-            if (children) {
-                for (var i = 0; i < children.length; i++) {
-                    buildHierarchy(children[i], node);
-                }
-            }
+    var listProxyMethods = {
+        cloneShallow: function (originMethod, tree) {
+            var newList = originMethod.apply(this, arraySlice.call(arguments, 1));
+            return proxyList(newList, tree);
+        },
+        map: function (originMethod, tree) {
+            var newList = originMethod.apply(this, arraySlice.call(arguments, 1));
+            return proxyList(newList, tree);
+        },
+        filterSelf: function (originMethod, tree) {
+            var result = originMethod.apply(this, arraySlice.call(arguments, 1));
+            tree.update();
+            return result;
         }
-
-        for (var i = 0; i < data.length; i++) {
-            buildHierarchy(data[i], rootNode);
-        }
-
-        tree.root.updateDepthAndHeight(0);
-
-        return tree;
     };
 
     return Tree;
