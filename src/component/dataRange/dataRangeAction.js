@@ -7,7 +7,13 @@ define(function(require) {
     var echarts = require('../../echarts');
     // var modelUtil = require('../../util/model');
 
-    echarts.registerAction('selectDataRange', 'dataRangeSelected', function (event, ecModel) {
+    var actionInfo = {
+        type: 'selectDataRange',
+        event: 'dataRangeSelected',
+        update: 'updateView'
+    };
+
+    echarts.registerAction(actionInfo, function (event, ecModel) {
 
         var fromDataRangeModel = ecModel.getComponentById(event.dataRangeModelId);
 

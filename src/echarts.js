@@ -94,18 +94,6 @@ define(function (require) {
         this._layouts = zrUtil.map(layoutClasses, function (Layout) {
             return new Layout();
         });
-
-        /**
-         * @type {boolean}
-         * @private
-         */
-        this._needsUpdate = false;
-
-        this._zr.animation.on('frame', function () {
-            if (this._needsUpdate) {
-                this.updateImmediately();
-            }
-        }, this);
     };
 
     ECharts.prototype = {
@@ -136,7 +124,7 @@ define(function (require) {
 
             this._prepareCharts(ecModel);
 
-            this.updateImmediately();
+            this.update();
         },
 
         setTheme: function (theme) {
@@ -157,11 +145,7 @@ define(function (require) {
             return this._zr.getHeight();
         },
 
-        update: function () {
-            this._needsUpdate = true;
-        },
-
-        updateImmediately: function (event) {
+        update: function (payload) {
             console.time('update');
 
             var ecModel = this._model;
@@ -178,18 +162,26 @@ define(function (require) {
 
             this._coordinateSystem.update(ecModel, this._extensionAPI);
 
-            this._doLayout(ecModel, event);
+            this._doLayout(ecModel, payload);
 
             this._doVisualCoding(ecModel);
 
-            this._doRender(ecModel, event);
-
-            this._needsUpdate = false;
+            this._doRender(ecModel, payload);
 
             // Set background
             this._dom.style.backgroundColor = ecModel.get('backgroundColor');
 
             console.timeEnd('update');
+        },
+
+        updateView: function (payload) {
+            var ecModel = this._model;
+
+            this._doLayout(ecModel, payload);
+
+            this._doVisualCoding(ecModel);
+
+            this._doRender(ecModel, payload);
         },
 
         resize: function () {
@@ -203,20 +195,20 @@ define(function (require) {
 
             // this._doRender(ecModel);
 
-            this.updateImmediately();
+            this.update();
         },
 
         /**
          * @pubilc
          * @param {Object} payload
-         * @param {string} [payload.type] Event type
+         * @param {string} [payload.type] Action type
          * @param {number} [payload.from] From uid
          */
         dispatch: function (payload) {
-            var action = actions[payload.type];
-            if (action) {
-                action(payload, this._model);
-                this.updateImmediately(payload);
+            var actionWrap = actions[payload.type];
+            if (actionWrap) {
+                actionWrap.action(payload, this._model);
+                this[actionWrap.update || 'update'](payload);
             }
         },
 
@@ -503,19 +495,26 @@ define(function (require) {
          * Usage:
          * registerAction('someAction', 'someEvent', function () { ... });
          * registerAction('someAction', function () { ... });
+         * registerAction(
+         *     {type: 'someAction', event: 'someEvent', update: 'updateView'},
+         *     function () { ... }
+         * );
          *
-         * @param {string} actionName
-         * @param {string=} eventName Can be ignored
+         * @param {(string|Object)} actionInfo
+         * @param {string} actionInfo.type
+         * @param {string=} actionInfo.event
+         * @param {string=} actionInfo.update
          * @param {Function=} action
          */
-        registerAction: function (actionName, eventName, action) {
-            if (typeof eventName === 'function') {
-                action = eventName;
-                eventName = null;
+        registerAction: function (actionInfo, action) {
+            var actionType = zrUtil.isObject(actionInfo)
+                ? actionInfo.type
+                : ([actionInfo, actionInfo = {}][0]);
+
+            if (!actions[actionType]) {
+                actions[actionType] = {action: action, actionInfo: actionInfo};
             }
-            if (!actions[actionName]) {
-                actions[actionName] = action;
-            }
+
             // TODO
             // event
         },
