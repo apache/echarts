@@ -104,52 +104,41 @@ define(function(require) {
             // selectedMode: false,
             // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             // roseType: null,
+
+            label: {
+                normal: {
+                    show: true,
+                    // 'outer', 'inside', 'center'
+                    position: 'outer'
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                    // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
+                },
+                emphasis: {}
+            },
+            // Enabled when label.normal.position is 'outer'
+            labelLine: {
+                show: true,
+                // 引导线两段中的第一段长度
+                length: 20,
+                // 引导线两段中的第二段长度
+                length2: 5,
+                lineStyle: {
+                    // color: 各异,
+                    width: 1,
+                    type: 'solid'
+                }
+            },
             itemStyle: {
                 normal: {
                     // color: 各异,
                     borderColor: 'rgba(0,0,0,0)',
-                    borderWidth: 1,
-                    label: {
-                        show: true,
-                        // 'outer', 'inside', 'center'
-                        position: 'outer'
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                        // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
-                    },
-                    labelLine: {
-                        show: true,
-                        // 引导线两段中的第一段长度
-                        length: 20,
-                        // 引导线两段中的第二段长度
-                        length2: 5,
-                        lineStyle: {
-                            // color: 各异,
-                            width: 1,
-                            type: 'solid'
-                        }
-                    }
+                    borderWidth: 1
                 },
                 emphasis: {
                     // color: 各异,
                     borderColor: 'rgba(0,0,0,0)',
-                    borderWidth: 1,
-                    label: {
-                        show: false
-                        // position: 'outer'
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                        // distance: 当position为inner时有效，为label位置到圆心的距离与圆半径(环状图为内外半径和)的比例系数
-                    },
-                    labelLine: {
-                        show: false,
-                        length: 20,
-                        lineStyle: {
-                            // color: 各异,
-                            width: 1,
-                            type: 'solid'
-                        }
-                    }
+                    borderWidth: 1
                 }
             }
         }

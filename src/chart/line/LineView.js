@@ -92,8 +92,8 @@ define(function(require) {
             var coordSys = seriesModel.coordinateSystem;
             var group = this.group;
             var data = seriesModel.getData();
-            var lineStyleModel = seriesModel.getModel('itemStyle.normal.lineStyle');
-            var areaStyleModel = seriesModel.getModel('itemStyle.normal.areaStyle');
+            var lineStyleModel = seriesModel.getModel('lineStyle.normal');
+            var areaStyleModel = seriesModel.getModel('areaStyle.normal');
 
             var points = data.mapArray(data.getItemLayout, true);
 

@@ -38,6 +38,26 @@ define(function(require) {
             barGap: '30%',
             // 类目间柱形距离，默认为类目间距的20%，可设固定值
             barCategoryGap: '20%',
+            label: {
+                normal: {
+                    show: false
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+
+                    // 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+                    //           'inside' | 'insideleft' | 'insideTop' | 'insideRight' | 'insideBottom' |
+                    //           'outside' |'left' | 'right'|'top'|'bottom'
+                    // position:
+
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                },
+                emphasis: {
+                    show: false
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+                    //           'inside'|'left'|'right'|'top'|'bottom'
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                }
+            },
             itemStyle: {
                 normal: {
                     // color: '各异',
@@ -49,28 +69,16 @@ define(function(require) {
                     barBorderWidth: 0,
                     label: {
                         show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-
-                        // 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-                        //           'inside' | 'insideleft' | 'insideTop' | 'insideRight' | 'insideBottom' |
-                        //           'outside' |'left' | 'right'|'top'|'bottom'
-                        // position:
-
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                     }
                 },
                 emphasis: {
                     // color: '各异',
-                    barBorderColor: '#fff',            // 柱条边线
-                    barBorderRadius: 0,                // 柱条边线圆角，单位px，默认为0
-                    barBorderWidth: 0,                 // 柱条边线线宽，单位px，默认为1
-                    label: {
-                        show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                        // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-                        //           'inside'|'left'|'right'|'top'|'bottom'
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                    }
+                    // 柱条边线
+                    barBorderColor: '#fff',
+                    // 柱条边线圆角，单位px，默认为0
+                    barBorderRadius: 0,
+                    // 柱条边线线宽，单位px，默认为1
+                    barBorderWidth: 0,
                 }
             }
         }

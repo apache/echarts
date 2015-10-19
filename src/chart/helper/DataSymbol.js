@@ -196,7 +196,7 @@ define(function (require) {
             data.eachItemGraphicEl(function (el, idx) {
                 var itemModel = data.getItemModel(idx);
                 var normalItemStyleModel = itemModel.getModel(itemStyleAccessPath);
-                var labelModel = normalItemStyleModel.getModel('label');
+                var labelModel = itemModel.getModel('label.normal');
                 var color = data.getItemVisual(idx, 'color');
 
                 zrUtil.extend(

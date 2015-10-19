@@ -86,35 +86,54 @@ define(function (require) {
             clickable: true,
             // 是否开启缩放及漫游模式
             // roam: false,
+
+            // 在 roam 开启的时候使用
+            roamDetail: {
+                x: 0,
+                y: 0,
+                zoom: 1
+            },
+
+            label: {
+                normal: {
+                    show: false,
+                    textStyle: {
+                        color: '#000'
+                    }
+                },
+                emphasis: {
+                    show: false,
+                    textStyle: {
+                        color: '#000'
+                    }
+                }
+            },
             // scaleLimit: null,
             itemStyle: {
                 normal: {
                     // color: 各异,
                     borderWidth: 0.5,
                     borderColor: '#444',
-                    areaStyle: {
-                        color: '#eee'
-                    },
-                    label: {
-                        show: false,
-                        textStyle: {
-                            color: '#000'
-                        }
-                    }
+                    areaColor: '#eee'
                 },
                 // 也是选中样式
                 emphasis: {
-                    areaStyle: {
-                        color: 'rgba(255,215,0,0.8)'
-                    },
-                    label: {
-                        show: false,
-                        textStyle: {
-                            color: '#000'
-                        }
-                    }
+                    areaColor: 'rgba(255,215,0,0.8)'
                 }
             }
-        }
+        },
+
+        setRoamZoom: function (zoom) {
+            var roamDetail = this.option.roamDetail;
+            roamDetail && (roamDetail.zoom = zoom);
+        },
+
+        setRoamPan: function (x, y) {
+            var roamDetail = this.option.roamDetail;
+            if (roamDetail) {
+                roamDetail.x = x;
+                roamDetail.y = y;
+            }
+         }
     })
 });
