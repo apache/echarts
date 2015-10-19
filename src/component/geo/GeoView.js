@@ -10,6 +10,8 @@ define(function (require) {
         type: 'geo',
 
         render: function (geoModel, ecModel, api) {
+            this.group.removeAll();
+
             var geo = geoModel.coordinateSystem;
 
             var itemStyleModel = geoModel.getModel('itemStyle.normal');
