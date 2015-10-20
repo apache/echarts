@@ -161,7 +161,6 @@ define(function (require) {
                             el.animateTo(newTarget, 300, 'cubicOut');
                         }
                         else {
-                            newTarget.position = point.slice();
                             // May still have animation. Must stop
                             el.stopAnimation();
                             el.attr(newTarget);
@@ -227,6 +226,16 @@ define(function (require) {
             }, this);
 
             this._data = data;
+        },
+
+        updateLayout: function () {
+            var data = this._data;
+            if (data) {
+                // Not use animation
+                data.eachItemGraphicEl(function (el, idx) {
+                    el.attr('position', data.getItemLayout(idx));
+                });
+            }
         },
 
         remove: function (enableAnimation) {

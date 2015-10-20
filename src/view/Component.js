@@ -23,7 +23,7 @@ define(function (require) {
 
         init: function (ecModel, api) {},
 
-        render: function (componentModel, ecModel, api) {},
+        render: function (componentModel, ecModel, api, payload) {},
 
         dispose: function () {}
     };

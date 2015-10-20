@@ -24,7 +24,7 @@ define(function (require) {
 
         init: function (ecModel, api) {},
 
-        render: function (seriesModel, ecModel, api) {},
+        render: function (seriesModel, ecModel, api, payload) {},
 
         remove: function (ecModel, api) {
             this.group.removeAll();
@@ -32,6 +32,14 @@ define(function (require) {
 
         dispose: function () {}
     };
+
+    var chartProto = Chart.prototype;
+    chartProto.updateView
+        = chartProto.updatelayout
+        = chartProto.updateVisual
+        = function (seriesModel, ecModel, api, payload) {
+            this.render(seriesModel, ecModel, api, payload);
+        }
 
     // Enable Chart.extend.
     componentUtil.enableClassExtend(Chart);

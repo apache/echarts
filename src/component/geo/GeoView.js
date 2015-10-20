@@ -12,12 +12,23 @@ define(function (require) {
         type: 'geo',
 
         init: function (ecModel, api) {
-            var controller = new RoamController(api.getZr(), null, null);
+            var mapGroup = new graphic.Group();
+            var controller = new RoamController(api.getZr(), mapGroup, null);
+
             this._controller = controller;
+
+            this._mapGroup = mapGroup;
         },
 
         render: function (geoModel, ecModel, api) {
-            this.group.removeAll();
+            var group = this.group;
+            var mapGroup = this._mapGroup;
+
+            group.removeAll();
+
+            group.add(mapGroup);
+
+            mapGroup.removeAll();
 
             var geo = geoModel.coordinateSystem;
 
@@ -28,15 +39,12 @@ define(function (require) {
             var itemStyle = itemStyleModel.getItemStyle();
             var hoverItemStyle = hoverItemStyleModel.getItemStyle();
 
-            var mapGroup = new graphic.Group();
-            var group = this.group;
-
             var scale = geo.scale;
 
-            group.add(mapGroup);
-
-            mapGroup.position = geo.position.slice();
-            mapGroup.scale = scale.slice();
+            mapGroup.attr({
+                position: geo.position,
+                scale: scale
+            });
 
             itemStyle.lineWidth && (itemStyle.lineWidth /= scale[0]);
             hoverItemStyle.lineWidth && (hoverItemStyle.lineWidth /= scale[0]);

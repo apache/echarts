@@ -30,8 +30,8 @@ define(function (require) {
             if (target) {
                 var pos = target.position;
                 var scale = target.scale;
-                pos[0] += dx * scale[0];
-                pos[1] += dy * scale[1];
+                pos[0] += dx;
+                pos[1] += dy;
                 target.dirty();
             }
 
@@ -48,7 +48,7 @@ define(function (require) {
         var y = e.offsetY;
         var rect = this.rect;
         if (rect && rect.contain(x, y)) {
-            
+
         }
     }
 

@@ -4,7 +4,7 @@ define(function (require) {
     var actionInfo = {
         type: 'geoRoam',
         event: 'geoRoam',
-        update: 'updateView'
+        update: 'updateLayout'
     };
 
     /**

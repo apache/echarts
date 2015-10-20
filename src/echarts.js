@@ -151,6 +151,9 @@ define(function (require) {
             return this._zr.getHeight();
         },
 
+        /**
+         * @param {Object} payload
+         */
         update: function (payload) {
             console.time('update');
 
@@ -168,7 +171,11 @@ define(function (require) {
 
             this._coordinateSystem.update(ecModel, this._extensionAPI);
 
-            this.updateView(payload);
+            this._doLayout(ecModel);
+
+            this._doVisualCoding(ecModel);
+
+            this._doRender(ecModel, payload);
 
             // Set background
             this._dom.style.backgroundColor = ecModel.get('backgroundColor');
@@ -176,14 +183,40 @@ define(function (require) {
             console.timeEnd('update');
         },
 
+        // PENDING
+        /**
+         * @param {Object} payload
+         */
         updateView: function (payload) {
             var ecModel = this._model;
 
-            this._doLayout(ecModel, payload);
+            this._doLayout(ecModel);
 
             this._doVisualCoding(ecModel);
 
-            this._doRender(ecModel, payload);
+            this._invokeUpdateMethod('updateView', ecModel, payload);
+        },
+
+        /**
+         * @param {Object} payload
+         */
+        updateVisual: function (payload) {
+            var ecModel = this._model;
+
+            this._doVisualCoding(ecModel);
+
+            this._invokeUpdateMethod('updateVisual', ecModel, payload);
+        },
+
+        /**
+         * @param {Object} payload
+         */
+        updateLayout: function (payload) {
+            var ecModel = this._model;
+
+            this._doLayout(ecModel);
+
+            this._invokeUpdateMethod('updateLayout', ecModel, payload);
         },
 
         resize: function () {
@@ -212,6 +245,28 @@ define(function (require) {
                 actionWrap.action(payload, this._model);
                 this[actionWrap.actionInfo.update || 'update'](payload);
             }
+        },
+
+        /**
+         * @param {string} methodName
+         * @private
+         */
+        _invokeUpdateMethod: function (methodName, ecModel, payload) {
+            var api = this._extensionAPI;
+
+            // Render all components
+            // each(this._componentsList, function (component) {
+            //     var componentModel = component.__model;
+            //     component[methodName](componentModel, ecModel, api, payload);
+            // }, this);
+
+            // Upate all charts
+            ecModel.eachSeries(function (seriesModel, idx) {
+                var id = seriesModel.uid;
+                var chart = this._chartsMap[id];
+                chart[methodName](seriesModel, ecModel, api, payload);
+            }, this);
+
         },
 
         _prepareCharts: function (ecModel) {
@@ -377,13 +432,14 @@ define(function (require) {
 
         /**
          * Render each chart and component
+         * @private
          */
-        _doRender: function (ecModel, event) {
+        _doRender: function (ecModel, payload) {
             var api = this._extensionAPI;
             // Render all components
             each(this._componentsList, function (component) {
                 var componentModel = component.__model;
-                component.render(componentModel, ecModel, api, event);
+                component.render(componentModel, ecModel, api, payload);
 
                 var z = componentModel.get('z');
                 var zlevel = componentModel.get('zlevel');
@@ -403,7 +459,7 @@ define(function (require) {
                 var id = seriesModel.uid;
                 var chart = this._chartsMap[id];
                 chart.__keepAlive = true;
-                chart.render(seriesModel, ecModel, api, event);
+                chart.render(seriesModel, ecModel, api, payload);
 
                 var z = seriesModel.get('z');
                 var zlevel = seriesModel.get('zlevel');
