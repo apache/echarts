@@ -22,6 +22,11 @@ define(function(require) {
         type: 'component',
 
         /**
+         * @readOnly
+         */
+        name: '',
+
+        /**
          * @type {Object}
          * @protected
          */
@@ -47,7 +52,7 @@ define(function(require) {
          */
         uid: null,
 
-        init: function () {
+        init: function (option, parentModel, ecModel, dependentModels, index) {
             this.mergeDefaultAndTheme(this.option, this.ecModel);
         },
 
@@ -80,10 +85,16 @@ define(function(require) {
     // Reset ComponentModel.extend, add preConstruct.
     componentUtil.enableClassExtend(
         ComponentModel,
-        function (option, parentModel, ecModel, dependentModels) {
+        function (option, parentModel, ecModel, dependentModels, index) {
             this.ecModel = ecModel;
             this.dependentModels = dependentModels;
             this.uid = componentUtil.getUID('componentModel');
+
+            var componentName = option.name;
+            if (componentName == null) {
+                componentName = this.type + '' + index;
+            }
+            this.name = componentName + '';
         }
     );
 

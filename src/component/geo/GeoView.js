@@ -5,9 +5,16 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
 
+    var RoamController = require('../helper/RoamController');
+
     return require('../../echarts').extendComponentView({
 
         type: 'geo',
+
+        init: function (ecModel, api) {
+            var controller = new RoamController(api.getZr(), null, null);
+            this._controller = controller;
+        },
 
         render: function (geoModel, ecModel, api) {
             this.group.removeAll();
@@ -55,6 +62,20 @@ define(function (require) {
 
                 mapGroup.add(regionGroup);
             });
+
+            var controller = this._controller;
+            controller.off('pan')
+                .on('pan', function (dx, dy) {
+                    api.dispatch({
+                        type: 'geoRoam',
+                        component: 'geo',
+                        name: geoModel.name,
+                        dx: dx,
+                        dy: dy
+                    });
+                });
+
+            controller.rect = geo.getViewBox();
         }
     });
 });

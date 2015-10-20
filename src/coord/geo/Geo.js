@@ -8,6 +8,8 @@ define(function (require) {
 
     var BoundingRect = require('zrender/core/BoundingRect');
 
+    var v2Copy = vector.copy;
+
     function Geo(name, geoJson) {
 
         this.name = name;
@@ -22,6 +24,27 @@ define(function (require) {
         Transformable.call(this);
 
         this._nameCoordMap = {};
+
+        /**
+         * @param Array.<number>
+         */
+        this.mapPosition = [0, 0];
+
+        /**
+         * @param Array.<number>
+         */
+        this.mapScale = [1, 1];
+
+        /**
+         * @param Array.<number>
+         * @private
+         */
+        this._pan = [0, 0];
+        /**
+         * @param number
+         * @private
+         */
+        this._zoom = 1;
     };
 
     Geo.prototype = {
@@ -80,12 +103,12 @@ define(function (require) {
 
         /**
          * Transformed to particular position and size
-         * @param {number} cx
-         * @param {number} cy
+         * @param {number} x
+         * @param {number} y
          * @param {number} width
          * @param {number} height
          */
-        transformTo: function (cx, cy, width, height) {
+        transformTo: function (x, y, width, height) {
             var rect = this.getBoundingRect();
 
             rect = rect.clone();
@@ -93,17 +116,75 @@ define(function (require) {
             rect.y = -rect.y - rect.height;
 
             this.transform = rect.calculateTransform(
-                new BoundingRect(cx - width / 2, cy - height / 2, width, height)
+                new BoundingRect(x, y, width, height)
             );
 
             this.decomposeTransform();
 
             var scale = this.scale;
+
             scale[1] = -scale[1];
+
+            v2Copy(this.mapPosition, this.position);
+            v2Copy(this.mapScale, scale);
+
+            this._updateTransform();
+        },
+
+        /**
+         * @param {number} x
+         * @param {number} y
+         * @param {number} width
+         * @param {number} height
+         */
+        setViewBox: function (x, y, width, height) {
+            this._viewBox = new BoundingRect(x, y, width, height);
+        },
+
+        /**
+         * @param {number} x
+         * @param {number} y
+         */
+        setPan: function (x, y) {
+            var pan = this._pan;
+            pan[0] = x;
+            pan[1] = y;
+
+            this._updateTransform();
+        },
+
+        /**
+         * @param {number} zoom
+         */
+        setZoom: function (zoom) {
+            this._zoom = zoom;
+
+            this._updateTransform();
+        },
+
+        /**
+         * Update transform from roam and mapLocation
+         * @private
+         */
+        _updateTransform: function () {
+            var mapScale = this.mapScale;
+
+            var pan = this._pan;
+
+            // Update transform position
+            pan = [
+                pan[0] * mapScale[0],
+                pan[1] * mapScale[1]
+            ];
+            vector.add(this.position, this.mapPosition, pan);
+            vector.scale(this.scale, mapScale, this._zoom);
 
             this.updateTransform();
         },
 
+        /**
+         * @return {module:zrender/core/BoundingRect}
+         */
         getBoundingRect: function () {
             if (this._rect) {
                 return this._rect;
@@ -121,6 +202,13 @@ define(function (require) {
         },
 
         /**
+         * @return {module:zrender/core/BoundingRect}
+         */
+        getViewBox: function () {
+            return this._viewBox;
+        },
+
+        /**
          * If contain point
          * @param {Array.<number>} point
          * @return {boolean}
@@ -134,7 +222,6 @@ define(function (require) {
          * @return {boolean}
          */
         containData: function (data) {
-
         },
 
         /**

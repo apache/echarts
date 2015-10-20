@@ -134,6 +134,6 @@ define(function (require) {
                 roamDetail.x = x;
                 roamDetail.y = y;
             }
-         }
+        }
     })
 });

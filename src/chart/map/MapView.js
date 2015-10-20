@@ -3,18 +3,41 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
 
+    var RoamController = require('../../component/helper/RoamController');
+
     require('../../echarts').extendChartView({
 
         type: 'map',
 
+        init: function (ecModel, api) {
+            var controller = new RoamController(api.getZr(), null, null);
+            this._controller = controller;
+        },
+
         render: function (mapModel, ecModel, api) {
-            this.group.removeAll();
+            var group = this.group;
+            var geo = mapModel.coordinateSystem;
+            group.removeAll();
 
             mapModel.needsDrawMap &&
                 this._renderArea(mapModel, ecModel, api);
 
             mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
                 && this._renderSymbols(mapModel, ecModel, api);
+
+            var controller = this._controller;
+            controller.off('pan')
+                .on('pan', function (dx, dy) {
+                    api.dispatch({
+                        type: 'geoRoam',
+                        // component: 'series',
+                        name: mapModel.name,
+                        dx: dx,
+                        dy: dy
+                    });
+                });
+
+            controller.rect = geo.getViewBox();
         },
 
         _renderArea: function (mapModel, ecModel, api) {
@@ -47,7 +70,7 @@ define(function (require) {
                 // Competitable with 2.0
                 var areaStylePath = 'areaStyle.color';
                 itemStyle.fill = itemStyleModel.get(areaStylePath);
-                hoverItemStyle.fill = hoverItemStyleModel.get(areaStylePath);
+                hoverItemStyle.fill = hoverItemStyleModel.get('areaColor');
 
                 var styleObj = zrUtil.defaults(
                     {

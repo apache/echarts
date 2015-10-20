@@ -18,11 +18,6 @@ define(function(require) {
          */
         seriesIndex: 0,
 
-        /**
-         * @readOnly
-         */
-        name: '',
-
         // coodinateSystem will be injected in the echarts/CoordinateSystem
         coordinateSystem: null,
 
@@ -46,12 +41,6 @@ define(function(require) {
             this.seriesIndex = seriesIndex;
 
             this.mergeDefaultAndTheme(option, ecModel);
-
-            var seriesName = this.get('name');
-            if (seriesName == null) {
-                seriesName = this.get('type') + '' + seriesIndex;
-            }
-            this.name = seriesName + '';
 
             /**
              * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}

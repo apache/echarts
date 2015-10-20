@@ -10,12 +10,13 @@ define(function (require) {
 
     /**
      * Resize method bound to the geo
-     * @param {module:echarts/coord/geo/GeoModel|module:echarts/chart/map/MapModel} locModel
+     * @param {module:echarts/coord/geo/GeoModel|module:echarts/chart/map/MapModel} geoModel
      * @param {module:echarts/ExtensionAPI} api
      */
-    var resizeGeo = function (locModel, api) {
-        if (locModel.type === 'series.map') {
-            locModel = locModel.getModel('mapLocation');
+    var resizeGeo = function (geoModel, api) {
+        var locModel = geoModel;
+        if (geoModel.type === 'series.map') {
+            locModel = geoModel.getModel('mapLocation');
         }
 
         var x = locModel.get('x');
@@ -66,7 +67,19 @@ define(function (require) {
                 break;
         }
 
-        this.transformTo(cx, cy, width, height);
+        x = cx - width / 2;
+        y = cy - height / 2;
+        this.transformTo(x, y, width, height);
+        this.setViewBox(x, y, width, height);
+
+        var roamDetailModel = geoModel.getModel('roamDetail');
+
+        var panX = roamDetailModel.get('x') || 0;
+        var panY = roamDetailModel.get('y') || 0;
+        var zoom = roamDetailModel.get('zoom') || 1;
+
+        this.setPan(panX, panY);
+        this.setZoom(zoom);
     }
 
     var geoCreator = {
