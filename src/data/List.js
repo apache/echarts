@@ -26,8 +26,7 @@ define(function (require) {
     var isObject = zrUtil.isObject;
 
     var IMMUTABLE_PROPERTIES = [
-        'stackedOn', '_nameList',
-        '_rawValueDims', '_optionModels'
+        'stackedOn', '_nameList', '_rawData', '_optionModels'
     ];
 
     var transferImmuProperties = function (a, b) {
@@ -96,12 +95,6 @@ define(function (require) {
         this.indices = [];
 
         /**
-         * Dimensions hint for regenerating the raw value
-         * @type {Array.<string>}
-         */
-        this._rawValueDims = ['x'];
-
-        /**
          * Data storage
          * @type {Object.<key, TypedArray|Array>}
          * @private
@@ -151,6 +144,11 @@ define(function (require) {
          * @private
          */
         this._graphicEls = [];
+
+        /**
+         * Raw data
+         */
+        this._rawData = [];
     }
 
     var listProto = List.prototype;
@@ -170,6 +168,9 @@ define(function (require) {
      * @param {Array.<string>} [nameList]
      */
     listProto.initData = function (data, nameList) {
+
+        this._rawData = data;
+
         // Clear
         var optionModels = this._optionModels = [];
         var storage = this._storage = {};
@@ -202,7 +203,10 @@ define(function (require) {
         );
         for (var idx = 0; idx < data.length; idx++) {
             var value = data[idx];
-            // Each data item contains value and option
+            // Each data item contains value and other option
+            // {
+            //  value: []
+            // }
             if (data[idx] != null && data[idx].hasOwnProperty('value')) {
                 value = data[idx].value;
                 var model = new Model(data[idx], this.hostModel);
@@ -252,8 +256,6 @@ define(function (require) {
 
             indices.push(idx);
         }
-
-        this._rawValueDims = rawValueTo1D ? dimensions.slice(1, 2) : dimensions.slice();
 
         // Use the name in option as data id in two value axis case
         for (var i = 0; i < optionModelIndices.length; i++) {
@@ -336,24 +338,16 @@ define(function (require) {
         var min = Infinity;
         var max = -Infinity;
         var value;
-        var dimInfo = this._dimensionInfos[dim];
+        // var dimInfo = this._dimensionInfos[dim];
         if (dimData) {
-            var count = this.count();
-            if (dimInfo.type === 'ordinal') {
-                // Ordinal data must be incremental
-                var first = this.get(dim, 0);
-                var last = this.get(dim, count - 1);
-                var indexOf = zrUtil.indexOf;
-                if (isNaN(first)) { // Is string
-                    first = indexOf(dimData, first);
-                }
-                if (isNaN(last)) { // Is string
-                    last = indexOf(dimData, last);
-                }
-                return [first, last];
-            }
-            for (var i = 0, len = count; i < len; i++) {
+            // var isOrdinal = dimInfo.type === 'ordinal';
+            for (var i = 0, len = this.count(); i < len; i++) {
                 value = this.get(dim, i, stack);
+                // FIXME
+                // if (isOrdinal && typeof value === 'string') {
+                //     value = zrUtil.indexOf(dimData, value);
+                //     console.log(value);
+                // }
                 value < min && (min = value);
                 value > max && (max = value);
             }
@@ -385,19 +379,11 @@ define(function (require) {
      * @return {number}
      */
     listProto.getRawValue = function (idx) {
-        var rawValueDims = this._rawValueDims;
-        var storage = this._storage;
-        if (rawValueDims.length === 1) {
-            var dimData = storage[rawValueDims[0]];
-            return dimData && dimData[idx];
+        var itemOpt = this._rawData[idx];
+        if (itemOpt && itemOpt.hasOwnProperty('value')) {
+            return itemOpt.value;
         }
-        else {
-            var value = [];
-            for (var i = 0; i < rawValueDims.length; i++) {
-                value[i] = this.get(rawValueDims[i], idx);
-            }
-            return value;
-        }
+        return itemOpt;
     };
 
     /**

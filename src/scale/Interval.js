@@ -153,7 +153,7 @@ define(function (require) {
             var labels = [];
             var ticks = this.getTicks();
             for (var i = 0; i < ticks.length; i++) {
-                labels.push(ticks[i].toString());
+                labels.push(this.getLabel(ticks[i]));
             }
             return labels;
         },
@@ -164,7 +164,7 @@ define(function (require) {
          */
         // FIXME addCommas
         getLabel: function (data) {
-            return data;
+            return data + '';
         },
 
         /**

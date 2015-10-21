@@ -156,8 +156,7 @@ define(function (require) {
                     fill: legendModel.get('backgroundColor'),
                     lineWidth: legendModel.get('borderWidth')
                 },
-                // Behind item elements
-                z2: -1
+                silent: true
             });
             graphic.subPixelOptimizeRect(rect);
 

@@ -178,8 +178,7 @@ define(function(require) {
                     fill: titleModel.get('backgroundColor'),
                     lineWidth: titleModel.get('borderWidth')
                 },
-                // Behind item elements
-                z2: -1
+                silent: true
             });
             graphic.subPixelOptimizeRect(rect);
 

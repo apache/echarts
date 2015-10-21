@@ -20,6 +20,7 @@
                 'echarts/component/legend',
                 'echarts/component/grid',
                 'echarts/component/tooltip',
+                'echarts/component/title',
                 'echarts/component/dataZoom'
             ], function (echarts) {
 
@@ -127,13 +128,13 @@
                         {
                             name : '流量(m^3/s)',
                             type : 'value',
-                            max : 500,
-                            inverse: true
+                            max : 500
                         },
                         {
                             name : '降雨量(mm)',
                             type : 'value',
-                            position: 'right'
+                            position: 'right',
+                            inverse: true
                         }
                     ],
                     series : [
