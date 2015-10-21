@@ -95,6 +95,88 @@ define(function (require) {
                     this['_' + name](axisModel, gridModel, labelInterval);
                 }
             }, this);
+
+            this._renderName(axisModel, gridModel);
+        },
+
+        /**
+         * @param {module:echarts/coord/cartesian/AxisModel}
+         * @private
+         */
+        _renderName: function (axisModel, gridModel) {
+            var axis = axisModel.axis;
+
+            var name = axisModel.get('name');
+
+            if (name) {
+                var nameLocation = axisModel.get('nameLocation');
+                var textStyleModel = axisModel.getModel('textStyle');
+
+                var isHorizontal = axis.isHorizontal();
+                var axisPosition = this._axisLinePosition;
+
+                var axisExtent = axis.getExtent();
+
+                var sign = axisExtent[1] - axisExtent[0] > 0 ? -1 : 1;
+
+                var textAlign;
+                var textBaseline;
+                var textX;
+                var textY;
+
+                var gap = axisModel.get('nameGap') || 0;
+
+                var axisInverse = axis.inverse;
+
+                switch (nameLocation) {
+                    case 'start':
+                        if (isHorizontal) {
+                            textX = axisExtent[0] + sign * gap;
+                            textY = axisPosition;
+                            textAlign = axisInverse ? 'left' : 'right';
+                            textBaseline = 'middle';
+                        }
+                        else {
+                            textX = axisPosition;
+                            textY = axisExtent[0] + sign * gap;
+                            textAlign = 'center';
+                            textBaseline = axisInverse ? 'bottom' : 'top';
+                        }
+                        break;
+                    case 'middle':
+                        // TODO
+                        break;
+                    case 'end':
+                        if (isHorizontal) {
+                            textX = axisExtent[1] - sign * gap;
+                            textY = axisPosition;
+                            textAlign = axisInverse ? 'right' : 'left';
+                            textBaseline = 'middle';
+                        }
+                        else {
+                            textX = axisPosition;
+                            textY = axisExtent[1] - sign * gap;
+                            textAlign = 'center';
+                            textBaseline = axisInverse ? 'top' : 'bottom';
+                        }
+                        break;
+                }
+
+                var text = new graphic.Text({
+                    style: {
+                        text: name,
+                        textFont: textStyleModel.getFont(),
+                        fill: textStyleModel.get('color')
+                            || axisModel.get('axisLine.lineStyle.color'),
+                        textAlign: textAlign,
+                        textBaseline: textBaseline
+                    },
+                    position: [textX, textY],
+                    z2: 1
+                });
+
+                this.group.add(text);
+            }
         },
 
         /**

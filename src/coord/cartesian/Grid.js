@@ -178,24 +178,12 @@ define(function(require, factory) {
             this._height = gridHeight;
 
             each(this._axesList, function (axis) {
-                var extent;
-                switch (axis.position) {
-                    case 'top':
-                        extent = [gridX, gridX + gridWidth];
-                        break;
-                    case 'left':
-                        extent = [gridY, gridY + gridHeight];
-                        break;
-                    case 'right':
-                        extent = [gridY, gridY + gridHeight];
-                        break;
-                    default: // Bottom
-                        extent = [gridX, gridX + gridWidth];
-                        break;
-                }
+                var isHorizontal = axis.isHorizontal();
+                var extent = isHorizontal
+                    ? [gridX, gridX + gridWidth]
+                    : [gridY + gridHeight, gridY];
 
-                var start = axis.isHorizontal() ? 0 : 1;
-                axis.setExtent(extent[start], extent[1 - start]);
+                axis.setExtent(extent[0], extent[1]);
             });
         },
 

@@ -7,10 +7,12 @@ define({
         inverse: false,
         // 坐标轴名字，默认为空
         name: '',
-        // 坐标轴名字位置，支持'start' | 'end'
+        // 坐标轴名字位置，支持'start' | 'middle' | 'end'
         nameLocation: 'end',
         // 坐标轴文字样式，默认取全局样式
         nameTextStyle: {},
+        // 文字与轴线距离
+        nameGap: 5,
         // 数值起始和结束两端空白策略
         boundaryGap: [0, 0],
         // 最小值, 设置成 'dataMin' 则从数据中计算最小值
@@ -93,6 +95,8 @@ define({
         name: '',
         // 坐标轴名字位置，支持'start' | 'end'
         nameLocation: 'end',
+        // 文字与轴线距离
+        nameGap: 5,
         // 坐标轴文字样式，默认取全局样式
         nameTextStyle: {},
         // 类目起始和结束两端空白策略

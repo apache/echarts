@@ -1,8 +1,4 @@
-// TODO Split line interval
-//      Axis tick interval
-//      Axis name
-//      boundaryGap
-//      Custom label itemStyle
+// TODO boundaryGap
 define(function(require) {
     'use strict';
 
