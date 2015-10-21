@@ -69,6 +69,8 @@ define(function (require) {
                 pos[1] -= (mouseY - pos[1]) * (zoomScale - 1);
                 scale[0] *= zoomScale;
                 scale[1] *= zoomScale;
+
+                target.dirty();
             }
 
             this.trigger('zoom', wheelDelta, mouseX, mouseY);
