@@ -6,7 +6,7 @@
  */
 define(function(require) {
 
-    var zrUtil = require('zrender/tool/util');
+    var zrUtil = require('zrender/core/util');
     var Model = require('../model/Model');
     var List = require('./List');
     var arraySlice = Array.prototype.slice;
@@ -58,6 +58,12 @@ define(function(require) {
              * @readOnly
              */
             this.children = [];
+
+            /**
+             * @type {Array.<module:echarts/data/Tree~TreeNode>}
+             * @pubilc
+             */
+            this.viewChildren = [];
 
             /**
              * @type {moduel:echarts/data/Tree}
@@ -143,10 +149,11 @@ define(function(require) {
         },
 
         /**
+         * @param {string=} dimension Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
          * @return {number} Value.
          */
-        getValue: function () {
-            return this.hostTree.list.get('value', this.dataIndex);
+        getValue: function (dimension) {
+            return this.hostTree.list.get(dimension || 'value', this.dataIndex);
         },
 
         /**
@@ -162,6 +169,43 @@ define(function(require) {
          */
         getLayout: function () {
             return this.hostTree.list.getItemLayout(this.dataIndex);
+        },
+
+        /**
+         * @return {module:echarts/model/Model}
+         */
+        modelGet: function (path) {
+            var itemModel = this.hostTree.list.getItemModel(this.dataIndex);
+            var parentModel = itemModel.parentModel;
+            var levelModel = (this.levelModels || [])[this.depth];
+
+            var value = itemModel.get(path, true);
+            if (value == null && levelModel) {
+                value = levelModel.get(path, true);
+            }
+            if (value == null && parentModel) {
+                value = parentModel.get(path);
+            }
+
+            return value;
+        },
+
+        /**
+         * @example
+         *  setItemVisual(0, 'color', color);
+         *  setItemVisual(0, {
+         *      'color': color
+         *  });
+         */
+        setVisual: function (key, value) {
+            return this.hostTree.list.setItemVisual(this.dataIndex, key, value);
+        },
+
+        /**
+         * @public
+         */
+        getVisual: function (key, ignoreParent) {
+            return this.hostTree.list.getItemVisual(this.dataIndex, key, ignoreParent);
         }
     });
 
@@ -169,13 +213,14 @@ define(function(require) {
      * @constructor
      * @alias module:echarts/data/Tree
      * @param {string=} name Root name
+     * @param {Array.<modules:echarts/model/Model>} levelModels
      */
-    function Tree(name) {
+    function Tree(name, levelModels) {
         /**
          * @type {module:echarts/data/Tree~TreeNode}
          * @readOnly
          */
-        this.root = new TreeNode(name);
+        this.root = new TreeNode(name, null, this);
 
         /**
          * @type {module:echarts/data/List}
@@ -188,6 +233,12 @@ define(function(require) {
          * @type {Array.<module:echarts/data/Tree~TreeNode}
          */
         this._nodes = [];
+
+        /**
+         * @private
+         * @readOnly
+         */
+        this.levelModels = levelModels;
     }
 
     Tree.prototype = {
@@ -240,74 +291,90 @@ define(function(require) {
             for (var i = 0, len = list.count(); i < len; i++) {
                 nodes[list.getRawIndex(i)].dataIndex = i;
             }
-        },
-
-        /**
-         * data format:
-         * [
-         *     {
-         *         name: ...
-         *         value: ...
-         *         children: [
-         *             {
-         *                 name: ...
-         *                 value: ...
-         *                 children: ...
-         *             },
-         *             ...
-         *         ]
-         *     },
-         *     ...
-         * ]
-         *
-         * @param {Array.<Object>} data
-         * @param {module:echarts/model/Model} hostModel
-         * @return module:echarts/data/Tree
-         */
-        createTree: function (data, hostModel) {
-            var listData = [];
-
-            var tree = new Tree();
-            var rootNode = tree.root;
-            var dataIndex = 0;
-
-            function buildHierarchy(dataNode, parentNode) {
-                var node = new TreeNode(dataNode.name, dataIndex, tree);
-                parentNode.add(node);
-
-                listData[dataIndex] = dataNode;
-
-                var children = dataNode.children;
-                if (children) {
-                    for (var i = 0; i < children.length; i++) {
-                        buildHierarchy(children[i], node);
-                    }
-                }
-            }
-
-            for (var i = 0; i < data.length; i++) {
-                buildHierarchy(data[i], rootNode);
-            }
-
-            tree.root.updateDepthAndHeight(0);
-
-            var list = new List(['value'], hostModel);
-            list.initData(listData);
-
-            tree.list = list;
-            list.tree = tree;
-
-            proxyList(list, tree);
-
-            return tree;
         }
     };
+
+    /**
+     * data format:
+     * [
+     *     {
+     *         name: ...
+     *         value: ...
+     *         children: [
+     *             {
+     *                 name: ...
+     *                 value: ...
+     *                 children: ...
+     *             },
+     *             ...
+     *         ]
+     *     },
+     *     ...
+     * ]
+     *
+     * @static
+     * @param {Array.<Object>} data
+     * @param {module:echarts/model/Model} hostModel
+     * @param {Array.<module:echarts/model/Model} levelModels
+     * @return module:echarts/data/Tree
+     */
+    Tree.createTree = function (data, hostModel, levelModels) {
+        var listData = [];
+
+        var tree = new Tree('', levelModels);
+        var rootNode = tree.root;
+
+        function buildHierarchy(dataNode, parentNode) {
+            listData.push(dataNode);
+
+            var node = new TreeNode(dataNode.name, listData.length - 1, tree);
+            parentNode.add(node);
+
+            var children = dataNode.children;
+            if (children) {
+                for (var i = 0; i < children.length; i++) {
+                    buildHierarchy(children[i], node);
+                }
+            }
+        }
+
+        for (var i = 0; i < data.length; i++) {
+            buildHierarchy(data[i], rootNode);
+        }
+
+        tree.root.updateDepthAndHeight(0);
+
+        var list = createList(listData, hostModel);
+
+        tree.list = list;
+
+        proxyList(list, tree);
+
+        return tree;
+    };
+
+    function createList(listData, hostModel) {
+        var firstValue = listData[0] && listData[0].value;
+        var dimSize = zrUtil.isArray(firstValue) ? firstValue.length : 1;
+        // FIXME
+        // 和 createListFromArray中一样，怎么改好看点。
+        var dimensionNames = ['value', 'a', 'b', 'c', 'd', 'e', 'f'];
+        var list = new List(dimensionNames.slice(0, dimSize), hostModel);
+        list.initData(listData);
+
+        return list;
+    }
 
     function proxyList(list, tree) {
         zrUtil.each(listProxyMethods, function (method, methodName) {
             var originMethod = list[methodName];
             list[methodName] = zrUtil.curry(method, originMethod, tree);
         });
+
+        // Among list and its clones, only one can be active in echarts process.
+        // So a tree instance can be share by list and its clone.
+        list.tree = tree;
+
         return list;
     }
 

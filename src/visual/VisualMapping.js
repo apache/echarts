@@ -18,7 +18,7 @@ define(function (require) {
      * @param {Array.<Array>=} [option.intervalVisual=] [value1, value2, ...],
      *                                            specific visual of some interval,
      *                                            available when dataNormalizer is 'piecewise'
-     * @param {Array} [option.data=] Visual data.
+     * @param {Array} [option.visual=] Visual data.
      */
     var VisualMapping = function (option) {
 
@@ -50,10 +50,6 @@ define(function (require) {
 
         mapValueToVisual: null,
 
-        getData: function () {
-            return this.option.data;
-        },
-
         _getIntervalVisual: function(normalized) {
             var intervalVisuals = this.option.intervalVisuals;
             return (intervalVisuals && intervalVisuals.length)
@@ -71,7 +67,7 @@ define(function (require) {
             },
 
             mapValueToVisual: function (value) {
-                var optionData = this.option.data;
+                var optionData = this.option.visual;
 
                 if (zrUtil.isArray(value)) {
                     value = [
@@ -89,6 +85,17 @@ define(function (require) {
                         ? specifiedVisual
                         : zrColor.mapToColor(normalized, optionData);
                 }
+            }
+        },
+
+        colorByIndex: {
+            applyVisual: function (index, getter, setter) {
+                setter('color', this.mapValueToVisual(index));
+            },
+
+            mapValueToVisual: function (index) {
+                var visual = this.option.visual;
+                return visual[index % visual.length];
             }
         },
 
@@ -119,7 +126,7 @@ define(function (require) {
 
                 return specifiedVisual != null
                     ? specifiedVisual
-                    : (arrayGetByNormalizedValue(this.option.data, normalized) || {});
+                    : (arrayGetByNormalizedValue(this.option.visual, normalized) || {});
             }
         },
 
@@ -134,7 +141,7 @@ define(function (require) {
 
                 return specifiedVisual != null
                     ? specifiedVisual
-                    : linearMap(normalized, [0, 1], this.option.data, true);
+                    : linearMap(normalized, [0, 1], this.option.visual, true);
             }
         }
     };
@@ -155,7 +162,7 @@ define(function (require) {
 
                 return specifiedVisual != null
                     ? specifiedVisual
-                    : linearMap(normalized, [0, 1], this.option.data, true);
+                    : linearMap(normalized, [0, 1], this.option.visual, true);
             }
         };
     }
