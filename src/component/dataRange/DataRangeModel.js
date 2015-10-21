@@ -290,7 +290,7 @@ define(function(require) {
                         var mappingOption = {
                             type: visualType,
                             dataExtent: dataExtent,
-                            data: visualData
+                            visual: visualData
                         };
                         fillVisualOption && fillVisualOption.call(this, mappingOption, state);
                         mappings[visualType] = new VisualMapping(mappingOption);
