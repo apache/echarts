@@ -5,6 +5,7 @@ define(function(require) {
     var echarts = require('../echarts');
     var graphic = require('../util/graphic');
     var layout = require('../util/layout');
+    var formatUtil = require('../util/format');
 
     // Model
     echarts.extendComponentModel({
@@ -140,7 +141,7 @@ define(function(require) {
                 }, {
                     width: api.getWidth(),
                     height: api.getHeight()
-                }, null, true, false
+                }, titleModel.get('padding'), true, false
             );
             // Adjust text align based on position
             if (!textAlign) {
@@ -157,6 +158,32 @@ define(function(require) {
                 }
             }
             textEl.style.textAlign = subTextEl.style.textAlign = textAlign;
+            textEl.dirty();
+            subTextEl.dirty();
+
+            // Render background
+            var padding = formatUtil.normalizeCssArray(
+                titleModel.get('padding')
+            );
+            var boundingRect = group.getBoundingRect();
+            var rect = new graphic.Rect({
+                shape: {
+                    x: boundingRect.x - padding[3],
+                    y: boundingRect.y - padding[0],
+                    width: boundingRect.width + padding[1] + padding[3],
+                    height: boundingRect.height + padding[0] + padding[2]
+                },
+                style: {
+                    stroke: titleModel.get('borderColor'),
+                    fill: titleModel.get('backgroundColor'),
+                    lineWidth: titleModel.get('borderWidth')
+                },
+                // Behind item elements
+                z2: -1
+            });
+            graphic.subPixelOptimizeRect(rect);
+
+            group.add(rect);
         }
     });
 });
