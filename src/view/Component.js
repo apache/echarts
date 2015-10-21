@@ -28,6 +28,13 @@ define(function (require) {
         dispose: function () {}
     };
 
+    var componentProto = Component.prototype;
+    componentProto.updateView
+        = componentProto.updateLayout
+        = componentProto.updateVisual
+        = function (seriesModel, ecModel, api, payload) {
+            // Do nothing;
+        }
     // Enable Component.extend.
     componentUtil.enableClassExtend(Component);
 

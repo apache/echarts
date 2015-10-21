@@ -254,11 +254,11 @@ define(function (require) {
         _invokeUpdateMethod: function (methodName, ecModel, payload) {
             var api = this._extensionAPI;
 
-            // Render all components
-            // each(this._componentsList, function (component) {
-            //     var componentModel = component.__model;
-            //     component[methodName](componentModel, ecModel, api, payload);
-            // }, this);
+            // Update all components
+            each(this._componentsList, function (component) {
+                var componentModel = component.__model;
+                component[methodName](componentModel, ecModel, api, payload);
+            }, this);
 
             // Upate all charts
             ecModel.eachSeries(function (seriesModel, idx) {
