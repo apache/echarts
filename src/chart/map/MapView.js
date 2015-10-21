@@ -16,7 +16,6 @@ define(function (require) {
 
         render: function (mapModel, ecModel, api) {
             var group = this.group;
-            var geo = mapModel.coordinateSystem;
             group.removeAll();
 
             mapModel.needsDrawMap &&
@@ -25,6 +24,11 @@ define(function (require) {
             mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
                 && this._renderSymbols(mapModel, ecModel, api);
 
+            this._updateController(mapModel, ecModel, api);
+        },
+
+        _updateController: function (mapModel, ecModel, api) {
+            var geo = mapModel.coordinateSystem;
             var controller = this._controller;
             controller.off('pan')
                 .on('pan', function (dx, dy) {
@@ -35,6 +39,19 @@ define(function (require) {
                         dx: dx,
                         dy: dy
                     });
+                });
+            controller.off('zoom')
+                .on('zoom', function (wheelDelta, mouseX, mouseY) {
+                    api.dispatch({
+                        type: 'geoRoam',
+                        // component: 'series',
+                        name: mapModel.name,
+                        zoom: wheelDelta,
+                        originX: mouseX,
+                        originY: mouseY
+                    });
+
+                    // TODO Update lineWidth
                 });
 
             controller.rect = geo.getViewBox();

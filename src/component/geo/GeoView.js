@@ -71,8 +71,14 @@ define(function (require) {
                 mapGroup.add(regionGroup);
             });
 
+            this._updateController(geoModel, ecModel, api);
+        },
+
+        _updateController: function (geoModel, ecModel, api) {
+            var geo = geoModel.coordinateSystem;
             var controller = this._controller;
             controller.off('pan')
+                .off('zoom')
                 .on('pan', function (dx, dy) {
                     api.dispatch({
                         type: 'geoRoam',
@@ -81,9 +87,22 @@ define(function (require) {
                         dx: dx,
                         dy: dy
                     });
+                })
+                .on('zoom', function (wheelDelta, mouseX, mouseY) {
+                    api.dispatch({
+                        type: 'geoRoam',
+                        component: 'geo',
+                        name: geoModel.name,
+                        zoom: wheelDelta,
+                        originX: mouseX,
+                        originY: mouseY
+                    });
+
+                    // TODO Update lineWidth
                 });
 
             controller.rect = geo.getViewBox();
-        }
+        },
+
     });
 });

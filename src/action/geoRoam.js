@@ -30,11 +30,13 @@ define(function (require) {
                 }
 
                 var roamDetailModel = componentModel.getModel('roamDetail');
-                if (dx != null && dy != null) {
-                    var mapScale = geo.mapScale;
+                var panX = roamDetailModel.get('x') || 0;
+                var panY = roamDetailModel.get('y') || 0;
 
-                    var panX = (roamDetailModel.get('x') || 0) + dx / mapScale[0];
-                    var panY = (roamDetailModel.get('y') || 0) + dy / mapScale[1];
+                if (dx != null && dy != null) {
+                    // FIXME Must divide mapScale ?
+                    panX += dx;
+                    panY += dy;
 
                     componentModel.setRoamPan
                         && componentModel.setRoamPan(panX, panY);
@@ -45,10 +47,19 @@ define(function (require) {
                 if (zoom != null && componentModel.setRoamZoom) {
                     var previousZoom = roamDetailModel.get('zoom') || 1;
 
-                    zoom *= previousZoom;
-                    componentModel.setRoamZoom(zoom);
+                    var fixX = (payload.originX - panX) * (zoom - 1);
+                    var fixY = (payload.originY - panY) * (zoom - 1);
 
-                    geo && geo.setZoom(zoom);
+                    panX -= fixX;
+                    panY -= fixY;
+
+                    geo && geo.setPan(panX, panY);
+                    componentModel.setRoamPan
+                        && componentModel.setRoamPan(panX, panY);
+
+                    geo && geo.setZoom(zoom * previousZoom);
+                    componentModel.setRoamZoom(zoom * previousZoom);
+
                 }
             }
         });

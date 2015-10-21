@@ -61,7 +61,7 @@ define(function(require) {
             inverse: false,
 
             seriesIndex: null,          // 所控制的series indices，默认所有有value的series.
-            splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变 (contimous)
+            splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变 (continous)
             backgroundColor: 'rgba(0,0,0,0)',
             borderColor: '#ccc',       // 值域边框颜色
             contentColor: '#5793f3',

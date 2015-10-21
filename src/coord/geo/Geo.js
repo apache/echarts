@@ -2,6 +2,7 @@ define(function (require) {
 
     var parseGeoJson = require('./parseGeoJson');
     var vector = require('zrender/core/vector');
+    var matrix = require('zrender/core/matrix');
 
     var Transformable = require('zrender/mixin/Transformable');
     var zrUtil = require('zrender/core/util');
@@ -9,6 +10,13 @@ define(function (require) {
     var BoundingRect = require('zrender/core/BoundingRect');
 
     var v2Copy = vector.copy;
+
+
+    // Dummy transform node
+    function TransformDummy() {
+        Transformable.call(this);
+    }
+    zrUtil.mixin(TransformDummy, Transformable);
 
     function Geo(name, geoJson) {
 
@@ -35,16 +43,10 @@ define(function (require) {
          */
         this.mapScale = [1, 1];
 
-        /**
-         * @param Array.<number>
-         * @private
-         */
-        this._pan = [0, 0];
-        /**
-         * @param number
-         * @private
-         */
-        this._zoom = 1;
+
+        this._roamTransform = new TransformDummy();
+
+        this._mapTransform = new TransformDummy();
     };
 
     Geo.prototype = {
@@ -122,11 +124,12 @@ define(function (require) {
             this.decomposeTransform();
 
             var scale = this.scale;
+            var mapTransform = this._mapTransform
 
             scale[1] = -scale[1];
 
-            v2Copy(this.mapPosition, this.position);
-            v2Copy(this.mapScale, scale);
+            v2Copy(mapTransform.position, this.position);
+            v2Copy(mapTransform.scale, scale);
 
             this._updateTransform();
         },
@@ -146,9 +149,8 @@ define(function (require) {
          * @param {number} y
          */
         setPan: function (x, y) {
-            var pan = this._pan;
-            pan[0] = x;
-            pan[1] = y;
+
+            this._roamTransform.position = [x, y];
 
             this._updateTransform();
         },
@@ -157,7 +159,7 @@ define(function (require) {
          * @param {number} zoom
          */
         setZoom: function (zoom) {
-            this._zoom = zoom;
+            this._roamTransform.scale = [zoom, zoom];
 
             this._updateTransform();
         },
@@ -167,17 +169,21 @@ define(function (require) {
          * @private
          */
         _updateTransform: function () {
-            var mapScale = this.mapScale;
+            var roamTransform = this._roamTransform;
+            var mapTransform = this._mapTransform;
+            var scale = this.scale;
 
-            var pan = this._pan;
+            mapTransform.parent = roamTransform;
+            roamTransform.updateTransform();
+            mapTransform.updateTransform();
+
+            mapTransform.transform && matrix.copy(this.transform, mapTransform.transform);
+
+            this.decomposeTransform();
+
+            scale[1] = -scale[1];
 
             // Update transform position
-            pan = [
-                pan[0] * mapScale[0],
-                pan[1] * mapScale[1]
-            ];
-            vector.add(this.position, this.mapPosition, pan);
-            vector.scale(this.scale, mapScale, this._zoom);
 
             this.updateTransform();
         },
