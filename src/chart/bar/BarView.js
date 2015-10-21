@@ -99,7 +99,7 @@ define(function (require) {
         _updateStyle: function (seriesModel, data, isHorizontal) {
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
-                var labelModel = itemModel.getModel('itemStyle.normal.label');
+                var labelModel = itemModel.getModel('label.normal');
                 var color = data.getItemVisual(idx, 'color');
                 var layout = data.getItemLayout(idx);
 

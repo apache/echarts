@@ -17,6 +17,10 @@ define(function (require) {
             );
         },
 
+        updateLayout: function () {
+            this._dataSymbol.updateLayout();
+        },
+
         remove: function (ecModel) {
             this._dataSymbol.remove(ecModel.get('animation'));
         }

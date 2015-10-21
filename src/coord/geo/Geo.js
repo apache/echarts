@@ -2,11 +2,21 @@ define(function (require) {
 
     var parseGeoJson = require('./parseGeoJson');
     var vector = require('zrender/core/vector');
+    var matrix = require('zrender/core/matrix');
 
     var Transformable = require('zrender/mixin/Transformable');
     var zrUtil = require('zrender/core/util');
 
     var BoundingRect = require('zrender/core/BoundingRect');
+
+    var v2Copy = vector.copy;
+
+
+    // Dummy transform node
+    function TransformDummy() {
+        Transformable.call(this);
+    }
+    zrUtil.mixin(TransformDummy, Transformable);
 
     function Geo(name, geoJson) {
 
@@ -22,6 +32,21 @@ define(function (require) {
         Transformable.call(this);
 
         this._nameCoordMap = {};
+
+        /**
+         * @param Array.<number>
+         */
+        this.mapPosition = [0, 0];
+
+        /**
+         * @param Array.<number>
+         */
+        this.mapScale = [1, 1];
+
+
+        this._roamTransform = new TransformDummy();
+
+        this._mapTransform = new TransformDummy();
     };
 
     Geo.prototype = {
@@ -80,12 +105,12 @@ define(function (require) {
 
         /**
          * Transformed to particular position and size
-         * @param {number} cx
-         * @param {number} cy
+         * @param {number} x
+         * @param {number} y
          * @param {number} width
          * @param {number} height
          */
-        transformTo: function (cx, cy, width, height) {
+        transformTo: function (x, y, width, height) {
             var rect = this.getBoundingRect();
 
             rect = rect.clone();
@@ -93,17 +118,79 @@ define(function (require) {
             rect.y = -rect.y - rect.height;
 
             this.transform = rect.calculateTransform(
-                new BoundingRect(cx - width / 2, cy - height / 2, width, height)
+                new BoundingRect(x, y, width, height)
             );
 
             this.decomposeTransform();
 
             var scale = this.scale;
+            var mapTransform = this._mapTransform
+
             scale[1] = -scale[1];
+
+            v2Copy(mapTransform.position, this.position);
+            v2Copy(mapTransform.scale, scale);
+
+            this._updateTransform();
+        },
+
+        /**
+         * @param {number} x
+         * @param {number} y
+         * @param {number} width
+         * @param {number} height
+         */
+        setViewBox: function (x, y, width, height) {
+            this._viewBox = new BoundingRect(x, y, width, height);
+        },
+
+        /**
+         * @param {number} x
+         * @param {number} y
+         */
+        setPan: function (x, y) {
+
+            this._roamTransform.position = [x, y];
+
+            this._updateTransform();
+        },
+
+        /**
+         * @param {number} zoom
+         */
+        setZoom: function (zoom) {
+            this._roamTransform.scale = [zoom, zoom];
+
+            this._updateTransform();
+        },
+
+        /**
+         * Update transform from roam and mapLocation
+         * @private
+         */
+        _updateTransform: function () {
+            var roamTransform = this._roamTransform;
+            var mapTransform = this._mapTransform;
+            var scale = this.scale;
+
+            mapTransform.parent = roamTransform;
+            roamTransform.updateTransform();
+            mapTransform.updateTransform();
+
+            mapTransform.transform && matrix.copy(this.transform, mapTransform.transform);
+
+            this.decomposeTransform();
+
+            scale[1] = -scale[1];
+
+            // Update transform position
 
             this.updateTransform();
         },
 
+        /**
+         * @return {module:zrender/core/BoundingRect}
+         */
         getBoundingRect: function () {
             if (this._rect) {
                 return this._rect;
@@ -121,6 +208,13 @@ define(function (require) {
         },
 
         /**
+         * @return {module:zrender/core/BoundingRect}
+         */
+        getViewBox: function () {
+            return this._viewBox;
+        },
+
+        /**
          * If contain point
          * @param {Array.<number>} point
          * @return {boolean}
@@ -134,7 +228,6 @@ define(function (require) {
          * @return {boolean}
          */
         containData: function (data) {
-
         },
 
         /**

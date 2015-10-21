@@ -13,11 +13,11 @@ define(function(require) {
         update: 'updateView'
     };
 
-    echarts.registerAction(actionInfo, function (event, ecModel) {
+    echarts.registerAction(actionInfo, function (payload, ecModel) {
 
-        var fromDataRangeModel = ecModel.getComponentById(event.dataRangeModelId);
+        var fromDataRangeModel = ecModel.getComponentById(payload.dataRangeModelId);
 
-        fromDataRangeModel && fromDataRangeModel.setSelected(event.selected);
+        fromDataRangeModel && fromDataRangeModel.setSelected(payload.selected);
 
         // Find all dataRangeModel that has the same visualType and controls the same series.
         // var linkedNodesFinder = modelUtil.createLinkedNodesFinder(
@@ -40,7 +40,7 @@ define(function(require) {
         // var effectedModels = linkedNodesFinder(fromDataRangeModel).nodes;
 
         // zrUtil.each(effectedModels, function (dataRangeModel) {
-            // fromDataRangeModel.setSelected(event.selected);
+            // fromDataRangeModel.setSelected(payload.selected);
         // });
     });
 

@@ -27,36 +27,44 @@ define(function(require) {
             gridIndex: 0,
             // 'nearest', 'min', 'max', 'average'
             dataFilter: 'nearest',
+
+            label: {
+                normal: {
+                    show: false
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+                    //           'inside'|'left'|'right'|'top'|'bottom'
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                },
+                emphasis: {
+                    show: false
+                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+                    //           'inside'|'left'|'right'|'top'|'bottom'
+                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+                }
+            },
             itemStyle: {
                 normal: {
-                    // color: 各异,
-                    label: {
-                        show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                        // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-                        //           'inside'|'left'|'right'|'top'|'bottom'
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                    },
-                    lineStyle: {
-                        width: 2,
-                        type: 'solid',
-                        shadowColor: 'rgba(0,0,0,0)', //默认透明
-                        shadowBlur: 0,
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0
-                    }
+                    // color: 各异
                 },
                 emphasis: {
                     // color: 各异,
-                    label: {
-                        show: false
-                        // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                        // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-                        //           'inside'|'left'|'right'|'top'|'bottom'
-                        // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                    }
                 }
             },
+            lineStyle: {
+                normal: {
+                    width: 2,
+                    type: 'solid',
+                    shadowColor: 'rgba(0,0,0,0)', //默认透明
+                    shadowBlur: 0,
+                    shadowOffsetX: 0,
+                    shadowOffsetY: 0
+                }
+            },
+            // areaStyle: {
+
+            // },
             // smooth: false,
             // 拐点图形类型
             symbol: 'emptyCircle',

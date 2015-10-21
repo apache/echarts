@@ -6,6 +6,8 @@ define(function (require) {
 
     require('./map/MapView');
 
+    require('../action/geoRoam');
+
     echarts.registerLayout(require('./map/mapSymbolLayout'));
 
     echarts.registerVisualCoding('chart', require('./map/mapVisual'));

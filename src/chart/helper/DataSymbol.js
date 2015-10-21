@@ -151,8 +151,6 @@ define(function (require) {
                                 symbolSize[0], symbolSize[1]
                             ) || {};
                         }
-                        var newColor = data.getItemVisual(newIdx, 'color');
-                        el.setColor(newColor);
 
                         // TODO Merge animateTo and attr methods into one
                         newTarget.position = point;
@@ -163,7 +161,6 @@ define(function (require) {
                             el.animateTo(newTarget, 300, 'cubicOut');
                         }
                         else {
-                            newTarget.position = point.slice();
                             // May still have animation. Must stop
                             el.stopAnimation();
                             el.attr(newTarget);
@@ -192,12 +189,15 @@ define(function (require) {
                 .execute();
 
             // Update common properties
-            var itemStyleAccessPath = ['itemStyle', 'normal'];
+            var normalStyleAccessPath = ['itemStyle', 'normal'];
+            var emphasisStyleAccessPath = [normalStyleAccessPath[0], 'emphasis'];
             data.eachItemGraphicEl(function (el, idx) {
                 var itemModel = data.getItemModel(idx);
-                var normalItemStyleModel = itemModel.getModel(itemStyleAccessPath);
-                var labelModel = normalItemStyleModel.getModel('label');
+                var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
+                var labelModel = itemModel.getModel('label.normal');
                 var color = data.getItemVisual(idx, 'color');
+
+                el.setColor(color);
 
                 zrUtil.extend(
                     el.style,
@@ -221,11 +221,21 @@ define(function (require) {
 
                 graphic.setHoverStyle(
                     el,
-                    itemModel.getModel('itemStyle.emphasis').getItemStyle()
+                    itemModel.getModel(emphasisStyleAccessPath).getItemStyle()
                 );
             }, this);
 
             this._data = data;
+        },
+
+        updateLayout: function () {
+            var data = this._data;
+            if (data) {
+                // Not use animation
+                data.eachItemGraphicEl(function (el, idx) {
+                    el.attr('position', data.getItemLayout(idx));
+                });
+            }
         },
 
         remove: function (enableAnimation) {

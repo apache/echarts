@@ -1,3 +1,4 @@
+// FIXME emphasis label position is not same with normal label position
 define(function (require) {
 
     'use strict';
@@ -6,9 +7,7 @@ define(function (require) {
 
     return function (seriesModel) {
         var data = seriesModel.getData();
-        var itemStyleModel = seriesModel.getModel('itemStyle.normal');
-        var labelLineModel = itemStyleModel.getModel('labelLine');
-        var labelModel = itemStyleModel.getModel('label')
+        var labelLineModel = seriesModel.getModel('labelLine');
 
         var labelLineLen = labelLineModel.get('length');
         var labelLineLen2 = labelLineModel.get('length2');
@@ -18,7 +17,7 @@ define(function (require) {
         data.each(function (idx) {
             var layout = data.getItemLayout(idx);
             var itemModel = data.getItemModel(idx);
-            var labelModel = itemModel.getModel('itemStyle.normal.label');
+            var labelModel = itemModel.getModel('label.normal');
             var font = labelModel.getModel('textStyle').getFont();
             var labelPosition = labelModel.get('position');
 
