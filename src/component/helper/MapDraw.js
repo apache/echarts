@@ -132,8 +132,7 @@ define(function (require) {
                 });
 
             controller.rect = geo.getViewBox();
-        },
-
+        }
     }
 
     return MapDraw;

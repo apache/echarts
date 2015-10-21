@@ -9,6 +9,7 @@
             html, body, #main {
                 width: 100%;
                 height: 100%;
+                margin: 0;
             }
         </style>
         <div id="main"></div>
@@ -34,8 +35,7 @@
                 var itemStyle = {
                     normal:{
                         borderWidth: 0.5,
-                        borderColor: 'black',
-                        label:{show:true}
+                        borderColor: 'black'
                     },
                     emphasis:{
                         label:{show:true},
@@ -75,7 +75,7 @@
                         {
                             name: 'World Population (2010)',
                             type: 'map',
-                            mapType: 'world',
+                            map: 'world',
                             mapLocation: {
                                 y : 60,
                                 width: '80%'

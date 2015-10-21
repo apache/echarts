@@ -10,7 +10,8 @@ define(function(require) {
     var actionInfo = {
         type: 'selectDataRange',
         event: 'dataRangeSelected',
-        update: 'updateView'
+        // FIXME use updateView appears wrong
+        update: 'update'
     };
 
     echarts.registerAction(actionInfo, function (payload, ecModel) {

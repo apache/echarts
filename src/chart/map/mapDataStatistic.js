@@ -41,7 +41,7 @@ define(function (require) {
     return function (ecModel) {
         var seriesGroupByMapType = {};
         ecModel.eachSeriesByType('map', function (seriesModel) {
-            var mapType = seriesModel.get('mapType');
+            var mapType = seriesModel.get('map');
             seriesGroupByMapType[mapType] = seriesGroupByMapType[mapType] || [];
             seriesGroupByMapType[mapType].push(seriesModel);
         });

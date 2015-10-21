@@ -5,6 +5,7 @@ define(function (require) {
     var Geo = require('./Geo');
 
     var numberUtil = require('../../util/number');
+    var zrUtil = require('zrender/core/util');
 
     var mapDataStores = {};
 
@@ -113,22 +114,33 @@ define(function (require) {
             });
 
             // If has map series
-            // PENDING Create new geo component dynamically
+            var mapModelGroupBySeries = {};
+
             ecModel.eachSeriesByType('map', function (seriesModel) {
-                var mapType = seriesModel.get('mapType');
+                var mapType = seriesModel.get('map');
+
+                mapModelGroupBySeries[mapType] = mapModelGroupBySeries[mapType] || [];
+
+                mapModelGroupBySeries[mapType].push(seriesModel);
+            });
+
+            zrUtil.each(mapModelGroupBySeries, function (mapSeries, mapType) {
                 var geoJson = mapDataStores[mapType];
                 if (!geoJson) {
                     // Warning
                 }
-                var geo = new Geo(seriesModel.name, geoJson);
+
+                var geo = new Geo(mapType, geoJson);
                 geoList.push(geo);
 
                 // Inject resize method
                 geo.resize = resizeGeo;
 
-                geo.resize(seriesModel, api);
+                geo.resize(mapSeries[0], api);
 
-                seriesModel.coordinateSystem = geo;
+                zrUtil.each(mapSeries, function (singleMapSeries) {
+                    singleMapSeries.coordinateSystem = geo;
+                });
             });
 
             return geoList;

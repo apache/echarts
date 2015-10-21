@@ -19,6 +19,14 @@ define(function (require) {
      */
     echarts.registerAction(actionInfo, function (payload, ecModel) {
         var componentType = payload.component || 'series';
+
+        function syncRoamOfAllMapSeries(mapType, panX, panY, zoom) {
+            ecModel.eachSeriesByTypeAll('map', function (seriesModel) {
+                seriesModel.setRoamPan(panX, panY);
+                seriesModel.setRoamZoom(zoom);
+            });
+        }
+
         ecModel.eachComponent(componentType, function (componentModel) {
             if (componentModel.name === payload.name) {
                 var dx = payload.dx;
@@ -32,6 +40,7 @@ define(function (require) {
                 var roamDetailModel = componentModel.getModel('roamDetail');
                 var panX = roamDetailModel.get('x') || 0;
                 var panY = roamDetailModel.get('y') || 0;
+                var previousZoom = roamDetailModel.get('zoom') || 1;
 
                 if (dx != null && dy != null) {
                     // FIXME Must divide mapScale ?
@@ -44,9 +53,7 @@ define(function (require) {
                     geo && geo.setPan(panX, panY);
 
                 }
-                if (zoom != null && componentModel.setRoamZoom) {
-                    var previousZoom = roamDetailModel.get('zoom') || 1;
-
+                if (zoom != null) {
                     var fixX = (payload.originX - panX) * (zoom - 1);
                     var fixY = (payload.originY - panY) * (zoom - 1);
 
@@ -54,12 +61,21 @@ define(function (require) {
                     panY -= fixY;
 
                     geo && geo.setPan(panX, panY);
+
                     componentModel.setRoamPan
                         && componentModel.setRoamPan(panX, panY);
 
                     geo && geo.setZoom(zoom * previousZoom);
-                    componentModel.setRoamZoom(zoom * previousZoom);
+                    componentModel.setRoamZoom
+                        && componentModel.setRoamZoom(zoom * previousZoom);
+                }
 
+                // All map series with same `map` use the same geo coordinate system
+                // So the roamDetail must be in sync. Include the series not selected by legend
+                if (componentType === 'series') {
+                    syncRoamOfAllMapSeries(
+                        componentModel.get('map'), panX, panY, (zoom || 1) * previousZoom
+                    );
                 }
             }
         });

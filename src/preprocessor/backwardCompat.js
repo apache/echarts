@@ -40,9 +40,6 @@ define(function (require) {
         }
     }
 
-    function compatMapSeries(opt) {
-    }
-
     return function (option) {
         zrUtil.each(option.series, function (seriesOpt) {
             compatItemStyle(seriesOpt);
@@ -51,6 +48,9 @@ define(function (require) {
                 for (var i = 0; i < data.length; i++) {
                     compatItemStyle(data[i]);
                 }
+            }
+            if (seriesOpt.type === 'map') {
+                seriesOpt.map = seriesOpt.mapType || seriesOpt.map;
             }
         });
     }

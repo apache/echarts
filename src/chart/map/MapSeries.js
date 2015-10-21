@@ -62,8 +62,8 @@ define(function (require) {
             // 二级层叠
             z: 2,
             coordinateSystem: 'geo',
-            // 各省的mapType暂时都用中文
-            mapType: 'china',
+            // 各省的 map 暂时都用中文
+            map: 'china',
             mapLocation: {
                 // 'center' | 'left' | 'right' | 'x%' | {number}
                 x: 'center',

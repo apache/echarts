@@ -21,8 +21,14 @@ define(function (require) {
 
             group.add(mapDraw.group);
 
-            mapModel.needsDrawMap &&
-                mapDraw.draw(mapModel, ecModel, api);
+            if (mapModel.needsDrawMap) {
+                mapModel.needsDrawMap
+                    mapDraw.draw(mapModel, ecModel, api);
+            }
+            else {
+                // Remove drawed map
+                mapDraw.group.removeAll();
+            }
 
             mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
                 && this._renderSymbols(mapModel, ecModel, api);

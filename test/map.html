@@ -9,6 +9,7 @@
             html, body, #main {
                 width: 100%;
                 height: 100%;
+                margin: 0;
             }
         </style>
         <div id="main"></div>
@@ -35,13 +36,13 @@
 
                 var itemStyle = {
                     normal:{
-                        label:{show:true}
+                        borderColor: 'rgba(0, 0, 0, 0.2)'
                     },
                     emphasis:{
-                        label:{show:true},
                         shadowOffsetX: 0,
                         shadowOffsetY: 0,
                         shadowBlur: 20,
+                        borderWidth: 0,
                         shadowColor: 'rgba(0, 0, 0, 0.5)'
                     }
                 }
@@ -69,9 +70,14 @@
                         {
                             name: 'iphone3',
                             type: 'map',
-                            mapType: 'china',
+                            map: 'china',
                             roam: false,
                             itemStyle: itemStyle,
+                            label: {
+                                normal: {
+                                    show: true
+                                }
+                            },
                             data:[
                                 {name: '北京',value: Math.round(Math.random()*1000)},
                                 {name: '天津',value: Math.round(Math.random()*1000)},
@@ -114,6 +120,11 @@
                             type: 'map',
                             mapType: 'china',
                             itemStyle: itemStyle,
+                            label: {
+                                normal: {
+                                    show: true
+                                }
+                            },
                             data:[
                                 {name: '北京',value: Math.round(Math.random()*1000)},
                                 {name: '天津',value: Math.round(Math.random()*1000)},
@@ -141,6 +152,11 @@
                             type: 'map',
                             mapType: 'china',
                             itemStyle: itemStyle,
+                            label: {
+                                normal: {
+                                    show: true
+                                }
+                            },
                             data:[
                                 {name: '北京',value: Math.round(Math.random()*1000)},
                                 {name: '天津',value: Math.round(Math.random()*1000)},
