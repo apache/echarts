@@ -113,7 +113,7 @@ define(function (require) {
                     return;
                 }
                 var itemModel = data.getItemModel(idx);
-                var labelModel = itemModel.getModel('itemStyle.normal.label');
+                var labelModel = itemModel.getModel('label.normal');
                 var textStyleModel = labelModel.getModel('textStyle');
 
                 var layout = data.getItemLayout(idx);

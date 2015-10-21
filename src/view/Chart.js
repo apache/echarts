@@ -35,7 +35,7 @@ define(function (require) {
 
     var chartProto = Chart.prototype;
     chartProto.updateView
-        = chartProto.updatelayout
+        = chartProto.updateLayout
         = chartProto.updateVisual
         = function (seriesModel, ecModel, api, payload) {
             this.render(seriesModel, ecModel, api, payload);
