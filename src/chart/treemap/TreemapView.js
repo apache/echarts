@@ -55,11 +55,8 @@ define(function(require) {
             group.position = [layout.x, layout.y];
 
             // Background
-            var itemModel = node.getItemModel();
-            // FIXME
-            // levels configuration ?????
-            var borderColor = itemModel.get('itemStyle.normal.borderColor')
-                || itemModel.get('itemStyle.normal.gapColor');
+            var borderColor = node.modelGet('itemStyle.normal.borderColor')
+                || node.modelGet('itemStyle.normal.gapColor');
             group.add(new Rect({
                 shape: {x: 0, y: 0, width: thisWidth, height: thisHeight},
                 style: {fill: borderColor}

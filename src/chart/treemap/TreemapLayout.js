@@ -74,19 +74,19 @@ define(function (require) {
                 }, true);
             }
 
-            var itemModel = node.getItemModel();
-
             // Considering border and gap
-            // ????? borderWidth gapwidth在每个层级中定义。
-            var borderWidth = itemModel.get('itemStyle.normal.borderWidth');
-            var halfGapWidth = itemModel.get('itemStyle.normal.gapWidth') / 2;
+            var borderWidth = node.modelGet('itemStyle.normal.borderWidth');
+            var halfGapWidth = node.modelGet('itemStyle.normal.gapWidth') / 2;
             var layoutOffset = borderWidth - halfGapWidth;
+
+console.log(borderWidth, halfGapWidth, layoutOffset);
+
             width -= 2 * layoutOffset;
             height -= 2 * layoutOffset;
 
             node.setLayout({borderWidth: borderWidth}, true);
 
-            var viewChildren = initChildren(node, width, height, itemModel, options);
+            var viewChildren = initChildren(node, width, height, options);
 
             if (!viewChildren.length) {
                 return;
@@ -136,7 +136,7 @@ define(function (require) {
     /**
      * Set area to each child.
      */
-    function initChildren(node, width, height, itemModel, options) {
+    function initChildren(node, width, height, options) {
         var viewChildren = node.children || [];
 
         // Sort children, order by desc.
@@ -160,7 +160,7 @@ define(function (require) {
         // Filter by thredshold.
         for (var i = viewChildren.length - 1; i >= 0; i--) {
             var value = viewChildren[i].getValue();
-            if (value / sum * totalArea < itemModel.get('itemStyle.normal.visibleMin')) {
+            if (value / sum * totalArea < node.modelGet('itemStyle.normal.visibleMin')) {
                 viewChildren.slice(i, 1);
                 sum -= value;
             }

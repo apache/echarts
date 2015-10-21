@@ -174,8 +174,20 @@ define(function(require) {
         /**
          * @return {module:echarts/model/Model}
          */
-        getItemModel: function () {
-            return this.hostTree.list.getItemModel(this.dataIndex);
+        modelGet: function (path) {
+            var itemModel = this.hostTree.list.getItemModel(this.dataIndex);
+            var parentModel = itemModel.parentModel;
+            var levelModel = (this.levelModels || [])[this.depth];
+
+            var value = itemModel.get(path, true);
+            if (value == null && levelModel) {
+                value = levelModel.get(path, true);
+            }
+            if (value == null && parentModel) {
+                value = parentModel.get(path);
+            }
+
+            return value;
         },
 
         /**
@@ -201,8 +213,9 @@ define(function(require) {
      * @constructor
      * @alias module:echarts/data/Tree
      * @param {string=} name Root name
+     * @param {Array.<modules:echarts/model/Model>} levelModels
      */
-    function Tree(name) {
+    function Tree(name, levelModels) {
         /**
          * @type {module:echarts/data/Tree~TreeNode}
          * @readOnly
@@ -220,6 +233,12 @@ define(function(require) {
          * @type {Array.<module:echarts/data/Tree~TreeNode}
          */
         this._nodes = [];
+
+        /**
+         * @private
+         * @readOnly
+         */
+        this.levelModels = levelModels;
     }
 
     Tree.prototype = {
@@ -296,12 +315,13 @@ define(function(require) {
      * @static
      * @param {Array.<Object>} data
      * @param {module:echarts/model/Model} hostModel
+     * @param {Array.<module:echarts/model/Model} levelModels
      * @return module:echarts/data/Tree
      */
-    Tree.createTree = function (data, hostModel) {
+    Tree.createTree = function (data, hostModel, levelModels) {
         var listData = [];
 
-        var tree = new Tree();
+        var tree = new Tree('', levelModels);
         var rootNode = tree.root;
 
         function buildHierarchy(dataNode, parentNode) {

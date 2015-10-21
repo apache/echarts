@@ -3,6 +3,7 @@ define(function(require) {
     var SeriesModel = require('../../model/Series');
     var Tree = require('../../data/Tree');
     var zrUtil = require('zrender/core/util');
+    var Model = require('../../model/Model');
 
     return SeriesModel.extend({
 
@@ -75,12 +76,19 @@ define(function(require) {
          * @override
          */
         getInitialData: function (option, ecModel) {
-            var data = option.data;
-            data = data || [];
+            var data = option.data || [];
 
             completeTreeValue(data);
 
-            return Tree.createTree(data, this).list;
+            // FIXME
+            // sereis.mergeOption 的 getInitData是否放在merge后，从而能直接获取merege后的结果而非手动判断。
+            var levels = option.levels || (this.option || {}).levels || [];
+            var levelModels = [];
+            zrUtil.each(levels, function (levelDefine) {
+                levelModels.push(new Model(levelDefine));
+            }, this);
+
+            return Tree.createTree(data, this, levelModels).list;
         },
 
         /**
@@ -105,9 +113,11 @@ define(function(require) {
         var sum = 0;
 
         zrUtil.each(data, function (dataItem) {
+            var isArrayValue = zrUtil.isArray(dataItem.value);
             var itemValue = dataItem.value;
-            var children = dataItem.children;
+            isArrayValue && (itemValue = itemValue[0]);
 
+            var children = dataItem.children;
             if (children && (itemValue == null || isNaN(itemValue))) {
                 itemValue = completeTreeValue(children);
             }
@@ -117,7 +127,10 @@ define(function(require) {
                 itemValue = 0;
             }
 
-            dataItem.value = itemValue;
+            isArrayValue
+                ? (dataItem.value[0] = itemValue)
+                : (dataItem.value = itemValue);
+
             sum += itemValue;
         });
 

@@ -1,0 +1,68 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+
+        <script src="data/obama_budget_proposal_2012.tree.js"></script>
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/treemap',
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                chart.setOption({
+
+                    series: [
+                        {
+                            name:'Obama’s 2012 Budget Proposal: How $3.7 Trillion is Spent',
+                            type:'treemap',
+                            label: {
+                                show: true,
+                                formatter: "{b}"
+                            },
+                            itemStyle: {
+                                normal: {
+                                    borderColor: 'black'
+                                },
+                                emphasis: {
+                                }
+                            },
+                            levels: [
+                                {
+                                },
+                                {
+                                    itemStyle: {
+                                        normal: {
+                                            gapWidth: 4,
+                                            borderColor: 'black'
+                                        },
+                                        emphasis: {
+                                        }
+                                    }
+                                }
+                            ],
+                            data: window.obama_budget_2012
+                        }
+                    ]
+                });
+            });
+
+        </script>
+    </body>
+</html>

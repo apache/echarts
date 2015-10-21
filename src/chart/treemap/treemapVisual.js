@@ -25,9 +25,7 @@ define(function (require) {
     };
 
     function travelTree(node, designatedVisual, seriesModel) {
-        var itemModel = node.getItemModel();
-
-        var visuals = buildVisuals(node, itemModel, designatedVisual, seriesModel);
+        var visuals = buildVisuals(node, designatedVisual, seriesModel);
 
         var viewChildren = node.viewChildren;
 
@@ -36,23 +34,23 @@ define(function (require) {
             node.setVisual('color', calculateColor(visuals, node));
         }
         else {
-            var mappingWrap = buildVisualMapping(visuals, itemModel, viewChildren);
+            var mappingWrap = buildVisualMapping(node, visuals, viewChildren);
             // Designate visual to children.
             zrUtil.each(viewChildren, function (child, index) {
-                var childVisual = mapVisual(visuals, child, index, itemModel, mappingWrap);
+                var childVisual = mapVisual(node, visuals, child, index, mappingWrap);
                 travelTree(child, childVisual, seriesModel);
             });
         }
     }
 
-    function buildVisuals(node, itemModel, designatedVisual, seriesModel) {
+    function buildVisuals(node, designatedVisual, seriesModel) {
         var visuals = zrUtil.extend({}, designatedVisual);
 
         zrUtil.each(VISUAL_LIST, function (visualName) {
             // Priority: thisNode > thisLevel > parentNodeDesignated
             var path = 'itemStyle.normal.' + visualName;
 
-            var visualValue = itemModel.get(path, true); // Ignore parent
+            var visualValue = node.modelGet(path); // Ignore parent
 
             if (visualValue == null) {
                 visualValue = retrieve(path, seriesModel.option.levels[node.depth]);
@@ -86,7 +84,7 @@ define(function (require) {
         }
     }
 
-    function buildVisualMapping(visuals, itemModel, viewChildren) {
+    function buildVisualMapping(node, visuals, viewChildren) {
         if (!viewChildren || !viewChildren.length) {
             return;
         }
@@ -106,14 +104,14 @@ define(function (require) {
 
         var mappingType = mappingVisualName === 'color'
             ? (
-                itemModel.get('itemStyle.normal.colorMapping') === 'byValue'
+                node.modelGet('itemStyle.normal.colorMapping') === 'byValue'
                     ? 'color' : 'colorByIndex'
             )
             : mappingVisualName;
 
         var dataExtent = mappingType === 'colorByIndex'
             ? null
-            : calculateDataExtent(itemModel, viewChildren);
+            : calculateDataExtent(node, viewChildren);
 
         return {
             mapping: new VisualMapping({
@@ -126,8 +124,8 @@ define(function (require) {
         };
     }
 
-    function calculateDataExtent(itemModel, viewChildren) {
-        var dimension = itemModel.get('colorDimension');
+    function calculateDataExtent(node, viewChildren) {
+        var dimension = node.modelGet('colorDimension');
 
         // The same as area dimension.
         if (dimension === 'value') {
@@ -147,13 +145,13 @@ define(function (require) {
         }
     }
 
-    function mapVisual(visuals, child, index, itemModel, mappingWrap) {
+    function mapVisual(node, visuals, child, index, mappingWrap) {
         var childVisuals = zrUtil.extend({}, visuals);
 
         if (mappingWrap) {
             var mapping = mappingWrap.mapping;
             var value = mapping.type === 'colorByIndex'
-                ? index : child.getValue(itemModel.get('colorDimension'));
+                ? index : child.getValue(node.modelGet('colorDimension'));
 
             childVisuals[mappingWrap.visualName] = mapping.mapValueToVisual(value);
         }
