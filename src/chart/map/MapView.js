@@ -1,124 +1,32 @@
 define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
+    // var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
 
-    var RoamController = require('../../component/helper/RoamController');
+    var MapDraw = require('../../component/helper/MapDraw');
 
     require('../../echarts').extendChartView({
 
         type: 'map',
 
         init: function (ecModel, api) {
-            var controller = new RoamController(api.getZr(), null, null);
-            this._controller = controller;
+            var mapDraw = new MapDraw(api, false);
+            this._mapDraw = mapDraw;
         },
 
         render: function (mapModel, ecModel, api) {
             var group = this.group;
+            var mapDraw = this._mapDraw;
             group.removeAll();
 
+            group.add(mapDraw.group);
+
             mapModel.needsDrawMap &&
-                this._renderArea(mapModel, ecModel, api);
+                mapDraw.draw(mapModel, ecModel, api);
 
             mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
                 && this._renderSymbols(mapModel, ecModel, api);
 
-            this._updateController(mapModel, ecModel, api);
-        },
-
-        _updateController: function (mapModel, ecModel, api) {
-            var geo = mapModel.coordinateSystem;
-            var controller = this._controller;
-            controller.off('pan')
-                .on('pan', function (dx, dy) {
-                    api.dispatch({
-                        type: 'geoRoam',
-                        // component: 'series',
-                        name: mapModel.name,
-                        dx: dx,
-                        dy: dy
-                    });
-                });
-            controller.off('zoom')
-                .on('zoom', function (wheelDelta, mouseX, mouseY) {
-                    api.dispatch({
-                        type: 'geoRoam',
-                        // component: 'series',
-                        name: mapModel.name,
-                        zoom: wheelDelta,
-                        originX: mouseX,
-                        originY: mouseY
-                    });
-
-                    // TODO Update lineWidth
-                });
-
-            controller.rect = geo.getViewBox();
-        },
-
-        _renderArea: function (mapModel, ecModel, api) {
-            var data = mapModel.getData();
-
-            var geo = mapModel.coordinateSystem;
-
-            var mapGroup = new graphic.Group();
-            var group = this.group;
-
-            group.add(mapGroup);
-
-            var scale = geo.scale;
-            mapGroup.position = geo.position.slice();
-            mapGroup.scale = scale.slice();
-
-            zrUtil.each(geo.regions, function (region) {
-
-                var regionGroup = new graphic.Group();
-
-                var dataIdx = data.indexOfName(region.name);
-                var itemModel = data.getItemModel(dataIdx);
-
-                var itemStyleModel = itemModel.getModel('itemStyle.normal');
-                var hoverItemStyleModel = itemModel.getModel('itemStyle.emphasis');
-
-                var itemStyle = itemStyleModel.getItemStyle();
-                var hoverItemStyle = hoverItemStyleModel.getItemStyle();
-
-                // Competitable with 2.0
-                var areaStylePath = 'areaStyle.color';
-                itemStyle.fill = itemStyleModel.get(areaStylePath);
-                hoverItemStyle.fill = hoverItemStyleModel.get('areaColor');
-
-                var styleObj = zrUtil.defaults(
-                    {
-                        // Global visual color is used by symbol
-                        // item visual color may be coded by dataRange
-                        fill: data.getItemVisual(dataIdx, 'color', true)
-                            || data.getVisual('areaColor')
-                    },
-                    itemStyle
-                );
-
-                styleObj.lineWidth && (styleObj.lineWidth /= scale[0]);
-                hoverItemStyle.lineWidth && (hoverItemStyle.lineWidth /= scale[0]);
-
-                zrUtil.each(region.contours, function (contour) {
-
-                    var polygon = new graphic.Polygon({
-                        shape: {
-                            points: contour
-                        }
-                    });
-
-                    polygon.setStyle(styleObj);
-
-                    graphic.setHoverStyle(polygon, hoverItemStyle);
-
-                    regionGroup.add(polygon);
-                });
-
-                mapGroup.add(regionGroup);
-            });
         },
 
         _renderSymbols: function (mapModel, ecModel, api) {
