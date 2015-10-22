@@ -3,7 +3,6 @@ define(function(require) {
     'use strict';
 
     var pathTool = require('zrender/tool/path');
-    var matrix = require('zrender/core/matrix');
     var round = Math.round;
     var Path = require('zrender/graphic/Path');
     var colorTool = require('zrender/tool/color');
@@ -152,40 +151,52 @@ define(function(require) {
             : (doubledPosition + (positiveOrNegative ? 1 : -1)) / 2;
     };
 
+
+    /**
+     * @inner
+     */
     function onElementMouseOver() {
-        this.setStyle(this.__hoverStyle);
-        this.z2 += 1;
+        var el = this;
+
+        if (el.__hoverStlDirty) {
+            var stroke = el.style.stroke;
+            var fill = el.style.fill;
+
+            // Create hoverStyle on mouseover
+            var hoverStyle = el.__hoverStl;
+            hoverStyle.fill = hoverStyle.fill || colorTool.lift(fill, -0.1);
+            hoverStyle.stroke = hoverStyle.stroke || colorTool.lift(stroke, -0.1);
+
+            var normalStyle = {};
+            for (var name in hoverStyle) {
+                normalStyle[name] = el.style[name];
+            }
+
+            el.__normalStl = normalStyle;
+
+            el.__hoverStlDirty = false;
+        }
+        el.setStyle(el.__hoverStl);
+        el.z2 += 1;
     }
+    /**
+     * @inner
+     */
     function onElementMouseOut() {
-        this.setStyle(this.__normalStyle);
+        this.setStyle(this.__normalStl);
         this.z2 -= 1;
     }
-    var MOUSEOVER = 'mouseover';
-    var MOUSEOUT = 'mouseout';
     /**
      * Set hover style of element
      * @param {module:zrender/graphic/Displayable} el
-     * @param {Object} hoverStyle
+     * @param {Object} [hoverStyle]
      */
     graphic.setHoverStyle = function (el, hoverStyle) {
-        var stroke = el.style.stroke;
-        var fill = el.style.fill;
-        hoverStyle = hoverStyle || {};
-        hoverStyle.fill = hoverStyle.fill || colorTool.lift(fill, -0.1);
-        hoverStyle.stroke = hoverStyle.stroke || colorTool.lift(stroke, -0.1);
-
-        var normalStyle = {};
-        for (var name in hoverStyle) {
-            normalStyle[name] = el.style[name];
-        }
-
-        el.__normalStyle = normalStyle;
-        el.__hoverStyle = hoverStyle;
+        el.__hoverStl = hoverStyle || {};
+        el.__hoverStlDirty = true;
         // Remove previous bound handlers
-        el.off(MOUSEOVER, onElementMouseOver);
-        el.off(MOUSEOUT, onElementMouseOut);
-        el.on(MOUSEOVER, onElementMouseOver);
-        el.on(MOUSEOUT, onElementMouseOut);
+        el.on('mouseover', onElementMouseOver)
+          .on('mouseout', onElementMouseOut);
     };
 
     return graphic;
