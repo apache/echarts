@@ -9,6 +9,7 @@
             html, body, #main {
                 width: 100%;
                 height: 100%;
+                margin: 0;
             }
         </style>
         <div id="main"></div>
@@ -19,6 +20,7 @@
                 'echarts/chart/scatter',
                 'echarts/component/legend',
                 'echarts/component/grid',
+                'echarts/component/polar',
                 'echarts/component/tooltip'
             ], function (echarts) {
 
@@ -47,42 +49,51 @@
                     usedMap[key] = true;
 
                     data.push([
-                        x, y,
-                        Math.random()
+                        x, y, Math.random() + 0.1
                     ])
                 }
 
                 chart.setOption({
                     legend: {
-                        data: ['Chart coord']
+                        data: ['Punch Card']
                     },
-                    xAxis: {
+                    polar: {},
+                    angleAxis: {
                         type: 'category',
                         data: hours,
+                        boundaryGap: false,
                         splitLine: {
-                            show: false
+                            show: true,
+                            lineStyle: {
+                                color: '#ddd',
+                                type: 'dashed'
+                            }
                         },
                         axisLine: {
                             show: false
                         }
                     },
-                    yAxis: {
+                    radiusAxis: {
                         type: 'category',
                         data: days,
                         axisLine: {
                             show: false
+                        },
+                        axisLabel: {
+                            rotate: 45
                         }
                     },
                     series: [{
-                        name: 'Chart coord',
+                        name: 'Punch Card',
                         type: 'scatter',
+                        coordinateSystem: 'polar',
                         itemStyle: {
                             normal: {
                                 color: '#d14a61'
                             }
                         },
                         symbolSize: function (val) {
-                            return val[2] * 30;
+                            return val[2] * 20;
                         },
                         data: data
                     }]

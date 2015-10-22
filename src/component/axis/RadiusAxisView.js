@@ -111,6 +111,12 @@ define(function (require) {
             var p = [];
             var labelMargin = labelModel.get('margin');
             var labelsPositions = axis.getLabelsCoords();
+            var labelRotate = labelModel.get('rotate');
+
+            var labelTextAlign = 'center';
+            if (labelRotate) {
+                labelTextAlign = labelRotate > 0 ? 'left' : 'right'
+            }
 
             // FIXME Text align and text baseline when axis angle is 90 degree
             for (var i = 0; i < labelsPositions.length; i++) {
@@ -122,10 +128,12 @@ define(function (require) {
                         x: p[0],
                         y: p[1],
                         text: labels[i],
-                        textAlign: 'center',
+                        textAlign: labelTextAlign,
                         textBaseline: 'bottom',
                         font: textStyleModel.getFont()
                     },
+                    rotation: labelRotate * Math.PI / 180,
+                    origin: p.slice(),
                     silent: true
                 }));
             };
@@ -138,7 +146,6 @@ define(function (require) {
             var splitLineModel = radiusAxisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
             var lineColors = lineStyleModel.get('color');
-            var lineWidth = lineStyleModel.get('width');
             var lineCount = 0;
 
             lineColors = lineColors instanceof Array ? lineColors : [lineColors];
@@ -162,12 +169,10 @@ define(function (require) {
             // Batching the lines if color are the same
             for (var i = 0; i < splitLines.length; i++) {
                 this.group.add(graphic.mergePath(splitLines[i], {
-                    style: {
+                    style: zrUtil.defaults({
                         stroke: lineColors[i % lineColors.length],
-                        lineType: lineStyleModel.getLineDash(),
-                        lineWidth: lineWidth,
                         fill: null
-                    },
+                    }, lineStyleModel.getLineStyle()),
                     silent: true
                 }));
             }

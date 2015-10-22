@@ -25,17 +25,16 @@ define(function(require) {
                 dimensions = [{
                     name: 'x',
                     type: 'ordinal'
-                }];
-                dimensions.push({
+                }, {
                     name: 'y',
                     // If two category axes
                     type: isYAxisCategory ? 'ordinal' : 'number',
                     stackable: !isYAxisCategory
-                });
+                }];
 
                 categoryAxisModel = xAxisModel;
             }
-            else if (yAxisType === 'category') {
+            else if (isYAxisCategory) {
                 dimensions = [{
                     name: 'y',
                     type: 'ordinal'
@@ -64,18 +63,21 @@ define(function(require) {
             var angleAxisModel = ecModel.findComponent('angleAxis', axisFinder);
             var radiusAxisModel = ecModel.findComponent('radiusAxis', axisFinder);
 
+            var isRadiusAxisCategory = radiusAxisModel.get('type') === 'category';
             if (angleAxisModel.get('type') === 'category') {
                 dimensions = [{
                     name: 'angle',
                     type: 'ordinal'
                 }, {
                     name: 'radius',
-                    stackable: true
+                    // If two category axes
+                    type: isRadiusAxisCategory ? 'ordinal' : 'number',
+                    stackable: !isRadiusAxisCategory
                 }];
 
                 categoryAxisModel = angleAxisModel;
             }
-            else if (radiusAxisModel.get('type') === 'category') {
+            else if (isRadiusAxisCategory) {
                 dimensions = [{
                     name: 'radius',
                     type: 'ordinal'
@@ -111,6 +113,7 @@ define(function(require) {
 
         var nameList = [];
         if (categoryAxisModel) {
+            // FIXME Two category axis
             var categories = categoryAxisModel.get('data');
             if (categories) {
                 var dataLen = data.length;
