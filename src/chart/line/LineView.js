@@ -88,7 +88,7 @@ define(function(require) {
             this._dataSymbol = dataSymbol;
         },
 
-        render: function (seriesModel, ecModel) {
+        render: function (seriesModel, ecModel, api) {
             var coordSys = seriesModel.coordinateSystem;
             var group = this.group;
             var data = seriesModel.getData();
@@ -120,7 +120,7 @@ define(function(require) {
                 && hasAnimation)
             ) {
                 dataSymbol.updateData(
-                    data, seriesModel, hasAnimation, symbolIgnoreMap
+                    data, seriesModel, api, hasAnimation, symbolIgnoreMap
                 );
 
                 polyline = this._newPolyline(group, points, coordSys, hasAnimation);
@@ -135,7 +135,7 @@ define(function(require) {
             else {
 
                 dataSymbol.updateData(
-                    data, seriesModel, false, symbolIgnoreMap
+                    data, seriesModel, api, false, symbolIgnoreMap
                 );
 
                 // Update clipPath
@@ -152,9 +152,20 @@ define(function(require) {
                 if (!isPointsSame(this._stackedOnPoints, stackedOnPoints)
                     || !isPointsSame(this._points, points)
                 ) {
-                    this._updateAnimation(
-                        data, stackedOnPoints, coordSys
-                    );
+                    if (hasAnimation) {
+                        this._updateAnimation(
+                            data, stackedOnPoints, coordSys, api
+                        );
+                    }
+                    else {
+                        polyline.setShape({
+                            points: points
+                        });
+                        polygon && polygon.setShape({
+                            points: points,
+                            stackedOnPoints: stackedOnPoints
+                        });
+                    }
                 }
                 // Add back
                 group.add(polyline);
@@ -289,7 +300,7 @@ define(function(require) {
         /**
          * @private
          */
-        _updateAnimation: function (data, stackedOnPoints, coordSys) {
+        _updateAnimation: function (data, stackedOnPoints, coordSys, api) {
             var polyline = this._polyline;
             var polygon = this._polygon;
 
@@ -299,23 +310,24 @@ define(function(require) {
                 this._coordSys, coordSys
             );
             polyline.shape.points = diff.current;
-            polyline.animateTo({
+
+            api.updateGraphicEl(polyline, {
                 shape: {
                     points: diff.next
                 }
-            }, 300, 'cubicOut');
+            });
 
             if (polygon) {
-                var polygonShape = polygon.shape;
-                polygonShape.points = diff.current;
-                polygonShape.stackedOnPoints = diff.stackedOnCurrent;
-
-                polygon.animateTo({
+                polygon.setShape({
+                    points: diff.current,
+                    stackedOnPoints: diff.stackedOnCurrent
+                });
+                api.updateGraphicEl(polygon, {
                     shape: {
                         points: diff.next,
                         stackedOnPoints: diff.stackedOnNext
                     }
-                }, 300, 'cubicOut');
+                });
             }
 
             var updatedDataInfo = [];

@@ -11,17 +11,17 @@ define(function (require) {
 
         type: 'bar',
 
-        render: function (seriesModel, ecModel) {
+        render: function (seriesModel, ecModel, api) {
             var coordinateSystemType = seriesModel.get('coordinateSystem');
 
             if (coordinateSystemType === 'cartesian2d') {
-                this._renderCartesian(seriesModel, ecModel);
+                this._renderCartesian(seriesModel, ecModel, api);
             }
 
             return this.group;
         },
 
-        _renderCartesian: function (seriesModel, ecModel) {
+        _renderCartesian: function (seriesModel, ecModel, api) {
             var group = this.group;
             var data = seriesModel.getData();
             var oldData = this._data;
@@ -68,9 +68,9 @@ define(function (require) {
                         return;
                     }
 
-                    rect.animateTo({
+                    api.updateGraphicEl(rect, {
                         shape: data.getItemLayout(newIndex)
-                    }, 500, 'cubicOut');
+                    });
 
                     data.setItemGraphicEl(newIndex, rect);
 

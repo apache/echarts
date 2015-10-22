@@ -74,11 +74,12 @@ define(function (require) {
         /**
          * @param {module:echarts/data/List} data
          * @param {module:echarts/model/Series} seriesModel
+         * @param {module:echarts/ExtensionAPI} api
          * @param {boolean} enableAnimation
          * @param {Array.<boolean>} [ignoreMap]
          */
         updateData: function (
-            data, seriesModel, enableAnimation, ignoreMap
+            data, seriesModel, api, enableAnimation, ignoreMap
         ) {
 
             var group = this.group;
@@ -158,7 +159,7 @@ define(function (require) {
                             newTarget.scale = [1, 1];
                         }
                         if (enableAnimation) {
-                            el.animateTo(newTarget, 300, 'cubicOut');
+                            api.updateGraphicEl(el, newTarget);
                         }
                         else {
                             // May still have animation. Must stop

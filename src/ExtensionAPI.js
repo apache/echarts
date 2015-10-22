@@ -8,18 +8,26 @@ define(function(require) {
         'getDom', 'getZr', 'getWidth', 'getHeight', 'dispatch'
     ];
 
-    function ExtensionAPI(echarts) {
+    function ExtensionAPI(chartInstance) {
         zrUtil.each(echartsAPIList, function (name) {
-            this[name] = zrUtil.bind(echarts[name], echarts);
+            this[name] = zrUtil.bind(chartInstance[name], chartInstance);
         }, this);
+
+        /**
+         * Update element property
+         * @param {module:zrender/Element}
+         */
+        this.updateGraphicEl = function (el, props) {
+            var ecModel = chartInstance.getModel();
+            var duration = ecModel.getShallow('animationDurationUpdate');
+            var enableAnimation = ecModel.getShallow('animation');
+            var animationEasing = ecModel.getShallow('animationEasing');
+
+            enableAnimation
+                ? el.animateTo(props, duration, animationEasing)
+                : el.attr(props);
+        }
     };
-
-    // Mix graphic api
-    // zrUtil.merge(ExtensionAPI.prototype, require('./util/graphic'));
-
-    // zrUtil.merge(ExtensionAPI.prototype, require('./util/symbol'));
-
-    // ExtensionAPI.prototype.log = require('zrender/core/log');
 
     return ExtensionAPI;
 });

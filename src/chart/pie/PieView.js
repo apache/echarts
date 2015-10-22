@@ -132,33 +132,29 @@ define(function (require) {
                     var labelLine = sector.__labelLine;
                     var labelText = sector.__labelText;
 
-                    sector.animateTo({
-                        shape: layout
-                    }, 300, 'cubicOut');
-
                     selectedMode
                         ? sector.on('click', onSectorClick)
                         : sector.off('click');
 
-                    if (labelLine) {
-                        labelLine.animateTo({
-                            shape: {
-                                points: labelLayout.linePoints
-                            }
-                        }, 300, 'cubicOut');
-                    }
+                    api.updateGraphicEl(sector, {
+                        shape: layout
+                    });
+                    labelLine && api.updateGraphicEl(labelLine, {
+                        shape: {
+                            points: labelLayout.linePoints
+                        }
+                    });
                     if (labelText) {
-                        labelText.animateTo({
+                        api.updateGraphicEl(labelText, {
                             position: [labelLayout.x, labelLayout.y],
                             rotation: labelLayout.rotation
-                        }, 300, 'cubicOut');
+                        });
+                        labelText.setStyle({
+                            textAlign: labelLayout.textAlign,
+                            textBaseline: labelLayout.textBaseline,
+                            font: labelLayout.font
+                        });
                     }
-
-                    labelText.setStyle({
-                        textAlign: labelLayout.textAlign,
-                        textBaseline: labelLayout.textBaseline,
-                        font: labelLayout.font
-                    });
 
                     sectorGroup.add(sector);
                     data.setItemGraphicEl(newIdx, sector);
