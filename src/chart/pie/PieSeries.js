@@ -107,6 +107,8 @@ define(function(require) {
 
             label: {
                 normal: {
+                    // If rotate around circle
+                    rotate: false,
                     show: true,
                     // 'outer', 'inside', 'center'
                     position: 'outer'

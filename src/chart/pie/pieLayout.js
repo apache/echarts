@@ -47,7 +47,7 @@ define(function (require) {
                 startAngle = endAngle;
             }, true);
 
-            labelLayout(seriesModel);
+            labelLayout(seriesModel, width, height);
         });
     }
 });

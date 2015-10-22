@@ -50,18 +50,20 @@ define(function (require) {
         var labelLine = new graphic.Polyline({
             shape: {
                 points: labelLayout.linePoints
-            }
+            },
+            silent: true
         });
 
         var labelText = new graphic.Text({
             style: {
-                x: labelLayout.x,
-                y: labelLayout.y,
                 text: text,
                 textAlign: labelLayout.textAlign,
                 textBaseline: labelLayout.textBaseline,
                 font: labelLayout.font
-            }
+            },
+            rotation: labelLayout.rotation,
+            position: [labelLayout.x, labelLayout.y],
+            silent: true
         });
 
         sector.__labelLine = labelLine;
@@ -138,17 +140,19 @@ define(function (require) {
                         ? sector.on('click', onSectorClick)
                         : sector.off('click');
 
-                    labelLine.animateTo({
-                        shape: {
-                            points: labelLayout.linePoints
-                        }
-                    }, 300, 'cubicOut');
-                    labelText.animateTo({
-                        style: {
-                            x: labelLayout.x,
-                            y: labelLayout.y
-                        }
-                    }, 300, 'cubicOut');
+                    if (labelLine) {
+                        labelLine.animateTo({
+                            shape: {
+                                points: labelLayout.linePoints
+                            }
+                        }, 300, 'cubicOut');
+                    }
+                    if (labelText) {
+                        labelText.animateTo({
+                            position: [labelLayout.x, labelLayout.y],
+                            rotation: labelLayout.rotation
+                        }, 300, 'cubicOut');
+                    }
 
                     labelText.setStyle({
                         textAlign: labelLayout.textAlign,
