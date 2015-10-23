@@ -95,7 +95,7 @@ define(function (require) {
          * @return {module:echarts/model/Model}
          */
         getModel: function (path, parentModel) {
-            var obj = this.get(path);
+            var obj = this.get(path, true);
             var thisParentModel = this.parentModel;
             return new Model(
                 obj, parentModel || (thisParentModel && thisParentModel.getModel(path))

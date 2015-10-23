@@ -171,9 +171,9 @@ define(function (require) {
 
             this._coordinateSystem.update(ecModel, this._extensionAPI);
 
-            this._doLayout(ecModel);
+            this._doLayout(ecModel, payload);
 
-            this._doVisualCoding(ecModel);
+            this._doVisualCoding(ecModel, payload);
 
             this._doRender(ecModel, payload);
 
@@ -190,9 +190,9 @@ define(function (require) {
         updateView: function (payload) {
             var ecModel = this._model;
 
-            this._doLayout(ecModel);
+            this._doLayout(ecModel, payload);
 
-            this._doVisualCoding(ecModel);
+            this._doVisualCoding(ecModel, payload);
 
             this._invokeUpdateMethod('updateView', ecModel, payload);
         },
@@ -203,7 +203,7 @@ define(function (require) {
         updateVisual: function (payload) {
             var ecModel = this._model;
 
-            this._doVisualCoding(ecModel);
+            this._doVisualCoding(ecModel, payload);
 
             this._invokeUpdateMethod('updateVisual', ecModel, payload);
         },
@@ -214,7 +214,7 @@ define(function (require) {
         updateLayout: function (payload) {
             var ecModel = this._model;
 
-            this._doLayout(ecModel);
+            this._doLayout(ecModel, payload);
 
             this._invokeUpdateMethod('updateLayout', ecModel, payload);
         },
@@ -406,13 +406,13 @@ define(function (require) {
          * @param {module:echarts/model/Global} ecModel
          * @private
          */
-        _doLayout: function (ecModel, event) {
+        _doLayout: function (ecModel, payload) {
             var api = this._extensionAPI;
             each(this._layouts, function (layout) {
-                layout.update(ecModel, api, event);
+                layout.update(ecModel, api, payload);
             });
             each(layoutFuncs, function (layout) {
-                layout(ecModel, api, event);
+                layout(ecModel, api, payload);
             });
         },
 
@@ -422,10 +422,10 @@ define(function (require) {
          * @param {module:echarts/model/Global} ecModel
          * @private
          */
-        _doVisualCoding: function (ecModel) {
+        _doVisualCoding: function (ecModel, payload) {
             each(VISUAL_CODING_STAGES, function (stage) {
                 each(visualCodingFuncs[stage] || [], function (visualCoding) {
-                    visualCoding(ecModel);
+                    visualCoding(ecModel, payload);
                 });
             });
         },
