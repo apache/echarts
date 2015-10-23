@@ -50,6 +50,7 @@ define(function (require) {
 
         init: function (ecModel, api) {
             var zr = api.getZr();
+
             zr.on('mousemove', this._mouseMove, this);
             zr.on('mouseout', this._hide, this);
 
@@ -57,6 +58,7 @@ define(function (require) {
         },
 
         render: function (tooltipModel, ecModel, api) {
+
             // Reset
             this.group.removeAll();
             this._axisPointers = {};
@@ -67,7 +69,7 @@ define(function (require) {
 
             this._api = api;
 
-            this._tooltipContent.hide();
+            this._tooltipContent.update();
 
             // Prepare data for axis trigger
             var seriesGroupByAxis = {};
