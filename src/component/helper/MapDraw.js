@@ -90,10 +90,10 @@ define(function (require) {
 
                     polygon.setStyle(itemStyle);
 
-                    graphic.setHoverStyle(polygon, hoverItemStyle);
-
                     regionGroup.add(polygon);
                 });
+
+                graphic.setHoverStyle(regionGroup, hoverItemStyle);
 
                 group.add(regionGroup);
             });

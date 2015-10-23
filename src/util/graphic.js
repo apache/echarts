@@ -151,13 +151,10 @@ define(function(require) {
             : (doubledPosition + (positiveOrNegative ? 1 : -1)) / 2;
     };
 
-
     /**
-     * @inner
+     * @private
      */
-    function onElementMouseOver() {
-        var el = this;
-
+    function enterHover(el) {
         if (el.__hoverStlDirty) {
             var stroke = el.style.stroke;
             var fill = el.style.fill;
@@ -179,21 +176,63 @@ define(function(require) {
         el.setStyle(el.__hoverStl);
         el.z2 += 1;
     }
+
+    /**
+     * @private
+     */
+    function leaveHover(el) {
+        var normalStl = el.__normalStl;
+        normalStl && el.setStyle(normalStl);
+        el.z2 -= 1;
+    }
+
+    /**
+     * @inner
+     */
+    function setElementHoverStl(el, hoverStl) {
+        el.__hoverStl = hoverStl;
+        el.__hoverStlDirty = true;
+    }
+    /**
+     * @inner
+     */
+    function onElementMouseOver() {
+        this.type === 'group'
+            ? this.traverse(function (child) {
+                if (child.type !== 'group') {
+                    enterHover(child);
+                }
+            })
+            : enterHover(this);
+    }
+
     /**
      * @inner
      */
     function onElementMouseOut() {
-        this.setStyle(this.__normalStl);
-        this.z2 -= 1;
+        this.type === 'group'
+            ? this.traverse(function (child) {
+                if (child.type !== 'group') {
+                    leaveHover(child);
+                }
+            })
+            : leaveHover(this);
     }
+
     /**
      * Set hover style of element
      * @param {module:zrender/graphic/Displayable} el
      * @param {Object} [hoverStyle]
      */
     graphic.setHoverStyle = function (el, hoverStyle) {
-        el.__hoverStl = hoverStyle || {};
-        el.__hoverStlDirty = true;
+        hoverStyle = hoverStyle || {};
+        el.type === 'group'
+            ? el.traverse(function (child) {
+                if (child.type !== 'group') {
+                    setElementHoverStl(child, hoverStyle);
+                }
+            })
+            : setElementHoverStl(el, hoverStyle);
         // Remove previous bound handlers
         el.on('mouseover', onElementMouseOver)
           .on('mouseout', onElementMouseOut);
