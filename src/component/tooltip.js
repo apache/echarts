@@ -467,8 +467,8 @@ define(function (require) {
             var data = seriesList[0].getData();
             var baseAxis = coordSys.getBaseAxis();
             if (baseAxis && rootTooltipModel.get('showContent')) {
-                var rank = value[baseAxis.dim === 'x' ? 0 : 1];
-                var dataIndex = data.indexOf(baseAxis.dim, rank);
+                var val = value[baseAxis.dim === 'x' ? 0 : 1];
+                var dataIndex = data.indexOfNearest(baseAxis.dim, val);
 
                 var html = data.getName(dataIndex) + '<br />'
                     + zrUtil.map(seriesList, function (series) {

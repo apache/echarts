@@ -555,9 +555,11 @@ define(function (require) {
 
             return (value == null && isNaN(value))
                 ? ''
-                : axis.type === 'category'
-                ? axis.scale.getLabel(Math.round(value))
-                : value.toFixed(labelPrecision);
+                // FIXME Glue code
+                : axis.type === 'category' || axis.type === 'time'
+                    ? axis.scale.getLabel(Math.round(value))
+                    : value.toFixed(labelPrecision);
+
         },
 
         /**

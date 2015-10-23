@@ -133,7 +133,7 @@ define(function (require) {
         }
     };
 
-    zrUtil.each(['contain', 'normalize', 'scale'], function (methodName) {
+    zrUtil.each(['contain', 'normalize'], function (methodName) {
         TimeScale.prototype[methodName] = function (val) {
             val = +parseDate(val);
             return intervalScaleProto[methodName].call(this, val);
