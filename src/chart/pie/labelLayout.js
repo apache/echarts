@@ -67,28 +67,27 @@ define(function (require) {
     //     } while (step < 200);
     // }
 
-    return function (seriesModel, viewWidth, viewHeight) {
+    return function (seriesModel, r, viewWidth, viewHeight) {
         var data = seriesModel.getData();
-        var labelLineModel = seriesModel.getModel('labelLine');
-
-        var labelLineLen = labelLineModel.get('length');
-        var labelLineLen2 = labelLineModel.get('length2');
 
         // var avoidLabelOverlap = seriesModel.get('avoidLabelOverlap');
 
-        var labelNodes = [];
+        // var labelNodes = [];
 
         data.each(function (idx) {
             var layout = data.getItemLayout(idx);
+
             var itemModel = data.getItemModel(idx);
             var labelModel = itemModel.getModel('label.normal');
             var labelPosition = labelModel.get('position');
 
+            var labelLineModel = itemModel.getModel('labelLine');
+            var labelLineLen = labelLineModel.get('length');
+            var labelLineLen2 = labelLineModel.get('length2');
+
             var midAngle = (layout.startAngle + layout.endAngle) / 2;
             var dx = Math.cos(midAngle);
             var dy = Math.sin(midAngle);
-
-            var r = layout.r;
 
             var textX;
             var textY;
@@ -102,8 +101,11 @@ define(function (require) {
             }
             else {
                 var isLabelInside = labelPosition === 'inside';
-                var x1 = (isLabelInside ? r / 2 * dx : r * dx) + layout.cx;
-                var y1 = (isLabelInside ? r / 2 * dy : r * dy) + layout.cy;
+                var x1 = (isLabelInside ? layout.r / 2 * dx : layout.r * dx) + layout.cx;
+                var y1 = (isLabelInside ? layout.r / 2 * dy : layout.r * dy) + layout.cy;
+
+                // For roseType
+                labelLineLen += r - layout.r;
 
                 textX = x1 + dx * 3;
                 textY = y1 + dy * 3;

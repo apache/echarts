@@ -33,7 +33,7 @@ define(function(require) {
 
         getInitialData: function (option, ecModel) {
             var list = new List([{
-                name: 'x',
+                name: 'value',
                 stackable: true
             }], this);
             list.initData(option.data);

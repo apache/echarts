@@ -41,12 +41,14 @@ define(function (require) {
     /**
      * @param {string} str
      * @return {string}
+     * @inner
      */
     var s2d = function (str) {
         return str < 10 ? ('0' + str) : str;
     }
 
     /**
+     * ISO Date format
      * @param {string} tpl
      * @param {number} value
      * @inner

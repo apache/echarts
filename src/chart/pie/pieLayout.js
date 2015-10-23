@@ -23,7 +23,7 @@ define(function (require) {
 
             var startAngle = -seriesModel.get('startAngle') * Math.PI / 180;
 
-            var sum = data.getSum('x');
+            var sum = data.getSum('value');
             if (sum === 0) {
                 sum = data.count();
             }
@@ -31,7 +31,13 @@ define(function (require) {
 
             var clockWise = seriesModel.get('clockWise');
 
-            data.each('x', function (value, idx) {
+            var roseType = seriesModel.get('roseType');
+
+            // [0...max]
+            var extent = data.getDataExtent('value');
+            extent[0] = 0;
+
+            data.each('value', function (value, idx) {
                 var angle = sum === 0 ? radianPerVal : (value * radianPerVal);
                 var endAngle = startAngle + angle;
                 data.setItemLayout(idx, {
@@ -41,13 +47,15 @@ define(function (require) {
                     cx: cx,
                     cy: cy,
                     r0: r0,
-                    r: r
+                    r: roseType
+                        ? numberUtil.linearMap(value, extent, [r0, r])
+                        : r
                 });
 
                 startAngle = endAngle;
             }, true);
 
-            labelLayout(seriesModel, width, height);
+            labelLayout(seriesModel, r, width, height);
         });
     }
 });
