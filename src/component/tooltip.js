@@ -260,10 +260,10 @@ define(function (require) {
                 var axis = cartesian.getAxis(axisType);
                 var pointerEl = self._getPointerElement(cartesian, axisPointerModel, axisType);
                 var bandWidth = axis.getBandWidth();
-                var extentSize = otherExtent[1] - otherExtent[0];
+                var span = otherExtent[1] - otherExtent[0];
                 var targetShape = axisType === 'x'
-                    ? makeRectShape(point[0] - bandWidth / 2, otherExtent[0], bandWidth, extentSize)
-                    : makeRectShape(otherExtent[0], point[1] - bandWidth / 2, extentSize, bandWidth);
+                    ? makeRectShape(point[0] - bandWidth / 2, otherExtent[0], bandWidth, span)
+                    : makeRectShape(otherExtent[0], point[1] - bandWidth / 2, span, bandWidth);
 
                 // FIXME 动画总是感觉不连贯
                 // pointerEl.animateTo({

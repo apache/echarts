@@ -7,6 +7,11 @@ define(function (require) {
     var numberUtil = require('../../util/number');
     var zrUtil = require('zrender/core/util');
 
+    var scaleClasses = require('../../scale/scale');
+
+    var CATEGORY_AXIS_TYPE = 'category';
+    var VALUE_AXIS_TYPE = 'value';
+
     // 依赖 PolarModel 做预处理
     require('./PolarModel');
 
@@ -41,11 +46,18 @@ define(function (require) {
     function createScaleByModel(axisModel) {
         var axisType = axisModel.get('type');
         if (axisType) {
-            return axisType === 'value'
-                ? new IntervalScale()
-                : new OrdinalScale(axisModel.get('data'), [Infinity, -Infinity]);
+            switch (axisType) {
+                // Buildin scale
+                case CATEGORY_AXIS_TYPE:
+                    return new OrdinalScale(axisModel.get('data'), [Infinity, -Infinity]);
+                case VALUE_AXIS_TYPE:
+                    return new IntervalScale();
+                // Extended scale, like time and log
+                default:
+                    return (scaleClasses.getClass(axisType) || IntervalScale).create(axisModel);
+            }
         }
-    };
+    }
 
     /**
      * Set common axis properties
@@ -56,7 +68,7 @@ define(function (require) {
     function setAxis(axis, axisModel) {
         axis.type = axisModel.get('type');
         axis.scale = createScaleByModel(axisModel);
-        axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
+        axis.onBand = axisModel.get('boundaryGap') && axis.type === CATEGORY_AXIS_TYPE;
         axis.inverse = axisModel.get('inverse');
 
         // Inject axis instance
@@ -84,10 +96,10 @@ define(function (require) {
 
                 var data = seriesModel.getData();
                 radiusAxis.scale.unionExtent(
-                    data.getDataExtent('radius', radiusAxis.type !== 'category')
+                    data.getDataExtent('radius', radiusAxis.type !== CATEGORY_AXIS_TYPE)
                 );
                 angleAxis.scale.unionExtent(
-                    data.getDataExtent('angle', angleAxis.type !== 'category')
+                    data.getDataExtent('angle', angleAxis.type !== CATEGORY_AXIS_TYPE)
                 );
             }
         });
@@ -128,7 +140,7 @@ define(function (require) {
             // Fix extent of category angle axis
             zrUtil.each(polarList, function (polar) {
                 var angleAxis = polar.getAngleAxis();
-                if (angleAxis.type === 'category' && !angleAxis.onBand) {
+                if (angleAxis.type === CATEGORY_AXIS_TYPE && !angleAxis.onBand) {
                     var angle = 360 - 360 / (angleAxis.scale.count() + 1);
                     angleAxis.setExtent(0, angle);
                 }

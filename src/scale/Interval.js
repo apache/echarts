@@ -1,8 +1,6 @@
 /**
  * Interval scale
  * @module echarts/coord/scale/Interval
- *
- * http://en.wikipedia.org/wiki/Level_of_measurement
  */
 
 define(function (require) {
@@ -13,7 +11,6 @@ define(function (require) {
     var mathCeil = Math.ceil;
     /**
      * @alias module:echarts/coord/scale/Interval
-     * @param {Array.<number>} data
      * @constructor
      */
     var IntervalScale = function () {
@@ -21,14 +18,14 @@ define(function (require) {
         /**
          * Extent
          * @type {Array.<number>}
-         * @private
+         * @protected
          */
         this._extent = [Infinity, -Infinity];
 
         /**
          * Step is calculated in adjustExtent
          * @type {Array.<number>}
-         * @private
+         * @protected
          */
         this._interval = 0;
     };
@@ -43,9 +40,9 @@ define(function (require) {
          * If scale extent contain give value
          * @param {number}
          */
-        contain: function (pos) {
+        contain: function (val) {
             var extent = this._extent;
-            return pos >= extent[0] && pos <= extent[1];
+            return val >= extent[0] && val <= extent[1];
         },
 
         /**
@@ -198,9 +195,10 @@ define(function (require) {
                 interval *= 2;
             }
 
-            var niceExtent = [];
-            niceExtent[0] = mathCeil(extent[0] / interval) * interval;
-            niceExtent[1] = mathFloor(extent[1] / interval) * interval;
+            var niceExtent = [
+                mathCeil(extent[0] / interval) * interval,
+                mathFloor(extent[1] / interval) * interval
+            ];
 
             this._interval = interval;
             this._niceExtent = niceExtent;
@@ -218,14 +216,23 @@ define(function (require) {
             var extent = this._extent;
             var interval = this._interval;
 
-            if (! fixMin) {
+            if (!fixMin) {
                 extent[0] = numberUtil.round(mathFloor(extent[0] / interval) * interval);
             }
-            if (! fixMax) {
+            if (!fixMax) {
                 extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
             }
         }
     };
+
+    /**
+     * @return {module:echarts/scale/Time}
+     */
+    IntervalScale.create = function () {
+        return new IntervalScale();
+    }
+
+    require('./scale').register(IntervalScale);
 
     return IntervalScale;
 });

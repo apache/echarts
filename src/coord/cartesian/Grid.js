@@ -5,16 +5,20 @@
  */
 define(function(require, factory) {
 
+    var OrdinalScale = require('../../scale/Ordinal');
+    var IntervalScale = require('../../scale/Interval');
+
     var zrUtil = require('zrender/core/util');
     var Cartesian2D = require('./Cartesian2D');
     var Axis2D = require('./Axis2D');
-    var OrdinalScale = require('../../scale/Ordinal');
-    var IntervalScale = require('../../scale/Interval');
     var numberUtil = require('../../util/number');
 
-    var CATEGORY_AXIS_TYPE = 'category';
+    var scaleClasses = require('../../scale/scale');
 
     var each = zrUtil.each;
+
+    var CATEGORY_AXIS_TYPE = 'category';
+    var VALUE_AXIS_TYPE = 'value';
 
     // 依赖 GridModel, AxisModel 做预处理
     require('./GridModel');
@@ -27,10 +31,16 @@ define(function(require, factory) {
     function createScaleByModel(axisModel) {
         var axisType = axisModel.get('type');
         if (axisType) {
-            return axisType === CATEGORY_AXIS_TYPE
-                // Give [Infinity, -Infinity] extent to make the unionExtent is right
-                ? new OrdinalScale(axisModel.get('data'), [Infinity, -Infinity])
-                : new IntervalScale();
+            switch (axisType) {
+                // Buildin scale
+                case CATEGORY_AXIS_TYPE:
+                    return new OrdinalScale(axisModel.get('data'), [Infinity, -Infinity]);
+                case VALUE_AXIS_TYPE:
+                    return new IntervalScale();
+                // Extended scale, like time and log
+                default:
+                    return (scaleClasses.getClass(axisType) || IntervalScale).create(axisModel);
+            }
         }
     }
 
@@ -222,7 +232,7 @@ define(function(require, factory) {
 
             ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
 
-            if (!axesCount.x || ! axesCount.y) {
+            if (!axesCount.x || !axesCount.y) {
                 // api.log('Grid must has at least one x axis and one y axis');
                 // Roll back
                 this._axesMap = {};

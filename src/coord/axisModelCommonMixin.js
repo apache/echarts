@@ -16,12 +16,15 @@ define(function (require) {
     function formatLabels (labels) {
         var labelFormatter = this.get('axisLabel.formatter');
 
-        if (! labelFormatter) {
+        if (!labelFormatter) {
             switch (this.get('type')) {
                 case 'category':
                     labelFormatter = categoryDefaultFormatter;
                     break;
                 case 'time':
+                    labelFormatter = function (time) {
+                        return time;
+                    }
                     break;
                 case 'log':
                     // TODO
