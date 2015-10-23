@@ -47,6 +47,8 @@ define(function(require) {
 
             /**
              * Reference to list item.
+             * Do not persistent dataIndex outside,
+             * besause it may be changed by list.
              *
              * @type {Object}
              * @readOnly
@@ -73,42 +75,43 @@ define(function(require) {
         },
 
         /**
-         * @param {(module:echarts/data/Tree~TreeNode|Object)} child
-         */
-        add: function (child) {
-            var children = this.children;
-            if (child.parentNode === this) {
-                return;
-            }
-
-            children.push(child);
-            child.parentNode = this;
-
-            this.hostTree._nodes.push(child);
-        },
-
-        /**
          * Travel this subtree (include this node).
          * Usage:
          *    node.eachNode(function () { ... }); // preorder
          *    node.eachNode('preorder', function () { ... }); // preorder
          *    node.eachNode('postorder', function () { ... }); // postorder
+         *    node.eachNode(
+         *        {order: 'postorder', attr: 'viewChildren'},
+         *        function () { ... }
+         *    ); // postorder
          *
-         * @param {string} order 'preorder' or 'postorder'
-         * @param {Function} cb
+         * @param {(Object|string)} options If string, means order.
+         * @param {string=} options.order 'preorder' or 'postorder'
+         * @param {string=} options.attr 'children' or 'viewChildren'
+         * @param {Function} cb If in preorder and return false,
+         *                      its subtree will not be visited.
          * @param {Object} [context]
          */
-        eachNode: function (order, cb, context) {
-            if (typeof order === 'function') {
+        eachNode: function (options, cb, context) {
+            if (typeof options === 'function') {
                 context = cb;
-                cb = order;
-                order = 'preorder';
+                cb = options;
+                options = null;
             }
 
-            order === 'preorder' && cb.call(context, this);
+            options = options || {};
+            if (zrUtil.isString(options)) {
+                options = {order: options};
+            }
 
-            for (var i = 0; i < this.children.length; i++) {
-                this.children[i].eachNode(order, cb, context);
+            var order = options.order || 'preorder';
+            var children = this[options.attr || 'children'];
+
+            var suppressVisitSub;
+            order === 'preorder' && (suppressVisitSub = cb.call(context, this));
+
+            for (var i = 0; !suppressVisitSub && i < children.length; i++) {
+                children[i].eachNode(options, cb, context);
             }
 
             order === 'postorder' && cb.call(context, this);
@@ -134,7 +137,7 @@ define(function(require) {
 
         /**
          * @param  {string} name
-         * @return module:echarts/data/Tree~TreeNode
+         * @return {module:echarts/data/Tree~TreeNode}
          */
         getNodeByName: function (name) {
             if (this.name === name) {
@@ -146,6 +149,21 @@ define(function(require) {
                     return res;
                 }
             }
+        },
+
+        /**
+         * @param {boolean} includeSelf Default false.
+         * @return {Array.<module:echarts/data/Tree~TreeNode>} order: [root, child, grandchild, ...]
+         */
+        getAncestors: function (includeSelf) {
+            var ancestors = [];
+            var node = includeSelf ? this : this.parentNode;
+            while (node) {
+                ancestors.push(node);
+                node = node.parentNode;
+            }
+            ancestors.reverse();
+            return ancestors;
         },
 
         /**
@@ -172,22 +190,22 @@ define(function(require) {
         },
 
         /**
+         * @param {string} path
          * @return {module:echarts/model/Model}
          */
-        modelGet: function (path) {
-            var itemModel = this.hostTree.list.getItemModel(this.dataIndex);
-            var parentModel = itemModel.parentModel;
-            var levelModel = (this.levelModels || [])[this.depth];
+        getModel: function (path) {
+            var hostTree = this.hostTree;
+            var itemModel = hostTree.list.getItemModel(this.dataIndex);
+            var levelModel = (hostTree.levelModels || [])[this.depth];
 
-            var value = itemModel.get(path, true);
-            if (value == null && levelModel) {
-                value = levelModel.get(path, true);
-            }
-            if (value == null && parentModel) {
-                value = parentModel.get(path);
-            }
+            return itemModel.getModel(path, (levelModel || hostTree.hostModel).getModel(path));
+        },
 
-            return value;
+        /**
+         * @return {module:echarts/model/Model}
+         */
+        getLevelModel: function () {
+            return (this.hostTree.levelModels || [])[this.depth];
         },
 
         /**
@@ -206,6 +224,13 @@ define(function(require) {
          */
         getVisual: function (key, ignoreParent) {
             return this.hostTree.list.getItemVisual(this.dataIndex, key, ignoreParent);
+        },
+
+        /**
+         * @public
+         */
+        getRawIndex: function () {
+            return this.hostTree.list.getRawIndex(this.dataIndex);
         }
     });
 
@@ -213,9 +238,10 @@ define(function(require) {
      * @constructor
      * @alias module:echarts/data/Tree
      * @param {string=} name Root name
-     * @param {Array.<modules:echarts/model/Model>} levelModels
+     * @param {module:echarts/model/Model} hostModel
+     * @param {Array.<Object>} levelOptions
      */
-    function Tree(name, levelModels) {
+    function Tree(name, hostModel, levelOptions) {
         /**
          * @type {module:echarts/data/Tree~TreeNode}
          * @readOnly
@@ -229,6 +255,7 @@ define(function(require) {
         this.list;
 
         /**
+         * Index of each item is the same as the raw index of coresponding list item.
          * @private
          * @type {Array.<module:echarts/data/Tree~TreeNode}
          */
@@ -237,8 +264,18 @@ define(function(require) {
         /**
          * @private
          * @readOnly
+         * @type {Array.<module:echarts/model/Model}
          */
-        this.levelModels = levelModels;
+        this.hostModel = hostModel;
+
+        /**
+         * @private
+         * @readOnly
+         * @type {Array.<module:echarts/model/Model}
+         */
+        this.levelModels = zrUtil.map(levelOptions || [], function (levelDefine) {
+            return new Model(levelDefine, hostModel);
+        });
     }
 
     Tree.prototype = {
@@ -253,19 +290,19 @@ define(function(require) {
          *    node.eachNode(function () { ... }); // preorder
          *    node.eachNode('preorder', function () { ... }); // preorder
          *    node.eachNode('postorder', function () { ... }); // postorder
+         *    node.eachNode(
+         *        {order: 'postorder', attr: 'viewChildren'},
+         *        function () { ... }
+         *    ); // postorder
          *
-         * @param {string} order 'preorder' or 'postorder'
+         * @param {(Object|string)} options If string, means order.
+         * @param {string=} options.order 'preorder' or 'postorder'
+         * @param {string=} options.attr 'children' or 'viewChildren'
          * @param {Function} cb
          * @param {Object}   [context]
          */
-        eachNode: function(order, cb, context) {
-            if (typeof order === 'function') {
-                context = cb;
-                cb = order;
-                order = 'preorder';
-            }
-
-            this.root.eachNode(order, cb, context);
+        eachNode: function(options, cb, context) {
+            this.root.eachNode(options, cb, context);
         },
 
         /**
@@ -315,20 +352,21 @@ define(function(require) {
      * @static
      * @param {Array.<Object>} data
      * @param {module:echarts/model/Model} hostModel
-     * @param {Array.<module:echarts/model/Model} levelModels
+     * @param {Array.<Object>} levelOptions
      * @return module:echarts/data/Tree
      */
-    Tree.createTree = function (data, hostModel, levelModels) {
-        var listData = [];
+    Tree.createTree = function (data, hostModel, levelOptions) {
 
-        var tree = new Tree('', levelModels);
+        var tree = new Tree('', hostModel, levelOptions);
+
+        var listData = [];
         var rootNode = tree.root;
 
         function buildHierarchy(dataNode, parentNode) {
             listData.push(dataNode);
 
             var node = new TreeNode(dataNode.name, listData.length - 1, tree);
-            parentNode.add(node);
+            addChild(node, parentNode);
 
             var children = dataNode.children;
             if (children) {
@@ -352,6 +390,24 @@ define(function(require) {
 
         return tree;
     };
+
+    /**
+     * It is needed to consider the mess of 'list', 'hostModel' when creating a TreeNote,
+     * so this function is not ready and not necessary to be public.
+     *
+     * @param {(module:echarts/data/Tree~TreeNode|Object)} child
+     */
+    function addChild(child, node) {
+        var children = node.children;
+        if (child.parentNode === node) {
+            return;
+        }
+
+        children.push(child);
+        child.parentNode = node;
+
+        node.hostTree._nodes.push(child);
+    }
 
     function createList(listData, hostModel) {
         var firstValue = listData[0] && listData[0].value;

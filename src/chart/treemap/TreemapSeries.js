@@ -27,6 +27,7 @@ define(function(require) {
             squareRatio: 0.5 * (1 + Math.sqrt(5)), // golden ratio
             root: '',
             colorDimension: 'value',                    // 默认第一个维度。
+            zoomStep: 10,                         // 0表示不zoom。
             breadcrumb: {
                 show: true,
                 itemStyle: {
@@ -83,12 +84,8 @@ define(function(require) {
             // FIXME
             // sereis.mergeOption 的 getInitData是否放在merge后，从而能直接获取merege后的结果而非手动判断。
             var levels = option.levels || (this.option || {}).levels || [];
-            var levelModels = [];
-            zrUtil.each(levels, function (levelDefine) {
-                levelModels.push(new Model(levelDefine));
-            }, this);
 
-            return Tree.createTree(data, this, levelModels).list;
+            return Tree.createTree(data, this, levels).list;
         },
 
         /**

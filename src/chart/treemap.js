@@ -5,6 +5,7 @@ define(function (require) {
 
     require('./treemap/TreemapSeries');
     require('./treemap/TreemapView');
+    require('./treemap/TreemapAction');
 
     echarts.registerVisualCoding('chart', require('./treemap/treemapVisual'));
 

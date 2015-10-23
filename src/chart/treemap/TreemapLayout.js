@@ -18,7 +18,7 @@ define(function (require) {
         /**
          * @override
          */
-        update: function (ecModel, api, event) {
+        update: function (ecModel, api, payload) {
             var ecWidth = api.getWidth();
             var ecHeight = api.getHeight();
 
@@ -41,6 +41,7 @@ define(function (require) {
                 );
 
                 this.squarify(seriesModel.getViewRoot(), options);
+
             }, this);
         },
 
@@ -75,14 +76,13 @@ define(function (require) {
             }
 
             // Considering border and gap
-            var borderWidth = node.modelGet('itemStyle.normal.borderWidth');
-            var halfGapWidth = node.modelGet('itemStyle.normal.gapWidth') / 2;
+            var itemStyleModel = node.getModel('itemStyle.normal');
+            var borderWidth = itemStyleModel.get('borderWidth');
+            var halfGapWidth = itemStyleModel.get('gapWidth') / 2;
             var layoutOffset = borderWidth - halfGapWidth;
 
-console.log(borderWidth, halfGapWidth, layoutOffset);
-
-            width -= 2 * layoutOffset;
-            height -= 2 * layoutOffset;
+            width = mathMax(width - 2 * layoutOffset, 0);
+            height = mathMax(height - 2 * layoutOffset, 0);
 
             node.setLayout({borderWidth: borderWidth}, true);
 
@@ -149,19 +149,20 @@ console.log(borderWidth, halfGapWidth, layoutOffset);
                     ? b.getValue() - a.getValue() : a.getValue() - b.getValue();
             });
         }
-
         var sum = 0;
         for (var i = 0, len = viewChildren.length; i < len; i++) {
             sum += viewChildren[i].getValue();
         }
 
         var totalArea = width * height;
+        var nodeModel = node.getModel();
 
         // Filter by thredshold.
         for (var i = viewChildren.length - 1; i >= 0; i--) {
             var value = viewChildren[i].getValue();
-            if (value / sum * totalArea < node.modelGet('itemStyle.normal.visibleMin')) {
-                viewChildren.slice(i, 1);
+
+            if (value / sum * totalArea < nodeModel.get('visibleMin')) {
+                viewChildren.splice(i, 1);
                 sum -= value;
             }
             else {

@@ -20,15 +20,19 @@ define(function (require) {
 
             !rootVisual.color && (rootVisual.color = globalColorList);
 
-            travelTree(seriesModel.getViewRoot(), rootVisual, seriesModel);
+            travelTree(
+                seriesModel.getData().tree.root,
+                rootVisual,
+                seriesModel,
+                seriesModel.getViewRoot().getAncestors()
+            );
         });
     };
 
-    function travelTree(node, designatedVisual, seriesModel) {
+    function travelTree(node, designatedVisual, seriesModel, viewRootAncestors) {
         var visuals = buildVisuals(node, designatedVisual, seriesModel);
 
         var viewChildren = node.viewChildren;
-
         if (!viewChildren || !viewChildren.length) {
             // Apply visual to this node.
             node.setVisual('color', calculateColor(visuals, node));
@@ -37,8 +41,11 @@ define(function (require) {
             var mappingWrap = buildVisualMapping(node, visuals, viewChildren);
             // Designate visual to children.
             zrUtil.each(viewChildren, function (child, index) {
-                var childVisual = mapVisual(node, visuals, child, index, mappingWrap);
-                travelTree(child, childVisual, seriesModel);
+                // If higher than viewRoot, only ancestors of viewRoot is needed to visit.
+                if (child.depth >= viewRootAncestors.length || child === viewRootAncestors[child.depth]) {
+                    var childVisual = mapVisual(node, visuals, child, index, mappingWrap);
+                    travelTree(child, childVisual, seriesModel, viewRootAncestors);
+                }
             });
         }
     }
@@ -48,12 +55,11 @@ define(function (require) {
 
         zrUtil.each(VISUAL_LIST, function (visualName) {
             // Priority: thisNode > thisLevel > parentNodeDesignated
-            var path = 'itemStyle.normal.' + visualName;
-
-            var visualValue = node.modelGet(path); // Ignore parent
+            var visualValue = node.getModel('itemStyle.normal').get(visualName, true); // Ignore parent
 
             if (visualValue == null) {
-                visualValue = retrieve(path, seriesModel.option.levels[node.depth]);
+                var levelModel = node.getLevelModel();
+                visualValue = levelModel ? levelModel.get(visualName, true) : null;
             }
             if (visualValue == null) {
                 visualValue = designatedVisual[visualName];
@@ -104,7 +110,7 @@ define(function (require) {
 
         var mappingType = mappingVisualName === 'color'
             ? (
-                node.modelGet('itemStyle.normal.colorMapping') === 'byValue'
+                node.getModel('itemStyle.normal').get('colorMapping') === 'byValue'
                     ? 'color' : 'colorByIndex'
             )
             : mappingVisualName;
@@ -125,7 +131,7 @@ define(function (require) {
     }
 
     function calculateDataExtent(node, viewChildren) {
-        var dimension = node.modelGet('colorDimension');
+        var dimension = node.getModel().get('colorDimension');
 
         // The same as area dimension.
         if (dimension === 'value') {
@@ -151,7 +157,7 @@ define(function (require) {
         if (mappingWrap) {
             var mapping = mappingWrap.mapping;
             var value = mapping.type === 'colorByIndex'
-                ? index : child.getValue(node.modelGet('colorDimension'));
+                ? index : child.getValue(node.getModel().get('colorDimension'));
 
             childVisuals[mappingWrap.visualName] = mapping.mapValueToVisual(value);
         }
@@ -171,22 +177,6 @@ define(function (require) {
         if (value != null && isArray(value)) {
             return name;
         }
-    }
-
-    // FIXME
-    // 这段代码是否和model中的复用？
-    function retrieve(path, base) {
-        path = path.split('.');
-
-        var obj = base;
-        for (var i = 0; i < path.length; i++) {
-            obj = obj && obj[path[i]];
-            if (obj == null) {
-                break;
-            }
-        }
-
-        return obj;
     }
 
 });
