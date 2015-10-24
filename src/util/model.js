@@ -124,6 +124,18 @@ define(function(require) {
     };
 
     /**
+     * Transform vertext to ancestor
+     * @param {Array.<number>} vertex [x, y]
+     * @param {module:zrender/mixin/Transformable} node
+     * @param {module:zrender/mixin/Transformable} ancestor
+     * @return {Array.<number>} [x, y]
+     */
+    util.transformCoordToAncestor = function (vertex, node, ancestor) {
+        var transform = util.getTransform(node, ancestor);
+        return util.applyTransform(vertex, transform);
+    };
+
+    /**
      * @param {string} direction 'left' 'right' 'top' 'bottom'
      * @param {Array.<number>} transform Transform matrix: like [1, 0, 0, 1, 0, 0]
      * @param {boolean=} invert Whether use invert matrix.

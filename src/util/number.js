@@ -98,6 +98,9 @@ define(function (require) {
 
         round: round,
 
-        asc: asc
+        asc: asc,
+
+        // Number.MAX_SAFE_INTEGER, ie do not support.
+        MAX_SAFE_INTEGER: 9007199254740991
     };
 });

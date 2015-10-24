@@ -49,6 +49,8 @@ define(function(require) {
              * Reference to list item.
              * Do not persistent dataIndex outside,
              * besause it may be changed by list.
+             * If dataIndex is null/undefined,
+             * this node is logical deleted (filtered) in list.
              *
              * @type {Object}
              * @readOnly
@@ -72,6 +74,14 @@ define(function(require) {
              * @readOnly
              */
             this.hostTree = hostTree;
+        },
+
+        /**
+         * The node is removed.
+         * @return {boolean} is remvoed.
+         */
+        isRemoved: function () {
+            return this.dataIndex == null;
         },
 
         /**
@@ -143,8 +153,24 @@ define(function(require) {
             if (this.name === name) {
                 return this;
             }
-            for (var i = 0; i < this.children.length; i++) {
-                var res = this.children[i].getNodeByName(name);
+            for (var i = 0, children = this.children, len = children.length; i < len; i++) {
+                var res = children[i].getNodeByName(name);
+                if (res) {
+                    return res;
+                }
+            }
+        },
+
+        /**
+         * @param {module:echarts/data/Tree~TreeNode} node
+         * @return {boolean}
+         */
+        contains: function (node) {
+            if (node === this) {
+                return true;
+            }
+            for (var i = 0, children = this.children, len = children.length; i < len; i++) {
+                var res = children[i].contains(node);
                 if (res) {
                     return res;
                 }
@@ -171,7 +197,9 @@ define(function(require) {
          * @return {number} Value.
          */
         getValue: function (dimension) {
-            return this.hostTree.list.get(dimension || 'value', this.dataIndex);
+            return this.dataIndex != null
+                ? this.hostTree.list.get(dimension || 'value', this.dataIndex)
+                : null;
         },
 
         /**
@@ -179,14 +207,17 @@ define(function(require) {
          * @param {boolean=} merge
          */
         setLayout: function (layout, merge) {
-            return this.hostTree.list.setItemLayout(this.dataIndex, layout, merge);
+            this.dataIndex != null
+                && this.hostTree.list.setItemLayout(this.dataIndex, layout, merge);
         },
 
         /**
          * @return {Object} layout
          */
         getLayout: function () {
-            return this.hostTree.list.getItemLayout(this.dataIndex);
+            return this.dataIndex != null
+                ? this.hostTree.list.getItemLayout(this.dataIndex)
+                : null;
         },
 
         /**
@@ -194,6 +225,9 @@ define(function(require) {
          * @return {module:echarts/model/Model}
          */
         getModel: function (path) {
+            if (this.dataIndex == null) {
+                return;
+            }
             var hostTree = this.hostTree;
             var itemModel = hostTree.list.getItemModel(this.dataIndex);
             var levelModel = (hostTree.levelModels || [])[this.depth];
@@ -216,37 +250,41 @@ define(function(require) {
          *  });
          */
         setVisual: function (key, value) {
-            return this.hostTree.list.setItemVisual(this.dataIndex, key, value);
+            this.dataIndex != null
+                && this.hostTree.list.setItemVisual(this.dataIndex, key, value);
         },
 
         /**
          * @public
          */
         getVisual: function (key, ignoreParent) {
-            return this.hostTree.list.getItemVisual(this.dataIndex, key, ignoreParent);
+            return this.dataIndex != null
+                ? this.hostTree.list.getItemVisual(this.dataIndex, key, ignoreParent)
+                : null;
         },
 
         /**
          * @public
          */
         getRawIndex: function () {
-            return this.hostTree.list.getRawIndex(this.dataIndex);
+            return this.dataIndex != null
+                ? this.hostTree.list.getRawIndex(this.dataIndex)
+                : null;
         }
     });
 
     /**
      * @constructor
      * @alias module:echarts/data/Tree
-     * @param {string=} name Root name
      * @param {module:echarts/model/Model} hostModel
      * @param {Array.<Object>} levelOptions
      */
-    function Tree(name, hostModel, levelOptions) {
+    function Tree(hostModel, levelOptions) {
         /**
          * @type {module:echarts/data/Tree~TreeNode}
          * @readOnly
          */
-        this.root = new TreeNode(name, null, this);
+        this.root;
 
         /**
          * @type {module:echarts/data/List}
@@ -332,41 +370,40 @@ define(function(require) {
     };
 
     /**
-     * data format:
-     * [
-     *     {
-     *         name: ...
-     *         value: ...
-     *         children: [
-     *             {
-     *                 name: ...
-     *                 value: ...
-     *                 children: ...
-     *             },
-     *             ...
-     *         ]
-     *     },
-     *     ...
-     * ]
+     * data node format:
+     * {
+     *     name: ...
+     *     value: ...
+     *     children: [
+     *         {
+     *             name: ...
+     *             value: ...
+     *             children: ...
+     *         },
+     *         ...
+     *     ]
+     * }
      *
      * @static
-     * @param {Array.<Object>} data
+     * @param {Objec} dataRoot Root node.
      * @param {module:echarts/model/Model} hostModel
      * @param {Array.<Object>} levelOptions
      * @return module:echarts/data/Tree
      */
-    Tree.createTree = function (data, hostModel, levelOptions) {
+    Tree.createTree = function (dataRoot, hostModel, levelOptions) {
 
-        var tree = new Tree('', hostModel, levelOptions);
-
+        var tree = new Tree(hostModel, levelOptions);
         var listData = [];
-        var rootNode = tree.root;
+
+        buildHierarchy(dataRoot);
 
         function buildHierarchy(dataNode, parentNode) {
             listData.push(dataNode);
 
             var node = new TreeNode(dataNode.name, listData.length - 1, tree);
-            addChild(node, parentNode);
+            parentNode
+                ? addChild(node, parentNode)
+                : (tree.root = node);
 
             var children = dataNode.children;
             if (children) {
@@ -374,10 +411,6 @@ define(function(require) {
                     buildHierarchy(children[i], node);
                 }
             }
-        }
-
-        for (var i = 0; i < data.length; i++) {
-            buildHierarchy(data[i], rootNode);
         }
 
         tree.root.updateDepthAndHeight(0);

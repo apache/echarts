@@ -2,9 +2,11 @@ define(function (require) {
 
     var mathMax = Math.max;
     var mathMin = Math.min;
-    var mathRound = Math.round;
-    var parsePercent = require('../../util/number').parsePercent;
+    var zrUtil = require('zrender/core/util');
+    var numberUtil = require('../../util/number');
+    var parsePercent = numberUtil.parsePercent;
     var retrieveValue = require('../../util/model').retrieveValue;
+    var helper = require('./helper');
 
     var TreemapLayout = function () {
         // FIXME
@@ -25,20 +27,33 @@ define(function (require) {
             // Layout result in each node:
             // {x, y, width, height, area, borderWidth}
             ecModel.eachSeriesByType('treemap', function (seriesModel) {
-                var options = {
-                    squareRatio: seriesModel.get('squareRatio'),
-                    sort: seriesModel.get('sort')
-                };
+
+                if (helper.irrelevant(payload, seriesModel)) {
+                    return;
+                }
+
+                // FIXME
+                // 暂使用 ecWidth ecHeight 作为可视区大小
+                var estimatedSize = estimateRootSize(
+                    helper.retrieveTargetInfo(payload, seriesModel),
+                    seriesModel, ecWidth, ecHeight
+                );
 
                 var size = seriesModel.get('size') || []; // Compatible with ec2.
-                options.rootWidth = parsePercent(
-                    retrieveValue(seriesModel.get('width'), size[0]),
-                    ecWidth
-                );
-                options.rootHeight = parsePercent(
-                    retrieveValue(seriesModel.get('height'), size[1]),
-                    ecHeight
-                );
+                var options = {
+                    squareRatio: seriesModel.get('squareRatio'),
+                    sort: seriesModel.get('sort'),
+                    rootSize: estimatedSize || [
+                        parsePercent(
+                            retrieveValue(seriesModel.get('width'), size[0]),
+                            ecWidth
+                        ),
+                        parsePercent(
+                            retrieveValue(seriesModel.get('height'), size[1]),
+                            ecHeight
+                        )
+                    ]
+                };
 
                 this.squarify(seriesModel.getViewRoot(), options);
 
@@ -53,13 +68,16 @@ define(function (require) {
          * @protected
          * @param {module:echarts/data/Tree~TreeNode} node
          * @param {Object} options
-         * @param {number} [options.rootWidth]
-         * @param {number} [options.rootHeight]
+         * @param {Array.<number>} [options.rootSize]
          * @param {number} [options.squareRatio]
          */
         squarify: function (node, options) {
             var width;
             var height;
+
+            if (node.isRemoved()) {
+                return;
+            }
 
             if (options.notRoot) {
                 var thisLayout = node.getLayout();
@@ -67,12 +85,13 @@ define(function (require) {
                 height = thisLayout.height;
             }
             else {
-                width = options.rootWidth;
-                height = options.rootHeight;
+                var rootSize = options.rootSize;
+                width = rootSize[0];
+                height = rootSize[1];
                 node.setLayout({
                     x: 0, y: 0, width: width, height: height,
                     area: width * height
-                }, true);
+                });
             }
 
             // Considering border and gap
@@ -102,6 +121,7 @@ define(function (require) {
 
             while ((remainingLen = remaining.length) > 0) {
                 var child = remaining[remainingLen - 1];
+
                 row.push(child);
                 row.area += child.getLayout().area;
                 var score = worst(row, rowFixedLength, options.squareRatio);
@@ -140,7 +160,9 @@ define(function (require) {
         var viewChildren = node.children || [];
 
         // Sort children, order by desc.
-        viewChildren = viewChildren.slice();
+        viewChildren = zrUtil.filter(viewChildren, function (child) {
+            return !child.isRemoved();
+        });
 
         if (options.sort) {
             viewChildren.sort(function (a, b) {
@@ -149,6 +171,7 @@ define(function (require) {
                     ? b.getValue() - a.getValue() : a.getValue() - b.getValue();
             });
         }
+
         var sum = 0;
         for (var i = 0, len = viewChildren.length; i < len; i++) {
             sum += viewChildren[i].getValue();
@@ -173,7 +196,8 @@ define(function (require) {
         // Set area to each child.
         for (var i = 0, len = viewChildren.length; i < len; i++) {
             var area = viewChildren[i].getValue() / sum * totalArea;
-            viewChildren[i].setLayout({area: area}, true);
+            // Do not use setLayout({...}, true), because it is needed to clear last layout.
+            viewChildren[i].setLayout({area: area});
         }
 
         node.viewChildren = viewChildren;
@@ -227,7 +251,7 @@ define(function (require) {
 
         var last = rect[xy[idx0WhenH]];
         var rowOtherLength = rowFixedLength
-            ? mathRound(row.area / rowFixedLength) : 0;
+            ? row.area / rowFixedLength : 0;
 
         if (flush || rowOtherLength > rect[wh[idx1WhenH]]) {
             rowOtherLength = rect[wh[idx1WhenH]]; // over+underflow
@@ -237,15 +261,17 @@ define(function (require) {
             var node = row[i];
             var nodeLayout = {};
             var step = rowOtherLength
-                ? mathRound(node.getLayout().area / rowOtherLength) : 0;
+                ? node.getLayout().area / rowOtherLength : 0;
 
-            nodeLayout[xy[idx1WhenH]] = rect[xy[idx1WhenH]] + halfGapWidth;
-            nodeLayout[xy[idx0WhenH]] = last + halfGapWidth;
-            nodeLayout[wh[idx1WhenH]] = rowOtherLength - 2 * halfGapWidth;
+            var wh1 = nodeLayout[wh[idx1WhenH]] = mathMax(rowOtherLength - 2 * halfGapWidth, 0);
 
+            // We use Math.max/min to avoid negative width/height when considering gap width.
             var remain = rect[xy[idx0WhenH]] + rect[wh[idx0WhenH]] - last;
             var modWH = (i === rowLen - 1 || remain < step) ? remain : step;
-            nodeLayout[wh[idx0WhenH]] = modWH - 2 * halfGapWidth;
+            var wh0 = nodeLayout[wh[idx0WhenH]] = mathMax(modWH - 2 * halfGapWidth, 0);
+
+            nodeLayout[xy[idx1WhenH]] = rect[xy[idx1WhenH]] + mathMin(halfGapWidth, wh1 / 2);
+            nodeLayout[xy[idx0WhenH]] = last + mathMin(halfGapWidth, wh0 / 2);
 
             last += modWH;
 
@@ -254,6 +280,50 @@ define(function (require) {
 
         rect[xy[idx1WhenH]] += rowOtherLength;
         rect[wh[idx1WhenH]] -= rowOtherLength;
+    }
+
+    function estimateRootSize(targetInfo, seriesModel, viewWidth, viewHeight) {
+        if (!targetInfo) {
+            return;
+        }
+
+        // If targetInfo.node exists, we zoom to the node,
+        // so estimate whold width and heigth by target node.
+        var currNode = targetInfo.node;
+        var parent;
+        var viewArea = viewWidth * viewHeight;
+        var area = viewArea * seriesModel.get('zoomToNodeRatio');
+
+        while (parent = currNode.parentNode) {
+            var sum = 0;
+            var siblings = parent.children;
+
+            for (var i = 0, len = siblings.length; i < len; i++) {
+                sum += siblings[i].getValue();
+            }
+            var currNodeValue = currNode.getValue();
+            if (currNodeValue === 0) {
+                return;
+            }
+            area *= sum / currNodeValue;
+
+            var borderWidth = parent.getModel('itemStyle.normal').get('borderWidth');
+
+            if (isFinite(borderWidth)) {
+                // Considering border, suppose aspect ratio is 1.
+                area += 4 * borderWidth * borderWidth + 4 * borderWidth * Math.pow(area, 0.5);
+            }
+
+            area > numberUtil.MAX_SAFE_INTEGER && (area = numberUtil.MAX_SAFE_INTEGER);
+
+            currNode = parent;
+        }
+
+        area < viewArea && (area = viewArea);
+        var scale = Math.pow(area / viewArea, 0.5);
+
+        // return [estimatedWidth, estimatedHeight]
+        return [viewWidth * scale, viewHeight * scale];
     }
 
     return TreemapLayout;

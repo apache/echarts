@@ -4,6 +4,8 @@
     var graphic = require('../../util/graphic');
     var layout = require('../../util/layout');
     var DataDiffer = require('../../data/DataDiffer');
+    var modelUtil = require('../../util/model');
+    var helper = require('./helper');
     var Group = graphic.Group;
     var Rect = graphic.Rect;
 
@@ -20,7 +22,7 @@
              * @private
              * @type {module:zrender/container/Group}
              */
-            this._drawGroup;
+            this._containerGroup;
 
             /**
              * @private
@@ -38,39 +40,29 @@
         /**
          * @override
          */
-        render: function (seriesModel, ecModel, api) {
-            this.seriesModel = seriesModel;
+        render: function (seriesModel, ecModel, api, payload) {
 
-            var drawGroup = this._drawGroup;
-
-            if (!drawGroup) {
-                drawGroup = this._drawGroup = new Group({
-                    onclick: zrUtil.bind(this._onClick, this)
-                });
-                this.group.add(drawGroup);
+            if (helper.irrelevant(payload, seriesModel)) {
+                return;
             }
 
+            this.seriesModel = seriesModel;
+            this.api = api;
+
             var thisTree = seriesModel.getData().tree;
-            var oldTree = this._oldTree;
-            this._storage = [];
+            var containerGroup = this._containerGroup;
 
-            var thisStorage = {nodeGroup: [], background: [], content: []};
-            var oldStorage = this._storage;
-            var renderNode = zrUtil.bind(this._renderNode, this);
-            var viewRoot = seriesModel.getViewRoot();
+            if (!containerGroup) {
+                containerGroup = this._containerGroup = new Group({
+                    onclick: zrUtil.bind(this._onClick, this)
+                });
+                this.group.add(containerGroup);
+            }
 
-            dualTravel(
-                [thisTree.root],
-                oldTree ? [oldTree.root] : [],
-                drawGroup,
-                viewRoot === thisTree.root
-            );
-
-            this._oldTree = thisTree;
-            this._storage = thisStorage;
+            this._doRender(thisTree, containerGroup, seriesModel);
 
             layout.positionGroup(
-                drawGroup,
+                containerGroup,
                 {
                     x: seriesModel.get('x'),
                     y: seriesModel.get('y'),
@@ -83,37 +75,56 @@
                 }
             );
 
-            function dualTravel(thisViewChildren, oldViewChildren, parentGroup, inView) {
-                // When update, 'this' and 'old' are in the same tree.
-                if (thisViewChildren === oldViewChildren
-                    || !thisViewChildren.length
-                    || !oldViewChildren.length
-                ) {
+            this._positionRoot(containerGroup, thisTree.root, payload, seriesModel);
+        },
+
+        /**
+         * @private
+         */
+        _doRender: function (thisTree, containerGroup, seriesModel) {
+            var oldTree = this._oldTree;
+
+            var thisStorage = {nodeGroup: [], background: [], content: []};
+            var oldStorage = this._storage;
+            var renderNode = zrUtil.bind(this._renderNode, this);
+            var viewRoot = seriesModel.getViewRoot();
+
+            dualTravel(
+                thisTree.root ? [thisTree.root] : [],
+                (oldTree && oldTree.root) ? [oldTree.root] : [],
+                containerGroup,
+                thisTree === oldTree || !oldTree,
+                viewRoot === thisTree.root
+            );
+
+            // Process all removing.
+            clearStorage(oldStorage);
+
+            this._oldTree = thisTree;
+            this._storage = thisStorage;
+
+            function dualTravel(thisViewChildren, oldViewChildren, parentGroup, sameTree, inView) {
+                // When 'render' is triggered by action,
+                // 'this' and 'old' may be the same tree,
+                // we use rawIndex in that case.
+                if (sameTree) {
+                    oldViewChildren = thisViewChildren;
                     zrUtil.each(thisViewChildren, function (child, index) {
-                        processNode(index, index);
+                        !child.isRemoved() && processNode(index, index);
                     });
                 }
-                // When setOption, data changed, use data differ.
+                // Diff hierarchically (diff only in each subtree, but not whole).
+                // because, consistency of view is important.
                 else {
-                    // Diff hierarchically (diff only in each subtree, but not whole).
-                    // because, consistency of view is important.
-                    (new DataDiffer(
-                        oldViewChildren,
-                        thisViewChildren,
-                        function (node) {
-                            // Identify by name or raw index.
-                            return node.name != null ? node.name : node.getRawIndex();
-                        }
-                    ))
-                    .add(function (newIndex) {
-                        processNode(newIndex);
-                    })
-                    .update(function (newIndex, oldIndex) {
-                        processNode(newIndex, oldIndex);
-                    })
-                    .remove(function (oldIndex) {
-                        processNode(null, oldIndex);
-                    });
+                    (new DataDiffer(oldViewChildren, thisViewChildren, getKey))
+                        .add(processNode)
+                        .update(processNode)
+                        .remove(zrUtil.curry(processNode, null));
+                }
+
+                function getKey(node) {
+                    // Identify by name or raw index.
+                    return node.name != null ? node.name : node.getRawIndex();
                 }
 
                 function processNode(newIndex, oldIndex) {
@@ -134,9 +145,18 @@
                         thisNode && thisNode.viewChildren || [],
                         oldNode && oldNode.viewChildren || [],
                         group,
+                        sameTree,
                         subInView
                     );
                 }
+            }
+
+            function clearStorage(storage) {
+                storage && zrUtil.each(storage, function (store) {
+                    zrUtil.each(store, function (shape) {
+                        shape && shape.parent && shape.parent.remove(shape);
+                    });
+                });
             }
         },
 
@@ -144,13 +164,10 @@
          * @private
          */
         _renderNode: function (thisNode, oldNode, parentGroup, thisStorage, oldStorage) {
-            // FIXME
-            // 考虑 viewRoot ??????????????
             var thisRawIndex = thisNode && thisNode.getRawIndex();
             var oldRawIndex = oldNode && oldNode.getRawIndex();
 
             if (!thisNode) {
-                oldNode && oldStorage && parentGroup.remove(oldStorage.nodeGroup[oldRawIndex]);
                 return;
             }
 
@@ -158,7 +175,7 @@
             var thisWidth = layout.width;
             var thisHeight = layout.height;
 
-            var group = makeGraphic('nodeGroup', Group);
+            var group = giveGraphic('nodeGroup', Group);
             group.position = [layout.x, layout.y];
             parentGroup.add(group);
 
@@ -166,7 +183,7 @@
             var borderColor = itemStyleModel.get('borderColor') || itemStyleModel.get('gapColor');
 
             // Background
-            var background = makeGraphic('background', Rect);
+            var background = giveGraphic('background', Rect);
             background.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
             background.setStyle({fill: borderColor});
             group.add(background);
@@ -177,7 +194,7 @@
             if (!thisViewChildren || !thisViewChildren.length) {
                 var borderWidth = layout.borderWidth;
 
-                var content = makeGraphic('content', Rect);
+                var content = giveGraphic('content', Rect);
                 content.setShape({
                     x: borderWidth,
                     y: borderWidth,
@@ -190,19 +207,22 @@
 
                 group.add(content);
             }
-            // Remove old content for children rendering.
-            else {
-                var content = (oldNode && oldStorage)
-                    ? oldStorage.content[oldRawIndex] : null;
-                content && group.remove(content);
-            }
 
             return group;
 
-            function makeGraphic(storage, Ctor) {
-                return thisStorage[storage][thisRawIndex] = (oldNode && oldStorage)
-                    ? oldStorage[storage][oldRawIndex]
-                    : new Ctor({});
+            function giveGraphic(storage, Ctor) {
+                var shape = oldRawIndex != null && oldStorage && oldStorage[storage][oldRawIndex];
+
+                if (shape) {
+                    // Remove from oldStorage
+                    oldStorage && (oldStorage[storage][oldRawIndex] = null);
+                }
+                else {
+                    shape = new Ctor();
+                }
+
+                // Set to thisStorage
+                return thisStorage[storage][thisRawIndex] = shape;
             }
         },
 
@@ -211,7 +231,7 @@
          */
         remove: function () {
             this.group.removeAll();
-            this._drawGroup = null;
+            this._containerGroup = null;
             this._storage = null;
             this._oldTree = null;
         },
@@ -236,7 +256,8 @@
             this.api.dispatch({
                 type: 'zoomToNode',
                 from: this.uid,
-                targetNode: ''
+                seriesId: this.seriesModel.uid,
+                targetInfo: targetInfo
             });
         },
 
@@ -263,7 +284,48 @@
             }, this);
 
             return targetInfo;
+        },
+
+        /**
+         * @private
+         */
+        _positionRoot: function(containerGroup, root, payload, seriesModel) {
+            var nodeGroups = this._storage.nodeGroup;
+
+            var rootGroup = nodeGroups[root.getRawIndex()];
+
+            var targetInfo = helper.retrieveTargetInfo(payload, seriesModel);
+
+            if (!targetInfo) {
+                rootGroup.position = [0, 0];
+                return;
+            }
+
+            // If targetInfo is fetched by 'retrieveTargetInfo',
+            // old tree and new tree are the same tree,
+            // so we can use raw index of targetInfo.node to find shape from storage.
+
+            var targetNode = targetInfo.node;
+            var containerRect = containerGroup.getBoundingRect();
+
+            var targetGroup = nodeGroups[targetNode.getRawIndex()];
+
+            if (!targetGroup) {
+                rootGroup.position = [0, 0];
+                return;
+            }
+
+            var targetRect = targetGroup.getBoundingRect();
+            var targetCenter = modelUtil.transformCoordToAncestor(
+                [targetRect.width / 2, targetRect.height / 2], targetGroup, containerGroup
+            );
+
+            rootGroup.position = [
+                containerRect.width / 2 - targetCenter[0],
+                containerRect.height / 2 - targetCenter[1]
+            ];
         }
 
     });
+
 });

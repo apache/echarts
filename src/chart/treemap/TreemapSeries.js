@@ -3,7 +3,6 @@ define(function(require) {
     var SeriesModel = require('../../model/Series');
     var Tree = require('../../data/Tree');
     var zrUtil = require('zrender/core/util');
-    var Model = require('../../model/Model');
 
     return SeriesModel.extend({
 
@@ -28,6 +27,7 @@ define(function(require) {
             root: '',
             colorDimension: 'value',                    // 默认第一个维度。
             zoomStep: 10,                         // 0表示不zoom。
+            zoomToNodeRatio: 0.2 * 0.2,                 // zoom to node时 node占可视区域的面积比例。
             breadcrumb: {
                 show: true,
                 itemStyle: {
@@ -79,13 +79,19 @@ define(function(require) {
         getInitialData: function (option, ecModel) {
             var data = option.data || [];
 
-            completeTreeValue(data);
+            // Create a virtual root.
+            var root = {name: '', children: option.data};
+
+            completeTreeValue(root, zrUtil.isArray((data[0] || {}).value));
 
             // FIXME
             // sereis.mergeOption 的 getInitData是否放在merge后，从而能直接获取merege后的结果而非手动判断。
             var levels = option.levels || (this.option || {}).levels || [];
 
-            return Tree.createTree(data, this, levels).list;
+            // Make sure always a new tree is created when setOption,
+            // in TreemapView, we check whether oldTree === newTree
+            // to choose mappings approach among old shapes and new shapes.
+            return Tree.createTree(root, this, levels).list;
         },
 
         /**
@@ -100,38 +106,46 @@ define(function(require) {
     });
 
     /**
-     * @param {Array.<Object>} data
-     * @return {number} Sum value of all children.
+     * @param {Object} dataNode
      */
-    function completeTreeValue(data) {
+    function completeTreeValue(dataNode, isArrayValue) {
         // Postorder travel tree.
         // If value of none-leaf node is not set,
         // calculate it by suming up the value of all children.
         var sum = 0;
 
-        zrUtil.each(data, function (dataItem) {
-            var isArrayValue = zrUtil.isArray(dataItem.value);
-            var itemValue = dataItem.value;
-            isArrayValue && (itemValue = itemValue[0]);
+        zrUtil.each(dataNode.children, function (child) {
 
-            var children = dataItem.children;
-            if (children && (itemValue == null || isNaN(itemValue))) {
-                itemValue = completeTreeValue(children);
-            }
+            completeTreeValue(child, isArrayValue);
 
-            // Value should not less than 0.
-            if (itemValue < 0) {
-                itemValue = 0;
-            }
+            var childValue = child.value;
+            zrUtil.isArray(childValue) && (childValue = childValue[0]);
 
-            isArrayValue
-                ? (dataItem.value[0] = itemValue)
-                : (dataItem.value = itemValue);
-
-            sum += itemValue;
+            sum += childValue;
         });
 
-        return sum;
+        var thisValue = dataNode.value;
+
+        if (isArrayValue) {
+            if (!zrUtil.isArray(thisValue)) {
+                dataNode.value = [];
+            }
+            else {
+                thisValue = thisValue[0];
+            }
+        }
+
+        if (thisValue == null || isNaN(thisValue)) {
+            thisValue = sum;
+        }
+        // Value should not less than 0.
+        if (thisValue < 0) {
+            thisValue = 0;
+        }
+
+        isArrayValue
+            ? (dataNode.value[0] = thisValue)
+            : (dataNode.value = thisValue);
     }
 
 });

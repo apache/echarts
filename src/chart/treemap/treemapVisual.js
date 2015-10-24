@@ -8,10 +8,21 @@ define(function (require) {
 
     var VISUAL_LIST = ['color', 'colorA', 'colorS'];
 
-    return function (ecModel) {
+    return function (ecModel, payload) {
         var globalColorList = ecModel.get('color');
 
         ecModel.eachSeriesByType('treemap', function (seriesModel) {
+
+            if (payload && payload.seriesId && seriesModel.uid !== payload.seriesId) {
+                return;
+            }
+
+            var root = seriesModel.getData().tree.root;
+
+            if (root.isRemoved()) {
+                return;
+            }
+
             var rootVisual = {};
             each(VISUAL_LIST, function (name) {
                 var visual = seriesModel.get('itemStyle.normal.' + name);
@@ -21,7 +32,7 @@ define(function (require) {
             !rootVisual.color && (rootVisual.color = globalColorList);
 
             travelTree(
-                seriesModel.getData().tree.root,
+                root,
                 rootVisual,
                 seriesModel,
                 seriesModel.getViewRoot().getAncestors()
