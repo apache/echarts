@@ -6,6 +6,7 @@
     var DataDiffer = require('../../data/DataDiffer');
     var modelUtil = require('../../util/model');
     var helper = require('./helper');
+    var Breadcrumb = require('./Breadcrumb');
     var Group = graphic.Group;
     var Rect = graphic.Rect;
 
@@ -35,13 +36,18 @@
              * @type {module:echarts/data/Tree}
              */
             this._oldTree;
+
+            /**
+             * @private
+             * @type {module:echarts/chart/treemap/Breadcrumb}
+             */
+            this._breadcrumb;
         },
 
         /**
          * @override
          */
         render: function (seriesModel, ecModel, api, payload) {
-
             if (helper.irrelevant(payload, seriesModel)) {
                 return;
             }
@@ -75,7 +81,11 @@
                 }
             );
 
-            this._positionRoot(containerGroup, thisTree.root, payload, seriesModel);
+            var targetInfo = helper.retrieveTargetInfo(payload, seriesModel);
+
+            this._positionRoot(containerGroup, thisTree.root, targetInfo);
+
+            this._renderBreadcrumb(seriesModel, api, targetInfo);
         },
 
         /**
@@ -227,6 +237,28 @@
         },
 
         /**
+         * @private
+         */
+        _renderBreadcrumb: function (seriesModel, api, targetInfo) {
+            if (!targetInfo) {
+                // Find breadcrumb tail on center of containerGroup.
+                targetInfo = this.findTarget(api.getWidth() / 2, api.getHeight() / 2);
+
+                if (!targetInfo) {
+                    targetInfo = {node: seriesModel.getData().tree.root};
+                }
+            }
+
+            (this._breadcrumb || (this._breadcrumb = new Breadcrumb(this.group, onSelect)))
+                .render(seriesModel, api, targetInfo.node);
+
+            var that = this;
+            function onSelect(node) {
+                that._zoomToNode({node: node});
+            }
+        },
+
+        /**
          * @override
          */
         remove: function () {
@@ -234,25 +266,25 @@
             this._containerGroup = null;
             this._storage = null;
             this._oldTree = null;
+
+            this._breadcrumb && this._breadcrumb.remove();
         },
 
         /**
          * @private
          */
         _onClick: function (e) {
-
-            var zoomStep = this.seriesModel.get('zoomToNode');
-
             var targetInfo = this.findTarget(e.offsetX, e.offsetY);
 
-            if (!targetInfo) {
-                return;
+            if (targetInfo) {
+                this._zoomToNode(targetInfo);
             }
+        },
 
-            if (zoomStep <= 0) {
-                return;
-            }
-
+        /**
+         * @private
+         */
+        _zoomToNode: function (targetInfo) {
             this.api.dispatch({
                 type: 'zoomToNode',
                 from: this.uid,
@@ -263,6 +295,8 @@
 
         /**
          * @public
+         * @param {number} x Global coord x.
+         * @param {number} y Global coord y.
          * @return {Object} info If not found, return undefined;
          * @return {number} info.node Target node.
          * @return {number} info.offsetX x refer to target node.
@@ -289,12 +323,10 @@
         /**
          * @private
          */
-        _positionRoot: function(containerGroup, root, payload, seriesModel) {
+        _positionRoot: function(containerGroup, root, targetInfo) {
             var nodeGroups = this._storage.nodeGroup;
 
             var rootGroup = nodeGroups[root.getRawIndex()];
-
-            var targetInfo = helper.retrieveTargetInfo(payload, seriesModel);
 
             if (!targetInfo) {
                 rootGroup.position = [0, 0];

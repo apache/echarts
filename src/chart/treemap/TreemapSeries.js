@@ -30,9 +30,25 @@ define(function(require) {
             zoomToNodeRatio: 0.2 * 0.2,                 // zoom to node时 node占可视区域的面积比例。
             breadcrumb: {
                 show: true,
+                height: 22,
+                x: 10,
+                y: 'bottom',
+                emptyItemWidth: 25,                    // 空节点宽度
                 itemStyle: {
                     normal: {
-                        textStyle: {}
+                        color: 'rgba(0,0,0,0.7)', //'#5793f3',
+                        borderColor: 'rgba(255,255,255,0.7)',
+                        borderWidth: 1,
+                        shadowColor: 'rgba(150,150,150,1)',
+                        shadowBlur: 3,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        textStyle: {
+                            color: '#fff',
+                            fontFamily: 'Arial',
+                            fontSize: 13,
+                            fontWeight: 'normal'
+                        }
                     },
                     emphasis: {
                         textStyle: {}
@@ -78,9 +94,11 @@ define(function(require) {
          */
         getInitialData: function (option, ecModel) {
             var data = option.data || [];
+            var rootName = option.name;
+            rootName == null && (rootName = this.option.name);
 
             // Create a virtual root.
-            var root = {name: '', children: option.data};
+            var root = {name: rootName, children: option.data};
 
             completeTreeValue(root, zrUtil.isArray((data[0] || {}).value));
 

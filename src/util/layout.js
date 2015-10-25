@@ -5,6 +5,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('./number');
     var formatUtil = require('./format');
+    var parsePercent = numberUtil.parsePercent;
 
     var layout = {};
 
@@ -46,6 +47,43 @@ define(function(require) {
     layout.hbox = zrUtil.curry(boxLayout, 'horizontal');
 
     /**
+     * If x or x2 is not specified or 'center' 'left' 'right',
+     * the width would be as long as possible.
+     * If y or y2 is not specified or 'middle' 'top' 'bottom',
+     * the height would be as long as possible.
+     *
+     * @param {Object} positionInfo
+     * @param {number|string} [positionInfo.x]
+     * @param {number|string} [positionInfo.y]
+     * @param {number|string} [positionInfo.x2]
+     * @param {number|string} [positionInfo.y2]
+     * @param {Object} containerRect
+     * @param {string|number} margin
+     * @return {Object} {width, height}
+     */
+    layout.getAvailableSize = function (positionInfo, containerRect, margin) {
+        var containerWidth = containerRect.width;
+        var containerHeight = containerRect.height;
+
+        var x = parsePercent(positionInfo.x, containerWidth);
+        var y = parsePercent(positionInfo.y, containerHeight);
+        var x2 = parsePercent(positionInfo.x2, containerWidth);
+        var y2 = parsePercent(positionInfo.y2, containerHeight);
+
+        isNaN(x) && (x = 0);
+        isNaN(x2) && (x2 = containerWidth);
+        isNaN(y) && (y = 0);
+        isNaN(y2) && (y2 = containerHeight);
+
+        margin = formatUtil.normalizeCssArray(margin || 0);
+
+        return {
+            width: Math.max(x2 - x - margin[1] - margin[3], 0),
+            height: Math.max(y2 - y - margin[0] - margin[2], 0)
+        };
+    };
+
+    /**
      * Position group of component in viewport
      *  Group position is specified by either
      *  {x, y}, {x2, y2}
@@ -73,7 +111,6 @@ define(function(require) {
         var containerWidth = containerRect.width;
         var containerHeight = containerRect.height;
 
-        var parsePercent = numberUtil.parsePercent;
         var x = parsePercent(positionInfo.x, containerWidth);
         var y = parsePercent(positionInfo.y, containerHeight);
         var x2 = parsePercent(positionInfo.x2, containerWidth);

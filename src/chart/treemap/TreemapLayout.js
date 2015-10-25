@@ -283,13 +283,14 @@ define(function (require) {
     }
 
     function estimateRootSize(targetInfo, seriesModel, viewWidth, viewHeight) {
-        if (!targetInfo) {
+        // If targetInfo.node exists, we zoom to the node,
+        // so estimate whold width and heigth by target node.
+        var currNode = (targetInfo || {}).node;
+
+        if (!currNode || currNode === seriesModel.getViewRoot()) {
             return;
         }
 
-        // If targetInfo.node exists, we zoom to the node,
-        // so estimate whold width and heigth by target node.
-        var currNode = targetInfo.node;
         var parent;
         var viewArea = viewWidth * viewHeight;
         var area = viewArea * seriesModel.get('zoomToNodeRatio');
