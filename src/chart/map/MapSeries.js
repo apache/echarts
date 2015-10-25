@@ -37,10 +37,13 @@ define(function (require) {
         needsDrawMap: false,
 
         init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
+
+            option = this._fillOption(option);
+            this.option = option;
+
             SeriesModel.prototype.init.call(
                 this, option, parentModel, ecModel, dependentModels, seriesIndex
             );
-            option = this._fillOption(option);
 
             this.updateSelectedMap();
         },
@@ -56,8 +59,8 @@ define(function (require) {
         },
 
         mergeOption: function (newOption) {
-            SeriesModel.prototype.mergeOption.call(this, newOption);
             newOption = this._fillOption(newOption);
+            SeriesModel.prototype.mergeOption.call(this, newOption);
             this.updateSelectedMap();
         },
 

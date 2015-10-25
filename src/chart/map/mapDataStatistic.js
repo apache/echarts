@@ -2,8 +2,6 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
 
-    var List = require('../../data/List');
-
     // FIXME 公用？
     /**
      * @param {Array.<module:echarts/data/List>} datas
@@ -34,7 +32,7 @@ define(function (require) {
             if (statisticsType === 'average') {
                 sum /= len;
             }
-            return sum;
+            return len === 0 ? NaN : sum;
         });
     }
 

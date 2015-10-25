@@ -40,9 +40,6 @@ define(function (require) {
             var group = this.group;
 
             data.each('value', function (value, idx) {
-                if (isNaN(value)) {
-                    return;
-                }
                 var itemModel = data.getItemModel(idx);
                 var labelModel = itemModel.getModel('label.normal');
                 var textStyleModel = labelModel.getModel('textStyle');
@@ -51,30 +48,39 @@ define(function (require) {
                 var point = layout.point;
                 var offset = layout.offset;
 
-                var circle = new graphic.Circle({
-                    style: {
-                        fill: data.getVisual('color')
-                    },
-                    shape: {
-                        cx: point[0] + offset * 9,
-                        cy: point[1],
-                        r: 3
-                    },
-                    silent: true,
+                var showLabel = labelModel.get('show');
 
-                    z2: 10
-                });
+                var labelText = data.getName(idx);
+                var labelColor = textStyleModel.get('color');
+                var labelFont = textStyleModel.getFont();
 
-                if (labelModel.get('show') && !offset) {
-                    circle.setStyle({
-                        text: data.getName(idx),
-                        textFill: textStyleModel.get('color'),
-                        textPosition: 'bottom',
-                        textFont: textStyleModel.getFont()
+                if (!isNaN(value)) {
+                    var circle = new graphic.Circle({
+                        style: {
+                            fill: data.getVisual('color')
+                        },
+                        shape: {
+                            cx: point[0] + offset * 9,
+                            cy: point[1],
+                            r: 3
+                        },
+                        silent: true,
+
+                        z2: 10
                     });
+
+                    if (showLabel && !offset) {
+                        circle.setStyle({
+                            text: labelText,
+                            textFill: labelColor,
+                            textPosition: 'bottom',
+                            textFont: labelFont
+                        });
+                    }
+
+                    group.add(circle);
                 }
 
-                group.add(circle);
             });
         }
     });

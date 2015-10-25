@@ -10,10 +10,6 @@ define(function (require) {
             var data = mapModel.getData();
 
             data.each('value', function (value, idx) {
-                if (isNaN(value)) {
-                    return;
-                }
-
                 var name = data.getName(idx);
                 var region = geo.getRegion(name);
 
