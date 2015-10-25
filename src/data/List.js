@@ -822,7 +822,7 @@ define(function (require) {
         el.dataIndex = idx;
         el.seriesIndex = hostModel && hostModel.seriesIndex;;
         if (el.type === 'group') {
-            el.traverse(setItemDataAndSeriesIndex, this)
+            el.traverse(setItemDataAndSeriesIndex, el)
         }
 
         this._graphicEls[idx] = el;

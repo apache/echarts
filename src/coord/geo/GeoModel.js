@@ -17,6 +17,8 @@ define(function (require) {
 
             z: 0,
 
+            show: true,
+
             x: 'center',
 
             y: 'center',

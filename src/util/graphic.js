@@ -154,7 +154,10 @@ define(function(require) {
     /**
      * @private
      */
-    function enterHover(el) {
+    function doSingleEnterHover(el) {
+        if (el.__isHover) {
+            return;
+        };
         if (el.__hoverStlDirty) {
             var stroke = el.style.stroke;
             var fill = el.style.fill;
@@ -175,15 +178,46 @@ define(function(require) {
         }
         el.setStyle(el.__hoverStl);
         el.z2 += 1;
+
+        el.__isHover = true;
     }
 
     /**
-     * @private
+     * @inner
      */
-    function leaveHover(el) {
+    function doSingleLeaveHover(el) {
+        if (!el.__isHover) {
+            return;
+        }
+
         var normalStl = el.__normalStl;
         normalStl && el.setStyle(normalStl);
         el.z2 -= 1;
+
+        el.__isHover = false;
+    }
+
+    /**
+     * @inner
+     */
+    function doEnterHover(el) {
+        el.type === 'group'
+            ? el.traverse(function (child) {
+                if (child.type !== 'group') {
+                    doSingleEnterHover(child);
+                }
+            })
+            : doSingleEnterHover(el);
+    }
+
+    function doLeaveHover(el) {
+        el.type === 'group'
+            ? el.traverse(function (child) {
+                if (child.type !== 'group') {
+                    doSingleLeaveHover(child);
+                }
+            })
+            : doSingleLeaveHover(el);
     }
 
     /**
@@ -193,30 +227,39 @@ define(function(require) {
         el.__hoverStl = hoverStl;
         el.__hoverStlDirty = true;
     }
+
     /**
      * @inner
      */
     function onElementMouseOver() {
-        this.type === 'group'
-            ? this.traverse(function (child) {
-                if (child.type !== 'group') {
-                    enterHover(child);
-                }
-            })
-            : enterHover(this);
+        // Only if element is not inemphasis status
+        !this.__isEmphasis
+            && doEnterHover(this);
     }
 
     /**
      * @inner
      */
     function onElementMouseOut() {
-        this.type === 'group'
-            ? this.traverse(function (child) {
-                if (child.type !== 'group') {
-                    leaveHover(child);
-                }
-            })
-            : leaveHover(this);
+        // Only if element is not inemphasis status
+        !this.__isEmphasis
+            && doLeaveHover(this);
+    }
+
+    /**
+     * @inner
+     */
+    function enterEmphasis() {
+        this.__isEmphasis = true;
+        doEnterHover(this);
+    }
+
+    /**
+     * @inner
+     */
+    function leaveEmphasis() {
+        this.__isEmphasis = false;
+        doLeaveHover(this);
     }
 
     /**
@@ -236,6 +279,10 @@ define(function(require) {
         // Remove previous bound handlers
         el.on('mouseover', onElementMouseOver)
           .on('mouseout', onElementMouseOut);
+
+        // Emphasis, normal can be triggered manually
+        el.on('emphasis', enterEmphasis)
+          .on('normal', leaveEmphasis);
     };
 
     return graphic;

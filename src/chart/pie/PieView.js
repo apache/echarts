@@ -3,7 +3,11 @@ define(function (require) {
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
 
-    function selectData(seriesModel) {
+    /**
+     * @param {module:echarts/model/Series} seriesModel
+     * @inner
+     */
+    function updateDataSelected(seriesModel) {
         var data = seriesModel.getData();
         var dataIndex = this.dataIndex;
         var name = data.getName(dataIndex);
@@ -12,7 +16,7 @@ define(function (require) {
         seriesModel.toggleSelected(name);
 
         data.each(function (idx) {
-            updateSelected(
+            toggleItemSelected(
                 data.getItemGraphicEl(idx),
                 data.getItemLayout(idx),
                 seriesModel.isSelected(data.getName(idx)),
@@ -21,7 +25,14 @@ define(function (require) {
         });
     }
 
-    function updateSelected(el, layout, isSelected, selectedOffset) {
+    /**
+     * @param {module:zrender/graphic/Sector} el
+     * @param {Object} layout
+     * @param {boolean} isSelected
+     * @param {number} selectedOffset
+     * @inner
+     */
+    function toggleItemSelected(el, layout, isSelected, selectedOffset) {
         var shape = el.shape;
         var midAngle = (layout.startAngle + layout.endAngle) / 2;
 
@@ -38,6 +49,13 @@ define(function (require) {
             .start('bounceOut');
     }
 
+    /**
+     * Create sector, label, and label line for each data
+     * @param {Object} layout
+     * @param {string} text
+     * @param {boolean} hasAnimations
+     * @return {module:zrender/graphic/Sector}
+     */
     function createSectorAndLabel(layout, text, hasAnimation) {
         var shape = zrUtil.extend({}, layout);
         delete shape.label;
@@ -100,7 +118,7 @@ define(function (require) {
             var isFirstRender = !oldData;
 
             var firstSector;
-            var onSectorClick = zrUtil.curry(selectData, seriesModel);
+            var onSectorClick = zrUtil.curry(updateDataSelected, seriesModel);
 
             var selectedMode = seriesModel.get('selectedMode');
 
@@ -217,7 +235,7 @@ define(function (require) {
                     });
                 }
 
-                updateSelected(
+                toggleItemSelected(
                     sector,
                     data.getItemLayout(idx),
                     itemModel.get('selected'),
