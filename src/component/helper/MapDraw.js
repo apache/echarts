@@ -96,7 +96,10 @@ define(function (require) {
                 if (data) {
                     var dataIdx = data.indexOfName(region.name);
                     var itemModel = data.getItemModel(dataIdx);
-                    var visualColor = data.getItemVisual(dataIdx, 'color');
+
+                    // Only visual color of each item will be used. It can be encoded by dataRange
+                    // But visual color of series is used in symbol drawing
+                    var visualColor = data.getItemVisual(dataIdx, 'color', true);
 
                     itemStyleModel = itemModel.getModel(itemStyleAccessPath);
                     hoverItemStyleModel = itemModel.getModel(hoverItemStyleAccessPath);

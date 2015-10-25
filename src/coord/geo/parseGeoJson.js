@@ -16,19 +16,20 @@ define(function (require) {
 
         for (var f = 0; f < features.length; f++) {
             var feature = features[f];
-            var coordinates = feature.geometry.coordinates;
-            var encodeOffsets = feature.geometry.encodeOffsets;
+            var geometry = feature.geometry;
+            var coordinates = geometry.coordinates;
+            var encodeOffsets = geometry.encodeOffsets;
 
             for (var c = 0; c < coordinates.length; c++) {
                 var coordinate = coordinates[c];
 
-                if (feature.geometry.type === 'Polygon') {
+                if (geometry.type === 'Polygon') {
                     coordinates[c] = decodePolygon(
                         coordinate,
                         encodeOffsets[c]
                     );
                 }
-                else if (feature.geometry.type === 'MultiPolygon') {
+                else if (geometry.type === 'MultiPolygon') {
                     for (var c2 = 0; c2 < coordinate.length; c2++) {
                         var polygon = coordinate[c2];
                         coordinate[c2] = decodePolygon(
