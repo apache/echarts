@@ -38,27 +38,30 @@ define(function (require) {
                 zoom: 1
             },
 
+            label: {
+                normal: {
+                    show: false,
+                    textStyle: {
+                        color: '#000'
+                    }
+                },
+                emphasis: {
+                    show: true,
+                    textStyle: {
+                        color: 'rgb(100,0,0)'
+                    }
+                }
+            },
+
             itemStyle: {
                 normal: {
                     // color: 各异,
                     borderWidth: 0.5,
                     borderColor: '#444',
-                    color: '#eee',
-                    label: {
-                        show: false,
-                        textStyle: {
-                            color: 'rgb(139,69,19)'
-                        }
-                    }
+                    color: '#eee'
                 },
                 emphasis: {                 // 也是选中样式
-                    color: 'rgba(255,215,0,0.8)',
-                    label: {
-                        show: false,
-                        textStyle: {
-                            color: 'rgb(100,0,0)'
-                        }
-                    }
+                    color: 'rgba(255,215,0,0.8)'
                 }
             }
         },

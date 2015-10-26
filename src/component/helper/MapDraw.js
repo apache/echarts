@@ -48,11 +48,25 @@ define(function (require) {
 
         var group = new graphic.Group();
 
+        /**
+         * @type {module:echarts/component/helper/RoamController}
+         * @private
+         */
         this._controller = new RoamController(
             api.getZr(), updateGroup ? group : null, null
         );
 
+        /**
+         * @type {module:zrender/container/Group}
+         * @readOnly
+         */
         this.group = group;
+
+        /**
+         * @type {boolean}
+         * @private
+         */
+        this._updateGroup = updateGroup;
     }
 
     MapDraw.prototype = {
@@ -219,18 +233,32 @@ define(function (require) {
                     });
                 });
             controller.off('zoom')
-                .on('zoom', function (wheelDelta, mouseX, mouseY) {
+                .on('zoom', function (zoom, mouseX, mouseY) {
                     api.dispatch({
                         type: 'geoRoam',
                         component: mainType,
                         name: mapOrGeoModel.name,
-                        zoom: wheelDelta,
+                        zoom: zoom,
                         originX: mouseX,
                         originY: mouseY
                     });
 
                     // TODO Update lineWidth
-                });
+                    if (this._updateGroup) {
+                        var group = this.group;
+                        var scale = group.scale;
+                        group.traverse(function (el) {
+                            if (el.type === 'text') {
+                                el.attr('scale', [1 / scale[0], 1 / scale[1]]);
+                            }
+                            else if (el.type === 'polygon') {
+                                // el.setStyle({
+
+                                // });
+                            }
+                        });
+                    }
+                }, this);
 
             controller.rect = geo.getViewBox();
         }
