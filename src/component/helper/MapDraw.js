@@ -198,6 +198,11 @@ define(function (require) {
             data && updateMapSelected(mapOrGeoModel, data);
         },
 
+        remove: function () {
+            this.group.removeAll();
+            this._controller.dispose();
+        },
+
         _updateController: function (mapOrGeoModel, ecModel, api) {
             var geo = mapOrGeoModel.coordinateSystem;
             var controller = this._controller;

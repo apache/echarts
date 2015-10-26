@@ -9,30 +9,32 @@ define(function (require) {
 
         type: 'map',
 
-        init: function (ecModel, api) {
-            var mapDraw = new MapDraw(api, false);
-            this._mapDraw = mapDraw;
-        },
-
         render: function (mapModel, ecModel, api) {
             var group = this.group;
-            var mapDraw = this._mapDraw;
             group.removeAll();
 
-            group.add(mapDraw.group);
-
             if (mapModel.needsDrawMap) {
-                mapModel.needsDrawMap
-                    mapDraw.draw(mapModel, ecModel, api);
+                var mapDraw = this._mapDraw || new MapDraw(api, false);
+                group.add(mapDraw.group);
+
+                mapDraw.draw(mapModel, ecModel, api);
+
+                this._mapDraw = mapDraw;
             }
             else {
                 // Remove drawed map
-                mapDraw.group.removeAll();
+                this._mapDraw && this._mapDraw.remove();
+                this._mapDraw = null;
             }
 
             mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
                 && this._renderSymbols(mapModel, ecModel, api);
+        },
 
+        remove: function () {
+            this._mapDraw && this._mapDraw.remove();
+            this._mapDraw = null;
+            this.group.removeAll();
         },
 
         _renderSymbols: function (mapModel, ecModel, api) {

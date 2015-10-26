@@ -36,6 +36,9 @@ define(function (require) {
                 rect.y + rect.height / 2
             ];
         }
+        else {
+            cp = [cp[0], cp[1]];
+        }
         /**
          * @type {Array.<number>}
          */
