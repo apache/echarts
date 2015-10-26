@@ -13,7 +13,9 @@ define(function (require) {
 
     // Geo fix functions
     var geoFixFuncs = [
-        require('./fix/nanhai')
+        require('./fix/nanhai'),
+        require('./fix/textCoord'),
+        require('./fix/geoCoord')
     ];
 
     // Dummy transform node

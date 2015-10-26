@@ -80,7 +80,6 @@ define(function (require) {
 
                     group.add(circle);
                 }
-
             });
         }
     });

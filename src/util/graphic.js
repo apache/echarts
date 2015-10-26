@@ -224,7 +224,9 @@ define(function(require) {
      * @inner
      */
     function setElementHoverStl(el, hoverStl) {
-        el.__hoverStl = hoverStl;
+        // If element has sepcified hoverStyle, then use it instead of given hoverStyle
+        // Often used when item group has a label element and it's hoverStyle is different
+        el.__hoverStl = el.hoverStyle || hoverStl;
         el.__hoverStlDirty = true;
     }
 
@@ -233,8 +235,7 @@ define(function(require) {
      */
     function onElementMouseOver() {
         // Only if element is not inemphasis status
-        !this.__isEmphasis
-            && doEnterHover(this);
+        !this.__isEmphasis && doEnterHover(this);
     }
 
     /**
@@ -242,8 +243,7 @@ define(function(require) {
      */
     function onElementMouseOut() {
         // Only if element is not inemphasis status
-        !this.__isEmphasis
-            && doLeaveHover(this);
+        !this.__isEmphasis && doLeaveHover(this);
     }
 
     /**

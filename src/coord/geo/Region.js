@@ -38,7 +38,6 @@ define(function (require) {
         }
         /**
          * @type {Array.<number>}
-         * @readOnly
          */
         this.center = cp;
     };
@@ -75,14 +74,6 @@ define(function (require) {
             return this._rect = new BoundingRect(
                 min[0], min[1], max[0] - min[0], max[1] - min[1]
             );
-        },
-
-        /**
-         * Get center point
-         * @return {Array.<number>}
-         */
-        getCenter: function () {
-            return this.center;
         },
 
         /**

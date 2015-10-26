@@ -18,9 +18,7 @@ define(function (require) {
                 if (!region) {
                     return;
                 }
-                var point = geo.dataToPoint(
-                    region.getCenter()
-                );
+                var point = geo.dataToPoint(region.center);
 
                 mapSymbolOffsets[name] = offset + 1;
 

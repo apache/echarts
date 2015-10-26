@@ -78,14 +78,22 @@ define(function (require) {
             var itemStyle;
             var hoverItemStyle;
 
+            var labelModel;
+            var hoverLabelModel;
+
             var itemStyleAccessPath = ['itemStyle', 'normal'];
             var hoverItemStyleAccessPath = ['itemStyle', 'emphasis'];
+            var labelAccessPath = ['label', 'normal'];
+            var hoverLabelAccessPath = ['label', 'emphasis'];
             if (!data) {
                 itemStyleModel = mapOrGeoModel.getModel(itemStyleAccessPath);
                 hoverItemStyleModel = mapOrGeoModel.getModel(hoverItemStyleAccessPath);
 
                 itemStyle = getFixedItemStyle(itemStyleModel, scale);
                 hoverItemStyle = getFixedItemStyle(hoverItemStyleModel, scale);
+
+                labelModel = mapOrGeoModel.getModel(labelAccessPath);
+                hoverLabelModel = mapOrGeoModel.getModel(hoverLabelAccessPath);
             }
 
             zrUtil.each(geo.regions, function (region) {
@@ -107,10 +115,15 @@ define(function (require) {
                     itemStyle = getFixedItemStyle(itemStyleModel, scale);
                     hoverItemStyle = getFixedItemStyle(hoverItemStyleModel, scale);
 
+                    labelModel = itemModel.getModel(labelAccessPath);
+                    hoverLabelModel = itemModel.getModel(hoverLabelAccessPath);
+
                     if (visualColor) {
                         itemStyle.fill = visualColor;
                     }
                 }
+                var textStyleModel = labelModel.getModel('textStyle');
+                var hoverTextStyleModel = hoverLabelModel.getModel('textStyle');
 
                 zrUtil.each(region.contours, function (contour) {
 
@@ -125,8 +138,53 @@ define(function (require) {
                     regionGroup.add(polygon);
                 });
 
-                // setItemGraphicEl, setHoverStyle after all polygons are added to the rigionGroup
-                data.setItemGraphicEl(dataIdx, regionGroup);
+                // Label
+                var showLabel = labelModel.get('show');
+                var hoverShowLabel = hoverLabelModel.get('show');
+
+                var isDataNaN = data && isNaN(data.get('value', dataIdx));
+                // In the following cases label will be drawn
+                // 1. In map series and data value is NaN
+                // 2. In component series
+                // 3. Data value is not NaN and label only shows on hover
+                if (
+                    (!data || isDataNaN && (showLabel || hoverShowLabel))
+                 || (data && !isDataNaN && (!showLabel && hoverShowLabel))
+                 ) {
+                    var text = new graphic.Text({
+                        style: {
+                            text: region.name,
+                            fill: textStyleModel.get('color'),
+                            textFont: textStyleModel.getFont(),
+                            textAlign: 'center',
+                            textBaseline: 'middle'
+                        },
+                        hoverStyle: {
+                            fill: hoverTextStyleModel.get('color'),
+                            textFont: hoverTextStyleModel.getFont()
+                        },
+                        position: region.center.slice(),
+                        scale: [1 / scale[0], 1 / scale[1]],
+                        z2: 10
+                    });
+                    function emphasisLabel() {
+                        text.attr('ignore', !hoverShowLabel);
+                    }
+                    function normalLabel() {
+                        text.attr('ignore', !showLabel);
+                    }
+                    regionGroup.on('mouseover', emphasisLabel)
+                        .on('mouseout', normalLabel)
+                        .on('emphasis', emphasisLabel)
+                        .on('normal', normalLabel);
+                    text.ignore = !showLabel;
+
+                    regionGroup.add(text);
+                }
+
+                // setItemGraphicEl, setHoverStyle after all polygons and labels
+                // are added to the rigionGroup
+                data && data.setItemGraphicEl(dataIdx, regionGroup);
 
                 graphic.setHoverStyle(regionGroup, hoverItemStyle);
 
@@ -137,7 +195,7 @@ define(function (require) {
 
             data && updateMapSelectHandler(mapOrGeoModel, data, group);
 
-            updateMapSelected(mapOrGeoModel, data);
+            data && updateMapSelected(mapOrGeoModel, data);
         },
 
         _updateController: function (mapOrGeoModel, ecModel, api) {

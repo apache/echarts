@@ -51,7 +51,8 @@
                     title : {
                         text: 'iphone销量',
                         subtext: '纯属虚构',
-                        x:'center'
+                        x:'center',
+                        borderWidth: 1
                     },
                     legend: {
                         orient: 'vertical',
@@ -66,6 +67,7 @@
                         text:['高','低'],           // 文本，默认为数值文本
                         calculable : true
                     },
+                    selectedMode: 'single',
                     series : [
                         {
                             name: 'iphone3',
@@ -75,6 +77,9 @@
                             itemStyle: itemStyle,
                             label: {
                                 normal: {
+                                    show: true
+                                },
+                                emphasis: {
                                     show: true
                                 }
                             },
@@ -123,6 +128,9 @@
                             label: {
                                 normal: {
                                     show: true
+                                },
+                                emphasis: {
+                                    show: true
                                 }
                             },
                             data:[
@@ -154,6 +162,9 @@
                             itemStyle: itemStyle,
                             label: {
                                 normal: {
+                                    show: true
+                                },
+                                emphasis: {
                                     show: true
                                 }
                             },
