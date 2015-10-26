@@ -125,16 +125,14 @@ define(function(require) {
         },
 
         /**
-         * Base axis is the category axis if exists.
-         * If don't, angle axis will be the base axis.
-         *
          * Base axis will be used on stacking.
          *
          * @return {module:echarts/coord/polar/Axis}
          */
         getBaseAxis: function () {
-            var radiusAxis = this._radiusAxis;
-            return radiusAxis.scale.type === 'ordinal' ? radiusAxis : this._angleAxis;
+            return this.getAxesByScale('ordinal')[0]
+                || this.getAxesByScale('time')[0]
+                || this.getAngleAxis();
         },
 
         /**

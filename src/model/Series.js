@@ -122,6 +122,34 @@ define(function(require) {
         },
 
         /**
+         * Get params for formatter
+         * @param {number} dataIndex
+         * @return {Object}
+         */
+        getFormatParams: function (dataIndex) {
+            var data = this._data;
+            var seriesIndex = this.seriesIndex;
+            var seriesName = this.name;
+            var rawDataIndex = data.getRawIndex(dataIndex);
+            var rawValue = data.getRawValue(dataIndex);
+            var name = data.getName(dataIndex, true);
+
+            var itemOpt = this.option.data[rawDataIndex];
+
+            return {
+                seriesIndex: seriesIndex,
+                seriesName: seriesName,
+                name: name,
+                dataIndex: rawDataIndex,
+                data: itemOpt,
+                value: rawValue,
+
+                // Param name list for mapping `a`, `b`, `c`, `d`, `e`
+                $vars: ['seriesName', 'name', 'value']
+            };
+        },
+
+        /**
          * Format label
          * @param {number} dataIndex
          * @param {string} [status='normal'] 'normal' or 'emphasis'
@@ -129,42 +157,27 @@ define(function(require) {
          * @return {string}
          */
         getFormattedLabel: function (dataIndex, status, formatter) {
+            status = status || 'normal';
             var data = this._data;
             var itemModel = data.getItemModel(dataIndex);
-            var value = data.getRawValue(dataIndex);
-            var rawIndex = data.getRawIndex(dataIndex)
 
-            var seriesOpt = this.option;
-            var dataItemOpt = seriesOpt.data[rawIndex];
-
-            var seriesIndex = this.seriesIndex;
-            var seriesName = this.name;
-
-            var name = data.getName(dataIndex);
-
+            var params = this.getFormatParams(dataIndex);
             if (!formatter) {
                 formatter = itemModel.get('itemStyle.' + status + '.label.formatter')
             }
 
             if (typeof formatter === 'function') {
-                return formatter({
-                    seriesIndex: seriesIndex,
-                    seriesName: seriesName,
-                    series: seriesOpt,
-                    name: name,
-                    value: value,
-                    data: dataItemOpt,
-                    status: status || 'normal'
-                });
+                params.status = status;
+                return formatter(params);
             }
             else if (typeof formatter === 'string') {
                 // TODO ETPL ?
                 return formatter.replace('{a}','{a0}')
                                 .replace('{b}','{b0}')
                                 .replace('{c}','{c0}')
-                                .replace('{a0}', seriesName)
-                                .replace('{b0}', name)
-                                .replace('{c0}', addCommas(value));
+                                .replace('{a0}', params.seriesName)
+                                .replace('{b0}', params.name)
+                                .replace('{c0}', addCommas(params.value));
             }
         },
 
