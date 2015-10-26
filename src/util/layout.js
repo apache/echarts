@@ -70,16 +70,90 @@ define(function(require) {
         var x2 = parsePercent(positionInfo.x2, containerWidth);
         var y2 = parsePercent(positionInfo.y2, containerHeight);
 
-        isNaN(x) && (x = 0);
-        isNaN(x2) && (x2 = containerWidth);
-        isNaN(y) && (y = 0);
-        isNaN(y2) && (y2 = containerHeight);
+        (isNaN(x) || isNaN(parseFloat(positionInfo.x))) && (x = 0);
+        (isNaN(x2) || isNaN(parseFloat(positionInfo.x2))) && (x2 = containerWidth);
+        (isNaN(y) || isNaN(parseFloat(positionInfo.y))) && (y = 0);
+        (isNaN(y2) || isNaN(parseFloat(positionInfo.y2))) && (y2 = containerHeight);
 
         margin = formatUtil.normalizeCssArray(margin || 0);
 
         return {
             width: Math.max(x2 - x - margin[1] - margin[3], 0),
             height: Math.max(y2 - y - margin[0] - margin[2], 0)
+        };
+    };
+
+    /**
+     * Parse position info.
+     *  position info is specified by either
+     *  {x, y}, {x2, y2}
+     *  If all properties exists, x2 and y2 will be igonred.
+     *
+     * @param {Object} positionInfo
+     * @param {number|string} [positionInfo.x]
+     * @param {number|string} [positionInfo.y]
+     * @param {number|string} [positionInfo.x2]
+     * @param {number|string} [positionInfo.y2]
+     * @param {number|string} [positionInfo.width]
+     * @param {number|string} [positionInfo.height]
+     * @param {Object} containerRect
+     * @param {string|number} margin
+     * @param {boolean} [notAlignX=false]
+     * @param {boolean} [notAlignY=false]
+     */
+    layout.parsePositionInfo = function (
+        positionInfo, containerRect, margin,
+        notAlignX, notAlignY
+    ) {
+        margin = formatUtil.normalizeCssArray(margin || 0);
+
+        var containerWidth = containerRect.width;
+        var containerHeight = containerRect.height;
+
+        var x = parsePercent(positionInfo.x, containerWidth);
+        var y = parsePercent(positionInfo.y, containerHeight);
+        var x2 = parsePercent(positionInfo.x2, containerWidth);
+        var y2 = parsePercent(positionInfo.y2, containerHeight);
+        var width = parsePercent(positionInfo.width, containerWidth);
+        var height = parsePercent(positionInfo.height, containerHeight);
+
+        height += margin[2] + margin[0];
+        width += margin[1] + margin[3];
+        // If x is not specified, calculate x from x2 and width
+        if (isNaN(x)) {
+            x = x2 - width;
+        }
+        if (isNaN(y)) {
+            y = y2 - height;
+        }
+
+        if (!notAlignX) {
+            switch (positionInfo.x || positionInfo.x2) {
+                case 'center':
+                    x = containerWidth / 2 - width / 2;
+                    break;
+                case 'right':
+                    x = containerWidth - width;
+                    break;
+            }
+        }
+        if (!notAlignY) {
+            switch (positionInfo.y || positionInfo.y2) {
+                case 'middle':
+                    y = containerHeight / 2 - height / 2;
+                    break;
+                case 'bottom':
+                    y = containerHeight - height;
+                    break;
+            }
+        }
+
+        return {
+            x: x + margin[3],
+            y: y + margin[0],
+            width: width,
+            height: height,
+            margin: margin
         };
     };
 
@@ -104,56 +178,21 @@ define(function(require) {
         group, positionInfo, containerRect, margin,
         notAlignX, notAlignY
     ) {
-        margin = formatUtil.normalizeCssArray(margin || 0);
-
         var groupRect = group.getBoundingRect();
 
-        var containerWidth = containerRect.width;
-        var containerHeight = containerRect.height;
+        positionInfo = zrUtil.extend({
+            width: groupRect.width,
+            height: groupRect.height
+        }, positionInfo);
 
-        var x = parsePercent(positionInfo.x, containerWidth);
-        var y = parsePercent(positionInfo.y, containerHeight);
-        var x2 = parsePercent(positionInfo.x2, containerWidth);
-        var y2 = parsePercent(positionInfo.y2, containerHeight);
-
-        var width = groupRect.width;
-        var height = groupRect.height;
-
-        height += margin[2] + margin[0];
-        width += margin[1] + margin[3];
-        // If x is not specified, calculate x from x2 and width
-        if (isNaN(x)) {
-            x = x2 - width;
-        }
-        if (isNaN(y)) {
-            y = y2 - height;
-        }
-
-        if (!notAlignX) {
-            switch (positionInfo.x || positionInfo.x2) {
-                case 'center':
-                    x = containerWidth / 2 - width / 2;
-                    break;
-                case 'right':
-                    x = containerWidth - width;
-                    break;
-
-            }
-        }
-        if (!notAlignY) {
-            switch (positionInfo.y || positionInfo.y2) {
-                case 'middle':
-                    y = containerHeight / 2 - height / 2;
-                    break;
-                case 'bottom':
-                    y = containerHeight - height;
-                    break;
-            }
-        }
+        positionInfo = layout.parsePositionInfo(
+            positionInfo, containerRect, margin,
+            notAlignX, notAlignY
+        );
 
         group.position = [
-            x - groupRect.x + margin[3],
-            y - groupRect.y + margin[0]
+            positionInfo.x - groupRect.x,
+            positionInfo.y - groupRect.y
         ];
     };
 

@@ -6,11 +6,11 @@ define(function (require) {
             return payload && payload.seriesId && seriesModel.uid !== payload.seriesId;
         },
 
-        retrieveTargetInfo: function (payload, seriesModel) {
+        retrieveTargetNodeInfo: function (payload, seriesModel) {
             if (payload && payload.seriesId && seriesModel.uid !== payload.seriesId) {
                 return;
             }
-            if (!payload || payload.type !== 'zoomToNode') {
+            if (!payload || payload.type !== 'treemapZoomToNode') {
                 return;
             }
 

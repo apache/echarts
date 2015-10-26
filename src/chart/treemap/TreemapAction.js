@@ -3,17 +3,11 @@
  */
 define(function(require) {
 
-    // var zrUtil = require('zrender/core/util');
     var echarts = require('../../echarts');
-    // var modelUtil = require('../../util/model');
 
-    var actionInfo = {
-        type: 'zoomToNode',
-        update: 'updateView'
-    };
+    var noop = function () {}
 
-    echarts.registerAction(actionInfo, function (payload, ecModel) {
-        // do nothing
-    });
+    echarts.registerAction({type: 'treemapZoomToNode', update: 'updateView'}, noop);
+    echarts.registerAction({type: 'treemapRender', update: 'updateView'}, noop);
 
 });

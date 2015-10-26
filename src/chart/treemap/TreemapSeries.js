@@ -26,12 +26,12 @@ define(function(require) {
             squareRatio: 0.5 * (1 + Math.sqrt(5)), // golden ratio
             root: '',
             colorDimension: 'value',                    // 默认第一个维度。
-            zoomStep: 10,                         // 0表示不zoom。
             zoomToNodeRatio: 0.2 * 0.2,                 // zoom to node时 node占可视区域的面积比例。
+            roam: true,
             breadcrumb: {
                 show: true,
                 height: 22,
-                x: 10,
+                x: 'center',
                 y: 'bottom',
                 emptyItemWidth: 25,                    // 空节点宽度
                 itemStyle: {
@@ -46,7 +46,7 @@ define(function(require) {
                         textStyle: {
                             color: '#fff',
                             fontFamily: 'Arial',
-                            fontSize: 13,
+                            fontSize: 12,
                             fontWeight: 'normal'
                         }
                     },
@@ -62,7 +62,7 @@ define(function(require) {
                     y: 12,
                     textStyle: {
                         align: 'left',
-                        color: '#000',
+                        color: '#fff',
                         fontFamily: 'Arial',
                         fontSize: 13,
                         fontStyle: 'normal',
@@ -119,6 +119,18 @@ define(function(require) {
             var optionRoot = this.option.root;
             var treeRoot = this.getData().tree.root;
             return optionRoot && treeRoot.getNodeByName(optionRoot) || treeRoot;
+        },
+
+        /**
+         * @public
+         * @param {Array.<number>} size [width, height]
+         */
+        setContainerSize: function (size) {
+            /**
+             * @readOnly
+             * @type {Array.<number>}
+             */
+            return this.containerSize = size.slice();
         }
 
     });

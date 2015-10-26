@@ -32,27 +32,32 @@ define(function (require) {
                     return;
                 }
 
-                // FIXME
-                // 暂使用 ecWidth ecHeight 作为可视区大小
-                var estimatedSize = estimateRootSize(
-                    helper.retrieveTargetInfo(payload, seriesModel),
-                    seriesModel, ecWidth, ecHeight
-                );
-
+                // Set container size
                 var size = seriesModel.get('size') || []; // Compatible with ec2.
+                var containerSize = seriesModel.setContainerSize([
+                    parsePercent(
+                        retrieveValue(seriesModel.get('width'), size[0]),
+                        ecWidth
+                    ),
+                    parsePercent(
+                        retrieveValue(seriesModel.get('height'), size[1]),
+                        ecHeight
+                    )
+                ]);
+
+                // FIXME
+                // 暂使用 ecWidth ecHeight 作为可视区大小，不进行clip。
+                var payloadType = payload && payload.type;
+                var payloadSize = payloadType === 'treemapZoomToNode'
+                    ? estimateRootSize(payload, seriesModel, ecWidth, ecHeight)
+                    : payloadType === 'treemapRender'
+                    ? [payload.viewRect.width, payload.viewRect.height]
+                    : null;
+
                 var options = {
                     squareRatio: seriesModel.get('squareRatio'),
                     sort: seriesModel.get('sort'),
-                    rootSize: estimatedSize || [
-                        parsePercent(
-                            retrieveValue(seriesModel.get('width'), size[0]),
-                            ecWidth
-                        ),
-                        parsePercent(
-                            retrieveValue(seriesModel.get('height'), size[1]),
-                            ecHeight
-                        )
-                    ]
+                    rootSize: payloadSize || containerSize.slice()
                 };
 
                 this.squarify(seriesModel.getViewRoot(), options);
@@ -282,7 +287,8 @@ define(function (require) {
         rect[wh[idx1WhenH]] -= rowOtherLength;
     }
 
-    function estimateRootSize(targetInfo, seriesModel, viewWidth, viewHeight) {
+    function estimateRootSize(payload, seriesModel, viewWidth, viewHeight) {
+        var targetInfo = helper.retrieveTargetNodeInfo(payload, seriesModel);
         // If targetInfo.node exists, we zoom to the node,
         // so estimate whold width and heigth by target node.
         var currNode = (targetInfo || {}).node;
