@@ -23,17 +23,14 @@ define(function(require) {
         type: 'cartesian2d',
 
         /**
-         * Base axis is the category axis if exists.
-         * If don't, x axis will be the base axis.
-         *
          * Base axis will be used on stacking.
          *
          * @return {module:echarts/coord/cartesian/Axis2D}
          */
         getBaseAxis: function () {
-            var xAxis = this.getAxis('x');
-            var yAxis = this.getAxis('y');
-            return yAxis.scale.type === 'ordinal' ? yAxis : xAxis;
+            return this.getAxesByScale('ordinal')[0]
+                || this.getAxesByScale('time')[0]
+                || this.getAxis('x');
         },
 
         /**

@@ -130,7 +130,6 @@ define(function (require) {
             var splitLineModel = angleAxisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
             var lineColors = lineStyleModel.get('color');
-            var lineWidth = lineStyleModel.get('width');
             var lineCount = 0;
 
             lineColors = lineColors instanceof Array ? lineColors : [lineColors];
@@ -149,11 +148,9 @@ define(function (require) {
             // Batching the lines if color are the same
             for (var i = 0; i < splitLines.length; i++) {
                 this.group.add(graphic.mergePath(splitLines[i], {
-                    style: {
-                        stroke: lineColors[i % lineColors.length],
-                        lineType: lineStyleModel.getLineDash(),
-                        lineWidth: lineWidth
-                    },
+                    style: zrUtil.defaults({
+                        stroke: lineColors[i % lineColors.length]
+                    }, lineStyleModel.getLineStyle()),
                     silent: true,
                     z: angleAxisModel.get('z')
                 }));

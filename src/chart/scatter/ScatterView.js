@@ -11,9 +11,9 @@ define(function (require) {
             this.group.add(this._dataSymbol.group);
         },
 
-        render: function (seriesModel, ecModel) {
+        render: function (seriesModel, ecModel, api) {
             this._dataSymbol.updateData(
-                seriesModel.getData(), seriesModel, ecModel.get('animation')
+                seriesModel.getData(), seriesModel, api, ecModel.get('animation')
             );
         },
 

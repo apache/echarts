@@ -147,6 +147,8 @@ define(function(require) {
             var baseAxis = columnLayoutInfo.axis;
             var valueAxis = cartesian.getOtherAxis(baseAxis);
 
+            var barMinHeight = seriesModel.get('barMinHeight') || 0;
+
             if (data.type === 'list') {
                 var valueAxisStart = baseAxis.onZero
                     ? valueAxis.dataToCoord(0) : valueAxis.getExtent()[0];
@@ -175,13 +177,22 @@ define(function(require) {
                         y = coord[1] + columnOffset;
                         width = coord[0] - lastCoord;
                         height = columnWidth;
+
+                        if (Math.abs(width) < barMinHeight) {
+                            width = (width < 0 ? -1 : 1) * barMinHeight;
+                        }
                     }
                     else {
                         x = coord[0] + columnOffset;
                         y = lastCoord;
                         width = columnWidth;
                         height = coord[1] - lastCoord;
+
+                        if (Math.abs(height) < barMinHeight) {
+                            height = (height < 0 ? -1 : 1) * barMinHeight;
+                        }
                     }
+
                     lastStackCoords[stackId][idx][sign] += height;
 
                     data.setItemLayout(idx, {

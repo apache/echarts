@@ -1,0 +1,105 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/polar',
+                'echarts/component/tooltip'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                var hours = ['12a', '1a', '2a', '3a', '4a', '5a', '6a',
+                        '7a', '8a', '9a','10a','11a',
+                        '12p', '1p', '2p', '3p', '4p', '5p',
+                        '6p', '7p', '8p', '9p', '10p', '11p'];
+                var days = ['Saturday', 'Friday', 'Thursday',
+                        'Wednesday', 'Tuesday', 'Monday', 'Sunday'];
+
+                var usedMap = {};
+
+                var data = [];
+
+                for (var i = 0; i < 100; i++) {
+                    do {
+                        var x = Math.round(Math.random() * (hours.length - 1));
+                        var y = Math.round(Math.random() * (days.length - 1));
+                        var key = y * 100 + x;
+                    } while(usedMap[key])
+
+                    usedMap[key] = true;
+
+                    data.push([
+                        x, y, Math.random() + 0.1
+                    ])
+                }
+
+                chart.setOption({
+                    legend: {
+                        data: ['Punch Card']
+                    },
+                    polar: {},
+                    angleAxis: {
+                        type: 'category',
+                        data: hours,
+                        boundaryGap: false,
+                        splitLine: {
+                            show: true,
+                            lineStyle: {
+                                color: '#ddd',
+                                type: 'dashed'
+                            }
+                        },
+                        axisLine: {
+                            show: false
+                        }
+                    },
+                    radiusAxis: {
+                        type: 'category',
+                        data: days,
+                        axisLine: {
+                            show: false
+                        },
+                        axisLabel: {
+                            rotate: 45
+                        }
+                    },
+                    series: [{
+                        name: 'Punch Card',
+                        type: 'scatter',
+                        coordinateSystem: 'polar',
+                        itemStyle: {
+                            normal: {
+                                color: '#d14a61'
+                            }
+                        },
+                        symbolSize: function (val) {
+                            return val[2] * 20;
+                        },
+                        data: data
+                    }]
+                });
+            })
+
+        </script>
+    </body>
+</html>

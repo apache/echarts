@@ -3,7 +3,6 @@ define(function(require) {
     'use strict';
 
     var pathTool = require('zrender/tool/path');
-    var matrix = require('zrender/core/matrix');
     var round = Math.round;
     var Path = require('zrender/graphic/Path');
     var colorTool = require('zrender/tool/color');
@@ -152,40 +151,138 @@ define(function(require) {
             : (doubledPosition + (positiveOrNegative ? 1 : -1)) / 2;
     };
 
+    /**
+     * @private
+     */
+    function doSingleEnterHover(el) {
+        if (el.__isHover) {
+            return;
+        };
+        if (el.__hoverStlDirty) {
+            var stroke = el.style.stroke;
+            var fill = el.style.fill;
+
+            // Create hoverStyle on mouseover
+            var hoverStyle = el.__hoverStl;
+            hoverStyle.fill = hoverStyle.fill || colorTool.lift(fill, -0.1);
+            hoverStyle.stroke = hoverStyle.stroke || colorTool.lift(stroke, -0.1);
+
+            var normalStyle = {};
+            for (var name in hoverStyle) {
+                normalStyle[name] = el.style[name];
+            }
+
+            el.__normalStl = normalStyle;
+
+            el.__hoverStlDirty = false;
+        }
+        el.setStyle(el.__hoverStl);
+        el.z2 += 1;
+
+        el.__isHover = true;
+    }
+
+    /**
+     * @inner
+     */
+    function doSingleLeaveHover(el) {
+        if (!el.__isHover) {
+            return;
+        }
+
+        var normalStl = el.__normalStl;
+        normalStl && el.setStyle(normalStl);
+        el.z2 -= 1;
+
+        el.__isHover = false;
+    }
+
+    /**
+     * @inner
+     */
+    function doEnterHover(el) {
+        el.type === 'group'
+            ? el.traverse(function (child) {
+                if (child.type !== 'group') {
+                    doSingleEnterHover(child);
+                }
+            })
+            : doSingleEnterHover(el);
+    }
+
+    function doLeaveHover(el) {
+        el.type === 'group'
+            ? el.traverse(function (child) {
+                if (child.type !== 'group') {
+                    doSingleLeaveHover(child);
+                }
+            })
+            : doSingleLeaveHover(el);
+    }
+
+    /**
+     * @inner
+     */
+    function setElementHoverStl(el, hoverStl) {
+        // If element has sepcified hoverStyle, then use it instead of given hoverStyle
+        // Often used when item group has a label element and it's hoverStyle is different
+        el.__hoverStl = el.hoverStyle || hoverStl;
+        el.__hoverStlDirty = true;
+    }
+
+    /**
+     * @inner
+     */
     function onElementMouseOver() {
-        this.setStyle(this.__hoverStyle);
-        this.z2 += 1;
+        // Only if element is not inemphasis status
+        !this.__isEmphasis && doEnterHover(this);
     }
+
+    /**
+     * @inner
+     */
     function onElementMouseOut() {
-        this.setStyle(this.__normalStyle);
-        this.z2 -= 1;
+        // Only if element is not inemphasis status
+        !this.__isEmphasis && doLeaveHover(this);
     }
-    var MOUSEOVER = 'mouseover';
-    var MOUSEOUT = 'mouseout';
+
+    /**
+     * @inner
+     */
+    function enterEmphasis() {
+        this.__isEmphasis = true;
+        doEnterHover(this);
+    }
+
+    /**
+     * @inner
+     */
+    function leaveEmphasis() {
+        this.__isEmphasis = false;
+        doLeaveHover(this);
+    }
+
     /**
      * Set hover style of element
      * @param {module:zrender/graphic/Displayable} el
-     * @param {Object} hoverStyle
+     * @param {Object} [hoverStyle]
      */
     graphic.setHoverStyle = function (el, hoverStyle) {
-        var stroke = el.style.stroke;
-        var fill = el.style.fill;
         hoverStyle = hoverStyle || {};
-        hoverStyle.fill = hoverStyle.fill || colorTool.lift(fill, -0.1);
-        hoverStyle.stroke = hoverStyle.stroke || colorTool.lift(stroke, -0.1);
-
-        var normalStyle = {};
-        for (var name in hoverStyle) {
-            normalStyle[name] = el.style[name];
-        }
-
-        el.__normalStyle = normalStyle;
-        el.__hoverStyle = hoverStyle;
+        el.type === 'group'
+            ? el.traverse(function (child) {
+                if (child.type !== 'group') {
+                    setElementHoverStl(child, hoverStyle);
+                }
+            })
+            : setElementHoverStl(el, hoverStyle);
         // Remove previous bound handlers
-        el.off(MOUSEOVER, onElementMouseOver);
-        el.off(MOUSEOUT, onElementMouseOut);
-        el.on(MOUSEOVER, onElementMouseOver);
-        el.on(MOUSEOUT, onElementMouseOut);
+        el.on('mouseover', onElementMouseOver)
+          .on('mouseout', onElementMouseOut);
+
+        // Emphasis, normal can be triggered manually
+        el.on('emphasis', enterEmphasis)
+          .on('normal', leaveEmphasis);
     };
 
     return graphic;

@@ -1,8 +1,15 @@
 define(function (require) {
 
     var List = require('../../data/List');
-
     var echarts = require('../../echarts');
+    var SeriesModel = require('../../model/Series');
+    var zrUtil = require('zrender/core/util');
+
+    var formatUtil = require('../../util/format');
+    var encodeHTML = formatUtil.encodeHTML;
+    var addCommas = formatUtil.addCommas;
+
+    var dataSelectableMixin = require('../helper/dataSelectableMixin');
 
     function fillData(dataOpt, geoJson) {
         var dataNameMap = {};
@@ -23,7 +30,7 @@ define(function (require) {
         return dataOpt;
     }
 
-    return echarts.extendSeriesModel({
+    var MapSeries = SeriesModel.extend({
 
         type: 'series.map',
 
@@ -33,27 +40,92 @@ define(function (require) {
          */
         needsDrawMap: false,
 
+        /**
+         * Group of all map series with same mapType
+         * @type {boolean}
+         */
+        seriesGroup: [],
+
+        init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
+
+            option = this._fillOption(option);
+            this.option = option;
+
+            SeriesModel.prototype.init.call(
+                this, option, parentModel, ecModel, dependentModels, seriesIndex
+            );
+
+            this.updateSelectedMap();
+        },
+
         getInitialData: function (option) {
             var list = new List([{
                 name: 'value'
             }], this);
 
-            var geoJson = echarts.getMap(option.mapType);
-
-            var dataOpt = option.data || [];
-
-            // https://jsperf.com/try-catch-performance-overhead
-            if (geoJson) {
-                try {
-                    dataOpt = fillData(dataOpt, geoJson);
-                }
-                catch (e) {
-                    throw 'Invalid geoJson format\n' + e;
-                }
-            }
-            list.initData(dataOpt);
+            list.initData(option.data);
 
             return list;
+        },
+
+        mergeOption: function (newOption) {
+            newOption = this._fillOption(newOption);
+            SeriesModel.prototype.mergeOption.call(this, newOption);
+            this.updateSelectedMap();
+        },
+
+        _fillOption: function (option) {
+            // Shallow clone
+            option = zrUtil.extend({}, option);
+
+            var geoJson = echarts.getMap(option.mapType);
+            geoJson && option.data
+                && (option.data = fillData(option.data, geoJson));
+
+            return option;
+        },
+
+        /**
+         * @param {number} zoom
+         */
+        setRoamZoom: function (zoom) {
+            var roamDetail = this.option.roamDetail;
+            roamDetail && (roamDetail.zoom = zoom);
+        },
+
+        /**
+         * @param {number} x
+         * @param {number} y
+         */
+        setRoamPan: function (x, y) {
+            var roamDetail = this.option.roamDetail;
+            if (roamDetail) {
+                roamDetail.x = x;
+                roamDetail.y = y;
+            }
+        },
+
+        /**
+         * Map tooltip formatter
+         *
+         * @param {number} dataIndex
+         */
+        formatTooltip: function (dataIndex) {
+            var data = this._data;
+            var formattedValue = addCommas(data.getRawValue(dataIndex));
+            var name = data.getName(dataIndex, true);
+
+            var seriesGroup = this.seriesGroup;
+            var seriesNames = [];
+            for (var i = 0; i < seriesGroup.length; i++) {
+                var subData = seriesGroup[i].getData();
+                if (!isNaN(subData.getRawValue(dataIndex))) {
+                    seriesNames.push(seriesGroup[i].name);
+                }
+            }
+
+            return seriesNames.join(', ') + '<br />'
+                + name + ' : ' + formattedValue;
         },
 
         defaultOption: {
@@ -121,19 +193,10 @@ define(function (require) {
                     areaColor: 'rgba(255,215,0,0.8)'
                 }
             }
-        },
-
-        setRoamZoom: function (zoom) {
-            var roamDetail = this.option.roamDetail;
-            roamDetail && (roamDetail.zoom = zoom);
-        },
-
-        setRoamPan: function (x, y) {
-            var roamDetail = this.option.roamDetail;
-            if (roamDetail) {
-                roamDetail.x = x;
-                roamDetail.y = y;
-            }
         }
-    })
+    });
+
+    zrUtil.mixin(MapSeries, dataSelectableMixin);
+
+    return MapSeries;
 });

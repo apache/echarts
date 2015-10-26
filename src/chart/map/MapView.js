@@ -9,30 +9,32 @@ define(function (require) {
 
         type: 'map',
 
-        init: function (ecModel, api) {
-            var mapDraw = new MapDraw(api, false);
-            this._mapDraw = mapDraw;
-        },
-
         render: function (mapModel, ecModel, api) {
             var group = this.group;
-            var mapDraw = this._mapDraw;
             group.removeAll();
 
-            group.add(mapDraw.group);
-
             if (mapModel.needsDrawMap) {
-                mapModel.needsDrawMap
-                    mapDraw.draw(mapModel, ecModel, api);
+                var mapDraw = this._mapDraw || new MapDraw(api, false);
+                group.add(mapDraw.group);
+
+                mapDraw.draw(mapModel, ecModel, api);
+
+                this._mapDraw = mapDraw;
             }
             else {
                 // Remove drawed map
-                mapDraw.group.removeAll();
+                this._mapDraw && this._mapDraw.remove();
+                this._mapDraw = null;
             }
 
             mapModel.get('showLegendSymbol') && ecModel.getComponent('legend')
                 && this._renderSymbols(mapModel, ecModel, api);
+        },
 
+        remove: function () {
+            this._mapDraw && this._mapDraw.remove();
+            this._mapDraw = null;
+            this.group.removeAll();
         },
 
         _renderSymbols: function (mapModel, ecModel, api) {
@@ -40,9 +42,6 @@ define(function (require) {
             var group = this.group;
 
             data.each('value', function (value, idx) {
-                if (isNaN(value)) {
-                    return;
-                }
                 var itemModel = data.getItemModel(idx);
                 var labelModel = itemModel.getModel('label.normal');
                 var textStyleModel = labelModel.getModel('textStyle');
@@ -51,30 +50,38 @@ define(function (require) {
                 var point = layout.point;
                 var offset = layout.offset;
 
-                var circle = new graphic.Circle({
-                    style: {
-                        fill: data.getVisual('color')
-                    },
-                    shape: {
-                        cx: point[0] + offset * 9,
-                        cy: point[1],
-                        r: 3
-                    },
-                    silent: true,
+                var showLabel = labelModel.get('show');
 
-                    z2: 10
-                });
+                var labelText = data.getName(idx);
+                var labelColor = textStyleModel.get('color');
+                var labelFont = textStyleModel.getFont();
 
-                if (labelModel.get('show') && !offset) {
-                    circle.setStyle({
-                        text: data.getName(idx),
-                        textFill: textStyleModel.get('color'),
-                        textPosition: 'bottom',
-                        textFont: textStyleModel.getFont()
+                if (!isNaN(value)) {
+                    var circle = new graphic.Circle({
+                        style: {
+                            fill: data.getVisual('color')
+                        },
+                        shape: {
+                            cx: point[0] + offset * 9,
+                            cy: point[1],
+                            r: 3
+                        },
+                        silent: true,
+
+                        z2: 10
                     });
-                }
 
-                group.add(circle);
+                    if (showLabel && !offset) {
+                        circle.setStyle({
+                            text: labelText,
+                            textFill: labelColor,
+                            textPosition: 'bottom',
+                            textFont: labelFont
+                        });
+                    }
+
+                    group.add(circle);
+                }
             });
         }
     });

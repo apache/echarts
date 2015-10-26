@@ -106,10 +106,11 @@ define(function (require) {
      * @constructor
      */
     function TooltipContent(container) {
-
         this.el = document.createElement('div');
 
         container.appendChild(this.el);
+
+        this._container = container;
 
         this._show = false;
     }
@@ -117,6 +118,21 @@ define(function (require) {
     TooltipContent.prototype = {
 
         constructor: TooltipContent,
+
+        /**
+         * Update when tooltip is rendered
+         */
+        update: function () {
+            var container = this._container;
+            var stl = document.defaultView.getComputedStyle(container);
+            var domStyle = container.style;
+            if (domStyle.position !== 'absolute' && stl.position !== 'absolute') {
+                domStyle.position = 'relative';
+            }
+            // Hide the tooltip
+            // PENDING
+            this.hide();
+        },
 
         show: function (tooltipModel) {
             clearTimeout(this._hideTimeout);

@@ -94,12 +94,26 @@ define(function (require) {
          */
         this.rect = rect;
 
-        zr.on('mousedown', mousedown, this);
-        zr.on('mousemove', mousemove, this);
-        zr.on('mouseup', mouseup, this);
-        zr.on('mousewheel', mousewheel, this);
+        // Avoid two roamController bind the same handler
+        var bind = zrUtil.bind;
+        var mousedownHandler = bind(mousedown, this);
+        var mousemoveHandler = bind(mousemove, this);
+        var mouseupHandler = bind(mouseup, this);
+        var mousewheelHandler = bind(mousewheel, this);
+
+        zr.on('mousedown', mousedownHandler);
+        zr.on('mousemove', mousemoveHandler);
+        zr.on('mouseup', mouseupHandler);
+        zr.on('mousewheel', mousewheelHandler);
 
         Eventful.call(this);
+
+        this.dispose = function () {
+            zr.off('mousedown', mousedownHandler);
+            zr.off('mousemove', mousemoveHandler);
+            zr.off('mouseup', mouseupHandler);
+            zr.off('mousewheel', mousewheelHandler);
+        }
     }
 
     zrUtil.mixin(RoamController, Eventful);

@@ -10,10 +10,6 @@ define(function (require) {
             var data = mapModel.getData();
 
             data.each('value', function (value, idx) {
-                if (isNaN(value)) {
-                    return;
-                }
-
                 var name = data.getName(idx);
                 var region = geo.getRegion(name);
 
@@ -22,9 +18,7 @@ define(function (require) {
                 if (!region) {
                     return;
                 }
-                var point = geo.dataToPoint(
-                    region.getCenter()
-                );
+                var point = geo.dataToPoint(region.center);
 
                 mapSymbolOffsets[name] = offset + 1;
 

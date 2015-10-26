@@ -6,7 +6,9 @@ define(function(require) {
     var SeriesModel = require('../../model/Series');
     var zrUtil = require('zrender/core/util');
 
-    return SeriesModel.extend({
+    var dataSelectableMixin = require('../helper/dataSelectableMixin');
+
+    var PieSeries = SeriesModel.extend({
 
         type: 'series.pie',
 
@@ -15,73 +17,27 @@ define(function(require) {
                 this, option, parentModel, ecModel, dependentModels, seriesIndex
             );
 
-            // FIXME Keep selected status?
-            var dataOptMap = {};
-
-            zrUtil.each(option.data, function (dataOpt) {
-                dataOptMap[dataOpt.name] = dataOpt;
-            });
-
-            this._dataOptMap = dataOptMap;
-
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
             this.legendDataProvider = function () {
                 return this._dataBeforeProcessed;
             }
+
+            this.updateSelectedMap();
+        },
+
+        mergeOption: function (newOption) {
+            SeriesModel.prototype.mergeOption.call(this, newOption);
+            this.updateSelectedMap();
         },
 
         getInitialData: function (option, ecModel) {
             var list = new List([{
-                name: 'x',
+                name: 'value',
                 stackable: true
             }], this);
             list.initData(option.data);
             return list;
-        },
-
-        /**
-         * @param {string} name
-         */
-        // PENGING If selectedMode is null ?
-        select: function (name) {
-            var dataOptMap = this._dataOptMap;
-            var dataOpt = dataOptMap[name];
-            var selectedMode = this.get('selectedMode');
-            if (selectedMode === 'single') {
-                zrUtil.each(dataOptMap, function (dataOpt) {
-                    dataOpt.selected = false;
-                });
-            }
-            dataOpt && (dataOpt.selected = true);
-        },
-
-        /**
-         * @param {string} name
-         */
-        unSelect: function (name) {
-            var dataOpt = this._dataOptMap[name];
-            var selectedMode = this.get('selectedMode');
-            selectedMode !== 'single' && dataOpt && (dataOpt.selected = false);
-        },
-
-        /**
-         * @param {string} name
-         */
-        toggleSelected: function (name) {
-            var dataOpt = this._dataOptMap[name];
-            if (dataOpt != null) {
-                this[dataOpt.selected ? 'unSelect' : 'select'](name);
-                return dataOpt.selected;
-            }
-        },
-
-        /**
-         * @param {string} name
-         */
-        isSelected: function (name) {
-            var dataOpt = this._dataOptMap[name];
-            return dataOpt && dataOpt.selected;
         },
 
         defaultOption: {
@@ -107,6 +63,8 @@ define(function(require) {
 
             label: {
                 normal: {
+                    // If rotate around circle
+                    rotate: false,
                     show: true,
                     // 'outer', 'inside', 'center'
                     position: 'outer'
@@ -143,4 +101,8 @@ define(function(require) {
             }
         }
     });
+
+    zrUtil.mixin(PieSeries, dataSelectableMixin);
+
+    return PieSeries;
 });

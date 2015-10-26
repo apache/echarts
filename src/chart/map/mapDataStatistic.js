@@ -2,8 +2,6 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
 
-    var List = require('../../data/List');
-
     // FIXME 公用？
     /**
      * @param {Array.<module:echarts/data/List>} datas
@@ -34,7 +32,7 @@ define(function (require) {
             if (statisticsType === 'average') {
                 sum /= len;
             }
-            return sum;
+            return len === 0 ? NaN : sum;
         });
     }
 
@@ -59,6 +57,7 @@ define(function (require) {
             seriesList[0].setData(data);
 
             for (var i = 0; i < seriesList.length; i++) {
+                seriesList[i].seriesGroup = seriesList;
                 seriesList[i].needsDrawMap = i === 0;
             }
         });

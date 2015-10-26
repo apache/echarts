@@ -197,6 +197,12 @@ define(function (require) {
             var labelMargin = labelModel.get('margin');
             var labelRotate = labelModel.get('rotate');
 
+            var isAxisTop = axis.position === 'top';
+
+            if (isAxisTop) {
+                labelRotate = -labelRotate;
+            }
+
             for (var i = 0; i < ticks.length; i++) {
                 var tick = ticks[i];
                 if (ifIgnoreOnTick(axis, i, labelInterval)) {
@@ -231,7 +237,8 @@ define(function (require) {
                         labelTextAlign = 'left';
                 }
                 if (axis.isHorizontal() && labelRotate) {
-                    labelTextAlign = labelRotate > 0 ? 'left' : 'right';
+                    labelTextAlign = (!isAxisTop && labelRotate < 0) || (isAxisTop && labelRotate > 0)
+                         ? 'left' : 'right';
                 }
 
                 var textEl = new graphic.Text({

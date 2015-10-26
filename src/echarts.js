@@ -17,6 +17,8 @@ define(function (require) {
     var ComponentView = require('./view/Component');
     var ChartView = require('./view/Chart');
 
+    var scaleClasses = require('./scale/scale');
+
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
 
@@ -108,7 +110,7 @@ define(function (require) {
             return this._zr;
         },
 
-        setOption: function (option, notMerge) {
+        setOption: function (option, notMerge, refreshImmediately) {
             // PENDING
             option = zrUtil.clone(option, true);
 
@@ -131,10 +133,19 @@ define(function (require) {
             this._prepareCharts(ecModel);
 
             this.update();
+
+            refreshImmediately && this._zr.refreshImmediately();
         },
 
         setTheme: function (theme) {
 
+        },
+
+        /**
+         * @return {module:echarts/model/Global}
+         */
+        getModel: function () {
+            return this._model;
         },
 
         /**
@@ -626,6 +637,13 @@ define(function (require) {
             }
             var funcs = visualCodingFuncs[stage] || (visualCodingFuncs[stage] = []);
             funcs.push(visualCodingFunc);
+        },
+
+        /**
+         * @param
+         */
+        registerScale: function (scale) {
+            scaleClasses.register(scale);
         },
 
         /**

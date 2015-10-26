@@ -16,7 +16,8 @@ define(function (require) {
         },
 
         render: function (geoModel, ecModel, api) {
-            this._mapDraw.draw(geoModel, ecModel, api);
+            geoModel.get('show') &&
+                this._mapDraw.draw(geoModel, ecModel, api);
         }
     });
 });

@@ -1,5 +1,7 @@
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
+
     var echarts = require('../../echarts');
     var actionInfo = {
         type: 'geoRoam',
@@ -19,13 +21,6 @@ define(function (require) {
      */
     echarts.registerAction(actionInfo, function (payload, ecModel) {
         var componentType = payload.component || 'series';
-
-        function syncRoamOfAllMapSeries(mapType, panX, panY, zoom) {
-            ecModel.eachSeriesByTypeAll('map', function (seriesModel) {
-                seriesModel.setRoamPan(panX, panY);
-                seriesModel.setRoamZoom(zoom);
-            });
-        }
 
         ecModel.eachComponent(componentType, function (componentModel) {
             if (componentModel.name === payload.name) {
@@ -73,9 +68,10 @@ define(function (require) {
                 // All map series with same `map` use the same geo coordinate system
                 // So the roamDetail must be in sync. Include the series not selected by legend
                 if (componentType === 'series') {
-                    syncRoamOfAllMapSeries(
-                        componentModel.get('map'), panX, panY, (zoom || 1) * previousZoom
-                    );
+                    zrUtil.each(componentModel.seriesGroup, function (seriesModel) {
+                        seriesModel.setRoamPan(panX, panY);
+                        seriesModel.setRoamZoom(zoom);
+                    })
                 }
             }
         });

@@ -8,10 +8,16 @@ define(function (require) {
 
     require('./tooltip/TooltipModel');
 
+    /**
+     * @inner
+     */
     function getAxisPointerKey(coordName, axisType) {
         return coordName + axisType;
     }
 
+    /**
+     * @inner
+     */
     function makeLineShape(x1, y1, x2, y2) {
         return {
             x1: x1,
@@ -21,6 +27,9 @@ define(function (require) {
         };
     }
 
+    /**
+     * @inner
+     */
     function makeRectShape(x, y, width, height) {
         return {
             x: x,
@@ -30,6 +39,9 @@ define(function (require) {
         };
     }
 
+    /**
+     * @inner
+     */
     function makeSectorShape(cx, cy, r0, r, startAngle, endAngle) {
         return {
             cx: cx,
@@ -42,6 +54,38 @@ define(function (require) {
         };
     }
 
+    var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e'];
+
+
+    function wrapVar(varName, seriesIdx) {
+        return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
+    }
+    /**
+     * @inner
+     */
+    function formatTpl(tpl, paramsList) {
+        var seriesLen = paramsList.length;
+        if (!seriesLen) {
+            return '';
+        }
+
+        var $vars = paramsList[0].$vars;
+        for (var i = 0; i < $vars.length; i++) {
+            var alias = TPL_VAR_ALIAS[i];
+            tpl = tpl.replace(wrapVar(alias),  wrapVar(alias, 0));
+        }
+        for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
+            for (var k = 0; k < $vars.length; k++) {
+                tpl = tpl.replace(
+                    wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
+                    paramsList[seriesIdx][$vars[k]]
+                );
+            }
+        }
+
+        return tpl;
+    }
+
     require('../echarts').extendComponentView({
 
         type: 'tooltip',
@@ -50,6 +94,7 @@ define(function (require) {
 
         init: function (ecModel, api) {
             var zr = api.getZr();
+
             zr.on('mousemove', this._mouseMove, this);
             zr.on('mouseout', this._hide, this);
 
@@ -57,6 +102,7 @@ define(function (require) {
         },
 
         render: function (tooltipModel, ecModel, api) {
+
             // Reset
             this.group.removeAll();
             this._axisPointers = {};
@@ -67,13 +113,26 @@ define(function (require) {
 
             this._api = api;
 
-            this._tooltipContent.hide();
+            this._tooltipContent.update();
 
+            this._seriesGroupByAxis = this._prepareAxisTriggerData(
+                tooltipModel, ecModel
+            );
+
+            var crossText = this._crossText;
+            if (crossText) {
+                this.group.add(crossText);
+            }
+        },
+
+        _prepareAxisTriggerData: function (tooltipModel, ecModel) {
             // Prepare data for axis trigger
             var seriesGroupByAxis = {};
             ecModel.eachSeries(function (seriesModel) {
                 var coordSys = seriesModel.coordinateSystem;
-                if (!coordSys) {
+                var trigger = seriesModel.get('tooltip.trigger', true);
+                // Ignore series use item tooltip trigger
+                if (!coordSys ||  trigger === 'item') {
                     return;
                 }
 
@@ -109,12 +168,7 @@ define(function (require) {
 
             }, this);
 
-            this._seriesGroupByAxis = seriesGroupByAxis;
-
-            var crossText = this._crossText;
-            if (crossText) {
-                this.group.add(crossText);
-            }
+            return seriesGroupByAxis;
         },
 
         /**
@@ -132,25 +186,28 @@ define(function (require) {
                 return;
             }
 
-            if (trigger === 'item') {
-                if (!el || el.dataIndex == null) {
-
-                    this._hide();
-
-                    return;
-                }
-            }
-            else {
-
-                this._showAxisTooltip(e);
-            }
+            // Reset ticket
+            this._ticket = '';
 
             // Always show item tooltip if mouse is on the element with dataIndex
             if (el && el.dataIndex != null) {
 
-                var seriesModel = ecModel.getSeriesByIndex(el.seriesIndex);
+                var seriesModel = ecModel.getSeriesByIndex(
+                    el.seriesIndex, true
+                );
+
+                this._hideAxisPointer();
 
                 this._showItemTooltip(seriesModel, el.dataIndex, e);
+            }
+            else {
+                if (trigger === 'item') {
+                    this._hide();
+                }
+                else {
+                    // Try show axis tooltip
+                    this._showAxisTooltip(e);
+                }
             }
         },
 
@@ -172,6 +229,7 @@ define(function (require) {
 
                 // If mouse position is not in the grid or polar
                 var point = [e.offsetX, e.offsetY];
+
                 if (!coordSys.containPoint(point)) {
                     // Hide axis pointer
                     this._hide();
@@ -260,10 +318,10 @@ define(function (require) {
                 var axis = cartesian.getAxis(axisType);
                 var pointerEl = self._getPointerElement(cartesian, axisPointerModel, axisType);
                 var bandWidth = axis.getBandWidth();
-                var extentSize = otherExtent[1] - otherExtent[0];
+                var span = otherExtent[1] - otherExtent[0];
                 var targetShape = axisType === 'x'
-                    ? makeRectShape(point[0] - bandWidth / 2, otherExtent[0], bandWidth, extentSize)
-                    : makeRectShape(otherExtent[0], point[1] - bandWidth / 2, extentSize, bandWidth);
+                    ? makeRectShape(point[0] - bandWidth / 2, otherExtent[0], bandWidth, span)
+                    : makeRectShape(otherExtent[0], point[1] - bandWidth / 2, span, bandWidth);
 
                 // FIXME 动画总是感觉不连贯
                 // pointerEl.animateTo({
@@ -459,6 +517,13 @@ define(function (require) {
             return el;
         },
 
+        /**
+         * Show tooltip on item
+         * @param {Array.<module:echarts/model/Series>} seriesList
+         * @param {Array.<number>} point
+         * @param {Array.<number>} value
+         * @param {Object} e
+         */
         _showSeriesTooltip: function (coordSys, seriesList, point, value) {
 
             var rootTooltipModel = this._tooltipModel;
@@ -466,14 +531,40 @@ define(function (require) {
 
             var data = seriesList[0].getData();
             var baseAxis = coordSys.getBaseAxis();
-            if (baseAxis && rootTooltipModel.get('showContent')) {
-                var rank = value[baseAxis.dim === 'x' ? 0 : 1];
-                var dataIndex = data.indexOf(baseAxis.dim, rank);
 
-                var html = data.getName(dataIndex) + '<br />'
-                    + zrUtil.map(seriesList, function (series) {
-                        return series.formatTooltip(dataIndex, true);
-                    }).join('<br />');
+            if (baseAxis && rootTooltipModel.get('showContent')) {
+                var val = value[baseAxis.dim === 'x' ? 0 : 1];
+                var dataIndex = data.indexOfNearest(baseAxis.dim, val);
+
+                var formatter = rootTooltipModel.get('formatter');
+                var html;
+                if (!formatter) {
+                    // Default tooltip content
+                    html = data.getName(dataIndex) + '<br />'
+                        + zrUtil.map(seriesList, function (series) {
+                            return series.formatTooltip(dataIndex, true);
+                        }).join('<br />');
+                }
+                else {
+                    var paramsList = zrUtil.map(seriesList, function (series) {
+                        return series.getFormatParams(dataIndex);
+                    });
+                    if (typeof formatter === 'string') {
+                        html = formatTpl(formatter, paramsList);
+                    }
+                    else if (typeof formatter === 'function') {
+                        var self = this;
+                        var ticket = 'axis_' + coordSys.name + '_' + dataIndex;
+                        self._ticket = ticket;
+                        function callback(cbTicket, html) {
+                            if (cbTicket === self._ticket) {
+                                tooltipContent.setContent(html);
+                            }
+                        }
+                        html = formatter(paramsList, ticket, callback)
+                    }
+                }
+
 
                 tooltipContent.show(rootTooltipModel);
 
@@ -495,7 +586,6 @@ define(function (require) {
             var itemModel = data.getItemModel(dataIndex);
 
             var rootTooltipModel = this._tooltipModel;
-            var showContent = rootTooltipModel.get('showContent');
 
             var tooltipContent = this._tooltipContent;
 
@@ -509,12 +599,33 @@ define(function (require) {
                 tooltipModel.parentModel = this._tooltipModel;
             }
 
-            if (showContent) {
+            if (tooltipModel.get('showContent')) {
+                var formatter = tooltipModel.get('formatter');
+                var html;
+                if (!formatter) {
+                    html = seriesModel.formatTooltip(dataIndex);
+                }
+                else {
+                    var params = seriesModel.getFormatParams(dataIndex);
+                    if (typeof formatter === 'string') {
+                        html = formatTpl(formatter, [params]);
+                    }
+                    else if (typeof formatter === 'function') {
+                        var self = this;
+                        var ticket = 'item_' + seriesModel.name + '_' + dataIndex;
+                        self._ticket = ticket;
+                        function callback(cbTicket, html) {
+                            if (cbTicket === self._ticket) {
+                                tooltipContent.setContent(html);
+                            }
+                        }
+                        html = formatter([params], ticket, callback);
+                    }
+                }
+
                 tooltipContent.show(tooltipModel);
 
-                tooltipContent.setContent(
-                    seriesModel.formatTooltip(dataIndex)
-                );
+                tooltipContent.setContent(html);
 
                 var x = e.offsetX + 20;
                 var y = e.offsetY + 20;

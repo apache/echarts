@@ -90,11 +90,12 @@ define(function (require) {
 
             // FIXME Create each time may be slow
             ecModel.eachComponent('geo', function (geoModel, idx) {
-                var geoJson = mapDataStores[geoModel.get('map')];
+                var name = geoModel.get('map');
+                var geoJson = mapDataStores[name];
                 if (!geoJson) {
                     // Warning
                 }
-                var geo = new Geo(idx, geoJson);
+                var geo = new Geo(name + idx, name, geoJson);
                 geoList.push(geo);
 
                 geoModel.coordinateSystem = geo;
@@ -130,7 +131,7 @@ define(function (require) {
                     // Warning
                 }
 
-                var geo = new Geo(mapType, geoJson);
+                var geo = new Geo(mapType, mapType, geoJson);
                 geoList.push(geo);
 
                 // Inject resize method

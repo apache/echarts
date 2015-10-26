@@ -11,6 +11,12 @@ define(function (require) {
 
     var v2Copy = vector.copy;
 
+    // Geo fix functions
+    var geoFixFuncs = [
+        require('./fix/nanhai'),
+        require('./fix/textCoord'),
+        require('./fix/geoCoord')
+    ];
 
     // Dummy transform node
     function TransformDummy() {
@@ -18,20 +24,30 @@ define(function (require) {
     }
     zrUtil.mixin(TransformDummy, Transformable);
 
-    function Geo(name, geoJson) {
+    function Geo(name, map, geoJson) {
 
+        /**
+         * @type {string}
+         */
         this.name = name;
 
-        this.loadGeoJson(geoJson);
+        /**
+         * Map type
+         * @type {string}
+         */
+        this.map = map;
+
         /**
          * @param {Array.<string>}
          * @readOnly
          */
         this.dimensions = ['lon', 'lat'];
 
-        Transformable.call(this);
-
         this._nameCoordMap = {};
+
+        this.loadGeoJson(geoJson);
+
+        Transformable.call(this);
 
         /**
          * @param Array.<number>
@@ -75,6 +91,10 @@ define(function (require) {
             this._regionsMap = regionsMap;
 
             this._rect = null;
+
+            zrUtil.each(geoFixFuncs, function (fixFunc) {
+                fixFunc(this);
+            }, this);
         },
 
         /**

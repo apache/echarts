@@ -154,5 +154,7 @@ define(function (require) {
         niceExtent: function () {},
     };
 
+    require('./scale').register(OrdinalScale);
+
     return OrdinalScale;
 });
