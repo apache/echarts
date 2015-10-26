@@ -57,6 +57,7 @@ define(function (require) {
             seriesList[0].setData(data);
 
             for (var i = 0; i < seriesList.length; i++) {
+                seriesList[i].seriesGroup = seriesList;
                 seriesList[i].needsDrawMap = i === 0;
             }
         });

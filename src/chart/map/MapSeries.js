@@ -5,6 +5,10 @@ define(function (require) {
     var SeriesModel = require('../../model/Series');
     var zrUtil = require('zrender/core/util');
 
+    var formatUtil = require('../../util/format');
+    var encodeHTML = formatUtil.encodeHTML;
+    var addCommas = formatUtil.addCommas;
+
     var dataSelectableMixin = require('../helper/dataSelectableMixin');
 
     function fillData(dataOpt, geoJson) {
@@ -35,6 +39,12 @@ define(function (require) {
          * @type {boolean}
          */
         needsDrawMap: false,
+
+        /**
+         * Group of all map series with same mapType
+         * @type {boolean}
+         */
+        seriesGroup: [],
 
         init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
 
@@ -93,6 +103,29 @@ define(function (require) {
                 roamDetail.x = x;
                 roamDetail.y = y;
             }
+        },
+
+        /**
+         * Map tooltip formatter
+         *
+         * @param {number} dataIndex
+         */
+        formatTooltip: function (dataIndex) {
+            var data = this._data;
+            var formattedValue = addCommas(data.getRawValue(dataIndex));
+            var name = data.getName(dataIndex, true);
+
+            var seriesGroup = this.seriesGroup;
+            var seriesNames = [];
+            for (var i = 0; i < seriesGroup.length; i++) {
+                var subData = seriesGroup[i].getData();
+                if (!isNaN(subData.getRawValue(dataIndex))) {
+                    seriesNames.push(seriesGroup[i].name);
+                }
+            }
+
+            return seriesNames.join(', ') + '<br />'
+                + name + ' : ' + formattedValue;
         },
 
         defaultOption: {
