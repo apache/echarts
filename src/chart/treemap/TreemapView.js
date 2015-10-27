@@ -259,6 +259,7 @@
                     text = '';
                 }
 
+                content.culling = true;
                 content.setShape({
                     x: borderWidth,
                     y: borderWidth,
@@ -310,7 +311,6 @@
 
             var lastShapes = this._lastShapes;
             var animationCount = 0;
-            var containerGroup = this._containerGroup;
             var that = this;
 
             zrUtil.each(this._storage, function (shapes, key) {
@@ -429,7 +429,6 @@
             // 但是animate中，按下鼠标，animate结束后（silent设回为false）松开鼠标，
             // 还是会触发click，期望是不触发。
             var maybeClick = false;
-            var containerGroup = this._containerGroup;
             var that = this;
 
             containerGroup.on('mousedown', function (e) {

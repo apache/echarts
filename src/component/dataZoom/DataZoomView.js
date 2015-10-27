@@ -167,7 +167,7 @@ define(function (require) {
         /**
          * @private
          */
-        _positionGroup: function (barGroup) {
+        _positionGroup: function () {
             var thisGroup = this.group;
             var location = this._location;
             var orient = this._orient;
@@ -318,13 +318,13 @@ define(function (require) {
         },
 
         _renderHandle: function () {
-            var displables = this._displayables;
-            var frames = displables.frames = [];
-            var handles = displables.handles = [];
-            var handleLabels = displables.handleLabels = [];
+            var displaybles = this._displayables;
+            var frames = displaybles.frames = [];
+            var handles = displaybles.handles = [];
+            var handleLabels = displaybles.handleLabels = [];
             var barGroup = this._displayables.barGroup;
 
-            barGroup.add(displables.filler = new Rect({
+            barGroup.add(displaybles.filler = new Rect({
                 draggable: true,
                 cursor: 'move',
                 drift: bind(this._onDragMove, this, 'all'),
@@ -431,7 +431,7 @@ define(function (require) {
          * @private
          */
         _updateView: function () {
-            var displables = this._displayables;
+            var displaybles = this._displayables;
             var handleEnds = this._handleEnds;
             var handleInterval = asc(handleEnds.slice());
             var size = this._size;
@@ -446,7 +446,7 @@ define(function (require) {
 
                 // Frames
                 var frameInterval = frameIntervals[handleIndex];
-                displables.frames[handleIndex].setShape(graphic.subPixelOptimizeRect({
+                displaybles.frames[handleIndex].setShape(graphic.subPixelOptimizeRect({
                     shape: {
                         x: frameInterval[0],
                         y: 0,
@@ -457,7 +457,7 @@ define(function (require) {
                 }).shape);
 
                 // Handles
-                var handle = displables.handles[handleIndex];
+                var handle = displaybles.handles[handleIndex];
                 handle.setShape({
                     x: handleEnds[handleIndex] - halfHandleSize,
                     y: 0,
@@ -468,7 +468,7 @@ define(function (require) {
             }, this);
 
             // Filler
-            displables.filler.setShape({
+            displaybles.filler.setShape({
                 x: handleInterval[0],
                 y: 0,
                 width: handleInterval[1] - handleInterval[0],
@@ -483,8 +483,8 @@ define(function (require) {
          */
         _updateDataInfo: function () {
             var dataZoomModel = this.dataZoomModel;
-            var displables = this._displayables;
-            var handleLabels = displables.handleLabels;
+            var displaybles = this._displayables;
+            var handleLabels = displaybles.handleLabels;
             var orient = this._orient;
 
             // FIXME
@@ -510,7 +510,7 @@ define(function (require) {
                 // Label
                 // Text should not transform by barGroup.
                 var barTransform = modelUtil.getTransform(
-                    displables.handles[handleIndex], this.group
+                    displaybles.handles[handleIndex], this.group
                 );
                 var direction = modelUtil.transformDirection(
                     handleIndex === 0 ? 'right' : 'left', barTransform
