@@ -69,8 +69,12 @@ define(function (require) {
                 // So the roamDetail must be in sync. Include the series not selected by legend
                 if (componentType === 'series') {
                     zrUtil.each(componentModel.seriesGroup, function (seriesModel) {
-                        seriesModel.setRoamPan(panX, panY);
-                        seriesModel.setRoamZoom(zoom);
+                        if (dx != null && dy != null) {
+                            seriesModel.setRoamPan(panX, panY);
+                        }
+                        if (zoom != null) {
+                            seriesModel.setRoamZoom(zoom * previousZoom);
+                        }
                     })
                 }
             }
