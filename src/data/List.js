@@ -461,7 +461,8 @@ define(function (require) {
      * @return {number}
      */
     listProto.getRawIndex = function (idx) {
-        return this.indices[idx];
+        var rawIdx = this.indices[idx];
+        return rawIdx == null ? -1 : rawIdx;
     };
 
     /**
@@ -822,7 +823,7 @@ define(function (require) {
         el.dataIndex = idx;
         el.seriesIndex = hostModel && hostModel.seriesIndex;;
         if (el.type === 'group') {
-            el.traverse(setItemDataAndSeriesIndex, el)
+            el.traverse(setItemDataAndSeriesIndex, el);
         }
 
         this._graphicEls[idx] = el;

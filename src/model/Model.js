@@ -121,11 +121,11 @@ define(function (require) {
     // Enable Model.extend.
     componentUtil.enableClassExtend(Model);
 
-    var modelProto = Model.prototype;
-    zrUtil.merge(modelProto, require('./mixin/lineStyle'));
-    zrUtil.merge(modelProto, require('./mixin/areaStyle'));
-    zrUtil.merge(modelProto, require('./mixin/textStyle'));
-    zrUtil.merge(modelProto, require('./mixin/itemStyle'));
+    var mixin = zrUtil.mixin;
+    mixin(Model, require('./mixin/lineStyle'));
+    mixin(Model, require('./mixin/areaStyle'));
+    mixin(Model, require('./mixin/textStyle'));
+    mixin(Model, require('./mixin/itemStyle'));
 
     return Model;
 });
