@@ -756,7 +756,7 @@ define(function (require) {
      * Set layout of single data item
      * @param {number} idx
      * @param {Object} layout
-     * @param {boolean=} merge
+     * @param {boolean=} [merge=false]
      */
     listProto.setItemLayout = function (idx, layout, merge) {
         this._itemLayouts[idx] = merge

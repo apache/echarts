@@ -195,18 +195,16 @@ define(function(require) {
         },
 
         /**
-         * @param {string=} dimension Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
+         * @param {string=} [dimension='value'] Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
          * @return {number} Value.
          */
         getValue: function (dimension) {
-            return this.dataIndex >= 0
-                ? this.hostTree.data.get(dimension || 'value', this.dataIndex)
-                : null;
+            return this.hostTree.data.get(dimension || 'value', this.dataIndex);
         },
 
         /**
          * @param {Object} layout
-         * @param {boolean=} merge
+         * @param {boolean=} [merge=false]
          */
         setLayout: function (layout, merge) {
             this.dataIndex >= 0
@@ -217,9 +215,7 @@ define(function(require) {
          * @return {Object} layout
          */
         getLayout: function () {
-            return this.dataIndex >= 0
-                ? this.hostTree.data.getItemLayout(this.dataIndex)
-                : null;
+            return this.hostTree.data.getItemLayout(this.dataIndex);
         },
 
         /**
@@ -260,19 +256,15 @@ define(function(require) {
          * @public
          */
         getVisual: function (key, ignoreParent) {
-            return this.dataIndex >= 0
-                ? this.hostTree.data.getItemVisual(this.dataIndex, key, ignoreParent)
-                : null;
+            return this.hostTree.data.getItemVisual(this.dataIndex, key, ignoreParent);
         },
 
         /**
          * @public
-         * @return number
+         * @return {number}
          */
         getRawIndex: function () {
-            return this.dataIndex >= 0
-                ? this.hostTree.data.getRawIndex(this.dataIndex)
-                : -1;
+            return this.hostTree.data.getRawIndex(this.dataIndex);
         }
     };
 
