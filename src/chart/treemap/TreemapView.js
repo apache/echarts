@@ -15,7 +15,7 @@
     var Group = graphic.Group;
     var Rect = graphic.Rect;
 
-    var ANIMATION_DURATION = 700;
+    var ANIMATION_DURATION = 600;
     var EASING = 'cubicOut';
     var DRAG_THRESHOLD = 3;
 
@@ -38,13 +38,7 @@
              * @private
              * @type {Object.<string, Array.<module:zrender/container/Group>>}
              */
-            this._storage;
-
-            /**
-             * @private
-             * @type {Object.<string, Array.<module:zrender/container/Group>>}
-             */
-            this._lastShapes;
+            this._storage = createStorage();
 
             /**
              * @private
@@ -69,6 +63,12 @@
              * @private
              */
             this._state = 'ready';
+
+            /**
+             * @readOnly
+             * @type {Object} {x, y, width, height}
+             */
+            this.positionInfo;
         },
 
         /**
@@ -85,7 +85,6 @@
 
             var thisTree = seriesModel.getData().tree;
             var containerGroup = this._containerGroup;
-            var lastContainerPosition;
             var containerSize = seriesModel.containerSize;
 
             if (!containerGroup) {
@@ -95,12 +94,8 @@
                 this._initEvents(containerGroup);
                 this.group.add(containerGroup);
             }
-            else {
-                // First rendering do not animate.
-                lastContainerPosition = containerGroup.position.slice();
-            }
 
-            var positionInfo = layout.parsePositionInfo(
+            var positionInfo = this.positionInfo = layout.parsePositionInfo(
                 {
                     x: seriesModel.get('x'),
                     y: seriesModel.get('y'),
@@ -116,16 +111,16 @@
             );
             containerGroup.position = [positionInfo.x, positionInfo.y];
 
-            this._doRender(thisTree, containerGroup, seriesModel);
+            var lastShapes = this._doRender(thisTree, containerGroup, seriesModel);
 
             var targetInfo = helper.retrieveTargetNodeInfo(payload, seriesModel);
             var viewRect = payload && payload.type === 'treemapRender' && payload.viewRect;
 
             this._positionRoot(containerGroup, positionInfo, thisTree.root, viewRect, targetInfo);
 
-            this._doAnimation(payload, containerGroup, lastContainerPosition);
+            this._doAnimation(payload, containerGroup, lastShapes);
 
-            this._initController(positionInfo, thisTree.root, seriesModel, api);
+            this._initController(api);
 
             this._renderBreadcrumb(seriesModel, api, targetInfo);
         },
@@ -137,8 +132,8 @@
             var oldTree = this._oldTree;
 
             // Clear last shape records.
-            this._lastShapes = {nodeGroup: [], background: [], content: []};
-            var thisStorage = {nodeGroup: [], background: [], content: []};
+            var lastShapes = createStorage();
+            var thisStorage = createStorage();
             var oldStorage = this._storage;
             var renderNode = bind(this._renderNode, this);
             var viewRoot = seriesModel.getViewRoot();
@@ -157,6 +152,7 @@
             this._oldTree = thisTree;
             this._storage = thisStorage;
 
+            return lastShapes;
 
             function dualTravel(thisViewChildren, oldViewChildren, parentGroup, sameTree, inView) {
                 // When 'render' is triggered by action,
@@ -194,7 +190,7 @@
                     }
 
                     var group = renderNode(
-                        thisNode, oldNode, parentGroup, thisStorage, oldStorage
+                        thisNode, oldNode, parentGroup, thisStorage, oldStorage, lastShapes
                     );
                     dualTravel(
                         thisNode && thisNode.viewChildren || [],
@@ -218,10 +214,9 @@
         /**
          * @private
          */
-        _renderNode: function (thisNode, oldNode, parentGroup, thisStorage, oldStorage) {
+        _renderNode: function (thisNode, oldNode, parentGroup, thisStorage, oldStorage, lastShapes) {
             var thisRawIndex = thisNode && thisNode.getRawIndex();
             var oldRawIndex = oldNode && oldNode.getRawIndex();
-            var lastShapes = this._lastShapes;
 
             if (!thisNode) {
                 return;
@@ -326,14 +321,13 @@
         /**
          * @private
          */
-        _doAnimation: function (payload, containerGroup, lastContainerPosition) {
+        _doAnimation: function (payload, containerGroup, lastShapes) {
             if (!this.ecModel.get('animation')
                 || (payload && payload.type === 'treemapRender')
             ) {
                 return;
             }
 
-            var lastShapes = this._lastShapes;
             var animationCount = 0;
             var containerGroup = this._containerGroup;
             var that = this;
@@ -359,16 +353,10 @@
                 });
             });
 
-            if (lastContainerPosition) {
-                var target = containerGroup.position.slice();
-                containerGroup.position = lastContainerPosition;
-                containerGroup.animateTo({position: target}, ANIMATION_DURATION, EASING, done);
-                animationCount++;
-            }
-
             if (animationCount) {
                 this._state = 'animating';
             }
+
             function done() {
                 animationCount--;
                 if (!animationCount) {
@@ -380,21 +368,19 @@
         /**
          * @private
          */
-        _initController: function (positionInfo, root, seriesModel, api) {
+        _initController: function (api) {
             var controller = this._controller;
-            var nodeGroups = this._storage.nodeGroup;
-            var rootGroup = nodeGroups[root.getRawIndex()];
-            var containerGroup = this._containerGroup;
 
             // Init controller.
             if (!controller) {
                 controller = this._controller = new RoamController(api.getZr());
                 controller.on('pan', bind(onPan, this));
                 controller.on('zoom', bind(onZoom, this));
-                controller.rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
             }
 
-            if (!seriesModel.get('roam')) {
+            controller.rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
+
+            if (!this.seriesModel.get('roam')) {
                 controller.off('pan').off('zoom');
                 this._controller = null;
                 return;
@@ -404,6 +390,13 @@
                 if (this._state !== 'animating'
                     && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
                 ) {
+                    // These param must not be cached.
+                    var seriesModel = this.seriesModel;
+                    var root = seriesModel.getData().tree.root;
+                    if (!root) {
+                        return;
+                    }
+                    var rootGroup = this._storage.nodeGroup[root.getRawIndex()];
                     // FIXME
                     // 找个好点的方法？
                     this._state = 'dragging';
@@ -419,8 +412,10 @@
 
             function onZoom(scale, mouseX, mouseY) {
                 if (this._state !== 'animating' && this._state !== 'dragging') {
-                    // var rect = this.group.getBoundingRect([containerGroup]);
-                    var rect = containerGroup.getBoundingRect();
+
+                    // These param must not be cached.
+                    var rect = this._containerGroup.getBoundingRect();
+                    var positionInfo = this.positionInfo;
 
                     mouseX -= positionInfo.x;
                     mouseY -= positionInfo.y;
@@ -448,13 +443,12 @@
         /**
          * @private
          */
-        _initEvents: function (containerGroup, clickCallback) {
+        _initEvents: function (containerGroup) {
             // FIXME
             // 不用click以及silent的原因是，animate时视图设置silent true来避免click生效，
             // 但是animate中，按下鼠标，animate结束后（silent设回为false）松开鼠标，
             // 还是会触发click，期望是不触发。
             var maybeClick = false;
-            var containerGroup = this._containerGroup;
             var that = this;
 
             containerGroup.on('mousedown', function (e) {
@@ -464,6 +458,8 @@
             });
             containerGroup.on('mouseup', function (e) {
                 if (that._state !== 'ready') {
+                    // Mousedown occurs when drag start, and mouseup occurs when drag end,
+                    // click event should not be triggered in that case.
                     that._state === 'dragging' && (that._state = 'ready');
                     return;
                 }
@@ -507,11 +503,9 @@
          * @override
          */
         remove: function () {
-            this.group.removeAll();
-            this._containerGroup = null;
-            this._storage = null;
-            this._oldTree = null;
-
+            this._containerGroup.removeAll();
+            this._storage = createStorage();
+            this._state = 'ready';
             this._breadcrumb && this._breadcrumb.remove();
         },
 
@@ -595,5 +589,9 @@
         }
 
     });
+
+    function createStorage() {
+        return {nodeGroup: [], background: [], content: []};
+    }
 
 });

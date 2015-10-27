@@ -139,13 +139,7 @@
          * @override
          */
         remove: function () {
-            var thisGroup = this.group;
-            thisGroup.removeAll();
-
-            var parent = thisGroup.parent;
-            if (parent) {
-                parent.remove(thisGroup);
-            }
+            this.group.removeAll();
         }
     };
 
