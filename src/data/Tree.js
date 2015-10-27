@@ -200,7 +200,7 @@ define(function(require) {
          */
         getValue: function (dimension) {
             return this.dataIndex >= 0
-                ? this.hostTree.list.get(dimension || 'value', this.dataIndex)
+                ? this.hostTree.data.get(dimension || 'value', this.dataIndex)
                 : null;
         },
 
@@ -210,7 +210,7 @@ define(function(require) {
          */
         setLayout: function (layout, merge) {
             this.dataIndex >= 0
-                && this.hostTree.list.setItemLayout(this.dataIndex, layout, merge);
+                && this.hostTree.data.setItemLayout(this.dataIndex, layout, merge);
         },
 
         /**
@@ -218,7 +218,7 @@ define(function(require) {
          */
         getLayout: function () {
             return this.dataIndex >= 0
-                ? this.hostTree.list.getItemLayout(this.dataIndex)
+                ? this.hostTree.data.getItemLayout(this.dataIndex)
                 : null;
         },
 
@@ -231,8 +231,8 @@ define(function(require) {
                 return;
             }
             var hostTree = this.hostTree;
-            var itemModel = hostTree.list.getItemModel(this.dataIndex);
-            var levelModel = (hostTree.levelModels || [])[this.depth];
+            var itemModel = hostTree.data.getItemModel(this.dataIndex);
+            var levelModel = this.getLevelModel();
 
             return itemModel.getModel(path, (levelModel || hostTree.hostModel).getModel(path));
         },
@@ -246,14 +246,14 @@ define(function(require) {
 
         /**
          * @example
-         *  setItemVisual(0, 'color', color);
-         *  setItemVisual(0, {
+         *  setItemVisual('color', color);
+         *  setItemVisual({
          *      'color': color
          *  });
          */
         setVisual: function (key, value) {
             this.dataIndex >= 0
-                && this.hostTree.list.setItemVisual(this.dataIndex, key, value);
+                && this.hostTree.data.setItemVisual(this.dataIndex, key, value);
         },
 
         /**
@@ -261,7 +261,7 @@ define(function(require) {
          */
         getVisual: function (key, ignoreParent) {
             return this.dataIndex >= 0
-                ? this.hostTree.list.getItemVisual(this.dataIndex, key, ignoreParent)
+                ? this.hostTree.data.getItemVisual(this.dataIndex, key, ignoreParent)
                 : null;
         },
 
@@ -271,7 +271,7 @@ define(function(require) {
          */
         getRawIndex: function () {
             return this.dataIndex >= 0
-                ? this.hostTree.list.getRawIndex(this.dataIndex)
+                ? this.hostTree.data.getRawIndex(this.dataIndex)
                 : -1;
         }
     };
@@ -293,7 +293,7 @@ define(function(require) {
          * @type {module:echarts/data/List}
          * @readOnly
          */
-        this.list;
+        this.data;
 
         /**
          * Index of each item is the same as the raw index of coresponding list item.
@@ -359,15 +359,15 @@ define(function(require) {
          * when list has been performed options like 'filterSelf' or 'map'.
          */
         update: function () {
-            var list = this.list;
+            var data = this.data;
             var nodes = this._nodes;
 
             for (var i = 0, len = nodes.length; i < len; i++) {
                 nodes[i].dataIndex = -1;
             }
 
-            for (var i = 0, len = list.count(); i < len; i++) {
-                nodes[list.getRawIndex(i)].dataIndex = i;
+            for (var i = 0, len = data.count(); i < len; i++) {
+                nodes[data.getRawIndex(i)].dataIndex = i;
             }
         }
     };
@@ -420,7 +420,7 @@ define(function(require) {
 
         var list = createList(listData, hostModel);
 
-        tree.list = list;
+        tree.data = list;
 
         linkListHelper.linkToTree(list, tree);
 
