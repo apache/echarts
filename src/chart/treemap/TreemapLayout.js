@@ -21,9 +21,6 @@ define(function (require) {
          * @override
          */
         update: function (ecModel, api, payload) {
-            var ecWidth = api.getWidth();
-            var ecHeight = api.getHeight();
-
             // Layout result in each node:
             // {x, y, width, height, area, borderWidth}
             ecModel.eachSeriesByType('treemap', function (seriesModel) {
@@ -37,19 +34,17 @@ define(function (require) {
                 var containerSize = seriesModel.setContainerSize([
                     parsePercent(
                         retrieveValue(seriesModel.get('width'), size[0]),
-                        ecWidth
+                        api.getWidth()
                     ),
                     parsePercent(
                         retrieveValue(seriesModel.get('height'), size[1]),
-                        ecHeight
+                        api.getHeight()
                     )
                 ]);
 
-                // FIXME
-                // 暂使用 ecWidth ecHeight 作为可视区大小，不进行clip。
                 var payloadType = payload && payload.type;
                 var payloadSize = payloadType === 'treemapZoomToNode'
-                    ? estimateRootSize(payload, seriesModel, ecWidth, ecHeight)
+                    ? estimateRootSize(payload, seriesModel, containerSize[0], containerSize[1])
                     : payloadType === 'treemapRender'
                     ? [payload.viewRect.width, payload.viewRect.height]
                     : null;
@@ -329,7 +324,6 @@ define(function (require) {
         area < viewArea && (area = viewArea);
         var scale = Math.pow(area / viewArea, 0.5);
 
-        // return [estimatedWidth, estimatedHeight]
         return [viewWidth * scale, viewHeight * scale];
     }
 

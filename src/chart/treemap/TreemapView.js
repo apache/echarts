@@ -6,6 +6,7 @@
     var DataDiffer = require('../../data/DataDiffer');
     var modelUtil = require('../../util/model');
     var helper = require('./helper');
+    var parsePercent = require('../../util/number').parsePercent;
     var Breadcrumb = require('./Breadcrumb');
     var RoamController = require('../../component/helper/RoamController');
     var BoundingRect = require('zrender/core/BoundingRect');
@@ -88,6 +89,8 @@
             var containerSize = seriesModel.containerSize;
 
             if (!containerGroup) {
+                // FIXME
+                // 加一层containerGroup是为了clip，但是现在clip功能并没有实现。
                 containerGroup = this._containerGroup = new Group();
                 this._initEvents(containerGroup);
                 this.group.add(containerGroup);
@@ -251,11 +254,18 @@
                 var content = giveGraphic('content', Rect, 'shape');
                 var contentWidth = Math.max(thisWidth - 2 * borderWidth, 0);
                 var contentHeight = Math.max(thisHeight - 2 * borderWidth, 0);
+                var labelModel = thisNode.getModel('label.normal');
                 var textStyleModel = thisNode.getModel('label.normal.textStyle');
                 var text = thisNode.getModel().get('name');
                 var textRect = textStyleModel.getTextRect(text);
+                var showLabel = labelModel.get('show');
 
-                if (textRect.width > contentWidth || textRect.height > contentHeight) {
+                if (!showLabel
+                    || (
+                        showLabel !== 'always'
+                        && (textRect.width > contentWidth || textRect.height > contentHeight)
+                    )
+                ) {
                     text = '';
                 }
 
@@ -268,6 +278,7 @@
                 content.setStyle({
                     fill: thisNode.getVisual('color', true),
                     text: text,
+                    textPosition: this._getTextPosition(labelModel, thisWidth, thisHeight),
                     textFill: textStyleModel.get('color'),
                     textAlign: textStyleModel.get('align'),
                     textFont: textStyleModel.getFont()
@@ -288,14 +299,28 @@
                          ? shape.position.slice() : zrUtil.extend({}, shape.shape);
                 }
                 else {
-                    // FIXME
-                    // 太多函数？
                     shape = new Ctor();
                 }
 
                 // Set to thisStorage
                 return thisStorage[storage][thisRawIndex] = shape;
             }
+
+        },
+
+        /**
+         * @private
+         */
+        _getTextPosition: function (labelModel, nodeWidth, nodeHeight) {
+            var position = labelModel.get('position');
+
+            if (zrUtil.isArray(position)) {
+                position = [
+                    parsePercent(position[0], nodeWidth),
+                    parsePercent(position[1], nodeHeight)
+                ];
+            }
+            return position;
         },
 
         /**

@@ -14,7 +14,7 @@ define(function(require) {
             calculable: false,
             clickable: true,
             // center: ['50%', '50%'],             // not supported in ec3.
-            size: ['80%', '80%'],               // deprecated, compatible with ec2.
+            // size: ['80%', '80%'],               // deprecated, compatible with ec2.
             x: 'center',
             y: 'middle',
             x2: null,
@@ -26,7 +26,7 @@ define(function(require) {
             squareRatio: 0.5 * (1 + Math.sqrt(5)), // golden ratio
             root: '',
             colorDimension: 'value',                    // 默认第一个维度。
-            zoomToNodeRatio: 0.2 * 0.2,                 // zoom to node时 node占可视区域的面积比例。
+            zoomToNodeRatio: 0.32 * 0.32,                 // zoom to node时 node占可视区域的面积比例。
             roam: true,
             breadcrumb: {
                 show: true,
@@ -57,11 +57,10 @@ define(function(require) {
             },
             label: {
                 normal: {
-                    show: true,
-                    x: 5,
-                    y: 12,
+                    show: true,                    // 可以是 'always' 表示无论块如何小，文字都显示。
+                    position: ['50%', '50%'],      // 可以是 5 '5%' 'insideTopLeft', ...
                     textStyle: {
-                        align: 'left',
+                        align: 'center',
                         color: '#fff',
                         fontFamily: 'Arial',
                         fontSize: 13,
