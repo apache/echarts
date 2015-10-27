@@ -60,14 +60,14 @@ define(function(require) {
         },
 
         mergeOption: function (newSeriesOption, ecModel) {
+            newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
+
             var data = this.getInitialData(newSeriesOption, ecModel);
             // TODO Merge data?
             if (data) {
                 this._data = data;
                 this._dataBeforeProcessed = data.cloneShallow();
             }
-
-            zrUtil.merge(this.option, newSeriesOption, true);
         },
 
         /**
