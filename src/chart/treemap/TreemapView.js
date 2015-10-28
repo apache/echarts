@@ -374,8 +374,8 @@
             // Init controller.
             if (!controller) {
                 controller = this._controller = new RoamController(api.getZr());
-                controller.on('pan', bind(onPan, this));
-                controller.on('zoom', bind(onZoom, this));
+                controller.on('pan', bind(this._onPan, this));
+                controller.on('zoom', bind(this._onZoom, this));
             }
 
             controller.rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
@@ -385,58 +385,63 @@
                 this._controller = null;
                 return;
             }
+        },
 
-            function onPan(dx, dy) {
-                if (this._state !== 'animating'
-                    && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
-                ) {
-                    // These param must not be cached.
-                    var seriesModel = this.seriesModel;
-                    var root = seriesModel.getData().tree.root;
-                    if (!root) {
-                        return;
-                    }
-                    var rootGroup = this._storage.nodeGroup[root.getRawIndex()];
-                    // FIXME
-                    // 找个好点的方法？
-                    this._state = 'dragging';
-                    var pos = rootGroup.position;
-                    pos[0] += dx;
-                    pos[1] += dy;
-                    rootGroup.dirty();
-
-                    // Update breadcrumb when drag move.
-                    this._renderBreadcrumb(seriesModel, api);
+        /**
+         * @private
+         */
+        _onPan: function (dx, dy) {
+            if (this._state !== 'animating'
+                && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
+            ) {
+                // These param must not be cached.
+                var seriesModel = this.seriesModel;
+                var root = seriesModel.getData().tree.root;
+                if (!root) {
+                    return;
                 }
+                var rootGroup = this._storage.nodeGroup[root.getRawIndex()];
+                // FIXME
+                // 找个好点的方法？
+                this._state = 'dragging';
+                var pos = rootGroup.position;
+                pos[0] += dx;
+                pos[1] += dy;
+                rootGroup.dirty();
+
+                // Update breadcrumb when drag move.
+                this._renderBreadcrumb(seriesModel, this.api);
             }
+        },
 
-            function onZoom(scale, mouseX, mouseY) {
-                if (this._state !== 'animating' && this._state !== 'dragging') {
+        /**
+         * @private
+         */
+        _onZoom: function (scale, mouseX, mouseY) {
+            if (this._state !== 'animating' && this._state !== 'dragging') {
 
-                    // These param must not be cached.
-                    var rect = this._containerGroup.getBoundingRect();
-                    var positionInfo = this.positionInfo;
+                // These param must not be cached.
+                var rect = this._containerGroup.getBoundingRect();
+                var positionInfo = this.positionInfo;
 
-                    mouseX -= positionInfo.x;
-                    mouseY -= positionInfo.y;
+                mouseX -= positionInfo.x;
+                mouseY -= positionInfo.y;
+                // Recalculate bounding rect.
+                var m = matrix.create();
+                matrix.translate(m, m, [-mouseX, -mouseY]);
+                matrix.scale(m, m, [scale, scale]);
+                matrix.translate(m, m, [mouseX, mouseY]);
 
-                    // Recalculate bounding rect.
-                    var m = matrix.create();
-                    matrix.translate(m, m, [-mouseX, -mouseY]);
-                    matrix.scale(m, m, [scale, scale]);
-                    matrix.translate(m, m, [mouseX, mouseY]);
+                rect.applyTransform(m);
 
-                    rect.applyTransform(m);
-
-                    this.api.dispatch({
-                        type: 'treemapRender',
-                        from: this.uid,
-                        seriesId: this.seriesModel.uid,
-                        viewRect: {
-                            x: rect.x, y: rect.y, width: rect.width, height: rect.height
-                        }
-                    });
-                }
+                this.api.dispatch({
+                    type: 'treemapRender',
+                    from: this.uid,
+                    seriesId: this.seriesModel.uid,
+                    viewRect: {
+                        x: rect.x, y: rect.y, width: rect.width, height: rect.height
+                    }
+                });
             }
         },
 

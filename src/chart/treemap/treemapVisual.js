@@ -4,44 +4,47 @@ define(function (require) {
     var zrColor = require('zrender/tool/color');
     var zrUtil = require('zrender/core/util');
     var isArray = zrUtil.isArray;
-    var each = zrUtil.each;
 
-    var VISUAL_LIST = ['color', 'colorA', 'colorS'];
+    var ITEM_STYLE_NORMAL = 'itemStyle.normal';
 
     return function (ecModel, payload) {
-        var globalColorList = ecModel.get('color');
-
         ecModel.eachSeriesByType('treemap', function (seriesModel) {
 
             if (payload && payload.seriesId && seriesModel.uid !== payload.seriesId) {
                 return;
             }
 
-            var root = seriesModel.getData().tree.root;
+            var tree = seriesModel.getData().tree;
+            var root = tree.root;
+            var seriesItemStyleModel = seriesModel.getModel(ITEM_STYLE_NORMAL);
 
             if (root.isRemoved()) {
                 return;
             }
 
-            var rootVisual = {};
-            each(VISUAL_LIST, function (name) {
-                var visual = seriesModel.get('itemStyle.normal.' + name);
-                rootVisual[name] = isArray(visual) ? null : visual;
+            var levelItemStyles = zrUtil.map(tree.levelModels, function (levelModel) {
+                return levelModel ? levelModel.get(ITEM_STYLE_NORMAL) : null;
             });
-
-            !rootVisual.color && (rootVisual.color = globalColorList);
 
             travelTree(
                 root,
-                rootVisual,
-                seriesModel,
+                {},
+                levelItemStyles,
+                seriesItemStyleModel,
                 seriesModel.getViewRoot().getAncestors()
             );
         });
     };
 
-    function travelTree(node, designatedVisual, seriesModel, viewRootAncestors) {
-        var visuals = buildVisuals(node, designatedVisual, seriesModel);
+    function travelTree(
+        node, designatedVisual, levelItemStyles, seriesItemStyleModel, viewRootAncestors
+    ) {
+        var nodeModel = node.getModel();
+        var nodeItemStyleModel = node.getModel(ITEM_STYLE_NORMAL);
+        var levelItemStyle = levelItemStyles[node.depth];
+        var visuals = buildVisuals(
+            nodeItemStyleModel, designatedVisual, levelItemStyle, seriesItemStyleModel
+        );
 
         var viewChildren = node.viewChildren;
         if (!viewChildren || !viewChildren.length) {
@@ -49,36 +52,38 @@ define(function (require) {
             node.setVisual('color', calculateColor(visuals, node));
         }
         else {
-            var mappingWrap = buildVisualMapping(node, visuals, viewChildren);
+            var mappingWrap = buildVisualMapping(
+                node, nodeItemStyleModel, visuals, viewChildren
+            );
             // Designate visual to children.
             zrUtil.each(viewChildren, function (child, index) {
                 // If higher than viewRoot, only ancestors of viewRoot is needed to visit.
-                if (child.depth >= viewRootAncestors.length || child === viewRootAncestors[child.depth]) {
-                    var childVisual = mapVisual(node, visuals, child, index, mappingWrap);
-                    travelTree(child, childVisual, seriesModel, viewRootAncestors);
+                if (child.depth >= viewRootAncestors.length
+                    || child === viewRootAncestors[child.depth]
+                ) {
+                    var childVisual = mapVisual(nodeModel, visuals, child, index, mappingWrap);
+                    travelTree(
+                        child, childVisual, levelItemStyles, seriesItemStyleModel, viewRootAncestors
+                    );
                 }
             });
         }
     }
 
-    function buildVisuals(node, designatedVisual, seriesModel) {
+    function buildVisuals(
+        nodeItemStyleModel, designatedVisual, levelItemStyle, seriesItemStyleModel
+    ) {
         var visuals = zrUtil.extend({}, designatedVisual);
 
-        zrUtil.each(VISUAL_LIST, function (visualName) {
-            // Priority: thisNode > thisLevel > parentNodeDesignated
-            var visualValue = node.getModel('itemStyle.normal').get(visualName, true); // Ignore parent
+        zrUtil.each(['color', 'colorA', 'colorS'], function (visualName) {
+            // Priority: thisNode > thisLevel > parentNodeDesignated > seriesModel
+            var val = nodeItemStyleModel.get(visualName, true); // Ignore parent
 
-            if (visualValue == null) {
-                var levelModel = node.getLevelModel();
-                visualValue = levelModel ? levelModel.get(visualName, true) : null;
-            }
-            if (visualValue == null) {
-                visualValue = designatedVisual[visualName];
-            }
+            val == null && levelItemStyle && (val = levelItemStyle[visualName]);
+            val == null && (val = designatedVisual[visualName]);
+            val == null && (val = seriesItemStyleModel.get(visualName));
 
-            if (visualValue != null) {
-                visuals[visualName] = visualValue;
-            }
+            val != null && (visuals[visualName] = val);
         });
 
         return visuals;
@@ -101,93 +106,82 @@ define(function (require) {
         }
     }
 
-    function buildVisualMapping(node, visuals, viewChildren) {
+    function getValueVisualDefine(visuals, name) {
+        var value = visuals[name];
+        if (value != null && value !== 'none') {
+            return value;
+        }
+    }
+
+    function buildVisualMapping(
+        node, nodeItemStyleModel, visuals, viewChildren
+    ) {
         if (!viewChildren || !viewChildren.length) {
             return;
         }
 
-        var mappingVisualName = getRangeVisualName(visuals, 'color')
+        var rangeVisual = getRangeVisual(nodeItemStyleModel, 'color')
             || (
                 visuals.color != null
+                && visuals.color !== 'none'
                 && (
-                    getRangeVisualName(visuals, 'colorA')
-                    || getRangeVisualName(visuals, 'colorS')
+                    getRangeVisual(nodeItemStyleModel, 'colorA')
+                    || getRangeVisual(nodeItemStyleModel, 'colorS')
                 )
             );
 
-        if (!mappingVisualName) {
+        if (!rangeVisual) {
             return;
         }
 
-        var mappingType = mappingVisualName === 'color'
+        var mappingType = rangeVisual.name === 'color'
             ? (
-                node.getModel('itemStyle.normal').get('colorMapping') === 'byValue'
+                nodeItemStyleModel.get('colorMapping') === 'byValue'
                     ? 'color' : 'colorByIndex'
             )
-            : mappingVisualName;
+            : rangeVisual.name;
 
         var dataExtent = mappingType === 'colorByIndex'
             ? null
-            : calculateDataExtent(node, viewChildren);
+            : node.getLayout().dataExtent;
 
         return {
             mapping: new VisualMapping({
                 type: mappingType,
                 dataExtent: dataExtent,
                 dataNormalizer: 'linear',
-                visual: visuals[mappingVisualName]
+                visual: rangeVisual.range
             }),
-            visualName: mappingVisualName
+            visualName: rangeVisual.name
         };
     }
 
-    function calculateDataExtent(node, viewChildren) {
-        var dimension = node.getModel().get('colorDimension');
-
-        // The same as area dimension.
-        if (dimension === 'value') {
-            return [
-                viewChildren[viewChildren.length - 1].getValue(),
-                viewChildren[0].getValue()
-            ];
-        }
-        // Other dimension.
-        else {
-            var dataExtent = [Infinity, -Infinity];
-            each(viewChildren, function (child) {
-                var value = child.getValue(dimension);
-                value < dataExtent[0] && (dataExtent[0] = value);
-                value > dataExtent[1] && (dataExtent[1] = value);
-            });
-        }
+    // Notice: If we dont have the attribute 'colorRange', but only use
+    // attribute 'color' to represent both concepts of 'colorRange' and 'color',
+    // (It means 'colorRange' when 'color' is Array, means 'color' when not array),
+    // this problem will be encountered:
+    // If a level-1 node dont have children, and its siblings has children,
+    // and colorRange is set on level-1, then the node can not be colored.
+    // So we separate 'colorRange' and 'color' to different attributes.
+    function getRangeVisual(nodeItemStyleModel, name) {
+        // 'colorRange', 'colorARange', 'colorSRange'.
+        // If not exsits on this node, fetch from levels and series.
+        var range = nodeItemStyleModel.get(name + 'Range');
+        return (isArray(range) && range.length) ? {name: name, range: range} : null;
     }
 
-    function mapVisual(node, visuals, child, index, mappingWrap) {
+    function mapVisual(nodeModel, visuals, child, index, mappingWrap) {
         var childVisuals = zrUtil.extend({}, visuals);
 
         if (mappingWrap) {
             var mapping = mappingWrap.mapping;
             var value = mapping.type === 'colorByIndex'
-                ? index : child.getValue(node.getModel().get('colorDimension'));
+                ? index : child.getValue(nodeModel.get('visualDimension'));
 
             childVisuals[mappingWrap.visualName] = mapping.mapValueToVisual(value);
         }
 
         return childVisuals;
-    }
-
-    function getValueVisualDefine(visuals, name) {
-        var value = visuals[name];
-        if (value != null && !isArray(value)) {
-            return value;
-        }
-    }
-
-    function getRangeVisualName(visuals, name) {
-        var value = visuals[name];
-        if (value != null && isArray(value)) {
-            return name;
-        }
     }
 
 });

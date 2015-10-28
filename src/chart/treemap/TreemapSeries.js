@@ -3,6 +3,7 @@ define(function(require) {
     var SeriesModel = require('../../model/Series');
     var Tree = require('../../data/Tree');
     var zrUtil = require('zrender/core/util');
+    var Model = require('../../model/Model');
 
     return SeriesModel.extend({
 
@@ -25,7 +26,7 @@ define(function(require) {
             clipWindow: 'origin',                      // 缩放时窗口大小。'origin' or 'fullscreen'
             squareRatio: 0.5 * (1 + Math.sqrt(5)), // golden ratio
             root: '',
-            colorDimension: 'value',                    // 默认第一个维度。
+            visualDimension: 'value',                    // 默认第一个维度。
             zoomToNodeRatio: 0.32 * 0.32,                 // zoom to node时 node占可视区域的面积比例。
             roam: true,
             breadcrumb: {
@@ -71,9 +72,12 @@ define(function(require) {
             },
             itemStyle: {
                 normal: {
-                    color: null,         // 各异 可以为数组，表示同一level的color 选取列表。
-                    colorA: null,        // 默认不设置 可以为数组，表示同一level的color alpha 选取范围。
-                    colorS: null,        // 默认不设置 可以为数组，表示同一level的color alpha 选取范围。
+                    color: null,         // 各异 如不需，可设为'none'
+                    colorA: null,        // 默认不设置 如不需，可设为'none'
+                    colorS: null,        // 默认不设置 如不需，可设为'none'
+                    colorRange: null,    // 为数组，表示同一level的color 选取列表。默认取系统color列表。
+                    colorARange: null,   // 为数组，表示同一level的color alpha 选取范围。
+                    colorSRange: null,   // 为数组，表示同一level的color alpha 选取范围。
                     colorMapping: 'byIndex', // 'byIndex' or 'byValue'
                     borderWidth: 0,
                     borderColor: 'rgba(0,0,0,0)',
@@ -82,9 +86,10 @@ define(function(require) {
                 },
                 emphasis: {}
             },
-            visibleMin: 5,     // Less than this threshold, node will not be rendered.
+            visibleMin: 10,    // If area less than this threshold (unit: pixel^2), node will not be rendered.
+                                // Only works when sort is 'asc' or 'desc'.
             levels: []         // Each item: {
-                               //     visibleMin, itemStyle, colorDimension
+                               //     visibleMin, itemStyle, visualDimension
                                // }
         },
 
@@ -104,6 +109,8 @@ define(function(require) {
             // FIXME
             // sereis.mergeOption 的 getInitData是否放在merge后，从而能直接获取merege后的结果而非手动判断。
             var levels = option.levels || (this.option || {}).levels || [];
+
+            levels = option.levels = setDefault(levels, ecModel);
 
             // Make sure always a new tree is created when setOption,
             // in TreemapView, we check whether oldTree === newTree
@@ -175,6 +182,37 @@ define(function(require) {
         isArrayValue
             ? (dataNode.value[0] = thisValue)
             : (dataNode.value = thisValue);
+    }
+
+    /**
+     * set default to level configuration
+     */
+    function setDefault(levels, ecModel) {
+        var globalColorList = ecModel.get('color');
+
+        if (!globalColorList) {
+            return;
+        }
+
+        levels = levels || [];
+        var hasColorDefine;
+        zrUtil.each(levels, function (levelDefine) {
+            var model = new Model(levelDefine);
+            if (model.get('itemStyle.normal.color')
+                || model.get('itemStyle.normal.colorRange')
+            ) {
+                hasColorDefine = true;
+            }
+        });
+
+        if (!hasColorDefine) {
+            var level0 = levels[0] || (levels[0] = {});
+            var itemStyle = level0.itemStyle || (level0.itemStyle = {});
+            var normal = itemStyle.normal || (itemStyle.normal = {});
+            normal.colorRange = globalColorList.slice();
+        }
+
+        return levels;
     }
 
 });

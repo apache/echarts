@@ -11,9 +11,6 @@ define(function (require) {
         });
     });
 
-    // TODO
-    // undo redo
-
     function processSingleDataRange(dataRangeModel, ecModel) {
         dataRangeModel.eachTargetSeries(function (seriesModel) {
             var visualMappings = dataRangeModel.targetVisuals;

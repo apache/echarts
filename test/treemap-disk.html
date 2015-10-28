@@ -15,7 +15,7 @@
         </style>
         <div id="main"></div>
 
-        <script src="data/obama_budget_proposal_2012.tree.js"></script>
+        <script src="data/disk.tree.js"></script>
 
         <script>
 
@@ -31,22 +31,23 @@
 
                 chart.setOption({
 
-                    legend: {
-                        data: ['Obama’s 2012 Budget Proposal: How $3.7 Trillion is Spent']
-                    },
-
                     series: [
                         {
-                            name:'Obama’s 2012 Budget Proposal: How $3.7 Trillion is Spent',
+                            name:'Disk Usage',
                             type:'treemap',
-                            // visibleMin: 20,
+                            visibleMin: 300,
                             label: {
-                                show: true, //
+                                show: true,
                                 formatter: "{b}"
+                                // normal: {
+                                //     textStyle: {
+                                //         color: 'black'
+                                //     }
+                                // }
                             },
                             itemStyle: {
                                 normal: {
-                                    borderColor: 'black'
+                                    borderColor: '#fff'
                                 },
                                 emphasis: {
                                 }
@@ -55,20 +56,34 @@
                                 {
                                     itemStyle: {
                                         normal: {
-                                            borderWidth: 3,
-                                            gapWidth: 3
+                                            borderWidth: 0,
+                                            gapWidth: 5,
+                                            color: '#d14a61' // default color
                                         }
                                     }
                                 },
                                 {
                                     itemStyle: {
                                         normal: {
-                                            gapWidth: 1
+                                            gapWidth: 1,
+                                            colorRange: [ // '#5793f3',
+                                                '#d14a61', '#fd9c35',
+                                                '#675bba', '#fec42c', '#dd4444',
+                                                '#d4df5a', '#cd4870'
+                                            ]
+                                        }
+                                    }
+                                },
+                                {
+                                    itemStyle: {
+                                        normal: {
+                                            // gapWidth: 1,
+                                            colorSRange: [0.35, 0.5]
                                         }
                                     }
                                 }
                             ],
-                            data: window.obama_budget_2012
+                            data: window.disk_usage_tree
                         }
                     ]
                 });

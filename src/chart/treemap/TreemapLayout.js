@@ -114,13 +114,11 @@ define(function (require) {
             var rect = {x: layoutOffset, y: layoutOffset, width: width, height: height};
             var rowFixedLength = mathMin(width, height);
             var best = Infinity; // the best row score so far
-            var remaining = viewChildren.slice();
-            var remainingLen;
             var row = [];
             row.area = 0;
 
-            while ((remainingLen = remaining.length) > 0) {
-                var child = remaining[remainingLen - 1];
+            for (var i = 0, len = viewChildren.length; i < len;) {
+                var child = viewChildren[i];
 
                 row.push(child);
                 row.area += child.getLayout().area;
@@ -128,7 +126,7 @@ define(function (require) {
 
                 // continue with this orientation
                 if (score <= best) {
-                    remaining.pop();
+                    i++;
                     best = score;
                 }
                 // abort, and try a different orientation
@@ -154,55 +152,134 @@ define(function (require) {
     };
 
     /**
-     * Set area to each child.
+     * Set area to each child, and calculate data extent for visual coding.
      */
     function initChildren(node, width, height, options) {
         var viewChildren = node.children || [];
+        var nodeModel = node.getModel();
+        var orderBy = options.sort;
+        orderBy !== 'asc' && orderBy !== 'desc' && (orderBy = null);
 
         // Sort children, order by desc.
         viewChildren = zrUtil.filter(viewChildren, function (child) {
             return !child.isRemoved();
         });
 
-        if (options.sort) {
-            viewChildren.sort(function (a, b) {
-                // If 'asc', sort by desc, because layout is performed from tail to head.
-                return options.sort === 'asc'
-                    ? b.getValue() - a.getValue() : a.getValue() - b.getValue();
-            });
-        }
+        sort(viewChildren, orderBy);
 
-        var sum = 0;
-        for (var i = 0, len = viewChildren.length; i < len; i++) {
-            sum += viewChildren[i].getValue();
+        var info = statistic(nodeModel, viewChildren, orderBy);
+
+        if (info.sum === 0) {
+            return node.viewChildren = [];
         }
 
         var totalArea = width * height;
-        var nodeModel = node.getModel();
 
-        // Filter by thredshold.
-        for (var i = viewChildren.length - 1; i >= 0; i--) {
-            var value = viewChildren[i].getValue();
+        info.sum = filterByThreshold(nodeModel, totalArea, info.sum, orderBy, viewChildren);
 
-            if (value / sum * totalArea < nodeModel.get('visibleMin')) {
-                viewChildren.splice(i, 1);
-                sum -= value;
-            }
-            else {
-                break;
-            }
+        if (info.sum === 0) {
+            return node.viewChildren = [];
         }
 
         // Set area to each child.
         for (var i = 0, len = viewChildren.length; i < len; i++) {
-            var area = viewChildren[i].getValue() / sum * totalArea;
+            var area = viewChildren[i].getValue() / info.sum * totalArea;
             // Do not use setLayout({...}, true), because it is needed to clear last layout.
             viewChildren[i].setLayout({area: area});
         }
 
         node.viewChildren = viewChildren;
+        node.setLayout({dataExtent: info.dataExtent}, true);
 
         return viewChildren;
+    }
+
+    /**
+     * Consider 'visibleMin'. Modify viewChildren and get new sum.
+     */
+    function filterByThreshold(nodeModel, totalArea, sum, orderBy, orderedChildren) {
+
+        // visibleMin is not supported yet when no option.sort.
+        if (!orderBy) {
+            return sum;
+        }
+
+        var visibleMin = nodeModel.get('visibleMin');
+        var len = orderedChildren.length;
+        var deletePoint = len;
+
+        // Always travel from little value to big value.
+        for (var i = len - 1; i >= 0; i--) {
+            var value = orderedChildren[
+                orderBy === 'asc' ? len - i - 1 : i
+            ].getValue();
+
+            if (value / sum * totalArea < visibleMin) {
+                deletePoint = i;
+                sum -= value;
+            }
+        }
+
+        orderBy === 'asc'
+            ? orderedChildren.splice(0, len - deletePoint)
+            : orderedChildren.splice(deletePoint, len - deletePoint);
+
+        return sum;
+    }
+
+    /**
+     * Sort
+     */
+    function sort(viewChildren, orderBy) {
+        if (orderBy) {
+            viewChildren.sort(function (a, b) {
+                return orderBy === 'asc'
+                    ?  a.getValue() - b.getValue() : b.getValue() - a.getValue();
+            });
+        }
+        return viewChildren;
+    }
+
+    /**
+     * Statistic
+     */
+    function statistic(nodeModel, children, orderBy) {
+        // Calculate sum.
+        var sum = 0;
+        for (var i = 0, len = children.length; i < len; i++) {
+            sum += children[i].getValue();
+        }
+
+        // Statistic data extent for latter visual coding.
+        // Notice: data extent should be calculate based on raw children
+        // but not filtered view children, otherwise visual mapping will not
+        // be stable when zoom (where children is filtered by visibleMin).
+
+        var dimension = nodeModel.get('visualDimension');
+        var dataExtent;
+
+        // The same as area dimension.
+        if (!children || !children.length) {
+            dataExtent = [NaN, NaN];
+        }
+        else if (dimension === 'value' && orderBy) {
+            dataExtent = [
+                children[children.length - 1].getValue(),
+                children[0].getValue()
+            ];
+            orderBy === 'asc' && dataExtent.reverse();
+        }
+        // Other dimension.
+        else {
+            var dataExtent = [Infinity, -Infinity];
+            zrUtil.each(children, function (child) {
+                var value = child.getValue(dimension);
+                value < dataExtent[0] && (dataExtent[0] = value);
+                value > dataExtent[1] && (dataExtent[1] = value);
+            });
+        }
+
+        return {sum: sum, dataExtent: dataExtent};
     }
 
     /**
