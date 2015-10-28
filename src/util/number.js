@@ -6,6 +6,7 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var number = {};
 
     function _trim(str) {
         return str.replace(/^\s+/, '').replace(/\s+$/, '');
@@ -20,7 +21,7 @@ define(function (require) {
      * @param  {boolean} clamp
      * @return {(number|Array.<number>}
      */
-    function linearMap(val, domain, range, clamp) {
+    number.linearMap = function (val, domain, range, clamp) {
 
         if (zrUtil.isArray(val)) {
             return zrUtil.map(val, function (v) {
@@ -50,7 +51,7 @@ define(function (require) {
      * @param {number} all
      * @return {number}
      */
-    function parsePercent(percent, all) {
+    number.parsePercent = function(percent, all) {
         switch (percent) {
             case 'center':
             case 'middle':
@@ -74,34 +75,45 @@ define(function (require) {
         }
 
         return +percent;
-    }
+    };
 
     /**
      * Fix rounding error of float numbers
+     * @param {number} x
+     * @return {number}
      */
-    function round(x) {
+    number.round = function (x) {
         // PENDING
         return +(+x).toFixed(12);
     }
 
-    function asc(arr) {
+    number.asc = function (arr) {
         arr.sort(function (a, b) {
             return a - b;
         });
         return arr;
-    }
-
-    return {
-
-        linearMap: linearMap,
-
-        parsePercent: parsePercent,
-
-        round: round,
-
-        asc: asc,
-
-        // Number.MAX_SAFE_INTEGER, ie do not support.
-        MAX_SAFE_INTEGER: 9007199254740991
     };
+
+    /**
+     * Get precision
+     * @param {number} val
+     */
+    number.getPrecision = function (val) {
+        // It is much faster than methods converting number to string as follows 
+        //      var tmp = val.toString();
+        //      return tmp.length - 1 - tmp.indexOf('.');
+        // especially when precision is low
+        var e = 1;
+        var count = 0;
+        while (Math.round(val * e) / e !== val) {
+            e *= 10;
+            count++;
+        }
+        return count;
+    };
+
+    // Number.MAX_SAFE_INTEGER, ie do not support.
+    number.MAX_SAFE_INTEGER = 9007199254740991;
+
+    return number;
 });

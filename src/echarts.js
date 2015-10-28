@@ -367,7 +367,7 @@ define(function (require) {
 
             for (var i = 0; i < componentsList.length;) {
                 var component = componentsList[i];
-                if (! component.__keepAlive) {
+                if (!component.__keepAlive) {
                     this._zr.remove(component.group);
                     component.dispose(this._extensionAPI);
                     componentsList.splice(i, 1);

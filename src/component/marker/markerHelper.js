@@ -1,6 +1,22 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var numberUtil = require('../../util/number');
+
+    var getPrecision = function (data, valueAxisDim, dataIndex) {
+        var precision = -1;
+        do {
+            precision = Math.max(
+                numberUtil.getPrecision(data.get(
+                    valueAxisDim, dataIndex
+                )),
+                precision
+            );
+            data = data.stackedOn;
+        } while (data);
+
+        return precision;
+    };
 
     var markerTypeCalculatorWithExtent = function (percent, data, baseAxisDim, valueAxisDim) {
         var extent = data.getDataExtent(valueAxisDim);
@@ -12,6 +28,12 @@ define(function (require) {
         var dataIndex = data.indexOfNearest(valueAxisDim, val);
         valueArr[1 - valueIndex] = data.get(baseAxisDim, dataIndex);
         valueArr[valueIndex] = data.get(valueAxisDim, dataIndex, true);
+
+        var precision = getPrecision(data, valueAxisDim, dataIndex);
+        if (precision >= 0) {
+            valueArr[valueIndex] = +valueArr[valueIndex].toFixed(precision);
+        }
+
         return valueArr;
     };
 
