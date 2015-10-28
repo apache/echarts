@@ -23,7 +23,8 @@ define(function (require) {
         ecModel.eachSeriesByType('graph', function (seriesModel) {
             var layout = seriesModel.get('layout');
             if (!layout || layout === 'none') {
-                var coordSys = seriesModel.coordinateSystem = seriesModel.coordinateSystem || new View();
+                var coordSys = seriesModel.coordinateSystem
+                    = seriesModel.coordinateSystem || new View();
                 var viewRect = getViewRect(seriesModel, api);
                 var graph = seriesModel.getData().graph;
                 var positions = graph.data.mapArray(function (idx) {

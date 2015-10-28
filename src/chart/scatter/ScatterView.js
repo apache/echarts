@@ -1,28 +1,28 @@
 define(function (require) {
 
-    var DataSymbol = require('../helper/DataSymbol');
+    var SymbolDraw = require('../helper/SymbolDraw');
 
     require('../../echarts').extendChartView({
 
         type: 'scatter',
 
         init: function () {
-            this._dataSymbol = new DataSymbol();
-            this.group.add(this._dataSymbol.group);
+            this._symbolDraw = new SymbolDraw();
+            this.group.add(this._symbolDraw.group);
         },
 
         render: function (seriesModel, ecModel, api) {
-            this._dataSymbol.updateData(
+            this._symbolDraw.updateData(
                 seriesModel.getData(), seriesModel, api, ecModel.get('animation')
             );
         },
 
         updateLayout: function () {
-            this._dataSymbol.updateLayout();
+            this._symbolDraw.updateLayout();
         },
 
         remove: function (ecModel) {
-            this._dataSymbol.remove(ecModel.get('animation'));
+            this._symbolDraw.remove(ecModel.get('animation'));
         }
     });
 });

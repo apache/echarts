@@ -1,22 +1,23 @@
 define(function (require) {
 
-    var DataSymbol = require('../helper/DataSymbol');
+    var SymbolDraw = require('../helper/SymbolDraw');
+    var LineDraw = require('../helper/LineDraw');
 
     require('../../echarts').extendChartView({
 
         type: 'graph',
 
         init: function () {
-            var dataSymbol = new DataSymbol();
-            this.group.add(dataSymbol.group);
+            var symbolDraw = new SymbolDraw();
+            this.group.add(symbolDraw.group);
 
-            this._dataSymbol = dataSymbol;
+            this._symbolDraw = symbolDraw;
         },
 
         render: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();
 
-            this._dataSymbol.updateData(
+            this._symbolDraw.updateData(
                 data, seriesModel, api, false
             );
         },

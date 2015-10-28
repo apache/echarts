@@ -1,6 +1,6 @@
 define(function (require) {
 
-    var DataSymbol = require('../../chart/helper/DataSymbol');
+    var SymbolDraw = require('../../chart/helper/SymbolDraw');
     var zrUtil = require('zrender/core/util');
 
     var List = require('../../data/List');
@@ -12,13 +12,13 @@ define(function (require) {
         type: 'markPoint',
 
         init: function () {
-            this._dataSymbolMap = {};
+            this._symbolDrawMap = {};
         },
 
         render: function (markPointModel, ecModel) {
-            var dataSymbolMap = this._dataSymbolMap;
-            for (var name in dataSymbolMap) {
-                dataSymbolMap[name].__keep = false;
+            var symbolDrawMap = this._symbolDrawMap;
+            for (var name in symbolDrawMap) {
+                symbolDrawMap[name].__keep = false;
             }
 
             ecModel.eachSeries(function (seriesModel) {
@@ -26,10 +26,10 @@ define(function (require) {
                 mpModel && this._renderSeriesMP(seriesModel, mpModel);
             }, this);
 
-            for (var name in dataSymbolMap) {
-                if (!dataSymbolMap[name].__keep) {
-                    dataSymbolMap[name].remove();
-                    this.group.remove(dataSymbolMap[name].group);
+            for (var name in symbolDrawMap) {
+                if (!symbolDrawMap[name].__keep) {
+                    symbolDrawMap[name].remove();
+                    this.group.remove(symbolDrawMap[name].group);
                 }
             }
         },
@@ -39,10 +39,10 @@ define(function (require) {
             var seriesName = seriesModel.name;
             var seriesData = seriesModel.getData();
 
-            var dataSymbolMap = this._dataSymbolMap;
-            var dataSymbol = dataSymbolMap[seriesName];
-            if (!dataSymbol) {
-                dataSymbol = dataSymbolMap[seriesName] = new DataSymbol();
+            var symbolDrawMap = this._symbolDrawMap;
+            var symbolDraw = symbolDrawMap[seriesName];
+            if (!symbolDraw) {
+                symbolDraw = symbolDrawMap[seriesName] = new SymbolDraw();
             }
 
             var mpData = createList(coordSys, seriesData, mpModel);
@@ -73,11 +73,11 @@ define(function (require) {
             });
 
             // TODO Text are wrong
-            dataSymbol.updateData(mpData, seriesModel, true);
+            symbolDraw.updateData(mpData, seriesModel, true);
 
-            this.group.add(dataSymbol.group);
+            this.group.add(symbolDraw.group);
 
-            dataSymbol.__keep = true;
+            symbolDraw.__keep = true;
         }
     });
 
