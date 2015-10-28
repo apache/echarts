@@ -13,6 +13,7 @@ define(function (require) {
         });
 
         list[targetType] = target;
+        target.data = list;
 
         return list;
     }

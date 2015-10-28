@@ -280,7 +280,6 @@ define(function(require) {
 
 
     /**
-     * 图节点
      * @alias module:echarts/data/Graph.Node
      */
     function Node(name, dataIndex) {
@@ -305,6 +304,11 @@ define(function(require) {
          * @type {module:echarts/data/Graph}
          */
         this.hostGraph;
+
+        /**
+         * @type {number}
+         */
+        this.dataIndex = dataIndex == null ? -1 : dataIndex;
     };
 
     Node.prototype = {

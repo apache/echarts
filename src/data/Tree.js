@@ -412,8 +412,6 @@ define(function(require) {
 
         var list = createList(listData, hostModel);
 
-        tree.data = list;
-
         linkListHelper.linkToTree(list, tree);
 
         return tree;

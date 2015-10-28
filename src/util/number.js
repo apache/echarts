@@ -53,6 +53,7 @@ define(function (require) {
     function parsePercent(percent, all) {
         switch (percent) {
             case 'center':
+            case 'middle':
                 percent = '50%';
                 break;
             case 'left':

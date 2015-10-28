@@ -20,7 +20,7 @@ define(function (require) {
 
     Chart.prototype = {
 
-        type: '',
+        type: 'chart',
 
         init: function (ecModel, api) {},
 

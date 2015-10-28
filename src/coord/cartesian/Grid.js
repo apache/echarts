@@ -5,13 +5,14 @@
  */
 define(function(require, factory) {
 
+    var layout = require('../../util/layout');
+
     var OrdinalScale = require('../../scale/Ordinal');
     var IntervalScale = require('../../scale/Interval');
 
     var zrUtil = require('zrender/core/util');
     var Cartesian2D = require('./Cartesian2D');
     var Axis2D = require('./Axis2D');
-    var numberUtil = require('../../util/number');
 
     var scaleClasses = require('../../scale/scale');
 
@@ -75,12 +76,13 @@ define(function(require, factory) {
      * @inner
      */
     function niceScaleExent(axis, model) {
-        if (axis.scale.type === 'ordinal') {
+        var scale = axis.scale;
+        if (scale.type === 'ordinal') {
             return;
         }
         var min = model.get('min');
         var max = model.get('max');
-        var originalExtent = axis.scale.getExtent();
+        var originalExtent = scale.getExtent();
         // TODO Only one data
         if (min === 'dataMin') {
             min = originalExtent[0];
@@ -88,36 +90,11 @@ define(function(require, factory) {
         else if (max === 'dataMax') {
             max = originalExtent[1];
         }
-        axis.scale.setExtent(min, max);
-        axis.scale.niceExtent(model.get('splitNumber'), !!min, !!max);
+        scale.setExtent(min, max);
+        scale.niceExtent(model.get('splitNumber'), !!min, !!max);
     }
 
     function Grid(gridModel, ecModel, api) {
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._x = 0;
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._y = 0;
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._width = 0;
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._height = 0;
-
         /**
          * @type {Object.<string, module:echarts/coord/cartesian/Cartesian2D>}
          * @private
@@ -150,12 +127,7 @@ define(function(require, factory) {
         type: 'grid',
 
         getRect: function () {
-            return {
-                x: this._x,
-                y: this._y,
-                width: this._width,
-                height: this._height
-            };
+            return this._rect;
         },
 
         /**
@@ -164,34 +136,26 @@ define(function(require, factory) {
          * @param {module:echarts/ExtensionAPI} api
          */
         resize: function (gridModel, api) {
-            var viewportWidth = api.getWidth();
-            var viewportHeight = api.getHeight();
 
-            var parsePercent = numberUtil.parsePercent;
-            var gridX = parsePercent(gridModel.get('x'), viewportWidth);
-            var gridY = parsePercent(gridModel.get('y'), viewportHeight);
-            var gridX2 = parsePercent(gridModel.get('x2'), viewportWidth);
-            var gridY2 = parsePercent(gridModel.get('y2'), viewportHeight);
-            var gridWidth = parsePercent(gridModel.get('width'), viewportWidth);
-            var gridHeight = parsePercent(gridModel.get('height'), viewportHeight);
+            var gridRect = layout.parsePositionInfo({
+                x: gridModel.get('x'),
+                y: gridModel.get('y'),
+                x2: gridModel.get('x2'),
+                y2: gridModel.get('y2'),
+                width: gridModel.get('width'),
+                height: gridModel.get('height')
+            }, {
+                width: api.getWidth(),
+                height: api.getHeight()
+            });
 
-            if (isNaN(gridWidth)) {
-                gridWidth = viewportWidth - gridX2 - gridX;
-            }
-            if (isNaN(gridHeight)) {
-                gridHeight = viewportHeight - gridY2 - gridY;
-            }
-
-            this._x = gridX;
-            this._y = gridY;
-            this._width = gridWidth;
-            this._height = gridHeight;
+            this._rect = gridRect;
 
             each(this._axesList, function (axis) {
                 var isHorizontal = axis.isHorizontal();
                 var extent = isHorizontal
-                    ? [gridX, gridX + gridWidth]
-                    : [gridY + gridHeight, gridY];
+                    ? [gridRect.x, gridRect.x + gridRect.width]
+                    : [gridRect.y + gridRect.height, gridRect.y];
 
                 axis.setExtent(extent[0], extent[1]);
             });

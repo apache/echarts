@@ -6,7 +6,9 @@ define(function(require) {
 
     require('./AxisModel');
 
-    require('../../echarts').extendComponentModel({
+    var zrUtil = require('zrender/core/util');
+
+    var GridModel = require('../../echarts').extendComponentModel({
 
         type: 'grid',
 

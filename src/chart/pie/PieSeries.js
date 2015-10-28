@@ -43,7 +43,6 @@ define(function(require) {
         defaultOption: {
             zlevel: 0,
             z: 2,
-            clickable: true,
             legendHoverLink: true,
             // 默认全局居中
             center: ['50%', '50%'],

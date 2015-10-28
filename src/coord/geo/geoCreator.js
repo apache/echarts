@@ -70,8 +70,7 @@ define(function (require) {
 
         x = cx - width / 2;
         y = cy - height / 2;
-        this.transformTo(x, y, width, height);
-        this.setViewBox(x, y, width, height);
+        this.setViewRect(x, y, width, height);
 
         var roamDetailModel = geoModel.getModel('roamDetail');
 
@@ -81,7 +80,7 @@ define(function (require) {
 
         this.setPan(panX, panY);
         this.setZoom(zoom);
-    }
+    };
 
     var geoCreator = {
 
@@ -174,7 +173,7 @@ define(function (require) {
     // TODO
     echarts.loadMap = function () {
 
-    }
+    };
 
     echarts.registerCoordinateSystem('geo', geoCreator);
 });
