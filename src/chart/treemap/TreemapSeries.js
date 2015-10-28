@@ -99,7 +99,7 @@ define(function(require) {
         getInitialData: function (option, ecModel) {
             var data = option.data || [];
             var rootName = option.name;
-            rootName == null && (rootName = this.option.name);
+            rootName == null && (rootName = option.name);
 
             // Create a virtual root.
             var root = {name: rootName, children: option.data};
@@ -108,14 +108,14 @@ define(function(require) {
 
             // FIXME
             // sereis.mergeOption 的 getInitData是否放在merge后，从而能直接获取merege后的结果而非手动判断。
-            var levels = option.levels || (this.option || {}).levels || [];
+            var levels = option.levels || [];
 
             levels = option.levels = setDefault(levels, ecModel);
 
             // Make sure always a new tree is created when setOption,
             // in TreemapView, we check whether oldTree === newTree
             // to choose mappings approach among old shapes and new shapes.
-            return Tree.createTree(root, this, levels).list;
+            return Tree.createTree(root, this, levels).data;
         },
 
         /**

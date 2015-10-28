@@ -60,14 +60,14 @@ define(function(require) {
         },
 
         mergeOption: function (newSeriesOption, ecModel) {
+            newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
+
             var data = this.getInitialData(newSeriesOption, ecModel);
             // TODO Merge data?
             if (data) {
                 this._data = data;
                 this._dataBeforeProcessed = data.cloneShallow();
             }
-
-            zrUtil.merge(this.option, newSeriesOption, true);
         },
 
         /**
@@ -163,7 +163,7 @@ define(function(require) {
 
             var params = this.getFormatParams(dataIndex);
             if (!formatter) {
-                formatter = itemModel.get('itemStyle.' + status + '.label.formatter')
+                formatter = itemModel.get('label.' + status + '.formatter')
             }
 
             if (typeof formatter === 'function') {

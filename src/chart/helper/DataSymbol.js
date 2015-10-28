@@ -191,7 +191,7 @@ define(function (require) {
 
             // Update common properties
             var normalStyleAccessPath = ['itemStyle', 'normal'];
-            var emphasisStyleAccessPath = [normalStyleAccessPath[0], 'emphasis'];
+            var emphasisStyleAccessPath = ['itemStyle', 'emphasis'];
             data.eachItemGraphicEl(function (el, idx) {
                 var itemModel = data.getItemModel(idx);
                 var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
@@ -240,10 +240,11 @@ define(function (require) {
         },
 
         remove: function (enableAnimation) {
-            if (this._data) {
-                var group = this.group;
+            var group = this.group;
+            var data = this._data;
+            if (data) {
                 if (enableAnimation) {
-                    this._data.eachItemGraphicEl(function (el) {
+                    data.eachItemGraphicEl(function (el) {
                         el.animateTo({
                             scale: [0, 0]
                         }, 200, 'cubicOut', function () {

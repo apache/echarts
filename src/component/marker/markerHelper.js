@@ -15,6 +15,7 @@ define(function (require) {
         return valueArr;
     };
 
+    var curry = zrUtil.curry;
     // TODO Specified percent
     var markerTypeCalculator = {
         /**
@@ -23,21 +24,21 @@ define(function (require) {
          * @param {string} baseAxisDim
          * @param {string} valueAxisDim
          */
-        min: zrUtil.curry(markerTypeCalculatorWithExtent, 0),
+        min: curry(markerTypeCalculatorWithExtent, 0),
         /**
          * @method
          * @param {module:echarts/data/List} data
          * @param {string} baseAxisDim
          * @param {string} valueAxisDim
          */
-        max: zrUtil.curry(markerTypeCalculatorWithExtent, 1),
+        max: curry(markerTypeCalculatorWithExtent, 1),
         /**
          * @method
          * @param {module:echarts/data/List} data
          * @param {string} baseAxisDim
          * @param {string} valueAxisDim
          */
-        average: zrUtil.curry(markerTypeCalculatorWithExtent, 0.5)
+        average: curry(markerTypeCalculatorWithExtent, 0.5)
     };
 
     var dataTransform = function (data, baseAxis, valueAxis, item) {

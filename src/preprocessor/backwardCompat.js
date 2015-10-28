@@ -48,6 +48,28 @@ define(function (require) {
                 for (var i = 0; i < data.length; i++) {
                     compatItemStyle(data[i]);
                 }
+                // mark point data
+                var markPoint = seriesOpt.markPoint;
+                if (markPoint && markPoint.data) {
+                    var mpData = markPoint.data;
+                    for (var i = 0; i < mpData.length; i++) {
+                        compatItemStyle(mpData[i]);
+                    }
+                }
+                // mark line data
+                var markLine = seriesOpt.markLine;
+                if (markLine && markLine.data) {
+                    var mlData = markLine.data;
+                    for (var i = 0; i < mlData.length; i++) {
+                        if (zrUtil.isArray(mlData[i])) {
+                            compatItemStyle(mlData[i][0]);
+                            compatItemStyle(mlData[i][1]);
+                        }
+                        else {
+                            compatItemStyle(mlData[i]);
+                        }
+                    }
+                }
             }
             if (seriesOpt.type === 'map') {
                 seriesOpt.map = seriesOpt.mapType || seriesOpt.map;

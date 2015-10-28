@@ -195,10 +195,17 @@ define(function (require) {
                 var seriesModel = ecModel.getSeriesByIndex(
                     el.seriesIndex, true
                 );
-
-                this._hideAxisPointer();
-
-                this._showItemTooltip(seriesModel, el.dataIndex, e);
+                var dataIndex = el.dataIndex;
+                var itemModel = seriesModel.getData().getItemModel(dataIndex);
+                // Series or single data may use item trigger when global is axis trigger
+                if ((itemModel.get('tooltip.trigger') || trigger) === 'axis') {
+                    this._showAxisTooltip(tooltipModel, ecModel, e);
+                }
+                else {
+                    // If either single data or series use item trigger
+                    this._hideAxisPointer();
+                    this._showItemTooltip(seriesModel, dataIndex, e);
+                }
             }
             else {
                 if (trigger === 'item') {
@@ -206,20 +213,29 @@ define(function (require) {
                 }
                 else {
                     // Try show axis tooltip
-                    this._showAxisTooltip(e);
+                    this._showAxisTooltip(tooltipModel, ecModel, e);
                 }
             }
         },
 
         /**
          * Show tooltip on axis
+         * @param {module:echarts/component/tooltip/TooltipModel} tooltipModel
+         * @param {module:echarts/model/Global} ecModel
          * @param {Object} e
          * @private
          */
-        _showAxisTooltip: function (e) {
-            var tooltipModel = this._tooltipModel;
+        _showAxisTooltip: function (tooltipModel, ecModel, e) {
             var axisPointerModel = tooltipModel.getModel('axisPointer');
 
+            if (axisPointerModel.get('type') === 'cross') {
+                var el = e.target;
+                if (el && el.dataIndex != null) {
+                    var seriesModel = ecModel.getSeriesByIndex(el.seriesIndex, true);
+                    var dataIndex = el.dataIndex;
+                    this._showItemTooltip(seriesModel, dataIndex, e);
+                }
+            }
             zrUtil.each(this._seriesGroupByAxis, function (item) {
                 // Try show the axis pointer
                 this.group.show();
@@ -249,10 +265,9 @@ define(function (require) {
                 }
 
                 if (axisPointerModel.get('type') !== 'cross') {
-                    this._showSeriesTooltip(coordSys, item.series, point, value);
+                    this._showSeriesTooltipContent(coordSys, item.series, point, value);
                 }
             }, this);
-
         },
 
         /**
@@ -524,7 +539,7 @@ define(function (require) {
          * @param {Array.<number>} value
          * @param {Object} e
          */
-        _showSeriesTooltip: function (coordSys, seriesList, point, value) {
+        _showSeriesTooltipContent: function (coordSys, seriesList, point, value) {
 
             var rootTooltipModel = this._tooltipModel;
             var tooltipContent = this._tooltipContent;

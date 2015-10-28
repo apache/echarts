@@ -2,86 +2,88 @@
  * Tree data structure
  *
  * @module echarts/data/Tree
- * @author Yi Shen(https://www.github.com/pissang)
  */
 define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var Model = require('../model/Model');
     var List = require('./List');
-    var arraySlice = Array.prototype.slice;
+    var linkListHelper = require('./helper/linkList');
 
     /**
      * @constructor module:echarts/data/Tree~TreeNode
-     * @param {number} dataIndex
+     * @param {string} name
+     * @param {number} [dataIndex=-1]
+     * @param {module:echarts/data/Tree} hostTree
      */
-    var TreeNode = Model.extend({
+    var TreeNode = function (name, dataIndex, hostTree) {
+        /**
+         * @type {string}
+         */
+        this.name = name || '';
 
-        init: function (name, dataIndex, hostTree) {
+        /**
+         * Depth of node
+         *
+         * @type {number}
+         * @readOnly
+         */
+        this.depth = 0;
 
-            /**
-             * @type {string}
-             */
-            this.name = name || '';
+        /**
+         * Height of the subtree rooted at this node.
+         * @type {number}
+         * @readOnly
+         */
+        this.height = 0;
 
-            /**
-             * Depth of node
-             *
-             * @type {number}
-             * @readOnly
-             */
-            this.depth = 0;
+        /**
+         * @type {module:echarts/data/Tree~TreeNode}
+         * @readOnly
+         */
+        this.parentNode = null;
 
-            /**
-             * Height of the subtree rooted at this node.
-             * @type {number}
-             * @readOnly
-             */
-            this.height = 0;
+        /**
+         * Reference to list item.
+         * Do not persistent dataIndex outside,
+         * besause it may be changed by list.
+         * If dataIndex -1,
+         * this node is logical deleted (filtered) in list.
+         *
+         * @type {Object}
+         * @readOnly
+         */
+        this.dataIndex = dataIndex == null ? -1 : dataIndex;
 
-            /**
-             * @type {module:echarts/data/Tree~TreeNode}
-             * @readOnly
-             */
-            this.parentNode = null;
+        /**
+         * @type {Array.<module:echarts/data/Tree~TreeNode>}
+         * @readOnly
+         */
+        this.children = [];
 
-            /**
-             * Reference to list item.
-             * Do not persistent dataIndex outside,
-             * besause it may be changed by list.
-             * If dataIndex is null/undefined,
-             * this node is logical deleted (filtered) in list.
-             *
-             * @type {Object}
-             * @readOnly
-             */
-            this.dataIndex = dataIndex;
+        /**
+         * @type {Array.<module:echarts/data/Tree~TreeNode>}
+         * @pubilc
+         */
+        this.viewChildren = [];
 
-            /**
-             * @type {Array.<module:echarts/data/Tree~TreeNode>}
-             * @readOnly
-             */
-            this.children = [];
+        /**
+         * @type {moduel:echarts/data/Tree}
+         * @readOnly
+         */
+        this.hostTree = hostTree;
+    };
 
-            /**
-             * @type {Array.<module:echarts/data/Tree~TreeNode>}
-             * @pubilc
-             */
-            this.viewChildren = [];
+    TreeNode.prototype = {
 
-            /**
-             * @type {moduel:echarts/data/Tree}
-             * @readOnly
-             */
-            this.hostTree = hostTree;
-        },
+        constructor: TreeNode,
 
         /**
          * The node is removed.
-         * @return {boolean} is remvoed.
+         * @return {boolean} is removed.
          */
         isRemoved: function () {
-            return this.dataIndex == null;
+            return this.dataIndex < 0;
         },
 
         /**
@@ -193,31 +195,27 @@ define(function(require) {
         },
 
         /**
-         * @param {string=} dimension Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
+         * @param {string=} [dimension='value'] Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
          * @return {number} Value.
          */
         getValue: function (dimension) {
-            return this.dataIndex != null
-                ? this.hostTree.list.get(dimension || 'value', this.dataIndex)
-                : null;
+            return this.hostTree.data.get(dimension || 'value', this.dataIndex);
         },
 
         /**
          * @param {Object} layout
-         * @param {boolean=} merge
+         * @param {boolean=} [merge=false]
          */
         setLayout: function (layout, merge) {
-            this.dataIndex != null
-                && this.hostTree.list.setItemLayout(this.dataIndex, layout, merge);
+            this.dataIndex >= 0
+                && this.hostTree.data.setItemLayout(this.dataIndex, layout, merge);
         },
 
         /**
          * @return {Object} layout
          */
         getLayout: function () {
-            return this.dataIndex != null
-                ? this.hostTree.list.getItemLayout(this.dataIndex)
-                : null;
+            return this.hostTree.data.getItemLayout(this.dataIndex);
         },
 
         /**
@@ -225,12 +223,12 @@ define(function(require) {
          * @return {module:echarts/model/Model}
          */
         getModel: function (path) {
-            if (this.dataIndex == null) {
+            if (this.dataIndex < 0) {
                 return;
             }
             var hostTree = this.hostTree;
-            var itemModel = hostTree.list.getItemModel(this.dataIndex);
-            var levelModel = (hostTree.levelModels || [])[this.depth];
+            var itemModel = hostTree.data.getItemModel(this.dataIndex);
+            var levelModel = this.getLevelModel();
 
             return itemModel.getModel(path, (levelModel || hostTree.hostModel).getModel(path));
         },
@@ -244,34 +242,31 @@ define(function(require) {
 
         /**
          * @example
-         *  setItemVisual(0, 'color', color);
-         *  setItemVisual(0, {
+         *  setItemVisual('color', color);
+         *  setItemVisual({
          *      'color': color
          *  });
          */
         setVisual: function (key, value) {
-            this.dataIndex != null
-                && this.hostTree.list.setItemVisual(this.dataIndex, key, value);
+            this.dataIndex >= 0
+                && this.hostTree.data.setItemVisual(this.dataIndex, key, value);
         },
 
         /**
          * @public
          */
         getVisual: function (key, ignoreParent) {
-            return this.dataIndex != null
-                ? this.hostTree.list.getItemVisual(this.dataIndex, key, ignoreParent)
-                : null;
+            return this.hostTree.data.getItemVisual(this.dataIndex, key, ignoreParent);
         },
 
         /**
          * @public
+         * @return {number}
          */
         getRawIndex: function () {
-            return this.dataIndex != null
-                ? this.hostTree.list.getRawIndex(this.dataIndex)
-                : null;
+            return this.hostTree.data.getRawIndex(this.dataIndex);
         }
-    });
+    };
 
     /**
      * @constructor
@@ -290,7 +285,7 @@ define(function(require) {
          * @type {module:echarts/data/List}
          * @readOnly
          */
-        this.list;
+        this.data;
 
         /**
          * Index of each item is the same as the raw index of coresponding list item.
@@ -356,15 +351,15 @@ define(function(require) {
          * when list has been performed options like 'filterSelf' or 'map'.
          */
         update: function () {
-            var list = this.list;
+            var data = this.data;
             var nodes = this._nodes;
 
             for (var i = 0, len = nodes.length; i < len; i++) {
-                nodes[i].dataIndex = null;
+                nodes[i].dataIndex = -1;
             }
 
-            for (var i = 0, len = list.count(); i < len; i++) {
-                nodes[list.getRawIndex(i)].dataIndex = i;
+            for (var i = 0, len = data.count(); i < len; i++) {
+                nodes[data.getRawIndex(i)].dataIndex = i;
             }
         }
     };
@@ -417,9 +412,9 @@ define(function(require) {
 
         var list = createList(listData, hostModel);
 
-        tree.list = list;
+        tree.data = list;
 
-        proxyList(list, tree);
+        linkListHelper.linkToTree(list, tree);
 
         return tree;
     };
@@ -453,35 +448,6 @@ define(function(require) {
 
         return list;
     }
-
-    function proxyList(list, tree) {
-        zrUtil.each(listProxyMethods, function (method, methodName) {
-            var originMethod = list[methodName];
-            list[methodName] = zrUtil.curry(method, originMethod, tree);
-        });
-
-        // Among list and its clones, only one can be active in echarts process.
-        // So a tree instance can be share by list and its clone.
-        list.tree = tree;
-
-        return list;
-    }
-
-    var listProxyMethods = {
-        cloneShallow: function (originMethod, tree) {
-            var newList = originMethod.apply(this, arraySlice.call(arguments, 1));
-            return proxyList(newList, tree);
-        },
-        map: function (originMethod, tree) {
-            var newList = originMethod.apply(this, arraySlice.call(arguments, 1));
-            return proxyList(newList, tree);
-        },
-        filterSelf: function (originMethod, tree) {
-            var result = originMethod.apply(this, arraySlice.call(arguments, 1));
-            tree.update();
-            return result;
-        }
-    };
 
     return Tree;
 });

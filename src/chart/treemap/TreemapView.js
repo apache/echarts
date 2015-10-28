@@ -264,6 +264,7 @@
                     text = '';
                 }
 
+                content.culling = true;
                 content.setShape({
                     x: borderWidth,
                     y: borderWidth,
@@ -329,7 +330,6 @@
             }
 
             var animationCount = 0;
-            var containerGroup = this._containerGroup;
             var that = this;
 
             zrUtil.each(this._storage, function (shapes, key) {

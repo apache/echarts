@@ -120,7 +120,9 @@ define(function (require) {
             for (var i = 0; i < seriesGroup.length; i++) {
                 var subData = seriesGroup[i].getData();
                 if (!isNaN(subData.getRawValue(dataIndex))) {
-                    seriesNames.push(seriesGroup[i].name);
+                    seriesNames.push(
+                        encodeHTML(seriesGroup[i].name)
+                    );
                 }
             }
 
