@@ -46,10 +46,22 @@ define(function (require) {
             nodeItemStyleModel, designatedVisual, levelItemStyle, seriesItemStyleModel
         );
 
+        // calculate border color
+        var borderColor = nodeItemStyleModel.get('borderColor');
+        var borderColorS = nodeItemStyleModel.get('borderColorS');
+        var thisNodeColor;
+        if (borderColorS != null) {
+            // For performance, do not always execute 'calculateColor'.
+            thisNodeColor = calculateColor(visuals, node);
+            borderColor = calculateBorderColor(borderColorS, thisNodeColor);
+        }
+        node.setVisual('borderColor', borderColor);
+
         var viewChildren = node.viewChildren;
         if (!viewChildren || !viewChildren.length) {
+            thisNodeColor = calculateColor(visuals, node);
             // Apply visual to this node.
-            node.setVisual('color', calculateColor(visuals, node));
+            node.setVisual('color', thisNodeColor);
         }
         else {
             var mappingWrap = buildVisualMapping(
@@ -104,6 +116,12 @@ define(function (require) {
 
             return color;
         }
+    }
+
+    function calculateBorderColor(borderColorS, thisNodeColor) {
+        return thisNodeColor != null
+             ? zrColor.modifyHSL(thisNodeColor, null, null, borderColorS)
+             : null;
     }
 
     function getValueVisualDefine(visuals, name) {

@@ -80,9 +80,9 @@ define(function(require) {
                     colorSRange: null,   // 为数组，表示同一level的color alpha 选取范围。
                     colorMapping: 'byIndex', // 'byIndex' or 'byValue'
                     borderWidth: 0,
-                    borderColor: 'rgba(0,0,0,0)',
                     gapWidth: 0,
-                    gapColor: 'rgba(0,0,0,0)' // 和borderColor恒相同。
+                    borderColor: '#fff',
+                    borderColorS: null   // 如果设置，则borderColor的设置无效，而是取当前节点计算出的颜色，再经由borderColorS处理。
                 },
                 emphasis: {}
             },

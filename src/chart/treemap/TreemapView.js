@@ -231,13 +231,10 @@
             parentGroup.add(group);
             group.position = [layout.x, layout.y];
 
-            var itemStyleModel = thisNode.getModel('itemStyle.normal');
-            var borderColor = itemStyleModel.get('borderColor') || itemStyleModel.get('gapColor');
-
             // Background
             var bg = giveGraphic('background', Rect, 'shape');
             bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
-            bg.setStyle({fill: borderColor});
+            bg.setStyle({fill: thisNode.getVisual('borderColor', true)});
             group.add(bg);
 
             var thisViewChildren = thisNode.viewChildren;
