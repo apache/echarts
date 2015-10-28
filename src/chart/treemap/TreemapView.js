@@ -59,7 +59,7 @@
             this._controller;
 
             /**
-             * 'ready', 'dragging', 'animating'
+             * 'ready', 'animating'
              * @private
              */
             this._state = 'ready';
@@ -69,6 +69,12 @@
              * @type {Object} {x, y, width, height}
              */
             this.positionInfo;
+
+            /**
+             * @private
+             * @type {boolean}
+             */
+            this._mayClick;
         },
 
         /**
@@ -371,8 +377,13 @@
             // Init controller.
             if (!controller) {
                 controller = this._controller = new RoamController(api.getZr());
-                controller.on('pan', bind(this._onPan, this));
-                controller.on('zoom', bind(this._onZoom, this));
+                controller.on('pan', bind(handle, this, this._onPan));
+                controller.on('zoom', bind(handle, this, this._onZoom));
+            }
+
+            function handle(handler) {
+                this._mayClick = false;
+                return handler.apply(this, Array.prototype.slice.call(arguments, 1));
             }
 
             controller.rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
@@ -398,9 +409,6 @@
                     return;
                 }
                 var rootGroup = this._storage.nodeGroup[root.getRawIndex()];
-                // FIXME
-                // 找个好点的方法？
-                this._state = 'dragging';
                 var pos = rootGroup.position;
                 pos[0] += dx;
                 pos[1] += dy;
@@ -415,7 +423,7 @@
          * @private
          */
         _onZoom: function (scale, mouseX, mouseY) {
-            if (this._state !== 'animating' && this._state !== 'dragging') {
+            if (this._state !== 'animating' && !this._controller.isDragging()) {
 
                 // These param must not be cached.
                 var rect = this._containerGroup.getBoundingRect();
@@ -450,24 +458,18 @@
             // 不用click以及silent的原因是，animate时视图设置silent true来避免click生效，
             // 但是animate中，按下鼠标，animate结束后（silent设回为false）松开鼠标，
             // 还是会触发click，期望是不触发。
-            var maybeClick = false;
             var that = this;
 
+            // Mousedown occurs when drag start, and mouseup occurs when drag end,
+            // click event should not be triggered in that case.
+
             containerGroup.on('mousedown', function (e) {
-                if (that._state === 'ready') {
-                    maybeClick = true;
-                }
+                that._state === 'ready' && (that._mayClick = true);
             });
             containerGroup.on('mouseup', function (e) {
-                if (that._state !== 'ready') {
-                    // Mousedown occurs when drag start, and mouseup occurs when drag end,
-                    // click event should not be triggered in that case.
-                    that._state === 'dragging' && (that._state = 'ready');
-                    return;
-                }
-                if (maybeClick) {
-                    maybeClick = false;
-                    onClick(e);
+                if (that._mayClick) {
+                    that._mayClick = false;
+                    that._state === 'ready' && onClick(e);
                 }
             });
 

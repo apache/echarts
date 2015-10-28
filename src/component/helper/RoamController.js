@@ -39,7 +39,7 @@ define(function (require) {
     }
 
     function mouseup(e) {
-        this._dragging =false;
+        this._dragging = false;
     }
 
     function mousewheel(e) {
@@ -113,6 +113,10 @@ define(function (require) {
             zr.off('mousemove', mousemoveHandler);
             zr.off('mouseup', mouseupHandler);
             zr.off('mousewheel', mousewheelHandler);
+        }
+
+        this.isDragging = function () {
+            return this._dragging;
         }
     }
 
