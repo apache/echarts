@@ -23,33 +23,26 @@ define(function (require) {
         var point = data.getItemLayout(idx);
         var color = data.getItemVisual(idx, 'color');
 
-        var symbolSize = data.getItemVisual(idx, 'symbolSize');
+        var size = data.getItemVisual(idx, 'symbolSize');
         var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
 
-        if (!symbolType || symbolType === 'none') {
+        if (symbolType === 'none') {
             return;
         }
 
-        symbolSize = normalizeSymbolSize(symbolSize);
+        size = normalizeSymbolSize(size);
 
-        var x = -symbolSize[0] / 2;
-        var y = -symbolSize[1] / 2;
-        var w = symbolSize[0];
-        var h = symbolSize[1];
         var symbolEl = symbolUtil.createSymbol(
-            symbolType, x, y, w, h, color
+            symbolType, -size[0] / 2, -size[1] / 2, size[0], size[1], color
         );
 
-        var symbolElPos = symbolEl.position;
-        symbolElPos[0] = point[0];
-        symbolElPos[1] = point[1];
-
-        symbolEl.z2 = 100;
+        symbolEl.attr({
+            position: point,
+            z2: 100
+        });
 
         if (enableAnimation) {
-
             symbolEl.scale = [0, 0];
-
             symbolEl.animateTo({
                 scale: [1, 1]
             }, 500);
@@ -65,199 +58,178 @@ define(function (require) {
         this.group = new graphic.Group();
     }
 
-    SymbolDraw.prototype = {
+    var symbolProto = SymbolDraw.prototype;
 
-        getData: function () {
-            return this._data;
-        },
+    /**
+     * @param {module:echarts/data/List} data
+     * @param {module:echarts/model/Series} seriesModel
+     * @param {module:echarts/ExtensionAPI} api
+     * @param {boolean} enableAnimation
+     * @param {Array.<boolean>} [ignoreMap]
+     */
+    symbolProto.updateData = function (
+        data, seriesModel, api, enableAnimation, ignoreMap
+    ) {
 
-        /**
-         * @param {module:echarts/data/List} data
-         * @param {module:echarts/model/Series} seriesModel
-         * @param {module:echarts/ExtensionAPI} api
-         * @param {boolean} enableAnimation
-         * @param {Array.<boolean>} [ignoreMap]
-         */
-        updateData: function (
-            data, seriesModel, api, enableAnimation, ignoreMap
-        ) {
+        var group = this.group;
+        var oldData = this._data;
 
-            var group = this.group;
-            var oldData = this._data;
+        data.diff(oldData)
+            .add(function (newIdx) {
+                if (data.hasValue(newIdx) && !(ignoreMap && ignoreMap[newIdx])) {
+                    var symbolEl = createSymbol(data, newIdx, enableAnimation);
 
-            data.diff(oldData)
-                .add(function (newIdx) {
-                    // 空数据
-                    // TODO
-                    if (!data.hasValue(newIdx)) {
-                        return;
+                    if (symbolEl) {
+                        data.setItemGraphicEl(newIdx, symbolEl);
+                        group.add(symbolEl);
                     }
-
-                    if (!(ignoreMap && ignoreMap[newIdx])) {
-                        var symbolEl = createSymbol(
-                            data, newIdx, enableAnimation
-                        );
-
-                        if (symbolEl) {
-                            data.setItemGraphicEl(newIdx, symbolEl);
-
-                            group.add(symbolEl);
-                        }
-                    }
-                })
-                .update(function (newIdx, oldIdx) {
-                    var el = oldData.getItemGraphicEl(oldIdx);
-                    // Empty data
-                    if (!data.hasValue(newIdx)
-                        || (ignoreMap && ignoreMap[newIdx])
-                    ) {
-                        group.remove(el);
-                        return;
-                    }
-
-                    var symbolSize = normalizeSymbolSize(
-                        data.getItemVisual(newIdx, 'symbolSize')
-                    );
-                    var point = data.getItemLayout(newIdx);
-
-                    var symbolType = data.getItemVisual(newIdx, 'symbol');
-                    // Symbol changed
-                    if (
-                        oldData.getItemVisual(oldIdx, 'symbol') !== symbolType
-                    || (!el && !(ignoreMap && ignoreMap[newIdx]))
-                    ) {
-                        // Remove the old one
-                        el && group.remove(el);
-                        el = createSymbol(data, newIdx, enableAnimation);
-                        // Disable symbol by setting `symbol: 'none'`
-                        if (!el) {
-                            return;
-                        }
-                    }
-                    else {
-                        // Update animation
-                        if (!el) {
-                            return;
-                        }
-                        var newTarget = {};
-                        if (!isSymbolSizeSame(
-                            symbolSize, normalizeSymbolSize(
-                                oldData.getItemVisual(oldIdx, 'symbolSize')
-                            )
-                        )) {
-                            // FIXME symbol created with pathStr has symbolSizeChanged
-                            newTarget = symbolUtil.getSymbolShape(
-                                symbolType,
-                                -symbolSize[0] / 2, -symbolSize[1] / 2,
-                                symbolSize[0], symbolSize[1]
-                            ) || {};
-                        }
-
-                        // TODO Merge animateTo and attr methods into one
-                        newTarget.position = point;
-                        if (!isAroundEqual(el.scale[0], 1)) {    // May have scale 0
-                            newTarget.scale = [1, 1];
-                        }
-                        if (enableAnimation) {
-                            api.updateGraphicEl(el, newTarget);
-                        }
-                        else {
-                            // May still have animation. Must stop
-                            el.stopAnimation();
-                            el.attr(newTarget);
-                        }
-                    }
-
-                    data.setItemGraphicEl(newIdx, el);
-
-                    // Add back
-                    group.add(el);
-                })
-                .remove(function (oldIdx) {
-                    var el = oldData.getItemGraphicEl(oldIdx);
-                    if (enableAnimation) {
-                        el.animateTo({
-                            scale: [0, 0]
-                        }, 200, 'cubicOut', function () {
-                            group.remove(el);
-                        });
-                    }
-                    else {
-                        // console.log(oldIdx);
-                        group.remove(el);
-                    }
-                })
-                .execute();
-
-            // Update common properties
-            var normalStyleAccessPath = ['itemStyle', 'normal'];
-            var emphasisStyleAccessPath = ['itemStyle', 'emphasis'];
-            data.eachItemGraphicEl(function (el, idx) {
-                var itemModel = data.getItemModel(idx);
-                var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
-                var labelModel = itemModel.getModel('label.normal');
-                var color = data.getItemVisual(idx, 'color');
-
-                el.setColor(color);
-
-                zrUtil.extend(
-                    el.style,
-                    normalItemStyleModel.getItemStyle(['color'])
-                );
-
-                if (labelModel.get('show')) {
-                    var labelPosition = labelModel.get('position') || 'inside';
-                    var labelColor = labelPosition === 'inside' ? 'white' : color;
-                    // Text use the value of last dimension
-                    var lastDim = data.dimensions[data.dimensions.length - 1];
-                    el.setStyle({
-                        // FIXME
-                        text: seriesModel.getFormattedLabel(idx, 'normal')
-                            || data.get(lastDim, idx),
-                        textFont: labelModel.getModel('textStyle').getFont(),
-                        textPosition: labelPosition,
-                        textFill: labelColor
-                    });
+                }
+            })
+            .update(function (newIdx, oldIdx) {
+                var el = oldData.getItemGraphicEl(oldIdx);
+                // Empty data
+                if (!data.hasValue(newIdx) || (ignoreMap && ignoreMap[newIdx])) {
+                    group.remove(el);
+                    return;
                 }
 
-                graphic.setHoverStyle(
-                    el,
-                    itemModel.getModel(emphasisStyleAccessPath).getItemStyle()
+                var size = normalizeSymbolSize(
+                    data.getItemVisual(newIdx, 'symbolSize')
                 );
-            }, this);
+                var point = data.getItemLayout(newIdx);
 
-            this._data = data;
-        },
+                var symbolType = data.getItemVisual(newIdx, 'symbol');
+                // Symbol changed
+                if (
+                    oldData.getItemVisual(oldIdx, 'symbol') !== symbolType
+                    || (!el && !(ignoreMap && ignoreMap[newIdx]))
+                ) {
+                    // Remove the old one
+                    el && group.remove(el);
+                    el = createSymbol(data, newIdx, enableAnimation);
+                    // Disable symbol by setting `symbol: 'none'`
+                    if (!el) { return; }
+                }
+                else {
+                    // Update animation
+                    if (!el) { return; }
 
-        updateLayout: function () {
-            var data = this._data;
-            if (data) {
-                // Not use animation
-                data.eachItemGraphicEl(function (el, idx) {
-                    el.attr('position', data.getItemLayout(idx));
-                });
-            }
-        },
+                    var newTarget = {};
+                    if (!isSymbolSizeSame(
+                        size, normalizeSymbolSize(
+                            oldData.getItemVisual(oldIdx, 'symbolSize')
+                        )
+                    )) {
+                        // FIXME symbol created with pathStr has symbolSizeChanged
+                        newTarget = symbolUtil.getSymbolShape(
+                            symbolType, -size[0] / 2, -size[1] / 2, size[0], size[1]
+                        ) || {};
+                    }
 
-        remove: function (enableAnimation) {
-            var group = this.group;
-            var data = this._data;
-            if (data) {
+                    newTarget.position = point;
+                    if (!isAroundEqual(el.scale[0], 1)) {    // May have scale 0
+                        newTarget.scale = [1, 1];
+                    }
+                    if (enableAnimation) {
+                        api.updateGraphicEl(el, newTarget);
+                    }
+                    else {
+                        // May still have animation. Must stop
+                        el.stopAnimation();
+                        el.attr(newTarget);
+                    }
+                }
+
+                data.setItemGraphicEl(newIdx, el);
+
+                // Add back
+                group.add(el);
+            })
+            .remove(function (oldIdx) {
+                var el = oldData.getItemGraphicEl(oldIdx);
                 if (enableAnimation) {
-                    data.eachItemGraphicEl(function (el) {
-                        el.animateTo({
-                            scale: [0, 0]
-                        }, 200, 'cubicOut', function () {
-                            group.remove(el);
-                        });
+                    el.animateTo({
+                        scale: [0, 0]
+                    }, 200, 'cubicOut', function () {
+                        group.remove(el);
                     });
                 }
                 else {
-                    group.removeAll();
+                    // console.log(oldIdx);
+                    group.remove(el);
                 }
+            })
+            .execute();
+
+        // Update common properties
+        var normalStyleAccessPath = ['itemStyle', 'normal'];
+        var emphasisStyleAccessPath = ['itemStyle', 'emphasis'];
+        data.eachItemGraphicEl(function (el, idx) {
+            var itemModel = data.getItemModel(idx);
+            var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
+            var labelModel = itemModel.getModel('label.normal');
+            var color = data.getItemVisual(idx, 'color');
+
+            el.setColor(color);
+
+            zrUtil.extend(
+                el.style,
+                normalItemStyleModel.getItemStyle(['color'])
+            );
+
+            if (labelModel.get('show')) {
+                var textStyleModel = labelModel.getModel('textStyle');
+                var labelPosition = labelModel.get('position') || 'inside';
+                var labelColor = labelPosition === 'inside' ? 'white' : color;
+                // Text use the value of last dimension
+                var lastDim = data.dimensions[data.dimensions.length - 1];
+                el.setStyle({
+                    // FIXME
+                    text: seriesModel.getFormattedLabel(idx, 'normal')
+                        || data.get(lastDim, idx),
+                    textFont: textStyleModel.getFont(),
+                    textPosition: labelPosition,
+                    textFill: textStyleModel.get('color') || labelColor
+                });
+            }
+
+            graphic.setHoverStyle(
+                el,
+                itemModel.getModel(emphasisStyleAccessPath).getItemStyle()
+            );
+        }, this);
+
+        this._data = data;
+    };
+
+    symbolProto.updateLayout = function () {
+        var data = this._data;
+        if (data) {
+            // Not use animation
+            data.eachItemGraphicEl(function (el, idx) {
+                el.attr('position', data.getItemLayout(idx));
+            });
+        }
+    };
+
+    symbolProto.remove = function (enableAnimation) {
+        var group = this.group;
+        var data = this._data;
+        if (data) {
+            if (enableAnimation) {
+                data.eachItemGraphicEl(function (el) {
+                    el.animateTo({
+                        scale: [0, 0]
+                    }, 200, 'cubicOut', function () {
+                        group.remove(el);
+                    });
+                });
+            }
+            else {
+                group.removeAll();
             }
         }
-    }
+    };
 
     return SymbolDraw;
 });

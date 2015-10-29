@@ -1,5 +1,9 @@
 define(function (require) {
 
+    function isSymbolNone(symbolType) {
+        return symbolType === 'none';
+    }
+
     return function (seriesType, defaultSymbolType, legendSymbol, ecModel, api) {
 
         // Encoding visual for all series include which is filtered for legend drawing
@@ -8,6 +12,8 @@ define(function (require) {
 
             var symbolType = seriesModel.get('symbol') || defaultSymbolType;
             var symbolSize = seriesModel.get('symbolSize');
+
+            // var coordSys = seriesModel.coordinateSystem;
 
             data.setVisual({
                 legendSymbol: legendSymbol || symbolType,
@@ -20,16 +26,18 @@ define(function (require) {
                 if (typeof symbolSize === 'function') {
                     data.each(function (idx) {
                         var rawValue = data.getRawValue(idx);
-                        data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue))
+                        data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue));
                     });
                 }
                 data.each(function (idx) {
                     var itemModel = data.getItemModel(idx);
                     var symbolType = itemModel.get('symbol', true);
                     var symbolSize = itemModel.get('symbolSize', true);
-                    if (symbolType != null && symbolType !== 'none') {
+                    // If has symbol
+                    if (!isSymbolNone(defaultSymbolType) || !isSymbolNone(defaultSymbolType)) {
                         data.setItemVisual(idx, 'symbol', symbolType);
                         if (symbolSize != null) {
+                            // PENDING Transform symbolSize ?
                             data.setItemVisual(idx, 'symbolSize', symbolSize);
                         }
                     }

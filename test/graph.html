@@ -39,20 +39,33 @@
                 $.get('./data/les-miserables.gexf', function (xml) {
                     var graph = gexf.parse(xml);
                     graph.nodes.forEach(function (node) {
+                        node.itemStyle = null;
                         node.value = 1;
+                        node.label.normal.show = node.symbolSize > 30;
                     });
                     chart.setOption({
+                        tooltip: {},
                         series : [
                             {
-                                name: 'iphone3',
+                                name: 'les-miserables',
                                 type: 'graph',
                                 data: graph.nodes,
-                                links: graph.links
+                                links: graph.links,
+                                label: {
+                                    normal: {
+                                        position: 'right'
+                                    }
+                                },
+                                lineStyle: {
+                                    normal: {
+                                        curveness: 0.3
+                                    }
+                                }
                             }
                         ]
                     });
                 });
-            })
+            });
 
         </script>
     </body>

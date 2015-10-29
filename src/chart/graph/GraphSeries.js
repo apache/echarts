@@ -37,6 +37,8 @@ define(function (require) {
             symbol: 'circle',
             symbolSize: 10,
 
+            // categories: [],
+
             label: {
                 normal: {
                     show: false
@@ -53,13 +55,14 @@ define(function (require) {
                 }
             },
 
-            linkStyle: {
+            lineStyle: {
                 normal: {
-                    color: '#5182ab',
-                    curveness: 0
+                    color: '#aaa',
+                    width: 1,
+                    curveness: 0,
+                    opacity: 0.5
                 },
                 emphasis: {
-
                 }
             }
         }

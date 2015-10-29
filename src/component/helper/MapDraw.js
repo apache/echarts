@@ -30,7 +30,7 @@ define(function (require) {
                 }
             })
             : group.off('click');
-    };
+    }
 
     function updateMapSelected(mapOrGeoModel, data) {
         data.eachItemGraphicEl(function (el, idx) {
@@ -181,12 +181,12 @@ define(function (require) {
                         scale: [1 / scale[0], 1 / scale[1]],
                         z2: 10
                     });
-                    function emphasisLabel() {
+                    var emphasisLabel = function() {
                         text.attr('ignore', !hoverShowLabel);
-                    }
-                    function normalLabel() {
+                    };
+                    var normalLabel = function() {
                         text.attr('ignore', !showLabel);
-                    }
+                    };
                     regionGroup.on('mouseover', emphasisLabel)
                         .on('mouseout', normalLabel)
                         .on('emphasis', emphasisLabel)
@@ -262,7 +262,7 @@ define(function (require) {
 
             controller.rect = geo.getViewRect();
         }
-    }
+    };
 
     return MapDraw;
 });

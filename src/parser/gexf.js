@@ -30,7 +30,7 @@ define(function(require) {
         var attributes = parseAttributes(getChildByTagName(graphRoot, 'attributes'));
         var attributesMap = {};
         for (var i = 0; i < attributes.length; i++) {
-            attributesMap[attributes[i].name] = attributes[i];
+            attributesMap[attributes[i].id] = attributes[i];
         }
 
         return {
@@ -42,9 +42,9 @@ define(function(require) {
     function parseAttributes(parent) {
         return parent ? zrUtil.map(getChildrenByTagName(parent, 'attribute'), function (attribDom) {
             return {
-                name: attribDom.getAttribute('id'),
-                title: attribDom.getAttribute('title'),
-                type: attribDom.getAttribute('type')
+                id: getAttr(attribDom, 'id'),
+                title: getAttr(attribDom, 'title'),
+                type: getAttr(attribDom, 'type')
             };
         }) : [];
     }
@@ -52,11 +52,12 @@ define(function(require) {
     function parseNodes(parent, attributesMap) {
         return parent ? zrUtil.map(getChildrenByTagName(parent, 'node'), function (nodeDom) {
 
-            var id = nodeDom.getAttribute('id');
-            var label = nodeDom.getAttribute('label');
+            var id = getAttr(nodeDom, 'id');
+            var label = getAttr(nodeDom, 'label');
 
             var node = {
-                name: id,
+                id: id,
+                name: label,
                 label: {
                     normal: {
                         formatter: label
@@ -70,28 +71,28 @@ define(function(require) {
             var vizSizeDom = getChildByTagName(nodeDom, 'viz:size');
             var vizPosDom = getChildByTagName(nodeDom, 'viz:position');
             var vizColorDom = getChildByTagName(nodeDom, 'viz:color');
-            var vizShapeDom = getChildByTagName(nodeDom, 'viz:shape');
+            // var vizShapeDom = getChildByTagName(nodeDom, 'viz:shape');
 
             var attvaluesDom = getChildByTagName(nodeDom, 'attvalues');
 
             if (vizSizeDom) {
-                node.itemStyle.normal.symbolSize = parseFloat(vizSizeDom.getAttribute('value'));
+                node.symbolSize = parseFloat(getAttr(vizSizeDom, 'value'));
             }
             if (vizPosDom) {
-                node.x = parseFloat(vizPosDom.getAttribute('x'));
-                node.y = parseFloat(vizPosDom.getAttribute('y'));
+                node.x = parseFloat(getAttr(vizPosDom, 'x'));
+                node.y = parseFloat(getAttr(vizPosDom, 'y'));
                 // z
             }
             if (vizColorDom) {
-                node.itemStyle.normal.color = 'rgb(' +
-                    [parseInt(vizColorDom.getAttribute('r')),
-                    parseInt(vizColorDom.getAttribute('g')),
-                    parseInt(vizColorDom.getAttribute('b'))].join(',')
-                    + ')';
+                node.itemStyle.normal.color = 'rgb(' +[
+                    getAttr(vizColorDom, 'r') | 0,
+                    getAttr(vizColorDom, 'g') | 0,
+                    getAttr(vizColorDom, 'b') | 0
+                ].join(',') + ')';
             }
-            if (vizShapeDom) {
-                // node.shape = vizShapeDom.getAttribute('shape');
-            }
+            // if (vizShapeDom) {
+                // node.shape = getAttr(vizShapeDom, 'shape');
+            // }
             if (attvaluesDom) {
                 var attvalueDomList = getChildrenByTagName(attvaluesDom, 'attvalue');
 
@@ -99,8 +100,8 @@ define(function(require) {
 
                 for (var j = 0; j < attvalueDomList.length; j++) {
                     var attvalueDom = attvalueDomList[j];
-                    var attId = attvalueDom.getAttribute('for');
-                    var attValue = attvalueDom.getAttribute('value');
+                    var attId = getAttr(attvalueDom, 'for');
+                    var attValue = getAttr(attvalueDom, 'value');
                     var attribute = attributesMap[attId];
 
                     if (attribute) {
@@ -129,14 +130,15 @@ define(function(require) {
 
     function parseEdges(parent) {
         return parent ? zrUtil.map(getChildrenByTagName(parent, 'edge'), function (edgeDom) {
-            var id = edgeDom.getAttribute('id');
-            var label = edgeDom.getAttribute('label');
+            var id = getAttr(edgeDom, 'id');
+            var label = getAttr(edgeDom, 'label');
 
-            var sourceId = edgeDom.getAttribute('source');
-            var targetId = edgeDom.getAttribute('target');
+            var sourceId = getAttr(edgeDom, 'source');
+            var targetId = getAttr(edgeDom, 'target');
 
             var edge = {
-                name: id,
+                id: id,
+                name: label,
                 source: sourceId,
                 target: targetId,
                 linkStyle: {
@@ -148,16 +150,16 @@ define(function(require) {
 
             var vizThicknessDom = getChildByTagName(edgeDom, 'viz:thickness');
             var vizColorDom = getChildByTagName(edgeDom, 'viz:color');
-            var vizShapeDom = getChildByTagName(edgeDom, 'viz:shape');
+            // var vizShapeDom = getChildByTagName(edgeDom, 'viz:shape');
 
             if (vizThicknessDom) {
                 linkStyle.thickness = parseFloat(vizThicknessDom.getAttribute('value'));
             }
             if (vizColorDom) {
                 linkStyle.color = 'rgb(' + [
-                    parseInt(vizColorDom.getAttribute('r')),
-                    parseInt(vizColorDom.getAttribute('g')),
-                    parseInt(vizColorDom.getAttribute('b'))
+                    getAttr(vizColorDom, 'r') | 0,
+                    getAttr(vizColorDom, 'g') | 0,
+                    getAttr(vizColorDom, 'b') | 0
                 ].join(',') + ')';
             }
             // if (vizShapeDom) {
@@ -166,6 +168,10 @@ define(function(require) {
 
             return edge;
         }) : [];
+    }
+
+    function getAttr(el, attrName) {
+        return el.getAttribute(attrName);
     }
 
     function getChildByTagName (parent, tagName) {
