@@ -104,9 +104,9 @@
                     tooltip : {
                         trigger: 'axis',
                         formatter: function(params) {
-                            return params[0].name + '<br/>'
-                                + params[0].seriesName + ' : ' + params[0].value + ' (m^3/s)<br/>'
-                                + params[1].seriesName + ' : ' + -params[1].value + ' (mm)';
+                            return new Date(params[0].value[0]) + '<br/>'
+                                + params[0].seriesName + ' : ' + params[0].value[1] + ' (m^3/s)<br/>'
+                                + params[1].seriesName + ' : ' + -params[1].value[1] + ' (mm)';
                         }
                     },
                     legend: {
