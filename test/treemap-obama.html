@@ -172,20 +172,37 @@
                 ];
             }
 
+            function isValidNumber(num) {
+                return num != null && isFinite(num);
+            }
+
             function getTooltipFormatter(mode) {
                 var amountIndex = mode === 1 ? 1 : 0;
                 var changeIndex = mode === 1 ? 0 : 1;
 
                 return function (info) {
                     var value = info[0].value;
+
+                    var amount = value[amountIndex];
+                    amount = isValidNumber(amount)
+                        ? formatUtil.addCommas(value[amountIndex] * 1000) + '$'
+                        : '-';
+
+                    var perHousehold = value[2];
+                    perHousehold = isValidNumber(perHousehold)
+                        ? formatUtil.addCommas((+perHousehold.toFixed(4)) * 1000) + '$'
+                        : '-';
+
+                    var change = value[changeIndex];
+                    change = isValidNumber(change)
+                        ? change.toFixed(2) + '%'
+                        : '-';
+
                     return [
                         '<div class="tooltip-title">' + formatUtil.encodeHTML(info[0].name) + '</div>',
-                        '2012 Amount: &nbsp;&nbsp;'
-                            + formatUtil.addCommas(value[amountIndex] * 1000) + '$<br>',
-                        'Per Household: &nbsp;&nbsp;'
-                            + formatUtil.addCommas((+value[2].toFixed(2)) * 1000) + '$<br>',
-                        'Change From 2010: &nbsp;&nbsp;'
-                            + value[changeIndex].toFixed(2) + '%'
+                        '2012 Amount: &nbsp;&nbsp;' + amount + '<br>',
+                        'Per Household: &nbsp;&nbsp;' + perHousehold + '<br>',
+                        'Change From 2010: &nbsp;&nbsp;' + change
                     ].join('');
                 }
             }
