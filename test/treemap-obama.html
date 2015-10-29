@@ -6,26 +6,164 @@
     </head>
     <body>
         <style>
-            html, body, #main {
+            html, body {
                 width: 100%;
                 height: 100%;
+            }
+            html, body, #main {
                 margin: 0;
                 padding: 0;
             }
+            #main {
+                margin-top: 70px;
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                top: 0;
+            }
+            .controller {
+                font-size: 14px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: #fff;
+                border-bottom: 1px solid #ccc;
+                line-height: 20px;
+                z-index: 100;
+            }
+            .controller label {
+                margin-right: 10px;
+            }
+            .item-title {
+                font-weight: bold;
+            }
+            .controller .mode-title {
+                float: left;
+                width: 60px;
+                vertical-align: middle;
+                padding-left: 10px;
+            }
+            .controller .mode-body {
+                margin-left: 80px;
+            }
         </style>
+        <div class="controller">
+            <div class="mode-title">示例模式<br>(Mode)</div>
+            <div class="mode-body">
+                <input type="radio" id="area-meaning-0" name="area-meaning" onclick="areaMeasureChange(0);" checked="checked"/>
+                <label for="area-meaning-0">面积代表“2012预算额” (Area represents '2012 Amount)</label><br>
+                <input type="radio" id="area-meaning-1" name="area-meaning" onclick="areaMeasureChange(1);"/>
+                <label for="area-meaning-1">面积代表“和2010相比的增长率” (Area represents 'Change from 2010')</label><br>
+                <input type="radio" id="area-meaning-2" name="area-meaning" onclick="areaMeasureChange(2);"/>
+                <label for="area-meaning-2">面积代表“2012预算额”，颜色代表“2010相比的增长率” (Area represents '2012 Amount' and color represents 'Change from 2010')</label>
+            </div>
+        </div>
         <div id="main"></div>
 
         <script src="data/obama_budget_proposal_2012.tree.js"></script>
 
         <script>
 
+            var chart;
+
             require([
                 'echarts',
                 'echarts/component/legend',
                 'echarts/chart/treemap',
-            ], function (echarts) {
+            ], init);
 
-                var chart = echarts.init(document.getElementById('main'), null, {
+            function areaMeasureChange(mode) {
+                chart.setOption({
+                    series: [{
+                        visualDimension: mode === 2 ? 'a' : null,
+                        data: buildData(mode),
+                        levels: getLevelOption(mode)
+                    }]
+                });
+            }
+
+            function buildData(mode) {
+                return buildDataRecursively(mode, window.obama_budget_2012);
+            }
+
+            function buildDataRecursively(mode, originList) {
+                var out = [];
+
+                for (var i = 0; i < originList.length; i++) {
+                    var node = originList[i];
+                    var newNode = out[i] = cloneNodeInfo(node);
+                    var value = newNode.value;
+
+                    if (!newNode) {
+                        continue;
+                    }
+
+                    // Calculate amount per household.
+                    value[2] = value[0] / window.household_america_2012;
+
+                    // if mode === 0 and mode === 2 do nothing
+                    if (mode === 1) {
+                        // Set 'Change from 2010' to value[0].
+                        var tmp = value[1];
+                        value[1] = value[0];
+                        value[0] = tmp;
+                    }
+
+                    if (node.children) {
+                        newNode.children = buildDataRecursively(mode, node.children);
+                    }
+                }
+
+                return out;
+            }
+
+            function cloneNodeInfo(node) {
+                if (!node) {
+                    return;
+                }
+
+                var newNode = {};
+                newNode.name = node.name;
+                newNode.id = node.id;
+                newNode.discretion = node.discretion;
+                newNode.value = (node.value || []).slice();
+                return newNode;
+            }
+
+            function getLevelOption(mode) {
+                return [
+                    {
+                        color: mode === 2
+                            ? [
+                                '#5793f3', '#d14a61', '#fd9c35',
+                                '#675bba', '#fec42c', '#dd4444',
+                                '#d4df5a', '#cd4870'
+                            ]
+                            : null,
+                        itemStyle: {
+                            normal: {
+                                borderWidth: 3,
+                                gapWidth: 3
+                            }
+                        }
+                    },
+                    {
+                        colorA: mode === 2
+                            ? [0.5, 1] : null,
+                        itemStyle: {
+                            normal: {
+                                gapWidth: 1
+                            }
+                        }
+                    }
+                ];
+            }
+
+            function init(echarts) {
+
+                chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
                 });
 
@@ -39,40 +177,21 @@
                         {
                             name:'Obama’s 2012 Budget Proposal: How $3.7 Trillion is Spent',
                             type:'treemap',
-                            // visibleMin: 20,
                             label: {
-                                show: true, //
+                                show: true,
                                 formatter: "{b}"
                             },
                             itemStyle: {
                                 normal: {
                                     borderColor: 'black'
-                                },
-                                emphasis: {
                                 }
                             },
-                            levels: [
-                                {
-                                    itemStyle: {
-                                        normal: {
-                                            borderWidth: 3,
-                                            gapWidth: 3
-                                        }
-                                    }
-                                },
-                                {
-                                    itemStyle: {
-                                        normal: {
-                                            gapWidth: 1
-                                        }
-                                    }
-                                }
-                            ],
-                            data: window.obama_budget_2012
+                            levels: getLevelOption(0),
+                            data: buildData('2012 Amount')
                         }
                     ]
                 });
-            });
+            }
 
         </script>
     </body>

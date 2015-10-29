@@ -65,7 +65,7 @@ define(function (require) {
         }
         else {
             var mappingWrap = buildVisualMapping(
-                node, nodeItemStyleModel, visuals, viewChildren
+                node, nodeModel, nodeItemStyleModel, visuals, viewChildren
             );
             // Designate visual to children.
             zrUtil.each(viewChildren, function (child, index) {
@@ -90,7 +90,6 @@ define(function (require) {
         zrUtil.each(['color', 'colorA', 'colorS'], function (visualName) {
             // Priority: thisNode > thisLevel > parentNodeDesignated > seriesModel
             var val = nodeItemStyleModel.get(visualName, true); // Ignore parent
-
             val == null && levelItemStyle && (val = levelItemStyle[visualName]);
             val == null && (val = designatedVisual[visualName]);
             val == null && (val = seriesItemStyleModel.get(visualName));
@@ -132,19 +131,19 @@ define(function (require) {
     }
 
     function buildVisualMapping(
-        node, nodeItemStyleModel, visuals, viewChildren
+        node, nodeModel, nodeItemStyleModel, visuals, viewChildren
     ) {
         if (!viewChildren || !viewChildren.length) {
             return;
         }
 
-        var rangeVisual = getRangeVisual(nodeItemStyleModel, 'color')
+        var rangeVisual = getRangeVisual(nodeModel, 'color')
             || (
                 visuals.color != null
                 && visuals.color !== 'none'
                 && (
-                    getRangeVisual(nodeItemStyleModel, 'colorA')
-                    || getRangeVisual(nodeItemStyleModel, 'colorS')
+                    getRangeVisual(nodeModel, 'colorA')
+                    || getRangeVisual(nodeModel, 'colorS')
                 )
             );
 
@@ -154,7 +153,7 @@ define(function (require) {
 
         var mappingType = rangeVisual.name === 'color'
             ? (
-                nodeItemStyleModel.get('colorMapping') === 'byValue'
+                nodeModel.get('colorMapping') === 'byValue'
                     ? 'color' : 'colorByIndex'
             )
             : rangeVisual.name;
@@ -181,10 +180,10 @@ define(function (require) {
     // If a level-1 node dont have children, and its siblings has children,
     // and colorRange is set on level-1, then the node can not be colored.
     // So we separate 'colorRange' and 'color' to different attributes.
-    function getRangeVisual(nodeItemStyleModel, name) {
+    function getRangeVisual(nodeModel, name) {
         // 'colorRange', 'colorARange', 'colorSRange'.
         // If not exsits on this node, fetch from levels and series.
-        var range = nodeItemStyleModel.get(name + 'Range');
+        var range = nodeModel.get(name);
         return (isArray(range) && range.length) ? {name: name, range: range} : null;
     }
 

@@ -176,7 +176,8 @@
                     (new DataDiffer(oldViewChildren, thisViewChildren, getKey))
                         .add(processNode)
                         .update(processNode)
-                        .remove(zrUtil.curry(processNode, null));
+                        .remove(zrUtil.curry(processNode, null))
+                        .execute();
                 }
 
                 function getKey(node) {
@@ -304,7 +305,6 @@
                 // Set to thisStorage
                 return thisStorage[storage][thisRawIndex] = shape;
             }
-
         },
 
         /**

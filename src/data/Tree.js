@@ -440,6 +440,7 @@ define(function(require) {
     function createList(listData, hostModel) {
         var firstValue = listData[0] && listData[0].value;
         var dimSize = zrUtil.isArray(firstValue) ? firstValue.length : 1;
+
         // FIXME
         // 和 createListFromArray中一样，怎么改好看点。
         var dimensionNames = ['value', 'a', 'b', 'c', 'd', 'e', 'f'];

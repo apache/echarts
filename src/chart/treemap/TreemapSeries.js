@@ -58,7 +58,7 @@ define(function(require) {
             },
             label: {
                 normal: {
-                    show: true,                    // 可以是 'always' 表示无论块如何小，文字都显示。
+                    show: true,
                     position: ['50%', '50%'],      // 可以是 5 '5%' 'insideTopLeft', ...
                     textStyle: {
                         align: 'center',
@@ -75,10 +75,6 @@ define(function(require) {
                     color: null,         // 各异 如不需，可设为'none'
                     colorA: null,        // 默认不设置 如不需，可设为'none'
                     colorS: null,        // 默认不设置 如不需，可设为'none'
-                    colorRange: null,    // 为数组，表示同一level的color 选取列表。默认取系统color列表。
-                    colorARange: null,   // 为数组，表示同一level的color alpha 选取范围。
-                    colorSRange: null,   // 为数组，表示同一level的color alpha 选取范围。
-                    colorMapping: 'byIndex', // 'byIndex' or 'byValue'
                     borderWidth: 0,
                     gapWidth: 0,
                     borderColor: '#fff',
@@ -86,10 +82,19 @@ define(function(require) {
                 },
                 emphasis: {}
             },
+            color: 'none',    // 为数组，表示同一level的color 选取列表。默认空，在level[0].color中取系统color列表。
+            colorA: null,   // 为数组，表示同一level的color alpha 选取范围。
+            colorS: null,   // 为数组，表示同一level的color alpha 选取范围。
+            colorMapping: 'byIndex', // 'byIndex' or 'byValue'
             visibleMin: 10,    // If area less than this threshold (unit: pixel^2), node will not be rendered.
-                                // Only works when sort is 'asc' or 'desc'.
+                               // Only works when sort is 'asc' or 'desc'.
+            childrenVisibleMin: null, // If area of a node less than this threshold (unit: pixel^2),
+                                      // grandchildren will not show.
+                                      // Why grandchildren? If not grandchildren but children,
+                                      // some siblings show children and some not,
+                                      // the appearance may be mess and not consistent,
             levels: []         // Each item: {
-                               //     visibleMin, itemStyle, visualDimension
+                               //     visibleMin, itemStyle, visualDimension, label
                                // }
         },
 
@@ -103,8 +108,9 @@ define(function(require) {
 
             // Create a virtual root.
             var root = {name: rootName, children: option.data};
+            var value0 = (data[0] || {}).value;
 
-            completeTreeValue(root, zrUtil.isArray((data[0] || {}).value));
+            completeTreeValue(root, zrUtil.isArray(value0) ? value0.length : -1);
 
             // FIXME
             // sereis.mergeOption 的 getInitData是否放在merge后，从而能直接获取merege后的结果而非手动判断。
@@ -144,7 +150,7 @@ define(function(require) {
     /**
      * @param {Object} dataNode
      */
-    function completeTreeValue(dataNode, isArrayValue) {
+    function completeTreeValue(dataNode, arrValueLength) {
         // Postorder travel tree.
         // If value of none-leaf node is not set,
         // calculate it by suming up the value of all children.
@@ -152,7 +158,7 @@ define(function(require) {
 
         zrUtil.each(dataNode.children, function (child) {
 
-            completeTreeValue(child, isArrayValue);
+            completeTreeValue(child, arrValueLength);
 
             var childValue = child.value;
             zrUtil.isArray(childValue) && (childValue = childValue[0]);
@@ -162,9 +168,9 @@ define(function(require) {
 
         var thisValue = dataNode.value;
 
-        if (isArrayValue) {
+        if (arrValueLength >= 0) {
             if (!zrUtil.isArray(thisValue)) {
-                dataNode.value = [];
+                dataNode.value = new Array(arrValueLength);
             }
             else {
                 thisValue = thisValue[0];
@@ -179,7 +185,7 @@ define(function(require) {
             thisValue = 0;
         }
 
-        isArrayValue
+        arrValueLength >= 0
             ? (dataNode.value[0] = thisValue)
             : (dataNode.value = thisValue);
     }
@@ -198,8 +204,9 @@ define(function(require) {
         var hasColorDefine;
         zrUtil.each(levels, function (levelDefine) {
             var model = new Model(levelDefine);
+            var modelColor = model.get('color');
             if (model.get('itemStyle.normal.color')
-                || model.get('itemStyle.normal.colorRange')
+                || (modelColor && modelColor !== 'none')
             ) {
                 hasColorDefine = true;
             }
@@ -207,9 +214,7 @@ define(function(require) {
 
         if (!hasColorDefine) {
             var level0 = levels[0] || (levels[0] = {});
-            var itemStyle = level0.itemStyle || (level0.itemStyle = {});
-            var normal = itemStyle.normal || (itemStyle.normal = {});
-            normal.colorRange = globalColorList.slice();
+            level0.color = globalColorList.slice();
         }
 
         return levels;

@@ -10,7 +10,7 @@ define(function(require) {
         this._new = newArr;
 
         this._keyGetter = keyGetter || defaultKeyGetter;
-    };
+    }
 
     DataDiffer.prototype = {
 
@@ -48,30 +48,71 @@ define(function(require) {
             var oldDataIndexMap = {};
             var newDataIndexMap = {};
             var i;
-            for (i = 0; i < oldArr.length; i++) {
-                oldDataIndexMap[keyGetter(oldArr[i])] = i;
-            }
-            for (i = 0; i < newArr.length; i++) {
-                newDataIndexMap[keyGetter(newArr[i])] = i;
-            }
 
-            for (i = 0; i < oldArr.length; i++) {
-                var newDataIndex = newDataIndexMap[keyGetter(oldArr[i])];
-                if (newDataIndex != null) {
-                    this._update && this._update(newDataIndex, i);
+            initIndexMap(oldArr, oldDataIndexMap, keyGetter);
+            initIndexMap(newArr, newDataIndexMap, keyGetter);
+
+            // Travel by inverted order to make sure order consistency
+            // when duplicate keys exists (consider newDataIndex.pop() below).
+            // For performance consideration, these code below do not look neat.
+            for (i = oldArr.length - 1; i >= 0; i--) {
+                var key = keyGetter(oldArr[i]);
+                var idx = newDataIndexMap[key];
+
+                // idx can never be empty array here. see 'set null' logic below.
+                if (idx != null) {
+                    // Consider there is duplicate key (for example, use dataItem.name as key).
+                    // We should make sure every item in newArr and oldArr can be visited.
+                    var len = idx.length;
+                    if (len) {
+                        len === 1 && (newDataIndexMap[key] = null);
+                        idx = idx.pop();
+                    }
+                    else {
+                        newDataIndexMap[key] = null;
+                    }
+                    this._update && this._update(idx, i);
                 }
                 else {
                     this._remove && this._remove(i);
                 }
             }
 
-            for (i = 0; i < newArr.length; i++) {
-                if (oldDataIndexMap[keyGetter(newArr[i])] == null) {
-                    this._add && this._add(i);
+            for (var key in newDataIndexMap) {
+                if (newDataIndexMap.hasOwnProperty(key)) {
+                    var idx = newDataIndexMap[key];
+                    if (idx == null) {
+                        continue;
+                    }
+                    // idx can never be empty array here. see 'set null' logic above.
+                    if (!idx.length) {
+                        this._add && this._add(idx);
+                    }
+                    else {
+                        for (var i = 0, len = idx.length; i < len; i++) {
+                            this._add && this._add(idx[i]);
+                        }
+                    }
                 }
             }
         }
     };
+
+    function initIndexMap(arr, map, keyGetter) {
+        for (var i = 0; i < arr.length; i++) {
+            var key = keyGetter(arr[i]);
+            var existence = map[key];
+            if (existence == null) {
+                map[key] = i;
+            }
+            else {
+                if (!existence.length) {
+                    map[key] = existence = [existence];
+                }
+                existence.push(i);
+            }
+        }
+    }
 
     return DataDiffer;
 });

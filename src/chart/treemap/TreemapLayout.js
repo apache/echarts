@@ -69,6 +69,8 @@ define(function (require) {
          * @param {module:echarts/data/Tree~TreeNode} node
          * @param {Object} options
          * @param {Array.<number>} [options.rootSize]
+         * @param {string} [options.sort] 'asc' or 'desc'
+         * @param {boolean} [options.hideChildren]
          * @param {number} [options.squareRatio]
          */
         squarify: function (node, options) {
@@ -99,13 +101,15 @@ define(function (require) {
             var borderWidth = itemStyleModel.get('borderWidth');
             var halfGapWidth = itemStyleModel.get('gapWidth') / 2;
             var layoutOffset = borderWidth - halfGapWidth;
+            var nodeModel = node.getModel();
+
+            node.setLayout({borderWidth: borderWidth}, true);
 
             width = mathMax(width - 2 * layoutOffset, 0);
             height = mathMax(height - 2 * layoutOffset, 0);
 
-            node.setLayout({borderWidth: borderWidth}, true);
-
-            var viewChildren = initChildren(node, width, height, options);
+            var totalArea = width * height;
+            var viewChildren = initChildren(node, nodeModel, totalArea, options);
 
             if (!viewChildren.length) {
                 return;
@@ -143,10 +147,20 @@ define(function (require) {
                 position(row, rowFixedLength, rect, halfGapWidth, true);
             }
 
-            options.notRoot = true;
+            // Update option carefully.
+            var hideChildren;
+            if (!options.hideChildren) {
+                var childrenVisibleMin = nodeModel.get('childrenVisibleMin');
+                if (childrenVisibleMin != null && totalArea < childrenVisibleMin) {
+                    hideChildren = true;
+                }
+            }
+
             for (var i = 0, len = viewChildren.length; i < len; i++) {
-                // The object "options" can be reused when tail recursion.
-                this.squarify(viewChildren[i], options);
+                var childOption = zrUtil.extend({
+                    notRoot: true, hideChildren: hideChildren
+                }, options);
+                this.squarify(viewChildren[i], childOption);
             }
         }
     };
@@ -154,11 +168,14 @@ define(function (require) {
     /**
      * Set area to each child, and calculate data extent for visual coding.
      */
-    function initChildren(node, width, height, options) {
+    function initChildren(node, nodeModel, totalArea, options) {
         var viewChildren = node.children || [];
-        var nodeModel = node.getModel();
         var orderBy = options.sort;
         orderBy !== 'asc' && orderBy !== 'desc' && (orderBy = null);
+
+        if (options.hideChildren) {
+            return node.viewChildren = [];
+        }
 
         // Sort children, order by desc.
         viewChildren = zrUtil.filter(viewChildren, function (child) {
@@ -172,8 +189,6 @@ define(function (require) {
         if (info.sum === 0) {
             return node.viewChildren = [];
         }
-
-        var totalArea = width * height;
 
         info.sum = filterByThreshold(nodeModel, totalArea, info.sum, orderBy, viewChildren);
 
@@ -333,7 +348,6 @@ define(function (require) {
         if (flush || rowOtherLength > rect[wh[idx1WhenH]]) {
             rowOtherLength = rect[wh[idx1WhenH]]; // over+underflow
         }
-
         for (var i = 0, rowLen = row.length; i < rowLen; i++) {
             var node = row[i];
             var nodeLayout = {};
@@ -351,7 +365,6 @@ define(function (require) {
             nodeLayout[xy[idx0WhenH]] = last + mathMin(halfGapWidth, wh0 / 2);
 
             last += modWH;
-
             node.setLayout(nodeLayout, true);
         }
 
