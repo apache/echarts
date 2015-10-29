@@ -1,4 +1,9 @@
+// 2012年house数
 window.household_america_2012 = 113616229;
+// value 内容：[
+//      预算(单位：thousand $),
+//      与2011比change的百分比(value[1] + '%')
+// ]
 window.obama_budget_2012 = [
     {
         "value": [

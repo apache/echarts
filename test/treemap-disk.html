@@ -33,6 +33,11 @@
                 padding-right: 10px;
                 border-right: 1px solid #ccc;
             }
+            .tooltip-title {
+                color: yellow;
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
         </style>
         <div class="controller">
             <span class="item">
@@ -58,12 +63,16 @@
         <script>
 
             var chart;
+            var formatUtil;
 
             require([
                 'echarts',
+                'echarts/util/format',
+                'echarts/component/tooltip',
                 'echarts/component/legend',
-                'echarts/chart/treemap',
-            ], function (echarts) {
+                'echarts/chart/treemap'
+            ], function (echarts, format) {
+                formatUtil = format;
                 initEcharts(echarts);
             });
 
@@ -127,6 +136,23 @@
 
                 chart.setOption({
 
+                    tooltip: {
+                        formatter: function (info) {
+                            var value = info[0].value;
+                            var treePathInfo = info[0].treePathInfo;
+                            var treePath = [];
+
+                            for (var i = 1; i < treePathInfo.length; i++) {
+                                treePath.push(treePathInfo[i].name);
+                            }
+
+                            return [
+                                '<div class="tooltip-title">' + formatUtil.encodeHTML(treePath.join('/')) + '</div>',
+                                'Disk Usage: ' + formatUtil.addCommas(value) + ' KB',
+                            ].join('');
+                        }
+                    },
+
                     series: [
                         {
                             name:'Disk Usage',
@@ -135,7 +161,7 @@
                             // childrenVisibleMin: 500000,
                             label: {
                                 show: true,
-                                formatter: "{b}"
+                                formatter: '{b}'
                                 // normal: {
                                 //     textStyle: {
                                 //         color: 'black'

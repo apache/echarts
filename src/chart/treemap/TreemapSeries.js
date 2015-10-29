@@ -4,6 +4,10 @@ define(function(require) {
     var Tree = require('../../data/Tree');
     var zrUtil = require('zrender/core/util');
     var Model = require('../../model/Model');
+    var formatUtil = require('../../util/format');
+    var encodeHTML = formatUtil.encodeHTML;
+    var addCommas = formatUtil.addCommas;
+
 
     return SeriesModel.extend({
 
@@ -131,6 +135,50 @@ define(function(require) {
             var optionRoot = this.option.root;
             var treeRoot = this.getData().tree.root;
             return optionRoot && treeRoot.getNodeByName(optionRoot) || treeRoot;
+        },
+
+        /**
+         * @override
+         * @param {number} dataIndex
+         * @param {boolean} [mutipleSeries=false]
+         */
+        formatTooltip: function (dataIndex) {
+            var data = this.getData();
+            var value = data.getRawValue(dataIndex);
+            var formattedValue = zrUtil.isArray(value)
+                ? addCommas(value[0]) : addCommas(value);
+            var name = data.getName(dataIndex, true);
+
+            return encodeHTML(name) + ': ' + formattedValue;
+        },
+
+        /**
+         * Add tree path to tooltip param
+         *
+         * @override
+         * @param {number} dataIndex
+         * @return {Object}
+         */
+        getFormatParams: function (dataIndex) {
+            var params = SeriesModel.prototype.getFormatParams.apply(this, arguments);
+
+            var data = this.getData();
+            var node = data.tree.getNodeByDataIndex(dataIndex);
+            var treePathInfo = params.treePathInfo = [];
+
+            while (node) {
+                var nodeDataIndex = node.dataIndex;
+                treePathInfo.push({
+                    name: node.name,
+                    dataIndex: nodeDataIndex,
+                    value: data.getRawValue(nodeDataIndex)
+                });
+                node = node.parentNode;
+            }
+
+            treePathInfo.reverse();
+
+            return params;
         },
 
         /**

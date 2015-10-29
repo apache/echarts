@@ -48,6 +48,11 @@
             .controller .mode-body {
                 margin-left: 80px;
             }
+            .tooltip-title {
+                color: yellow;
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
         </style>
         <div class="controller">
             <div class="mode-title">示例模式<br>(Mode)</div>
@@ -67,15 +72,21 @@
         <script>
 
             var chart;
+            var formatUtil;
 
             require([
                 'echarts',
+                'echarts/util/format',
                 'echarts/component/legend',
+                'echarts/component/tooltip',
                 'echarts/chart/treemap',
             ], init);
 
             function areaMeasureChange(mode) {
                 chart.setOption({
+                    tooltip: {
+                        formatter: getTooltipFormatter(mode)
+                    },
                     series: [{
                         visualDimension: mode === 2 ? 'a' : null,
                         data: buildData(mode),
@@ -161,7 +172,27 @@
                 ];
             }
 
-            function init(echarts) {
+            function getTooltipFormatter(mode) {
+                var amountIndex = mode === 1 ? 1 : 0;
+                var changeIndex = mode === 1 ? 0 : 1;
+
+                return function (info) {
+                    var value = info[0].value;
+                    return [
+                        '<div class="tooltip-title">' + formatUtil.encodeHTML(info[0].name) + '</div>',
+                        '2012 Amount: &nbsp;&nbsp;'
+                            + formatUtil.addCommas(value[amountIndex] * 1000) + '$<br>',
+                        'Per Household: &nbsp;&nbsp;'
+                            + formatUtil.addCommas((+value[2].toFixed(2)) * 1000) + '$<br>',
+                        'Change From 2010: &nbsp;&nbsp;'
+                            + value[changeIndex].toFixed(2) + '%'
+                    ].join('');
+                }
+            }
+
+            function init(echarts, format) {
+
+                formatUtil = format;
 
                 chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
@@ -171,6 +202,10 @@
 
                     legend: {
                         data: ['Obama’s 2012 Budget Proposal: How $3.7 Trillion is Spent']
+                    },
+
+                    tooltip: {
+                        formatter: getTooltipFormatter(0)
                     },
 
                     series: [

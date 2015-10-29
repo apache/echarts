@@ -339,8 +339,17 @@ define(function(require) {
         },
 
         /**
+         * @param {number} dataIndex
+         * @return {module:echarts/data/Tree~TreeNode}
+         */
+        getNodeByDataIndex: function (dataIndex) {
+            var rawIndex = this.data.getRawIndex(dataIndex);
+            return this._nodes[rawIndex];
+        },
+
+        /**
          * @param {string} name
-         * @return module:echarts/data/Tree~TreeNode
+         * @return {module:echarts/data/Tree~TreeNode}
          */
         getNodeByName: function (name) {
             return this.root.getNodeByName(name);

@@ -268,6 +268,10 @@
                     text = '';
                 }
 
+                // For tooltip.
+                content.dataIndex = thisNode.dataIndex;
+                content.seriesIndex = this.seriesModel.seriesIndex;
+
                 content.culling = true;
                 content.setShape({
                     x: borderWidth,
