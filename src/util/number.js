@@ -25,7 +25,7 @@ define(function (require) {
 
         if (zrUtil.isArray(val)) {
             return zrUtil.map(val, function (v) {
-                return linearMap(v, domain, range, clamp);
+                return number.linearMap(v, domain, range, clamp);
             });
         }
 
@@ -99,7 +99,7 @@ define(function (require) {
      * @param {number} val
      */
     number.getPrecision = function (val) {
-        // It is much faster than methods converting number to string as follows 
+        // It is much faster than methods converting number to string as follows
         //      var tmp = val.toString();
         //      return tmp.length - 1 - tmp.indexOf('.');
         // especially when precision is low
