@@ -260,7 +260,7 @@ define(function (require) {
                     }
                 }, this);
 
-            controller.rect = geo.getViewBox();
+            controller.rect = geo.getViewRect();
         }
     }
 

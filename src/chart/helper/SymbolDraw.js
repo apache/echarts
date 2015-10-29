@@ -61,11 +61,11 @@ define(function (require) {
         return symbolEl;
     }
 
-    function DataSymbol() {
+    function SymbolDraw() {
         this.group = new graphic.Group();
     }
 
-    DataSymbol.prototype = {
+    SymbolDraw.prototype = {
 
         getData: function () {
             return this._data;
@@ -124,7 +124,7 @@ define(function (require) {
                     // Symbol changed
                     if (
                         oldData.getItemVisual(oldIdx, 'symbol') !== symbolType
-                        || (!el && !(ignoreMap && ignoreMap[newIdx]))
+                    || (!el && !(ignoreMap && ignoreMap[newIdx]))
                     ) {
                         // Remove the old one
                         el && group.remove(el);
@@ -259,5 +259,5 @@ define(function (require) {
         }
     }
 
-    return DataSymbol;
+    return SymbolDraw;
 });

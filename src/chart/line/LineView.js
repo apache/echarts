@@ -4,7 +4,7 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var vector = require('zrender/core/vector');
-    var DataSymbol = require('../helper/DataSymbol');
+    var SymbolDraw = require('../helper/SymbolDraw');
     var lineAnimationDiff = require('./lineAnimationDiff');
     var graphic = require('../../util/graphic');
 
@@ -83,9 +83,9 @@ define(function(require) {
         type: 'line',
 
         init: function () {
-            var dataSymbol = new DataSymbol();
-            this.group.add(dataSymbol.group);
-            this._dataSymbol = dataSymbol;
+            var symbolDraw = new SymbolDraw();
+            this.group.add(symbolDraw.group);
+            this._symbolDraw = symbolDraw;
         },
 
         render: function (seriesModel, ecModel, api) {
@@ -100,7 +100,7 @@ define(function(require) {
             var isCoordSysPolar = coordSys.type === 'polar';
             var prevCoordSys = this._coordSys;
 
-            var dataSymbol = this._dataSymbol;
+            var symbolDraw = this._symbolDraw;
             var polyline = this._polyline;
             var polygon = this._polygon;
 
@@ -119,7 +119,7 @@ define(function(require) {
                 && prevCoordSys.type === coordSys.type
                 && hasAnimation)
             ) {
-                dataSymbol.updateData(
+                symbolDraw.updateData(
                     data, seriesModel, api, hasAnimation, symbolIgnoreMap
                 );
 
@@ -134,7 +134,7 @@ define(function(require) {
             }
             else {
 
-                dataSymbol.updateData(
+                symbolDraw.updateData(
                     data, seriesModel, api, false, symbolIgnoreMap
                 );
 
@@ -441,7 +441,7 @@ define(function(require) {
             var group = this.group;
             group.remove(this._polyline);
             group.remove(this._polygon);
-            this._dataSymbol.remove(ecModel.get('animation'));
+            this._symbolDraw.remove(ecModel.get('animation'));
         }
     });
 });

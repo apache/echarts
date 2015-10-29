@@ -3,6 +3,7 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var BoundingRect = require('zrender/core/BoundingRect');
     var numberUtil = require('./number');
     var formatUtil = require('./format');
     var parsePercent = numberUtil.parsePercent;
@@ -100,6 +101,8 @@ define(function(require) {
      * @param {string|number} margin
      * @param {boolean} [notAlignX=false]
      * @param {boolean} [notAlignY=false]
+     *
+     * @return {module:zrender/core/BoundingRect}
      */
     layout.parsePositionInfo = function (
         positionInfo, containerRect, margin,
@@ -117,14 +120,20 @@ define(function(require) {
         var width = parsePercent(positionInfo.width, containerWidth);
         var height = parsePercent(positionInfo.height, containerHeight);
 
-        height += margin[2] + margin[0];
-        width += margin[1] + margin[3];
+        // If width is not specified, calculate width from x and x2
+        if (isNaN(width)) {
+            width = containerWidth - x2 - margin[2] - margin[0] - x;
+        }
+        if (isNaN(height)) {
+            height = containerHeight - y2 - margin[1] - margin[3] - y;
+        }
+
         // If x is not specified, calculate x from x2 and width
         if (isNaN(x)) {
-            x = x2 - width;
+            x = containerWidth - x2 - width - margin[2] - margin[0];
         }
         if (isNaN(y)) {
-            y = y2 - height;
+            y = containerHeight - y2 - height - margin[1] - margin[3];
         }
 
         if (!notAlignX) {
@@ -140,6 +149,7 @@ define(function(require) {
         if (!notAlignY) {
             switch (positionInfo.y || positionInfo.y2) {
                 case 'middle':
+                case 'center':
                     y = containerHeight / 2 - height / 2;
                     break;
                 case 'bottom':
@@ -148,13 +158,9 @@ define(function(require) {
             }
         }
 
-        return {
-            x: x + margin[3],
-            y: y + margin[0],
-            width: width,
-            height: height,
-            margin: margin
-        };
+        var rect = new BoundingRect(x + margin[3], y + margin[0], width, height);
+        rect.margin = margin;
+        return rect;
     };
 
     /**
