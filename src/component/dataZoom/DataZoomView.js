@@ -509,14 +509,14 @@ define(function (require) {
 
                 // Label
                 // Text should not transform by barGroup.
-                var barTransform = modelUtil.getTransform(
+                var barTransform = graphic.getTransform(
                     displaybles.handles[handleIndex], this.group
                 );
-                var direction = modelUtil.transformDirection(
+                var direction = graphic.transformDirection(
                     handleIndex === 0 ? 'right' : 'left', barTransform
                 );
                 var offset = this._halfHandleSize + LABEL_GAP;
-                var textPoint = modelUtil.applyTransform(
+                var textPoint = graphic.applyTransform(
                     [
                         orderedHandleEnds[handleIndex] + (handleIndex === 0 ? -offset : offset),
                         this._size[1] / 2
@@ -609,7 +609,7 @@ define(function (require) {
          */
         _applyBarTransform: function (vertex, inverse) {
             var barTransform = this._displayables.barGroup.getLocalTransform();
-            return modelUtil.applyTransform(vertex, barTransform, inverse);
+            return graphic.applyTransform(vertex, barTransform, inverse);
         },
 
         /**

@@ -6,6 +6,7 @@ define(function(require) {
     var round = Math.round;
     var Path = require('zrender/graphic/Path');
     var colorTool = require('zrender/tool/color');
+    var matrix = require('zrender/core/matrix');
 
     var graphic = {};
 
@@ -157,7 +158,7 @@ define(function(require) {
     function doSingleEnterHover(el) {
         if (el.__isHover) {
             return;
-        };
+        }
         if (el.__hoverStlDirty) {
             var stroke = el.style.stroke;
             var fill = el.style.fill;
@@ -283,6 +284,84 @@ define(function(require) {
         // Emphasis, normal can be triggered manually
         el.on('emphasis', enterEmphasis)
           .on('normal', leaveEmphasis);
+    };
+
+    /**
+     * Get transform matrix of target (param target),
+     * in coordinate of its ancestor (param ancestor)
+     *
+     * @param {module:zrender/mixin/Transformable} target
+     * @param {module:zrender/mixin/Transformable} ancestor
+     */
+    graphic.getTransform = function (target, ancestor) {
+        var node = target;
+        var nodeList = [];
+
+        while (node && node !== ancestor) {
+            nodeList.push(node);
+            node = node.parent;
+        }
+
+        var mat = matrix.identity([]);
+
+        for (var i = nodeList.length - 1; i >= 0; i--) {
+            mat = matrix.mul(mat, mat, nodeList[i].getLocalTransform());
+        }
+        return mat;
+    };
+
+    /**
+     * Apply transform to an vertex.
+     * @param {Array.<number>} vertex [x, y]
+     * @param {Array.<number>} transform Transform matrix: like [1, 0, 0, 1, 0, 0]
+     * @param {boolean=} invert Whether use invert matrix.
+     * @return {Array.<number>} [x, y]
+     */
+    graphic.applyTransform = function (vertex, transform, invert) {
+        var mat = [1, 0, 0, 1, vertex[0], vertex[1]];
+        if (invert) {
+            transform = matrix.invert([], transform);
+        }
+        matrix.mul(mat, transform, mat);
+        return [mat[4], mat[5]];
+    };
+
+    /**
+     * Transform vertext to ancestor
+     * @param {Array.<number>} vertex [x, y]
+     * @param {module:zrender/mixin/Transformable} node
+     * @param {module:zrender/mixin/Transformable} ancestor
+     * @return {Array.<number>} [x, y]
+     */
+    graphic.transformCoordToAncestor = function (vertex, node, ancestor) {
+        var transform = graphic.getTransform(node, ancestor);
+        return graphic.applyTransform(vertex, transform);
+    };
+
+    /**
+     * @param {string} direction 'left' 'right' 'top' 'bottom'
+     * @param {Array.<number>} transform Transform matrix: like [1, 0, 0, 1, 0, 0]
+     * @param {boolean=} invert Whether use invert matrix.
+     * @return {string} Transformed direction. 'left' 'right' 'top' 'bottom'
+     */
+    graphic.transformDirection = function (direction, transform, invert) {
+
+        // Pick a base, ensure that transform result will not be (0, 0).
+        var hBase = (transform[4] === 0 || transform[5] === 0 || transform[0] === 0)
+            ? 1 : Math.abs(2 * transform[4] / transform[0]);
+        var vBase = (transform[4] === 0 || transform[5] === 0 || transform[2] === 0)
+            ? 1 : Math.abs(2 * transform[4] / transform[2]);
+
+        var vertex = [
+            direction === 'left' ? -hBase : direction === 'right' ? hBase : 0,
+            direction === 'top' ? -vBase : direction === 'bottom' ? vBase : 0
+        ];
+
+        vertex = graphic.applyTransform(vertex, transform, invert);
+
+        return Math.abs(vertex[0]) > Math.abs(vertex[1])
+            ? (vertex[0] > 0 ? 'right' : 'left')
+            : (vertex[1] > 0 ? 'bottom' : 'top');
     };
 
     return graphic;

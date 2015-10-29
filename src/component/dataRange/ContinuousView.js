@@ -4,7 +4,6 @@ define(function(require) {
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
-    var modelUtil = require('../../util/model');
     var linearMap = numberUtil.linearMap;
     var LinearGradient = require('zrender/graphic/LinearGradient');
     var each = zrUtil.each;
@@ -431,9 +430,9 @@ define(function(require) {
 
                 // Update handle label position.
                 var labelPoint = shapes.handleLabelPoints[handleIndex];
-                var textPoint = modelUtil.applyTransform(
+                var textPoint = graphic.applyTransform(
                     [labelPoint.x, labelPoint.y],
-                    modelUtil.getTransform(handleGroup, this.group)
+                    graphic.getTransform(handleGroup, this.group)
                 );
 
                 shapes.handleLabels[handleIndex].setStyle({
@@ -446,9 +445,9 @@ define(function(require) {
          * @private
          */
         _applyTransform: function (vertex, element, inverse) {
-            var transform = modelUtil.getTransform(element, this.group);
+            var transform = graphic.getTransform(element, this.group);
 
-            return modelUtil[
+            return graphic[
                 zrUtil.isArray(vertex)
                     ? 'applyTransform' : 'transformDirection'
             ](vertex, transform, inverse);

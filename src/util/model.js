@@ -1,7 +1,6 @@
 define(function(require) {
 
     var zrUtil = require('zrender/core/util');
-    var matrix = require('zrender/core/matrix');
 
     var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
 
@@ -81,84 +80,6 @@ define(function(require) {
             : value == null
             ? []
             : [value];
-    };
-
-    /**
-     * Get transform matrix of target (param target),
-     * in coordinate of its ancestor (param ancestor)
-     *
-     * @param {module:zrender/mixin/Transformable} target
-     * @param {module:zrender/mixin/Transformable} ancestor
-     */
-    util.getTransform = function (target, ancestor) {
-        var node = target;
-        var nodeList = [];
-
-        while (node && node !== ancestor) {
-            nodeList.push(node);
-            node = node.parent;
-        }
-
-        var mat = matrix.identity([]);
-
-        for (var i = nodeList.length - 1; i >= 0; i--) {
-            mat = matrix.mul(mat, mat, nodeList[i].getLocalTransform());
-        }
-        return mat;
-    };
-
-    /**
-     * Apply transform to an vertex.
-     * @param {Array.<number>} vertex [x, y]
-     * @param {Array.<number>} transform Transform matrix: like [1, 0, 0, 1, 0, 0]
-     * @param {boolean=} invert Whether use invert matrix.
-     * @return {Array.<number>} [x, y]
-     */
-    util.applyTransform = function (vertex, transform, invert) {
-        var mat = [1, 0, 0, 1, vertex[0], vertex[1]];
-        if (invert) {
-            transform = matrix.invert([], transform);
-        }
-        matrix.mul(mat, transform, mat);
-        return [mat[4], mat[5]];
-    };
-
-    /**
-     * Transform vertext to ancestor
-     * @param {Array.<number>} vertex [x, y]
-     * @param {module:zrender/mixin/Transformable} node
-     * @param {module:zrender/mixin/Transformable} ancestor
-     * @return {Array.<number>} [x, y]
-     */
-    util.transformCoordToAncestor = function (vertex, node, ancestor) {
-        var transform = util.getTransform(node, ancestor);
-        return util.applyTransform(vertex, transform);
-    };
-
-    /**
-     * @param {string} direction 'left' 'right' 'top' 'bottom'
-     * @param {Array.<number>} transform Transform matrix: like [1, 0, 0, 1, 0, 0]
-     * @param {boolean=} invert Whether use invert matrix.
-     * @return {string} Transformed direction. 'left' 'right' 'top' 'bottom'
-     */
-    util.transformDirection = function (direction, transform, invert) {
-
-        // Pick a base, ensure that transform result will not be (0, 0).
-        var hBase = (transform[4] === 0 || transform[5] === 0 || transform[0] === 0)
-            ? 1 : Math.abs(2 * transform[4] / transform[0]);
-        var vBase = (transform[4] === 0 || transform[5] === 0 || transform[2] === 0)
-            ? 1 : Math.abs(2 * transform[4] / transform[2]);
-
-        var vertex = [
-            direction === 'left' ? -hBase : direction === 'right' ? hBase : 0,
-            direction === 'top' ? -vBase : direction === 'bottom' ? vBase : 0
-        ];
-
-        vertex = util.applyTransform(vertex, transform, invert);
-
-        return Math.abs(vertex[0]) > Math.abs(vertex[1])
-            ? (vertex[0] > 0 ? 'right' : 'left')
-            : (vertex[1] > 0 ? 'bottom' : 'top');
     };
 
     /**

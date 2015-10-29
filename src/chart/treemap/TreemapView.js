@@ -428,7 +428,6 @@
          */
         _onZoom: function (scale, mouseX, mouseY) {
             if (this._state !== 'animating' && !this._controller.isDragging()) {
-
                 // These param must not be cached.
                 var rect = this._containerGroup.getBoundingRect();
                 var positionInfo = this.positionInfo;
@@ -543,9 +542,16 @@
             var viewRoot = this.seriesModel.getViewRoot();
 
             viewRoot.eachNode({attr: 'viewChildren', order: 'preorder'}, function (node) {
-                var nodeGroup = this._storage.nodeGroup[node.getRawIndex()];
-                var point = nodeGroup.transformCoordToLocal(x, y);
-                if (nodeGroup.getBoundingRect().contain(point[0], point[1])) {
+                var bgShape = this._storage.background[node.getRawIndex()];
+                var point = bgShape.transformCoordToLocal(x, y);
+                var shape = bgShape.shape;
+
+                // For performance consideration, dont use 'getBoundingRect'.
+                if (shape.x <= point[0]
+                    && point[0] <= shape.x + shape.width
+                    && shape.y <= point[1]
+                    && point[1] <= shape.y + shape.height
+                ) {
                     targetInfo = {node: node, offsetX: point[0], offsetY: point[1]};
                 }
                 else {
@@ -587,7 +593,7 @@
             }
 
             var targetRect = targetGroup.getBoundingRect();
-            var targetCenter = modelUtil.transformCoordToAncestor(
+            var targetCenter = graphic.transformCoordToAncestor(
                 [targetRect.width / 2, targetRect.height / 2], targetGroup, containerGroup
             );
             rootGroup.position = [
