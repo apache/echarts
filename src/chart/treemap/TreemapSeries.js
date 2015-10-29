@@ -147,7 +147,7 @@ define(function(require) {
             var value = data.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
                 ? addCommas(value[0]) : addCommas(value);
-            var name = data.getName(dataIndex, true);
+            var name = data.getName(dataIndex);
 
             return encodeHTML(name) + ': ' + formattedValue;
         },
@@ -192,7 +192,6 @@ define(function(require) {
              */
             return this.containerSize = size.slice();
         }
-
     });
 
     /**

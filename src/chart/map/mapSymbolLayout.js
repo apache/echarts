@@ -26,7 +26,7 @@ define(function (require) {
                     point: point,
                     offset: offset
                 });
-            })
+            });
         });
     }
 });

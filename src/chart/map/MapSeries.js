@@ -113,7 +113,7 @@ define(function (require) {
         formatTooltip: function (dataIndex) {
             var data = this._data;
             var formattedValue = addCommas(data.getRawValue(dataIndex));
-            var name = data.getName(dataIndex, true);
+            var name = data.getName(dataIndex);
 
             var seriesGroup = this.seriesGroup;
             var seriesNames = [];

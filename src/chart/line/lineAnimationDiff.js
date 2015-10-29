@@ -2,10 +2,6 @@ define(function (require) {
 
     var arrayDiff = require('zrender/core/arrayDiff');
 
-    function nameCompare(a, b) {
-        return a.name === b.name;
-    }
-
     function sign(val) {
         return val >= 0 ? 1 : -1;
     }
@@ -43,8 +39,8 @@ define(function (require) {
         oldCoordSys, newCoordSys
     ) {
 
-        var newNameList = newData.mapArray(newData.getName);
-        var oldNameList = oldData.mapArray(oldData.getName);
+        var newIdList = newData.mapArray(newData.getId);
+        var oldIdList = oldData.mapArray(oldData.getId);
 
         var currPoints = [];
         var nextPoints = [];
@@ -57,7 +53,7 @@ define(function (require) {
         var rawIndices = [];
 
         // FIXME One data ?
-        var diff = arrayDiff(oldNameList, newNameList);
+        var diff = arrayDiff(oldIdList, newIdList);
 
         var dims = newCoordSys.dimensions;
         for (var i = 0; i < diff.length; i++) {
@@ -158,5 +154,5 @@ define(function (require) {
 
             status: sortedStatus
         };
-    }
+    };
 });
