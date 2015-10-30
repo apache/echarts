@@ -3,6 +3,7 @@ define(function (require) {
     var VisualMapping = require('../../visual/VisualMapping');
     var zrColor = require('zrender/tool/color');
     var zrUtil = require('zrender/core/util');
+    var helper = require('./helper');
     var isArray = zrUtil.isArray;
 
     var ITEM_STYLE_NORMAL = 'itemStyle.normal';
@@ -10,7 +11,7 @@ define(function (require) {
     return function (ecModel, payload) {
         ecModel.eachSeriesByType('treemap', function (seriesModel) {
 
-            if (payload && payload.seriesId && seriesModel.uid !== payload.seriesId) {
+            if (helper.irrelevant(payload, seriesModel)) {
                 return;
             }
 
@@ -40,6 +41,13 @@ define(function (require) {
         node, designatedVisual, levelItemStyles, seriesItemStyleModel, viewRootAncestors
     ) {
         var nodeModel = node.getModel();
+        var nodeLayout = node.getLayout();
+
+        // Optimize
+        if (nodeLayout.invisible) {
+            return;
+        }
+
         var nodeItemStyleModel = node.getModel(ITEM_STYLE_NORMAL);
         var levelItemStyle = levelItemStyles[node.depth];
         var visuals = buildVisuals(
@@ -65,7 +73,7 @@ define(function (require) {
         }
         else {
             var mappingWrap = buildVisualMapping(
-                node, nodeModel, nodeItemStyleModel, visuals, viewChildren
+                node, nodeModel, nodeLayout, nodeItemStyleModel, visuals, viewChildren
             );
             // Designate visual to children.
             zrUtil.each(viewChildren, function (child, index) {
@@ -131,7 +139,7 @@ define(function (require) {
     }
 
     function buildVisualMapping(
-        node, nodeModel, nodeItemStyleModel, visuals, viewChildren
+        node, nodeModel, nodeLayout, nodeItemStyleModel, visuals, viewChildren
     ) {
         if (!viewChildren || !viewChildren.length) {
             return;
@@ -159,8 +167,7 @@ define(function (require) {
             : rangeVisual.name;
 
         var dataExtent = mappingType === 'colorByIndex'
-            ? null
-            : node.getLayout().dataExtent;
+            ? null : nodeLayout.dataExtent;
 
         return {
             mapping: new VisualMapping({

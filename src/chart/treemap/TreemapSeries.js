@@ -183,14 +183,21 @@ define(function(require) {
 
         /**
          * @public
-         * @param {Array.<number>} size [width, height]
+         * @param {Object} layoutInfo {
+         *                                x: containerGroup x
+         *                                y: containerGroup y
+         *                                width: containerGroup width
+         *                                height: containerGroup height
+         *                                rootPosition
+         *                            }
          */
-        setContainerSize: function (size) {
+        setLayoutInfo: function (layoutInfo) {
             /**
              * @readOnly
-             * @type {Array.<number>}
+             * @type {Object}
              */
-            return this.containerSize = size.slice();
+            this.layoutInfo = this.layoutInfo || {};
+            zrUtil.extend(this.layoutInfo, layoutInfo);
         }
 
     });

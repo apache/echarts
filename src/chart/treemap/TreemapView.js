@@ -2,9 +2,7 @@
 
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
-    var layout = require('../../util/layout');
     var DataDiffer = require('../../data/DataDiffer');
-    var modelUtil = require('../../util/model');
     var helper = require('./helper');
     var parsePercent = require('../../util/number').parsePercent;
     var Breadcrumb = require('./Breadcrumb');
@@ -15,7 +13,7 @@
     var Group = graphic.Group;
     var Rect = graphic.Rect;
 
-    var ANIMATION_DURATION = 600;
+    var ANIMATION_DURATION = 700;
     var EASING = 'cubicOut';
     var DRAG_THRESHOLD = 3;
 
@@ -65,12 +63,6 @@
             this._state = 'ready';
 
             /**
-             * @readOnly
-             * @type {Object} {x, y, width, height}
-             */
-            this.positionInfo;
-
-            /**
              * @private
              * @type {boolean}
              */
@@ -89,10 +81,33 @@
             this.api = api;
             this.ecModel = ecModel;
 
-            var thisTree = seriesModel.getData().tree;
-            var containerGroup = this._containerGroup;
-            var containerSize = seriesModel.containerSize;
+            var payloadType = payload && payload.type;
+            var layoutInfo = seriesModel.layoutInfo;
 
+            var containerGroup = this._giveContainerGroup(layoutInfo);
+
+            var renderResult = this._doRender(containerGroup, seriesModel);
+
+            var viewRootWrap = this._getViewRootWrap();
+            if (viewRootWrap) {
+                viewRootWrap.rootGroup.position = layoutInfo.rootPosition.slice();
+            }
+
+            (!payloadType || payloadType === 'treemapZoomToNode')
+                ? this._doAnimation(containerGroup, renderResult)
+                : renderResult.renderFinally();
+
+            this._resetController(api);
+
+            var targetInfo = helper.retrieveTargetNodeInfo(payload, seriesModel);
+            this._renderBreadcrumb(seriesModel, api, targetInfo);
+        },
+
+        /**
+         * @private
+         */
+        _giveContainerGroup: function (layoutInfo) {
+            var containerGroup = this._containerGroup;
             if (!containerGroup) {
                 // FIXME
                 // 加一层containerGroup是为了clip，但是现在clip功能并没有实现。
@@ -100,48 +115,27 @@
                 this._initEvents(containerGroup);
                 this.group.add(containerGroup);
             }
+            containerGroup.position = [layoutInfo.x, layoutInfo.y];
 
-            var positionInfo = this.positionInfo = layout.parsePositionInfo(
-                {
-                    x: seriesModel.get('x'),
-                    y: seriesModel.get('y'),
-                    x2: seriesModel.get('x2'),
-                    y2: seriesModel.get('y2'),
-                    width: containerSize[0],
-                    height: containerSize[1]
-                },
-                {
-                    width: api.getWidth(),
-                    height: api.getHeight()
-                }
-            );
-            containerGroup.position = [positionInfo.x, positionInfo.y];
-
-            var lastShapes = this._doRender(thisTree, containerGroup, seriesModel);
-
-            var targetInfo = helper.retrieveTargetNodeInfo(payload, seriesModel);
-            var viewRect = payload && payload.type === 'treemapRender' && payload.viewRect;
-
-            this._positionRoot(containerGroup, positionInfo, thisTree.root, viewRect, targetInfo);
-
-            this._doAnimation(payload, containerGroup, lastShapes);
-
-            this._initController(api);
-
-            this._renderBreadcrumb(seriesModel, api, targetInfo);
+            return containerGroup;
         },
 
         /**
          * @private
          */
-        _doRender: function (thisTree, containerGroup, seriesModel) {
+        _doRender: function (containerGroup, seriesModel) {
+            var thisTree = seriesModel.getData().tree;
             var oldTree = this._oldTree;
 
             // Clear last shape records.
             var lastShapes = createStorage();
             var thisStorage = createStorage();
             var oldStorage = this._storage;
-            var renderNode = bind(this._renderNode, this);
+            var willInvisibleEls = [];
+            var renderNode = bind(
+                this._renderNode, this,
+                thisStorage, oldStorage, lastShapes, willInvisibleEls
+            );
             var viewRoot = seriesModel.getViewRoot();
 
             dualTravel(
@@ -158,7 +152,10 @@
             this._oldTree = thisTree;
             this._storage = thisStorage;
 
-            return lastShapes;
+            return {
+                lastShapes: lastShapes,
+                renderFinally: zrUtil.curry(setInvisible, willInvisibleEls)
+            };
 
             function dualTravel(thisViewChildren, oldViewChildren, parentGroup, sameTree, inView) {
                 // When 'render' is triggered by action,
@@ -196,9 +193,8 @@
                         thisNode = null;
                     }
 
-                    var group = renderNode(
-                        thisNode, oldNode, parentGroup, thisStorage, oldStorage, lastShapes
-                    );
+                    var group = renderNode(thisNode, oldNode, parentGroup);
+
                     dualTravel(
                         thisNode && thisNode.viewChildren || [],
                         oldNode && oldNode.viewChildren || [],
@@ -216,12 +212,21 @@
                     });
                 });
             }
+
+            function setInvisible(willInvisibleEls) {
+                zrUtil.each(willInvisibleEls, function (el) {
+                    el.invisible = true;
+                });
+            }
         },
 
         /**
          * @private
          */
-        _renderNode: function (thisNode, oldNode, parentGroup, thisStorage, oldStorage, lastShapes) {
+        _renderNode: function (
+            thisStorage, oldStorage, lastShapes, willInvisibleEls,
+            thisNode, oldNode, parentGroup
+        ) {
             var thisRawIndex = thisNode && thisNode.getRawIndex();
             var oldRawIndex = oldNode && oldNode.getRawIndex();
 
@@ -232,6 +237,7 @@
             var layout = thisNode.getLayout();
             var thisWidth = layout.width;
             var thisHeight = layout.height;
+            var invisible = layout.invisible;
 
             // Node group
             var group = giveGraphic('nodeGroup', Group, 'position');
@@ -241,7 +247,7 @@
             // Background
             var bg = giveGraphic('background', Rect, 'shape');
             bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
-            bg.setStyle({fill: thisNode.getVisual('borderColor', true)});
+            updateStyle(bg, {fill: thisNode.getVisual('borderColor', true)});
             group.add(bg);
 
             var thisViewChildren = thisNode.viewChildren;
@@ -279,7 +285,7 @@
                     width: contentWidth,
                     height: contentHeight
                 });
-                content.setStyle({
+                updateStyle(content, {
                     fill: thisNode.getVisual('color', true),
                     text: text,
                     textPosition: this._getTextPosition(labelModel, thisWidth, thisHeight),
@@ -309,6 +315,21 @@
                 // Set to thisStorage
                 return thisStorage[storage][thisRawIndex] = shape;
             }
+
+            function updateStyle(element, style) {
+                if (!invisible) {
+                    // If invisible, do not set visual, otherwise the element will
+                    // change immediately before animation. We think it is OK to
+                    // remain its origin color when moving out of the view window.
+                    element.setStyle(style);
+                    element.invisible = false;
+                }
+                else {
+                    // Delay invisible setting utill animation finished,
+                    // avoid element vanish suddenly before animation.
+                    !element.invisible && willInvisibleEls.push(element);
+                }
+            }
         },
 
         /**
@@ -329,10 +350,8 @@
         /**
          * @private
          */
-        _doAnimation: function (payload, containerGroup, lastShapes) {
-            if (!this.ecModel.get('animation')
-                || (payload && payload.type === 'treemapRender')
-            ) {
+        _doAnimation: function (containerGroup, renderResult) {
+            if (!this.ecModel.get('animation')) {
                 return;
             }
 
@@ -341,7 +360,7 @@
 
             zrUtil.each(this._storage, function (shapes, key) {
                 zrUtil.each(shapes, function (shape, index) {
-                    var last = lastShapes[key][index];
+                    var last = renderResult.lastShapes[key][index];
                     if (!last) {
                         return;
                     }
@@ -368,6 +387,7 @@
                 animationCount--;
                 if (!animationCount) {
                     that._state = 'ready';
+                    renderResult.renderFinally();
                 }
             }
         },
@@ -375,7 +395,7 @@
         /**
          * @private
          */
-        _initController: function (api) {
+        _resetController: function (api) {
             var controller = this._controller;
 
             // Init controller.
@@ -407,19 +427,24 @@
                 && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
             ) {
                 // These param must not be cached.
-                var seriesModel = this.seriesModel;
-                var root = seriesModel.getData().tree.root;
-                if (!root) {
+                var viewRootWrap = this._getViewRootWrap();
+
+                if (!viewRootWrap) {
                     return;
                 }
-                var rootGroup = this._storage.nodeGroup[root.getRawIndex()];
-                var pos = rootGroup.position;
-                pos[0] += dx;
-                pos[1] += dy;
-                rootGroup.dirty();
 
-                // Update breadcrumb when drag move.
-                this._renderBreadcrumb(seriesModel, this.api);
+                var rootLayout = viewRootWrap.root.getLayout();
+                var rootPosition = viewRootWrap.rootGroup.position;
+
+                this.api.dispatch({
+                    type: 'treemapMove',
+                    from: this.uid,
+                    seriesId: this.seriesModel.uid,
+                    rootRect: {
+                        x: rootPosition[0] + dx, y: rootPosition[1] + dy,
+                        width: rootLayout.width, height: rootLayout.height
+                    }
+                });
             }
         },
 
@@ -429,12 +454,25 @@
         _onZoom: function (scale, mouseX, mouseY) {
             if (this._state !== 'animating' && !this._controller.isDragging()) {
                 // These param must not be cached.
-                var rect = this._containerGroup.getBoundingRect();
-                var positionInfo = this.positionInfo;
+                var viewRootWrap = this._getViewRootWrap();
 
-                mouseX -= positionInfo.x;
-                mouseY -= positionInfo.y;
-                // Recalculate bounding rect.
+                if (!viewRootWrap) {
+                    return;
+                }
+
+                var rootLayout = viewRootWrap.root.getLayout();
+                var layoutInfo = this.seriesModel.layoutInfo;
+                var rootPosition = viewRootWrap.rootGroup.position;
+
+                var rect = new BoundingRect(
+                    rootPosition[0], rootPosition[1], rootLayout.width, rootLayout.height
+                );
+
+                // Transform mouse coord from global to containerGroup.
+                mouseX -= layoutInfo.x;
+                mouseY -= layoutInfo.y;
+
+                // Scale root bounding rect.
                 var m = matrix.create();
                 matrix.translate(m, m, [-mouseX, -mouseY]);
                 matrix.scale(m, m, [scale, scale]);
@@ -446,8 +484,9 @@
                     type: 'treemapRender',
                     from: this.uid,
                     seriesId: this.seriesModel.uid,
-                    viewRect: {
-                        x: rect.x, y: rect.y, width: rect.width, height: rect.height
+                    rootRect: {
+                        x: rect.x, y: rect.y,
+                        width: rect.width, height: rect.height
                     }
                 });
             }
@@ -565,41 +604,14 @@
         /**
          * @private
          */
-        _positionRoot: function(containerGroup, positionInfo, root, viewRect, targetInfo) {
-            var nodeGroups = this._storage.nodeGroup;
-            var rootGroup = nodeGroups[root.getRawIndex()];
-
-            if (viewRect) {
-                rootGroup.position = [viewRect.x, viewRect.y];
-                return;
-            }
-
-            if (!targetInfo) {
-                rootGroup.position = [0, 0];
-                return;
-            }
-
-            // If targetInfo is fetched by 'retrieveTargetNodeInfo',
-            // old tree and new tree are the same tree,
-            // so we can use raw index of targetInfo.node to find shape from storage.
-
-            var targetNode = targetInfo.node;
-
-            var targetGroup = nodeGroups[targetNode.getRawIndex()];
-
-            if (!targetGroup) {
-                rootGroup.position = [0, 0];
-                return;
-            }
-
-            var targetRect = targetGroup.getBoundingRect();
-            var targetCenter = graphic.transformCoordToAncestor(
-                [targetRect.width / 2, targetRect.height / 2], targetGroup, containerGroup
-            );
-            rootGroup.position = [
-                positionInfo.width / 2 - targetCenter[0],
-                positionInfo.height / 2 - targetCenter[1]
-            ];
+        _getViewRootWrap: function () {
+            var viewRoot = this.seriesModel.getViewRoot();
+            return viewRoot
+                ? {
+                    root: viewRoot,
+                    rootGroup: this._storage.nodeGroup[viewRoot.getRawIndex()]
+                }
+                : null;
         }
 
     });

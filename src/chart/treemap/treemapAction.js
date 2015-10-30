@@ -9,5 +9,6 @@ define(function(require) {
 
     echarts.registerAction({type: 'treemapZoomToNode', update: 'updateView'}, noop);
     echarts.registerAction({type: 'treemapRender', update: 'updateView'}, noop);
+    echarts.registerAction({type: 'treemapMove', update: 'updateView'}, noop);
 
 });

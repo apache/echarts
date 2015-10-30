@@ -170,7 +170,9 @@ define(function(require) {
 
             var normalStyle = {};
             for (var name in hoverStyle) {
-                normalStyle[name] = el.style[name];
+                if (hoverStyle.hasOwnProperty(name)) {
+                    normalStyle[name] = el.style[name];
+                }
             }
 
             el.__normalStl = normalStyle;
@@ -324,18 +326,6 @@ define(function(require) {
         }
         matrix.mul(mat, transform, mat);
         return [mat[4], mat[5]];
-    };
-
-    /**
-     * Transform vertext to ancestor
-     * @param {Array.<number>} vertex [x, y]
-     * @param {module:zrender/mixin/Transformable} node
-     * @param {module:zrender/mixin/Transformable} ancestor
-     * @return {Array.<number>} [x, y]
-     */
-    graphic.transformCoordToAncestor = function (vertex, node, ancestor) {
-        var transform = graphic.getTransform(node, ancestor);
-        return graphic.applyTransform(vertex, transform);
     };
 
     /**
