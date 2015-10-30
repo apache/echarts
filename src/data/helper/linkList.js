@@ -6,6 +6,13 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var arraySlice = Array.prototype.slice;
 
+    // Caution:
+    // In most case, only one of the list and its shallow clones (see list.cloneShallow)
+    // can be active in echarts process. Considering heap memory consumption,
+    // we do not clone tree or graph, but share them among list and its shallow clones.
+    // But in some rare case, we have to keep old list (like do animation in chart). So
+    // please take care that both the old list and the new list share the same tree/graph.
+
     function linkList(list, target, targetType) {
         zrUtil.each(listProxyMethods, function (method, methodName) {
             var originMethod = list[methodName];

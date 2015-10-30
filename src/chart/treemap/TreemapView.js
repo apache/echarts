@@ -13,8 +13,8 @@
     var Group = graphic.Group;
     var Rect = graphic.Rect;
 
-    var ANIMATION_DURATION = 700;
-    var EASING = 'cubicOut';
+    var ANIMATION_DURATION = 5700;
+    var EASING;// = 'cubicOut';
     var DRAG_THRESHOLD = 3;
 
     return require('../../echarts').extendChartView({
@@ -132,11 +132,17 @@
             var thisStorage = createStorage();
             var oldStorage = this._storage;
             var willInvisibleEls = [];
+            var willDeleteEls = [];
             var renderNode = bind(
                 this._renderNode, this,
                 thisStorage, oldStorage, lastShapes, willInvisibleEls
             );
             var viewRoot = seriesModel.getViewRoot();
+
+            // Notice: when thisTree and oldTree are the same tree (see list.cloneShadow),
+            // the oldTree is actually losted, so we can not find all of the old graphic
+            // elements from tree. So we use this stragegy: make element storage, move
+            // from old storage to new storage, clear old storage.
 
             dualTravel(
                 thisTree.root ? [thisTree.root] : [],
@@ -147,14 +153,15 @@
             );
 
             // Process all removing.
-            clearStorage(oldStorage);
+            var willDeleteEls = clearStorage(oldStorage);
 
             this._oldTree = thisTree;
             this._storage = thisStorage;
 
             return {
                 lastShapes: lastShapes,
-                renderFinally: zrUtil.curry(setInvisible, willInvisibleEls)
+                willDeleteEls: willDeleteEls,
+                renderFinally: renderFinally
             };
 
             function dualTravel(thisViewChildren, oldViewChildren, parentGroup, sameTree, inView) {
@@ -206,14 +213,19 @@
             }
 
             function clearStorage(storage) {
+                var willDeleteEls = [];
                 storage && zrUtil.each(storage, function (store) {
-                    zrUtil.each(store, function (shape) {
-                        shape && shape.parent && shape.parent.remove(shape);
+                    zrUtil.each(store, function (el) {
+                        el && willDeleteEls.push(el);
                     });
                 });
+                return willDeleteEls;
             }
 
-            function setInvisible(willInvisibleEls) {
+            function renderFinally() {
+                zrUtil.each(willDeleteEls, function (el) {
+                    el.parent && el.parent.remove(el);
+                });
                 zrUtil.each(willInvisibleEls, function (el) {
                     el.invisible = true;
                 });
@@ -359,24 +371,31 @@
             var that = this;
 
             zrUtil.each(this._storage, function (shapes, key) {
-                zrUtil.each(shapes, function (shape, index) {
+                zrUtil.each(shapes, function (el, index) {
                     var last = renderResult.lastShapes[key][index];
                     if (!last) {
                         return;
                     }
                     if (last.position) {
-                        var target = shape.position.slice();
-                        shape.position = last.position;
-                        shape.animateTo({position: target}, ANIMATION_DURATION, EASING, done);
+                        var target = el.position.slice();
+                        el.position = last.position;
+                        el.animateTo({position: target}, ANIMATION_DURATION, EASING, done);
                         animationCount++;
                     }
                     else if (last.shape) {
-                        var target = zrUtil.extend({}, shape.shape);
-                        shape.setShape(last.shape);
-                        shape.animateTo({shape: target}, ANIMATION_DURATION, EASING, done);
+                        var target = zrUtil.extend({}, el.shape);
+                        el.setShape(last.shape);
+                        el.animateTo({shape: target}, ANIMATION_DURATION, EASING, done);
                         animationCount++;
                     }
                 });
+            });
+
+            zrUtil.each(renderResult.willDeleteEls, function (el) {
+                if (!el.invisible) {
+                    el.animateTo({shape: {x: 0, y: 0, width: 0, height: 0}}, ANIMATION_DURATION, EASING, done);
+                    animationCount++;
+                }
             });
 
             if (animationCount) {
