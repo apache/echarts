@@ -12,16 +12,14 @@ define(function(require) {
 
         type: 'series.pie',
 
-        init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
-            SeriesModel.prototype.init.call(
-                this, option, parentModel, ecModel, dependentModels, seriesIndex
-            );
+        init: function (option) {
+            SeriesModel.prototype.init.apply(this, arguments);
 
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
             this.legendDataProvider = function () {
                 return this._dataBeforeProcessed;
-            }
+            };
 
             this.updateSelectedMap();
         },

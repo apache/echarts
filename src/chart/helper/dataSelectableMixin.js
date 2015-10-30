@@ -13,14 +13,10 @@ define(function (require) {
 
         updateSelectedMap: function () {
             var option = this.option;
-            // FIXME Keep selected status?
-            var dataOptMap = {};
-
-            zrUtil.each(option.data, function (dataOpt) {
+            this._dataOptMap = zrUtil.reduce(option.data, function (dataOptMap, dataOpt) {
                 dataOptMap[dataOpt.name] = dataOpt;
-            });
-
-            this._dataOptMap = dataOptMap;
+                return dataOptMap;
+            }, {});
         },
         /**
          * @param {string} name

@@ -64,7 +64,7 @@ define(function (require) {
      * @param {module:echarts/data/List} data
      * @param {module:echarts/model/Series} seriesModel
      * @param {module:echarts/ExtensionAPI} api
-     * @param {boolean} enableAnimation
+     * @param {boolean} [enableAnimation=false]
      * @param {Array.<boolean>} [ignoreMap]
      */
     symbolProto.updateData = function (

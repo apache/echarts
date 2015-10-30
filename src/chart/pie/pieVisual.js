@@ -5,9 +5,9 @@ define(function (require) {
         var colorList = ecModel.get('color');
 
         ecModel.eachSeriesByTypeAll('pie', function (seriesModel) {
+            var dataAll = seriesModel.getDataAll();
             if (!ecModel.isSeriesFiltered(seriesModel)) {
                 var data = seriesModel.getData();
-                var dataAll = seriesModel.getDataAll();
                 data.each(function (idx) {
                     var itemModel = data.getItemModel(idx);
                     var rawIdx = data.getRawIndex(idx);
@@ -18,8 +18,7 @@ define(function (require) {
                     data.setItemVisual(idx, 'color', color);
                 });
             }
-
             offset += dataAll.count();
         });
-    }
+    };
 });

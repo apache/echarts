@@ -251,14 +251,25 @@ define(function(require) {
 
     graphProto.update = function () {
         var data = this.data;
+        var edgeData = this.edgeData;
         var nodes = this.nodes;
+        var edges = this.edges;
 
         for (var i = 0, len = nodes.length; i < len; i++) {
             nodes[i].dataIndex = -1;
         }
-
         for (var i = 0, len = data.count(); i < len; i++) {
             nodes[data.getRawIndex(i)].dataIndex = i;
+        }
+
+        // Update edge
+        for (var i = 0, len = edges.length; i < len; i++) {
+            edges[i].dataIndex = -1;
+        }
+        for (var i = 0, len = edgeData.count(); i < len; i++) {
+            if (edges[i].node1.dataIndex >= 0 && edges[i].node2.dataIndex >= 0) {
+                edges[edgeData.getRawIndex(i)].dataIndex = i;  
+            }
         }
     };
 
@@ -390,14 +401,14 @@ define(function(require) {
         return itemModel.getModel(path);
     };
 
-    var createGraphDataProxyMixin = function (dataName) {
+    var createGraphDataProxyMixin = function (hostName, dataName) {
         return {
             /**
              * @param {string=} [dimension='value'] Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
              * @return {number}
              */
             getValue: function (dimension) {
-                return this.hostGraph[dataName].get(dimension || 'value', this.dataIndex);
+                return this[hostName][dataName].get(dimension || 'value', this.dataIndex);
             },
 
             /**
@@ -406,7 +417,7 @@ define(function(require) {
              */
             setVisual: function (key, value) {
                 this.dataIndex >= 0
-                    && this.hostGraph[dataName].setItemVisual(this.dataIndex, key, value);
+                    && this[hostName][dataName].setItemVisual(this.dataIndex, key, value);
             },
 
             /**
@@ -414,7 +425,7 @@ define(function(require) {
              * @return {boolean}
              */
             getVisual: function (key, ignoreParent) {
-                return this.hostGraph[dataName].getItemVisual(this.dataIndex, key, ignoreParent);
+                return this[hostName][dataName].getItemVisual(this.dataIndex, key, ignoreParent);
             },
 
             /**
@@ -423,27 +434,34 @@ define(function(require) {
              */
             setLayout: function (layout, merge) {
                 this.dataIndex >= 0
-                    && this.hostGraph[dataName].setItemLayout(this.dataIndex, layout, merge);
+                    && this[hostName][dataName].setItemLayout(this.dataIndex, layout, merge);
             },
 
             /**
              * @return {Object}
              */
             getLayout: function () {
-                return this.hostGraph[dataName].getItemLayout(this.dataIndex);
+                return this[hostName][dataName].getItemLayout(this.dataIndex);
+            },
+
+            /**
+             * @return {module:zrender/Element}
+             */
+            getGraphicEl: function () {
+                return this[hostName][dataName].getItemGraphicEl(this.dataIndex);
             },
 
             /**
              * @return {number}
              */
             getRawIndex: function () {
-                return this.hostGraph[dataName].getRawIndex(this.dataIndex);
+                return this[hostName][dataName].getRawIndex(this.dataIndex);
             }
         };
     };
 
-    zrUtil.mixin(Node, createGraphDataProxyMixin('data'));
-    zrUtil.mixin(Edge, createGraphDataProxyMixin('edgeData'));
+    zrUtil.mixin(Node, createGraphDataProxyMixin('hostGraph', 'data'));
+    zrUtil.mixin(Edge, createGraphDataProxyMixin('hostGraph', 'edgeData'));
 
     Graph.Node = Node;
     Graph.Edge = Edge;

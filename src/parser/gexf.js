@@ -141,22 +141,22 @@ define(function(require) {
                 name: label,
                 source: sourceId,
                 target: targetId,
-                linkStyle: {
+                lineStyle: {
                     normal: {}
                 }
             };
 
-            var linkStyle = edge.linkStyle.normal;
+            var lineStyle = edge.lineStyle.normal;
 
             var vizThicknessDom = getChildByTagName(edgeDom, 'viz:thickness');
             var vizColorDom = getChildByTagName(edgeDom, 'viz:color');
             // var vizShapeDom = getChildByTagName(edgeDom, 'viz:shape');
 
             if (vizThicknessDom) {
-                linkStyle.thickness = parseFloat(vizThicknessDom.getAttribute('value'));
+                lineStyle.width = parseFloat(vizThicknessDom.getAttribute('value'));
             }
             if (vizColorDom) {
-                linkStyle.color = 'rgb(' + [
+                lineStyle.color = 'rgb(' + [
                     getAttr(vizColorDom, 'r') | 0,
                     getAttr(vizColorDom, 'g') | 0,
                     getAttr(vizColorDom, 'b') | 0

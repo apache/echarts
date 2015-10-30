@@ -3,20 +3,59 @@ define(function (require) {
     'use strict';
 
     var SeriesModel = require('../../model/Series');
+    var List = require('../../data/List');
+    var zrUtil = require('zrender/core/util');
 
-    var createGraphNodeLinks = require('../helper/createGraphFromNodeLinks');
+    var createGraphFromNodeEdge = require('../helper/createGraphFromNodeEdge');
 
     return SeriesModel.extend({
 
         type: 'series.graph',
 
+        init: function (option) {
+            SeriesModel.prototype.init.apply(this, arguments);
+
+            this._udpateCategoriesData();
+
+            // Provide data for legend select
+            this.legendDataProvider = function () {
+                return this._categoriesData;
+            };
+        },
+
+        mergeOption: function (option) {
+            SeriesModel.prototype.mergeOption.apply(this, arguments);
+
+            this._udpateCategoriesData();
+        },
+
+        _udpateCategoriesData: function () {
+            var categories = zrUtil.map(this.option.categories || [], function (category) {
+                // Data must has value
+                return category.value != null ? category : zrUtil.extend({value : 0}, category);
+            });
+            var categoriesData = new List(['value'], this);
+            categoriesData.initData(categories);
+
+            this._categoriesData = categoriesData;
+        },
+
         getInitialData: function (option, ecModel) {
-            if (option.data && option.links) {
-                var graph = createGraphNodeLinks(
-                    option.data, option.links, this, true
-                );
+            var edges = option.edges || option.links;
+            var nodes = option.data || option.nodes;
+            if (nodes && edges) {
+                var graph = createGraphFromNodeEdge(nodes, edges, this, true);
                 return graph.data;
             }
+        },
+
+        /**
+         * Get category model by index
+         * @param  {number} id Category index
+         * @return {module:echarts/model/Model}
+         */
+        getCategoriesData: function () {
+            return this._categoriesData;
         },
 
         defaultOption: {
@@ -31,13 +70,29 @@ define(function (require) {
             y: 'center',
             x2: null,
             y2: null,
-            width: '80%',
-            height: '80%',
+            width: '90%',
+            height: '90%',
 
             symbol: 'circle',
             symbolSize: 10,
 
+            roam: true,
+
+            // Symbol size scale ratio in roam
+            nodeScaleRatio: 0.6,
+
+            // Line width scale ratio in roam
+            edgeScaleRatio: 0.1,
+
             // categories: [],
+
+            // data: []
+            // Or
+            // nodes: []
+            // 
+            // links: []
+            // Or
+            // edges: []
 
             label: {
                 normal: {

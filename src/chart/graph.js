@@ -6,9 +6,12 @@ define(function (require) {
     require('./graph/GraphSeries');
     require('./graph/GraphView');
 
+    echarts.registerProcessor('filter', require('./graph/categoryFilter'));
+
     echarts.registerVisualCoding('chart', zrUtil.curry(
         require('../visual/symbol'), 'graph', 'circle', null
     ));
+    echarts.registerVisualCoding('chart', require('./graph/categoryVisual'));
 
     echarts.registerLayout(require('./graph/simpleLayout'));
 });

@@ -46,14 +46,12 @@ define(function (require) {
          */
         seriesGroup: [],
 
-        init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
+        init: function (option) {
 
             option = this._fillOption(option);
             this.option = option;
 
-            SeriesModel.prototype.init.call(
-                this, option, parentModel, ecModel, dependentModels, seriesIndex
-            );
+            SeriesModel.prototype.init.apply(this, arguments);
 
             this.updateSelectedMap();
         },

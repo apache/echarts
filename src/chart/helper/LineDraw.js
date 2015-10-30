@@ -12,7 +12,7 @@ define(function (require) {
      * @param {module:echarts/data/List} data
      * @param {module:echarts/model/Series} seriesModel
      * @param {module:echarts/ExtensionAPI} api
-     * @param {boolean} enableAnimation
+     * @param {boolean} [enableAnimation=false]
      */
     lineDrawProto.updateData = function (data, seriesModel, api, enableAnimation) {
         var group = this.group;
@@ -21,16 +21,22 @@ define(function (require) {
         data.diff(oldData)
             .add(function (idx) {
                 var shape = data.getItemLayout(idx);
-                var line = new graphic[shape.cpx1 != null ? 'BezierCurve' : 'Line']({
-                    shape: shape
-                });
+                if (shape) {
+                    var line = new graphic[shape.cpx1 != null ? 'BezierCurve' : 'Line']({
+                        shape: shape
+                    });
 
-                data.setItemGraphicEl(idx, line);
-                group.add(line);
+                    data.setItemGraphicEl(idx, line);
+                    group.add(line);   
+                }
             })
             .update(function (newIdx, oldIdx) {
                 var line = oldData.getItemGraphicEl(oldIdx);
                 var shape = data.getItemLayout(newIdx);
+                if (!shape) {
+                    group.remove(line);
+                    return;
+                }
                 if (shape.cpx1 != null && shape.type === 'line') {
                     var oldShape = line.shape;
                     line = new graphic.BezierCurve({
@@ -42,6 +48,9 @@ define(function (require) {
                     });
                 }
                 api.updateGraphicEl(line, shape);
+
+                data.setItemGraphicEl(newIdx, line);
+                group.add(line);
             })
             .remove(function (idx) {
                 group.remove(oldData.getItemGraphicEl(idx));

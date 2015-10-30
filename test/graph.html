@@ -38,19 +38,36 @@
 
                 $.get('./data/les-miserables.gexf', function (xml) {
                     var graph = gexf.parse(xml);
+                    var categories = [];
+                    for (var i = 0; i < 9; i++) {
+                        categories[i] = {
+                            name: '类目' + i
+                        };
+                    }
                     graph.nodes.forEach(function (node) {
                         node.itemStyle = null;
-                        node.value = 1;
+                        node.value = node.symbolSize;
                         node.label.normal.show = node.symbolSize > 30;
+                        node.category = node.attributes['modularity_class'];
                     });
                     chart.setOption({
                         tooltip: {},
+                        legend: [{
+                            data: categories.map(function (a) {return a.name})
+                        }],
+                        dataRange: {
+                            max: 100,
+                            inRange: {
+                                colorS: [1, 0.3]   
+                            }
+                        },
                         series : [
                             {
-                                name: 'les-miserables',
+                                name: 'Les Miserables',
                                 type: 'graph',
                                 data: graph.nodes,
                                 links: graph.links,
+                                categories: categories,
                                 label: {
                                     normal: {
                                         position: 'right'
