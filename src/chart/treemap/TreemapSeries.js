@@ -188,7 +188,6 @@ define(function(require) {
          *                                y: containerGroup y
          *                                width: containerGroup width
          *                                height: containerGroup height
-         *                                rootPosition
          *                            }
          */
         setLayoutInfo: function (layoutInfo) {

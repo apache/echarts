@@ -88,11 +88,6 @@
 
             var renderResult = this._doRender(containerGroup, seriesModel);
 
-            var viewRootWrap = this._getViewRootWrap();
-            if (viewRootWrap) {
-                viewRootWrap.rootGroup.position = layoutInfo.rootPosition.slice();
-            }
-
             (!payloadType || payloadType === 'treemapZoomToNode')
                 ? this._doAnimation(containerGroup, renderResult)
                 : renderResult.renderFinally();
@@ -446,21 +441,20 @@
                 && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
             ) {
                 // These param must not be cached.
-                var viewRootWrap = this._getViewRootWrap();
+                var viewRoot = this.seriesModel.getViewRoot();
 
-                if (!viewRootWrap) {
+                if (!viewRoot) {
                     return;
                 }
 
-                var rootLayout = viewRootWrap.root.getLayout();
-                var rootPosition = viewRootWrap.rootGroup.position;
+                var rootLayout = viewRoot.getLayout();
 
                 this.api.dispatch({
                     type: 'treemapMove',
                     from: this.uid,
                     seriesId: this.seriesModel.uid,
                     rootRect: {
-                        x: rootPosition[0] + dx, y: rootPosition[1] + dy,
+                        x: rootLayout.x + dx, y: rootLayout.y + dy,
                         width: rootLayout.width, height: rootLayout.height
                     }
                 });
@@ -473,19 +467,17 @@
         _onZoom: function (scale, mouseX, mouseY) {
             if (this._state !== 'animating' && !this._controller.isDragging()) {
                 // These param must not be cached.
-                var viewRootWrap = this._getViewRootWrap();
+                var viewRoot = this.seriesModel.getViewRoot();
 
-                if (!viewRootWrap) {
+                if (!viewRoot) {
                     return;
                 }
 
-                var rootLayout = viewRootWrap.root.getLayout();
-                var layoutInfo = this.seriesModel.layoutInfo;
-                var rootPosition = viewRootWrap.rootGroup.position;
-
+                var rootLayout = viewRoot.getLayout();
                 var rect = new BoundingRect(
-                    rootPosition[0], rootPosition[1], rootLayout.width, rootLayout.height
+                    rootLayout.x, rootLayout.y, rootLayout.width, rootLayout.height
                 );
+                var layoutInfo = this.seriesModel.layoutInfo;
 
                 // Transform mouse coord from global to containerGroup.
                 mouseX -= layoutInfo.x;
@@ -618,19 +610,6 @@
             }, this);
 
             return targetInfo;
-        },
-
-        /**
-         * @private
-         */
-        _getViewRootWrap: function () {
-            var viewRoot = this.seriesModel.getViewRoot();
-            return viewRoot
-                ? {
-                    root: viewRoot,
-                    rootGroup: this._storage.nodeGroup[viewRoot.getRawIndex()]
-                }
-                : null;
         }
 
     });

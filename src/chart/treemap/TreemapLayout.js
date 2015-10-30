@@ -75,15 +75,22 @@ define(function (require) {
 
                     var options = {
                         squareRatio: seriesModel.get('squareRatio'),
-                        sort: seriesModel.get('sort'),
-                        rootWidth: rootSize[0],
-                        rootHeight: rootSize[1]
+                        sort: seriesModel.get('sort')
                     };
+
+                    viewRoot.setLayout({
+                        x: 0, y: 0,
+                        width: rootSize[0], height: rootSize[1],
+                        area: rootSize[0] * rootSize[1]
+                    });
+
                     this.squarify(viewRoot, options);
                 }
 
-                var rootPosition = layoutInfo.rootPosition = calculateRootPosition(
-                    layoutInfo, rootRect, targetInfo
+                // Set root position
+                viewRoot.setLayout(
+                    calculateRootPosition(layoutInfo, rootRect, targetInfo),
+                    true
                 );
 
                 seriesModel.setLayoutInfo(layoutInfo);
@@ -91,13 +98,10 @@ define(function (require) {
                 // Optimize
                 // FIXME
                 // 现在没有clip功能，暂时取ec高宽。
-                var rootClipRect = new BoundingRect(
-                    -layoutInfo.x - rootPosition[0],
-                    -layoutInfo.y - rootPosition[1],
-                    ecWidth,
-                    ecHeight
+                prunning(
+                    viewRoot,
+                    new BoundingRect(-layoutInfo.x, -layoutInfo.y, ecWidth, ecHeight)
                 );
-                prunning(viewRoot, rootClipRect);
 
             }, this);
         },
@@ -110,8 +114,6 @@ define(function (require) {
          * @protected
          * @param {module:echarts/data/Tree~TreeNode} node
          * @param {Object} options
-         * @param {number} [options.rootWidth]
-         * @param {number} [options.rootHeight]
          * @param {string} options.sort 'asc' or 'desc'
          * @param {boolean} options.hideChildren
          * @param {number} options.squareRatio
@@ -124,18 +126,9 @@ define(function (require) {
                 return;
             }
 
-            if (options.notRoot) {
-                var thisLayout = node.getLayout();
-                width = thisLayout.width;
-                height = thisLayout.height;
-            }
-            else {
-                width = options.rootWidth;
-                height = options.rootHeight;
-                node.setLayout({
-                    x: 0, y: 0, width: width, height: height, area: width * height
-                });
-            }
+            var thisLayout = node.getLayout();
+            width = thisLayout.width;
+            height = thisLayout.height;
 
             // Considering border and gap
             var itemStyleModel = node.getModel('itemStyle.normal');
@@ -199,7 +192,6 @@ define(function (require) {
 
             for (var i = 0, len = viewChildren.length; i < len; i++) {
                 var childOption = zrUtil.extend({
-                    notRoot: true,
                     hideChildren: hideChildren
                 }, options);
 
@@ -464,11 +456,12 @@ define(function (require) {
     // Root postion base on coord of containerGroup
     function calculateRootPosition(layoutInfo, rootRect, targetInfo) {
         if (rootRect) {
-            return [rootRect.x, rootRect.y];
+            return {x: rootRect.x, y: rootRect.y};
         }
 
+        var defaultPosition = {x: 0, y: 0};
         if (!targetInfo) {
-            return [0, 0];
+            return defaultPosition;
         }
 
         // If targetInfo is fetched by 'retrieveTargetNodeInfo',
@@ -479,7 +472,7 @@ define(function (require) {
         var layout = targetNode.getLayout();
 
         if (!layout) {
-            return [0, 0];
+            return defaultPosition;
         }
 
         // Transform coord from local to container.
@@ -492,10 +485,10 @@ define(function (require) {
             node = node.parentNode;
         }
 
-        return [
-            layoutInfo.width / 2 - targetCenter[0],
-            layoutInfo.height / 2 - targetCenter[1]
-        ];
+        return {
+            x: layoutInfo.width / 2 - targetCenter[0],
+            y: layoutInfo.height / 2 - targetCenter[1]
+        };
     }
 
     // Mark invisible nodes for prunning when visual coding and rendering.
