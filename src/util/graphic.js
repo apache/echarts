@@ -28,6 +28,8 @@ define(function(require) {
 
     graphic.Line = require('zrender/graphic/shape/Line');
 
+    graphic.BezierCurve = require('zrender/graphic/shape/BezierCurve');
+
     graphic.Arc = require('zrender/graphic/shape/Arc');
 
     /**

@@ -116,7 +116,7 @@ define(function (require) {
 
             each(optionPreprocessorFuncs, function (preProcess) {
                 preProcess(option);
-            })
+            });
 
             var ecModel = this._model;
             if (!ecModel || notMerge) {

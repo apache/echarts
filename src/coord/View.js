@@ -37,7 +37,7 @@ define(function (require) {
         this._roamTransform = new TransformDummy();
 
         this._viewTransform = new TransformDummy();
-    };
+    }
 
     View.prototype = {
 
@@ -180,6 +180,16 @@ define(function (require) {
             return invTransform
                 ? vector.applyTransform([], point, invTransform)
                 : point.slice();
+        },
+
+        /**
+         * @return {number}
+         */
+        getScalarScale: function () {
+            // Use determinant square root of transform to mutiply scalar
+            var m = this.transform;
+            var det = Math.sqrt(Math.abs(m[0] * m[3] - m[2] * m[1]));
+            return det;
         }
     };
 

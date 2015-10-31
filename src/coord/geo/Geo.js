@@ -33,7 +33,7 @@ define(function (require) {
         this._nameCoordMap = {};
 
         this.loadGeoJson(geoJson);
-    };
+    }
 
     Geo.prototype = {
 

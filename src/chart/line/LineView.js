@@ -201,7 +201,7 @@ define(function(require) {
 
                 if (stackedOn) {
                     var stackedOnSeries = stackedOn.hostModel;
-                    stackedOnSmooth = getSmooth(stackedOnSeries.get('smooth'))
+                    stackedOnSmooth = getSmooth(stackedOnSeries.get('smooth'));
                 }
 
                 polygonShape.stackedOnSmooth = stackedOnSmooth;

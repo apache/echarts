@@ -1,3 +1,7 @@
+/**
+ * @module echarts/component/helper/RoamController
+ */
+
 define(function (require) {
 
     var Eventful = require('zrender/mixin/Eventful');
@@ -78,6 +82,10 @@ define(function (require) {
     }
 
     /**
+     * @alias module:echarts/component/helper/RoamController
+     * @constructor
+     * @mixin {module:zrender/mixin/Eventful}
+     * 
      * @param {module:zrender/zrender~ZRender} zr
      * @param {module:zrender/Element} target
      * @param {module:zrender/core/BoundingRect} rect
@@ -101,23 +109,27 @@ define(function (require) {
         var mouseupHandler = bind(mouseup, this);
         var mousewheelHandler = bind(mousewheel, this);
 
-        zr.on('mousedown', mousedownHandler);
-        zr.on('mousemove', mousemoveHandler);
-        zr.on('mouseup', mouseupHandler);
-        zr.on('mousewheel', mousewheelHandler);
-
         Eventful.call(this);
 
-        this.dispose = function () {
+        this.enable = function () {
+            zr.on('mousedown', mousedownHandler);
+            zr.on('mousemove', mousemoveHandler);
+            zr.on('mouseup', mouseupHandler);
+            zr.on('mousewheel', mousewheelHandler);
+        };
+
+        this.disable = this.dispose = function () {
             zr.off('mousedown', mousedownHandler);
             zr.off('mousemove', mousemoveHandler);
             zr.off('mouseup', mouseupHandler);
             zr.off('mousewheel', mousewheelHandler);
-        }
+        };
+
+        this.enable();
 
         this.isDragging = function () {
             return this._dragging;
-        }
+        };
     }
 
     zrUtil.mixin(RoamController, Eventful);

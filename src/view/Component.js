@@ -34,7 +34,7 @@ define(function (require) {
         = componentProto.updateVisual
         = function (seriesModel, ecModel, api, payload) {
             // Do nothing;
-        }
+        };
     // Enable Component.extend.
     componentUtil.enableClassExtend(Component);
 

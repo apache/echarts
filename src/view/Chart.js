@@ -39,7 +39,7 @@ define(function (require) {
         = chartProto.updateVisual
         = function (seriesModel, ecModel, api, payload) {
             this.render(seriesModel, ecModel, api, payload);
-        }
+        };
 
     // Enable Chart.extend.
     componentUtil.enableClassExtend(Chart);

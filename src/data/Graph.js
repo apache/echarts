@@ -64,32 +64,32 @@ define(function(require) {
 
     /**
      * Add a new node
-     * @param {string} name
+     * @param {string} id
      * @param {number} [dataIndex]
      */
-    graphProto.addNode = function (name, dataIndex) {
+    graphProto.addNode = function (id, dataIndex) {
         var nodesMap = this._nodesMap;
 
-        if (nodesMap[name]) {
-            return nodesMap[name];
+        if (nodesMap[id]) {
+            return nodesMap[id];
         }
 
-        var node = new Node(name, dataIndex);
+        var node = new Node(id, dataIndex);
         node.hostGraph = this;
 
         this.nodes.push(node);
 
-        nodesMap[name] = node;
+        nodesMap[id] = node;
         return node;
     };
 
     /**
-     * Get node by name
-     * @param  {string} name
+     * Get node by id
+     * @param  {string} id
      * @return {module:echarts/data/Graph.Node}
      */
-    graphProto.getNodeByName = function (name) {
-        return this._nodesMap[name];
+    graphProto.getNodeById = function (id) {
+        return this._nodesMap[id];
     };
 
     /**
@@ -113,12 +113,13 @@ define(function(require) {
             return;
         }
 
-        var key = n1.name + '-' + n2.name;
+        var key = n1.id + '-' + n2.id;
         if (edgesMap[key]) {
             return edgesMap[key];
         }
 
         var edge = new Edge(n1, n2, dataIndex);
+        edge.hostGraph = this;
 
         if (this._directed) {
             n1.outEdges.push(edge);
@@ -143,10 +144,10 @@ define(function(require) {
      */
     graphProto.getEdge = function (n1, n2) {
         if (typeof(n1) !== 'string') {
-            n1 = n1.name;
+            n1 = n1.id;
         }
         if (typeof(n2) !== 'string') {
-            n2 = n2.name;
+            n2 = n2.id;
         }
 
         var edgesMap = this._edgesMap;
@@ -250,14 +251,25 @@ define(function(require) {
 
     graphProto.update = function () {
         var data = this.data;
+        var edgeData = this.edgeData;
         var nodes = this.nodes;
+        var edges = this.edges;
 
         for (var i = 0, len = nodes.length; i < len; i++) {
             nodes[i].dataIndex = -1;
         }
-
         for (var i = 0, len = data.count(); i < len; i++) {
             nodes[data.getRawIndex(i)].dataIndex = i;
+        }
+
+        // Update edge
+        for (var i = 0, len = edges.length; i < len; i++) {
+            edges[i].dataIndex = -1;
+        }
+        for (var i = 0, len = edgeData.count(); i < len; i++) {
+            if (edges[i].node1.dataIndex >= 0 && edges[i].node2.dataIndex >= 0) {
+                edges[edgeData.getRawIndex(i)].dataIndex = i;  
+            }
         }
     };
 
@@ -269,11 +281,11 @@ define(function(require) {
         var nodes = this.nodes;
         var edges = this.edges;
         for (var i = 0; i < nodes.length; i++) {
-            graph.addNode(nodes[i].name, nodes[i].dataIndex);
+            graph.addNode(nodes[i].id, nodes[i].dataIndex);
         }
         for (var i = 0; i < edges.length; i++) {
             var e = edges[i];
-            graph.addEdge(e.node1.name, e.node2.name, e.dataIndex);
+            graph.addEdge(e.node1.id, e.node2.id, e.dataIndex);
         }
         return graph;
     };
@@ -282,11 +294,11 @@ define(function(require) {
     /**
      * @alias module:echarts/data/Graph.Node
      */
-    function Node(name, dataIndex) {
+    function Node(id, dataIndex) {
         /**
         * @type {string}
         */
-        this.name = name || '';
+        this.id = id || '';
 
         /**
         * @type {Array.<module:echarts/data/Graph.Edge>}
@@ -309,7 +321,7 @@ define(function(require) {
          * @type {number}
          */
         this.dataIndex = dataIndex == null ? -1 : dataIndex;
-    };
+    }
 
     Node.prototype = {
 
@@ -348,57 +360,6 @@ define(function(require) {
             var itemModel = graph.data.getItemModel(this.dataIndex);
 
             return itemModel.getModel(path);
-        },
-
-
-        // Proxy methods
-
-        /**
-         * @param {string=} [dimension='value'] Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
-         * @return {number}
-         */
-        getValue: function (dimension) {
-            return this.hostTree.data.get(dimension || 'value', this.dataIndex);
-        },
-
-        /**
-         * @param {Object|string} key
-         * @param {*} [value]
-         */
-        setVisual: function (key, value) {
-            this.dataIndex >= 0
-                && this.hostGraph.data.setItemVisual(this.dataIndex, key, value);
-        },
-
-        /**
-         * @param {string} key
-         * @return {boolean}
-         */
-        getVisual: function (key, ignoreParent) {
-            return this.hostGraph.data.getItemVisual(this.dataIndex, key, ignoreParent)
-        },
-
-        /**
-         * @param {Object} layout
-         * @return {boolean} [merge=false]
-         */
-        setLayout: function (layout, merge) {
-            this.dataIndex >= 0
-                && this.hostGraph.data.setItemLayout(this.dataIndex, layout, merge);
-        },
-
-        /**
-         * @return {Object}
-         */
-        getLayout: function () {
-            return this.hostGraph.data.getItemLayout(this.dataIndex);
-        },
-
-        /**
-         * @return {number}
-         */
-        getRawIndex: function () {
-            return this.hostGraph.data.getRawIndex(this.dataIndex);
         }
     };
 
@@ -424,7 +385,83 @@ define(function(require) {
         this.node2 = n2;
 
         this.dataIndex = dataIndex == null ? -1 : dataIndex;
+    }
+
+    /**
+     * @param {string} [path]
+     * @return {module:echarts/model/Model}
+     */
+     Edge.prototype.getModel = function (path) {
+        if (this.dataIndex < 0) {
+            return;
+        }
+        var graph = this.hostGraph;
+        var itemModel = graph.data.getItemModel(this.dataIndex);
+
+        return itemModel.getModel(path);
     };
+
+    var createGraphDataProxyMixin = function (hostName, dataName) {
+        return {
+            /**
+             * @param {string=} [dimension='value'] Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
+             * @return {number}
+             */
+            getValue: function (dimension) {
+                return this[hostName][dataName].get(dimension || 'value', this.dataIndex);
+            },
+
+            /**
+             * @param {Object|string} key
+             * @param {*} [value]
+             */
+            setVisual: function (key, value) {
+                this.dataIndex >= 0
+                    && this[hostName][dataName].setItemVisual(this.dataIndex, key, value);
+            },
+
+            /**
+             * @param {string} key
+             * @return {boolean}
+             */
+            getVisual: function (key, ignoreParent) {
+                return this[hostName][dataName].getItemVisual(this.dataIndex, key, ignoreParent);
+            },
+
+            /**
+             * @param {Object} layout
+             * @return {boolean} [merge=false]
+             */
+            setLayout: function (layout, merge) {
+                this.dataIndex >= 0
+                    && this[hostName][dataName].setItemLayout(this.dataIndex, layout, merge);
+            },
+
+            /**
+             * @return {Object}
+             */
+            getLayout: function () {
+                return this[hostName][dataName].getItemLayout(this.dataIndex);
+            },
+
+            /**
+             * @return {module:zrender/Element}
+             */
+            getGraphicEl: function () {
+                return this[hostName][dataName].getItemGraphicEl(this.dataIndex);
+            },
+
+            /**
+             * @return {number}
+             */
+            getRawIndex: function () {
+                return this[hostName][dataName].getRawIndex(this.dataIndex);
+            }
+        };
+    };
+
+    zrUtil.mixin(Node, createGraphDataProxyMixin('hostGraph', 'data'));
+    zrUtil.mixin(Edge, createGraphDataProxyMixin('hostGraph', 'edgeData'));
 
     Graph.Node = Node;
     Graph.Edge = Edge;

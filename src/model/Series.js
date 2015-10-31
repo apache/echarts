@@ -11,7 +11,7 @@ define(function(require) {
 
     var SeriesModel = ComponentModel.extend({
 
-        type: '',
+        type: 'series',
 
         /**
          * @readOnly
@@ -110,7 +110,7 @@ define(function(require) {
             var value = data.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
-            var name = data.getName(dataIndex, true);
+            var name = data.getName(dataIndex);
 
             return !mutipleSeries
                 ? (encodeHTML(this.name) + '<br />'

@@ -46,14 +46,12 @@ define(function (require) {
          */
         seriesGroup: [],
 
-        init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
+        init: function (option) {
 
             option = this._fillOption(option);
             this.option = option;
 
-            SeriesModel.prototype.init.call(
-                this, option, parentModel, ecModel, dependentModels, seriesIndex
-            );
+            SeriesModel.prototype.init.apply(this, arguments);
 
             this.updateSelectedMap();
         },
@@ -113,7 +111,7 @@ define(function (require) {
         formatTooltip: function (dataIndex) {
             var data = this._data;
             var formattedValue = addCommas(data.getRawValue(dataIndex));
-            var name = data.getName(dataIndex, true);
+            var name = data.getName(dataIndex);
 
             var seriesGroup = this.seriesGroup;
             var seriesNames = [];

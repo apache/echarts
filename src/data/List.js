@@ -26,14 +26,15 @@ define(function (require) {
     var isObject = zrUtil.isObject;
 
     var IMMUTABLE_PROPERTIES = [
-        'stackedOn', '_nameList', '_rawData', '_optionModels'
+        'stackedOn', '_nameList', '_idList',
+        '_rawData', '_valueProp', '_optionModels'
     ];
 
     var transferImmuProperties = function (a, b) {
         zrUtil.each(IMMUTABLE_PROPERTIES, function (propName) {
             a[propName] = b[propName];
-        })
-    }
+        });
+    };
 
     /**
      * @constructor
@@ -64,7 +65,7 @@ define(function (require) {
             else {
                 dimensionInfo = dimensions[i];
                 dimensionName = dimensionInfo.name;
-                dimensionInfo.type = dimensionInfo.type || 'number'
+                dimensionInfo.type = dimensionInfo.type || 'number';
             }
             dimensionNames.push(dimensionName);
             dimensionInfos[dimensionName] = dimensionInfo;
@@ -105,6 +106,10 @@ define(function (require) {
          * @type {Array.<string>}
          */
         this._nameList = [];
+        /**
+         * @type {Array.<string>}
+         */
+        this._idList = [];
         /**
          * Models of data option is stored sparse for optimizing memory cost
          * @type {Array.<module:echarts/model/Model>}
@@ -147,9 +152,15 @@ define(function (require) {
 
         /**
          * Raw data
+         * @private
          */
         this._rawData = [];
-    }
+
+        /**
+         * @private
+         */
+        this._valueProp;
+    };
 
     var listProto = List.prototype;
 
@@ -166,10 +177,14 @@ define(function (require) {
      * Initialize from data
      * @param {Array.<Object|number|Array>} data
      * @param {Array.<string>} [nameList]
+     * @param {string} [valueProp='value']
      */
-    listProto.initData = function (data, nameList) {
+    listProto.initData = function (data, nameList, valueProp) {
+
+        valueProp = valueProp || 'value';
 
         this._rawData = data;
+        this._valueProp = valueProp;
 
         // Clear
         var optionModels = this._optionModels = [];
@@ -179,6 +194,9 @@ define(function (require) {
         var dimensions = this.dimensions;
         var size = data.length;
         var dimensionInfoMap = this._dimensionInfos;
+
+        var idList = [];
+        var nameRepeatCount = {};
 
         nameList = nameList || [];
 
@@ -199,16 +217,16 @@ define(function (require) {
 
         // Use the first data to indicate data type;
         var isValueArray = data[0] != null && zrUtil.isArray(
-            data[0].value == null ? data[0] : data[0].value
+            data[0][valueProp] == null ? data[0] : data[0][valueProp]
         );
         for (var idx = 0; idx < data.length; idx++) {
             var value = data[idx];
-            // Each data item contains value and other option
+            // Each data item contains `value` and other option
             // {
             //  value: []
             // }
-            if (data[idx] != null && data[idx].hasOwnProperty('value')) {
-                value = data[idx].value;
+            if (data[idx] != null && data[idx].hasOwnProperty(valueProp)) {
+                value = data[idx][valueProp];
                 var model = new Model(data[idx], this.hostModel);
                 var modelIdx = optionModels.length;
                 optionModelIndices[idx] = modelIdx;
@@ -257,18 +275,33 @@ define(function (require) {
             indices.push(idx);
         }
 
-        // Use the name in option as data id in two value axis case
+        // Use the name in option and create id
         for (var i = 0; i < optionModelIndices.length; i++) {
+            var id = '';
             if (!nameList[i]) {
                 var modelIdx = optionModelIndices[i];
                 var model = optionModels[modelIdx];
                 if (model && model.option) {
-                    nameList[i] = model.option.name || ('' + i);
+                    nameList[i] = model.option.name;
+                    // Try using the id in option
+                    id = model.option.id;
                 }
             }
+            var name = nameList[i] || '';
+            if (!id && name) {
+                // Use name as id and add counter to avoid same name
+                nameRepeatCount[name] = nameRepeatCount[name] || 0;
+                id = name;
+                if (nameRepeatCount[name] > 0) {
+                    id += '__ec__' + nameRepeatCount[name];
+                }
+                nameRepeatCount[name]++;
+            }
+            id && (idList[i] = id);
         }
 
         this._nameList = nameList;
+        this._idList = idList;
     };
 
     /**
@@ -326,7 +359,7 @@ define(function (require) {
             }
         }
         return true;
-    }
+    };
 
     /**
      * Get extent of data in one dimension
@@ -380,8 +413,9 @@ define(function (require) {
      */
     listProto.getRawValue = function (idx) {
         var itemOpt = this._rawData[idx];
-        if (itemOpt && itemOpt.hasOwnProperty('value')) {
-            return itemOpt.value;
+        var valueProp = this._valueProp;
+        if (itemOpt && itemOpt.hasOwnProperty(valueProp)) {
+            return itemOpt[valueProp];
         }
         return itemOpt;
     };
@@ -453,7 +487,7 @@ define(function (require) {
             return nearestIdx;
         }
         return -1;
-    }
+    };
 
     /**
      * Get raw data index
@@ -470,11 +504,17 @@ define(function (require) {
      * @param {boolean} [notDefaultIdx=false]
      * @return {string}
      */
-    listProto.getName = function (idx, notDefaultIdx) {
-        var nameList = this._nameList;
-        var rawIndex = this.indices[idx];
-        return nameList[rawIndex]
-            || (notDefaultIdx ? '' : (rawIndex + ''));
+    listProto.getName = function (idx) {
+        return this._nameList[this.indices[idx]] || '';
+    };
+
+    /**
+     * @param {number} idx
+     * @param {boolean} [notDefaultIdx=false]
+     * @return {string}
+     */
+    listProto.getId = function (idx) {
+        return this._idList[this.indices[idx]] || (this.getRawIndex(idx) + '');
     };
 
 
@@ -703,10 +743,10 @@ define(function (require) {
      * @return {module:echarts/data/DataDiffer}
      */
     listProto.diff = function (oldList) {
-        var nameList = this._nameList;
+        var idList = this._idList;
         return new DataDiffer(
             oldList ? oldList.indices : [], this.indices, function (idx) {
-                return nameList && nameList[idx] || idx;
+                return idList[idx] || (idx + '');
             }
         );
     };
@@ -811,7 +851,7 @@ define(function (require) {
     var setItemDataAndSeriesIndex = function (child) {
         child.seriesIndex = this.seriesIndex;
         child.dataIndex = this.dataIndex;
-    }
+    };
     /**
      * @param {number} idx
      * @param {module:zrender/Element} el
@@ -821,7 +861,7 @@ define(function (require) {
         // Add data index and series index for indexing the data by element
         // Useful in tooltip
         el.dataIndex = idx;
-        el.seriesIndex = hostModel && hostModel.seriesIndex;;
+        el.seriesIndex = hostModel && hostModel.seriesIndex;
         if (el.type === 'group') {
             el.traverse(setItemDataAndSeriesIndex, el);
         }
