@@ -26,13 +26,16 @@ define(function(require) {
             y2: null,
             width: '80%',
             height: '80%',
-            sort: 'desc',                         // Can be null or 'asc' or 'desc'
+            sort: true,                         // Can be null or true or 'asc' or 'desc'
             clipWindow: 'origin',                      // 缩放时窗口大小。'origin' or 'fullscreen'
             squareRatio: 0.5 * (1 + Math.sqrt(5)), // golden ratio
             root: '',
             visualDimension: 'value',                    // 默认第一个维度。
             zoomToNodeRatio: 0.32 * 0.32,                 // zoom to node时 node占可视区域的面积比例。
             roam: true,
+            animation: true,
+            animationDurationUpdate: 1500,
+            animationEasing: 'quadraticInOut',
             breadcrumb: {
                 show: true,
                 height: 22,

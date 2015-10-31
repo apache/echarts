@@ -73,9 +73,13 @@ define(function (require) {
                         ? [rootRect.width, rootRect.height]
                         : [containerWidth, containerHeight];
 
+                    var sort = seriesModel.get('sort');
+                    if (sort && sort !== 'asc' && sort !== 'desc') {
+                        sort = 'desc';
+                    }
                     var options = {
                         squareRatio: seriesModel.get('squareRatio'),
-                        sort: seriesModel.get('sort')
+                        sort: sort
                     };
 
                     viewRoot.setLayout({
