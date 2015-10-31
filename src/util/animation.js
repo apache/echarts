@@ -77,7 +77,7 @@
                 for (var i = 0, len = storage.length; i < len; i++) {
                     count += storage[i].el.animators.length;
                 }
-console.log(count);
+
                 // No animators. This should be checked before animators[i].start(),
                 // because 'done' may be executed immediately if no need to animate.
                 if (!count) {

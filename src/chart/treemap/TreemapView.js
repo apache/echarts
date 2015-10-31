@@ -83,12 +83,13 @@
 
             var payloadType = payload && payload.type;
             var layoutInfo = seriesModel.layoutInfo;
+            var isInit = !this._oldTree;
 
             var containerGroup = this._giveContainerGroup(layoutInfo);
 
             var renderResult = this._doRender(containerGroup, seriesModel);
 
-            (!payloadType || payloadType === 'treemapZoomToNode')
+            (!isInit && (!payloadType || payloadType === 'treemapZoomToNode'))
                 ? this._doAnimation(containerGroup, renderResult, seriesModel)
                 : renderResult.renderFinally();
 

@@ -26,7 +26,8 @@ define(function(require) {
             y2: null,
             width: '80%',
             height: '80%',
-            sort: true,                         // Can be null or true or 'asc' or 'desc'
+            sort: true,                         // Can be null or false or true
+                                                // (order by desc default, asc not supported yet (strange effect))
             clipWindow: 'origin',                      // 缩放时窗口大小。'origin' or 'fullscreen'
             squareRatio: 0.5 * (1 + Math.sqrt(5)), // golden ratio
             root: '',
