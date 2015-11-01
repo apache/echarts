@@ -42,5 +42,5 @@ define(function (require) {
         linkToTree: function (list, tree) {
             linkList(list, tree, 'tree');
         }
-    }
+    };
 });

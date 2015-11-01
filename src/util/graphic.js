@@ -159,7 +159,7 @@ define(function(require) {
     function doSingleEnterHover(el) {
         if (el.__isHover) {
             return;
-        };
+        }
         if (el.__hoverStlDirty) {
             var stroke = el.style.stroke;
             var fill = el.style.fill;
@@ -266,7 +266,7 @@ define(function(require) {
 
     /**
      * Set hover style of element
-     * @param {module:zrender/graphic/Displayable} el
+     * @param {module:zrender/Element} el
      * @param {Object} [hoverStyle]
      */
     graphic.setHoverStyle = function (el, hoverStyle) {

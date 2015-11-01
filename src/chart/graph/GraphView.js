@@ -41,7 +41,10 @@ define(function (require) {
 
             lineDraw.updateData(
                 data.graph.edgeData,
-                seriesModel, api, false
+                seriesModel, api, false,
+                function (idx) {
+                    return data.graph.edges[idx].dataIndex >= 0;
+                }
             );
 
             // Save the original lineWidth

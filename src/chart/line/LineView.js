@@ -110,8 +110,8 @@ define(function(require) {
             var stackedOnPoints = getStackedOnPoints(coordSys, data);
 
 
-            var symbolIgnoreMap = !isCoordSysPolar && !seriesModel.get('showAllSymbol')
-                && this._getSymbolIgnored(data, coordSys);
+            var isSymbolIgnore = !isCoordSysPolar && !seriesModel.get('showAllSymbol')
+                && this._getSymbolIgnoreFunc(data, coordSys);
 
             // Initialization animation or coordinate system changed
             if (
@@ -120,7 +120,7 @@ define(function(require) {
                 && hasAnimation)
             ) {
                 symbolDraw.updateData(
-                    data, seriesModel, api, hasAnimation, symbolIgnoreMap
+                    data, seriesModel, api, hasAnimation, isSymbolIgnore
                 );
 
                 polyline = this._newPolyline(group, points, coordSys, hasAnimation);
@@ -135,7 +135,7 @@ define(function(require) {
             else {
 
                 symbolDraw.updateData(
-                    data, seriesModel, api, false, symbolIgnoreMap
+                    data, seriesModel, api, false, isSymbolIgnore
                 );
 
                 // Update clipPath
@@ -281,20 +281,17 @@ define(function(require) {
         /**
          * @private
          */
-        _getSymbolIgnored: function (data, coordSys) {
+        _getSymbolIgnoreFunc: function (data, coordSys) {
             var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
-            var ignoreMap;
             // `getLabelInterval` is provided by echarts/component/axis
             if (categoryAxis && categoryAxis.getLabelInterval) {
-                ignoreMap = [];
                 var labelInterval = categoryAxis.getLabelInterval();
-                data.each(function (idx) {
-                    ignoreMap[idx] = (typeof labelInterval === 'function')
-                        && !labelInterval(idx, categoryAxis.scale.getItem(idx))
-                        || idx % (labelInterval + 1);
-                });
+                return function (idx) {
+                    return (typeof labelInterval === 'function')
+                            && !labelInterval(idx, categoryAxis.scale.getItem(idx))
+                            || idx % (labelInterval + 1);
+                };
             }
-            return ignoreMap;
         },
 
         /**

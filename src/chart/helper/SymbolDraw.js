@@ -65,10 +65,10 @@ define(function (require) {
      * @param {module:echarts/model/Series} seriesModel
      * @param {module:echarts/ExtensionAPI} api
      * @param {boolean} [enableAnimation=false]
-     * @param {Array.<boolean>} [ignoreMap]
+     * @param {Array.<boolean>} [isIgnore]
      */
     symbolProto.updateData = function (
-        data, seriesModel, api, enableAnimation, ignoreMap
+        data, seriesModel, api, enableAnimation, isIgnore
     ) {
 
         var group = this.group;
@@ -76,7 +76,7 @@ define(function (require) {
 
         data.diff(oldData)
             .add(function (newIdx) {
-                if (data.hasValue(newIdx) && !(ignoreMap && ignoreMap[newIdx])) {
+                if (data.hasValue(newIdx) && !(isIgnore && isIgnore(newIdx))) {
                     var symbolEl = createSymbol(data, newIdx, enableAnimation);
 
                     if (symbolEl) {
@@ -88,7 +88,7 @@ define(function (require) {
             .update(function (newIdx, oldIdx) {
                 var el = oldData.getItemGraphicEl(oldIdx);
                 // Empty data
-                if (!data.hasValue(newIdx) || (ignoreMap && ignoreMap[newIdx])) {
+                if (!data.hasValue(newIdx) || (isIgnore && isIgnore(newIdx))) {
                     group.remove(el);
                     return;
                 }
@@ -102,7 +102,7 @@ define(function (require) {
                 // Symbol changed
                 if (
                     oldData.getItemVisual(oldIdx, 'symbol') !== symbolType
-                    || (!el && !(ignoreMap && ignoreMap[newIdx]))
+                    || (!el && !(isIgnore && isIgnore(newIdx)))
                 ) {
                     // Remove the old one
                     el && group.remove(el);
