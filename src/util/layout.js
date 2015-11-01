@@ -139,10 +139,10 @@ define(function(require) {
         if (!notAlignX) {
             switch (positionInfo.x || positionInfo.x2) {
                 case 'center':
-                    x = containerWidth / 2 - width / 2;
+                    x = containerWidth / 2 - width / 2 - margin[3];
                     break;
                 case 'right':
-                    x = containerWidth - width;
+                    x = containerWidth - width - margin[3] - margin[1];
                     break;
             }
         }
@@ -150,10 +150,10 @@ define(function(require) {
             switch (positionInfo.y || positionInfo.y2) {
                 case 'middle':
                 case 'center':
-                    y = containerHeight / 2 - height / 2;
+                    y = containerHeight / 2 - height / 2 - margin[0];
                     break;
                 case 'bottom':
-                    y = containerHeight - height;
+                    y = containerHeight - height - margin[0] - margin[2];
                     break;
             }
         }

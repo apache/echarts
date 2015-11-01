@@ -135,7 +135,7 @@ define(function (require) {
             // Render backgroun after group is positioned
             // Or will get rect of group with padding
             // FIXME
-            this._renderBG(legendModel, group)
+            this._renderBG(legendModel, group);
         },
 
         // FIXME 通用？
