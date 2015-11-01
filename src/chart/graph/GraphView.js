@@ -13,13 +13,14 @@ define(function (require) {
             var lineDraw = new LineDraw();
             var group = this.group;
 
+            var controller = new RoamController(api.getZr(), group);
+
             group.add(symbolDraw.group);
             group.add(lineDraw.group);
 
             this._symbolDraw = symbolDraw;
             this._lineDraw = lineDraw;
-
-            this._controller = new RoamController(api.getZr(), group);
+            this._controller = controller;
         },
 
         render: function (seriesModel, ecModel, api) {
@@ -68,7 +69,28 @@ define(function (require) {
 
             controller.disable();
             seriesModel.get('roam') && controller.enable();
-            controller.on('zoom', this._updateNodeAndLinkScale, this);
+
+            controller
+                .off('pan')
+                .off('zoom')
+                .on('pan', function (dx, dy) {
+                    api.dispatch({
+                        name: seriesModel.name,
+                        type: 'graphRoam',
+                        dx: dx,
+                        dy: dy
+                    });
+                })
+                .on('zoom', function (zoom, mouseX, mouseY) {
+                    api.dispatch({
+                        name: seriesModel.name,
+                        type: 'graphRoam',
+                        zoom:  zoom,
+                        originX: mouseX,
+                        originY: mouseY
+                    });
+                })
+                .on('zoom', this._updateNodeAndLinkScale, this);
         },
 
         _updateNodeAndLinkScale: function () {

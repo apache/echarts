@@ -253,8 +253,9 @@ define(function (require) {
         dispatch: function (payload) {
             var actionWrap = actions[payload.type];
             if (actionWrap) {
+                var updateMethod = actionWrap.actionInfo.update || 'update';
                 actionWrap.action(payload, this._model);
-                this[actionWrap.actionInfo.update || 'update'](payload);
+                updateMethod !== 'none' && this[updateMethod](payload);
             }
         },
 

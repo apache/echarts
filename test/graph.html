@@ -53,7 +53,9 @@
                     chart.setOption({
                         tooltip: {},
                         legend: [{
-                            data: categories.map(function (a) {return a.name})
+                            data: categories.map(function (a) {
+                                return a.name;
+                            })
                         }],
                         dataRange: {
                             max: 100,
@@ -68,6 +70,7 @@
                                 data: graph.nodes,
                                 links: graph.links,
                                 categories: categories,
+                                roam: true,
                                 label: {
                                     normal: {
                                         position: 'right'
