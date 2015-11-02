@@ -16,4 +16,10 @@ define(function (require) {
     echarts.registerVisualCoding('chart', require('./graph/categoryVisual'));
 
     echarts.registerLayout(require('./graph/simpleLayout'));
+    echarts.registerLayout(require('./graph/circularLayout'));
+
+    // Graph view coordinate system
+    echarts.registerCoordinateSystem('graphView', {
+        create: require('./graph/createView')
+    });
 });

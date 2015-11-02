@@ -163,7 +163,7 @@ define(function(require) {
 
             var params = this.getFormatParams(dataIndex);
             if (!formatter) {
-                formatter = itemModel.get('label.' + status + '.formatter')
+                formatter = itemModel.get('label.' + status + '.formatter');
             }
 
             if (typeof formatter === 'function') {

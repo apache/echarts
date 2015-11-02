@@ -8,6 +8,10 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
 
     function mousedown(e) {
+        if (e.target && e.target.draggable) {
+            return;
+        }
+
         var x = e.offsetX;
         var y = e.offsetY;
         var rect = this.rect;

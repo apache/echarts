@@ -40,17 +40,26 @@ define(function (require) {
                     group.remove(line);
                     return;
                 }
-                if (shape.cpx1 != null && shape.type === 'line') {
-                    var oldShape = line.shape;
-                    line = new graphic.BezierCurve({
-                        shape: oldShape
-                    });
-                    line.setShape({
-                        cpx1: (oldShape.x1 + oldShape.x2) / 2,
-                        cpy1: (oldShape.y1 + oldShape.y2) / 2
+                if (!line) {
+                    line = new graphic[shape.cpx1 != null ? 'BezierCurve' : 'Line']({
+                        shape: shape
                     });
                 }
-                api.updateGraphicEl(line, shape);
+                else {
+                    if (shape.cpx1 != null && line.type === 'line') {
+                        var oldShape = line.shape;
+                        line = new graphic.BezierCurve({
+                            shape: oldShape
+                        });
+                        line.setShape({
+                            cpx1: (oldShape.x1 + oldShape.x2) / 2,
+                            cpy1: (oldShape.y1 + oldShape.y2) / 2
+                        });
+                    }
+                    api.updateGraphicEl(line, {
+                        shape: shape
+                    });
+                }
 
                 data.setItemGraphicEl(newIdx, line);
                 group.add(line);

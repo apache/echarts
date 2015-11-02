@@ -37,7 +37,7 @@ define(function (require) {
             var lineDraw = this._lineDraw;
 
             symbolDraw.updateData(
-                data, seriesModel, api, false
+                data, seriesModel, api, true
             );
 
             lineDraw.updateData(
