@@ -32,13 +32,15 @@ define(function (require) {
                 {},
                 levelItemStyles,
                 seriesItemStyleModel,
-                seriesModel.getViewRoot().getAncestors()
+                seriesModel.getViewRoot().getAncestors(),
+                seriesModel
             );
         });
     };
 
     function travelTree(
-        node, designatedVisual, levelItemStyles, seriesItemStyleModel, viewRootAncestors
+        node, designatedVisual, levelItemStyles, seriesItemStyleModel,
+        viewRootAncestors, seriesModel
     ) {
         var nodeModel = node.getModel();
         var nodeLayout = node.getLayout();
@@ -81,9 +83,12 @@ define(function (require) {
                 if (child.depth >= viewRootAncestors.length
                     || child === viewRootAncestors[child.depth]
                 ) {
-                    var childVisual = mapVisual(nodeModel, visuals, child, index, mappingWrap);
+                    var childVisual = mapVisual(
+                        nodeModel, visuals, child, index, mappingWrap, seriesModel
+                    );
                     travelTree(
-                        child, childVisual, levelItemStyles, seriesItemStyleModel, viewRootAncestors
+                        child, childVisual, levelItemStyles, seriesItemStyleModel,
+                        viewRootAncestors, seriesModel
                     );
                 }
             });
@@ -159,15 +164,19 @@ define(function (require) {
             return;
         }
 
+        var colorMapping;
         var mappingType = rangeVisual.name === 'color'
             ? (
-                nodeModel.get('colorMapping') === 'byValue'
-                    ? 'color' : 'colorByIndex'
+                colorMapping = nodeModel.get('colorMapping'),
+                colorMapping === 'byValue'
+                    ? 'color'
+                    : 'colorByIndex' // When colorMapping is byIndex and byId
             )
             : rangeVisual.name;
 
-        var dataExtent = mappingType === 'colorByIndex'
-            ? null : nodeLayout.dataExtent;
+        var dataExtent = (
+            mappingType === 'colorByIndex' || mappingType === 'colorById'
+        ) ? null : nodeLayout.dataExtent;
 
         return {
             mapping: new VisualMapping({
@@ -176,7 +185,8 @@ define(function (require) {
                 dataNormalizer: 'linear',
                 visual: rangeVisual.range
             }),
-            visualName: rangeVisual.name
+            visualName: rangeVisual.name,
+            colorMapping: colorMapping
         };
     }
 
@@ -194,13 +204,19 @@ define(function (require) {
         return (isArray(range) && range.length) ? {name: name, range: range} : null;
     }
 
-    function mapVisual(nodeModel, visuals, child, index, mappingWrap) {
+    function mapVisual(nodeModel, visuals, child, index, mappingWrap, seriesModel) {
         var childVisuals = zrUtil.extend({}, visuals);
 
         if (mappingWrap) {
             var mapping = mappingWrap.mapping;
-            var value = mapping.type === 'colorByIndex'
-                ? index : child.getValue(nodeModel.get('visualDimension'));
+            var mappingType = mapping.type;
+            var value = mappingType === 'colorByIndex'
+                ? (
+                    mappingWrap.colorMapping === 'byId'
+                        ? seriesModel.mapIdToIndex(child.getId())
+                        : index // When colorMapping is 'byIndex'
+                )
+                : child.getValue(nodeModel.get('visualDimension'));
 
             childVisuals[mappingWrap.visualName] = mapping.mapValueToVisual(value);
         }

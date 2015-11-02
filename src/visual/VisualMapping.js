@@ -11,11 +11,11 @@ define(function (require) {
      * @param {Object} option
      * @param {string} [option.type] See visualHandlers.
      * @param {string} [option.dataNormalizer] 'linear' or 'piecewise'
-     * @param {Array.<number>=} [option.dataExtent=] [minExtent, maxExtent],
+     * @param {Array.<number>=} [option.dataExtent] [minExtent, maxExtent],
      *                                              required when dataNormalizer is 'linear'
-     * @param {Array.<Array>=} [option.intervals=] [[min1, max1], [min2, max2], ...],
+     * @param {Array.<Array>=} [option.intervals] [[min1, max1], [min2, max2], ...],
      *                                            required when dataNormalizer is 'piecewise'
-     * @param {Array.<Array>=} [option.intervalVisual=] [value1, value2, ...],
+     * @param {Array.<Array>=} [option.intervalVisual] [value1, value2, ...],
      *                                            specific visual of some interval,
      *                                            available when dataNormalizer is 'piecewise'
      * @param {Array} [option.visual=] Visual data.
@@ -24,16 +24,19 @@ define(function (require) {
 
         /**
          * @readOnly
+         * @type {string}
          */
         this.type = option.type;
 
         /**
          * @readOnly
+         * @type {Object}
          */
         this.option = zrUtil.clone(option, true);
 
         /**
          * @private
+         * @type {Function}
          */
         this._normalizeData = dataNormalizers[option.dataNormalizer];
 
@@ -62,9 +65,7 @@ define(function (require) {
 
         color: {
 
-            applyVisual: function (value, getter, setter) {
-                setter('color', this.mapValueToVisual(value));
-            },
+            applyVisual: defaultApplyColor,
 
             mapValueToVisual: function (value) {
                 var optionData = this.option.visual;
@@ -89,9 +90,8 @@ define(function (require) {
         },
 
         colorByIndex: {
-            applyVisual: function (index, getter, setter) {
-                setter('color', this.mapValueToVisual(index));
-            },
+
+            applyVisual: defaultApplyColor,
 
             mapValueToVisual: function (index) {
                 var visual = this.option.visual;
@@ -171,6 +171,10 @@ define(function (require) {
         return arr[
             Math.round(linearMap(normalized, [0, 1], [0, arr.length - 1], true))
         ];
+    }
+
+    function defaultApplyColor(value, getter, setter) {
+        setter('color', this.mapValueToVisual(value));
     }
 
     var dataNormalizers = {

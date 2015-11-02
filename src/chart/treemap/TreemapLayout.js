@@ -61,7 +61,7 @@ define(function (require) {
 
                 // Fetch payload info.
                 var payloadType = payload && payload.type;
-                var targetInfo = helper.retrieveTargetNodeInfo(payload, seriesModel);
+                var targetInfo = helper.retrieveTargetInfo(payload, seriesModel);
                 var rootRect = (payloadType === 'treemapRender' || payloadType === 'treemapMove')
                     ? payload.rootRect : null;
                 var viewRoot = seriesModel.getViewRoot();
@@ -468,7 +468,7 @@ define(function (require) {
             return defaultPosition;
         }
 
-        // If targetInfo is fetched by 'retrieveTargetNodeInfo',
+        // If targetInfo is fetched by 'retrieveTargetInfo',
         // old tree and new tree are the same tree,
         // so the node still exists and we can visit it.
 

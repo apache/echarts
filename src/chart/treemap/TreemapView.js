@@ -95,7 +95,7 @@
 
             this._resetController(api);
 
-            var targetInfo = helper.retrieveTargetNodeInfo(payload, seriesModel);
+            var targetInfo = helper.retrieveTargetInfo(payload, seriesModel);
             this._renderBreadcrumb(seriesModel, api, targetInfo);
         },
 
@@ -183,7 +183,7 @@
 
                 function getKey(node) {
                     // Identify by name or raw index.
-                    return node.name != null ? node.name : node.getRawIndex();
+                    return node.getId();
                 }
 
                 function processNode(newIndex, oldIndex) {
@@ -296,13 +296,12 @@
                     var textRect = textStyleModel.getTextRect(text);
                     var showLabel = labelModel.get('show');
 
-                    if (!showLabel
-                        || (
-                            showLabel !== 'always'
-                            && (textRect.width > contentWidth || textRect.height > contentHeight)
-                        )
-                    ) {
+                    if (!showLabel || textRect.height > contentHeight) {
                         text = '';
+                    }
+                    else if (textRect.width > contentWidth) {
+                        text = textStyleModel.get('ellipsis')
+                            ? textStyleModel.ellipsis(text, contentWidth) : '';
                     }
 
                     // For tooltip.
@@ -322,6 +321,7 @@
                         textPosition: this._getTextPosition(labelModel, thisWidth, thisHeight),
                         textFill: textStyleModel.get('color'),
                         textAlign: textStyleModel.get('align'),
+                        textBaseline: textStyleModel.get('baseline'),
                         textFont: textStyleModel.getFont()
                     });
                     group.add(content);
@@ -481,6 +481,11 @@
                             el.setStyle('opacity', 0);
                             target.style = {opacity: 1};
                         }
+                        // When animation is stopped for succedent animation starting,
+                        // el.style.opacity might not be 1
+                        else if (el.style.opacity !== 1) {
+                            target.style = {opacity: 1};
+                        }
                     }
                     animationWrap.add(el, target, duration, easing);
                 });
@@ -539,10 +544,14 @@
 
                 var rootLayout = viewRoot.getLayout();
 
+                if (!rootLayout) {
+                    return;
+                }
+
                 this.api.dispatch({
                     type: 'treemapMove',
                     from: this.uid,
-                    seriesId: this.seriesModel.uid,
+                    seriesUID: this.seriesModel.uid,
                     rootRect: {
                         x: rootLayout.x + dx, y: rootLayout.y + dy,
                         width: rootLayout.width, height: rootLayout.height
@@ -564,6 +573,11 @@
                 }
 
                 var rootLayout = viewRoot.getLayout();
+
+                if (!rootLayout) {
+                    return;
+                }
+
                 var rect = new BoundingRect(
                     rootLayout.x, rootLayout.y, rootLayout.width, rootLayout.height
                 );
@@ -584,7 +598,7 @@
                 this.api.dispatch({
                     type: 'treemapRender',
                     from: this.uid,
-                    seriesId: this.seriesModel.uid,
+                    seriesUID: this.seriesModel.uid,
                     rootRect: {
                         x: rect.x, y: rect.y,
                         width: rect.width, height: rect.height
@@ -661,8 +675,8 @@
             this.api.dispatch({
                 type: 'treemapZoomToNode',
                 from: this.uid,
-                seriesId: this.seriesModel.uid,
-                targetInfo: targetInfo
+                seriesUID: this.seriesModel.uid,
+                targetNode: targetInfo.node
             });
         },
 

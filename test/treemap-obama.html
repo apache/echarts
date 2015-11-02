@@ -15,7 +15,7 @@
                 padding: 0;
             }
             #main {
-                margin-top: 70px;
+                margin-top: 90px;
                 position: absolute;
                 left: 0;
                 right: 0;
@@ -46,7 +46,15 @@
                 padding-left: 10px;
             }
             .controller .mode-body {
-                margin-left: 80px;
+                float: left;
+                width: 700px;
+            }
+            .controller .query {
+                margin-left: 800px;
+                padding-top: 10px;
+            }
+            .controller .query #query-input {
+                width: 250px;
             }
             .tooltip-title {
                 color: yellow;
@@ -58,11 +66,15 @@
             <div class="mode-title">示例模式<br>(Mode)</div>
             <div class="mode-body">
                 <input type="radio" id="area-meaning-0" name="area-meaning" onclick="areaMeasureChange(0);" checked="checked"/>
-                <label for="area-meaning-0">面积代表“2012预算额” (Area represents '2012 Amount)</label><br>
-                <input type="radio" id="area-meaning-1" name="area-meaning" onclick="areaMeasureChange(1);"/>
-                <label for="area-meaning-1">面积代表“和2010相比的增长率” (Area represents 'Change from 2010')</label><br>
+                <label for="area-meaning-0">面积代表“2012年预算额” (Area represents '2012 Amount)</label><br>
                 <input type="radio" id="area-meaning-2" name="area-meaning" onclick="areaMeasureChange(2);"/>
-                <label for="area-meaning-2">面积代表“2012预算额”，明暗代表“2010相比的增长率” (Area represents '2012 Amount' and color-alpha represents 'Change from 2010')</label>
+                <label for="area-meaning-2">面积代表“2012年预算额”，明暗代表“2011年相比的增长率”<br>&nbsp;&nbsp;&nbsp;&nbsp; (Area represents '2012 Amount' and color-alpha represents 'Change from 2011')</label><br>
+                <input type="radio" id="area-meaning-1" name="area-meaning" onclick="areaMeasureChange(1);"/>
+                <label for="area-meaning-1">面积代表“2011年预算额” (Area represents '2011 Amount')</label>
+            </div>
+            <div class="query">
+                <input id="query-input" type="text" placeholder="请输入节点名 (Please node name)" onkeypress="if (event.keyCode === 13) { query(); return false; }"/>
+                <input type="button" class="query-btn" value="检索节点(query)" onclick="query();" />
             </div>
         </div>
         <div id="main"></div>
@@ -73,6 +85,8 @@
 
             var chart;
             var formatUtil;
+
+            var SERIES_NAME = 'Obama’s 2012 Budget Proposal: How $3.7 Trillion is Spent';
 
             require([
                 'echarts',
@@ -88,18 +102,61 @@
                         formatter: getTooltipFormatter(mode)
                     },
                     series: [{
-                        visualDimension: mode === 2 ? 'a' : null,
-                        data: buildData(mode),
+                        visualDimension: mode === 2 ? 'b' : null,
+                        data: buildData(mode, window.obama_budget_2012),
                         levels: getLevelOption(mode)
                     }]
                 });
             }
 
-            function buildData(mode) {
-                return buildDataRecursively(mode, window.obama_budget_2012);
+            function query() {
+                var nodeName = document.getElementById('query-input').value;
+                // 先找精确匹配的
+                var nodeIdList = findNodeId(nodeName, window.obama_budget_2012);
+                // 再找模糊匹配的
+                if (!nodeIdList.length) {
+                    nodeIdList = findNodeId(nodeName, window.obama_budget_2012, true);
+                }
+
+                if (nodeIdList.length) {
+                    // FIXME
+                    // 接口？
+                    chart.dispatch({
+                        type: 'treemapZoomToNode',
+                        seriesId: SERIES_NAME,
+                        // 这个示例中简单处理，只聚焦到找到的第一个节点上。
+                        targetNodeId: nodeIdList[0]
+                    });
+                }
+                else {
+                    alert('没有找到节点 (No result)');
+                }
             }
 
-            function buildDataRecursively(mode, originList) {
+            function findNodeId(nodeName, originList, fuzzy) {
+                var out = [];
+                nodeName = nodeName.toLowerCase();
+
+                for (var i = 0, len = originList.length; i < len; i++) {
+                    var node = originList[i];
+                    if (node.name
+                        && (
+                            fuzzy
+                            ? node.name.toLowerCase().indexOf(nodeName) === 0
+                            : node.name.toLowerCase() === nodeName
+                        )
+                    ) {
+                        out.push(node.id);
+                    }
+                    if (node.children) {
+                        out.push.apply(out, findNodeId(nodeName, node.children, fuzzy));
+                    }
+                }
+
+                return out;
+            }
+
+            function buildData(mode, originList) {
                 var out = [];
 
                 for (var i = 0; i < originList.length; i++) {
@@ -112,7 +169,7 @@
                     }
 
                     // Calculate amount per household.
-                    value[2] = value[0] / window.household_america_2012;
+                    value[3] = value[0] / window.household_america_2012;
 
                     // if mode === 0 and mode === 2 do nothing
                     if (mode === 1) {
@@ -123,7 +180,7 @@
                     }
 
                     if (node.children) {
-                        newNode.children = buildDataRecursively(mode, node.children);
+                        newNode.children = buildData(mode, node.children);
                     }
                 }
 
@@ -153,6 +210,7 @@
                                 '#d4df5a', '#cd4870'
                             ]
                             : null,
+                        colorMapping: 'byId',
                         itemStyle: {
                             normal: {
                                 borderWidth: 3,
@@ -178,22 +236,27 @@
 
             function getTooltipFormatter(mode) {
                 var amountIndex = mode === 1 ? 1 : 0;
-                var changeIndex = mode === 1 ? 0 : 1;
+                var amountIndex2011 = mode === 1 ? 0 : 1;
 
                 return function (info) {
                     var value = info[0].value;
 
                     var amount = value[amountIndex];
                     amount = isValidNumber(amount)
-                        ? formatUtil.addCommas(value[amountIndex] * 1000) + '$'
+                        ? formatUtil.addCommas(amount * 1000) + '$'
                         : '-';
 
-                    var perHousehold = value[2];
+                    var amount2011 = value[amountIndex2011];
+                    amount2011 = isValidNumber(amount2011)
+                        ? formatUtil.addCommas(amount2011 * 1000) + '$'
+                        : '-';
+
+                    var perHousehold = value[3];
                     perHousehold = isValidNumber(perHousehold)
                         ? formatUtil.addCommas((+perHousehold.toFixed(4)) * 1000) + '$'
                         : '-';
 
-                    var change = value[changeIndex];
+                    var change = value[2];
                     change = isValidNumber(change)
                         ? change.toFixed(2) + '%'
                         : '-';
@@ -202,7 +265,8 @@
                         '<div class="tooltip-title">' + formatUtil.encodeHTML(info[0].name) + '</div>',
                         '2012 Amount: &nbsp;&nbsp;' + amount + '<br>',
                         'Per Household: &nbsp;&nbsp;' + perHousehold + '<br>',
-                        'Change From 2010: &nbsp;&nbsp;' + change
+                        '2011 Amount: &nbsp;&nbsp;' + amount2011 + '<br>',
+                        'Change From 2011: &nbsp;&nbsp;' + change
                     ].join('');
                 }
             }
@@ -217,9 +281,9 @@
 
                 chart.setOption({
 
-                    legend: {
-                        data: ['Obama’s 2012 Budget Proposal: How $3.7 Trillion is Spent']
-                    },
+                    // legend: {
+                    //     data: [SERIES_NAME]
+                    // },
 
                     tooltip: {
                         formatter: getTooltipFormatter(0)
@@ -227,11 +291,16 @@
 
                     series: [
                         {
-                            name:'Obama’s 2012 Budget Proposal: How $3.7 Trillion is Spent',
-                            type:'treemap',
+                            name: SERIES_NAME,
+                            type: 'treemap',
                             label: {
                                 show: true,
-                                formatter: "{b}"
+                                formatter: "{b}",
+                                normal: {
+                                    textStyle: {
+                                        ellipsis: true
+                                    }
+                                }
                             },
                             itemStyle: {
                                 normal: {
@@ -239,7 +308,7 @@
                                 }
                             },
                             levels: getLevelOption(0),
-                            data: buildData('2012 Amount')
+                            data: buildData('2012 Amount', window.obama_budget_2012)
                         }
                     ]
                 });

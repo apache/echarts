@@ -8,9 +8,9 @@ define(function(require) {
     var echarts = require('../../echarts');
 
 
-    echarts.registerAction('dataZoom', function (event, ecModel) {
+    echarts.registerAction('dataZoom', function (payload, ecModel) {
 
-        var fromDataZoomModel = ecModel.getComponentById(event.dataZoomModelId);
+        var fromDataZoomModel = ecModel.getComponentById(payload.dataZoomModelId);
         if (!fromDataZoomModel) {
             return;
         }
@@ -26,7 +26,7 @@ define(function(require) {
         var effectedModels = linkedNodesFinder(fromDataZoomModel).nodes;
 
         zrUtil.each(effectedModels, function (dataZoomModel) {
-            dataZoomModel.setRange(event.dataZoomRange);
+            dataZoomModel.setRange(payload.dataZoomRange);
         });
     });
 

@@ -148,15 +148,15 @@ define(function(require) {
         },
 
         /**
-         * @param  {string} name
+         * @param  {string} id
          * @return {module:echarts/data/Tree~TreeNode}
          */
-        getNodeByName: function (name) {
-            if (this.name === name) {
+        getNodeById: function (id) {
+            if (this.getId() === id) {
                 return this;
             }
             for (var i = 0, children = this.children, len = children.length; i < len; i++) {
-                var res = children[i].getNodeByName(name);
+                var res = children[i].getNodeById(id);
                 if (res) {
                     return res;
                 }
@@ -265,6 +265,14 @@ define(function(require) {
          */
         getRawIndex: function () {
             return this.hostTree.data.getRawIndex(this.dataIndex);
+        },
+
+        /**
+         * @public
+         * @return {string}
+         */
+        getId: function () {
+            return this.hostTree.data.getId(this.dataIndex);
         }
     };
 

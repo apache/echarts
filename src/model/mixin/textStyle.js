@@ -1,5 +1,7 @@
 define(function (require) {
 
+    var textContain = require('zrender/contain/text');
+
     return {
         getFont: function () {
             return [
@@ -12,11 +14,17 @@ define(function (require) {
 
         getTextRect: function (text) {
             var textStyle = this.get('textStyle') || {};
-            return require('zrender/contain/text').getBoundingRect(
+            return textContain.getBoundingRect(
                 text,
                 this.getFont(),
                 textStyle.align,
                 textStyle.baseline
+            );
+        },
+
+        ellipsis: function (text, containerWidth, options) {
+            return textContain.ellipsis(
+                text, this.getFont(), containerWidth, options
             );
         }
     };

@@ -7,6 +7,7 @@ define(function(require) {
     var numberUtil = require('./number');
     var formatUtil = require('./format');
     var parsePercent = numberUtil.parsePercent;
+    var textContain = require('zrender/contain/text');
 
     var layout = {};
 
@@ -200,6 +201,22 @@ define(function(require) {
             positionInfo.x - groupRect.x,
             positionInfo.y - groupRect.y
         ];
+    };
+
+    /**
+     * @param {string} text
+     * @param {string} font See textStyle.getFont();
+     * @param {number} containerWidth
+     * @param {lineBreak} [lineBreak='\n']
+     * @return {string} Result text.
+     */
+    layout.textWrap = function (text, font, containerWidth, lineBreak) {
+        if (!text) {
+            return '';
+        }
+
+        lineBreak = lineBreak || '\n';
+        width = textContain.getWidth(text, font);
     };
 
     return layout;

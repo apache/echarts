@@ -1,29 +1,46 @@
 define(function (require) {
 
-    return {
+    var helper = {
 
         irrelevant: function (payload, seriesModel) {
-            return payload && payload.seriesId && seriesModel.uid !== payload.seriesId;
+            // It is irrelavant only when seriesUID or seriesId is
+            // specified and not equals to seriesModel's.
+            return payload
+                && (
+                    payload.seriesUID != null
+                    ? seriesModel.uid !== payload.seriesUID
+                    : payload.seriesId != null
+                    // FIXME
+                    // seriesModel.getId() ???
+                    ? payload.seriesId !== seriesModel.get('name')
+                    : false
+                );
+
         },
 
-        retrieveTargetNodeInfo: function (payload, seriesModel) {
-            if (payload && payload.seriesId && seriesModel.uid !== payload.seriesId) {
+        retrieveTargetInfo: function (payload, seriesModel) {
+            if (helper.irrelevant(payload, seriesModel)) {
                 return;
             }
             if (!payload || payload.type !== 'treemapZoomToNode') {
                 return;
             }
 
-            // FIXME
-            // 从payload中传来node是否合适？
             var root = seriesModel.getData().tree.root;
-            var targetInfo = payload.targetInfo;
-            if (!targetInfo || !root.contains(targetInfo.node)) {
-                return;
+            var targetNode = payload.targetNode;
+            if (targetNode && root.contains(targetNode)) {
+                return {node: targetNode};
             }
 
-            return targetInfo;
+            var targetNodeId = payload.targetNodeId;
+            if (targetNodeId != null && (targetNode = root.getNodeById(targetNodeId))) {
+                return {node: targetNode};
+            }
+
+            return null;
         }
 
     };
+
+    return helper;
 });

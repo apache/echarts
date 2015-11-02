@@ -8,6 +8,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             1226629000,
+            null,
             null
         ],
         "name": "Health and Human Services",
@@ -17,6 +18,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1105220000,
+                    1071808000,
                     3.11734937600765
                 ],
                 "name": "Centers for Medicare and Medicaid Services",
@@ -26,6 +28,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     34502000,
+                    34325000,
                     0.515659140568103
                 ],
                 "name": "Administration for Children and Families",
@@ -35,6 +38,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     31829000,
+                    30784000,
                     3.39462058212059
                 ],
                 "name": "National Institutes of Health",
@@ -44,6 +48,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     16180000,
+                    17334000,
                     -6.65743625245183
                 ],
                 "name": "Administration for Children and Families",
@@ -53,6 +58,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     7324000,
+                    6246000,
                     17.2590457893051
                 ],
                 "name": "Centers for Medicare and Medicaid Services",
@@ -62,6 +68,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     6821000,
+                    7506000,
                     -9.12603250732747
                 ],
                 "name": "Health Resources and Services Administration",
@@ -71,6 +78,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5893000,
+                    6467000,
                     -8.8758311427246
                 ],
                 "name": "Centers for Disease Control and Prevention",
@@ -80,6 +88,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     4624000,
+                    4053000,
                     14.0883296323711
                 ],
                 "name": "Indian Health Services",
@@ -89,6 +98,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3387000,
+                    3431000,
                     -1.28242494899447
                 ],
                 "name": "Substance Abuse and Mental Health Services Administration",
@@ -98,6 +108,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2744000,
+                    2599000,
                     5.57906887264332
                 ],
                 "name": "Food and Drug Administration",
@@ -107,6 +118,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2237000,
+                    1513000,
                     47.8519497686715
                 ],
                 "name": "Administration on Aging",
@@ -116,6 +128,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2155000,
+                    707000,
                     204.809052333805
                 ],
                 "name": "Health Resources and Services Administration",
@@ -125,6 +138,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1063000,
+                    4554000,
                     -76.6578831796223
                 ],
                 "name": "Departmental Management",
@@ -134,6 +148,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     809000,
+                    297000,
                     172.390572390572
                 ],
                 "name": "Centers for Disease Control and Prevention",
@@ -143,6 +158,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     647000,
+                    610000,
                     6.06557377049179
                 ],
                 "name": "Program Support Center",
@@ -152,6 +168,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     473000,
+                    1047000,
                     -54.8233046800382
                 ],
                 "name": "Departmental Management",
@@ -161,6 +178,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     210000,
+                    10000,
                     2000
                 ],
                 "name": "Administration on Aging",
@@ -169,6 +187,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    166000,
                     166000,
                     0
                 ],
@@ -179,6 +198,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     158000,
+                    158000,
                     0
                 ],
                 "name": "Indian Health Services",
@@ -188,6 +208,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     93000,
+                    20000,
                     365
                 ],
                 "name": "Substance Abuse and Mental Health Services Administration",
@@ -197,6 +218,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     53000,
+                    50000,
                     6.00000000000001
                 ],
                 "name": "Office of the Inspector General",
@@ -206,6 +228,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     39000,
+                    36000,
                     8.33333333333333
                 ],
                 "name": "Program Support Center",
@@ -214,6 +237,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    2000,
                     2000,
                     0
                 ],
@@ -226,6 +250,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             818284000,
+            null,
             null
         ],
         "name": "Social Security Administration",
@@ -235,6 +260,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     808041000,
+                    744812000,
                     8.48925634925324
                 ],
                 "name": "Social Security Administration",
@@ -244,6 +270,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     10243000,
+                    9294000,
                     10.2108887454271
                 ],
                 "name": "Social Security Administration",
@@ -255,6 +282,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             677483000,
+            null,
             null
         ],
         "name": "Defense--Military Programs",
@@ -264,6 +292,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     294891000,
+                    292828000,
                     0.704509131640418
                 ],
                 "name": "Operation and Maintenance",
@@ -273,6 +302,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     154057000,
+                    152586000,
                     0.964046504921812
                 ],
                 "name": "Military Personnel",
@@ -282,6 +312,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     128051000,
+                    135819000,
                     -5.71937652316686
                 ],
                 "name": "Procurement",
@@ -291,6 +322,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     75722000,
+                    80232000,
                     -5.62119852427959
                 ],
                 "name": "Research, Development, Test, and Evaluation",
@@ -300,6 +332,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     13073000,
+                    22578000,
                     -42.0985029674905
                 ],
                 "name": "Military Construction",
@@ -309,6 +342,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5475000,
+                    4516000,
                     21.2356067316209
                 ],
                 "name": "Military Personnel",
@@ -318,6 +352,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3136000,
+                    4159000,
                     -24.5972589564799
                 ],
                 "name": "Revolving and Management Funds",
@@ -327,6 +362,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1695000,
+                    2267000,
                     -25.2315835906484
                 ],
                 "name": "Family Housing",
@@ -336,6 +372,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     836000,
+                    804000,
                     3.98009950248757
                 ],
                 "name": "Operation and Maintenance",
@@ -345,6 +382,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     447000,
+                    756000,
                     -40.8730158730159
                 ],
                 "name": "Trust Funds",
@@ -354,6 +392,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     100000,
+                    756000,
                     null
                 ],
                 "name": "Research, Development, Test, and Evaluation",
@@ -365,6 +404,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             612004000,
+            null,
             null
         ],
         "name": "Treasury",
@@ -374,6 +414,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     474146000,
+                    413955000,
                     14.5404693746905
                 ],
                 "name": "Interest on the Public Debt",
@@ -383,6 +424,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     82053000,
+                    110583000,
                     -25.7996256205746
                 ],
                 "name": "Internal Revenue Service",
@@ -392,6 +434,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     24495000,
+                    12679000,
                     93.1934695165234
                 ],
                 "name": "Financial Management Service",
@@ -401,6 +444,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     13285000,
+                    12147000,
                     9.36856837079114
                 ],
                 "name": "Internal Revenue Service",
@@ -410,6 +454,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     9495000,
+                    15156000,
                     -37.3515439429929
                 ],
                 "name": "Departmental Offices",
@@ -419,6 +464,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3841000,
+                    2192000,
                     75.228102189781
                 ],
                 "name": "Financial Management Service",
@@ -428,6 +474,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3289000,
+                    2177000,
                     51.0794671566376
                 ],
                 "name": "Internal Revenue Service",
@@ -437,6 +484,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     510000,
+                    378000,
                     34.9206349206349
                 ],
                 "name": "Alcohol and Tobacco Tax and Trade Bureau",
@@ -446,6 +494,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     219000,
+                    244000,
                     -10.2459016393443
                 ],
                 "name": "Financial Management Service",
@@ -455,6 +504,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     166000,
+                    861000,
                     -80.7200929152149
                 ],
                 "name": "Departmental Offices",
@@ -464,6 +514,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     166000,
+                    185000,
                     -10.2702702702703
                 ],
                 "name": "Bureau of the Public Debt",
@@ -473,6 +524,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     127000,
+                    103000,
                     23.3009708737864
                 ],
                 "name": "Bureau of the Public Debt",
@@ -482,6 +534,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     114000,
+                    111000,
                     2.7027027027027
                 ],
                 "name": "Financial Crimes Enforcement Network",
@@ -491,6 +544,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     98000,
+                    103000,
                     -4.85436893203883
                 ],
                 "name": "Alcohol and Tobacco Tax and Trade Bureau",
@@ -502,6 +556,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             148349000,
+            null,
             null
         ],
         "name": "Agriculture",
@@ -511,6 +566,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     104212000,
+                    85935000,
                     21.2684005352883
                 ],
                 "name": "Food and Nutrition Service",
@@ -520,6 +576,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     9801000,
+                    10069000,
                     -2.66163472042904
                 ],
                 "name": "Farm Service Agency",
@@ -529,6 +586,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     7765000,
+                    8227000,
                     -5.61565576759451
                 ],
                 "name": "Food and Nutrition Service",
@@ -538,6 +596,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5125000,
+                    5313000,
                     -3.53849049501224
                 ],
                 "name": "Forest Service",
@@ -547,6 +606,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     4592000,
+                    2939000,
                     56.2436202790065
                 ],
                 "name": "Natural Resources Conservation Service",
@@ -556,6 +616,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2981000,
+                    4547000,
                     -34.4402903012976
                 ],
                 "name": "Risk Management Agency",
@@ -565,6 +626,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2124000,
+                    2376000,
                     -10.6060606060606
                 ],
                 "name": "Foreign Agricultural Service",
@@ -574,6 +636,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1777000,
+                    2139000,
                     -16.9237961664329
                 ],
                 "name": "Farm Service Agency",
@@ -583,6 +646,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1446000,
+                    1885000,
                     -23.289124668435
                 ],
                 "name": "Rural Housing Service",
@@ -592,6 +656,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1306000,
+                    1276000,
                     2.35109717868338
                 ],
                 "name": "Agricultural Marketing Service",
@@ -601,6 +666,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1209000,
+                    1351000,
                     -10.5107327905255
                 ],
                 "name": "National Institute of Food and Agriculture",
@@ -610,6 +676,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1011000,
+                    1019000,
                     -0.785083415112853
                 ],
                 "name": "Food Safety and Inspection Service",
@@ -619,6 +686,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     914000,
+                    1251000,
                     -26.9384492406075
                 ],
                 "name": "Agricultural Research Service",
@@ -628,6 +696,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     838000,
+                    949000,
                     -11.6965226554268
                 ],
                 "name": "Animal and Plant Health Inspection Service",
@@ -637,6 +706,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     695000,
+                    779000,
                     -10.783055198973
                 ],
                 "name": "Forest Service",
@@ -646,6 +716,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     577000,
+                    694000,
                     -16.8587896253602
                 ],
                 "name": "Rural Utilities Service",
@@ -655,6 +726,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     412000,
+                    431000,
                     -4.40835266821346
                 ],
                 "name": "Departmental Management",
@@ -664,6 +736,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     264000,
+                    320000,
                     -17.5
                 ],
                 "name": "Animal and Plant Health Inspection Service",
@@ -673,6 +746,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     234000,
+                    202000,
                     15.8415841584158
                 ],
                 "name": "Rural Development",
@@ -682,6 +756,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     175000,
+                    384000,
                     -54.4270833333333
                 ],
                 "name": "Rural Business_Cooperative Service",
@@ -691,6 +766,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     165000,
+                    162000,
                     1.85185185185186
                 ],
                 "name": "National Agricultural Statistics Service",
@@ -700,6 +776,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     134000,
+                    123000,
                     8.9430894308943
                 ],
                 "name": "National Institute of Food and Agriculture",
@@ -709,6 +786,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     99000,
+                    93000,
                     6.4516129032258
                 ],
                 "name": "Agricultural Marketing Service",
@@ -718,6 +796,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     91000,
+                    89000,
                     2.24719101123596
                 ],
                 "name": "Office of the Inspector General",
@@ -727,6 +806,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     86000,
+                    82000,
                     4.87804878048781
                 ],
                 "name": "Economic Research Service",
@@ -736,6 +816,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     82000,
+                    80000,
                     2.49999999999999
                 ],
                 "name": "Risk Management Agency",
@@ -745,6 +826,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     53000,
+                    18000,
                     194.444444444444
                 ],
                 "name": "Office of the Secretary",
@@ -754,6 +836,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     46000,
+                    44000,
                     4.54545454545454
                 ],
                 "name": "Office of the General Counsel",
@@ -763,6 +846,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     44000,
+                    42000,
                     4.76190476190477
                 ],
                 "name": "Grain Inspection, Packers and Stockyards Administration",
@@ -771,6 +855,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    22000,
                     22000,
                     0
                 ],
@@ -781,6 +866,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     18000,
+                    14000,
                     28.5714285714286
                 ],
                 "name": "Agricultural Research Service",
@@ -789,6 +875,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    15000,
                     15000,
                     0
                 ],
@@ -799,6 +886,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     15000,
+                    13000,
                     15.3846153846154
                 ],
                 "name": "Office of Chief Economist",
@@ -807,6 +895,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    10000,
                     10000,
                     0
                 ],
@@ -817,6 +906,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     9000,
+                    10000,
                     -10
                 ],
                 "name": "Food Safety and Inspection Service",
@@ -826,6 +916,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1000,
+                    1000,
                     0
                 ],
                 "name": "Office of the Secretary",
@@ -834,6 +925,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    1000,
                     1000,
                     0
                 ],
@@ -846,6 +938,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             132612000,
+            null,
             null
         ],
         "name": "Labor",
@@ -855,6 +948,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     117659000,
+                    240093000,
                     -50.9944063342122
                 ],
                 "name": "Employment and Training Administration",
@@ -864,6 +958,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     10000000,
+                    10917000,
                     -8.39974351928186
                 ],
                 "name": "Employment and Training Administration",
@@ -873,6 +968,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2078000,
+                    2217000,
                     -6.26973387460532
                 ],
                 "name": "Office of Workers' Compensation Programs",
@@ -882,6 +978,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     583000,
+                    559000,
                     4.29338103756709
                 ],
                 "name": "Occupational Safety and Health Administration",
@@ -891,6 +988,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     578000,
+                    530000,
                     9.0566037735849
                 ],
                 "name": "Bureau of Labor Statistics",
@@ -900,6 +998,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     567000,
+                    530000,
                     6.98113207547171
                 ],
                 "name": "Departmental Management",
@@ -909,6 +1008,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     384000,
+                    364000,
                     5.4945054945055
                 ],
                 "name": "Mine Safety and Health Administration",
@@ -918,6 +1018,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     241000,
+                    364000,
                     null
                 ],
                 "name": "Wage and Hour Division",
@@ -927,6 +1028,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     198000,
+                    160000,
                     23.75
                 ],
                 "name": "Employee Benefits Security Administration",
@@ -936,6 +1038,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     123000,
+                    160000,
                     null
                 ],
                 "name": "Office of Workers' Compensation Programs",
@@ -945,6 +1048,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     109000,
+                    160000,
                     null
                 ],
                 "name": "Office of Federal Contract Compliance Programs",
@@ -954,6 +1058,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     51000,
+                    160000,
                     null
                 ],
                 "name": "Wage and Hour Division",
@@ -963,6 +1068,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     41000,
+                    160000,
                     null
                 ],
                 "name": "Office of Labor Management Standards",
@@ -974,6 +1080,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             132359000,
+            null,
             null
         ],
         "name": "Veterans Affairs",
@@ -983,6 +1090,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     70477000,
+                    71940000,
                     -2.03363914373089
                 ],
                 "name": "Benefits Programs",
@@ -992,6 +1100,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     54438000,
+                    47966000,
                     13.4928907976483
                 ],
                 "name": "Veterans Health Administration",
@@ -1001,6 +1110,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     7259000,
+                    7718000,
                     -5.94713656387665
                 ],
                 "name": "Departmental Administration",
@@ -1010,6 +1120,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     156000,
+                    233000,
                     -33.0472103004292
                 ],
                 "name": "Benefits Programs",
@@ -1019,6 +1130,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     29000,
+                    27000,
                     7.40740740740742
                 ],
                 "name": "Veterans Health Administration",
@@ -1030,6 +1142,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             129458000,
+            null,
             null
         ],
         "name": "Transportation",
@@ -1039,6 +1152,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     70546000,
+                    67815000,
                     4.02713264027132
                 ],
                 "name": "Federal Highway Administration",
@@ -1048,6 +1162,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     22201000,
+                    9772000,
                     127.189930413426
                 ],
                 "name": "Federal Transit Administration",
@@ -1057,6 +1172,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     12883000,
+                    12470000,
                     3.31194867682438
                 ],
                 "name": "Federal Aviation Administration",
@@ -1066,6 +1182,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     8046000,
+                    15000,
                     53540
                 ],
                 "name": "Federal Railroad Administration",
@@ -1075,6 +1192,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5774000,
+                    3121000,
                     85.0048061518744
                 ],
                 "name": "Federal Aviation Administration",
@@ -1084,6 +1202,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5000000,
+                    3121000,
                     null
                 ],
                 "name": "National Infrastructure Bank",
@@ -1093,6 +1212,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2050000,
+                    50000,
                     4000
                 ],
                 "name": "Office of the Secretary",
@@ -1102,6 +1222,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     860000,
+                    696000,
                     23.5632183908046
                 ],
                 "name": "National Highway Traffic Safety Administration",
@@ -1111,6 +1232,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     606000,
+                    536000,
                     13.0597014925373
                 ],
                 "name": "Federal Motor Carrier Safety Administration",
@@ -1120,6 +1242,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     303000,
+                    413000,
                     -26.634382566586
                 ],
                 "name": "Maritime Administration",
@@ -1129,6 +1252,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     290000,
+                    890000,
                     -67.4157303370787
                 ],
                 "name": "Office of the Secretary",
@@ -1138,6 +1262,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     192000,
+                    164000,
                     17.0731707317073
                 ],
                 "name": "Pipeline and Hazardous Materials Safety Administration",
@@ -1147,6 +1272,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     183000,
+                    4360000,
                     -95.802752293578
                 ],
                 "name": "Federal Railroad Administration",
@@ -1156,6 +1282,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     175000,
+                    226000,
                     -22.5663716814159
                 ],
                 "name": "Maritime Administration",
@@ -1165,6 +1292,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     150000,
+                    2389000,
                     -93.7212222687317
                 ],
                 "name": "Federal Transit Administration",
@@ -1174,6 +1302,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     89000,
+                    77000,
                     15.5844155844156
                 ],
                 "name": "Office of Inspector General",
@@ -1183,6 +1312,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     34000,
+                    32000,
                     6.25
                 ],
                 "name": "Saint Lawrence Seaway Development Corporation",
@@ -1192,6 +1322,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     30000,
+                    28000,
                     7.14285714285714
                 ],
                 "name": "Surface Transportation Board",
@@ -1201,6 +1332,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     28000,
+                    23000,
                     21.7391304347826
                 ],
                 "name": "Pipeline and Hazardous Materials Safety Administration",
@@ -1210,6 +1342,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     18000,
+                    13000,
                     38.4615384615385
                 ],
                 "name": "Research and Innovative Technology Administration",
@@ -1221,6 +1354,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             93790000,
+            null,
             null
         ],
         "name": "Education",
@@ -1230,6 +1364,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     31433000,
+                    20085000,
                     56.4998755290018
                 ],
                 "name": "Office of Federal Student Aid",
@@ -1239,6 +1374,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     20161000,
+                    22495000,
                     -10.3756390308958
                 ],
                 "name": "Office of Elementary and Secondary Education",
@@ -1248,6 +1384,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     12805000,
+                    14290000,
                     -10.3918824352694
                 ],
                 "name": "Office of Federal Student Aid",
@@ -1257,6 +1394,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     12647000,
+                    13225000,
                     -4.37051039697542
                 ],
                 "name": "Office of Special Education and Rehabilitative Services",
@@ -1266,6 +1404,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     4995000,
+                    1378000,
                     262.481857764877
                 ],
                 "name": "Office of Innovation and Improvement",
@@ -1275,6 +1414,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3122000,
+                    3085000,
                     1.19935170178282
                 ],
                 "name": "Office of Special Education and Rehabilitative Services",
@@ -1284,6 +1424,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2533000,
+                    2512000,
                     0.835987261146487
                 ],
                 "name": "Office of Postsecondary Education",
@@ -1293,6 +1434,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1781000,
+                    393000,
                     353.180661577608
                 ],
                 "name": "Office of Safe and Drug-Free Schools",
@@ -1302,6 +1444,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1683000,
+                    2016000,
                     -16.5178571428571
                 ],
                 "name": "Office of Vocational and Adult Education",
@@ -1311,6 +1454,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     760000,
+                    659000,
                     15.3262518968134
                 ],
                 "name": "Institute of Education Sciences",
@@ -1319,6 +1463,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    750000,
                     750000,
                     0
                 ],
@@ -1329,6 +1474,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     654000,
+                    619000,
                     5.65428109854604
                 ],
                 "name": "Departmental Management",
@@ -1338,6 +1484,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     426000,
+                    462000,
                     -7.79220779220779
                 ],
                 "name": "Office of Postsecondary Education",
@@ -1347,6 +1494,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     40000,
+                    462000,
                     null
                 ],
                 "name": "Office of Innovation and Improvement",
@@ -1358,6 +1506,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             83502000,
+            null,
             null
         ],
         "name": "Office of Personnel Management",
@@ -1367,6 +1516,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     83239000,
+                    73691000,
                     12.9568061228644
                 ],
                 "name": "Office of Personnel Management",
@@ -1376,6 +1526,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     263000,
+                    243000,
                     8.23045267489713
                 ],
                 "name": "Office of Personnel Management",
@@ -1387,6 +1538,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             66476000,
+            null,
             null
         ],
         "name": "Other",
@@ -1396,6 +1548,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     18724000,
+                    18725000,
                     -0.00534045393858484
                 ],
                 "name": "National Aeronautics and Space Administration",
@@ -1405,6 +1558,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     10000000,
+                    18725000,
                     null
                 ],
                 "name": "Allowances",
@@ -1414,6 +1568,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     8973000,
+                    10257000,
                     -12.5182801988886
                 ],
                 "name": "Environmental Protection Agency",
@@ -1423,6 +1578,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     7768000,
+                    6873000,
                     13.0219700276444
                 ],
                 "name": "National Science Foundation",
@@ -1432,6 +1588,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5947000,
+                    4449000,
                     33.6704877500562
                 ],
                 "name": "Postal Service",
@@ -1441,6 +1598,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1900000,
+                    4449000,
                     null
                 ],
                 "name": "National Credit Union Administration",
@@ -1450,6 +1608,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1259000,
+                    1150000,
                     9.47826086956523
                 ],
                 "name": "Corporation for National and Community Service",
@@ -1459,6 +1618,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1125000,
+                    672000,
                     67.4107142857143
                 ],
                 "name": "Tennessee Valley Authority",
@@ -1468,6 +1628,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1048000,
+                    980000,
                     6.93877551020408
                 ],
                 "name": "Smithsonian Institution",
@@ -1477,6 +1638,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     984000,
+                    1786000,
                     -44.9048152295633
                 ],
                 "name": "Small Business Administration",
@@ -1486,6 +1648,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     767000,
+                    750000,
                     2.26666666666666
                 ],
                 "name": "Broadcasting Board of Governors",
@@ -1495,6 +1658,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     592000,
+                    705000,
                     -16.0283687943262
                 ],
                 "name": "Intelligence Community Management Account",
@@ -1504,6 +1668,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     514000,
+                    291000,
                     76.6323024054983
                 ],
                 "name": "Central Intelligence Agency",
@@ -1513,6 +1678,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     451000,
+                    506000,
                     -10.8695652173913
                 ],
                 "name": "Corporation for Public Broadcasting",
@@ -1522,6 +1688,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     450000,
+                    420000,
                     7.14285714285714
                 ],
                 "name": "Legal Services Corporation",
@@ -1531,6 +1698,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     386000,
+                    367000,
                     5.17711171662125
                 ],
                 "name": "Equal Employment Opportunity Commission",
@@ -1540,6 +1708,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     347000,
+                    370000,
                     -6.21621621621622
                 ],
                 "name": "Postal Service",
@@ -1549,6 +1718,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     333000,
+                    375000,
                     -11.2
                 ],
                 "name": "Federal Drug Control Programs",
@@ -1558,6 +1728,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     329000,
+                    18000,
                     1727.77777777778
                 ],
                 "name": "Bureau of Consumer Financial Protection",
@@ -1567,6 +1738,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     288000,
+                    417000,
                     -30.9352517985611
                 ],
                 "name": "Securities Investor Protection Corporation",
@@ -1576,6 +1748,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     288000,
+                    283000,
                     1.76678445229681
                 ],
                 "name": "National Labor Relations Board",
@@ -1585,6 +1758,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     258000,
+                    249000,
                     3.6144578313253
                 ],
                 "name": "Court Services and Offender Supervision Agency for the District",
@@ -1594,6 +1768,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     248000,
+                    90000,
                     175.555555555556
                 ],
                 "name": "National Science Foundation",
@@ -1603,6 +1778,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     243000,
+                    282000,
                     -13.8297872340426
                 ],
                 "name": "Institute of Museum and Library Services",
@@ -1612,6 +1788,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     227000,
+                    143000,
                     58.7412587412587
                 ],
                 "name": "Federal Housing Finance Agency",
@@ -1620,6 +1797,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    216000,
                     216000,
                     0
                 ],
@@ -1630,6 +1808,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     215000,
+                    233000,
                     -7.72532188841202
                 ],
                 "name": "Neighborhood Reinvestment Corporation",
@@ -1639,6 +1818,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     213000,
+                    164000,
                     29.8780487804878
                 ],
                 "name": "Public Company Accounting Oversight Board",
@@ -1648,6 +1828,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     197000,
+                    205000,
                     -3.90243902439025
                 ],
                 "name": "Federal Trade Commission",
@@ -1657,6 +1838,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     191000,
+                    169000,
                     13.0177514792899
                 ],
                 "name": "Commodity Futures Trading Commission",
@@ -1666,6 +1848,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     150000,
+                    10000,
                     1400
                 ],
                 "name": "Patient-Centered Outcomes Research Trust Fund",
@@ -1675,6 +1858,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     146000,
+                    168000,
                     -13.0952380952381
                 ],
                 "name": "National Endowment for the Humanities",
@@ -1684,6 +1868,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     146000,
+                    168000,
                     -13.0952380952381
                 ],
                 "name": "National Endowment for the Arts",
@@ -1693,6 +1878,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     128000,
+                    139000,
                     -7.9136690647482
                 ],
                 "name": "Nuclear Regulatory Commission",
@@ -1702,6 +1888,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     122000,
+                    118000,
                     3.38983050847457
                 ],
                 "name": "Consumer Product Safety Commission",
@@ -1711,6 +1898,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     102000,
+                    98000,
                     4.08163265306123
                 ],
                 "name": "National Transportation Safety Board",
@@ -1719,6 +1907,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    100000,
                     100000,
                     0
                 ],
@@ -1729,6 +1918,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     100000,
+                    100000,
                     null
                 ],
                 "name": "Corporation for Travel Promotion",
@@ -1738,6 +1928,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     88000,
+                    100000,
                     null
                 ],
                 "name": "Civilian Property Realignment Board",
@@ -1747,6 +1938,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     87000,
+                    81000,
                     7.40740740740742
                 ],
                 "name": "International Trade Commission",
@@ -1755,6 +1947,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    76000,
                     76000,
                     0
                 ],
@@ -1765,6 +1958,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     67000,
+                    67000,
                     0
                 ],
                 "name": "Federal Election Commission",
@@ -1774,6 +1968,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     56000,
+                    27000,
                     107.407407407407
                 ],
                 "name": "United States Court of Appeals for Veterans Claims",
@@ -1783,6 +1978,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     53000,
+                    49000,
                     8.16326530612246
                 ],
                 "name": "United States Holocaust Memorial Museum",
@@ -1792,6 +1988,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     48000,
+                    47000,
                     2.12765957446808
                 ],
                 "name": "Federal Mediation and Conciliation Service",
@@ -1801,6 +1998,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     43000,
+                    49000,
                     -12.2448979591837
                 ],
                 "name": "United States Institute of Peace",
@@ -1810,6 +2008,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     42000,
+                    40000,
                     5
                 ],
                 "name": "Merit Systems Protection Board",
@@ -1819,6 +2018,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     41000,
+                    34000,
                     20.5882352941176
                 ],
                 "name": "Standard Setting Body",
@@ -1828,6 +2028,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     33000,
+                    42000,
                     -21.4285714285714
                 ],
                 "name": "United Mine Workers of America Benefit Funds",
@@ -1837,6 +2038,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     29000,
+                    26000,
                     11.5384615384615
                 ],
                 "name": "Defense Nuclear Facilities Safety Board",
@@ -1846,6 +2048,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     26000,
+                    24000,
                     8.33333333333333
                 ],
                 "name": "Federal Maritime Commission",
@@ -1855,6 +2058,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     26000,
+                    25000,
                     4
                 ],
                 "name": "Federal Labor Relations Authority",
@@ -1864,6 +2068,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     22000,
+                    19000,
                     15.7894736842105
                 ],
                 "name": "National Railroad Passenger Corporation Office of Inspector Gene",
@@ -1873,6 +2078,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     22000,
+                    14000,
                     57.1428571428571
                 ],
                 "name": "Federal Mine Safety and Health Review Commission",
@@ -1882,6 +2088,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     20000,
+                    14000,
                     42.8571428571429
                 ],
                 "name": "Corporation for National and Community Service",
@@ -1891,6 +2098,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     19000,
+                    18000,
                     5.55555555555556
                 ],
                 "name": "Office of Special Counsel",
@@ -1900,6 +2108,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     16000,
+                    19000,
                     -15.7894736842105
                 ],
                 "name": "Denali Commission",
@@ -1909,6 +2118,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     14000,
+                    13000,
                     7.69230769230769
                 ],
                 "name": "National Mediation Board",
@@ -1917,6 +2127,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    14000,
                     14000,
                     0
                 ],
@@ -1927,6 +2138,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     13000,
+                    13000,
                     0
                 ],
                 "name": "Delta Regional Authority",
@@ -1936,6 +2148,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     13000,
+                    12000,
                     8.33333333333333
                 ],
                 "name": "Occupational Safety and Health Review Commission",
@@ -1945,6 +2158,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     12000,
+                    23000,
                     -47.8260869565217
                 ],
                 "name": "Presidio Trust",
@@ -1954,6 +2168,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     11000,
+                    89000,
                     -87.6404494382023
                 ],
                 "name": "Election Assistance Commission",
@@ -1962,6 +2177,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    11000,
                     11000,
                     0
                 ],
@@ -1972,6 +2188,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     10000,
+                    8000,
                     25
                 ],
                 "name": "Office of Navajo and Hopi Indian Relocation",
@@ -1981,6 +2198,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     9000,
+                    8000,
                     12.5
                 ],
                 "name": "Institute of American Indian and Alaska Native Culture and Arts",
@@ -1989,6 +2207,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    9000,
                     9000,
                     0
                 ],
@@ -1999,6 +2218,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     8000,
+                    9000,
                     -11.1111111111111
                 ],
                 "name": "National Capital Planning Commission",
@@ -2007,6 +2227,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    6000,
                     6000,
                     0
                 ],
@@ -2017,6 +2238,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     6000,
+                    7000,
                     -14.2857142857143
                 ],
                 "name": "Morris K. Udall and Stewart L. Udall Foundation",
@@ -2025,6 +2247,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    5000,
                     5000,
                     0
                 ],
@@ -2035,6 +2258,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     4000,
+                    2000,
                     100
                 ],
                 "name": "United States Interagency Council on Homelessness",
@@ -2043,6 +2267,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    4000,
                     4000,
                     0
                 ],
@@ -2053,6 +2278,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     4000,
+                    4000,
                     0
                 ],
                 "name": "Office of the Fed Coordinator for Alaska Natural Gas Transportat",
@@ -2062,6 +2288,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3000,
+                    2000,
                     50
                 ],
                 "name": "Japan-United States Friendship Commission",
@@ -2071,6 +2298,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3000,
+                    1000,
                     200
                 ],
                 "name": "Harry S Truman Scholarship Foundation",
@@ -2079,6 +2307,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    3000,
                     3000,
                     0
                 ],
@@ -2089,6 +2318,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3000,
+                    3000,
                     0
                 ],
                 "name": "Marine Mammal Commission",
@@ -2098,6 +2328,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3000,
+                    4000,
                     -25
                 ],
                 "name": "Nuclear Waste Technical Review Board",
@@ -2107,6 +2338,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3000,
+                    2000,
                     50
                 ],
                 "name": "Administrative Conference of the United States",
@@ -2115,6 +2347,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    2000,
                     2000,
                     0
                 ],
@@ -2125,6 +2358,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2000,
+                    2000,
                     0
                 ],
                 "name": "James Madison Memorial Fellowship Foundation",
@@ -2134,6 +2368,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2000,
+                    1000,
                     100
                 ],
                 "name": "National Credit Union Administration",
@@ -2143,6 +2378,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2000,
+                    1000,
                     null
                 ],
                 "name": "Privacy and Civil Liberties Oversight Board",
@@ -2152,6 +2388,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2000,
+                    12000,
                     -83.3333333333333
                 ],
                 "name": "Commission of Fine Arts",
@@ -2161,6 +2398,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2000,
+                    1000,
                     100
                 ],
                 "name": "United States Court of Appeals for Veterans Claims",
@@ -2169,6 +2407,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    1000,
                     1000,
                     null
                 ],
@@ -2179,6 +2418,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1000,
+                    1000,
                     0
                 ],
                 "name": "Christopher Columbus Fellowship Foundation",
@@ -2188,6 +2428,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1000,
+                    1000,
                     null
                 ],
                 "name": "Public Company Accounting Oversight Board",
@@ -2196,6 +2437,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    1000,
                     1000,
                     0
                 ],
@@ -2208,6 +2450,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             58663000,
+            null,
             null
         ],
         "name": "Other Defense Civil Programs",
@@ -2217,6 +2460,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     48455000,
+                    51097000,
                     -5.17055795839286
                 ],
                 "name": "Military Retirement",
@@ -2226,6 +2470,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     9917000,
+                    8623000,
                     15.0063782906181
                 ],
                 "name": "Retiree Health Care",
@@ -2235,6 +2480,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     77000,
+                    83000,
                     -7.2289156626506
                 ],
                 "name": "American Battle Monuments Commission",
@@ -2244,6 +2490,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     76000,
+                    83000,
                     null
                 ],
                 "name": "Educational Benefits",
@@ -2253,6 +2500,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     68000,
+                    134000,
                     -49.2537313432836
                 ],
                 "name": "Armed Forces Retirement Home",
@@ -2262,6 +2510,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     46000,
+                    40000,
                     15
                 ],
                 "name": "Cemeterial Expenses",
@@ -2270,6 +2519,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    24000,
                     24000,
                     0
                 ],
@@ -2282,6 +2532,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             52092000,
+            null,
             null
         ],
         "name": "Housing and Urban Development",
@@ -2291,6 +2542,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     36186000,
+                    34796000,
                     3.99471203586619
                 ],
                 "name": "Public and Indian Housing Programs",
@@ -2300,6 +2552,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     8211000,
+                    8601000,
                     -4.53435647017789
                 ],
                 "name": "Community Planning and Development",
@@ -2309,6 +2562,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     4484000,
+                    3025000,
                     48.2314049586777
                 ],
                 "name": "Housing Programs",
@@ -2318,6 +2572,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1791000,
+                    2000000,
                     -10.45
                 ],
                 "name": "Management and Administration",
@@ -2327,6 +2582,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1001000,
+                    4000,
                     24925
                 ],
                 "name": "Community Planning and Development",
@@ -2336,6 +2592,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     150000,
+                    4000,
                     null
                 ],
                 "name": "Office of Sustainable Housing and Communities",
@@ -2345,6 +2602,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     140000,
+                    139000,
                     0.71942446043165
                 ],
                 "name": "Office of Lead Hazard Control and Healthy Homes",
@@ -2354,6 +2612,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     72000,
+                    71000,
                     1.40845070422535
                 ],
                 "name": "Fair Housing and Equal Opportunity",
@@ -2363,6 +2622,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     57000,
+                    48000,
                     18.75
                 ],
                 "name": "Policy Development and Research",
@@ -2374,6 +2634,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             50045000,
+            null,
             null
         ],
         "name": "Homeland Security",
@@ -2383,6 +2644,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     10493000,
+                    10323000,
                     1.64680809842099
                 ],
                 "name": "Customs and Border Protection",
@@ -2392,6 +2654,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     8935000,
+                    8894000,
                     0.460984933663133
                 ],
                 "name": "United States Coast Guard",
@@ -2401,6 +2664,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     6790000,
+                    12211000,
                     -44.3943984931619
                 ],
                 "name": "Federal Emergency Management Agency",
@@ -2410,6 +2674,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5495000,
+                    5520000,
                     -0.452898550724634
                 ],
                 "name": "Immigration and Customs Enforcement",
@@ -2419,6 +2684,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5114000,
+                    5515000,
                     -7.27107887579329
                 ],
                 "name": "Transportation Security Administration",
@@ -2428,6 +2694,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2534000,
+                    2410000,
                     5.14522821576764
                 ],
                 "name": "Citizenship and Immigration Services",
@@ -2437,6 +2704,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1699000,
+                    1490000,
                     14.0268456375839
                 ],
                 "name": "United States Secret Service",
@@ -2446,6 +2714,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1662000,
+                    2233000,
                     -25.5709807433945
                 ],
                 "name": "United States Coast Guard",
@@ -2455,6 +2724,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1471000,
+                    1295000,
                     13.5907335907336
                 ],
                 "name": "Customs and Border Protection",
@@ -2464,6 +2734,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1428000,
+                    1295000,
                     null
                 ],
                 "name": "National Protection and Programs Directorate",
@@ -2473,6 +2744,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1302000,
+                    1133000,
                     14.9161518093557
                 ],
                 "name": "Departmental Management and Operations",
@@ -2482,6 +2754,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1177000,
+                    999000,
                     17.8178178178178
                 ],
                 "name": "Science and Technology",
@@ -2491,6 +2764,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     365000,
+                    246000,
                     48.3739837398374
                 ],
                 "name": "Citizenship and Immigration Services",
@@ -2500,6 +2774,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     331000,
+                    376000,
                     -11.968085106383
                 ],
                 "name": "Domestic Nuclear Detection Office",
@@ -2509,6 +2784,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     311000,
+                    275000,
                     13.0909090909091
                 ],
                 "name": "Immigration and Customs Enforcement",
@@ -2518,6 +2794,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     276000,
+                    290000,
                     -4.82758620689655
                 ],
                 "name": "Federal Law Enforcement Training Center",
@@ -2526,6 +2803,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    250000,
                     250000,
                     0
                 ],
@@ -2536,6 +2814,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     245000,
+                    244000,
                     0.409836065573765
                 ],
                 "name": "United States Secret Service",
@@ -2545,6 +2824,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     144000,
+                    135000,
                     6.66666666666667
                 ],
                 "name": "Office of the Inspector General",
@@ -2554,6 +2834,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     23000,
+                    135000,
                     null
                 ],
                 "name": "Federal Emergency Management Agency",
@@ -2565,6 +2846,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             41915000,
+            null,
             null
         ],
         "name": "International Assistance Programs",
@@ -2574,6 +2856,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     15965000,
+                    14252000,
                     12.0193657030592
                 ],
                 "name": "International Security Assistance",
@@ -2583,6 +2866,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     14257000,
+                    3257000,
                     337.734111145226
                 ],
                 "name": "Military Sales Program",
@@ -2592,6 +2876,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     6246000,
+                    6127000,
                     1.94222294760895
                 ],
                 "name": "Agency for International Development",
@@ -2601,6 +2886,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3713000,
+                    3115000,
                     19.1974317817014
                 ],
                 "name": "Multilateral Assistance",
@@ -2610,6 +2896,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1125000,
+                    1055000,
                     6.6350710900474
                 ],
                 "name": "Millennium Challenge Corporation",
@@ -2619,6 +2906,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     440000,
+                    400000,
                     10
                 ],
                 "name": "Peace Corps",
@@ -2628,6 +2916,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     70000,
+                    20000,
                     250
                 ],
                 "name": "Overseas Private Investment Corporation",
@@ -2637,6 +2926,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     56000,
+                    55000,
                     1.81818181818181
                 ],
                 "name": "Trade and Development Agency",
@@ -2646,6 +2936,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     24000,
+                    30000,
                     -20
                 ],
                 "name": "African Development Foundation",
@@ -2655,6 +2946,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     19000,
+                    23000,
                     -17.3913043478261
                 ],
                 "name": "Inter-American Foundation",
@@ -2666,6 +2958,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             35403000,
+            null,
             null
         ],
         "name": "Justice",
@@ -2675,6 +2968,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     8076000,
+                    7874000,
                     2.56540513081027
                 ],
                 "name": "Federal Bureau of Investigation",
@@ -2684,6 +2978,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     7808000,
+                    774000,
                     908.785529715762
                 ],
                 "name": "Office of Justice Programs",
@@ -2693,6 +2988,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     6791000,
+                    6205000,
                     9.44399677679291
                 ],
                 "name": "Federal Prison System",
@@ -2702,6 +2998,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3909000,
+                    4358000,
                     -10.3028912345112
                 ],
                 "name": "Legal Activities and U.S. Marshals",
@@ -2711,6 +3008,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2323000,
+                    1646000,
                     41.1300121506683
                 ],
                 "name": "Legal Activities and U.S. Marshals",
@@ -2720,6 +3018,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2293000,
+                    2312000,
                     -0.821799307958482
                 ],
                 "name": "General Administration",
@@ -2729,6 +3028,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2012000,
+                    2084000,
                     -3.45489443378119
                 ],
                 "name": "Drug Enforcement Administration",
@@ -2738,6 +3038,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1147000,
+                    1158000,
                     -0.949913644214162
                 ],
                 "name": "Bureau of Alcohol, Tobacco, Firearms, and Explosives",
@@ -2747,6 +3048,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     541000,
+                    548000,
                     -1.27737226277372
                 ],
                 "name": "Interagency Law Enforcement",
@@ -2756,6 +3058,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     282000,
+                    272000,
                     3.6764705882353
                 ],
                 "name": "Drug Enforcement Administration",
@@ -2764,6 +3067,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    120000,
                     120000,
                     0
                 ],
@@ -2774,6 +3078,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     88000,
+                    88000,
                     0
                 ],
                 "name": "National Security Division",
@@ -2782,6 +3087,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    13000,
                     13000,
                     0
                 ],
@@ -2794,6 +3100,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             32746000,
+            null,
             null
         ],
         "name": "State",
@@ -2803,6 +3110,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     14747000,
+                    12367000,
                     19.2447642920676
                 ],
                 "name": "Administration of Foreign Affairs",
@@ -2812,6 +3120,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     13080000,
+                    12954000,
                     0.972672533580354
                 ],
                 "name": "Other",
@@ -2821,6 +3130,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     3539000,
+                    3905000,
                     -9.37259923175416
                 ],
                 "name": "International Organizations and Conferences",
@@ -2830,6 +3140,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1257000,
+                    1266000,
                     -0.710900473933651
                 ],
                 "name": "Administration of Foreign Affairs",
@@ -2839,6 +3150,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     122000,
+                    143000,
                     -14.6853146853147
                 ],
                 "name": "International Commissions",
@@ -2848,6 +3160,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1000,
+                    4000,
                     -75
                 ],
                 "name": "Other",
@@ -2859,6 +3172,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             30779000,
+            null,
             null
         ],
         "name": "Energy",
@@ -2868,6 +3182,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     11836000,
+                    8610000,
                     37.4680603948897
                 ],
                 "name": "Energy Programs",
@@ -2877,6 +3192,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     11712000,
+                    9881000,
                     18.5305131059609
                 ],
                 "name": "National Nuclear Security Administration",
@@ -2886,6 +3202,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     6267000,
+                    6585000,
                     -4.82915717539863
                 ],
                 "name": "Environmental and Other Defense Activities",
@@ -2895,6 +3212,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     604000,
+                    785000,
                     -23.0573248407643
                 ],
                 "name": "Power Marketing Administration",
@@ -2904,6 +3222,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     171000,
+                    256000,
                     -33.203125
                 ],
                 "name": "Departmental Administration",
@@ -2913,6 +3232,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     103000,
+                    62000,
                     66.1290322580645
                 ],
                 "name": "Energy Programs",
@@ -2922,6 +3242,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     86000,
+                    150000,
                     -42.6666666666667
                 ],
                 "name": "Power Marketing Administration",
@@ -2933,6 +3254,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             17863000,
+            null,
             null
         ],
         "name": "Interior",
@@ -2942,6 +3264,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2892000,
+                    2770000,
                     4.40433212996389
                 ],
                 "name": "National Park Service",
@@ -2951,6 +3274,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2501000,
+                    2612000,
                     -4.24961715160797
                 ],
                 "name": "Bureau of Indian Affairs and Bureau of Indian Education",
@@ -2960,6 +3284,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2117000,
+                    1775000,
                     19.2676056338028
                 ],
                 "name": "Departmental Offices",
@@ -2969,6 +3294,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1695000,
+                    1648000,
                     2.85194174757282
                 ],
                 "name": "United States Fish and Wildlife Service",
@@ -2978,6 +3304,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1132000,
+                    1156000,
                     -2.07612456747405
                 ],
                 "name": "Bureau of Land Management",
@@ -2987,6 +3314,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1118000,
+                    1112000,
                     0.539568345323738
                 ],
                 "name": "United States Geological Survey",
@@ -2996,6 +3324,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1018000,
+                    1098000,
                     -7.28597449908925
                 ],
                 "name": "Bureau of Reclamation",
@@ -3005,6 +3334,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     996000,
+                    1362000,
                     -26.8722466960352
                 ],
                 "name": "United States Fish and Wildlife Service",
@@ -3014,6 +3344,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     911000,
+                    960000,
                     -5.10416666666667
                 ],
                 "name": "Department-Wide Programs",
@@ -3023,6 +3354,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     538000,
+                    542000,
                     -0.738007380073802
                 ],
                 "name": "Office of Surface Mining Reclamation and Enforcement",
@@ -3032,6 +3364,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     437000,
+                    626000,
                     -30.1916932907348
                 ],
                 "name": "Department-Wide Programs",
@@ -3041,6 +3374,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     405000,
+                    429000,
                     -5.59440559440559
                 ],
                 "name": "Insular Affairs",
@@ -3050,6 +3384,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     395000,
+                    393000,
                     0.508905852417296
                 ],
                 "name": "National Park Service",
@@ -3059,6 +3394,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     358000,
+                    482000,
                     -25.7261410788382
                 ],
                 "name": "Office of the Special Trustee for American Indians",
@@ -3068,6 +3404,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     242000,
+                    138000,
                     75.3623188405797
                 ],
                 "name": "Departmental Offices",
@@ -3077,6 +3414,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     194000,
+                    104000,
                     86.5384615384615
                 ],
                 "name": "Bureau of Reclamation",
@@ -3086,6 +3424,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     152000,
+                    177000,
                     -14.1242937853107
                 ],
                 "name": "Office of the Special Trustee for American Indians",
@@ -3095,6 +3434,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     146000,
+                    163000,
                     -10.4294478527607
                 ],
                 "name": "Office of Surface Mining Reclamation and Enforcement",
@@ -3104,6 +3444,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     133000,
+                    208000,
                     -36.0576923076923
                 ],
                 "name": "Bureau of Land Management",
@@ -3113,6 +3454,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     132000,
+                    191000,
                     -30.8900523560209
                 ],
                 "name": "Bureau of Ocean Energy Management, Regulation and Enforcement",
@@ -3122,6 +3464,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     106000,
+                    121000,
                     -12.396694214876
                 ],
                 "name": "Bureau of Indian Affairs and Bureau of Indian Education",
@@ -3131,6 +3474,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     69000,
+                    60000,
                     15
                 ],
                 "name": "Insular Affairs",
@@ -3140,6 +3484,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     68000,
+                    65000,
                     4.61538461538462
                 ],
                 "name": "Office of the Solicitor",
@@ -3148,6 +3493,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    49000,
                     49000,
                     0
                 ],
@@ -3158,6 +3504,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     33000,
+                    52000,
                     -36.5384615384615
                 ],
                 "name": "Central Utah Project",
@@ -3167,6 +3514,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     17000,
+                    13000,
                     30.7692307692308
                 ],
                 "name": "National Indian Gaming Commission",
@@ -3176,6 +3524,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     8000,
+                    21000,
                     -61.9047619047619
                 ],
                 "name": "Bureau of Ocean Energy Management, Regulation and Enforcement",
@@ -3185,6 +3534,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1000,
+                    2000,
                     -50
                 ],
                 "name": "United States Geological Survey",
@@ -3196,6 +3546,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             11570000,
+            null,
             null
         ],
         "name": "Federal Communications Commission",
@@ -3205,6 +3556,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     11570000,
+                    8918000,
                     29.7376093294461
                 ],
                 "name": "Federal Communications Commission",
@@ -3216,6 +3568,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             10449000,
+            null,
             null
         ],
         "name": "Commerce",
@@ -3225,6 +3578,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5510000,
+                    4878000,
                     12.9561295612956
                 ],
                 "name": "National Oceanic and Atmospheric Administration",
@@ -3234,6 +3588,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1400000,
+                    197000,
                     610.659898477157
                 ],
                 "name": "National Telecommunications and Information Administration",
@@ -3243,6 +3598,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1025000,
+                    7096000,
                     -85.5552423900789
                 ],
                 "name": "Bureau of the Census",
@@ -3252,6 +3608,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1004000,
+                    863000,
                     16.3383545770568
                 ],
                 "name": "National Institute of Standards and Technology",
@@ -3261,6 +3618,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     517000,
+                    448000,
                     15.4017857142857
                 ],
                 "name": "International Trade Administration",
@@ -3270,6 +3628,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     325000,
+                    347000,
                     -6.34005763688761
                 ],
                 "name": "Economic Development Administration",
@@ -3279,6 +3638,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     113000,
+                    97000,
                     16.4948453608248
                 ],
                 "name": "Economic and Statistical Analysis",
@@ -3288,6 +3648,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     111000,
+                    58000,
                     91.3793103448276
                 ],
                 "name": "National Oceanic and Atmospheric Administration",
@@ -3297,6 +3658,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     111000,
+                    100000,
                     11
                 ],
                 "name": "Bureau of Industry and Security",
@@ -3305,6 +3667,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    100000,
                     100000,
                     null
                 ],
@@ -3315,6 +3678,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     95000,
+                    109000,
                     -12.8440366972477
                 ],
                 "name": "Departmental Management",
@@ -3324,6 +3688,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     50000,
+                    109000,
                     null
                 ],
                 "name": "National Telecommunications and Information Administration",
@@ -3332,6 +3697,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    32000,
                     32000,
                     0
                 ],
@@ -3342,6 +3708,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     30000,
+                    30000,
                     0
                 ],
                 "name": "Bureau of the Census",
@@ -3351,6 +3718,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     20000,
+                    30000,
                     null
                 ],
                 "name": "Economic Development Administration",
@@ -3360,6 +3728,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5000,
+                    5000,
                     0
                 ],
                 "name": "International Trade Administration",
@@ -3368,6 +3737,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    1000,
                     1000,
                     0
                 ],
@@ -3380,6 +3750,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             8284000,
+            null,
             null
         ],
         "name": "Judicial Branch",
@@ -3389,6 +3760,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     6580000,
+                    6175000,
                     6.55870445344129
                 ],
                 "name": "Courts of Appeals, District Courts, and other Judicial Services",
@@ -3398,6 +3770,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1177000,
+                    1141000,
                     3.15512708150745
                 ],
                 "name": "Courts of Appeals, District Courts, and other Judicial Services",
@@ -3407,6 +3780,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     248000,
+                    197000,
                     25.8883248730964
                 ],
                 "name": "Judicial Retirement Funds",
@@ -3416,6 +3790,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     89000,
+                    83000,
                     7.2289156626506
                 ],
                 "name": "Administrative Office of the United States Courts",
@@ -3425,6 +3800,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     83000,
+                    87000,
                     -4.59770114942529
                 ],
                 "name": "Supreme Court of the United States",
@@ -3434,6 +3810,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     33000,
+                    29000,
                     13.7931034482759
                 ],
                 "name": "United States Court of Appeals for the Federal Circuit",
@@ -3443,6 +3820,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     29000,
+                    27000,
                     7.40740740740742
                 ],
                 "name": "Federal Judicial Center",
@@ -3452,6 +3830,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     21000,
+                    19000,
                     10.5263157894737
                 ],
                 "name": "United States Court of International Trade",
@@ -3461,6 +3840,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     18000,
+                    17000,
                     5.88235294117647
                 ],
                 "name": "United States Sentencing Commission",
@@ -3469,6 +3849,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    2000,
                     2000,
                     0
                 ],
@@ -3479,6 +3860,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2000,
+                    2000,
                     0
                 ],
                 "name": "Supreme Court of the United States",
@@ -3487,6 +3869,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    2000,
                     2000,
                     0
                 ],
@@ -3499,6 +3882,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             7115000,
+            null,
             null
         ],
         "name": "Railroad Retirement Board",
@@ -3508,6 +3892,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     6945000,
+                    6864000,
                     1.18006993006994
                 ],
                 "name": "Railroad Retirement Board",
@@ -3517,6 +3902,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     170000,
+                    181000,
                     -6.07734806629834
                 ],
                 "name": "Railroad Retirement Board",
@@ -3528,6 +3914,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             5173000,
+            null,
             null
         ],
         "name": "Legislative Branch",
@@ -3537,6 +3924,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1334000,
+                    1369000,
                     -2.55661066471877
                 ],
                 "name": "House of Representatives",
@@ -3546,6 +3934,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     971000,
+                    918000,
                     5.77342047930283
                 ],
                 "name": "Senate",
@@ -3555,6 +3944,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     694000,
+                    590000,
                     17.6271186440678
                 ],
                 "name": "Architect of the Capitol",
@@ -3564,6 +3954,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     667000,
+                    642000,
                     3.89408099688473
                 ],
                 "name": "Library of Congress",
@@ -3573,6 +3964,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     557000,
+                    558000,
                     -0.179211469534046
                 ],
                 "name": "Government Accountability Office",
@@ -3582,6 +3974,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     387000,
+                    342000,
                     13.1578947368421
                 ],
                 "name": "Capitol Police",
@@ -3590,6 +3983,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    148000,
                     148000,
                     0
                 ],
@@ -3600,6 +3994,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     130000,
+                    57000,
                     128.070175438596
                 ],
                 "name": "Legislative Branch Boards and Commissions",
@@ -3609,6 +4004,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     101000,
+                    110000,
                     -8.18181818181818
                 ],
                 "name": "House of Representatives",
@@ -3618,6 +4014,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     60000,
+                    49000,
                     22.4489795918367
                 ],
                 "name": "United States Tax Court",
@@ -3627,6 +4024,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     47000,
+                    45000,
                     4.44444444444445
                 ],
                 "name": "Congressional Budget Office",
@@ -3635,6 +4033,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    33000,
                     33000,
                     0
                 ],
@@ -3645,6 +4044,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     20000,
+                    21000,
                     -4.76190476190477
                 ],
                 "name": "Joint Items",
@@ -3654,6 +4054,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     12000,
+                    11000,
                     9.09090909090908
                 ],
                 "name": "Botanic Garden",
@@ -3663,6 +4064,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     6000,
+                    9000,
                     -33.3333333333333
                 ],
                 "name": "Library of Congress",
@@ -3672,6 +4074,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5000,
+                    4000,
                     25
                 ],
                 "name": "Office of Compliance",
@@ -3681,6 +4084,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     1000,
+                    4000,
                     null
                 ],
                 "name": "United States Tax Court",
@@ -3692,6 +4096,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             4584000,
+            null,
             null
         ],
         "name": "Corps of Engineers--Civil Works",
@@ -3701,6 +4106,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     4574000,
+                    5739000,
                     -20.2997037811465
                 ],
                 "name": "Corps of Engineers--Civil Works",
@@ -3710,6 +4116,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     10000,
+                    5739000,
                     null
                 ],
                 "name": "Corps of Engineers--Civil Works",
@@ -3721,6 +4128,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             1070000,
+            null,
             null
         ],
         "name": "District of Columbia",
@@ -3730,6 +4138,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     603000,
+                    523000,
                     15.2963671128107
                 ],
                 "name": "District of Columbia General and Special Payments",
@@ -3739,6 +4148,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     284000,
+                    316000,
                     -10.126582278481
                 ],
                 "name": "District of Columbia Courts",
@@ -3748,6 +4158,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     174000,
+                    186000,
                     -6.45161290322581
                 ],
                 "name": "District of Columbia General and Special Payments",
@@ -3757,6 +4168,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     9000,
+                    8000,
                     12.5
                 ],
                 "name": "District of Columbia Courts",
@@ -3768,6 +4180,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             915000,
+            null,
             null
         ],
         "name": "Federal Deposit Insurance Corporation",
@@ -3777,6 +4190,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     855000,
+                    null,
                     null
                 ],
                 "name": "Orderly Liquidation",
@@ -3786,6 +4200,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     45000,
+                    33000,
                     36.3636363636364
                 ],
                 "name": "FDIC_Office of Inspector General",
@@ -3795,6 +4210,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     15000,
+                    27000,
                     -44.4444444444444
                 ],
                 "name": "FSLIC Resolution",
@@ -3806,6 +4222,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             653000,
+            null,
             null
         ],
         "name": "General Services Administration",
@@ -3815,6 +4232,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     332000,
+                    267000,
                     24.3445692883895
                 ],
                 "name": "General Activities",
@@ -3824,6 +4242,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     286000,
+                    10000,
                     2760
                 ],
                 "name": "Real Property Activities",
@@ -3832,6 +4251,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    13000,
                     13000,
                     0
                 ],
@@ -3842,6 +4262,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     12000,
+                    11000,
                     9.09090909090908
                 ],
                 "name": "General Activities",
@@ -3851,6 +4272,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     10000,
+                    3000,
                     233.333333333333
                 ],
                 "name": "Real Property Activities",
@@ -3862,6 +4284,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             569000,
+            null,
             null
         ],
         "name": "Executive Office of the President",
@@ -3871,6 +4294,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     116000,
+                    115000,
                     0.869565217391299
                 ],
                 "name": "Office of Administration",
@@ -3880,6 +4304,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     100000,
+                    115000,
                     null
                 ],
                 "name": "Unanticipated Needs",
@@ -3889,6 +4314,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     92000,
+                    93000,
                     -1.0752688172043
                 ],
                 "name": "Office of Management and Budget",
@@ -3898,6 +4324,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     81000,
+                    39000,
                     107.692307692308
                 ],
                 "name": "Unanticipated Needs",
@@ -3907,6 +4334,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     59000,
+                    60000,
                     -1.66666666666667
                 ],
                 "name": "The White House",
@@ -3916,6 +4344,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     51000,
+                    48000,
                     6.25
                 ],
                 "name": "Office of the United States Trade Representative",
@@ -3925,6 +4354,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     23000,
+                    30000,
                     -23.3333333333333
                 ],
                 "name": "Office of National Drug Control Policy",
@@ -3934,6 +4364,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     15000,
+                    17000,
                     -11.7647058823529
                 ],
                 "name": "Executive Residence at the White House",
@@ -3943,6 +4374,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     13000,
+                    12000,
                     8.33333333333333
                 ],
                 "name": "National Security Council and Homeland Security Council",
@@ -3951,6 +4383,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    7000,
                     7000,
                     0
                 ],
@@ -3961,6 +4394,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     5000,
+                    5000,
                     0
                 ],
                 "name": "Special Assistance to the President and the Official Residence",
@@ -3970,6 +4404,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     4000,
+                    4000,
                     0
                 ],
                 "name": "Council of Economic Advisers",
@@ -3978,6 +4413,7 @@ window.obama_budget_2012 = [
             },
             {
                 "value": [
+                    3000,
                     3000,
                     0
                 ],
@@ -3990,6 +4426,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             407000,
+            null,
             null
         ],
         "name": "National Archives and Records Administration",
@@ -3999,6 +4436,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     407000,
+                    458000,
                     -11.1353711790393
                 ],
                 "name": "National Archives and Records Administration",
@@ -4010,6 +4448,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             32000,
+            null,
             null
         ],
         "name": "Recovery Accountability and Transparency Board",
@@ -4019,6 +4458,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     32000,
+                    null,
                     null
                 ],
                 "name": "Recovery Act Accountability and Transparency Board",
@@ -4030,6 +4470,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             7000,
+            null,
             null
         ],
         "name": "Access Board",
@@ -4038,6 +4479,7 @@ window.obama_budget_2012 = [
         "children": [
             {
                 "value": [
+                    7000,
                     7000,
                     0
                 ],
@@ -4050,6 +4492,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             6000,
+            null,
             null
         ],
         "name": "Committee for Purchase from People Who Are Blind or Severely Dis",
@@ -4059,6 +4502,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     6000,
+                    5000,
                     20
                 ],
                 "name": "Committee for Purchase from People who are Blind or Severely Dis",
@@ -4070,6 +4514,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             2000,
+            null,
             null
         ],
         "name": "Federal Financial Institutions Examination Council",
@@ -4079,6 +4524,7 @@ window.obama_budget_2012 = [
             {
                 "value": [
                     2000,
+                    3000,
                     -33.3333333333333
                 ],
                 "name": "Federal Financial Institutions Examination Council Appraisal Sub",
@@ -4090,6 +4536,7 @@ window.obama_budget_2012 = [
     {
         "value": [
             0,
+            null,
             null
         ],
         "name": "Securities and Exchange Commission",

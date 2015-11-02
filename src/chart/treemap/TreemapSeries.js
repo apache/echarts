@@ -30,7 +30,7 @@ define(function(require) {
                                                 // (order by desc default, asc not supported yet (strange effect))
             clipWindow: 'origin',                      // 缩放时窗口大小。'origin' or 'fullscreen'
             squareRatio: 0.5 * (1 + Math.sqrt(5)), // golden ratio
-            root: '',
+            root: null,                             // default: tree root. This feature doesnt work unless node have id.
             visualDimension: 'value',                    // 默认第一个维度。
             zoomToNodeRatio: 0.32 * 0.32,                 // zoom to node时 node占可视区域的面积比例。
             roam: true,
@@ -70,11 +70,13 @@ define(function(require) {
                     position: ['50%', '50%'],      // 可以是 5 '5%' 'insideTopLeft', ...
                     textStyle: {
                         align: 'center',
+                        baseline: 'middle',
                         color: '#fff',
                         fontFamily: 'Arial',
                         fontSize: 13,
                         fontStyle: 'normal',
-                        fontWeight: 'normal'
+                        fontWeight: 'normal',
+                        ellipsis: false
                     }
                 }
             },
@@ -93,7 +95,7 @@ define(function(require) {
             color: 'none',    // 为数组，表示同一level的color 选取列表。默认空，在level[0].color中取系统color列表。
             colorA: null,   // 为数组，表示同一level的color alpha 选取范围。
             colorS: null,   // 为数组，表示同一level的color alpha 选取范围。
-            colorMapping: 'byIndex', // 'byIndex' or 'byValue'
+            colorMapping: 'byIndex', // 'byIndex' or 'byValue' or 'byId'
             visibleMin: 10,    // If area less than this threshold (unit: pixel^2), node will not be rendered.
                                // Only works when sort is 'asc' or 'desc'.
             childrenVisibleMin: null, // If area of a node less than this threshold (unit: pixel^2),
@@ -138,7 +140,7 @@ define(function(require) {
         getViewRoot: function () {
             var optionRoot = this.option.root;
             var treeRoot = this.getData().tree.root;
-            return optionRoot && treeRoot.getNodeByName(optionRoot) || treeRoot;
+            return optionRoot && treeRoot.getNodeById(optionRoot) || treeRoot;
         },
 
         /**
@@ -201,6 +203,42 @@ define(function(require) {
              */
             this.layoutInfo = this.layoutInfo || {};
             zrUtil.extend(this.layoutInfo, layoutInfo);
+        },
+
+        /**
+         * @param  {string} id
+         * @return {number} index
+         */
+        mapIdToIndex: function (id) {
+            // A feature is implemented:
+            // index is monotone increasing with the sequence of
+            // input id at the first time.
+            // This feature can make sure that each data item and its
+            // mapped color have the same index between data list and
+            // color list at the beginning, which is useful for user
+            // to adjust data-color mapping.
+
+            /**
+             * @private
+             * @type {Object}
+             */
+            var idIndexMap = this._idIndexMap;
+
+            if (!idIndexMap) {
+                idIndexMap = this._idIndexMap = {};
+                /**
+                 * @private
+                 * @type {number}
+                 */
+                this._idIndexMapCount = 0;
+            }
+
+            var index = idIndexMap[id];
+            if (index == null) {
+                idIndexMap[id] = index = this._idIndexMapCount++;
+            }
+
+            return index;
         }
     });
 
