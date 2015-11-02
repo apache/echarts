@@ -85,7 +85,7 @@ define(function (require) {
                     data.each(function (idx) {
                         var layout = data.getItemLayout(idx);
                         layout.startAngle = idx * angle;
-                        layout.endAngle = (idx + 1) * angle
+                        layout.endAngle = (idx + 1) * angle;
                     })
                 }
                 else {

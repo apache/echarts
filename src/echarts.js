@@ -676,7 +676,7 @@ define(function (require) {
         }
     };
 
-    echarts.registerVisualCoding('echarts', require('./visual/defaultColor'));
+    echarts.registerVisualCoding('echarts', require('./visual/seriesColor'));
 
     echarts.registerPreprocessor(require('./preprocessor/backwardCompat'));
 

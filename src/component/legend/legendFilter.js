@@ -6,5 +6,5 @@ define(function () {
                 return legendModel.isSelected(series.name);
             });
         }
-    }
+    };
 });

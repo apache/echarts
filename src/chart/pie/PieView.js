@@ -228,11 +228,15 @@ define(function (require) {
                 );
 
                 var labelText = sector.__labelText;
+                var labelLine = sector.__labelLine;
                 if (labelText) {
                     labelText.setStyle({
                         text: seriesModel.getFormattedLabel(idx, 'normal')
                             || data.getName(idx)
                     });
+                }
+                if (labelLine) {
+                    labelLine.setStyle(itemModel.getModel('labelLine').getLineStyle());
                 }
 
                 toggleItemSelected(

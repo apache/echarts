@@ -12,7 +12,6 @@ define(function (require) {
 
     var BoundingRect = require('zrender/core/BoundingRect');
 
-    var v2Copy = vector.copy;
     var v2ApplyTransform = vector.applyTransform;
 
     // Dummy transform node
