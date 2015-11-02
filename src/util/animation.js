@@ -20,16 +20,22 @@
     function createWrap() {
 
         var storage = [];
+        var elExistsMap = {};
         var doneCallback;
 
         return {
 
             /**
+             * Caution: a el can only be added once, otherwise 'done'
+             * might not be called. This method checks this (by el.id),
+             * suppresses adding and returns false when existing el found.
+             *
              * @param {modele:zrender/Element} el
              * @param {Object} target
              * @param {number} [time=500]
              * @param {number} [delay=0]
              * @param {string} [easing='linear']
+             * @return {boolean} Whether adding succeeded.
              *
              * @example
              *     add(el, target, time, delay, easing);
@@ -43,10 +49,16 @@
                     delay = 0;
                 }
 
+                if (elExistsMap[el.id]) {
+                    return false;
+                }
+                elExistsMap[el.id] = 1;
+
                 storage.push(
                     {el: el, target: target, time: time, delay: delay, easing: easing}
                 );
-                return this;
+
+                return true;
             },
 
             /**
@@ -64,34 +76,11 @@
              * Will stop exist animation firstly.
              */
             start: function () {
+                var count = storage.length;
 
-                // Stop exist animation.
                 for (var i = 0, len = storage.length; i < len; i++) {
                     var item = storage[i];
-                    item.el
-                        .stopAnimation()
-                        .animateToShallow(item.target, item.time, item.delay);
-                }
-
-                var count = 0;
-                for (var i = 0, len = storage.length; i < len; i++) {
-                    count += storage[i].el.animators.length;
-                }
-
-                // No animators. This should be checked before animators[i].start(),
-                // because 'done' may be executed immediately if no need to animate.
-                if (!count) {
-                    doneCallback && doneCallback();
-                }
-
-                for (var i = 0, len = storage.length; i < len; i++) {
-                    // Animators may be removed immediately after start
-                    // if there is nothing to animate. So do reverse travel.
-                    var item = storage[i];
-                    var animators = item.el.animators;
-                    for (var j = animators.length - 1; j >= 0; j--) {
-                        animators[j].done(done).start(item.easing);
-                    }
+                    item.el.animateTo(item.target, item.time, item.delay, done);
                 }
 
                 return this;
@@ -100,6 +89,7 @@
                     count--;
                     if (!count) {
                         storage.length = 0;
+                        elExistsMap = {};
                         doneCallback && doneCallback();
                     }
                 }

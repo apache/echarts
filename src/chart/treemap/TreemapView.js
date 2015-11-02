@@ -471,7 +471,6 @@
                     if (storageName === 'nodeGroup') {
                         target = {position: el.position.slice()};
                         el.position = last.old;
-                        animationWrap.add(el, target, duration, easing);
                     }
                     else {
                         target = {shape: zrUtil.extend({}, el.shape)};
