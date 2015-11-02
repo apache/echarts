@@ -9,7 +9,7 @@ define(function (require) {
                 if (coordSys && coordSys.type !== 'view') {
                     return;
                 }
-                var graph = seriesModel.getData().graph;
+                var graph = seriesModel.getGraph();
 
                 graph.eachNode(function (node) {
                     var model = node.getModel();

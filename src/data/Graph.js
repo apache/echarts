@@ -46,6 +46,18 @@ define(function(require) {
          * @private
          */
         this._edgesMap = {};
+
+        /**
+         * @type {module:echarts/data/List}
+         * @readOnly
+         */
+        this.data;
+
+        /**
+         * @type {module:echarts/data/List}
+         * @readOnly
+         */
+        this.edgeData;
     };
 
     var graphProto = Graph.prototype;
@@ -249,6 +261,7 @@ define(function(require) {
 
     };
 
+    // Filter update
     graphProto.update = function () {
         var data = this.data;
         var edgeData = this.edgeData;
@@ -262,15 +275,31 @@ define(function(require) {
             nodes[data.getRawIndex(i)].dataIndex = i;
         }
 
+        edgeData.filterSelf(function (idx) {
+            var edge = edges[edgeData.getRawIndex(idx)];
+            return edge.node1.dataIndex >= 0 && edge.node2.dataIndex >= 0;
+        });
+
         // Update edge
         for (var i = 0, len = edges.length; i < len; i++) {
             edges[i].dataIndex = -1;
         }
         for (var i = 0, len = edgeData.count(); i < len; i++) {
-            if (edges[i].node1.dataIndex >= 0 && edges[i].node2.dataIndex >= 0) {
-                edges[edgeData.getRawIndex(i)].dataIndex = i;  
-            }
+            edges[edgeData.getRawIndex(i)].dataIndex = i;  
         }
+    };
+
+    /**
+     * Set edge data
+     * @param {module:echarts/data/List} edgeData
+     */
+    graphProto.setEdgeData = function (edgeData) {
+        this.edgeData = edgeData;
+        this._edgeDataSaved = edgeData.cloneShallow();
+    };
+
+    graphProto.restoreData = function () {
+        this.edgeData = this._edgeDataSaved.cloneShallow();
     };
 
     /**

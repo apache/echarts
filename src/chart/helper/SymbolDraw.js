@@ -42,13 +42,15 @@ define(function (require) {
         });
 
         if (enableAnimation) {
-            symbolEl.scale = [0, 0];
+            // FIXME Use scale to improve performance
+            var zeroShape = symbolUtil.getSymbolShape(
+                symbolType, 0, 0, 0, 0
+            ).shape;
+            var normalShape = symbolEl.shape;
+            symbolEl.shape = zeroShape;
             symbolEl.animateTo({
-                scale: [1, 1]
+                shape: normalShape
             }, 500);
-        }
-        else {
-            symbolEl.scale = [1, 1];
         }
 
         return symbolEl;

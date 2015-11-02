@@ -1,3 +1,4 @@
+
 define(function (require) {
 
     var SymbolDraw = require('../helper/SymbolDraw');
@@ -42,10 +43,7 @@ define(function (require) {
 
             lineDraw.updateData(
                 data.graph.edgeData,
-                seriesModel, api, false,
-                function (idx) {
-                    return data.graph.edges[idx].dataIndex >= 0;
-                }
+                seriesModel, api, false
             );
 
             // Save the original lineWidth

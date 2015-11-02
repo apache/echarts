@@ -35,6 +35,11 @@ define(function (require) {
                 var max = [];
 
                 bbox.fromPoints(positions, min, max);
+                // Position may be NaN, use view rect instead
+                if (isNaN(min[0]) || isNaN(min[1])) {
+                    min = [viewRect.x, viewRect.y];
+                    max = [viewRect.x + viewRect.width, viewRect.y + viewRect.height];
+                }
 
                 var bbWidth = max[0] - min[0];
                 var bbHeight = max[1] - min[1];

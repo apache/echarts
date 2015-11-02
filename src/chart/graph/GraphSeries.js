@@ -17,29 +17,18 @@ define(function (require) {
         init: function (option) {
             seriesModelProto.init.apply(this, arguments);
 
-            this._udpateCategoriesData();
-
             // Provide data for legend select
             this.legendDataProvider = function () {
                 return this._categoriesData;
             };
+
+            this._updateCategoriesData();
         },
 
         mergeOption: function (option) {
             seriesModelProto.mergeOption.apply(this, arguments);
 
-            this._udpateCategoriesData();
-        },
-
-        _udpateCategoriesData: function () {
-            var categories = zrUtil.map(this.option.categories || [], function (category) {
-                // Data must has value
-                return category.value != null ? category : zrUtil.extend({value : 0}, category);
-            });
-            var categoriesData = new List(['value'], this);
-            categoriesData.initData(categories);
-
-            this._categoriesData = categoriesData;
+            this._updateCategoriesData();
         },
 
         getInitialData: function (option, ecModel) {
@@ -51,13 +40,61 @@ define(function (require) {
             }
         },
 
+        restoreData: function () {
+            seriesModelProto.restoreData.apply(this, arguments);
+            this.getGraph().restoreData();
+        },
+
         /**
-         * Get category model by index
-         * @param  {number} id Category index
-         * @return {module:echarts/model/Model}
+         * @return {module:echarts/data/Graph}
+         */
+        getGraph: function () {
+            return this.getData().graph;
+        },
+
+        /**
+         * @return {module:echarts/data/List}
+         */
+        getEdgeData: function () {
+            return this.getGraph().edgeData;
+        },
+
+        /**
+         * @return {module:echarts/data/List}
          */
         getCategoriesData: function () {
             return this._categoriesData;
+        },
+
+        _updateCategoriesData: function () {
+            var categories = zrUtil.map(this.option.categories || [], function (category) {
+                // Data must has value
+                return category.value != null ? category : zrUtil.extend({value : 0}, category);
+            });
+            var categoriesData = new List(['value'], this);
+            categoriesData.initData(categories);
+
+            this._categoriesData = categoriesData;
+        },
+
+        /**
+         * @param {number} zoom
+         */
+        setRoamZoom: function (zoom) {
+            var roamDetail = this.option.roamDetail;
+            roamDetail && (roamDetail.zoom = zoom);
+        },
+
+        /**
+         * @param {number} x
+         * @param {number} y
+         */
+        setRoamPan: function (x, y) {
+            var roamDetail = this.option.roamDetail;
+            if (roamDetail) {
+                roamDetail.x = x;
+                roamDetail.y = y;
+            }
         },
 
         defaultOption: {
@@ -124,26 +161,6 @@ define(function (require) {
                     opacity: 0.5
                 },
                 emphasis: {}
-            }
-        },
-
-        /**
-         * @param {number} zoom
-         */
-        setRoamZoom: function (zoom) {
-            var roamDetail = this.option.roamDetail;
-            roamDetail && (roamDetail.zoom = zoom);
-        },
-
-        /**
-         * @param {number} x
-         * @param {number} y
-         */
-        setRoamPan: function (x, y) {
-            var roamDetail = this.option.roamDetail;
-            if (roamDetail) {
-                roamDetail.x = x;
-                roamDetail.y = y;
             }
         }
    });

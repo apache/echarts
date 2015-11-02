@@ -16,7 +16,7 @@ define(function(require) {
 
             option.selected = option.selected || {};
 
-            this._data = zrUtil.map(option.data, function (dataItem) {
+            var legendData = zrUtil.map(option.data, function (dataItem) {
                 if (typeof dataItem === 'string') {
                     dataItem = {
                         name: dataItem
@@ -24,6 +24,7 @@ define(function(require) {
                 }
                 return new Model(dataItem, this);
             }, this);
+            this._data = legendData;
 
             var availableNames = zrUtil.map(ecModel.getSeries(), function (series) {
                 return series.name;
@@ -41,7 +42,7 @@ define(function(require) {
             this._availableNames = availableNames;
 
             // Try select the first if selectedMode is single
-            this.select(availableNames[0]);
+            legendData[0] && this.select(legendData[0].get('name'));
         },
 
         /**
@@ -58,9 +59,9 @@ define(function(require) {
             var selected = this.option.selected;
             var selectedMode = this.get('selectedMode');
             if (selectedMode === 'single') {
-                var availableNames = this._availableNames;
-                zrUtil.each(availableNames, function (name) {
-                    selected[name] = false;
+                var data = this._data;
+                zrUtil.each(data, function (dataItem) {
+                    selected[dataItem.get('name')] = false;
                 });
             }
             selected[name] = true;

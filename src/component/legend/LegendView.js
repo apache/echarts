@@ -96,7 +96,7 @@ define(function (require) {
                 );
             }, this);
 
-            ecModel.eachSeries(function (seriesModel) {
+            ecModel.eachSeriesAll(function (seriesModel) {
                 if (seriesModel.legendDataProvider) {
                     var data = seriesModel.legendDataProvider();
                     data.each(function (idx) {
