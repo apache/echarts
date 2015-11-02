@@ -269,7 +269,7 @@ define(function(require) {
 
     /**
      * Set hover style of element
-     * @param {module:zrender/graphic/Displayable} el
+     * @param {module:zrender/Element} el
      * @param {Object} [hoverStyle]
      */
     graphic.setHoverStyle = function (el, hoverStyle) {

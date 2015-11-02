@@ -6,6 +6,8 @@ define(function (require) {
     require('./graph/GraphSeries');
     require('./graph/GraphView');
 
+    require('./graph/roamAction');
+
     echarts.registerProcessor('filter', require('./graph/categoryFilter'));
 
     echarts.registerVisualCoding('chart', zrUtil.curry(

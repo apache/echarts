@@ -8,12 +8,14 @@ define(function (require) {
 
     var createGraphFromNodeEdge = require('../helper/createGraphFromNodeEdge');
 
+    var seriesModelProto = SeriesModel.prototype;
+
     return SeriesModel.extend({
 
         type: 'series.graph',
 
         init: function (option) {
-            SeriesModel.prototype.init.apply(this, arguments);
+            seriesModelProto.init.apply(this, arguments);
 
             this._udpateCategoriesData();
 
@@ -24,7 +26,7 @@ define(function (require) {
         },
 
         mergeOption: function (option) {
-            SeriesModel.prototype.mergeOption.apply(this, arguments);
+            seriesModelProto.mergeOption.apply(this, arguments);
 
             this._udpateCategoriesData();
         },
@@ -76,7 +78,13 @@ define(function (require) {
             symbol: 'circle',
             symbolSize: 10,
 
-            roam: true,
+            // roam: false,
+
+            roamDetail: {
+                x: 0,
+                y: 0,
+                zoom: 1
+            },
 
             // Symbol size scale ratio in roam
             nodeScaleRatio: 0.6,
@@ -104,10 +112,8 @@ define(function (require) {
             },
 
             itemStyle: {
-                normal: {
-                },
-                emphasis: {
-                }
+                normal: {},
+                emphasis: {}
             },
 
             lineStyle: {
@@ -117,8 +123,27 @@ define(function (require) {
                     curveness: 0,
                     opacity: 0.5
                 },
-                emphasis: {
-                }
+                emphasis: {}
+            }
+        },
+
+        /**
+         * @param {number} zoom
+         */
+        setRoamZoom: function (zoom) {
+            var roamDetail = this.option.roamDetail;
+            roamDetail && (roamDetail.zoom = zoom);
+        },
+
+        /**
+         * @param {number} x
+         * @param {number} y
+         */
+        setRoamPan: function (x, y) {
+            var roamDetail = this.option.roamDetail;
+            if (roamDetail) {
+                roamDetail.x = x;
+                roamDetail.y = y;
             }
         }
    });

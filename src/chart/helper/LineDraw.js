@@ -13,15 +13,18 @@ define(function (require) {
      * @param {module:echarts/model/Series} seriesModel
      * @param {module:echarts/ExtensionAPI} api
      * @param {boolean} [enableAnimation=false]
+     * @param {Function} [isIgnore]
      */
-    lineDrawProto.updateData = function (data, seriesModel, api, enableAnimation) {
+    lineDrawProto.updateData = function (
+        data, seriesModel, api, enableAnimation, isIgnore
+    ) {
         var group = this.group;
         var oldData = this._data;
 
         data.diff(oldData)
             .add(function (idx) {
                 var shape = data.getItemLayout(idx);
-                if (shape) {
+                if (!(isIgnore && isIgnore[idx])) {
                     var line = new graphic[shape.cpx1 != null ? 'BezierCurve' : 'Line']({
                         shape: shape
                     });
@@ -33,7 +36,7 @@ define(function (require) {
             .update(function (newIdx, oldIdx) {
                 var line = oldData.getItemGraphicEl(oldIdx);
                 var shape = data.getItemLayout(newIdx);
-                if (!shape) {
+                if (!(isIgnore && isIgnore(newIdx))) {
                     group.remove(line);
                     return;
                 }
