@@ -15,7 +15,7 @@ define(function (require) {
                 dataOpt = [dataOpt];
             }
             // Only use the first data item
-            list.initData(dataOpt && dataOpt.slice(0, 1));
+            list.initData(dataOpt);
             return list;
         },
 
@@ -83,8 +83,12 @@ define(function (require) {
             pointer: {
                 show: true,
                 length: '80%',
-                width: 8,
-                color: 'auto'
+                width: 8
+            },
+            itemStyle: {
+                normal: {
+                    color: 'auto'
+                }
             },
             title: {
                 show: true,

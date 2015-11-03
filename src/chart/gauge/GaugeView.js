@@ -1,9 +1,11 @@
 define(function (require) {
 
+    var PointerPath = require('./PointerPath');
+
     var graphic = require('../../util/graphic');
     var numberUtil = require('../../util/number');
     var parsePercent = numberUtil.parsePercent;
-    var zrUtil = require('zrender/core/util');
+    // var zrUtil = require('zrender/core/util');
 
     function parsePosition(seriesModel, api) {
         var center = seriesModel.get('center');
@@ -22,36 +24,6 @@ define(function (require) {
     }
 
     var PI2 = Math.PI * 2;
-
-    // function getAngleRange(seriesModel) {
-    //     var startAngle = seriesModel.get('startAngle');
-    //     var endAngle = seriesModel.get('endAngle');
-    //     var clockwise = seriesModel.get('clockwise');
-
-    //     // Thresh to [0, Math.PI * 2]
-    //     startAngle = startAngle % (PI2);
-    //     if (startAngle < 0) {
-    //         startAngle = startAngle + PI2;
-    //     }
-    //     endAngle = endAngle % (PI2);
-    //     if (endAngle < 0) {
-    //         endAngle = endAngle + PI2;
-    //     }
-
-    //     if (startAngle > endAngle && clockwise) {
-    //         endAngle += PI2;
-    //     }
-    //     else if (startAngle < endAngle && !clockwise) {
-    //         startAngle += PI2;
-    //     }
-    //     if (!clockwise) {
-    //         var tmp = endAngle;
-    //         endAngle = startAngle;
-    //         startAngle = tmp;
-    //     }
-
-    //     return [startAngle, endAngle];
-    // }
 
     var GaugeView = require('../../view/Chart').extend({
 
@@ -78,16 +50,6 @@ define(function (require) {
             var clockwise = seriesModel.get('clockwise');
             var startAngle = -seriesModel.get('startAngle') / 180 * Math.PI;
             var endAngle = -seriesModel.get('endAngle') / 180 * Math.PI;
-
-            // Thresh to [0, Math.PI * 2]
-            // startAngle = startAngle % (PI2);
-            // if (startAngle < 0) {
-            //     startAngle = startAngle + PI2;
-            // }
-            // endAngle = endAngle % (PI2);
-            // if (endAngle < 0) {
-            //     endAngle = endAngle + PI2;
-            // }
 
             var angleRangeSpan = (endAngle - startAngle) % PI2;
 
@@ -139,10 +101,21 @@ define(function (require) {
                 return colorList[i - 1][1];
             };
 
+            if (!clockwise) {
+                var tmp = startAngle;
+                startAngle = endAngle;
+                endAngle = tmp;
+            }
+
             this._renderTicks(
                 seriesModel, ecModel, api, getColor, posInfo,
                 startAngle, endAngle, clockwise
             );
+
+            this._renderPointer(
+                seriesModel, ecModel, api, getColor, posInfo,
+                startAngle, endAngle, clockwise
+            )
         },
 
         _renderTicks: function (
@@ -261,12 +234,82 @@ define(function (require) {
                     angle += step;
                 }
             }
-
-            console.log(startAngle, endAngle);
         },
 
-        _renderPointer: function (seriesModel, ecModel, api, getColor) {
+        _renderPointer: function (
+            seriesModel, ecModel, api, getColor, posInfo,
+            startAngle, endAngle, clockwise
+        ) {
+            var linearMap = numberUtil.linearMap;
+            var valueExtent = [+seriesModel.get('min'), +seriesModel.get('max')];
+            var angleExtent = [startAngle, endAngle];
 
+            if (!clockwise) {
+                angleExtent = angleExtent.reverse();
+            }
+
+            var data = seriesModel.getData();
+            var oldData = this._data;
+
+            var group = this.group;
+
+            data.diff(oldData)
+                .add(function (idx) {
+                    var pointer = new PointerPath({
+                        shape: {
+                            angle: startAngle
+                        }
+                    });
+
+                    api.updateGraphicEl(pointer, {
+                        shape: {
+                            angle: linearMap(data.get('value', idx), valueExtent, angleExtent)
+                        }
+                    });
+
+                    group.add(pointer);
+                    data.setItemGraphicEl(idx, pointer);
+                })
+                .update(function (newIdx, oldIdx) {
+                    var pointer = oldData.getItemGraphicEl(oldIdx);
+
+                    api.updateGraphicEl(pointer, {
+                        shape: {
+                            angle: linearMap(data.get('value', newIdx), valueExtent, angleExtent)
+                        }
+                    });
+
+                    group.add(pointer);
+                    data.setItemGraphicEl(newIdx, pointer);
+                })
+                .remove(function (idx) {
+                    var pointer = oldData.getItemGraphicEl(idx);
+                    group.remove(pointer);
+                })
+                .execute();
+
+            data.eachItemGraphicEl(function (pointer, idx) {
+                var itemModel = data.getItemModel(idx);
+                var pointerModel = itemModel.getModel('pointer');
+
+                pointer.attr({
+                    shape: {
+                        x: posInfo.cx,
+                        y: posInfo.cy,
+                        width: pointerModel.get('width'),
+                        r: parsePercent(pointerModel.get('length'), posInfo.r)
+                    },
+                    style: itemModel.getModel('itemStyle.normal').getItemStyle()
+                });
+
+                if (pointer.style.fill === 'auto') {
+                    pointer.setStyle('fill', getColor(
+                        (data.get('value', idx) - valueExtent[0]) / (valueExtent[1] - valueExtent[0])
+                    ));
+                }
+            });
+
+            this._data = data;
         },
 
         _renderTitle: function (seriesModel, ecModel, api) {

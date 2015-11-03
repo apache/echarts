@@ -292,7 +292,7 @@ define(function (require) {
             }
 
             ecModel.eachSeries(function (seriesModel, idx) {
-                var id = seriesModel.uid;
+                var id = getViewId(seriesModel);
 
                 var chart = chartsMap[id];
                 if (!chart) {
@@ -343,7 +343,7 @@ define(function (require) {
                     return;
                 }
 
-                var id = componentModel.uid;
+                var id = getViewId(componentModel);
                 var component = componentsMap[id];
                 if (!component) {
                     // Create and add component
@@ -468,7 +468,7 @@ define(function (require) {
 
             // Render all charts
             ecModel.eachSeries(function (seriesModel, idx) {
-                var id = seriesModel.uid;
+                var id = getViewId(seriesModel);
                 var chart = this._chartsMap[id];
                 chart.__keepAlive = true;
                 chart.render(seriesModel, ecModel, api, payload);
@@ -501,6 +501,14 @@ define(function (require) {
             this.zr.dispose();
         }
     };
+
+    /**
+     * @param {module:echarts/model/Series|module:echarts/model/Component} model
+     * @return {string}
+     */
+    function getViewId(model) {
+        return model.name + '_' + model.type;
+    }
 
 
     /**
