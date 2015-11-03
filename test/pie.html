@@ -46,11 +46,9 @@
                     series: [{
                         name: 'pie',
                         type: 'pie',
-                        stack: 'all',
-                        symbol: 'circle',
-                        symbolSize: 10,
                         selectedMode: 'single',
                         selectedOffset: 30,
+                        clockwise: true,
                         data:[
                             {value:335, name:'直接访问'},
                             {value:310, name:'邮件营销'},
@@ -64,6 +62,7 @@
 
                 var config = {
                     labelPosition: 'outside',
+                    clockwise: true,
                     labelLineLen: 20,
                     labelLineLen2: 5
                 };
@@ -72,6 +71,7 @@
                     chart.setOption({
                         series: [{
                             name: 'pie',
+                            clockwise: config.clockwise,
                             label: {
                                 normal: {
                                     position: config.labelPosition
@@ -86,6 +86,8 @@
                 }
 
                 var gui = new dat.GUI();
+                gui.add(config, 'clockwise')
+                    .onChange(update);
                 gui.add(config, 'labelPosition', ['inside', 'outside'])
                     .onChange(update);
                 gui.add(config, 'labelLineLen', 0, 100)

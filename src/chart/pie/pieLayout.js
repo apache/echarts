@@ -34,7 +34,7 @@ define(function (require) {
             }
             var unitRadian = Math.PI / sum * 2;
 
-            var clockWise = seriesModel.get('clockWise');
+            var clockwise = seriesModel.get('clockwise');
 
             var roseType = seriesModel.get('roseType');
 
@@ -47,6 +47,8 @@ define(function (require) {
             var valueSumLargerThanMinAngle = 0;
 
             var currentAngle = startAngle;
+
+            var dir = clockwise ? 1 : -1;
             data.each('value', function (value, idx) {
                 var angle = sum === 0 ? unitRadian : (value * unitRadian);
 
@@ -58,12 +60,12 @@ define(function (require) {
                     valueSumLargerThanMinAngle += value;
                 }
 
-                var endAngle = currentAngle + angle;
+                var endAngle = currentAngle + dir * angle;
                 data.setItemLayout(idx, {
                     angle: angle,
                     startAngle: currentAngle,
                     endAngle: endAngle,
-                    clockwise: clockWise,
+                    clockwise: clockwise,
                     cx: cx,
                     cy: cy,
                     r0: r0,
@@ -84,9 +86,9 @@ define(function (require) {
                     var angle = PI2 / data.count();
                     data.each(function (idx) {
                         var layout = data.getItemLayout(idx);
-                        layout.startAngle = idx * angle;
-                        layout.endAngle = (idx + 1) * angle;
-                    })
+                        layout.startAngle = startAngle + dir * idx * angle;
+                        layout.endAngle = startAngle + dir * (idx + 1) * angle;
+                    });
                 }
                 else {
                     unitRadian = restAngle / valueSumLargerThanMinAngle;
@@ -96,7 +98,7 @@ define(function (require) {
                         var angle = layout.angle === minAngle
                             ? minAngle : value * unitRadian;
                         layout.startAngle = currentAngle;
-                        layout.endAngle = currentAngle + angle;
+                        layout.endAngle = currentAngle + dir * angle;
                         currentAngle += angle;
                     });
                 }
@@ -104,5 +106,5 @@ define(function (require) {
 
             labelLayout(seriesModel, r, width, height);
         });
-    }
+    };
 });

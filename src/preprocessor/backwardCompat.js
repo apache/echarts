@@ -16,9 +16,8 @@ define(function (require) {
             each(POSSIBLE_STYLES, function (styleName) {
                 var normalItemStyleOpt = itemStyleOpt.normal;
                 var emphasisItemStyleOpt = itemStyleOpt.emphasis;
-                opt[styleName] = opt[styleName] || {
-                };
                 if (normalItemStyleOpt && normalItemStyleOpt[styleName]) {
+                    opt[styleName] = opt[styleName] || {};
                     if (!opt[styleName].normal) {
                         opt[styleName].normal = normalItemStyleOpt[styleName];
                     }
@@ -28,6 +27,7 @@ define(function (require) {
                     normalItemStyleOpt[styleName] = null;
                 }
                 if (emphasisItemStyleOpt && emphasisItemStyleOpt[styleName]) {
+                    opt[styleName] = opt[styleName] || {};
                     if (!opt[styleName].emphasis) {
                         opt[styleName].emphasis = emphasisItemStyleOpt[styleName];
                     }
@@ -72,8 +72,11 @@ define(function (require) {
                 }
             }
             if (seriesOpt.type === 'map') {
-                seriesOpt.map = seriesOpt.mapType || seriesOpt.map;
+                seriesOpt.map = seriesOpt.map || seriesOpt.mapType;
+            }
+            if (seriesOpt.type === 'pie' || seriesOpt.type === 'gauge') {
+                seriesOpt.clockwise = seriesOpt.clockwise != null ? seriesOpt.clockwise : seriesOpt.clockWise;
             }
         });
-    }
+    };
 });

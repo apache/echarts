@@ -43,7 +43,7 @@ define(function(require) {
             center: ['50%', '50%'],
             radius: [0, '40%'],
             // 默认顺时针
-            clockWise: true,
+            clockwise: true,
             startAngle: 90,
             // 最小角度改为0
             minAngle: 0,

@@ -44,7 +44,7 @@ define(function (require) {
         var midAngle = (layout.startAngle + layout.endAngle) / 2;
 
         var dx = Math.cos(midAngle);
-        var dy = (layout.clockwise ? 1 : -1) * Math.sin(midAngle);
+        var dy = Math.sin(midAngle);
 
         var offset = isSelected ? selectedOffset : 0;
 
@@ -133,6 +133,8 @@ define(function (require) {
             data.diff(oldData)
                 .add(function (idx) {
                     var layout = data.getItemLayout(idx);
+
+                    console.log(layout);
 
                     var sector = createSectorAndLabel(
                         layout, '', hasAnimation && !isFirstRender
@@ -285,7 +287,7 @@ define(function (require) {
 
             clipPath.animateTo({
                 shape: {
-                    endAngle: startAngle + Math.PI * 2
+                    endAngle: startAngle + (clockwise ? 1 : -1) * Math.PI * 2
                 }
             }, 1000, 'cubicOut', cb);
 
