@@ -49,8 +49,6 @@ define(function (require) {
                     var layout = data.getItemLayout(idx);
                     var labelLayout = layout.label;
 
-                    var itemModel = data.getItemModel(idx);
-
                     var poly = new graphic.Polygon({
                         shape: {
                             points: layout.points
@@ -77,7 +75,6 @@ define(function (require) {
                         shape: {
                             points: labelLayout.linePoints
                         },
-                        ignore: !itemModel.get('labelLine.show'),
                         silent: true
                     });
                     poly.__labelLine = labelLine;
@@ -94,7 +91,6 @@ define(function (require) {
 
                     var layout = data.getItemLayout(newIdx);
                     var labelLayout = layout.label;
-                    var itemModel = data.getItemModel(newIdx);
 
                     api.updateGraphicEl(poly, {
                         shape: {
@@ -108,8 +104,7 @@ define(function (require) {
                     api.updateGraphicEl(labelLine, {
                         shape: {
                             points: labelLayout.linePoints
-                        },
-                        ignore: !itemModel.get('labelLine.show')
+                        }
                     });
                     api.updateGraphicEl(labelText, {
                         style: {
@@ -170,34 +165,30 @@ define(function (require) {
                     itemStyleModel.getModel('emphasis').getItemStyle()
                 );
 
+                // Set label style
                 var labelText = poly.__labelText;
                 var labelLine = poly.__labelLine;
-                if (labelText) {
-                    var labelModel = itemModel.getModel('label.normal');
-                    var textStyleModel = labelModel.getModel('textStyle');
-                    var labelPosition = labelModel.get('position');
-                    var isLabelInside = labelPosition === 'inside'
-                        || labelPosition === 'inner' || labelPosition === 'center';
+                var labelModel = itemModel.getModel('label.normal');
+                var textStyleModel = labelModel.getModel('textStyle');
+                var labelPosition = labelModel.get('position');
+                var isLabelInside = labelPosition === 'inside'
+                    || labelPosition === 'inner' || labelPosition === 'center';
+                labelText.setStyle({
                     // Default use item visual color
-                    labelText.setStyle({
-                        fill: textStyleModel.get('color')
-                            || isLabelInside ? '#fff' : visualColor
-                    });
-                    labelText.setStyle({
-                        text: seriesModel.getFormattedLabel(idx, 'normal')
-                            || data.getName(idx),
-                        font: textStyleModel.getFont()
-                    });
-                }
-                if (labelLine) {
-                    // Default use item visual color
-                    labelLine.setStyle({
-                        stroke: visualColor
-                    });
-                    labelLine.setStyle(
-                        itemModel.getModel('labelLine.lineStyle').getLineStyle()
-                    );
-                }
+                    fill: textStyleModel.get('color')
+                        || isLabelInside ? '#fff' : visualColor,
+                    text: seriesModel.getFormattedLabel(idx, 'normal')
+                        || data.getName(idx),
+                    font: textStyleModel.getFont()
+                });
+                // Default use item visual color
+                labelLine.attr('ignore', !itemModel.get('labelLine.show'));
+                labelLine.setStyle({
+                    stroke: visualColor
+                });
+                labelLine.setStyle(
+                    itemModel.getModel('labelLine.lineStyle').getLineStyle()
+                );
             });
         }
     });

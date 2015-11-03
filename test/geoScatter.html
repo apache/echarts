@@ -9,6 +9,7 @@
             html, body, #main {
                 width: 100%;
                 height: 100%;
+                margin: 0;
             }
         </style>
         <div id="main"></div>
@@ -232,7 +233,7 @@
                         geoCoord[1] + Math.random() * 1 - 0.5,
                         Math.random()
                     ];
-                }
+                };
 
                 while(len--) {
                     var geoCoord = placeList[len % placeList.length].geoCoord;
@@ -244,7 +245,7 @@
                     data2.push({
                         name: placeList[len % placeList.length].name + len,
                         value: randomValue(geoCoord)
-                    })
+                    });
                 }
 
                 chart.setOption({

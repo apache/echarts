@@ -3,6 +3,7 @@
         <meta charset="utf-8">
         <script src="esl.js"></script>
         <script src="config.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
     </head>
     <body>
         <style>
@@ -60,6 +61,37 @@
                         itemStyle: itemStyle
                     }]
                 });
+
+                var config = {
+                    labelPosition: 'outside',
+                    labelLineLen: 20,
+                    labelLineLen2: 5
+                };
+
+                function update() {
+                    chart.setOption({
+                        series: [{
+                            name: 'pie',
+                            label: {
+                                normal: {
+                                    position: config.labelPosition
+                                }
+                            },
+                            labelLine: {
+                                length: config.labelLineLen,
+                                length2: config.labelLineLen2
+                            }
+                        }]
+                    });
+                }
+
+                var gui = new dat.GUI();
+                gui.add(config, 'labelPosition', ['inside', 'outside'])
+                    .onChange(update);
+                gui.add(config, 'labelLineLen', 0, 100)
+                    .onChange(update);
+                gui.add(config, 'labelLineLen2', 0, 100)
+                    .onChange(update);
             })
 
         </script>

@@ -123,6 +123,12 @@ define(function (require) {
 
                 textAlign = isLabelInside ? 'center' : (dx > 0 ? 'left' : 'right');
             }
+            if (!linePoints) {
+                // Default line points
+                var linePoints = [
+                    [textX, textY], [textX, textY], [textX, textY]
+                ];
+            }
 
             var textBaseline = 'middle';
             var font = labelModel.getModel('textStyle').getFont();

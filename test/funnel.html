@@ -80,32 +80,34 @@
 
                 var config = {
                     sort: 'ascending',
-                    labelPosition: 'inside'
+                    labelPosition: 'inside',
+                    labelLineLen: 20
                 };
+
+                function update() {
+                    chart.setOption({
+                        series: [{
+                            name: '漏斗图',
+                            sort: config.sort,
+                            label: {
+                                normal: {
+                                    position: config.labelPosition
+                                }
+                            },
+                            labelLine: {
+                                length: config.labelLineLen
+                            }
+                        }]
+                    });
+                }
 
                 var gui = new dat.GUI();
                 gui.add(config, 'sort', ['descending', 'ascending'])
-                    .onChange(function (value) {
-                        chart.setOption({
-                            series: [{
-                                name: 'Les Miserables',
-                                sort: value
-                            }]
-                        });
-                    });
+                    .onChange(update);
                 gui.add(config, 'labelPosition', ['inside', 'left', 'right'])
-                    .onChange(function (value) {
-                        chart.setOption({
-                            series: [{
-                                name: 'Les Miserables',
-                                label: {
-                                    normal: {
-                                        position: value
-                                    }
-                                }
-                            }]
-                        });
-                    });
+                    .onChange(update);
+                gui.add(config, 'labelLineLen', 0, 100)
+                    .onChange(update);
             });
 
         </script>
