@@ -1,6 +1,6 @@
 define(function (require) {
 
-    var numberUtil = require('../util/number')
+    var numberUtil = require('../util/number');
     var linearMap = numberUtil.linearMap;
     var zrUtil = require('zrender/core/util');
 
@@ -69,7 +69,7 @@ define(function (require) {
          * @return {boolean}
          */
         containData: function (data) {
-            return this.contain(this.dataToCoord(data))
+            return this.contain(this.dataToCoord(data));
         },
 
         /**

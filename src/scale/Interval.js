@@ -182,16 +182,16 @@ define(function (require) {
             var err = approxTickNum / span * interval;
 
             // Filter ticks to get closer to the desired count.
-            if (err <= .15) {
+            if (err <= 0.15) {
                 interval *= 10;
             }
-            else if (err <= .3) {
+            else if (err <= 0.3) {
                 interval *= 5;
             }
-            else if (err <= .5) {
+            else if (err <= 0.5) {
                 interval *= 3;
             }
-            else if (err <= .75) {
+            else if (err <= 0.75) {
                 interval *= 2;
             }
 
@@ -230,7 +230,7 @@ define(function (require) {
      */
     IntervalScale.create = function () {
         return new IntervalScale();
-    }
+    };
 
     require('./scale').register(IntervalScale);
 

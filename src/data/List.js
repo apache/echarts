@@ -180,6 +180,7 @@ define(function (require) {
      * @param {string} [valueProp='value']
      */
     listProto.initData = function (data, nameList, valueProp) {
+        data = data || [];
 
         valueProp = valueProp || 'value';
 

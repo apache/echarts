@@ -151,7 +151,7 @@ define(function (require) {
 
         // Do nothing
         niceTicks: function () {},
-        niceExtent: function () {},
+        niceExtent: function () {}
     };
 
     require('./scale').register(OrdinalScale);

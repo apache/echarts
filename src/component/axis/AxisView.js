@@ -15,7 +15,7 @@ define(function (require) {
             labelInterval = this._labelInterval = axisLabelInterval(this);
         }
         return labelInterval;
-    }
+    };
 
     /**
      * @inner

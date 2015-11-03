@@ -26,7 +26,7 @@ define(function (require) {
             }
         }
         return lo;
-    }
+    };
 
     /**
      * @param {string|Date|number} value
@@ -36,7 +36,7 @@ define(function (require) {
         return value instanceof Date
                ? value
                : new Date(typeof value == 'string' ? value.replace(/-/g, '/') : value);
-    }
+    };
 
     /**
      * @param {string} str
@@ -45,7 +45,7 @@ define(function (require) {
      */
     var s2d = function (str) {
         return str < 10 ? ('0' + str) : str;
-    }
+    };
 
     /**
      * ISO Date format
@@ -85,7 +85,7 @@ define(function (require) {
             .replace('s', s);
 
         return tpl;
-    }
+    };
     /**
      * @alias module:echarts/coord/scale/Time
      * @constructor
@@ -93,7 +93,7 @@ define(function (require) {
     var TimeScale = function () {
 
         IntervalScale.call(this);
-    }
+    };
 
     TimeScale.prototype = {
 
@@ -115,7 +115,7 @@ define(function (require) {
             approxTickNum = approxTickNum || 10;
 
             var extent = this._extent;
-            var span = extent[1]-extent[0];
+            var span = extent[1] - extent[0];
             var approxInterval = span / approxTickNum;
             var scaleLevelsLen = scaleLevels.length;
             var idx = bisect(scaleLevels, approxInterval, 0, scaleLevelsLen);
