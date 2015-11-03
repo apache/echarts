@@ -28,7 +28,7 @@ define(function (require) {
         nodeData.initData(nodes);
         edgeData.initData(edges, linkNameList, 'weight');
 
-        graph.edgeData = edgeData;
+        graph.setEdgeData(edgeData);
 
         linkList.linkToGraph(nodeData, graph);
 

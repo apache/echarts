@@ -1,10 +1,11 @@
+// Pick color from palette for each data item
 define(function (require) {
 
-    return function (ecModel) {
+    return function (seriesType, ecModel) {
         var offset = 0;
         var colorList = ecModel.get('color');
 
-        ecModel.eachSeriesByTypeAll('pie', function (seriesModel) {
+        ecModel.eachSeriesByTypeAll(seriesType, function (seriesModel) {
             var dataAll = seriesModel.getDataAll();
             if (!ecModel.isSeriesFiltered(seriesModel)) {
                 var data = seriesModel.getData();
@@ -13,7 +14,7 @@ define(function (require) {
                     var rawIdx = data.getRawIndex(idx);
                     var color = itemModel.get('itemStyle.normal.color')
                         || colorList[(offset + rawIdx) % colorList.length];
-                    // Legend use the visual info in data before processed
+                    // Legend may use the visual info in data before processed
                     dataAll.setItemVisual(rawIdx, 'color', color);
                     data.setItemVisual(idx, 'color', color);
                 });

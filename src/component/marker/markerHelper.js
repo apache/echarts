@@ -98,7 +98,7 @@ define(function (require) {
         var value = item.value;
         value = [value[coordDataIdx[0]], value[coordDataIdx[1]]];
         return coordSys.containData(value);
-    }
+    };
 
     return {
         dataTransform: dataTransform,

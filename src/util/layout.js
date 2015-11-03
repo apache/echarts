@@ -121,20 +121,23 @@ define(function(require) {
         var width = parsePercent(positionInfo.width, containerWidth);
         var height = parsePercent(positionInfo.height, containerHeight);
 
+        var verticalMargin = margin[2] + margin[0];
+        var horizontalMargin = margin[1] + margin[3];
+
         // If width is not specified, calculate width from x and x2
         if (isNaN(width)) {
-            width = containerWidth - x2 - margin[2] - margin[0] - x;
+            width = containerWidth - x2 - horizontalMargin - x;
         }
         if (isNaN(height)) {
-            height = containerHeight - y2 - margin[1] - margin[3] - y;
+            height = containerHeight - y2 - verticalMargin - y;
         }
 
         // If x is not specified, calculate x from x2 and width
         if (isNaN(x)) {
-            x = containerWidth - x2 - width - margin[2] - margin[0];
+            x = containerWidth - x2 - width - horizontalMargin;
         }
         if (isNaN(y)) {
-            y = containerHeight - y2 - height - margin[1] - margin[3];
+            y = containerHeight - y2 - height - verticalMargin;
         }
 
         if (!notAlignX) {
@@ -143,7 +146,7 @@ define(function(require) {
                     x = containerWidth / 2 - width / 2 - margin[3];
                     break;
                 case 'right':
-                    x = containerWidth - width - margin[3] - margin[1];
+                    x = containerWidth - width - horizontalMargin;
                     break;
             }
         }
@@ -154,7 +157,7 @@ define(function(require) {
                     y = containerHeight / 2 - height / 2 - margin[0];
                     break;
                 case 'bottom':
-                    y = containerHeight - height - margin[0] - margin[2];
+                    y = containerHeight - height - verticalMargin;
                     break;
             }
         }

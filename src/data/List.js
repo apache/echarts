@@ -180,6 +180,7 @@ define(function (require) {
      * @param {string} [valueProp='value']
      */
     listProto.initData = function (data, nameList, valueProp) {
+        data = data || [];
 
         valueProp = valueProp || 'value';
 
@@ -894,9 +895,7 @@ define(function (require) {
      * New list only change the indices.
      */
     listProto.cloneShallow = function () {
-        var dimensionInfoList = zrUtil.map(this.dimensions, function (dim) {
-            return this._dimensionInfos[dim];
-        }, this);
+        var dimensionInfoList = zrUtil.map(this.dimensions, this.getDimensionInfo, this);
         var list = new List(dimensionInfoList, this.hostModel);
 
         // FIXME

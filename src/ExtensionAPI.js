@@ -26,8 +26,8 @@ define(function(require) {
             enableAnimation
                 ? el.animateTo(props, duration, animationEasing)
                 : el.attr(props);
-        }
-    };
+        };
+    }
 
     return ExtensionAPI;
 });

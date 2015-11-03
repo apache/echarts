@@ -24,23 +24,17 @@ define(function (require) {
         data.diff(oldData)
             .add(function (idx) {
                 var shape = data.getItemLayout(idx);
-                if (!(isIgnore && isIgnore[idx])) {
-                    var line = new graphic[shape.cpx1 != null ? 'BezierCurve' : 'Line']({
-                        shape: shape
-                    });
+                var line = new graphic[shape.cpx1 != null ? 'BezierCurve' : 'Line']({
+                    shape: shape
+                });
 
-                    data.setItemGraphicEl(idx, line);
-                    group.add(line);   
-                }
+                data.setItemGraphicEl(idx, line);
+                group.add(line);
             })
             .update(function (newIdx, oldIdx) {
                 var line = oldData.getItemGraphicEl(oldIdx);
                 var shape = data.getItemLayout(newIdx);
-                if (!(isIgnore && isIgnore(newIdx))) {
-                    group.remove(line);
-                    return;
-                }
-                if (shape.cpx1 != null && shape.type === 'line') {
+                if (shape.cpx1 != null && line.type === 'line') {
                     var oldShape = line.shape;
                     line = new graphic.BezierCurve({
                         shape: oldShape
@@ -50,7 +44,9 @@ define(function (require) {
                         cpy1: (oldShape.y1 + oldShape.y2) / 2
                     });
                 }
-                api.updateGraphicEl(line, shape);
+                api.updateGraphicEl(line, {
+                    shape: shape
+                });
 
                 data.setItemGraphicEl(newIdx, line);
                 group.add(line);
@@ -86,7 +82,9 @@ define(function (require) {
         });
     };
 
+    lineDrawProto.remove = function () {
 
+    };
 
     return LineDraw;
 });

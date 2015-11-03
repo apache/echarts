@@ -12,7 +12,7 @@ define(function (require) {
 
     var BoundingRect = require('zrender/core/BoundingRect');
 
-    var v2Copy = vector.copy;
+    var v2ApplyTransform = vector.applyTransform;
 
     // Dummy transform node
     function TransformDummy() {
@@ -84,24 +84,13 @@ define(function (require) {
          */
         transformTo: function (x, y, width, height) {
             var rect = this.getBoundingRect();
+            var viewTransform = this._viewTransform;
 
-            rect = rect.clone();
-            // Longitute is inverted
-            rect.y = -rect.y - rect.height;
-
-            this.transform = rect.calculateTransform(
+            viewTransform.transform = rect.calculateTransform(
                 new BoundingRect(x, y, width, height)
             );
 
-            this.decomposeTransform();
-
-            var scale = this.scale;
-            var viewTransform = this._viewTransform;
-
-            scale[1] = -scale[1];
-
-            v2Copy(viewTransform.position, this.position);
-            v2Copy(viewTransform.scale, scale);
+            viewTransform.decomposeTransform();
 
             this._updateTransform();
         },
@@ -133,22 +122,16 @@ define(function (require) {
         _updateTransform: function () {
             var roamTransform = this._roamTransform;
             var viewTransform = this._viewTransform;
-            var scale = this.scale;
+            // var scale = this.scale;
 
             viewTransform.parent = roamTransform;
             roamTransform.updateTransform();
             viewTransform.updateTransform();
 
             viewTransform.transform
-                && matrix.copy(this.transform, viewTransform.transform);
+                && matrix.copy(this.transform || (this.transform = []), viewTransform.transform);
 
             this.decomposeTransform();
-
-            scale[1] = -scale[1];
-
-            // Update transform position
-
-            this.updateTransform();
         },
 
         /**
@@ -166,8 +149,8 @@ define(function (require) {
         dataToPoint: function (data) {
             var transform = this.transform;
             return transform
-                ? vector.applyTransform([], data, this.transform)
-                : data.slice();
+                ? v2ApplyTransform([], data, transform)
+                : [data[0], data[1]];
         },
 
         /**
@@ -178,19 +161,19 @@ define(function (require) {
         pointToData: function (point) {
             var invTransform = this.invTransform;
             return invTransform
-                ? vector.applyTransform([], point, invTransform)
-                : point.slice();
-        },
+                ? v2ApplyTransform([], point, invTransform)
+                : [point[0], point[1]];
+        }
 
         /**
          * @return {number}
          */
-        getScalarScale: function () {
-            // Use determinant square root of transform to mutiply scalar
-            var m = this.transform;
-            var det = Math.sqrt(Math.abs(m[0] * m[3] - m[2] * m[1]));
-            return det;
-        }
+        // getScalarScale: function () {
+        //     // Use determinant square root of transform to mutiply scalar
+        //     var m = this.transform;
+        //     var det = Math.sqrt(Math.abs(m[0] * m[3] - m[2] * m[1]));
+        //     return det;
+        // }
     };
 
     zrUtil.mixin(View, Transformable);

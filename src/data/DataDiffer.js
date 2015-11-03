@@ -55,7 +55,7 @@ define(function(require) {
             // Travel by inverted order to make sure order consistency
             // when duplicate keys exists (consider newDataIndex.pop() below).
             // For performance consideration, these code below do not look neat.
-            for (i = oldArr.length - 1; i >= 0; i--) {
+            for (i = 0; i < oldArr.length; i++) {
                 var key = keyGetter(oldArr[i]);
                 var idx = newDataIndexMap[key];
 
@@ -66,7 +66,7 @@ define(function(require) {
                     var len = idx.length;
                     if (len) {
                         len === 1 && (newDataIndexMap[key] = null);
-                        idx = idx.pop();
+                        idx = idx.unshift();
                     }
                     else {
                         newDataIndexMap[key] = null;

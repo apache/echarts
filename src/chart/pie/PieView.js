@@ -25,6 +25,14 @@ define(function (require) {
         });
     }
 
+    function selectAnimate(el, pos) {
+        // animateTo will stop revious animation like update transition
+        el.animate()
+            .when(200, {
+                position: pos
+            })
+            .start('bounceOut');
+    }
     /**
      * @param {module:zrender/graphic/Sector} el
      * @param {Object} layout
@@ -33,20 +41,17 @@ define(function (require) {
      * @inner
      */
     function toggleItemSelected(el, layout, isSelected, selectedOffset) {
-        var shape = el.shape;
         var midAngle = (layout.startAngle + layout.endAngle) / 2;
 
         var dx = Math.cos(midAngle);
-        var dy = (shape.clockwise ? 1 : -1) * Math.sin(midAngle);
+        var dy = Math.sin(midAngle);
 
         var offset = isSelected ? selectedOffset : 0;
 
-        // animateTo will stop revious animation like update transition
-        el.animate()
-            .when(200, {
-                position: [dx * offset, dy * offset]
-            })
-            .start('bounceOut');
+        var position = [dx * offset, dy * offset];
+        selectAnimate(el, position);
+        selectAnimate(el.__labelLine, position);
+        selectAnimate(el.__labelText, position);
     }
 
     /**
@@ -74,14 +79,17 @@ define(function (require) {
 
         var labelText = new graphic.Text({
             style: {
+                x: labelLayout.x,
+                y: labelLayout.y,
                 text: text,
                 textAlign: labelLayout.textAlign,
                 textBaseline: labelLayout.textBaseline,
                 font: labelLayout.font
             },
             rotation: labelLayout.rotation,
-            position: [labelLayout.x, labelLayout.y],
-            silent: true
+            origin: [labelLayout.x, labelLayout.y],
+            silent: true,
+            z2: 10
         });
 
         sector.__labelLine = labelLine;
@@ -144,6 +152,7 @@ define(function (require) {
                 })
                 .update(function (newIdx, oldIdx) {
                     var sector = oldData.getItemGraphicEl(oldIdx);
+
                     var layout = data.getItemLayout(newIdx);
                     var labelLayout = layout.label;
 
@@ -157,22 +166,25 @@ define(function (require) {
                     api.updateGraphicEl(sector, {
                         shape: layout
                     });
-                    labelLine && api.updateGraphicEl(labelLine, {
+                    api.updateGraphicEl(labelLine, {
                         shape: {
                             points: labelLayout.linePoints
                         }
                     });
-                    if (labelText) {
-                        api.updateGraphicEl(labelText, {
-                            position: [labelLayout.x, labelLayout.y],
-                            rotation: labelLayout.rotation
-                        });
-                        labelText.setStyle({
-                            textAlign: labelLayout.textAlign,
-                            textBaseline: labelLayout.textBaseline,
-                            font: labelLayout.font
-                        });
-                    }
+                    api.updateGraphicEl(labelText, {
+                        style: {
+                            x: labelLayout.x,
+                            y: labelLayout.y
+                        },
+                        rotation: labelLayout.rotation
+                    });
+
+                    // Set none animating style
+                    labelText.setStyle({
+                        textAlign: labelLayout.textAlign,
+                        textBaseline: labelLayout.textBaseline,
+                        font: labelLayout.font
+                    });
 
                     sectorGroup.add(sector);
                     data.setItemGraphicEl(newIdx, sector);
@@ -213,11 +225,12 @@ define(function (require) {
             data.eachItemGraphicEl(function (sector, idx) {
                 var itemModel = data.getItemModel(idx);
                 var itemStyleModel = itemModel.getModel('itemStyle');
+                var visualColor = data.getItemVisual(idx, 'color');
 
                 sector.setStyle(
                     zrUtil.extend(
                         {
-                            fill: data.getItemVisual(idx, 'color')
+                            fill: visualColor
                         },
                         itemStyleModel.getModel('normal').getItemStyle()
                     )
@@ -227,13 +240,26 @@ define(function (require) {
                     itemStyleModel.getModel('emphasis').getItemStyle()
                 );
 
+                // Set label style
                 var labelText = sector.__labelText;
-                if (labelText) {
-                    labelText.setStyle({
-                        text: seriesModel.getFormattedLabel(idx, 'normal')
-                            || data.getName(idx)
-                    });
-                }
+                var labelLine = sector.__labelLine;
+                var labelModel = itemModel.getModel('label.normal');
+                var textStyleModel = labelModel.getModel('textStyle');
+                var labelPosition = labelModel.get('position');
+                var isLabelInside = labelPosition === 'inside';
+                labelText.setStyle({
+                    fill: textStyleModel.get('color')
+                        || isLabelInside ? '#fff' : visualColor,
+                    text: seriesModel.getFormattedLabel(idx, 'normal')
+                        || data.getName(idx),
+                    font: textStyleModel.getFont()
+                });
+                // Default use item visual color
+                labelLine.attr('ignore', !itemModel.get('labelLine.show'));
+                labelLine.setStyle({
+                    stroke: visualColor
+                });
+                labelLine.setStyle(itemModel.getModel('labelLine').getLineStyle());
 
                 toggleItemSelected(
                     sector,
@@ -259,7 +285,7 @@ define(function (require) {
 
             clipPath.animateTo({
                 shape: {
-                    endAngle: startAngle + Math.PI * 2
+                    endAngle: startAngle + (clockwise ? 1 : -1) * Math.PI * 2
                 }
             }, 1000, 'cubicOut', cb);
 

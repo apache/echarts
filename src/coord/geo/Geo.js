@@ -1,5 +1,7 @@
 define(function (require) {
 
+    var vector = require('zrender/core/vector');
+
     var parseGeoJson = require('./parseGeoJson');
 
     var zrUtil = require('zrender/core/util');
@@ -7,6 +9,8 @@ define(function (require) {
     var BoundingRect = require('zrender/core/BoundingRect');
 
     var View = require('../View');
+
+    var v2Copy = vector.copy;
 
     // Geo fix functions
     var geoFixFuncs = [
@@ -67,6 +71,30 @@ define(function (require) {
             }, this);
         },
 
+        // Overwrite
+        transformTo: function (x, y, width, height) {
+            var rect = this.getBoundingRect();
+
+            rect = rect.clone();
+            // Longitute is inverted
+            rect.y = -rect.y - rect.height;
+
+            var viewTransform = this._viewTransform;
+
+            viewTransform.transform = rect.calculateTransform(
+                new BoundingRect(x, y, width, height)
+            );
+
+            viewTransform.decomposeTransform();
+
+            var scale = viewTransform.scale;
+            scale[1] = -scale[1];
+
+            viewTransform.updateTransform();
+
+            this._updateTransform();
+        },
+
         /**
          * @param {string} name
          * @return {module:echarts/coord/geo/Region}
@@ -107,7 +135,7 @@ define(function (require) {
                 rect.union(regionRect);
             }
             // FIXME Always return new ?
-            return this._rect = rect || new BoundingRect(0, 0, 0, 0);
+            return (this._rect = rect || new BoundingRect(0, 0, 0, 0));
         },
 
         /**

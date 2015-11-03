@@ -7,7 +7,8 @@ define(function (require) {
         }
         ecModel.eachSeriesByType('graph', function (graphSeries) {
             var categoriesData = graphSeries.getCategoriesData();
-            var data = graphSeries.getData();
+            var graph = graphSeries.getGraph();
+            var data = graph.data;
 
             var categoryNames = categoriesData.mapArray(categoriesData.getName);
 
@@ -22,7 +23,6 @@ define(function (require) {
                 }
                 return true;
             });
-            
         }, this);
     };
 });

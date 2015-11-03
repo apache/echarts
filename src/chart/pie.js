@@ -6,11 +6,15 @@ define(function (require) {
     require('./pie/PieSeries');
     require('./pie/PieView');
 
-    echarts.registerVisualCoding('chart', require('./pie/pieVisual'));
+    echarts.registerVisualCoding(
+        'chart',  zrUtil.curry(require('../visual/dataColor'), 'pie')
+    );
 
     echarts.registerLayout(zrUtil.curry(
         require('./pie/pieLayout'), 'pie'
     ));
 
-    echarts.registerProcessor('filter', require('./pie/dataItemFilter'));
+    echarts.registerProcessor(
+        'filter', zrUtil.curry(require('../processor/dataFilter'), 'pie')
+    );
 });

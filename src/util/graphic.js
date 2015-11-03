@@ -7,6 +7,7 @@ define(function(require) {
     var Path = require('zrender/graphic/Path');
     var colorTool = require('zrender/tool/color');
     var matrix = require('zrender/core/matrix');
+    var vector = require('zrender/core/vector');
 
     var graphic = {};
 
@@ -322,12 +323,10 @@ define(function(require) {
      * @return {Array.<number>} [x, y]
      */
     graphic.applyTransform = function (vertex, transform, invert) {
-        var mat = [1, 0, 0, 1, vertex[0], vertex[1]];
         if (invert) {
             transform = matrix.invert([], transform);
         }
-        matrix.mul(mat, transform, mat);
-        return [mat[4], mat[5]];
+        return vector.applyTransform([], vertex, transform);
     };
 
     /**

@@ -1,19 +1,36 @@
 define(function (require) {
-
     return function (ecModel, api) {
         ecModel.eachSeriesByType('graph', function (seriesModel) {
-            var layout = seriesModel.get('layout');
-            if (!layout || layout === 'none') {
+            if (seriesModel.get('layout') === 'circular') {
                 var coordSys = seriesModel.coordinateSystem;
-
                 if (coordSys && coordSys.type !== 'view') {
                     return;
                 }
-                var graph = seriesModel.getGraph();
+
+                var rect = coordSys.getBoundingRect();
+
+                var nodeData = seriesModel.getData();
+                var graph = nodeData.graph;
+
+                var angle = 0;
+                var unitAngle = Math.PI * 2 / nodeData.getSum('value');
+
+                var cx = rect.width / 2 + rect.x;
+                var cy = rect.height / 2 + rect.y;
+
+                var r = Math.min(rect.width, rect.height) / 2;
 
                 graph.eachNode(function (node) {
-                    var model = node.getModel();
-                    node.setLayout([+model.get('x'), +model.get('y')]);
+                    var value = node.getValue('value');
+
+                    angle += unitAngle * value / 2;
+
+                    node.setLayout([
+                        r * Math.cos(angle) + cx,
+                        r * Math.sin(angle) + cy
+                    ]);
+
+                    angle += unitAngle * value / 2;
                 });
 
                 graph.eachEdge(function (edge) {
@@ -21,12 +38,8 @@ define(function (require) {
                     var p1 = edge.node1.getLayout();
                     var p2 = edge.node2.getLayout();
                     var cp1;
-                    var inv = 1;
                     if (curveness > 0) {
-                        cp1 = [
-                            (p1[0] + p2[0]) / 2 - inv * (p1[1] - p2[1]) * curveness,
-                            (p1[1] + p2[1]) / 2 - inv * (p2[0] - p1[0]) * curveness
-                        ];
+                        cp1 = [cx, cy];
                     }
                     var shape = {
                         x1: p1[0],
@@ -40,7 +53,6 @@ define(function (require) {
                     }
                     edge.setLayout(shape);
                 });
-
             }
         });
     };
