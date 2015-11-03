@@ -1494,7 +1494,9 @@ define(function (require) {
                     style: {
                         x: imgList[c].left - minLeft,
                         y: imgList[c].top - minTop,
-                        image: imgList[c].img
+                        image: imgList[c].img,
+                        width: imgList[c].right - imgList[c].left,
+                        height: imgList[c].bottom - imgList[c].top
                     }
                 }));
             }
