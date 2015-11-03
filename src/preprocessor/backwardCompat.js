@@ -75,7 +75,9 @@ define(function (require) {
                 seriesOpt.map = seriesOpt.map || seriesOpt.mapType;
             }
             if (seriesOpt.type === 'pie' || seriesOpt.type === 'gauge') {
-                seriesOpt.clockwise = seriesOpt.clockwise != null ? seriesOpt.clockwise : seriesOpt.clockWise;
+                if (seriesOpt.clockWise != null) {
+                    seriesOpt.clockwise = seriesOpt.clockWise;
+                }
             }
         });
     };

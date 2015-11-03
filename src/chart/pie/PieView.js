@@ -134,8 +134,6 @@ define(function (require) {
                 .add(function (idx) {
                     var layout = data.getItemLayout(idx);
 
-                    console.log(layout);
-
                     var sector = createSectorAndLabel(
                         layout, '', hasAnimation && !isFirstRender
                     );
