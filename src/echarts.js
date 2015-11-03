@@ -274,7 +274,7 @@ define(function (require) {
 
             // Upate all charts
             ecModel.eachSeries(function (seriesModel, idx) {
-                var id = seriesModel.uid;
+                var id = getViewId(seriesModel);
                 var chart = this._chartsMap[id];
                 chart[methodName](seriesModel, ecModel, api, payload);
             }, this);

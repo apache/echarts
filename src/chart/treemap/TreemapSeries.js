@@ -36,7 +36,7 @@ define(function(require) {
             roam: true,
             animation: true,
             animationDurationUpdate: 1500,
-            animationEasing: 'quadraticInOut',
+            animationEasing: 'quinticInOut',
             breadcrumb: {
                 show: true,
                 height: 22,

@@ -67,7 +67,8 @@ define(function (require) {
                         clockwise: clockwise,
                         r0: posInfo.r - axisLineWidth,
                         r: posInfo.r
-                    }
+                    },
+                    silent: true
                 });
 
                 sector.setStyle({
@@ -162,7 +163,8 @@ define(function (require) {
                             x2: unitX * (r - splitLineLen) + cx,
                             y2: unitY * (r - splitLineLen) + cy
                         },
-                        style: splitLineStyle
+                        style: splitLineStyle,
+                        silent: true
                     });
                     if (splitLineStyle.stroke === 'auto') {
                         splitLine.setStyle({
@@ -193,7 +195,8 @@ define(function (require) {
                             font: textStyleModel.getFont(),
                             textBaseline: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
                             textAlign: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
-                        }
+                        },
+                        silent: true
                     });
                     if (text.style.fill === 'auto') {
                         text.setStyle({
@@ -216,6 +219,7 @@ define(function (require) {
                                 x2: unitX * (r - tickLen) + cx,
                                 y2: unitY * (r - tickLen) + cy
                             },
+                            silent: true,
                             style: tickLineStyle
                         });
 
@@ -307,6 +311,10 @@ define(function (require) {
                         (data.get('value', idx) - valueExtent[0]) / (valueExtent[1] - valueExtent[0])
                     ));
                 }
+
+                graphic.setHoverStyle(
+                    pointer, itemModel.getModel('itemStyle.emphasis').getItemStyle()
+                );
             });
 
             this._data = data;

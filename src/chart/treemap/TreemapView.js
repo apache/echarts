@@ -346,7 +346,7 @@
                 }
 
                 // Set to thisStorage
-                return thisStorage[storageName][thisRawIndex] = element;
+                return (thisStorage[storageName][thisRawIndex] = element);
             }
 
             function prepareAnimationWhenHasOld(lasts, element, storageName) {

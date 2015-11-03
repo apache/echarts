@@ -397,7 +397,7 @@ define(function(require) {
                         width: xExtent[1] - xExtent[0],
                         height: yExtent[1] - yExtent[0]
                     }
-                }, 1500);
+                }, 1000);
             }
 
             return clipPath;

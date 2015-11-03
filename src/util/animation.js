@@ -80,7 +80,7 @@
 
                 for (var i = 0, len = storage.length; i < len; i++) {
                     var item = storage[i];
-                    item.el.animateTo(item.target, item.time, item.delay, done);
+                    item.el.animateTo(item.target, item.time, item.delay, item.easing, done);
                 }
 
                 return this;
