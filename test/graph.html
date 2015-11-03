@@ -4,6 +4,7 @@
         <script src="esl.js"></script>
         <script src="config.js"></script>
         <script src="lib/jquery.min.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
     </head>
     <body>
         <style>
@@ -53,6 +54,7 @@
                     chart.setOption({
                         tooltip: {},
                         legend: [{
+                            // selectedMode: 'single',
                             data: categories.map(function (a) {
                                 return a.name;
                             })
@@ -63,10 +65,13 @@
                                 colorS: [1, 0.3]   
                             }
                         },
+                        animationDurationUpdate: 1500,
+                        animationEasing: 'quinticInOut',
                         series : [
                             {
                                 name: 'Les Miserables',
                                 type: 'graph',
+                                layout: 'circular',
                                 data: graph.nodes,
                                 links: graph.links,
                                 categories: categories,
@@ -84,9 +89,23 @@
                             }
                         ]
                     });
+
+                    var config = {
+                        layout: 'circular'
+                    };
+
+                    var gui = new dat.GUI();
+                    gui.add(config, 'layout', ['none', 'circular'])
+                        .onChange(function (value) {
+                            chart.setOption({
+                                series: [{
+                                    name: 'Les Miserables',
+                                    layout: value
+                                }]
+                            });
+                        });
                 });
             });
-
         </script>
     </body>
 </html>

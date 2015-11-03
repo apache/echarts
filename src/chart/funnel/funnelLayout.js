@@ -56,6 +56,10 @@ define(function (require) {
             if (isLabelInside) {
                 textX = (points[0][0] + points[1][0] + points[2][0] + points[3][0]) / 4;
                 textY = (points[0][1] + points[1][1] + points[2][1] + points[3][1]) / 4;
+                textAlign = 'center';
+                linePoints = [
+                    [textX, textY], [textX, textY]
+                ];
             }
             else {
                 var x1;
@@ -89,7 +93,8 @@ define(function (require) {
                 x: textX,
                 y: textY,
                 textBaseline: 'middle',
-                textAlign: textAlign
+                textAlign: textAlign,
+                inside: isLabelInside
             };
         });
     }

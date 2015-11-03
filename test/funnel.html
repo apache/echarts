@@ -31,10 +31,6 @@
 
                 var itemStyle = {
                     normal: {
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.4)',
                         borderWidth: 0
                     },
                     emphasis: {
@@ -66,6 +62,11 @@
                             itemStyle: itemStyle,
                             width: '50%',
                             sort: 'ascending',
+                            label: {
+                                normal: {
+                                    position: 'inside'
+                                }
+                            },
                             data:[
                                 {value:60, name:'访问'},
                                 {value:40, name:'咨询'},
@@ -78,7 +79,8 @@
                 });
 
                 var config = {
-                    sort: 'ascending'
+                    sort: 'ascending',
+                    labelPosition: 'inside'
                 };
 
                 var gui = new dat.GUI();
@@ -88,6 +90,19 @@
                             series: [{
                                 name: 'Les Miserables',
                                 sort: value
+                            }]
+                        });
+                    });
+                gui.add(config, 'labelPosition', ['inside', 'left', 'right'])
+                    .onChange(function (value) {
+                        chart.setOption({
+                            series: [{
+                                name: 'Les Miserables',
+                                label: {
+                                    normal: {
+                                        position: value
+                                    }
+                                }
                             }]
                         });
                     });
