@@ -5,7 +5,6 @@ define(function (require) {
     var graphic = require('../../util/graphic');
     var numberUtil = require('../../util/number');
     var parsePercent = numberUtil.parsePercent;
-    // var zrUtil = require('zrender/core/util');
 
     function parsePosition(seriesModel, api) {
         var center = seriesModel.get('center');
@@ -21,6 +20,19 @@ define(function (require) {
             cy: cy,
             r: r
         };
+    }
+
+    function formatLabel(label, labelFormatter) {
+        if (labelFormatter) {
+            if (typeof labelFormatter === 'string') {
+                label = labelFormatter.replace('{value}', label);
+            }
+            else if (typeof labelFormatter === 'function') {
+                label = labelFormatter(label);
+            }
+        }
+
+        return label;
     }
 
     var PI2 = Math.PI * 2;
@@ -116,7 +128,14 @@ define(function (require) {
             this._renderPointer(
                 seriesModel, ecModel, api, getColor, posInfo,
                 startAngle, endAngle, clockwise
-            )
+            );
+
+            this._renderTitle(
+                seriesModel, ecModel, api, getColor, posInfo
+            );
+            this._renderDetail(
+                seriesModel, ecModel, api, getColor, posInfo
+            );
         },
 
         _renderTicks: function (
@@ -134,8 +153,6 @@ define(function (require) {
             var splitLineModel = seriesModel.getModel('splitLine');
             var tickModel = seriesModel.getModel('axisTick');
             var labelModel = seriesModel.getModel('axisLabel');
-
-            var labelFormatter = labelModel.get('formatter');
 
             var splitNumber = seriesModel.get('splitNumber');
             var subSplitNumber = tickModel.get('splitNumber');
@@ -177,15 +194,11 @@ define(function (require) {
 
                 // Label
                 if (labelModel.get('show')) {
-                    var label = numberUtil.round(i / splitNumber * (maxVal - minVal) + minVal);
-                    if (labelFormatter) {
-                        if (typeof labelFormatter === 'string') {
-                            label = labelFormatter.replace('{value}', label);
-                        }
-                        else if (typeof labelFormatter === 'function') {
-                            label = labelFormatter(label);
-                        }
-                    }
+                    var label = formatLabel(
+                        numberUtil.round(i / splitNumber * (maxVal - minVal) + minVal),
+                        labelModel.get('formatter')
+                    );
+
                     var text = new graphic.Text({
                         style: {
                             text: label,
@@ -320,12 +333,68 @@ define(function (require) {
             this._data = data;
         },
 
-        _renderTitle: function (seriesModel, ecModel, api) {
-
+        _renderTitle: function (
+            seriesModel, ecModel, api, getColor, posInfo
+        ) {
+            var titleModel = seriesModel.getModel('title');
+            if (titleModel.get('show')) {
+                var textStyleModel = titleModel.getModel('textStyle');
+                var offsetCenter = titleModel.get('offsetCenter');
+                var x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
+                var y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
+                var text = new graphic.Text({
+                    style: {
+                        x: x,
+                        y: y,
+                        // FIXME First data name ?
+                        text: seriesModel.getData().getName(0),
+                        fill: textStyleModel.get('color'),
+                        textFont: textStyleModel.getFont(),
+                        textAlign: 'center',
+                        textBaseline: 'middle'
+                    }
+                });
+                this.group.add(text);
+            }
         },
 
-        _renderDetail: function (seriesModel, ecModel, api) {
-
+        _renderDetail: function (
+            seriesModel, ecModel, api, getColor, posInfo
+        ) {
+            var detailModel = seriesModel.getModel('detail');
+            var minVal = seriesModel.get('min');
+            var maxVal = seriesModel.get('max');
+            if (detailModel.get('show')) {
+                var textStyleModel = detailModel.getModel('textStyle');
+                var offsetCenter = detailModel.get('offsetCenter');
+                var x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
+                var y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
+                var width = parsePercent(detailModel.get('width'), posInfo.r);
+                var height = parsePercent(detailModel.get('height'), posInfo.r);
+                var value = seriesModel.getData().get('value', 0);
+                var rect = new graphic.Rect({
+                    shape: {
+                        x: x - width / 2,
+                        y: y - height / 2,
+                        width: width,
+                        height: height
+                    },
+                    style: {
+                        text: formatLabel(
+                            // FIXME First data name ?
+                            value, detailModel.get('formatter')
+                        ),
+                        fill: detailModel.get('backgroundColor'),
+                        textFill: textStyleModel.get('color'),
+                        textFont: textStyleModel.getFont()
+                    }
+                });
+                if (rect.style.textFill === 'auto') {
+                    rect.setStyle('textFill', getColor((value - minVal) / (maxVal - minVal)));
+                }
+                rect.setStyle(detailModel.getItemStyle(['color']));
+                this.group.add(rect);
+            }
         }
     });
 
