@@ -13,7 +13,7 @@ var startCode = fs.readFileSync('wrap/start.js', 'utf-8');
 var nutCode = fs.readFileSync('wrap/nut.js', 'utf-8');
 var endCode = fs.readFileSync('wrap/end.js', 'utf-8');
 
-mainCode = require('./optimizeString')(mainCode);
+// mainCode = require('./optimizeString')(mainCode);
 
 endCode = etpl.compile(endCode)({
     parts: config.include

@@ -13,8 +13,6 @@ define(function (require) {
             var symbolType = seriesModel.get('symbol') || defaultSymbolType;
             var symbolSize = seriesModel.get('symbolSize');
 
-            // var coordSys = seriesModel.coordinateSystem;
-
             data.setVisual({
                 legendSymbol: legendSymbol || symbolType,
                 symbol: symbolType,

@@ -84,6 +84,12 @@ define(function (require) {
                     color = LEGEND_DISABLE_COLOR;
                 }
 
+                // If color is a callback function
+                if (typeof color === 'function') {
+                    // Use the first data
+                    color = color(seriesModel.getFormatParams(0));
+                }
+
                 // Using rect symbol defaultly
                 var legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
                 var symbolType = data.getVisual('symbol');
