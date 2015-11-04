@@ -23,6 +23,9 @@ define(function (require) {
 
             y: 'center',
 
+            // x2
+            // y2
+
             width: '70%',
 
             // 默认 height 会根据 width 自适应

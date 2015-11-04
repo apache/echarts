@@ -141,6 +141,8 @@ define(function (require) {
                 x: 'center',
                 // 'center' | 'top' | 'bottom' | 'x%' | {number}
                 y: 'center',
+                // x2
+                // y2
                 width: '60%'    // 自适应
                 // height   // 自适应
             },

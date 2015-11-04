@@ -5,6 +5,7 @@ define(function (require) {
     var Geo = require('./Geo');
 
     var numberUtil = require('../../util/number');
+    var layout = require('../../util/layout');
     var zrUtil = require('zrender/core/util');
 
     var mapDataStores = {};
@@ -20,56 +21,27 @@ define(function (require) {
             locModel = geoModel.getModel('mapLocation');
         }
 
-        var x = locModel.get('x');
-        var y = locModel.get('y');
-        var width = locModel.get('width');
-        var height = locModel.get('height');
-
-        var viewWidth = api.getWidth();
-        var viewHeight = api.getHeight();
-
-        var parsePercent = numberUtil.parsePercent;
-        var cx = parsePercent(x, viewWidth);
-        var cy = parsePercent(y, viewHeight);
-
-        width = parsePercent(width, viewWidth);
-        height = parsePercent(height, viewHeight);
-
         var rect = this.getBoundingRect();
 
-        if (isNaN(height)) {
+        var viewRect = layout.parsePositionInfo({
+            x: locModel.get('x'),
+            y: locModel.get('y'),
+            x2: locModel.get('x2'),
+            y2: locModel.get('y2'),
+            width: locModel.get('width'),
+            height: locModel.get('height'),
             // 0.75 rate
-            height = rect.height / rect.width * width / 0.75;
-        }
-        else if (isNaN(width)) {
-            width = rect.width / rect.height * height;
-        }
+            aspect: rect.width / rect.height * 0.75
+        }, {
+            width: api.getWidth(),
+            height: api.getHeight()
+        });
 
-        // Special position
-        // FIXME
-        switch (x) {
-            case 'center':
-                break;
-            case 'right':
-                cx -= width;
-                break;
-            default:
-                cx += width / 2;
-                break;
-        }
-        switch (y) {
-            case 'center':
-                break;
-            case 'bottom':
-                cy -= height;
-                break;
-            default:
-                cy += height / 2;
-                break;
-        }
+        var width = viewRect.width;
+        var height = viewRect.height;
 
-        x = cx - width / 2;
-        y = cy - height / 2;
+        var x = viewRect.x + (width - viewRect.width) / 2;
+        var y = viewRect.y + (height - viewRect.height) / 2;
         this.setViewRect(x, y, width, height);
 
         var roamDetailModel = geoModel.getModel('roamDetail');
@@ -91,9 +63,9 @@ define(function (require) {
             ecModel.eachComponent('geo', function (geoModel, idx) {
                 var name = geoModel.get('map');
                 var geoJson = mapDataStores[name];
-                if (!geoJson) {
+                // if (!geoJson) {
                     // Warning
-                }
+                // }
                 var geo = new Geo(name + idx, name, geoJson);
                 geoList.push(geo);
 

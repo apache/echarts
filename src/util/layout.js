@@ -97,8 +97,9 @@ define(function(require) {
      * @param {number|string} [positionInfo.y2]
      * @param {number|string} [positionInfo.width]
      * @param {number|string} [positionInfo.height]
+     * @param {number|string} [positionInfo.aspect] Aspect is width / height
      * @param {Object} containerRect
-     * @param {string|number} margin
+     * @param {string|number} [margin]
      * @param {boolean} [notAlignX=false]
      * @param {boolean} [notAlignY=false]
      *
@@ -122,6 +123,7 @@ define(function(require) {
 
         var verticalMargin = margin[2] + margin[0];
         var horizontalMargin = margin[1] + margin[3];
+        var aspect = positionInfo.aspect;
 
         // If width is not specified, calculate width from x and x2
         if (isNaN(width)) {
@@ -129,6 +131,16 @@ define(function(require) {
         }
         if (isNaN(height)) {
             height = containerHeight - y2 - verticalMargin - y;
+        }
+
+        if (aspect != null) {
+            // Calculate width or height with given aspect
+            if (isNaN(width)) {
+                width = aspect * height;
+            }
+            if (isNaN(height)) {
+                height = width / aspect;
+            }
         }
 
         // If x is not specified, calculate x from x2 and width
