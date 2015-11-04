@@ -7,6 +7,8 @@ define(function (require) {
             var data = seriesModel.getData();
             var color = seriesModel.get(colorAccessPath) // Set in itemStyle
                 || colorList[seriesModel.seriesIndex];  // Default color
+
+            // FIXME Set color function or use the platte color
             data.setVisual('color', color);
 
             // Only visible series has each data be visual encoded

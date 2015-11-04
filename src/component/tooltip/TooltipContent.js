@@ -124,7 +124,8 @@ define(function (require) {
          */
         update: function () {
             var container = this._container;
-            var stl = document.defaultView.getComputedStyle(container);
+            var stl = container.currentStyle
+                || document.defaultView.getComputedStyle(container);
             var domStyle = container.style;
             if (domStyle.position !== 'absolute' && stl.position !== 'absolute') {
                 domStyle.position = 'relative';
@@ -137,7 +138,7 @@ define(function (require) {
         show: function (tooltipModel) {
             clearTimeout(this._hideTimeout);
 
-            this.el.style.cssText = gCssText + assembleCssText(tooltipModel);;
+            this.el.style.cssText = gCssText + assembleCssText(tooltipModel);
 
             this._show = true;
         },

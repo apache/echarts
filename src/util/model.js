@@ -37,7 +37,7 @@ define(function(require) {
      * @public
      */
     util.capitalFirst = function (str) {
-        return str ? str[0].toUpperCase() + str.substr(1) : str;
+        return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
     };
 
     /**

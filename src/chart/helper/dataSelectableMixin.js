@@ -39,8 +39,9 @@ define(function (require) {
          */
         unSelect: function (name) {
             var dataOpt = this._dataOptMap[name];
-            var selectedMode = this.get('selectedMode');
-            selectedMode !== 'single' && dataOpt && (dataOpt.selected = false);
+            // var selectedMode = this.get('selectedMode');
+            // selectedMode !== 'single' && dataOpt && (dataOpt.selected = false);
+            dataOpt && (dataOpt.selected = false);
         },
 
         /**
@@ -62,7 +63,4 @@ define(function (require) {
             return dataOpt && dataOpt.selected;
         }
     };
-
-
-    return DataSelectable
 });

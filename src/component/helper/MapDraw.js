@@ -73,7 +73,7 @@ define(function (require) {
 
         constructor: MapDraw,
 
-        draw: function (mapOrGeoModel, ecModel, api) {
+        draw: function (mapOrGeoModel, ecModel, api, forceShowLabel) {
 
             // geoModel has no data
             var data = mapOrGeoModel.getData && mapOrGeoModel.getData();
@@ -164,6 +164,7 @@ define(function (require) {
                 if (
                     (!data || isDataNaN && (showLabel || hoverShowLabel))
                  || (data && !isDataNaN && (!showLabel && hoverShowLabel))
+                 || forceShowLabel
                  ) {
                     var text = new graphic.Text({
                         style: {
