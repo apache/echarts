@@ -100,7 +100,7 @@ define(function (require) {
     }
 
     return function (ecModel, api) {
-        ecModel.eachSeries(function (seriesModel) {
+        ecModel.eachSeriesByType('funnel', function (seriesModel) {
             var data = seriesModel.getData();
             var sort = seriesModel.get('sort');
             var viewRect = getViewRect(seriesModel, api);
@@ -152,7 +152,7 @@ define(function (require) {
                 var idx = indices[i];
                 var nextIdx = indices[i + 1];
                 var start = getLinePoints(idx, y);
-                var end = nextIdx == null 
+                var end = nextIdx == null
                     // End point
                     ? [
                         [viewRect.x + viewRect.width / 2, y + itemHeight],
