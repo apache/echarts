@@ -1,5 +1,3 @@
-var esprima = require('esprima');
-var escodegen = require('escodegen');
 var UglifyJS = require('uglify-js');
 var fs = require('fs');
 var etpl = require('etpl');
@@ -14,6 +12,8 @@ var mainCode = fs.readFileSync('../dist/echarts.js', 'utf-8');
 var startCode = fs.readFileSync('wrap/start.js', 'utf-8');
 var nutCode = fs.readFileSync('wrap/nut.js', 'utf-8');
 var endCode = fs.readFileSync('wrap/end.js', 'utf-8');
+
+mainCode = require('./optimizeString')(mainCode);
 
 endCode = etpl.compile(endCode)({
     parts: config.include

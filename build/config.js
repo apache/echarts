@@ -22,24 +22,24 @@
         'echarts/component/grid',
         'echarts/component/legend',
 
-        // 'echarts/chart/scatter',
-        // 'echarts/chart/map',
-        // 'echarts/chart/treemap',
-        // 'echarts/chart/graph',
-        // 'echarts/chart/gauge',
-        // 'echarts/chart/funnel',
+        'echarts/chart/scatter',
+        'echarts/chart/map',
+        'echarts/chart/treemap',
+        'echarts/chart/graph',
+        'echarts/chart/gauge',
+        'echarts/chart/funnel',
 
-        // 'echarts/component/geo',
-        // 'echarts/component/polar',
+        'echarts/component/geo',
+        'echarts/component/polar',
 
-        // 'echarts/component/title',
+        'echarts/component/title',
 
-        // 'echarts/component/dataZoom',
-        // 'echarts/component/tooltip',
-        // 'echarts/component/dataRange',
+        'echarts/component/dataZoom',
+        'echarts/component/tooltip',
+        'echarts/component/dataRange',
 
-        // 'echarts/component/markPoint',
-        // 'echarts/component/markLine'
+        'echarts/component/markPoint',
+        'echarts/component/markLine'
     ],
     out: '../dist/echarts.js'
 }
