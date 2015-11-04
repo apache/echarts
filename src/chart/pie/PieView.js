@@ -84,7 +84,7 @@ define(function (require) {
                 text: text,
                 textAlign: labelLayout.textAlign,
                 textBaseline: labelLayout.textBaseline,
-                font: labelLayout.font
+                textFont: labelLayout.font
             },
             rotation: labelLayout.rotation,
             origin: [labelLayout.x, labelLayout.y],
@@ -183,7 +183,7 @@ define(function (require) {
                     labelText.setStyle({
                         textAlign: labelLayout.textAlign,
                         textBaseline: labelLayout.textBaseline,
-                        font: labelLayout.font
+                        textFont: labelLayout.font
                     });
 
                     sectorGroup.add(sector);
@@ -252,7 +252,7 @@ define(function (require) {
                         || isLabelInside ? '#fff' : visualColor,
                     text: seriesModel.getFormattedLabel(idx, 'normal')
                         || data.getName(idx),
-                    font: textStyleModel.getFont()
+                    textFont: textStyleModel.getFont()
                 });
                 // Default use item visual color
                 labelLine.attr('ignore', !itemModel.get('labelLine.show'));
