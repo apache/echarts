@@ -422,7 +422,10 @@ define(function(require) {
          * @protected
          */
         resetItemSize: function () {
-            this.itemSize = [+this.get('itemWidth'), +this.get('itemHeight')];
+            this.itemSize = [
+                parseFloat(this.get('itemWidth')),
+                parseFloat(this.get('itemHeight'))
+            ];
         },
 
         /**

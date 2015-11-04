@@ -128,6 +128,7 @@ define(function(require) {
                 barGroup
             );
             var orient = this._orient;
+            var textStyleModel = this.dataRangeModel.textStyleModel;
 
             this.group.add(new graphic.Text({
                 style: {
@@ -136,7 +137,8 @@ define(function(require) {
                     textBaseline: orient === 'horizontal' ? 'middle' : align,
                     textAlign: orient === 'horizontal' ? align : 'center',
                     text: text,
-                    font: this.dataRangeModel.textStyleModel.getFont()
+                    textFont: textStyleModel.getFont(),
+                    fill: textStyleModel.get('color')
                 }
             }));
         },
@@ -204,18 +206,20 @@ define(function(require) {
             var handleLabelPoint = {
                 x: orient === 'horizontal'
                     ? textSize / 2
-                    : textSize + 3,
+                    : textSize * 1.5,
                 y: orient === 'horizontal'
-                    ? (handleIndex === 0 ? -textSize - 3 : textSize + 3)
+                    ? (handleIndex === 0 ? -(textSize * 1.5) : (textSize * 1.5))
                     : (handleIndex === 0 ? -textSize / 2 : textSize / 2)
             };
 
+            var textStyleModel = this.dataRangeModel.textStyleModel;
             var handleLabel = new graphic.Text({
                 silent: true,
                 style: {
                     x: 0, y: 0, text: '',
                     textBaseline: 'middle',
-                    font: this.dataRangeModel.textStyleModel.getFont()
+                    textFont: textStyleModel.getFont(),
+                    fill: textStyleModel.get('color')
                 }
             });
 

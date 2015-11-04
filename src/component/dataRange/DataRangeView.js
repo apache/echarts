@@ -6,6 +6,7 @@ define(function (require) {
     var modelUtil = require('../../util/model');
     var formatUtil = require('../../util/format');
     var layout = require('../../util/layout');
+    var VisualMapping = require('../../visual/VisualMapping');
 
     return echarts.extendComponentView({
 
@@ -86,15 +87,15 @@ define(function (require) {
          * @protected
          * @param {(number|Array)} targetValue
          * @param {string=} forceState Specify state, instead of using getValueState method.
-         * @param {string=} visualType Specify visual type, defualt all available visualTypes.
+         * @param {string=} visualCategory Specify visual type, defualt all available visualCategorys.
          */
-        getControllerVisual: function (targetValue, forceState, visualType) {
+        getControllerVisual: function (targetValue, forceState, visualCategory) {
             var dataRangeModel = this.dataRangeModel;
             var targetIsArray = zrUtil.isArray(targetValue);
 
             // targetValue is array when caculate gradient color,
             // where forceState is required.
-            if (targetIsArray && (!forceState || visualType !== 'color')) {
+            if (targetIsArray && (!forceState || visualCategory !== 'color')) {
                 throw new Error(targetValue);
             }
 
@@ -114,13 +115,14 @@ define(function (require) {
             }
 
             function setter(key, value) {
-                zrUtil.isObject(key)
-                    ? zrUtil.extend(visualObj, key)
-                    : (visualObj[key] = value);
+                visualObj[key] = value;
             }
 
-            zrUtil.each(mappings, function (visualMapping, type) {
-                (!visualType || type === visualType)
+            var visualTypes = VisualMapping.prepareVisualTypes(mappings);
+
+            zrUtil.each(visualTypes, function (type) {
+                var visualMapping = mappings[type];
+                (!visualCategory || VisualMapping.isInVisualCategory(type, visualCategory))
                     && visualMapping
                     && visualMapping.applyVisual(
                         targetValue, getter, setter

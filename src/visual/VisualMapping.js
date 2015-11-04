@@ -67,6 +67,14 @@ define(function (require) {
 
             applyVisual: defaultApplyColor,
 
+            // value:
+            // (1) {number}
+            // (2) {Array.<number>} Represents a interval, for colorStops.
+            // Return type:
+            // (1) {string} color value like '#444'
+            // (2) {Array.<Object>} colorStops,
+            // like [{color: '#fff', offset: 0}, {color: '#444', offset: 1}]
+            // where offset is between 0 and 1.
             mapValueToVisual: function (value) {
                 var optionData = this.option.visual;
 
@@ -75,6 +83,7 @@ define(function (require) {
                         this._normalizeData(value[0]),
                         this._normalizeData(value[1])
                     ];
+
                     // For creating graduate color list.
                     return zrColor.mapIntervalToColor(value, optionData);
                 }
@@ -114,10 +123,16 @@ define(function (require) {
         symbol: {
             applyVisual: function (value, getter, setter) {
                 var symbolCfg = this.mapValueToVisual(value);
-                if (typeof symbolCfg === 'string') {
-                    symbolCfg = {symbol: symbolCfg};
+                if (zrUtil.isString(symbolCfg)) {
+                    setter('symbol', symbolCfg);
                 }
-                setter(symbolCfg);
+                else if (zrUtil.isObject(symbolCfg)) {
+                    for (var name in symbolCfg) {
+                        if (symbolCfg.hasOwnProperty(name)) {
+                            setter(name, symbolCfg[name]);
+                        }
+                    }
+                }
             },
 
             mapValueToVisual: function (value) {
@@ -150,10 +165,24 @@ define(function (require) {
         return {
 
             applyVisual: function (value, getter, setter) {
-                setter(
-                    'color',
-                    applyValue(getter('color'), this.mapValueToVisual(value))
-                );
+                // color can be {string} or {Array.<Object>} (for gradient color stops)
+                var color = getter('color');
+                var isArrayValue = zrUtil.isArray(value);
+                value = isArrayValue
+                    ? [this.mapValueToVisual(value[0]), this.mapValueToVisual(value[1])]
+                    : this.mapValueToVisual(value);
+
+                if (zrUtil.isArray(color)) {
+                    for (var i = 0, len = color.length; i < len; i++) {
+                        color[i].color = applyValue(
+                            color[i].color, isArrayValue ? value[i] : value
+                        );
+                    }
+                }
+                else {
+                    // Must not be array value
+                    setter('color', applyValue(color, value));
+                }
             },
 
             mapValueToVisual: function (value) {
@@ -225,6 +254,50 @@ define(function (require) {
     VisualMapping.getDefault = function (visualType, key) {
         var value = (defaultOption[visualType] || {})[key];
         return value != null ? zrUtil.clone(value, true) : null;
+    };
+
+    /**
+     * @public
+     * @param {string} visualType
+     * @return {boolean}
+     */
+    VisualMapping.isInVisualCategory = function (visualType, visualCategory) {
+        return visualCategory === 'color'
+            ? !!(visualType && visualType.indexOf(visualCategory) === 0)
+            : visualType === visualCategory;
+    };
+
+    /**
+     * Give order to visual types, considering colorS, colorA depends on color.
+     *
+     * @public
+     * @param {(Object|Array)} visualTypes If Object, like: {color: ..., colorS: ...}
+     *                                     IF Array, like: ['color', 'symbol', 'colorS']
+     * @return {Array.<string>} Sorted visual types.
+     */
+    VisualMapping.prepareVisualTypes = function (visualTypes) {
+        if (zrUtil.isObject(visualTypes)) {
+            var types = [];
+            zrUtil.each(visualTypes, function (item, type) {
+                types.push(type);
+            });
+            visualTypes = types;
+        }
+        else if (zrUtil.isArray(visualTypes)) {
+            visualTypes = visualTypes.slice();
+        }
+        else {
+            return [];
+        }
+
+        visualTypes.sort(function (type1, type2) {
+            // color should be front of colorS, colorA, ...
+            // symbol and symbolSize do not matter.
+            return (type2 === 'color' && type1 !== 'color' && type1.indexOf('color') === 0)
+                ? 1 : -1;
+        });
+
+        return visualTypes;
     };
 
     var defaultOption = {

@@ -23,7 +23,9 @@ define(function(require) {
             var api = this.api;
             var ecWidth = api.getWidth();
             var textGap = dataRangeModel.get('textGap');
-            var font = dataRangeModel.textStyleModel.getFont();
+            var textStyleModel = dataRangeModel.textStyleModel;
+            var textFont = textStyleModel.getFont();
+            var textFill = textStyleModel.get('color');
             var itemAlign = this.getItemAlignByOrient('horizontal', ecWidth);
             var itemSize = dataRangeModel.itemSize;
 
@@ -59,7 +61,8 @@ define(function(require) {
                             text: item.piece.text,
                             textBaseline: 'middle',
                             textAlign: itemAlign === 'right' ? 'left' : 'right',
-                            font: font
+                            textFont: textFont,
+                            fill: textFill
                         }
                     }));
                 }
@@ -76,6 +79,7 @@ define(function(require) {
                 return;
             }
             var itemGroup = new graphic.Group();
+            var textStyleModel = this.dataRangeModel.textStyleModel;
             itemGroup.add(new graphic.Text({
                 style: {
                     x: itemSize[0] / 2,
@@ -83,7 +87,8 @@ define(function(require) {
                     textBaseline: 'middle',
                     textAlign: 'center',
                     text: text,
-                    font: this.dataRangeModel.textStyleModel.getFont()
+                    textFont: textStyleModel.getFont(),
+                    fill: textStyleModel.get('color')
                 }
             }));
 

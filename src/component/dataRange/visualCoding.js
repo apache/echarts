@@ -4,6 +4,7 @@
 define(function (require) {
 
     var echarts = require('../../echarts');
+    var VisualMapping = require('../../visual/VisualMapping');
 
     echarts.registerVisualCoding('component', function (ecModel) {
         ecModel.eachComponent('dataRange', function (dataRangeModel) {
@@ -30,10 +31,11 @@ define(function (require) {
                 // For performance consideration, do not use curry.
                 dataIndex = index;
                 var mappings = visualMappings[dataRangeModel.getValueState(value)];
-                for (var key in mappings) {
-                    if (mappings.hasOwnProperty(key)) {
-                        mappings[key] && mappings[key].applyVisual(value, getVisual, setVisual);
-                    }
+                var visualTypes = VisualMapping.prepareVisualTypes(mappings);
+
+                for (var i = 0, len = visualTypes.length; i < len; i++) {
+                    var type = visualTypes[i];
+                    mappings[type] && mappings[type].applyVisual(value, getVisual, setVisual);
                 }
             });
         });
