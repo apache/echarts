@@ -110,7 +110,7 @@ define(function (require) {
 
             if (name) {
                 var nameLocation = axisModel.get('nameLocation');
-                var textStyleModel = axisModel.getModel('textStyle');
+                var textStyleModel = axisModel.getModel('nameTextStyle');
 
                 var isHorizontal = axis.isHorizontal();
                 var axisPosition = this._axisLinePosition;
