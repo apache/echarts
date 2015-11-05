@@ -19,8 +19,9 @@ define(function (require) {
     }
 
     function updateMapSelectHandler(mapOrGeoModel, data, group) {
+        group.off('click');
         mapOrGeoModel.get('selectedMode')
-            ? group.on('click', function (e) {
+            && group.on('click', function (e) {
                 var dataIndex = e.target.dataIndex;
                 if (dataIndex != null) {
                     var name = data.getName(dataIndex);
@@ -28,8 +29,7 @@ define(function (require) {
 
                     updateMapSelected(mapOrGeoModel, data);
                 }
-            })
-            : group.off('click');
+            });
     }
 
     function updateMapSelected(mapOrGeoModel, data) {
@@ -73,7 +73,7 @@ define(function (require) {
 
         constructor: MapDraw,
 
-        draw: function (mapOrGeoModel, ecModel, api, forceShowLabel) {
+        draw: function (mapOrGeoModel, ecModel, api) {
 
             // geoModel has no data
             var data = mapOrGeoModel.getData && mapOrGeoModel.getData();
@@ -113,10 +113,10 @@ define(function (require) {
             zrUtil.each(geo.regions, function (region) {
 
                 var regionGroup = new graphic.Group();
-
+                var dataIdx;
                 // Use the itemStyle in data if has data
                 if (data) {
-                    var dataIdx = data.indexOfName(region.name);
+                    dataIdx = data.indexOfName(region.name);
                     var itemModel = data.getItemModel(dataIdx);
 
                     // Only visual color of each item will be used. It can be encoded by dataRange
@@ -157,14 +157,16 @@ define(function (require) {
                 var hoverShowLabel = hoverLabelModel.get('show');
 
                 var isDataNaN = data && isNaN(data.get('value', dataIdx));
+                var itemLayout = data && data.getItemLayout(dataIdx);
                 // In the following cases label will be drawn
                 // 1. In map series and data value is NaN
                 // 2. In component series
                 // 3. Data value is not NaN and label only shows on hover
+                // 4. Region has no series legendSymbol, which will be add a showLabel flag in mapSymbolLayout
                 if (
                     (!data || isDataNaN && (showLabel || hoverShowLabel))
                  || (data && !isDataNaN && (!showLabel && hoverShowLabel))
-                 || forceShowLabel
+                 || (itemLayout && itemLayout.showLabel)
                  ) {
                     var text = new graphic.Text({
                         style: {

@@ -23,10 +23,10 @@ define(function (require) {
         var dimSize = zrUtil.isArray(firstValue) ? firstValue.length : 1;
         var dimensionNames = ['value', 'a', 'b', 'c', 'd', 'e', 'f'].slice(0, dimSize);
         var nodeData = new List(dimensionNames, hostModel);
-        var edgeData = new List(['weight'], hostModel);
+        var edgeData = new List(['value'], hostModel);
 
         nodeData.initData(nodes);
-        edgeData.initData(edges, linkNameList, 'weight');
+        edgeData.initData(edges, linkNameList);
 
         graph.setEdgeData(edgeData);
 

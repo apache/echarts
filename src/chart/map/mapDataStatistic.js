@@ -57,16 +57,10 @@ define(function (require) {
             seriesList[0].setData(data);
 
             // FIXME Put where?
-            var needsShowLabel = true;
             for (var i = 0; i < seriesList.length; i++) {
                 seriesList[i].seriesGroup = seriesList;
                 seriesList[i].needsDrawMap = i === 0;
-                if (seriesList[i].get('showLegendSymbol')) {
-                    needsShowLabel = false;
-                }
             }
-
-            seriesList[0].needsShowLabel = needsShowLabel;
         });
     };
 });

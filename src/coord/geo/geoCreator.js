@@ -98,9 +98,9 @@ define(function (require) {
 
             zrUtil.each(mapModelGroupBySeries, function (mapSeries, mapType) {
                 var geoJson = mapDataStores[mapType];
-                if (!geoJson) {
+                // if (!geoJson) {
                     // Warning
-                }
+                // }
 
                 var geo = new Geo(mapType, mapType, geoJson);
                 geoList.push(geo);
