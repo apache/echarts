@@ -113,11 +113,11 @@ define(function(require) {
             var isSymbolIgnore = !isCoordSysPolar && !seriesModel.get('showAllSymbol')
                 && this._getSymbolIgnoreFunc(data, coordSys);
 
+
             // Initialization animation or coordinate system changed
             if (
                 !(polyline
-                && prevCoordSys.type === coordSys.type
-                && hasAnimation)
+                && prevCoordSys.type === coordSys.type)
             ) {
                 symbolDraw.updateData(
                     data, seriesModel, api, hasAnimation, isSymbolIgnore
@@ -133,19 +133,20 @@ define(function(require) {
                 }
             }
             else {
-
                 symbolDraw.updateData(
                     data, seriesModel, api, false, isSymbolIgnore
                 );
 
                 // Update clipPath
                 // FIXME Clip path used by more than one elements
-                polyline.setClipPath(
-                    this._createClipShape(coordSys)
-                );
-                polygon && polygon.setClipPath(
-                    this._createClipShape(coordSys)
-                );
+                if (hasAnimation) {
+                    polyline.setClipPath(
+                        this._createClipShape(coordSys)
+                    );
+                    polygon && polygon.setClipPath(
+                        this._createClipShape(coordSys)
+                    );
+                }
 
                 // In the case data zoom triggerred refreshing frequently
                 // Data may not change if line has a category axis. So it should animate nothing
@@ -208,7 +209,6 @@ define(function(require) {
             }
 
             this._data = data;
-
             // Save the coordinate system for transition animation when data changed
             this._coordSys = coordSys;
             this._stackedOnPoints = stackedOnPoints;
@@ -237,8 +237,10 @@ define(function(require) {
                 z2: 10
             });
 
-            var clipPath = this._createClipShape(coordSys, hasAnimation);
-            polyline.setClipPath(clipPath);
+            if (hasAnimation) {
+                var clipPath = this._createClipShape(coordSys, true);
+                polyline.setClipPath(clipPath);
+            }
 
             group.add(polyline);
 
@@ -270,8 +272,10 @@ define(function(require) {
                 silent: true
             });
 
-            var clipPath = this._createClipShape(coordSys, hasAnimation);
-            polygon.setClipPath(clipPath);
+            if (hasAnimation) {
+                var clipPath = this._createClipShape(coordSys, true);
+                polygon.setClipPath(clipPath);
+            }
 
             group.add(polygon);
 

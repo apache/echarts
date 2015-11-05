@@ -75,7 +75,7 @@ define(function(require) {
                     // 柱条边线圆角，单位px，默认为0
                     barBorderRadius: 0,
                     // 柱条边线线宽，单位px，默认为1
-                    barBorderWidth: 0,
+                    barBorderWidth: 0
                 }
             }
         }
