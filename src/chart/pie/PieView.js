@@ -5,9 +5,10 @@ define(function (require) {
 
     /**
      * @param {module:echarts/model/Series} seriesModel
+     * @param {boolean} hasAnimation
      * @inner
      */
-    function updateDataSelected(seriesModel) {
+    function updateDataSelected(seriesModel, hasAnimation) {
         var data = seriesModel.getData();
         var dataIndex = this.dataIndex;
         var name = data.getName(dataIndex);
@@ -20,27 +21,31 @@ define(function (require) {
                 data.getItemGraphicEl(idx),
                 data.getItemLayout(idx),
                 seriesModel.isSelected(data.getName(idx)),
-                selectedOffset
+                selectedOffset,
+                hasAnimation
             );
         });
     }
 
-    function selectAnimate(el, pos) {
-        // animateTo will stop revious animation like update transition
-        el.animate()
-            .when(200, {
-                position: pos
-            })
-            .start('bounceOut');
+    function updateElementSelect(el, pos, hasAnimation) {
+        hasAnimation
+            // animateTo will stop revious animation like update transition
+            ? el.animate()
+                .when(200, {
+                    position: pos
+                })
+                .start('bounceOut')
+            : el.attr('position', pos);
     }
     /**
      * @param {module:zrender/graphic/Sector} el
      * @param {Object} layout
      * @param {boolean} isSelected
      * @param {number} selectedOffset
+     * @param {boolean} hasAnimation
      * @inner
      */
-    function toggleItemSelected(el, layout, isSelected, selectedOffset) {
+    function toggleItemSelected(el, layout, isSelected, selectedOffset, hasAnimation) {
         var midAngle = (layout.startAngle + layout.endAngle) / 2;
 
         var dx = Math.cos(midAngle);
@@ -49,9 +54,9 @@ define(function (require) {
         var offset = isSelected ? selectedOffset : 0;
 
         var position = [dx * offset, dy * offset];
-        selectAnimate(el, position);
-        selectAnimate(el.__labelLine, position);
-        selectAnimate(el.__labelText, position);
+        updateElementSelect(el, position, hasAnimation);
+        updateElementSelect(el.__labelLine, position, hasAnimation);
+        updateElementSelect(el.__labelText, position, hasAnimation);
     }
 
     /**
@@ -126,7 +131,7 @@ define(function (require) {
             var isFirstRender = !oldData;
 
             var firstSector;
-            var onSectorClick = zrUtil.curry(updateDataSelected, seriesModel);
+            var onSectorClick = zrUtil.curry(updateDataSelected, seriesModel, hasAnimation);
 
             var selectedMode = seriesModel.get('selectedMode');
 
@@ -220,7 +225,7 @@ define(function (require) {
             this._data = data;
         },
 
-        _updateAll: function (data, seriesModel) {
+        _updateAll: function (data, seriesModel, hasAnimation) {
             var selectedOffset = seriesModel.get('selectedOffset');
             data.eachItemGraphicEl(function (sector, idx) {
                 var itemModel = data.getItemModel(idx);
@@ -265,7 +270,8 @@ define(function (require) {
                     sector,
                     data.getItemLayout(idx),
                     itemModel.get('selected'),
-                    selectedOffset
+                    selectedOffset,
+                    hasAnimation
                 );
             });
         },
