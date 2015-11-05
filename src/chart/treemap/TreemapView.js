@@ -318,7 +318,7 @@
                     updateStyle(content, {
                         fill: thisNode.getVisual('color', true),
                         text: text,
-                        textPosition: this._getTextPosition(labelModel, thisWidth, thisHeight),
+                        textPosition: labelModel.get('position'),
                         textFill: textStyleModel.get('color'),
                         textAlign: textStyleModel.get('align'),
                         textBaseline: textStyleModel.get('baseline'),
@@ -405,21 +405,6 @@
                     !element.invisible && willInvisibleEls.push(element);
                 }
             }
-        },
-
-        /**
-         * @private
-         */
-        _getTextPosition: function (labelModel, nodeWidth, nodeHeight) {
-            var position = labelModel.get('position');
-
-            if (zrUtil.isArray(position)) {
-                position = [
-                    parsePercent(position[0], nodeWidth),
-                    parsePercent(position[1], nodeHeight)
-                ];
-            }
-            return position;
         },
 
         /**
@@ -721,5 +706,4 @@
     function createStorage() {
         return {nodeGroup: [], background: [], content: []};
     }
-
 });
