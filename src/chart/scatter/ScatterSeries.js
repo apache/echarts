@@ -52,7 +52,7 @@ define(function (require) {
             },
             itemStyle: {
                 normal: {
-                    opacity: 0.8,
+                    opacity: 0.8
                     // color: 各异
                 }
             }

@@ -15,9 +15,15 @@ define(function (require) {
         return Math.abs(a - b) < 1e-4;
     }
 
-    function isSymbolSizeSame(a, b) {
-        return isAroundEqual(a[0], b[0]) && isAroundEqual(a[1], b[1]);
-    }
+    // function isShapeSame(a, b) {
+    //     // return isAroundEqual(a[0], b[0]) && isAroundEqual(a[1], b[1]);
+    //     for (var name in a) {
+    //         if (!isAroundEqual(a[name], b[name])) {
+    //             return false;
+    //         }
+    //     }
+    //     return true;
+    // }
 
     function createSymbol(data, idx, enableAnimation) {
         var point = data.getItemLayout(idx);
@@ -98,6 +104,7 @@ define(function (require) {
                 var size = normalizeSymbolSize(
                     data.getItemVisual(newIdx, 'symbolSize')
                 );
+
                 var point = data.getItemLayout(newIdx);
 
                 var symbolType = data.getItemVisual(newIdx, 'symbol');
@@ -116,17 +123,12 @@ define(function (require) {
                     // Update animation
                     if (!el) { return; }
 
-                    var newTarget = {};
-                    if (!isSymbolSizeSame(
-                        size, normalizeSymbolSize(
-                            oldData.getItemVisual(oldIdx, 'symbolSize')
-                        )
-                    )) {
-                        // FIXME symbol created with pathStr has symbolSizeChanged
-                        newTarget = symbolUtil.getSymbolShape(
-                            symbolType, -size[0] / 2, -size[1] / 2, size[0], size[1]
-                        ) || {};
-                    }
+                    // FIXME symbol created with pathStr has symbolSizeChanged
+                    // FIXME Can't use symbolSize to determine if symbol has changed it's size
+                    // Or animation will be wrong if symbolSize changed to frequently
+                    var newTarget = (symbolUtil.getSymbolShape(
+                        symbolType, -size[0] / 2, -size[1] / 2, size[0], size[1]
+                    ) || {});
 
                     newTarget.position = point;
                     if (!isAroundEqual(el.scale[0], 1)) {    // May have scale 0
