@@ -49,8 +49,7 @@
                 // }
                 for (var i = 0; i < 5; i++) {
                     data1.push([
-                        i * 5, i * 4, i * 20,
-                        i * 123
+                        i * 5, i * 4, i * 20
                     ]);
                     // data2.push([
                     //     i * 10, Math.random() * 5, Math.random() * 20,
@@ -85,11 +84,16 @@
                     },
                     dataRange: [
                         {
+                            min: 0,
+                            max: 100,
                             show: true,
                             itemWidth: 30,
                             calculable: true,
                             inverse: true,
-                            inRange: 'symbolSize'
+                            dimension: 'z',
+                            inRange: {
+                                symbolSize: [10, 180]
+                            }
                         }
                     ],
                     series: [
@@ -105,9 +109,6 @@
                                     shadowColor: 'rgba(0, 0, 0, 0.5)'
                                 }
                             },
-                            symbolSize: function (val) {
-                                return val[2] * 2;
-                            },
                             data: data1
                         },
                         {
@@ -122,9 +123,6 @@
                                     shadowColor: 'rgba(0, 0, 0, 0.5)'
                                 }
                             },
-                            symbolSize: function (val) {
-                                return val[2] * 2;
-                            },
                             data: data2
                         },
                         {
@@ -138,9 +136,6 @@
                                     shadowOffsetY: 0,
                                     shadowColor: 'rgba(0, 0, 0, 0.5)'
                                 }
-                            },
-                            symbolSize: function (val) {
-                                return val[2] * 2;
                             },
                             data: data3
                         }
