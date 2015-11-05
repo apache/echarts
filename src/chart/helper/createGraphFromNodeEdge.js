@@ -3,7 +3,7 @@ define(function (require) {
     var List = require('../../data/List');
     var Graph = require('../../data/Graph');
     var linkList = require('../../data/helper/linkList');
-    var zrUtil = require('zrender/core/util');
+    var completeDimensions = require('../../data/helper/completeDimensions');
 
     return function (nodes, edges, hostModel, directed) {
         var graph = new Graph(directed);
@@ -19,9 +19,8 @@ define(function (require) {
         }
 
         // FIXME
-        var firstValue = nodes[0] && nodes[0].value;
-        var dimSize = zrUtil.isArray(firstValue) ? firstValue.length : 1;
-        var dimensionNames = ['value', 'a', 'b', 'c', 'd', 'e', 'f'].slice(0, dimSize);
+        var dimensionNames = completeDimensions(['value'], nodes);
+
         var nodeData = new List(dimensionNames, hostModel);
         var edgeData = new List(['value'], hostModel);
 

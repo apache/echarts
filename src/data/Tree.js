@@ -9,6 +9,7 @@ define(function(require) {
     var Model = require('../model/Model');
     var List = require('./List');
     var linkListHelper = require('./helper/linkList');
+    var completeDimensions = require('./helper/completeDimensions');
 
     /**
      * @constructor module:echarts/data/Tree~TreeNode
@@ -195,7 +196,7 @@ define(function(require) {
         },
 
         /**
-         * @param {string=} [dimension='value'] Default 'value'. can be 'a', 'b', 'c', 'd', 'e'.
+         * @param {string=} [dimension='value'] Default 'value'. can be 'dim1', 'dim2', ...
          * @return {number} Value.
          */
         getValue: function (dimension) {
@@ -427,7 +428,9 @@ define(function(require) {
 
         tree.root.updateDepthAndHeight(0);
 
-        var list = createList(listData, hostModel);
+        var dimensions = completeDimensions([{name: 'value'}], listData);
+        var list = new List(dimensions, hostModel);
+        list.initData(listData);
 
         linkListHelper.linkToTree(list, tree);
 
@@ -450,19 +453,6 @@ define(function(require) {
         child.parentNode = node;
 
         node.hostTree._nodes.push(child);
-    }
-
-    function createList(listData, hostModel) {
-        var firstValue = listData[0] && listData[0].value;
-        var dimSize = zrUtil.isArray(firstValue) ? firstValue.length : 1;
-
-        // FIXME
-        // 和 createListFromArray中一样，怎么改好看点。
-        var dimensionNames = ['value', 'a', 'b', 'c', 'd', 'e', 'f'];
-        var list = new List(dimensionNames.slice(0, dimSize), hostModel);
-        list.initData(listData);
-
-        return list;
     }
 
     return Tree;

@@ -2,20 +2,37 @@ define(function(require) {
     'use strict';
 
     var List = require('../../data/List');
+    var completeDimensions = require('../../data/helper/completeDimensions');
 
     /**
      * Helper function to create a list from option data
      */
-    return function (data, seriesModel, ecModel) {
+    function createListFromArray(data, seriesModel, ecModel) {
         // If data is undefined
         data = data || [];
 
-        var coordinateSystem = seriesModel.get('coordinateSystem');
-        var dimensions;
+        var result = creaters[seriesModel.get('coordinateSystem')](
+            data, seriesModel, ecModel
+        );
 
-        var categoryAxisModel;
+        var list = new List(result.dimensions, seriesModel);
 
-        if (coordinateSystem === 'cartesian2d') {
+        var nameList = createNameList(result, data);
+
+        list.initData(data, nameList);
+
+        return list;
+    }
+
+    /**
+     * Creaters for each coord system.
+     * @return {Object} {dimensions, categoryAxisModel};
+     */
+    var creaters = {
+
+        cartesian2d: function (data, seriesModel, ecModel) {
+            var dimensions = [];
+            var categoryAxisModel;
             var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
             var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
             var xAxisType = xAxisModel.get('type');
@@ -45,20 +62,18 @@ define(function(require) {
 
                 categoryAxisModel = yAxisModel;
             }
-            else {
-                // PENDING
-                var dimSize = data[0] && data[0].length;
-                // FIXME
-                var dimensionNames = ['x', 'y', 'z', 'a', 'b', 'c', 'd', 'e'];
-                if (dimSize >= 2) {
-                    dimensions = dimensionNames.slice(0, dimSize);
-                }
-            }
-        }
-        else if (coordinateSystem === 'polar') {
+
+            completeDimensions(dimensions, data, ['x', 'y', 'z']);
+
+            return {dimensions: dimensions, categoryAxisModel: categoryAxisModel};
+        },
+
+        polar: function (data, seriesModel, ecModel) {
+            var dimensions = [];
+            var categoryAxisModel;
             var axisFinder = function (axisModel) {
                 return axisModel.get('polarIndex') === polarIndex;
-            }
+            };
             var polarIndex = seriesModel.get('polarIndex') || 0;
             var angleAxisModel = ecModel.findComponent('angleAxis', axisFinder);
             var radiusAxisModel = ecModel.findComponent('radiusAxis', axisFinder);
@@ -88,33 +103,31 @@ define(function(require) {
 
                 categoryAxisModel = radiusAxisModel;
             }
-            else {
-                // PENDING
-                var dimSize = data[0] && data[0].length;
-                if (dimSize === 2) {
-                    dimensions = ['radius', 'angle'];
-                }
-                else if (dimSize === 3) {
-                    dimensions = ['radius', 'angle', 'value'];
-                }
-            }
-        }
-        else if (coordinateSystem === 'geo') {
+
+            completeDimensions(dimensions, data, ['radius', 'angle', 'value']);
+
+            return {dimensions: dimensions, categoryAxisModel: categoryAxisModel};
+        },
+
+        geo: function (data, seriesModel, ecModel) {
             // TODO Region
             // 多个散点图系列在同一个地区的时候
-            dimensions = [{
-                name: 'lon'
-            }, {
-                name: 'lat'
-            }, {
-                name: 'value'
-            }]
+            return {
+                dimensions: [
+                    {name: 'lon'},
+                    {name: 'lat'},
+                    {name: 'value'}
+                ]
+            };
         }
+    };
 
+    function createNameList(result, data) {
         var nameList = [];
-        if (categoryAxisModel) {
+
+        if (result.categoryAxisModel) {
             // FIXME Two category axis
-            var categories = categoryAxisModel.get('data');
+            var categories = result.categoryAxisModel.get('data');
             if (categories) {
                 var dataLen = data.length;
                 // Ordered data is given explicitly like
@@ -132,11 +145,9 @@ define(function(require) {
             }
         }
 
-        var list = new List(dimensions, seriesModel);
+        return nameList;
+    }
 
-        list.initData(data, nameList);
-
-        return list;
-    };
+    return createListFromArray;
 
 });
