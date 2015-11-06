@@ -32,7 +32,6 @@ define(function (require) {
                 dataIndex = index;
                 var mappings = visualMappings[dataRangeModel.getValueState(value)];
                 var visualTypes = VisualMapping.prepareVisualTypes(mappings);
-
                 for (var i = 0, len = visualTypes.length; i < len; i++) {
                     var type = visualTypes[i];
                     mappings[type] && mappings[type].applyVisual(value, getVisual, setVisual);

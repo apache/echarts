@@ -5,6 +5,7 @@ define(function(require) {
 
     var DataRangeModel = require('./DataRangeModel');
     var zrUtil = require('zrender/core/util');
+    var VisualMapping = require('../../visual/VisualMapping');
 
     return DataRangeModel.extend({
 
@@ -19,7 +20,8 @@ define(function(require) {
             itemWidth: 20,             // 值域图形宽度，线性渐变水平布局宽度为该值 * 10
             itemHeight: 14,            // 值域图形高度，线性渐变垂直布局高度为该值 * 10
             itemSymbol: 'roundRect',
-            splitList: null,           // 值顺序：由高到低
+            splitList: null,           // 值顺序：由高到低, item can be:
+                                    // {min, max, value, color, colorS, colorA, symbol, symbolSize}
             selectedMode: 'multiple',
             itemGap: 10                // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
@@ -43,20 +45,32 @@ define(function(require) {
             this.resetTargetSeries(newOption, isInit);
             this.resetExtent();
 
+            var categories = this.option.categories;
+
             this.useCustomizedSplit()
                 ? this._resetForCustomizedSplit()
+                : categories
+                ? this._resetForCategory()
                 : this._resetForAutoSplit();
 
             this._resetSelected();
 
-            this.resetVisual(function (mappingOption) {
-                mappingOption.dataNormalizer = 'piecewise';
+            var dataNormalizer = categories ? 'category' : 'piecewise';
+
+            this.resetVisual(function (mappingOption, state) {
+                mappingOption.dataNormalizer = dataNormalizer;
+                mappingOption.categories = categories && zrUtil.clone(categories, true);
 
                 var intervals = mappingOption.intervals = [];
-                var intervalVisuals = mappingOption.intervalVisuals = [];
+                var specifiedVisuals = mappingOption.specifiedVisuals = [];
+
                 zrUtil.each(this._pieceList, function (piece, index) {
-                    intervals[index] = piece.interval;
-                    intervalVisuals[index] = piece.visualValue;
+                    if (piece.interval) {
+                        intervals[index] = piece.interval;
+                    }
+                    if (state === 'inRange') {
+                        specifiedVisuals[index] = piece.visuals;
+                    }
                 });
             });
         },
@@ -123,6 +137,15 @@ define(function(require) {
             }
         },
 
+        _resetForCategory: function () {
+            zrUtil.each(this.option.categories, function (cate) {
+                this._pieceList.push({
+                    text: this.formatValueText(cate, null, true),
+                    value: cate
+                });
+            }, this);
+        },
+
         _resetForCustomizedSplit: function () {
             var option = this.option;
             var splitList = option.splitList;
@@ -130,29 +153,41 @@ define(function(require) {
 
             for (var i = 0; i < splitNumber; i++) {
                 var splitListItem = splitList[splitNumber - 1 - i];
-                var text = '';
 
-                var min = splitListItem.min;
-                var max = splitListItem.max;
-                min == null && (min = -Infinity);
-                max == null && (max = Infinity);
+                if (!zrUtil.isObject(splitListItem)) {
+                    splitListItem = {value: splitListItem};
+                }
+
+                var item = {text: ''};
+                var hasLabel;
 
                 if (splitListItem.label != null) {
-                    text = splitListItem.label;
-                }
-                else if (splitListItem.single != null) {
-                    text = this.formatValueText(splitListItem.single);
-                }
-                else {
-                    text = this.formatValueText(min, max);
+                    item.text = splitListItem.label;
+                    hasLabel = true;
                 }
 
-                this._pieceList.unshift({
-                    text: text,
-                    interval: [min, max],
-                    visualValue: splitListItem.visualValue
-                        || splitListItem.color // Compatible to ec2
-                });
+                if (splitListItem.hasOwnProperty('value')) {
+                    item.value = splitListItem.value;
+
+                    if (!hasLabel) {
+                        item.text = this.formatValueText(item.value);
+                    }
+                }
+                else {
+                    var min = splitListItem.min;
+                    var max = splitListItem.max;
+                    min == null && (min = -Infinity);
+                    max == null && (max = Infinity);
+                    item.interval = [min, max];
+
+                    if (!hasLabel) {
+                        item.text = this.formatValueText(min, max);
+                    }
+                }
+
+                item.visuals = VisualMapping.retrieveVisuals(splitListItem);
+
+                this._pieceList.unshift(item);
             }
         },
 
@@ -186,13 +221,23 @@ define(function(require) {
          */
         getValueState: function (value) {
             var pieceList = this._pieceList;
+            var targetIndex;
             for (var i = 0, len = pieceList.length; i < len; i++) {
                 var targetPiece = pieceList[i];
-                if (targetPiece.interval[0] <= value && value <= targetPiece.interval[1]) {
-                    return this.option.selected[i] ? 'inRange' : 'outOfRange';
+                if (targetPiece.hasOwnProperty('value')) {
+                    if (targetPiece.value === value) {
+                        targetIndex = i;
+                        break;
+                    }
+                }
+                else if (targetPiece.interval[0] <= value && value <= targetPiece.interval[1]) {
+                    targetIndex = i;
+                    break;
                 }
             }
-            return 'outOfRange';
+            return targetIndex != null
+                ? (this.option.selected[targetIndex] ? 'inRange' : 'outOfRange')
+                : 'outOfRange';
         }
 
     });

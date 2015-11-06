@@ -9,6 +9,8 @@ define(function(require) {
     var modelUtil = require('../../util/model');
     var VisualMapping = require('../../visual/VisualMapping');
     var numberUtil = require('../../util/number');
+    var isArray = zrUtil.isArray;
+    var each = zrUtil.each;
     var asc = numberUtil.asc;
     var linearMap = numberUtil.linearMap;
 
@@ -42,6 +44,7 @@ define(function(require) {
 
             min: 0,                     // 最小值，
             max: 200,                   // 最大值，
+            categories: null,          // 描述 category 数据。如：['some1', 'some2', 'some3']，设置后，min max失效。
             dimension: null,
 
             inRange: null,             // 'color', 'colorH', 'colorS', 'colorL', 'colorA',
@@ -132,7 +135,7 @@ define(function(require) {
 
             newOption && zrUtil.merge(thisOption, newOption);
 
-            if (newOption.text && zrUtil.isArray(newOption.text)) {
+            if (newOption.text && isArray(newOption.text)) {
                 thisOption.text = newOption.text.slice();
             }
 
@@ -155,24 +158,35 @@ define(function(require) {
          * @param {number} valueEnd Can be null or dataBound[0 or 1].
          * @protected
          */
-        formatValueText: function(valueStart, valueEnd) {
+        formatValueText: function(valueStart, valueEnd, isCategory) {
             var option = this.option;
             var precision = option.precision;
             var dataBound = this.dataBound;
-
-            if (valueStart !== dataBound[0]) {
-                valueStart = (+valueStart).toFixed(precision);
-            }
-            if (valueEnd != null && valueEnd !== dataBound[1]) {
-                valueEnd = (+valueEnd).toFixed(precision);
+            if (!isCategory) {
+                if (valueStart !== dataBound[0]) {
+                    valueStart = (+valueStart).toFixed(precision);
+                }
+                if (valueEnd != null && valueEnd !== dataBound[1]) {
+                    valueEnd = (+valueEnd).toFixed(precision);
+                }
             }
 
             var formatter = option.formatter;
             if (formatter) {
                 if (zrUtil.isString(formatter)) {
                     return formatter
-                        .replace('{value}', valueStart === dataBound[0] ? 'min' : valueStart)
-                        .replace('{value2}', valueEnd === dataBound[1] ? 'max' : valueEnd);
+                        .replace(
+                            '{value}',
+                            isCategory
+                                ? valueStart
+                                : (valueStart === dataBound[0] ? 'min' : valueStart)
+                        )
+                        .replace(
+                            '{value2}',
+                            isCategory
+                                ? valueEnd
+                                : (valueEnd === dataBound[1] ? 'max' : valueEnd)
+                        );
                 }
                 else if (zrUtil.isFunction(formatter)) {
                     // FIXME
@@ -184,7 +198,7 @@ define(function(require) {
             if (valueEnd == null) {
                 return valueStart;
             }
-            else {
+            else if (!isCategory) {
                 if (valueStart === dataBound[0]) {
                     return '< ' + valueEnd;
                 }
@@ -280,10 +294,10 @@ define(function(require) {
             doReset.call(this, 'target', this.targetVisuals);
 
             function doReset(baseAttr, visualMappings) {
-                zrUtil.each(this.stateList, function (state) {
+                each(this.stateList, function (state) {
                     var mappings = visualMappings[state] || (visualMappings[state] = {});
                     var visaulOption = this.option[baseAttr][state] || {};
-                    zrUtil.each(visaulOption, function (visualData, visualType) {
+                    each(visaulOption, function (visualData, visualType) {
                         if (!VisualMapping.isValidType(visualType)) {
                             return;
                         }
@@ -309,8 +323,12 @@ define(function(require) {
             var target = thisOption.target || (thisOption.target = {});
             var controller = thisOption.controller || (thisOption.controller = {});
 
-            zrUtil.merge(target, base);
-            zrUtil.merge(controller, base);
+            zrUtil.merge(target, base); // Do not override
+            zrUtil.merge(controller, base); // Do not override
+
+            var isCategory = this.isCategory();
+            var makeDefault = VisualMapping.makeDefault;
+            var eachVisual = VisualMapping.eachVisual;
 
             completeSingle.call(this, target);
             completeSingle.call(this, controller);
@@ -322,7 +340,7 @@ define(function(require) {
                 // Compatible with ec2 dataRange.color.
                 // The mapping order of dataRange.color is: [high value, ..., low value]
                 // whereas inRange.color and outOfRange.color is [low value, ..., high value]
-                if (zrUtil.isArray(thisOption.color)
+                if (isArray(thisOption.color)
                     // If there has been inRange: {symbol: ...}, adding color is a mistake.
                     // So adding color only when no inRange defined.
                     && !base.inRange
@@ -331,11 +349,11 @@ define(function(require) {
                 }
 
                 // If using shortcut like: {inRange: 'symbol'}, complete default value.
-                zrUtil.each(this.stateList, function (state) {
+                each(this.stateList, function (state) {
                     var visualType = base[state];
 
                     if (zrUtil.isString(visualType)) {
-                        var defa = VisualMapping.getDefault(visualType, 'active');
+                        var defa = VisualMapping.getDefault(visualType, 'active', isCategory);
                         if (defa) {
                             base[state] = {};
                             base[state][visualType] = defa;
@@ -353,8 +371,8 @@ define(function(require) {
                 var optAbsent = base[stateAbsent];
                 if (optExist && !optAbsent) {
                     optAbsent = base[stateAbsent] = {};
-                    zrUtil.each(optExist, function (visualData, visualType) {
-                        var defa = VisualMapping.getDefault(visualType, 'inactive');
+                    each(optExist, function (visualData, visualType) {
+                        var defa = VisualMapping.getDefault(visualType, 'inactive', isCategory);
                         if (VisualMapping.isValidType(visualType) && defa) {
                             optAbsent[visualType] = defa;
                         }
@@ -368,41 +386,51 @@ define(function(require) {
                 var symbolSizeExists = (controller.inRange || {}).symbolSize
                     || (controller.outOfRange || {}).symbolSize;
 
-                zrUtil.each(this.stateList, function (state) {
+                each(this.stateList, function (state) {
 
                     var itemSize = this.itemSize;
                     var visuals = controller[state];
 
                     // Set inactive color for controller if no other color attr (like colorA) specified.
                     if (!visuals) {
-                        visuals = controller[state] = {color: [this.get('inactiveColor')]};
+                        visuals = controller[state] = {
+                            color: makeDefault([this.get('inactiveColor')], isCategory)
+                        };
+console.log(visuals);
                     }
 
                     // Consistent symbol and symbolSize if not specified.
                     if (!visuals.symbol) {
-                        visuals.symbol = symbolExists && symbolExists.slice() || ['roundRect'];
+                        visuals.symbol = symbolExists
+                            && zrUtil.clone(symbolExists, true)
+                            || makeDefault(['roundRect'], isCategory);
                     }
                     if (!visuals.symbolSize) {
                         visuals.symbolSize = symbolSizeExists
-                            && symbolSizeExists.slice()
-                            || [itemSize[0], itemSize[0]];
+                            && zrUtil.clone(symbolSizeExists, true)
+                            || makeDefault([itemSize[0], itemSize[0]], isCategory);
                     }
 
                     // Filter square and none.
-                    visuals.symbol = zrUtil.map(visuals.symbol, function (symbol) {
-                        return (symbol === 'none' || symbol === 'square')
+                    eachVisual(visuals.symbol, function (symbol, i) {
+                        visuals.symbol[i] = (symbol === 'none' || symbol === 'square')
                             ? 'roundRect' : symbol;
                     });
 
                     // Normalize symbolSize
                     var symbolSize = visuals.symbolSize;
+
                     if (symbolSize) {
-                        symbolSize[0] = linearMap(
-                            symbolSize[0], [0, symbolSize[1]], [0, itemSize[0]], true
-                        );
-                        symbolSize[1] = linearMap(
-                            symbolSize[1], [0, symbolSize[1]], [0, itemSize[0]], true
-                        );
+                        var max = -Infinity;
+                        // symbolSize can be object when categories defined.
+                        eachVisual(symbolSize, function (value, i) {
+                            value > max && (max = value);
+                        });
+                        eachVisual(symbolSize, function (value, i) {
+                            symbolSize[i] = linearMap(
+                                value, [0, max], [0, itemSize[0]], true
+                            );
+                        });
                     }
 
                 }, this);
@@ -416,6 +444,13 @@ define(function(require) {
             zrUtil.each(this.option.seriesIndex, function (seriesIndex) {
                 callback.call(context, this.ecModel.getSeriesByIndex(seriesIndex, true));
             }, this);
+        },
+
+        /**
+         * @public
+         */
+        isCategory: function () {
+            return !!this.option.categories;
         },
 
         /**

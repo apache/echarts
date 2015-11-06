@@ -127,8 +127,15 @@ define(function(require) {
          * @private
          */
         _createItemSymbol: function (group, piece, shapeParam) {
-            var pieceInterval = piece.interval || [];
-            var representValue = (pieceInterval[0] + pieceInterval[1]) / 2;
+            var representValue;
+            if (this.dataRangeModel.isCategory()) {
+                representValue = piece.value;
+            }
+            else {
+                var pieceInterval = piece.interval || [];
+                representValue = (pieceInterval[0] + pieceInterval[1]) / 2;
+            }
+
             var visualObj = this.getControllerVisual(representValue);
 
             group.add(symbolCreators.createSymbol(
