@@ -196,16 +196,12 @@ define(function (require) {
                 var colorArr = colorTool.parse(backgroundColor);
                 backgroundColor = colorTool.stringify(colorArr, 'rgb');
                 if (colorArr[3] === 0) {
-                    backgroundColor = 'none';
+                    backgroundColor = 'transparent';
                 }
             }
             backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
 
             console.time && console.timeEnd('update');
-        },
-
-        _updateBackground: function () {
-
         },
 
         // PENDING
