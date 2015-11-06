@@ -96,6 +96,12 @@ define(function (require) {
             if (!isNaN(end)) {
                 thisExtent[1] = end;
             }
+            if (thisExtent[0] === thisExtent[1]) {
+                // Expand extent
+                var expandSize = thisExtent[0] / 2;
+                thisExtent[0] -= expandSize;
+                thisExtent[1] += expandSize;
+            }
         },
 
         /**
