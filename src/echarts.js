@@ -21,6 +21,8 @@ define(function (require) {
 
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
+    var colorTool = require('zrender/tool/color');
+    var env = require('zrender/core/env');
 
     var each = zrUtil.each;
 
@@ -137,9 +139,8 @@ define(function (require) {
             refreshImmediately && this._zr.refreshImmediately();
         },
 
-        setTheme: function (theme) {
-
-        },
+        // setTheme: function (theme) {
+        // },
 
         /**
          * @return {module:echarts/model/Global}
@@ -190,9 +191,21 @@ define(function (require) {
 
             // Set background
             var backgroundColor = ecModel.get('backgroundColor');
+            // In IE8
+            if (!env.canvasSupported) {
+                var colorArr = colorTool.parse(backgroundColor);
+                backgroundColor = colorTool.stringify(colorArr, 'rgb');
+                if (colorArr[3] === 0) {
+                    backgroundColor = 'none';
+                }
+            }
             backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
 
             console.time && console.timeEnd('update');
+        },
+
+        _updateBackground: function () {
+
         },
 
         // PENDING
