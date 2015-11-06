@@ -226,13 +226,13 @@ define(function (require) {
         var info = statistic(nodeModel, viewChildren, orderBy);
 
         if (info.sum === 0) {
-            return node.viewChildren = [];
+            return (node.viewChildren = []);
         }
 
         info.sum = filterByThreshold(nodeModel, totalArea, info.sum, orderBy, viewChildren);
 
         if (info.sum === 0) {
-            return node.viewChildren = [];
+            return (node.viewChildren = []);
         }
 
         // Set area to each child.

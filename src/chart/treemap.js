@@ -1,6 +1,5 @@
 define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
     var echarts = require('../echarts');
 
     require('./treemap/TreemapSeries');

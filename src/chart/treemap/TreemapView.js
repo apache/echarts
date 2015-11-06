@@ -4,7 +4,6 @@
     var graphic = require('../../util/graphic');
     var DataDiffer = require('../../data/DataDiffer');
     var helper = require('./helper');
-    var parsePercent = require('../../util/number').parsePercent;
     var Breadcrumb = require('./Breadcrumb');
     var RoamController = require('../../component/helper/RoamController');
     var BoundingRect = require('zrender/core/BoundingRect');
