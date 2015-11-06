@@ -182,7 +182,8 @@ define(function (require) {
                         },
                         position: region.center.slice(),
                         scale: [1 / scale[0], 1 / scale[1]],
-                        z2: 10
+                        z2: 10,
+                        silent: true
                     });
                     var emphasisLabel = function() {
                         text.attr('ignore', !hoverShowLabel);

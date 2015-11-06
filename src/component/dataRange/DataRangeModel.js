@@ -396,7 +396,6 @@ define(function(require) {
                         visuals = controller[state] = {
                             color: makeDefault([this.get('inactiveColor')], isCategory)
                         };
-console.log(visuals);
                     }
 
                     // Consistent symbol and symbolSize if not specified.

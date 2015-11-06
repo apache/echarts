@@ -166,7 +166,7 @@ define(function (require) {
          * @param {Object} payload
          */
         update: function (payload) {
-            console.time('update');
+            console.time && console.time('update');
 
             var ecModel = this._model;
 
@@ -189,9 +189,10 @@ define(function (require) {
             this._doRender(ecModel, payload);
 
             // Set background
-            this._dom.style.backgroundColor = ecModel.get('backgroundColor');
+            var backgroundColor = ecModel.get('backgroundColor');
+            backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
 
-            console.timeEnd('update');
+            console.time && console.timeEnd('update');
         },
 
         // PENDING
@@ -270,6 +271,8 @@ define(function (require) {
             each(this._componentsList, function (component) {
                 var componentModel = component.__model;
                 component[methodName](componentModel, ecModel, api, payload);
+
+                updateZ(componentModel, component);
             }, this);
 
             // Upate all charts
@@ -277,6 +280,8 @@ define(function (require) {
                 var id = getViewId(seriesModel);
                 var chart = this._chartsMap[id];
                 chart[methodName](seriesModel, ecModel, api, payload);
+
+                updateZ(seriesModel, chart);
             }, this);
 
         },
@@ -453,13 +458,7 @@ define(function (require) {
                 var componentModel = component.__model;
                 component.render(componentModel, ecModel, api, payload);
 
-                var z = componentModel.get('z');
-                var zlevel = componentModel.get('zlevel');
-                // Set z and zlevel
-                component.group.traverse(function (el) {
-                    z != null && (el.z = z);
-                    zlevel != null && (el.zlevel = zlevel);
-                });
+                updateZ(componentModel, component);
             }, this);
 
             each(this._chartsList, function (chart) {
@@ -473,13 +472,7 @@ define(function (require) {
                 chart.__keepAlive = true;
                 chart.render(seriesModel, ecModel, api, payload);
 
-                var z = seriesModel.get('z');
-                var zlevel = seriesModel.get('zlevel');
-                // Set z and zlevel
-                chart.group.traverse(function (el) {
-                    z != null && (el.z = z);
-                    zlevel != null && (el.zlevel = zlevel);
-                });
+                updateZ(seriesModel, chart);
             }, this);
 
             // Remove groups of charts
@@ -510,7 +503,20 @@ define(function (require) {
         return model.name + '_' + model.type;
     }
 
-
+    /**
+     * @param {module:echarts/model/Series|module:echarts/model/Component} model
+     * @param {module:echarts/view/Component|module:echarts/view/Chart} view
+     * @return {string}
+     */
+    function updateZ(model, view) {
+        var z = model.get('z');
+        var zlevel = model.get('zlevel');
+        // Set z and zlevel
+        view.group.traverse(function (el) {
+            z != null && (el.z = z);
+            zlevel != null && (el.zlevel = zlevel);
+        });
+    }
     /**
      * @type {Array.<Function>}
      * @inner

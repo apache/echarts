@@ -52,7 +52,6 @@ define(function (require) {
         var dy = Math.sin(midAngle);
 
         var offset = isSelected ? selectedOffset : 0;
-
         var position = [dx * offset, dy * offset];
         updateElementSelect(el, position, hasAnimation);
         updateElementSelect(el.__labelLine, position, hasAnimation);
