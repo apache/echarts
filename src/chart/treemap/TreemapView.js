@@ -244,7 +244,8 @@
          * @private
          */
         _renderNode: function (
-            thisStorage, oldStorage, lastsForAnimation, willInvisibleEls, willVisibleEls,
+            thisStorage, oldStorage, lastsForAnimation,
+            willInvisibleEls, willVisibleEls,
             thisNode, oldNode, parentGroup
         ) {
             var thisRawIndex = thisNode && thisNode.getRawIndex();

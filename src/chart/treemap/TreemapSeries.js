@@ -76,7 +76,7 @@ define(function(require) {
                         fontSize: 13,
                         fontStyle: 'normal',
                         fontWeight: 'normal',
-                        ellipsis: false
+                        ellipsis: true
                     }
                 }
             },
