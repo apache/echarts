@@ -11,14 +11,21 @@ define(function (require) {
      * @constructor
      * @param {Object} option
      * @param {module:echarts/model/Model} parentModel
+     * @param {module:echarts/model/Global} ecModel
      */
-    function Model(option, parentModel) {
+    function Model(option, parentModel, ecModel) {
 
         /**
          * @type {module:echarts/model/Model}
          * @readOnly
          */
         this.parentModel = parentModel || null;
+
+        /**
+         * @type {module:echarts/model/Global}
+         * @readOnly
+         */
+        this.ecModel = ecModel || null;
 
         /**
          * @type {Object}
@@ -97,9 +104,11 @@ define(function (require) {
         getModel: function (path, parentModel) {
             var obj = this.get(path, true);
             var thisParentModel = this.parentModel;
-            return new Model(
-                obj, parentModel || (thisParentModel && thisParentModel.getModel(path))
+            var model = new Model(
+                obj, parentModel || (thisParentModel && thisParentModel.getModel(path)),
+                this.ecModel
             );
+            return model;
         },
 
         /**

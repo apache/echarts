@@ -248,7 +248,7 @@ define(function (require) {
                         text: labels[i],
                         textAlign: labelTextAlign,
                         textBaseline: labelTextBaseline,
-                        font: textStyleModel.getFont(),
+                        textFont: textStyleModel.getFont(),
                         fill: textStyleModel.get('color')
                     },
                     rotation: labelRotate * Math.PI / 180,

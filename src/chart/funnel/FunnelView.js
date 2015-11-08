@@ -32,7 +32,7 @@ define(function (require) {
     }
 
     var Funnel = require('../../view/Chart').extend({
-        
+
         type: 'funnel',
 
         render: function (seriesModel, ecModel, api) {
@@ -61,7 +61,7 @@ define(function (require) {
                         poly.setStyle({ opacity : 0 });
                         poly.animateTo({
                             style: {
-                                opacity: opacity   
+                                opacity: opacity
                             }
                         }, 300, 'cubicIn');
                     }
@@ -117,8 +117,11 @@ define(function (require) {
                         textAlign: labelLayout.textAlign,
                         textBaseline: labelLayout.textBaseline
                     });
-
-                    poly.setStyle('opacity', data.getItemModel(newIdx).get(opacityAccessPath));
+                    var opacity = data.getItemModel(newIdx).get(opacityAccessPath);
+                    if (opacity == null) {
+                        opacity = 1;
+                    }
+                    poly.setStyle('opacity', opacity);
 
                     group.add(poly);
                     group.add(labelLine);
@@ -179,7 +182,7 @@ define(function (require) {
                         || isLabelInside ? '#fff' : visualColor,
                     text: seriesModel.getFormattedLabel(idx, 'normal')
                         || data.getName(idx),
-                    font: textStyleModel.getFont()
+                    textFont: textStyleModel.getFont()
                 });
                 // Default use item visual color
                 labelLine.attr('ignore', !itemModel.get('labelLine.show'));
