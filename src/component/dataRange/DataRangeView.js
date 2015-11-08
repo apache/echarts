@@ -87,15 +87,15 @@ define(function (require) {
          * @protected
          * @param {(number|Array)} targetValue
          * @param {string=} forceState Specify state, instead of using getValueState method.
-         * @param {string=} visualCategory Specify visual type, defualt all available visualCategorys.
+         * @param {string=} visualCluster Specify visual type, defualt all available visualClusters.
          */
-        getControllerVisual: function (targetValue, forceState, visualCategory) {
+        getControllerVisual: function (targetValue, forceState, visualCluster) {
             var dataRangeModel = this.dataRangeModel;
             var targetIsArray = zrUtil.isArray(targetValue);
 
             // targetValue is array when caculate gradient color,
             // where forceState is required.
-            if (targetIsArray && (!forceState || visualCategory !== 'color')) {
+            if (targetIsArray && (!forceState || visualCluster !== 'color')) {
                 throw new Error(targetValue);
             }
 
@@ -122,11 +122,9 @@ define(function (require) {
 
             zrUtil.each(visualTypes, function (type) {
                 var visualMapping = mappings[type];
-                (!visualCategory || VisualMapping.isInVisualCategory(type, visualCategory))
-                    && visualMapping
-                    && visualMapping.applyVisual(
-                        targetValue, getter, setter
-                    );
+                if (!visualCluster || VisualMapping.isInVisualCluster(type, visualCluster)) {
+                    visualMapping && visualMapping.applyVisual(targetValue, getter, setter);
+                }
             });
 
             return visualObj;
