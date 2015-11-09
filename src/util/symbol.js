@@ -175,7 +175,7 @@ define(function(require) {
                 cx: x + w / 2,
                 cy: y + h / 2,
                 r: size / 2
-            }
+            };
         },
 
         diamond: function (x, y, w, h) {
@@ -203,7 +203,7 @@ define(function(require) {
                 y: y + h / 2,
                 width: w,
                 height: h
-            }
+            };
         }
     };
 

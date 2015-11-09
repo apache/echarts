@@ -102,406 +102,401 @@ define(function (require) {
         });
     };
 
-    ECharts.prototype = {
+    var echartsProto = ECharts.prototype;
+    echartsProto.getDom = function () {
+        return this._dom;
+    };
 
-        getDom: function () {
-            return this._dom;
-        },
+    echartsProto.getZr = function () {
+        return this._zr;
+    };
 
-        getZr: function () {
-            return this._zr;
-        },
+    echartsProto.setOption = function (option, notMerge, refreshImmediately) {
+        // PENDING
+        option = zrUtil.clone(option, true);
 
-        setOption: function (option, notMerge, refreshImmediately) {
-            // PENDING
-            option = zrUtil.clone(option, true);
+        each(optionPreprocessorFuncs, function (preProcess) {
+            preProcess(option);
+        });
 
-            each(optionPreprocessorFuncs, function (preProcess) {
-                preProcess(option);
-            });
+        var ecModel = this._model;
+        if (!ecModel || notMerge) {
+            ecModel = new GlobalModel(option, null, this._theme);
+            this._model = ecModel;
+        }
+        else {
+            ecModel.restoreData();
+            ecModel.mergeOption(option);
+        }
 
-            var ecModel = this._model;
-            if (!ecModel || notMerge) {
-                ecModel = new GlobalModel(option, null, this._theme);
-                this._model = ecModel;
+        this._prepareComponents(ecModel);
+
+        this._prepareCharts(ecModel);
+
+        this.update();
+
+        refreshImmediately && this._zr.refreshImmediately();
+    };
+
+    /**
+     * @return {module:echarts/model/Global}
+     */
+    echartsProto.getModel = function () {
+        return this._model;
+    };
+
+    /**
+     * @return {number}
+     */
+    echartsProto.getWidth = function () {
+        return this._zr.getWidth();
+    };
+
+    /**
+     * @return {number}
+     */
+    echartsProto.getHeight = function () {
+        return this._zr.getHeight();
+    };
+
+    /**
+     * @param {Object} payload
+     */
+    echartsProto.update = function (payload) {
+        console.time && console.time('update');
+
+        var ecModel = this._model;
+
+        ecModel.restoreData();
+
+        // TODO
+        // Save total ecModel here for undo/redo (after restoring data and before processing data).
+        // Undo (restoration of total ecModel) can be carried out in 'action' or outside API call.
+
+        this._processData(ecModel);
+
+        this._stackSeriesData(ecModel);
+
+        this._coordinateSystem.update(ecModel, this._extensionAPI);
+
+        this._doLayout(ecModel, payload);
+
+        this._doVisualCoding(ecModel, payload);
+
+        this._doRender(ecModel, payload);
+
+        // Set background
+        var backgroundColor = ecModel.get('backgroundColor');
+        // In IE8
+        if (!env.canvasSupported) {
+            var colorArr = colorTool.parse(backgroundColor);
+            backgroundColor = colorTool.stringify(colorArr, 'rgb');
+            if (colorArr[3] === 0) {
+                backgroundColor = 'transparent';
+            }
+        }
+        backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
+
+        console.time && console.timeEnd('update');
+    };
+
+    // PENDING
+    /**
+     * @param {Object} payload
+     */
+    echartsProto.updateView = function (payload) {
+        var ecModel = this._model;
+
+        this._doLayout(ecModel, payload);
+
+        this._doVisualCoding(ecModel, payload);
+
+        this._invokeUpdateMethod('updateView', ecModel, payload);
+    };
+
+    /**
+     * @param {Object} payload
+     */
+    echartsProto.updateVisual = function (payload) {
+        var ecModel = this._model;
+
+        this._doVisualCoding(ecModel, payload);
+
+        this._invokeUpdateMethod('updateVisual', ecModel, payload);
+    };
+
+    /**
+     * @param {Object} payload
+     */
+    echartsProto.updateLayout = function (payload) {
+        var ecModel = this._model;
+
+        this._doLayout(ecModel, payload);
+
+        this._invokeUpdateMethod('updateLayout', ecModel, payload);
+    };
+
+    echartsProto.resize = function () {
+        // var ecModel = this._model;
+
+        // this._coordinateSystem.resize(ecModel, this._extensionAPI);
+
+        // this._doVisualCoding(ecModel);
+
+        // this._doLayout(ecModel);
+
+        // this._doRender(ecModel);
+
+        this.update();
+    };
+
+    /**
+     * @pubilc
+     * @param {Object} payload
+     * @param {string} [payload.type] Action type
+     * @param {number} [payload.from] From uid
+     */
+    echartsProto.dispatch = function (payload) {
+        var actionWrap = actions[payload.type];
+        if (actionWrap) {
+            var updateMethod = actionWrap.actionInfo.update || 'update';
+            actionWrap.action(payload, this._model);
+            updateMethod !== 'none' && this[updateMethod](payload);
+        }
+    };
+
+    /**
+     * @param {string} methodName
+     * @private
+     */
+    echartsProto._invokeUpdateMethod = function (methodName, ecModel, payload) {
+        var api = this._extensionAPI;
+
+        // Update all components
+        each(this._componentsList, function (component) {
+            var componentModel = component.__model;
+            component[methodName](componentModel, ecModel, api, payload);
+
+            updateZ(componentModel, component);
+        }, this);
+
+        // Upate all charts
+        ecModel.eachSeries(function (seriesModel, idx) {
+            var id = getViewId(seriesModel);
+            var chart = this._chartsMap[id];
+            chart[methodName](seriesModel, ecModel, api, payload);
+
+            updateZ(seriesModel, chart);
+        }, this);
+
+    };
+
+    echartsProto._prepareCharts = function (ecModel) {
+
+        var chartsList = this._chartsList;
+        var chartsMap = this._chartsMap;
+        var zr = this._zr;
+
+        for (var i = 0; i < chartsList.length; i++) {
+            chartsList[i].__keepAlive = false;
+        }
+
+        ecModel.eachSeries(function (seriesModel, idx) {
+            var id = getViewId(seriesModel);
+
+            var chart = chartsMap[id];
+            if (!chart) {
+                var Clazz = ChartView.getClass(
+                    ComponentModel.parseComponentType(seriesModel.type).sub
+                );
+                if (Clazz) {
+                    chart = new Clazz();
+                    chart.init(ecModel, this._extensionAPI);
+                    chartsMap[id] = chart;
+                    chartsList.push(chart);
+                    zr.add(chart.group);
+                }
+                else {
+                    // Error
+                }
+            }
+
+            chart.__keepAlive = true;
+            chart.__id = id;
+        }, this);
+
+        for (var i = 0; i < chartsList.length;) {
+            var chart = chartsList[i];
+            if (!chart.__keepAlive) {
+                zr.remove(chart.group);
+                chart.dispose(this._extensionAPI);
+                chartsList.splice(i, 1);
+                delete chartsMap[chart.__id];
             }
             else {
-                ecModel.restoreData();
-                ecModel.mergeOption(option);
+                i++;
             }
-
-            this._prepareComponents(ecModel);
-
-            this._prepareCharts(ecModel);
-
-            this.update();
-
-            refreshImmediately && this._zr.refreshImmediately();
-        },
-
-        // setTheme: function (theme) {
-        // },
-
-        /**
-         * @return {module:echarts/model/Global}
-         */
-        getModel: function () {
-            return this._model;
-        },
-
-        /**
-         * @return {number}
-         */
-        getWidth: function () {
-            return this._zr.getWidth();
-        },
-
-        /**
-         * @return {number}
-         */
-        getHeight: function () {
-            return this._zr.getHeight();
-        },
-
-        /**
-         * @param {Object} payload
-         */
-        update: function (payload) {
-            console.time && console.time('update');
-
-            var ecModel = this._model;
-
-            ecModel.restoreData();
-
-            // TODO
-            // Save total ecModel here for undo/redo (after restoring data and before processing data).
-            // Undo (restoration of total ecModel) can be carried out in 'action' or outside API call.
-
-            this._processData(ecModel);
-
-            this._stackSeriesData(ecModel);
-
-            this._coordinateSystem.update(ecModel, this._extensionAPI);
-
-            this._doLayout(ecModel, payload);
-
-            this._doVisualCoding(ecModel, payload);
-
-            this._doRender(ecModel, payload);
-
-            // Set background
-            var backgroundColor = ecModel.get('backgroundColor');
-            // In IE8
-            if (!env.canvasSupported) {
-                var colorArr = colorTool.parse(backgroundColor);
-                backgroundColor = colorTool.stringify(colorArr, 'rgb');
-                if (colorArr[3] === 0) {
-                    backgroundColor = 'transparent';
-                }
-            }
-            backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
-
-            console.time && console.timeEnd('update');
-        },
-
-        // PENDING
-        /**
-         * @param {Object} payload
-         */
-        updateView: function (payload) {
-            var ecModel = this._model;
-
-            this._doLayout(ecModel, payload);
-
-            this._doVisualCoding(ecModel, payload);
-
-            this._invokeUpdateMethod('updateView', ecModel, payload);
-        },
-
-        /**
-         * @param {Object} payload
-         */
-        updateVisual: function (payload) {
-            var ecModel = this._model;
-
-            this._doVisualCoding(ecModel, payload);
-
-            this._invokeUpdateMethod('updateVisual', ecModel, payload);
-        },
-
-        /**
-         * @param {Object} payload
-         */
-        updateLayout: function (payload) {
-            var ecModel = this._model;
-
-            this._doLayout(ecModel, payload);
-
-            this._invokeUpdateMethod('updateLayout', ecModel, payload);
-        },
-
-        resize: function () {
-            // var ecModel = this._model;
-
-            // this._coordinateSystem.resize(ecModel, this._extensionAPI);
-
-            // this._doVisualCoding(ecModel);
-
-            // this._doLayout(ecModel);
-
-            // this._doRender(ecModel);
-
-            this.update();
-        },
-
-        /**
-         * @pubilc
-         * @param {Object} payload
-         * @param {string} [payload.type] Action type
-         * @param {number} [payload.from] From uid
-         */
-        dispatch: function (payload) {
-            var actionWrap = actions[payload.type];
-            if (actionWrap) {
-                var updateMethod = actionWrap.actionInfo.update || 'update';
-                actionWrap.action(payload, this._model);
-                updateMethod !== 'none' && this[updateMethod](payload);
-            }
-        },
-
-        /**
-         * @param {string} methodName
-         * @private
-         */
-        _invokeUpdateMethod: function (methodName, ecModel, payload) {
-            var api = this._extensionAPI;
-
-            // Update all components
-            each(this._componentsList, function (component) {
-                var componentModel = component.__model;
-                component[methodName](componentModel, ecModel, api, payload);
-
-                updateZ(componentModel, component);
-            }, this);
-
-            // Upate all charts
-            ecModel.eachSeries(function (seriesModel, idx) {
-                var id = getViewId(seriesModel);
-                var chart = this._chartsMap[id];
-                chart[methodName](seriesModel, ecModel, api, payload);
-
-                updateZ(seriesModel, chart);
-            }, this);
-
-        },
-
-        _prepareCharts: function (ecModel) {
-
-            var chartsList = this._chartsList;
-            var chartsMap = this._chartsMap;
-            var zr = this._zr;
-
-            for (var i = 0; i < chartsList.length; i++) {
-                chartsList[i].__keepAlive = false;
-            }
-
-            ecModel.eachSeries(function (seriesModel, idx) {
-                var id = getViewId(seriesModel);
-
-                var chart = chartsMap[id];
-                if (!chart) {
-                    var Clazz = ChartView.getClass(
-                        ComponentModel.parseComponentType(seriesModel.type).sub
-                    );
-                    if (Clazz) {
-                        chart = new Clazz();
-                        chart.init(ecModel, this._extensionAPI);
-                        chartsMap[id] = chart;
-                        chartsList.push(chart);
-                        zr.add(chart.group);
-                    }
-                    else {
-                        // Error
-                    }
-                }
-
-                chart.__keepAlive = true;
-                chart.__id = id;
-            }, this);
-
-            for (var i = 0; i < chartsList.length;) {
-                var chart = chartsList[i];
-                if (!chart.__keepAlive) {
-                    zr.remove(chart.group);
-                    chart.dispose(this._extensionAPI);
-                    chartsList.splice(i, 1);
-                    delete chartsMap[chart.__id];
-                }
-                else {
-                    i++;
-                }
-            }
-        },
-
-        _prepareComponents: function (ecModel) {
-
-            var componentsMap = this._componentsMap;
-            var componentsList = this._componentsList;
-
-            for (var i = 0; i < componentsList.length; i++) {
-                componentsList[i].__keepAlive = true;
-            }
-
-            ecModel.eachComponent(function (componentType, componentModel) {
-                if (componentType === 'series') {
-                    return;
-                }
-
-                var id = getViewId(componentModel);
-                var component = componentsMap[id];
-                if (!component) {
-                    // Create and add component
-                    var Clazz = ComponentView.getClass(
-                        componentType, componentModel.option.type
-                    );
-
-                    if (Clazz) {
-                        component = new Clazz();
-                        component.init(ecModel, this._extensionAPI);
-                        componentsMap[id] = component;
-                        componentsList.push(component);
-
-                        this._zr.add(component.group);
-                    }
-                }
-                component.__id = id;
-                component.__keepAlive = true;
-                // Used in rendering
-                component.__model = componentModel;
-            }, this);
-
-            for (var i = 0; i < componentsList.length;) {
-                var component = componentsList[i];
-                if (!component.__keepAlive) {
-                    this._zr.remove(component.group);
-                    component.dispose(this._extensionAPI);
-                    componentsList.splice(i, 1);
-                    delete componentsMap[component.__id];
-                }
-                else {
-                    i++;
-                }
-            }
-        },
-
-        /**
-         * Processor data in each series
-         *
-         * @param {module:echarts/model/Global} ecModel
-         * @private
-         */
-        _processData: function (ecModel) {
-            each(PROCESSOR_STAGES, function (stage) {
-                each(dataProcessorFuncs[stage] || [], function (process) {
-                    process(ecModel);
-                });
-            });
-        },
-
-        /**
-         * @private
-         */
-        _stackSeriesData: function (ecModel) {
-            var stackedDataMap = {};
-            ecModel.eachSeries(function (series) {
-                var stack = series.get('stack');
-                var data = series.getData();
-                if (stack && data.type === 'list') {
-                    var previousStack = stackedDataMap[stack];
-                    if (previousStack) {
-                        data.stackedOn = previousStack;
-                    }
-                    stackedDataMap[stack] = data;
-                }
-            });
-        },
-
-        /**
-         * Layout before each chart render there series after visual coding and data processing
-         *
-         * @param {module:echarts/model/Global} ecModel
-         * @private
-         */
-        _doLayout: function (ecModel, payload) {
-            var api = this._extensionAPI;
-            each(this._layouts, function (layout) {
-                layout.update(ecModel, api, payload);
-            });
-            each(layoutFuncs, function (layout) {
-                layout(ecModel, api, payload);
-            });
-        },
-
-        /**
-         * Code visual infomation from data after data processing
-         *
-         * @param {module:echarts/model/Global} ecModel
-         * @private
-         */
-        _doVisualCoding: function (ecModel, payload) {
-            each(VISUAL_CODING_STAGES, function (stage) {
-                each(visualCodingFuncs[stage] || [], function (visualCoding) {
-                    visualCoding(ecModel, payload);
-                });
-            });
-        },
-
-        /**
-         * Render each chart and component
-         * @private
-         */
-        _doRender: function (ecModel, payload) {
-            var api = this._extensionAPI;
-            // Render all components
-            each(this._componentsList, function (component) {
-                var componentModel = component.__model;
-                component.render(componentModel, ecModel, api, payload);
-
-                updateZ(componentModel, component);
-            }, this);
-
-            each(this._chartsList, function (chart) {
-                chart.__keepAlive = false;
-            }, this);
-
-            // Render all charts
-            ecModel.eachSeries(function (seriesModel, idx) {
-                var id = getViewId(seriesModel);
-                var chart = this._chartsMap[id];
-                chart.__keepAlive = true;
-                chart.render(seriesModel, ecModel, api, payload);
-
-                updateZ(seriesModel, chart);
-            }, this);
-
-            // Remove groups of charts
-            each(this._chartsList, function (chart) {
-                if (!chart.__keepAlive) {
-                    chart.remove(ecModel, api);
-                }
-            }, this);
-        },
-
-        dispose: function () {
-            each(this._components, function (component) {
-                component.dispose();
-            });
-            each(this._charts, function (chart) {
-                chart.dispose();
-            });
-
-            this.zr.dispose();
         }
+    };
+
+    echartsProto._prepareComponents = function (ecModel) {
+
+        var componentsMap = this._componentsMap;
+        var componentsList = this._componentsList;
+
+        for (var i = 0; i < componentsList.length; i++) {
+            componentsList[i].__keepAlive = true;
+        }
+
+        ecModel.eachComponent(function (componentType, componentModel) {
+            if (componentType === 'series') {
+                return;
+            }
+
+            var id = getViewId(componentModel);
+            var component = componentsMap[id];
+            if (!component) {
+                // Create and add component
+                var Clazz = ComponentView.getClass(
+                    componentType, componentModel.option.type
+                );
+
+                if (Clazz) {
+                    component = new Clazz();
+                    component.init(ecModel, this._extensionAPI);
+                    componentsMap[id] = component;
+                    componentsList.push(component);
+
+                    this._zr.add(component.group);
+                }
+            }
+            component.__id = id;
+            component.__keepAlive = true;
+            // Used in rendering
+            component.__model = componentModel;
+        }, this);
+
+        for (var i = 0; i < componentsList.length;) {
+            var component = componentsList[i];
+            if (!component.__keepAlive) {
+                this._zr.remove(component.group);
+                component.dispose(this._extensionAPI);
+                componentsList.splice(i, 1);
+                delete componentsMap[component.__id];
+            }
+            else {
+                i++;
+            }
+        }
+    };
+
+    /**
+     * Processor data in each series
+     *
+     * @param {module:echarts/model/Global} ecModel
+     * @private
+     */
+    echartsProto._processData = function (ecModel) {
+        each(PROCESSOR_STAGES, function (stage) {
+            each(dataProcessorFuncs[stage] || [], function (process) {
+                process(ecModel);
+            });
+        });
+    };
+
+    /**
+     * @private
+     */
+    echartsProto._stackSeriesData = function (ecModel) {
+        var stackedDataMap = {};
+        ecModel.eachSeries(function (series) {
+            var stack = series.get('stack');
+            var data = series.getData();
+            if (stack && data.type === 'list') {
+                var previousStack = stackedDataMap[stack];
+                if (previousStack) {
+                    data.stackedOn = previousStack;
+                }
+                stackedDataMap[stack] = data;
+            }
+        });
+    };
+
+    /**
+     * Layout before each chart render there series after visual coding and data processing
+     *
+     * @param {module:echarts/model/Global} ecModel
+     * @private
+     */
+    echartsProto._doLayout = function (ecModel, payload) {
+        var api = this._extensionAPI;
+        each(this._layouts, function (layout) {
+            layout.update(ecModel, api, payload);
+        });
+        each(layoutFuncs, function (layout) {
+            layout(ecModel, api, payload);
+        });
+    };
+
+    /**
+     * Code visual infomation from data after data processing
+     *
+     * @param {module:echarts/model/Global} ecModel
+     * @private
+     */
+    echartsProto._doVisualCoding = function (ecModel, payload) {
+        each(VISUAL_CODING_STAGES, function (stage) {
+            each(visualCodingFuncs[stage] || [], function (visualCoding) {
+                visualCoding(ecModel, payload);
+            });
+        });
+    };
+
+    /**
+     * Render each chart and component
+     * @private
+     */
+    echartsProto._doRender = function (ecModel, payload) {
+        var api = this._extensionAPI;
+        // Render all components
+        each(this._componentsList, function (component) {
+            var componentModel = component.__model;
+            component.render(componentModel, ecModel, api, payload);
+
+            updateZ(componentModel, component);
+        }, this);
+
+        each(this._chartsList, function (chart) {
+            chart.__keepAlive = false;
+        }, this);
+
+        // Render all charts
+        ecModel.eachSeries(function (seriesModel, idx) {
+            var id = getViewId(seriesModel);
+            var chart = this._chartsMap[id];
+            chart.__keepAlive = true;
+            chart.render(seriesModel, ecModel, api, payload);
+
+            updateZ(seriesModel, chart);
+        }, this);
+
+        // Remove groups of charts
+        each(this._chartsList, function (chart) {
+            if (!chart.__keepAlive) {
+                chart.remove(ecModel, api);
+            }
+        }, this);
+    };
+
+    echartsProto.dispose = function () {
+        each(this._components, function (component) {
+            component.dispose();
+        });
+        each(this._charts, function (chart) {
+            chart.dispose();
+        });
+
+        this.zr.dispose();
     };
 
     /**
@@ -567,136 +562,135 @@ define(function (require) {
     /**
      * @module echarts
      */
-    var echarts = {
+    var echarts = {};
 
-        /**
-         * @param {HTMLDomElement} dom
-         * @param {Object} [theme]
-         * @param {Object} opts
-         */
-        init: function (dom, theme, opts) {
-            return new ECharts(dom, theme, opts);
-        },
+    /**
+     * @param {HTMLDomElement} dom
+     * @param {Object} [theme]
+     * @param {Object} opts
+     */
+    echarts.init = function (dom, theme, opts) {
+        return new ECharts(dom, theme, opts);
+    };
 
-        /**
-         * Register option preprocessor
-         * @param {Function} preprocessorFunc
-         */
-        registerPreprocessor: function (preprocessorFunc) {
-            optionPreprocessorFuncs.push(preprocessorFunc);
-        },
+    /**
+     * Register option preprocessor
+     * @param {Function} preprocessorFunc
+     */
+    echarts.registerPreprocessor = function (preprocessorFunc) {
+        optionPreprocessorFuncs.push(preprocessorFunc);
+    };
 
-        /**
-         * @param {string} stage
-         * @param {Function} processorFunc
-         */
-        registerProcessor: function (stage, processorFunc) {
-            if (zrUtil.indexOf(PROCESSOR_STAGES, stage) < 0) {
-                throw new Error('stage should be one of ' + PROCESSOR_STAGES);
-            }
-            var funcs = dataProcessorFuncs[stage] || (dataProcessorFuncs[stage] = []);
-            funcs.push(processorFunc);
-        },
-
-        /**
-         * Usage:
-         * registerAction('someAction', 'someEvent', function () { ... });
-         * registerAction('someAction', function () { ... });
-         * registerAction(
-         *     {type: 'someAction', event: 'someEvent', update: 'updateView'},
-         *     function () { ... }
-         * );
-         *
-         * @param {(string|Object)} actionInfo
-         * @param {string} actionInfo.type
-         * @param {string=} actionInfo.event
-         * @param {string=} actionInfo.update
-         * @param {Function=} action
-         */
-        registerAction: function (actionInfo, action) {
-            var actionType = zrUtil.isObject(actionInfo)
-                ? actionInfo.type
-                : ([actionInfo, actionInfo = {}][0]);
-
-            if (!actions[actionType]) {
-                actions[actionType] = {action: action, actionInfo: actionInfo};
-            }
-
-            // TODO
-            // event
-        },
-
-        /**
-         * @param {string} type
-         * @param {*} CoordinateSystem
-         */
-        registerCoordinateSystem: function (type, CoordinateSystem) {
-            CoordinateSystemManager.register(type, CoordinateSystem);
-        },
-
-        /**
-         * @param {*} layout
-         */
-        registerLayout: function (layout, isFactory) {
-            // PENDING All functions ?
-            if (isFactory) {
-                if (zrUtil.indexOf(layoutClasses, layout) < 0) {
-                    layoutClasses.push(layout);
-                }
-            }
-            else {
-                if (zrUtil.indexOf(layoutFuncs, layout) < 0) {
-                    layoutFuncs.push(layout);
-                }
-            }
-        },
-
-        /**
-         * @param {string} stage
-         * @param {Function} visualCodingFunc
-         */
-        registerVisualCoding: function (stage, visualCodingFunc) {
-            if (zrUtil.indexOf(VISUAL_CODING_STAGES, stage) < 0) {
-                throw new Error('stage should be one of ' + VISUAL_CODING_STAGES);
-            }
-            var funcs = visualCodingFuncs[stage] || (visualCodingFuncs[stage] = []);
-            funcs.push(visualCodingFunc);
-        },
-
-        /**
-         * @param
-         */
-        registerScale: function (scale) {
-            scaleClasses.register(scale);
-        },
-
-        /**
-         * @param {Object} opts
-         */
-        extendChartView: function (opts) {
-            return ChartView.extend(opts);
-        },
-
-        /**
-         * @param {Object} opts
-         */
-        extendComponentModel: function (opts) {
-            return ComponentModel.extend(opts);
-        },
-
-        /**
-         * @param {Object} opts
-         */
-        extendSeriesModel: function (opts) {
-            return SeriesModel.extend(opts);
-        },
-
-        /**
-         * @param {Object} opts
-         */
-        extendComponentView: function (opts) {
-            return ComponentView.extend(opts);
+    /**
+     * @param {string} stage
+     * @param {Function} processorFunc
+     */
+    echarts.registerProcessor = function (stage, processorFunc) {
+        if (zrUtil.indexOf(PROCESSOR_STAGES, stage) < 0) {
+            throw new Error('stage should be one of ' + PROCESSOR_STAGES);
         }
+        var funcs = dataProcessorFuncs[stage] || (dataProcessorFuncs[stage] = []);
+        funcs.push(processorFunc);
+    };
+
+    /**
+     * Usage:
+     * registerAction('someAction', 'someEvent', function () { ... });
+     * registerAction('someAction', function () { ... });
+     * registerAction(
+     *     {type: 'someAction', event: 'someEvent', update: 'updateView'},
+     *     function () { ... }
+     * );
+     *
+     * @param {(string|Object)} actionInfo
+     * @param {string} actionInfo.type
+     * @param {string=} actionInfo.event
+     * @param {string=} actionInfo.update
+     * @param {Function=} action
+     */
+    echarts.registerAction = function (actionInfo, action) {
+        var actionType = zrUtil.isObject(actionInfo)
+            ? actionInfo.type
+            : ([actionInfo, actionInfo = {}][0]);
+
+        if (!actions[actionType]) {
+            actions[actionType] = {action: action, actionInfo: actionInfo};
+        }
+
+        // TODO
+        // event
+    };
+
+    /**
+     * @param {string} type
+     * @param {*} CoordinateSystem
+     */
+    echarts.registerCoordinateSystem = function (type, CoordinateSystem) {
+        CoordinateSystemManager.register(type, CoordinateSystem);
+    };
+
+    /**
+     * @param {*} layout
+     */
+    echarts.registerLayout = function (layout, isFactory) {
+        // PENDING All functions ?
+        if (isFactory) {
+            if (zrUtil.indexOf(layoutClasses, layout) < 0) {
+                layoutClasses.push(layout);
+            }
+        }
+        else {
+            if (zrUtil.indexOf(layoutFuncs, layout) < 0) {
+                layoutFuncs.push(layout);
+            }
+        }
+    };
+
+    /**
+     * @param {string} stage
+     * @param {Function} visualCodingFunc
+     */
+    echarts.registerVisualCoding = function (stage, visualCodingFunc) {
+        if (zrUtil.indexOf(VISUAL_CODING_STAGES, stage) < 0) {
+            throw new Error('stage should be one of ' + VISUAL_CODING_STAGES);
+        }
+        var funcs = visualCodingFuncs[stage] || (visualCodingFuncs[stage] = []);
+        funcs.push(visualCodingFunc);
+    };
+
+    /**
+     * @param
+     */
+    echarts.registerScale = function (scale) {
+        scaleClasses.register(scale);
+    };
+
+    /**
+     * @param {Object} opts
+     */
+    echarts.extendChartView = function (opts) {
+        return ChartView.extend(opts);
+    };
+
+    /**
+     * @param {Object} opts
+     */
+    echarts.extendComponentModel = function (opts) {
+        return ComponentModel.extend(opts);
+    };
+
+    /**
+     * @param {Object} opts
+     */
+    echarts.extendSeriesModel = function (opts) {
+        return SeriesModel.extend(opts);
+    };
+
+    /**
+     * @param {Object} opts
+     */
+    echarts.extendComponentView = function (opts) {
+        return ComponentView.extend(opts);
     };
 
     echarts.registerVisualCoding('echarts', require('./visual/seriesColor'));

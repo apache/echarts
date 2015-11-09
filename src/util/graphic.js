@@ -33,6 +33,10 @@ define(function(require) {
 
     graphic.Arc = require('zrender/graphic/shape/Arc');
 
+    graphic.LinearGradient = require('zrender/graphic/LinearGradient');
+
+    graphic.RadialGradient = require('zrender/graphic/RadialGradient');
+
     /**
      * Extend shape with parameters
      */
@@ -66,7 +70,7 @@ define(function(require) {
      * @param {Object} rect
      */
     graphic.resizePath = function (path, rect) {
-        if (! path.applyTransform) {
+        if (!path.applyTransform) {
             return;
         }
 
