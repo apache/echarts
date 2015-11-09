@@ -1,5 +1,5 @@
 define(function (require) {
-
+    var Gradient = require('zrender/graphic/Gradient');
     return function (ecModel) {
         ecModel.eachSeriesAll(function (seriesModel) {
             var colorAccessPath = ['itemStyle', 'normal', 'color'];
@@ -13,7 +13,7 @@ define(function (require) {
 
             // Only visible series has each data be visual encoded
             if (!ecModel.isSeriesFiltered(seriesModel)) {
-                if (typeof color === 'function') {
+                if (typeof color === 'function' && (!color instanceof Gradient)) {
                     data.each(function (idx) {
                         data.setItemVisual(
                             idx, 'color', color(seriesModel.getFormatParams(idx))
