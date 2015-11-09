@@ -656,8 +656,9 @@ define(function (require) {
      * @return {Array}
      */
     listProto.map = function (dimensions, cb, stack, context) {
+        var allDimensions = this.dimensions;
         var list = new List(
-            zrUtil.map(dimensions, this.getDimensionInfo, this),
+            zrUtil.map(allDimensions, this.getDimensionInfo, this),
             this.hostModel
         );
 
@@ -672,13 +673,17 @@ define(function (require) {
         var thisStorage = this._storage;
 
         // Init storage
-        for (var i = 0; i < dimensions.length; i++) {
-            var dim = dimensions[i];
+        for (var i = 0; i < allDimensions.length; i++) {
+            var dim = allDimensions[i];
             var dimStore = thisStorage[dim];
-            if (dimStore) {
+            if (zrUtil.indexOf(dimensions, dim) >= 0) {
                 storage[dim] = new dimStore.constructor(
                     thisStorage[dim].length
                 );
+            }
+            else {
+                // Direct copy for other dimensions
+                storage[dim] = thisStorage[dim];
             }
         }
 
