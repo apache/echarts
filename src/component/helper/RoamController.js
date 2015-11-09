@@ -24,6 +24,9 @@ define(function (require) {
 
     function mousemove(e) {
         if (this._dragging) {
+            var rawE = e.event;
+            rawE.preventDefault();
+
             var x = e.offsetX;
             var y = e.offsetY;
 
@@ -89,7 +92,7 @@ define(function (require) {
      * @alias module:echarts/component/helper/RoamController
      * @constructor
      * @mixin {module:zrender/mixin/Eventful}
-     * 
+     *
      * @param {module:zrender/zrender~ZRender} zr
      * @param {module:zrender/Element} target
      * @param {module:zrender/core/BoundingRect} rect

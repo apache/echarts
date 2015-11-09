@@ -372,7 +372,7 @@ define(function (require) {
                         x: 0, y: 0, text: '',
                         textBaseline: 'middle',
                         textAlign: 'center',
-                        font: this.dataZoomModel.textStyleModel.getFont()
+                        textFont: this.dataZoomModel.textStyleModel.getFont()
                     }
                 }));
 

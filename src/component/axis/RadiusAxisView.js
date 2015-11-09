@@ -130,7 +130,7 @@ define(function (require) {
                         text: labels[i],
                         textAlign: labelTextAlign,
                         textBaseline: 'bottom',
-                        font: textStyleModel.getFont()
+                        textFont: textStyleModel.getFont()
                     },
                     rotation: labelRotate * Math.PI / 180,
                     origin: p.slice(),

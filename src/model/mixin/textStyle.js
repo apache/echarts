@@ -2,13 +2,19 @@ define(function (require) {
 
     var textContain = require('zrender/contain/text');
 
+    function getShallow(model, path) {
+        return model && model.getShallow(path);
+    }
+
     return {
         getFont: function () {
+            var ecModel = this.ecModel;
+            var gTextStyleModel = ecModel && ecModel.getModel('textStyle');
             return [
-                this.get('fontStyle'),
-                this.get('fontWeight'),
-                (this.get('fontSize') || 12) + 'px',
-                this.get('fontFamily') || 'sans-serif'
+                this.getShallow('fontStyle') || getShallow(gTextStyleModel, 'fontStyle'),
+                this.getShallow('fontWeight') || getShallow(gTextStyleModel, 'fontWeight'),
+                (this.getShallow('fontSize') || getShallow(gTextStyleModel, 'fontSize') || 12) + 'px',
+                this.getShallow('fontFamily') || getShallow(gTextStyleModel, 'fontFamily') || 'sans-serif'
             ].join(' ');
         },
 

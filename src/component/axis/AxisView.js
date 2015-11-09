@@ -85,6 +85,10 @@ define(function (require) {
 
             this.group.removeAll();
 
+            if (!axisModel.get('show')) {
+                return;
+            }
+
             var gridModel = ecModel.getComponent('grid', axisModel.get('gridIndex'));
             var labelInterval = axisModel.axis.getLabelInterval();
 
@@ -248,7 +252,7 @@ define(function (require) {
                         text: labels[i],
                         textAlign: labelTextAlign,
                         textBaseline: labelTextBaseline,
-                        font: textStyleModel.getFont(),
+                        textFont: textStyleModel.getFont(),
                         fill: textStyleModel.get('color')
                     },
                     rotation: labelRotate * Math.PI / 180,

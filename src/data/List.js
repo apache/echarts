@@ -228,7 +228,8 @@ define(function (require) {
             // }
             if (data[idx] != null && data[idx].hasOwnProperty(valueProp)) {
                 value = data[idx][valueProp];
-                var model = new Model(data[idx], this.hostModel);
+                var model = new Model(data[idx], this.hostModel, this.hostModel.ecModel);
+
                 var modelIdx = optionModels.length;
                 optionModelIndices[idx] = modelIdx;
                 optionModels.push(model);
@@ -733,6 +734,7 @@ define(function (require) {
             else {
                 model = temporaryModel;
                 model.parentModel = hostModel;
+                model.ecModel = hostModel.ecModel;
             }
         }
         return model;

@@ -10,18 +10,50 @@ define(function(require) {
 
     var layout = {};
 
-    function boxLayout(orient, group, gap) {
+    function boxLayout(orient, group, gap, maxWidth, maxHeight) {
         var x = 0;
         var y = 0;
+        if (maxWidth == null) {
+            maxWidth = Infinity;
+        }
+        if (maxHeight == null) {
+            maxHeight = Infinity;
+        }
+        var currentLineMaxSize = 0;
         group.eachChild(function (child) {
             var position = child.position;
             var rect = child.getBoundingRect();
+            if (orient === 'horizontal') {
+                var nextX = x + rect.width;
+                // Wrap
+                if (nextX > maxWidth) {
+                    x = 0;
+                    y += currentLineMaxSize + gap;
+                    currentLineMaxSize = 0;
+                }
+                else {
+                    currentLineMaxSize = Math.max(currentLineMaxSize, rect.height);
+                }
+            }
+            else {
+                var nextY = y + rect.height;
+                // Wrap
+                if (nextY > maxHeight) {
+                    x += currentLineMaxSize + gap;
+                    y = 0;
+                    currentLineMaxSize = 0;
+                }
+                else {
+                    currentLineMaxSize = Math.max(currentLineMaxSize, rect.width);
+                }
+            }
+
             position[0] = x;
             position[1] = y;
 
             orient === 'horizontal'
-                ? (x += rect.width + gap)
-                : (y += rect.height + gap);
+                ? x += rect.width + gap
+                : y += rect.height + gap;
         });
     }
 
@@ -30,6 +62,8 @@ define(function(require) {
      * @param {string} orient
      * @param {module:zrender/container/Group} group
      * @param {number} gap
+     * @param {number} [width=Infinity]
+     * @param {number} [height=Infinity]
      */
     layout.box = boxLayout;
 
@@ -37,6 +71,8 @@ define(function(require) {
      * VBox layouting
      * @param {module:zrender/container/Group} group
      * @param {number} gap
+     * @param {number} [width=Infinity]
+     * @param {number} [height=Infinity]
      */
     layout.vbox = zrUtil.curry(boxLayout, 'vertical');
 
@@ -44,6 +80,8 @@ define(function(require) {
      * HBox layouting
      * @param {module:zrender/container/Group} group
      * @param {number} gap
+     * @param {number} [width=Infinity]
+     * @param {number} [height=Infinity]
      */
     layout.hbox = zrUtil.curry(boxLayout, 'horizontal');
 

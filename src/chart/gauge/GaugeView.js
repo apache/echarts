@@ -205,7 +205,7 @@ define(function (require) {
                             x: unitX * (r - splitLineLen - 5) + cx,
                             y: unitY * (r - splitLineLen - 5) + cy,
                             fill: textStyleModel.get('color'),
-                            font: textStyleModel.getFont(),
+                            textFont: textStyleModel.getFont(),
                             textBaseline: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
                             textAlign: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
                         },
