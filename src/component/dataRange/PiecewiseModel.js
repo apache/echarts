@@ -55,10 +55,10 @@ define(function(require) {
 
             this._resetSelected();
 
-            var dataNormalizer = categories ? 'category' : 'piecewise';
+            var mappingMethod = categories ? 'category' : 'piecewise';
 
             this.resetVisual(function (mappingOption, state) {
-                mappingOption.dataNormalizer = dataNormalizer;
+                mappingOption.mappingMethod = mappingMethod;
                 mappingOption.categories = categories && zrUtil.clone(categories, true);
 
                 var intervals = mappingOption.intervals = [];

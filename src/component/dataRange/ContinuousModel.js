@@ -38,7 +38,7 @@ define(function(require) {
             this.resetExtent();
 
             this.resetVisual(function (mappingOption) {
-                mappingOption.dataNormalizer = 'linear';
+                mappingOption.mappingMethod = 'linear';
             });
 
             this._resetRange();

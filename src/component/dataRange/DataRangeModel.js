@@ -7,7 +7,10 @@ define(function(require) {
     var env = require('zrender/core/env');
     var echarts = require('../../echarts');
     var modelUtil = require('../../util/model');
+    var visualDefault = require('../../visual/visualDefault');
     var VisualMapping = require('../../visual/VisualMapping');
+    var mapVisual = VisualMapping.mapVisual;
+    var eachVisual = VisualMapping.eachVisual;
     var numberUtil = require('../../util/number');
     var isArray = zrUtil.isArray;
     var each = zrUtil.each;
@@ -327,8 +330,6 @@ define(function(require) {
             zrUtil.merge(controller, base); // Do not override
 
             var isCategory = this.isCategory();
-            var makeDefault = VisualMapping.makeDefault;
-            var eachVisual = VisualMapping.eachVisual;
 
             completeSingle.call(this, target);
             completeSingle.call(this, controller);
@@ -353,7 +354,7 @@ define(function(require) {
                     var visualType = base[state];
 
                     if (zrUtil.isString(visualType)) {
-                        var defa = VisualMapping.getDefault(visualType, 'active', isCategory);
+                        var defa = visualDefault.get(visualType, 'active', isCategory);
                         if (defa) {
                             base[state] = {};
                             base[state][visualType] = defa;
@@ -369,10 +370,11 @@ define(function(require) {
             function completeInactive(base, stateExist, stateAbsent) {
                 var optExist = base[stateExist];
                 var optAbsent = base[stateAbsent];
+
                 if (optExist && !optAbsent) {
                     optAbsent = base[stateAbsent] = {};
                     each(optExist, function (visualData, visualType) {
-                        var defa = VisualMapping.getDefault(visualType, 'inactive', isCategory);
+                        var defa = visualDefault.get(visualType, 'inactive', isCategory);
                         if (VisualMapping.isValidType(visualType) && defa) {
                             optAbsent[visualType] = defa;
                         }
@@ -385,6 +387,7 @@ define(function(require) {
                     || (controller.outOfRange || {}).symbol;
                 var symbolSizeExists = (controller.inRange || {}).symbolSize
                     || (controller.outOfRange || {}).symbolSize;
+                var inactiveColor = this.get('inactiveColor');
 
                 each(this.stateList, function (state) {
 
@@ -394,7 +397,7 @@ define(function(require) {
                     // Set inactive color for controller if no other color attr (like colorA) specified.
                     if (!visuals) {
                         visuals = controller[state] = {
-                            color: makeDefault([this.get('inactiveColor')], isCategory)
+                            color: isCategory ? inactiveColor : [inactiveColor]
                         };
                     }
 
@@ -402,18 +405,17 @@ define(function(require) {
                     if (!visuals.symbol) {
                         visuals.symbol = symbolExists
                             && zrUtil.clone(symbolExists, true)
-                            || makeDefault(['roundRect'], isCategory);
+                            || (isCategory ? 'roundRect' : ['roundRect']);
                     }
                     if (!visuals.symbolSize) {
                         visuals.symbolSize = symbolSizeExists
                             && zrUtil.clone(symbolSizeExists, true)
-                            || makeDefault([itemSize[0], itemSize[0]], isCategory);
+                            || (isCategory ? itemSize[0] : [itemSize[0], itemSize[0]]);
                     }
 
                     // Filter square and none.
-                    eachVisual(visuals.symbol, function (symbol, i) {
-                        visuals.symbol[i] = (symbol === 'none' || symbol === 'square')
-                            ? 'roundRect' : symbol;
+                    visuals.symbol = mapVisual(visuals.symbol, function (symbol) {
+                        return (symbol === 'none' || symbol === 'square') ? 'roundRect' : symbol;
                     });
 
                     // Normalize symbolSize
@@ -422,13 +424,11 @@ define(function(require) {
                     if (symbolSize) {
                         var max = -Infinity;
                         // symbolSize can be object when categories defined.
-                        eachVisual(symbolSize, function (value, i) {
+                        eachVisual(symbolSize, function (value) {
                             value > max && (max = value);
                         });
-                        eachVisual(symbolSize, function (value, i) {
-                            symbolSize[i] = linearMap(
-                                value, [0, max], [0, itemSize[0]], true
-                            );
+                        visuals.symbolSize = mapVisual(symbolSize, function (value) {
+                            return linearMap(value, [0, max], [0, itemSize[0]], true);
                         });
                     }
 

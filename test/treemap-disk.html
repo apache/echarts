@@ -50,9 +50,9 @@
             </span>
             <span class="item">
                 <span class="item-title">colorMapping:</span>
-                <input type="radio" id="colorMapping-0" name="colorMapping" onclick="colorMappingChange('byIndex');" checked="checked"/>
+                <input type="radio" id="colorMapping-0" name="colorMapping" onclick="colorMappingChange('index');" checked="checked"/>
                 <label for="colorMapping-0">byIndex</label>
-                <input type="radio" id="colorMapping-1" name="colorMapping" onclick="colorMappingChange('byValue');"/>
+                <input type="radio" id="colorMapping-1" name="colorMapping" onclick="colorMappingChange('value');"/>
                 <label for="colorMapping-1">byValue</label>
             </span>
         </div>
@@ -111,7 +111,7 @@
                             '#675bba', '#fec42c', '#dd4444',
                             '#d4df5a', '#cd4870'
                         ],
-                        colorMapping: colorMapping,
+                        colorMappingBy: colorMapping,
                         itemStyle: {
                             normal: {
                                 gapWidth: 1
@@ -176,7 +176,7 @@
                                 emphasis: {
                                 }
                             },
-                            levels: getLevelOption('byIndex'),
+                            levels: getLevelOption('index'),
                             data: window.disk_usage_tree
                         }
                     ]

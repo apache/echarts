@@ -9,25 +9,35 @@ define(function (require) {
     var each = zrUtil.each;
     var isObject = zrUtil.isObject;
 
+    var CATEGORY_DEFAULT_VISUAL_INDEX = -1;
+
     /**
      * @param {Object} option
      * @param {string} [option.type] See visualHandlers.
-     * @param {string} [option.dataNormalizer] 'linear' or 'piecewise' or 'category'
+     * @param {string} [option.mappingMethod] 'linear' or 'piecewise' or 'category'
      * @param {Array.<number>=} [option.dataExtent] [minExtent, maxExtent],
-     *                                              required when dataNormalizer is 'linear'
+     *                                              required when mappingMethod is 'linear'
      * @param {Array.<Array>=} [option.intervals] [[min1, max1], [min2, max2], ...],
-     *                                            required when dataNormalizer is 'piecewise'
+     *                                            required when mappingMethod is 'piecewise'
      * @param {Array.<string>=} [option.categories] ['cate1', 'cate2', 'cate3', ...],
-     *                                            required when dataNormalizer is 'category'
+     *                                            required when mappingMethod is 'category'.
+     *                                            If no option.categories, it represents
+     *                                            categories is [0, 1, 2, ...].
+     * @param {boolean} [option.loop=false] Whether loop mapping when mappingMethod is 'category'.
      * @param {Array.<Object>=} [option.specifiedVisuals] [visuals1, visuals2, ...],
      *                                            specific visual of some interval, available
-     *                                            when dataNormalizer is 'piecewise' or 'category'
-     * @param {(Array|Object)} [option.visual=] Visual data.
-     *                                          object only when dataNormalizer is 'category',
-     *                                          like: {cate1: '#222', none: '#fff'}
+     *                                            when mappingMethod is 'piecewise' or 'category'
+     * @param {(Array|Object|*)} [option.visual]  Visual data.
+     *                                            when mappingMethod is 'category',
+     *                                            visual data can be array or object
+     *                                            (like: {cate1: '#222', none: '#fff'})
+     *                                            or primary types (which represents
+     *                                            defualt category visual), otherwise visual
+     *                                            can only be array.
+     *
      */
     var VisualMapping = function (option) {
-        var dataNormalizer = option.dataNormalizer;
+        var mappingMethod = option.mappingMethod;
         var visualType = option.type;
 
         /**
@@ -40,34 +50,31 @@ define(function (require) {
          * @readOnly
          * @type {string}
          */
-        this.dataNormalizer = dataNormalizer;
+        this.mappingMethod = mappingMethod;
 
-        // FIXME
-        // 用 -1 做 key不太好。换种方式？至少参数初始化时候不要用-1。
         /**
          * @readOnly
          * @type {Object}
          */
         var thisOption = this.option = zrUtil.clone(option, true);
-        thisOption.visual = this.option.visual;
 
         /**
          * @private
          * @type {Function}
          */
-        this._normalizeData = dataNormalizers[dataNormalizer];
+        this._normalizeData = normalizers[mappingMethod];
 
         /**
          * @private
          * @type {Function}
          */
         this._getSpecifiedVisual = zrUtil.bind(
-            specifiedVisualGetters[dataNormalizer], this, visualType
+            specifiedVisualGetters[mappingMethod], this, visualType
         );
 
         zrUtil.extend(this, visualHandlers[visualType]);
 
-        if (dataNormalizer === 'category') {
+        if (mappingMethod === 'category') {
             preprocessForCategory(thisOption);
         }
     };
@@ -80,11 +87,7 @@ define(function (require) {
 
         isValueActive: null,
 
-        mapValueToVisual: null,
-
-        _isCategory: function () {
-            return this.option.dataNormalizer === 'category';
-        }
+        mapValueToVisual: null
     };
 
     var visualHandlers = VisualMapping.visualHandlers = {
@@ -118,25 +121,13 @@ define(function (require) {
                     var result = this._getSpecifiedVisual(normalized);
 
                     if (result == null) {
-                        result = this._isCategory()
-                            ? visual[normalized]
+                        result = isCategory(this)
+                            ? getVisualForCategory(this, visual, normalized)
                             : zrColor.mapToColor(normalized, visual);
                     }
 
                     return result;
                 }
-            }
-        },
-
-        // FIXME
-        // 和category一样？
-        colorByIndex: {
-
-            applyVisual: defaultApplyColor,
-
-            mapValueToVisual: function (index) {
-                var visual = this.option.visual;
-                return visual[index % visual.length];
             }
         },
 
@@ -173,8 +164,8 @@ define(function (require) {
                 var visual = this.option.visual;
 
                 if (result == null) {
-                    result = this._isCategory()
-                        ? visual[normalized]
+                    result = isCategory(this)
+                        ? getVisualForCategory(this, visual, normalized)
                         : (arrayGetByNormalizedValue(visual, normalized) || {});
                 }
 
@@ -193,11 +184,10 @@ define(function (require) {
                 var visual = this.option.visual;
 
                 if (result == null) {
-                    result = this._isCategory()
-                        ? visual[normalized]
+                    result = isCategory(this)
+                        ? getVisualForCategory(this, visual, normalized)
                         : linearMap(normalized, [0, 1], visual, true);
                 }
-
                 return result;
             }
         }
@@ -206,25 +196,43 @@ define(function (require) {
     function preprocessForCategory(thisOption) {
         // Hash categories.
         var categories = thisOption.categories;
+        var visual = thisOption.visual;
+        var isVisualArray = zrUtil.isArray(visual);
+
+        if (!categories) {
+            if (!isVisualArray) {
+                // visual should be array when no categories.
+                throw new Error();
+            }
+            else {
+                return;
+            }
+        }
+
         var categoryMap = thisOption.categoryMap = {};
         each(categories, function (cate, index) {
             categoryMap[cate] = index;
         });
 
         // Process visual map input.
-        var visual = thisOption.visual;
-        if (!zrUtil.isArray(visual)) { // Is object.
+        if (!isVisualArray) {
             var visualArr = [];
-            each(visual, function (v, cate) {
-                var index = categoryMap[cate];
-                // '-1' means default visaul.
-                visualArr[index != null ? index : '-1'] = v;
-            });
+
+            if (zrUtil.isObject(visual)) {
+                each(visual, function (v, cate) {
+                    var index = categoryMap[cate];
+                    visualArr[index != null ? index : CATEGORY_DEFAULT_VISUAL_INDEX] = v;
+                });
+            }
+            else { // Is primary type, represents default visual.
+                visualArr[CATEGORY_DEFAULT_VISUAL_INDEX] = visual;
+            }
+
             visual = thisOption.visual = visualArr;
         }
 
         // Remove categories that has no visual,
-        // then we can mapping them to '-1' visual.
+        // then we can mapping them to CATEGORY_DEFAULT_VISUAL_INDEX.
         for (var i = categories.length - 1; i >= 0; i--) {
             if (visual[i] == null) {
                 delete categoryMap[categories[i]];
@@ -263,11 +271,10 @@ define(function (require) {
                 var visual = this.option.visual;
 
                 if (result == null) {
-                    result = this._isCategory()
-                        ? visual[normalized]
+                    result = isCategory(this)
+                        ? getVisualForCategory(this, visual, normalized)
                         : linearMap(normalized, [0, 1], visual, true);
                 }
-
                 return result;
             }
         };
@@ -283,8 +290,20 @@ define(function (require) {
         setter('color', this.mapValueToVisual(value));
     }
 
+    function getVisualForCategory(me, visual, normalized) {
+        return visual[
+            (me.option.loop && normalized !== CATEGORY_DEFAULT_VISUAL_INDEX)
+                ? normalized % visual.length
+                : normalized
+        ];
+    }
 
-    var dataNormalizers = {
+    function isCategory(me) {
+        return me.option.mappingMethod === 'category';
+    }
+
+
+    var normalizers = {
 
         linear: function (value) {
             return linearMap(value, this.option.dataExtent, [0, 1], true);
@@ -305,8 +324,10 @@ define(function (require) {
         },
 
         category: function (value) {
-            var index = this.option.categoryMap[value];
-            return index == null ? -1 : index;
+            var index = this.option.categories
+                ? this.option.categoryMap[value]
+                : value; // ordinal
+            return index == null ? CATEGORY_DEFAULT_VISUAL_INDEX : index;
         }
     };
 
@@ -337,13 +358,6 @@ define(function (require) {
     /**
      * @public
      */
-    VisualMapping.addDataNormalizer = function (name, normalizer) {
-        dataNormalizers[name] = normalizer;
-    };
-
-    /**
-     * @public
-     */
     VisualMapping.addVisualHandler = function (name, handler) {
         visualHandlers[name] = handler;
     };
@@ -356,50 +370,48 @@ define(function (require) {
     };
 
     /**
-     * @public
-     */
-    VisualMapping.getDefault = function (visualType, key, isCategory) {
-        var value = (defaultOption[visualType] || {})[key];
-
-        return VisualMapping.makeDefault(
-            value != null ? zrUtil.clone(value, true) : null,
-            isCategory
-        );
-    };
-
-    /**
-     * @public
-     */
-    VisualMapping.makeDefault = function (value, isCategory) {
-        if (isCategory && zrUtil.isArray(value) && value.length) {
-            var def = [];
-            def[-1] = value[value.length - 1];
-            return def;
-        }
-        else {
-            return value;
-        }
-    };
-
-    /**
+     * Convinent method.
+     * Visual can be Object or Array or primary type.
+     *
      * @public
      */
     VisualMapping.eachVisual = function (visual, callback, context) {
-        for (var i in visual) { // jshint ignore:line
-            // visual can be Object or Array, Considering key: -1.
-            callback.call(context, visual[i], i);
+        if (zrUtil.isObject(visual)) {
+            zrUtil.each(visual, callback, context);
+        }
+        else {
+            callback.call(context, visual);
         }
     };
 
+    VisualMapping.mapVisual = function (visual, callback, context) {
+        var isPrimary;
+        var newVisual = zrUtil.isArray(visual)
+            ? []
+            : zrUtil.isObject(visual)
+            ? {}
+            : (isPrimary = true, null);
+
+        VisualMapping.eachVisual(visual, function (v, key) {
+            var newVal = callback.call(context, v, key);
+            isPrimary ? (newVisual = newVal) : (newVisual[key] = newVal);
+        });
+        return newVisual;
+    };
+
     /**
+     * 'color', 'colorS', 'colorA', ... are in the same visualCluster named 'color'.
+     * Other visuals are in the cluster named as the same as theirselves.
+     *
      * @public
      * @param {string} visualType
+     * @param {string} visualCluster
      * @return {boolean}
      */
-    VisualMapping.isInVisualCategory = function (visualType, visualCategory) {
-        return visualCategory === 'color'
-            ? !!(visualType && visualType.indexOf(visualCategory) === 0)
-            : visualType === visualCategory;
+    VisualMapping.isInVisualCluster = function (visualType, visualCluster) {
+        return visualCluster === 'color'
+            ? !!(visualType && visualType.indexOf(visualCluster) === 0)
+            : visualType === visualCluster;
     };
 
     /**
@@ -450,39 +462,6 @@ define(function (require) {
         });
 
         return visualTypes;
-    };
-
-    var defaultOption = {
-
-        color: {
-            active: ['#006edd', '#e0ffff'],
-            inactive: ['rgba(0,0,0,0)']
-        },
-
-        colorS: {
-            active: [0.3, 1],
-            inactive: [0, 0]
-        },
-
-        colorL: {
-            active: [0.9, 0.5],
-            inactive: [0, 0]
-        },
-
-        colorA: {
-            active: [0.3, 1],
-            inactive: [0, 0]
-        },
-
-        symbol: {
-            active: ['circle', 'roundRect', 'diamond'],
-            inactive: ['none']
-        },
-
-        symbolSize: {
-            active: [10, 50],
-            inactive: [0, 0]
-        }
     };
 
     return VisualMapping;
