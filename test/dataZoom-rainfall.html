@@ -54,6 +54,9 @@
                         data: ['降水量', '流量']
                     },
                     grid: {
+                        show: true,
+                        borderColor: '#ccc',
+                        borderWidth: 1,
                         x2: '15%'
                     },
                     xAxis: [
@@ -86,9 +89,10 @@
                             boundaryGap: false,
                             splitLine: {show: false},
                             position: 'right',
+                            inverse: true,
                             axisLabel: {
                                 textStyle: {
-                                    color: '#eee'
+                                    color: '#666'
                                 }
                             },
                             axisLine: {
@@ -103,22 +107,22 @@
                             name: '降水量',
                             type: 'line',
                             data: data.rainfall,
-                            // itemStyle: {
-                            //     normal: {
-                            //          areaStyle: {}
-                            //     }
-                            // }
+                            itemStyle: {
+                                normal: {
+                                     areaStyle: {}
+                                }
+                            }
                         },
                         {
                             name: '流量',
                             type: 'line',
                             data: data.flow,
                             yAxisIndex: 1,
-                            // itemStyle: {
-                            //     normal: {
-                            //          areaStyle: {}
-                            //     }
-                            // }
+                            itemStyle: {
+                                normal: {
+                                     areaStyle: {}
+                                }
+                            }
                         },
                         // {
                         //     name: 'bar3',
@@ -130,6 +134,7 @@
                         {
                             show: true,
                             orient: 'vertical',
+                            filterMode: 'empty',
                             yAxisIndex: [0]
                         },
                         {
@@ -140,6 +145,7 @@
                         {
                             show: true,
                             orient: 'vertical',
+                            filterMode: 'empty',
                             yAxisIndex: [1],
                             x: '90%'
                         }

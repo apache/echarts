@@ -43,13 +43,22 @@ define(function(require) {
             showDataShadow: null,     // 默认只有line bar k 默认显示dataShadow，其他默认不显示。
             xAxisIndex: null,         // 默认控制所有横向类目
             yAxisIndex: null,         // 默认控制所有横向类目
+            filterMode: 'filter',       // 'filter' or 'empty'
+                                      // 'filter': data items which are out of window will be removed.
+                                      //           This option is applicable when filtering outliers.
+                                      // 'empty': data items which are out of window will be set to empty.
+                                      //          This option is applicable when user should not neglect
+                                      //          that there are some data items out of window.
             start: 0,               // 默认为0
             end: 100,               // 默认为全部 100%
             start2: 0,               // 默认为0
             end2: 100,               // 默认为全部 100%
             realtime: true,
             inverse: false,           // 默认与所控制的轴相同
-            zoomLock: false         // 是否锁定选择区域大小
+            zoomLock: false,         // 是否锁定选择区域大小
+            textStyle: {
+                color: '#333'
+            }
         },
 
         /**

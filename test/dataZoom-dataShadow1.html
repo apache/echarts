@@ -64,22 +64,24 @@
                             type: 'line',
                             stack: 'all',
                             symbol: 'none',
-                            data: data1dim,
-                            itemStyle: {
-                                normal: {
-                                    areaStyle: {}
-                                }
-                            }
+                            data: data1dim
+                            // itemStyle: {
+                            //     normal: {
+                            //         areaStyle: {}
+                            //     }
+                            // }
                         }
                     ],
                     dataZoom: [
                         {
                             show: true,
-                            start: 60
+                            start: 60,
+                            filterMode: 'empty'
                         },
                         {
                             show: true,
-                            orient: 'vertical'
+                            orient: 'vertical',
+                            filterMode: 'empty'
                         }
                     ]
                 });

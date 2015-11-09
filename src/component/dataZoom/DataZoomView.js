@@ -364,6 +364,8 @@ define(function (require) {
                     onmouseout: bind(this._showDataInfo, this, false)
                 }));
 
+                var textStyleModel = this.dataZoomModel.textStyleModel;
+
                 this.group.add(
                     handleLabels[handleIndex] = new graphic.Text({
                     silent: true,
@@ -372,7 +374,8 @@ define(function (require) {
                         x: 0, y: 0, text: '',
                         textBaseline: 'middle',
                         textAlign: 'center',
-                        textFont: this.dataZoomModel.textStyleModel.getFont()
+                        fill: textStyleModel.get('color'),
+                        textFont: textStyleModel.getFont()
                     }
                 }));
 
@@ -486,14 +489,13 @@ define(function (require) {
             var displaybles = this._displayables;
             var handleLabels = displaybles.handleLabels;
             var orient = this._orient;
+            var labelTexts = ['', ''];
 
             // FIXME
             // date型，支持formatter，autoformatter（ec2 date.getAutoFormatter）
-            var shouldShow = dataZoomModel.get('showDetail');
-            var dataInterval;
-            var axis;
-
-            if (shouldShow) {
+            if (dataZoomModel.get('showDetail')) {
+                var dataInterval;
+                var axis;
                 dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
                     // Using dataInterval of the first axis.
                     if (!dataInterval) {
@@ -501,12 +503,21 @@ define(function (require) {
                         axis = this.ecModel.getComponent(dimNames.axis, axisIndex).axis;
                     }
                 }, this);
+
+                if (dataInterval) {
+                    labelTexts = [
+                        this._formatLabel(dataInterval[0], axis),
+                        this._formatLabel(dataInterval[1], axis)
+                    ];
+                }
             }
 
             var orderedHandleEnds = asc(this._handleEnds.slice());
 
-            zrUtil.each([0, 1], function (handleIndex) {
+            setLabel.call(this, 0);
+            setLabel.call(this, 1);
 
+            function setLabel(handleIndex) {
                 // Label
                 // Text should not transform by barGroup.
                 var barTransform = graphic.getTransform(
@@ -527,15 +538,10 @@ define(function (require) {
                     x: textPoint[0],
                     y: textPoint[1],
                     textBaseline: orient === HORIZONTAL ? 'middle' : direction,
-                    textAlign: orient === HORIZONTAL ? direction : 'center'
+                    textAlign: orient === HORIZONTAL ? direction : 'center',
+                    text: labelTexts[handleIndex]
                 });
-
-                var text = (shouldShow && dataInterval)
-                    ? this._formatLabel(dataInterval[handleIndex], axis) : null;
-
-                handleLabels[handleIndex].setStyle('text', text);
-
-            }, this);
+            }
         },
 
         /**
