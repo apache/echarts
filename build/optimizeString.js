@@ -5,6 +5,8 @@ var estraverse = require('estraverse');
 var SYNTAX = estraverse.Syntax;
 
 var STR_MIN_LENGTH = 5;
+var STR_MIN_DIST = 80;
+var STR_MIN_COUNT = 4;
 
 function createDeclaration(declarations) {
     return {
@@ -48,7 +50,9 @@ var base54 = (function(){
 
 function optimizeString(source) {
 
-    var ast = esprima.parse(source);
+    var ast = esprima.parse(source, {
+        loc: true
+    });
 
     var stringVariables = {};
 
@@ -66,13 +70,41 @@ function optimizeString(source) {
                 var value = node.value;
                 if (value.length > STR_MIN_LENGTH) {
                     if (!stringVariables[value]) {
-                        var varName = '__echartsString__' + base54(stringRelaceCount++);
                         stringVariables[value] = {
-                            name: varName,
-                            count: 0
+                            count: 0,
+                            lastLoc: node.loc.start.line
                         };
                     }
-                    stringVariables[value].count++;
+                    if (stringVariables[value].count === STR_MIN_COUNT) {
+                        stringVariables[value].name = '__echartsString__' + base54(stringRelaceCount++);
+                    }
+                    var diff = node.loc.start.line - stringVariables[value].lastLoc;
+                    stringVariables[value].lastLoc = node.loc.start.line;
+                    if (diff >= STR_MIN_DIST) {
+                        stringVariables[value].count++;
+                    }
+                }
+            }
+
+            if (node.type === SYNTAX.MemberExpression && !node.computed) {
+                if (node.property.type === SYNTAX.Identifier) {
+                    var value = node.property.name;
+                    if (value.length > STR_MIN_LENGTH) {
+                        if (!stringVariables[value]) {
+                            stringVariables[value] = {
+                                count: 0,
+                                lastLoc: node.loc.start.line
+                            };
+                        }
+                        if (stringVariables[value].count === STR_MIN_COUNT) {
+                            stringVariables[value].name = '__echartsString__' + base54(stringRelaceCount++);
+                        }
+                        var diff = node.loc.start.line - stringVariables[value].lastLoc;
+                        stringVariables[value].lastLoc = node.loc.start.line;
+                        if (diff >= STR_MIN_DIST) {
+                            stringVariables[value].count++;
+                        }
+                    }
                 }
             }
         }
@@ -80,19 +112,35 @@ function optimizeString(source) {
 
     estraverse.replace(ast, {
         enter: function (node, parent) {
-            if (node.type === SYNTAX.Literal
-                && typeof node.value === 'string'
+            if ((node.type === SYNTAX.Literal
+                && typeof node.value === 'string')
             ) {
                 // Ignore if string is the key of property
                 if (parent.type === SYNTAX.Property) {
                     return;
                 }
                 var str = node.value;
-                if (stringVariables[str] && stringVariables[str].count > 1) {
+                if (stringVariables[str] && stringVariables[str].count > STR_MIN_COUNT) {
                     return {
                         type: SYNTAX.Identifier,
                         name: stringVariables[str].name
                     };
+                }
+            }
+            if (node.type === SYNTAX.MemberExpression && !node.computed) {
+                if (node.property.type === SYNTAX.Identifier) {
+                    var str = node.property.name;
+                    if (stringVariables[str] && stringVariables[str].count > STR_MIN_COUNT) {
+                        return {
+                            type: SYNTAX.MemberExpression,
+                            object: node.object,
+                            property: {
+                                type: SYNTAX.Identifier,
+                                name: stringVariables[str].name
+                            },
+                            computed: true
+                        };
+                    }
                 }
             }
         }
@@ -101,7 +149,7 @@ function optimizeString(source) {
     // Add variables in the top
     for (var str in stringVariables) {
         // Used more than once
-        if (stringVariables[str].count > 1) {
+        if (stringVariables[str].count > STR_MIN_COUNT) {
             ast.body.unshift(createDeclaration([
                 createDeclarator(stringVariables[str].name, str)
             ]));
