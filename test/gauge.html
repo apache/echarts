@@ -4,6 +4,7 @@
         <script src="esl.js"></script>
         <script src="config.js"></script>
         <script src="lib/dat.gui.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
         <style>
@@ -26,9 +27,9 @@
                     renderer: 'canvas'
                 });
 
-                chart.setOption({
+                var option ={
                     tooltip : {
-                        formatter: "{a} <br/>{c} {b}"
+                        formatter: '{a} <br/>{c} {b}'
                     },
                     toolbox: {
                         show : true,
@@ -52,7 +53,7 @@
                                 }
                             },
                             axisTick: {            // 坐标轴小标记
-                                length :6,        // 属性length控制线长
+                                length :15,        // 属性length控制线长
                                 lineStyle: {       // 属性lineStyle控制线条样式
                                     color: 'auto'
                                 }
@@ -107,7 +108,8 @@
                                 width:5
                             },
                             title : {
-                                offsetCenter: [0, '-30%'],       // x, y，单位px
+                                // x, y，单位px
+                                offsetCenter: [0, '-30%']
                             },
                             detail : {
                                 textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE
@@ -211,8 +213,17 @@
                             data:[{value: 0.5, name: 'gas'}]
                         }
                     ]
-                });
+                };
 
+                chart.setOption(option);
+
+                setInterval(function () {
+                    option.series[0].data[0].value = (Math.random()*100).toFixed(2) - 0;
+                    option.series[1].data[0].value = (Math.random()*7).toFixed(2) - 0;
+                    option.series[2].data[0].value = (Math.random()*2).toFixed(2) - 0;
+                    option.series[3].data[0].value = (Math.random()*2).toFixed(2) - 0;
+                    chart.setOption(option,true);
+                }, 2000);
                 // var config = {
                 //     labelPosition: 'outside',
                 //     clockwise: true,
