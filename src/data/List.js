@@ -656,6 +656,8 @@ define(function (require) {
      * @return {Array}
      */
     listProto.map = function (dimensions, cb, stack, context) {
+        dimensions = normalizeDimensions(dimensions);
+
         var allDimensions = this.dimensions;
         var list = new List(
             zrUtil.map(allDimensions, this.getDimensionInfo, this),
