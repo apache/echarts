@@ -133,12 +133,14 @@ define(function (require) {
             layout.box(
                 legendModel.get('orient'),
                 group,
-                legendModel.get('itemGap')
+                legendModel.get('itemGap'),
+                api.getWidth(),
+                api.getHeight()
             );
 
             positionGroup(group, legendModel, api);
 
-            // Render backgroun after group is positioned
+            // Render background after group is positioned
             // Or will get rect of group with padding
             // FIXME
             this._renderBG(legendModel, group);
