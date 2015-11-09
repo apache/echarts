@@ -8,12 +8,15 @@ define(function(require) {
 
     var dataSelectableMixin = require('../helper/dataSelectableMixin');
 
+    var seriesModelProto = SeriesModel.prototype;
+
     var PieSeries = SeriesModel.extend({
 
         type: 'series.pie',
 
+        // Overwrite
         init: function (option) {
-            SeriesModel.prototype.init.apply(this, arguments);
+            seriesModelProto.init.apply(this, arguments);
 
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
@@ -24,8 +27,9 @@ define(function(require) {
             this.updateSelectedMap();
         },
 
+        // Overwrite
         mergeOption: function (newOption) {
-            SeriesModel.prototype.mergeOption.call(this, newOption);
+            seriesModelProto.mergeOption.call(this, newOption);
             this.updateSelectedMap();
         },
 
@@ -33,6 +37,16 @@ define(function(require) {
             var list = new List(['value'], this);
             list.initData(option.data);
             return list;
+        },
+
+        // Overwrite
+        getFormatParams: function (dataIndex) {
+            var data = this._data;
+            var params = seriesModelProto.getFormatParams.call(this, dataIndex);
+            params.percent = data.get('value', dataIndex) / data.getSum('value');
+
+            params.$vars.push('percent');
+            return params;
         },
 
         defaultOption: {

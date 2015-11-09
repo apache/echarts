@@ -258,6 +258,7 @@ define(function (require) {
                         || data.getName(idx),
                     textFont: textStyleModel.getFont()
                 });
+                labelText.attr('ignore', !labelModel.get('show'));
                 // Default use item visual color
                 labelLine.attr('ignore', !itemModel.get('labelLine.show'));
                 labelLine.setStyle({

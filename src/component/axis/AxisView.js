@@ -85,6 +85,10 @@ define(function (require) {
 
             this.group.removeAll();
 
+            if (!axisModel.get('show')) {
+                return;
+            }
+
             var gridModel = ecModel.getComponent('grid', axisModel.get('gridIndex'));
             var labelInterval = axisModel.axis.getLabelInterval();
 
