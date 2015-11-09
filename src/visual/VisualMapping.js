@@ -14,18 +14,21 @@ define(function (require) {
     /**
      * @param {Object} option
      * @param {string} [option.type] See visualHandlers.
-     * @param {string} [option.dataNormalizer] 'linear' or 'piecewise' or 'category'
+     * @param {string} [option.mappingMethod] 'linear' or 'piecewise' or 'category'
      * @param {Array.<number>=} [option.dataExtent] [minExtent, maxExtent],
-     *                                              required when dataNormalizer is 'linear'
+     *                                              required when mappingMethod is 'linear'
      * @param {Array.<Array>=} [option.intervals] [[min1, max1], [min2, max2], ...],
-     *                                            required when dataNormalizer is 'piecewise'
+     *                                            required when mappingMethod is 'piecewise'
      * @param {Array.<string>=} [option.categories] ['cate1', 'cate2', 'cate3', ...],
-     *                                            required when dataNormalizer is 'category'
+     *                                            required when mappingMethod is 'category'.
+     *                                            If no option.categories, it represents
+     *                                            categories is [0, 1, 2, ...].
+     * @param {boolean} [option.loop=false] Whether loop mapping when mappingMethod is 'category'.
      * @param {Array.<Object>=} [option.specifiedVisuals] [visuals1, visuals2, ...],
      *                                            specific visual of some interval, available
-     *                                            when dataNormalizer is 'piecewise' or 'category'
-     * @param {(Array|Object|*)} [option.visual=] Visual data.
-     *                                            when dataNormalizer is 'category',
+     *                                            when mappingMethod is 'piecewise' or 'category'
+     * @param {(Array|Object|*)} [option.visual]  Visual data.
+     *                                            when mappingMethod is 'category',
      *                                            visual data can be array or object
      *                                            (like: {cate1: '#222', none: '#fff'})
      *                                            or primary types (which represents
@@ -34,7 +37,7 @@ define(function (require) {
      *
      */
     var VisualMapping = function (option) {
-        var dataNormalizer = option.dataNormalizer;
+        var mappingMethod = option.mappingMethod;
         var visualType = option.type;
 
         /**
@@ -47,7 +50,7 @@ define(function (require) {
          * @readOnly
          * @type {string}
          */
-        this.dataNormalizer = dataNormalizer;
+        this.mappingMethod = mappingMethod;
 
         /**
          * @readOnly
@@ -59,19 +62,19 @@ define(function (require) {
          * @private
          * @type {Function}
          */
-        this._normalizeData = dataNormalizers[dataNormalizer];
+        this._normalizeData = normalizers[mappingMethod];
 
         /**
          * @private
          * @type {Function}
          */
         this._getSpecifiedVisual = zrUtil.bind(
-            specifiedVisualGetters[dataNormalizer], this, visualType
+            specifiedVisualGetters[mappingMethod], this, visualType
         );
 
         zrUtil.extend(this, visualHandlers[visualType]);
 
-        if (dataNormalizer === 'category') {
+        if (mappingMethod === 'category') {
             preprocessForCategory(thisOption);
         }
     };
@@ -84,11 +87,7 @@ define(function (require) {
 
         isValueActive: null,
 
-        mapValueToVisual: null,
-
-        _isCategory: function () {
-            return this.option.dataNormalizer === 'category';
-        }
+        mapValueToVisual: null
     };
 
     var visualHandlers = VisualMapping.visualHandlers = {
@@ -122,25 +121,13 @@ define(function (require) {
                     var result = this._getSpecifiedVisual(normalized);
 
                     if (result == null) {
-                        result = this._isCategory()
-                            ? visual[normalized]
+                        result = isCategory(this)
+                            ? getVisualForCategory(this, visual, normalized)
                             : zrColor.mapToColor(normalized, visual);
                     }
 
                     return result;
                 }
-            }
-        },
-
-        // FIXME
-        // 和category一样？
-        colorByIndex: {
-
-            applyVisual: defaultApplyColor,
-
-            mapValueToVisual: function (index) {
-                var visual = this.option.visual;
-                return visual[index % visual.length];
             }
         },
 
@@ -177,8 +164,8 @@ define(function (require) {
                 var visual = this.option.visual;
 
                 if (result == null) {
-                    result = this._isCategory()
-                        ? visual[normalized]
+                    result = isCategory(this)
+                        ? getVisualForCategory(this, visual, normalized)
                         : (arrayGetByNormalizedValue(visual, normalized) || {});
                 }
 
@@ -197,8 +184,8 @@ define(function (require) {
                 var visual = this.option.visual;
 
                 if (result == null) {
-                    result = this._isCategory()
-                        ? visual[normalized]
+                    result = isCategory(this)
+                        ? getVisualForCategory(this, visual, normalized)
                         : linearMap(normalized, [0, 1], visual, true);
                 }
                 return result;
@@ -209,15 +196,26 @@ define(function (require) {
     function preprocessForCategory(thisOption) {
         // Hash categories.
         var categories = thisOption.categories;
+        var visual = thisOption.visual;
+        var isVisualArray = zrUtil.isArray(visual);
+
+        if (!categories) {
+            if (!isVisualArray) {
+                // visual should be array when no categories.
+                throw new Error();
+            }
+            else {
+                return;
+            }
+        }
+
         var categoryMap = thisOption.categoryMap = {};
         each(categories, function (cate, index) {
             categoryMap[cate] = index;
         });
 
         // Process visual map input.
-        var visual = thisOption.visual;
-
-        if (!zrUtil.isArray(visual)) {
+        if (!isVisualArray) {
             var visualArr = [];
 
             if (zrUtil.isObject(visual)) {
@@ -232,6 +230,7 @@ define(function (require) {
 
             visual = thisOption.visual = visualArr;
         }
+
         // Remove categories that has no visual,
         // then we can mapping them to CATEGORY_DEFAULT_VISUAL_INDEX.
         for (var i = categories.length - 1; i >= 0; i--) {
@@ -272,11 +271,10 @@ define(function (require) {
                 var visual = this.option.visual;
 
                 if (result == null) {
-                    result = this._isCategory()
-                        ? visual[normalized]
+                    result = isCategory(this)
+                        ? getVisualForCategory(this, visual, normalized)
                         : linearMap(normalized, [0, 1], visual, true);
                 }
-
                 return result;
             }
         };
@@ -292,8 +290,20 @@ define(function (require) {
         setter('color', this.mapValueToVisual(value));
     }
 
+    function getVisualForCategory(me, visual, normalized) {
+        return visual[
+            (me.option.loop && normalized !== CATEGORY_DEFAULT_VISUAL_INDEX)
+                ? normalized % visual.length
+                : normalized
+        ];
+    }
 
-    var dataNormalizers = {
+    function isCategory(me) {
+        return me.option.mappingMethod === 'category';
+    }
+
+
+    var normalizers = {
 
         linear: function (value) {
             return linearMap(value, this.option.dataExtent, [0, 1], true);
@@ -314,7 +324,9 @@ define(function (require) {
         },
 
         category: function (value) {
-            var index = this.option.categoryMap[value];
+            var index = this.option.categories
+                ? this.option.categoryMap[value]
+                : value; // ordinal
             return index == null ? CATEGORY_DEFAULT_VISUAL_INDEX : index;
         }
     };
@@ -341,13 +353,6 @@ define(function (require) {
                 return visual[visualType];
             }
         }
-    };
-
-    /**
-     * @public
-     */
-    VisualMapping.addDataNormalizer = function (name, normalizer) {
-        dataNormalizers[name] = normalizer;
     };
 
     /**

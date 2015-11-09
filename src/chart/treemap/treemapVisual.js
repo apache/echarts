@@ -74,7 +74,7 @@ define(function (require) {
             node.setVisual('color', thisNodeColor);
         }
         else {
-            var mappingWrap = buildVisualMapping(
+            var mapping = buildVisualMapping(
                 node, nodeModel, nodeLayout, nodeItemStyleModel, visuals, viewChildren
             );
             // Designate visual to children.
@@ -84,7 +84,7 @@ define(function (require) {
                     || child === viewRootAncestors[child.depth]
                 ) {
                     var childVisual = mapVisual(
-                        nodeModel, visuals, child, index, mappingWrap, seriesModel
+                        nodeModel, visuals, child, index, mapping, seriesModel
                     );
                     travelTree(
                         child, childVisual, levelItemStyles, seriesItemStyleModel,
@@ -164,30 +164,27 @@ define(function (require) {
             return;
         }
 
-        var colorMapping;
-        var mappingType = rangeVisual.name === 'color'
-            ? (
-                colorMapping = nodeModel.get('colorMapping'),
-                colorMapping === 'byValue'
-                    ? 'color'
-                    : 'colorByIndex' // When colorMapping is byIndex and byId
-            )
-            : rangeVisual.name;
-
-        var dataExtent = (
-            mappingType === 'colorByIndex' || mappingType === 'colorById'
-        ) ? null : nodeLayout.dataExtent;
-
-        return {
-            mapping: new VisualMapping({
-                type: mappingType,
-                dataExtent: dataExtent,
-                dataNormalizer: 'linear',
-                visual: rangeVisual.range
-            }),
-            visualName: rangeVisual.name,
-            colorMapping: colorMapping
+        var colorMappingBy = nodeModel.get('colorMappingBy');
+        var opt = {
+            type: rangeVisual.name,
+            dataExtent: nodeLayout.dataExtent,
+            visual: rangeVisual.range
         };
+        if (opt.type === 'color'
+            && (colorMappingBy === 'index' || colorMappingBy === 'id')
+        ) {
+            opt.mappingMethod = 'category';
+            opt.loop = true;
+            // categories is ordinal, so do not set opt.categories.
+        }
+        else {
+            opt.mappingMethod = 'linear';
+        }
+
+        var mapping = new VisualMapping(opt);
+        mapping.__drColorMappingBy = colorMappingBy;
+
+        return mapping;
     }
 
     // Notice: If we dont have the attribute 'colorRange', but only use
@@ -204,21 +201,20 @@ define(function (require) {
         return (isArray(range) && range.length) ? {name: name, range: range} : null;
     }
 
-    function mapVisual(nodeModel, visuals, child, index, mappingWrap, seriesModel) {
+    function mapVisual(nodeModel, visuals, child, index, mapping, seriesModel) {
         var childVisuals = zrUtil.extend({}, visuals);
 
-        if (mappingWrap) {
-            var mapping = mappingWrap.mapping;
+        if (mapping) {
             var mappingType = mapping.type;
-            var value = mappingType === 'colorByIndex'
-                ? (
-                    mappingWrap.colorMapping === 'byId'
-                        ? seriesModel.mapIdToIndex(child.getId())
-                        : index // When colorMapping is 'byIndex'
-                )
+            var colorMappingBy = mappingType === 'color' && mapping.__drColorMappingBy;
+            var value =
+                colorMappingBy === 'index'
+                ? index
+                : colorMappingBy === 'id'
+                ? seriesModel.mapIdToIndex(child.getId())
                 : child.getValue(nodeModel.get('visualDimension'));
 
-            childVisuals[mappingWrap.visualName] = mapping.mapValueToVisual(value);
+            childVisuals[mappingType] = mapping.mapValueToVisual(value);
         }
 
         return childVisuals;

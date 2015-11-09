@@ -95,7 +95,7 @@ define(function(require) {
             color: 'none',    // 为数组，表示同一level的color 选取列表。默认空，在level[0].color中取系统color列表。
             colorA: null,   // 为数组，表示同一level的color alpha 选取范围。
             colorS: null,   // 为数组，表示同一level的color alpha 选取范围。
-            colorMapping: 'byIndex', // 'byIndex' or 'byValue' or 'byId'
+            colorMappingBy: 'index', // 'value' or 'index' or 'id'.
             visibleMin: 10,    // If area less than this threshold (unit: pixel^2), node will not be rendered.
                                // Only works when sort is 'asc' or 'desc'.
             childrenVisibleMin: null, // If area of a node less than this threshold (unit: pixel^2),
