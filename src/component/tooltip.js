@@ -58,7 +58,6 @@ define(function (require) {
 
     var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e'];
 
-
     function wrapVar(varName, seriesIdx) {
         return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
     }
