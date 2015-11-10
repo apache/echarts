@@ -50,9 +50,7 @@ define(function(require) {
         defaultOption: {
             type: 'category',
 
-            gridIndex: 0,
-
-            position: 'bottom'
+            gridIndex: 0
         }
     });
 
@@ -71,9 +69,7 @@ define(function(require) {
         defaultOption: {
             type: 'value',
 
-            gridIndex: 0,
-
-            position: 'left'
+            gridIndex: 0
         }
     });
 

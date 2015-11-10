@@ -116,8 +116,12 @@ define(function(require, factory) {
      * @private
      */
     gridProto._initCartesian = function (gridModel, ecModel, api) {
-        var leftUsed = false;
-        var bottomUsed = false;
+        var axisPositionUsed = {
+            left: false,
+            right: false,
+            top: false,
+            bottom: false
+        };
 
         var axesMap = {
             x: {},
@@ -189,9 +193,26 @@ define(function(require, factory) {
                     return;
                 }
 
-                var axisPosition = axisType === 'x'
-                    ? axisModel.get('position') || (bottomUsed ? 'top' : 'bottom')
-                    : axisModel.get('position') || (leftUsed ? 'right' : 'left');
+                var axisPosition = axisModel.get('position');
+                if (axisType === 'x') {
+                    // Fix position
+                    if (axisPosition !== 'top' || axisPosition !== 'bottom') {
+                        axisPosition = 'bottom';
+                    }
+                    if (axisPositionUsed[axisPosition]) {
+                        axisPosition = axisPosition === 'top' ? 'bottom' : 'top';
+                    }
+                }
+                else {
+                    // Fix position
+                    if (axisPosition !== 'left' || axisPosition !== 'right') {
+                        axisPosition = 'left';
+                    }
+                    if (axisPositionUsed[axisPosition]) {
+                        axisPosition = axisPosition === 'left' ? 'right' : 'left';
+                    }
+                }
+                axisPositionUsed[axisPosition] = true;
 
                 var axis = new Axis2D(
                     axisType, axisHelper.createScaleByModel(axisModel),
