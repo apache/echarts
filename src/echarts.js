@@ -91,15 +91,6 @@ define(function (require) {
          * @private
          */
         this._coordinateSystem = new CoordinateSystemManager();
-
-        /**
-         * Layout instances
-         * @type {Array}
-         * @private
-         */
-        this._layouts = zrUtil.map(layoutClasses, function (Layout) {
-            return new Layout();
-        });
     };
 
     var echartsProto = ECharts.prototype;
@@ -282,8 +273,7 @@ define(function (require) {
 
         // Upate all charts
         ecModel.eachSeries(function (seriesModel, idx) {
-            var id = getViewId(seriesModel);
-            var chart = this._chartsMap[id];
+            var chart = this._chartsMap[seriesModel.getId()];
             chart[methodName](seriesModel, ecModel, api, payload);
 
             updateZ(seriesModel, chart);
@@ -302,7 +292,7 @@ define(function (require) {
         }
 
         ecModel.eachSeries(function (seriesModel, idx) {
-            var id = getViewId(seriesModel);
+            var id = seriesModel.getId();
 
             var chart = chartsMap[id];
             if (!chart) {
@@ -353,7 +343,7 @@ define(function (require) {
                 return;
             }
 
-            var id = getViewId(componentModel);
+            var id = componentModel.getId();
             var component = componentsMap[id];
             if (!component) {
                 // Create and add component
@@ -472,8 +462,7 @@ define(function (require) {
 
         // Render all charts
         ecModel.eachSeries(function (seriesModel, idx) {
-            var id = getViewId(seriesModel);
-            var chart = this._chartsMap[id];
+            var chart = this._chartsMap[seriesModel.getId()];
             chart.__keepAlive = true;
             chart.render(seriesModel, ecModel, api, payload);
 
@@ -501,14 +490,6 @@ define(function (require) {
 
     /**
      * @param {module:echarts/model/Series|module:echarts/model/Component} model
-     * @return {string}
-     */
-    function getViewId(model) {
-        return model.name + '_' + model.type;
-    }
-
-    /**
-     * @param {module:echarts/model/Series|module:echarts/model/Component} model
      * @param {module:echarts/view/Component|module:echarts/view/Chart} view
      * @return {string}
      */
@@ -526,12 +507,6 @@ define(function (require) {
      * @inner
      */
     var actions = [];
-
-    /**
-     * @type {Array.<Function>}
-     * @inner
-     */
-    var layoutClasses = [];
 
     /**
      * @type {Array.<Function>}
@@ -634,15 +609,8 @@ define(function (require) {
      */
     echarts.registerLayout = function (layout, isFactory) {
         // PENDING All functions ?
-        if (isFactory) {
-            if (zrUtil.indexOf(layoutClasses, layout) < 0) {
-                layoutClasses.push(layout);
-            }
-        }
-        else {
-            if (zrUtil.indexOf(layoutFuncs, layout) < 0) {
-                layoutFuncs.push(layout);
-            }
+        if (zrUtil.indexOf(layoutFuncs, layout) < 0) {
+            layoutFuncs.push(layout);
         }
     };
 

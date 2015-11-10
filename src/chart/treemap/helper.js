@@ -3,12 +3,12 @@ define(function (require) {
     var helper = {
 
         irrelevant: function (payload, seriesModel) {
-            // It is irrelavant only when seriesUID or seriesName is
+            // It is irrelavant only when seriesID or seriesName is
             // specified and not equals to seriesModel's.
             return payload
                 && (
-                    payload.seriesUID != null
-                    ? seriesModel.uid !== payload.seriesUID
+                    payload.seriesId != null
+                    ? seriesModel.getId() !== payload.seriesId
                     : payload.seriesName != null
                     // FIXME
                     // seriesModel.getId() ???

@@ -249,7 +249,7 @@ define(function(require) {
             this.api.dispatch({
                 type: 'selectDataRange',
                 from: this.uid,
-                dataRangeModelId: this.dataRangeModel.uid,
+                dataRangeModelId: this.dataRangeModel.getId(),
                 selected: this._dataInterval.slice()
             });
         },

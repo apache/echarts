@@ -13,7 +13,7 @@ define(function (require) {
     /**
      * @public
      */
-    function layout(ecModel, api, payload) {
+    function update(ecModel, api, payload) {
         // Layout result in each node:
         // {x, y, width, height, area, borderWidth}
         ecModel.eachSeriesByType('treemap', function (seriesModel) {
@@ -505,6 +505,5 @@ define(function (require) {
         }
     }
 
-    return layout;
-
+    return update;
 });

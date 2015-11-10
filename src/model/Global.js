@@ -35,13 +35,7 @@ define(function (require) {
             this.option = {};
 
             /**
-             * @type {Array.<module:echarts/model/Model}
-             * @private
-             */
-            this._components = [];
-
-            /**
-             * @type {Object.<string, module:echarts/model/Model>}
+             * @type {Object.<string, Array.<module:echarts/model/Model>>}
              * @private
              */
             this._componentsMap = {};
@@ -140,7 +134,7 @@ define(function (require) {
                     var newCptOption = newCptOptionList[i];
 
                     var subType = this._determineSubType(
-                        componentType, newCptOption, existComponents[i]
+                        componentType, newCptOption, componentModel
                     );
                     var ComponentModelClass = ComponentModel.getClass(
                         componentType, subType, true
@@ -158,8 +152,7 @@ define(function (require) {
                         componentsMap[componentType][i] = componentModel;
 
                         // Merge option is incremental
-                        this._components.push(componentModel);
-                        this._componentsIdMap[componentModel.uid] = componentModel;
+                        this._componentsIdMap[componentModel.getId()] = componentModel;
                     }
                 }
             }
@@ -237,11 +230,11 @@ define(function (require) {
         },
 
         /**
-         * @param {string} uid
+         * @param {string} id
          * @return {module:echarts/model/Component}
          */
-        getComponentById: function (uid) {
-            return this._componentsIdMap[uid];
+        getComponentById: function (id) {
+            return this._componentsIdMap[id];
         },
 
         /**

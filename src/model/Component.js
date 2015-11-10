@@ -78,6 +78,19 @@ define(function(require) {
                 this.__defaultOption = defaultOption;
             }
             return this.__defaultOption;
+        },
+
+        /**
+         * Two ids are different if and only if their component types
+         * or names are different. We use this id to hash component models
+         * and view instances in echarts. When setOption are called in
+         * no-merge mode, new models are able to replace old model, and
+         * view instances are able to mapped to previous.
+         * @public
+         * @return {string} id
+         */
+        getId: function () {
+            return this.name + '__' + this.type;
         }
 
     });
@@ -88,13 +101,16 @@ define(function(require) {
         function (option, parentModel, ecModel, dependentModels, index) {
             this.ecModel = ecModel;
             this.dependentModels = dependentModels;
-            this.uid = componentUtil.getUID('componentModel');
 
+            // FIXME
+            // 如果name重复，要进行提示。
             var componentName = option.name;
             if (componentName == null) {
                 componentName = this.type + '' + index;
             }
             this.name = componentName + '';
+
+            this.uid = componentUtil.getUID('componentModel');
         }
     );
 

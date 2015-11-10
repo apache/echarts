@@ -22,17 +22,6 @@ define(function(require) {
 
     /**
      * @public
-     * @param {string} uid
-     * @return {string} Type
-     */
-    util.getUIDType = function (uid) {
-        if (uid) {
-            return uid.split(DELIMITER)[0];
-        }
-    };
-
-    /**
-     * @public
      */
     var parseComponentType = util.parseComponentType = function (componentType) {
         var ret = {main: '', sub: ''};
