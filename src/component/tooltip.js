@@ -87,6 +87,26 @@ define(function (require) {
         return tpl;
     }
 
+    function adjustedTooltipPosition(x, y, el, viewWidth, viewHeight) {
+        var width = el.clientWidth;
+        var height = el.clientHeight;
+        var gap = 20;
+
+        if (x + width + gap > viewWidth) {
+            x -= width + gap;
+        }
+        else {
+            x += gap;
+        }
+        if (y + height + gap > viewHeight) {
+            y -= height + gap;
+        }
+        else {
+            y += gap;
+        }
+        return [x, y];
+    }
+
     require('../echarts').extendComponentView({
 
         type: 'tooltip',
@@ -576,6 +596,15 @@ define(function (require) {
                         var callback = function (cbTicket, html) {
                             if (cbTicket === self._ticket) {
                                 tooltipContent.setContent(html);
+
+                                if (!positionFunc) {
+                                    var pos = adjustedTooltipPosition(
+                                        point[0], point[1], tooltipContent.el, viewWidth, viewHeight
+                                    );
+                                    x = pos[0];
+                                    y = pos[1];
+                                    tooltipContent.moveTo(x, y);
+                                }
                             }
                         };
                         self._ticket = ticket;
@@ -601,8 +630,11 @@ define(function (require) {
                     y = parsePercent(positionFunc[1], viewHeight);
                 }
                 else {
-                    x += 20;
-                    y += 20;
+                    var pos = adjustedTooltipPosition(
+                        x, y, tooltipContent.el, viewWidth, viewHeight
+                    );
+                    x = pos[0];
+                    y = pos[1];
                 }
 
                 tooltipContent.moveTo(x, y);
@@ -653,6 +685,14 @@ define(function (require) {
                         var callback = function (cbTicket, html) {
                             if (cbTicket === self._ticket) {
                                 tooltipContent.setContent(html);
+                                if (!positionFunc) {
+                                    var pos = adjustedTooltipPosition(
+                                        e.offsetX, e.offsetY, tooltipContent.el, viewWidth, viewHeight
+                                    );
+                                    x = pos[0];
+                                    y = pos[1];
+                                    tooltipContent.moveTo(x, y);
+                                }
                             }
                         };
                         self._ticket = ticket;
@@ -678,8 +718,11 @@ define(function (require) {
                     y = parsePercent(positionFunc[1], viewHeight);
                 }
                 else {
-                    x += 20;
-                    y += 20;
+                    var pos = adjustedTooltipPosition(
+                        x, y, tooltipContent.el, viewWidth, viewHeight
+                    );
+                    x = pos[0];
+                    y = pos[1];
                 }
 
                 tooltipContent.moveTo(x, y);
