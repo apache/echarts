@@ -1,7 +1,13 @@
 define(function (require) {
 
+    var SeriesModel = require('../../model/Series');
     var zrUtil = require('zrender/core/util');
     var List = require('../../data/List');
+    var formatUtil = require('../../util/format');
+    var retrieveValue = require('../../util/model').retrieveValue;
+
+    var addCommas = formatUtil.addCommas;
+    var encodeHTML = formatUtil.encodeHTML;
 
     var markerHelper = require('./markerHelper');
 
@@ -35,14 +41,15 @@ define(function (require) {
 
             mlFrom[valueAxisKey] = mlTo[valueAxisKey] = value;
 
-            item = [
-                mlFrom,
-                mlTo
-            ];
-        };
+            item = [mlFrom, mlTo, { // Extra option for tooltip and label
+                __rawValue: value,
+                name: item.name
+            }];
+        }
         return [
             markerHelper.dataTransform(data, baseAxis, valueAxis, item[0]),
-            markerHelper.dataTransform(data, baseAxis, valueAxis, item[1])
+            markerHelper.dataTransform(data, baseAxis, valueAxis, item[1]),
+            item[2] || {}
         ];
     };
 
@@ -50,6 +57,31 @@ define(function (require) {
         return markerHelper.dataFilter(coordSys, dimensionInverse, item[0])
             && markerHelper.dataFilter(coordSys, dimensionInverse, item[1]);
     }
+
+    var seriesModelProto = SeriesModel.prototype;
+    var markLineFormatMixin = {
+        getFormatParams: seriesModelProto.getFormatParams,
+
+        getFormattedLabel: seriesModelProto.getFormattedLabel,
+
+        formatTooltip: function (dataIndex) {
+            var data = this._data;
+            var value = data.getRawValue(dataIndex);
+            var formattedValue = zrUtil.isArray(value)
+                ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
+            var name = data.getName(dataIndex);
+            return this.name + '<br />'
+                + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
+        },
+
+        getData: function () {
+            return this._data;
+        },
+
+        setData: function (data) {
+            this._data = data;
+        }
+    };
 
     require('../../echarts').extendComponentView({
 
@@ -94,11 +126,20 @@ define(function (require) {
             }
             this.group.add(seriesMarkLine.group);
 
-            var mlData = createList(coordSys, seriesData, mlModel)
+            var mlData = createList(coordSys, seriesData, mlModel);
             var dims = coordSys.dimensions;
 
             var fromData = mlData.from;
             var toData = mlData.to;
+
+            // Line data for tooltip and formatter
+            var lineData = mlData.line;
+            lineData.getRawValue = function (idx) {
+                var option = this.getItemModel(idx).option;
+                return retrieveValue(option.__rawValue, option.value, '');
+            };
+            zrUtil.mixin(mlModel, markLineFormatMixin);
+            mlModel.setData(lineData);
 
             var symbolType = mlModel.get('symbol');
             var symbolSize = mlModel.get('symbolSize');
@@ -115,6 +156,12 @@ define(function (require) {
             });
 
             seriesMarkLine.update(fromData, toData);
+
+            // Set host model for tooltip
+            // FIXME
+            mlData.from.eachItemGraphicEl(function (el, idx) {
+                el.hostModel = mlModel;
+            });
 
             function updateDataVisualAndLayout(data, idx, isFrom) {
                 var itemModel = data.getItemModel(idx);
@@ -161,6 +208,8 @@ define(function (require) {
             );
         var fromData = new List(dimensionInfosMap, mlModel);
         var toData = new List(dimensionInfosMap, mlModel);
+        // No dimensions
+        var lineData = new List([], mlModel);
 
         if (coordSys) {
             var baseAxis = coordSys.getBaseAxis();
@@ -188,11 +237,15 @@ define(function (require) {
             toData.initData(
                 zrUtil.map(optData, function (item) { return item[1]; })
             );
+            lineData.initData(
+                zrUtil.map(optData, function (item) { return item[2]; })
+            );
 
         }
         return {
             from: fromData,
-            to: toData
+            to: toData,
+            line: lineData
         };
-    };
+    }
 });

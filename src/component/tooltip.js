@@ -219,12 +219,14 @@ define(function (require) {
 
             // Always show item tooltip if mouse is on the element with dataIndex
             if (el && el.dataIndex != null) {
-
-                var seriesModel = ecModel.getSeriesByIndex(
+                // Use hostModel in element if possible
+                // Used when mouseover on a element like markPoint or edge
+                // In which case, the data is not main data in series.
+                var hostModel = el.hostModel || ecModel.getSeriesByIndex(
                     el.seriesIndex, true
                 );
                 var dataIndex = el.dataIndex;
-                var itemModel = seriesModel.getData().getItemModel(dataIndex);
+                var itemModel = hostModel.getData().getItemModel(dataIndex);
                 // Series or single data may use item trigger when global is axis trigger
                 if ((itemModel.get('tooltip.trigger') || trigger) === 'axis') {
                     this._showAxisTooltip(tooltipModel, ecModel, e);
@@ -232,9 +234,11 @@ define(function (require) {
                 else {
                     // Reset ticket
                     this._ticket = '';
+                    // Reset lastHoverData
+                    this._lastHoverData = null;
                     // If either single data or series use item trigger
                     this._hideAxisPointer();
-                    this._showItemTooltipContent(seriesModel, dataIndex, e);
+                    this._showItemTooltipContent(hostModel, dataIndex, e);
                 }
             }
             else {
@@ -342,6 +346,7 @@ define(function (require) {
             var self = this;
 
             var axisPointerType = axisPointerModel.get('type');
+            var moveAnimation = axisPointerType !== 'cross';
 
             if (axisPointerType === 'cross') {
                 moveGridLine('x', point, cartesian.getAxis('y').getExtent());
@@ -371,12 +376,13 @@ define(function (require) {
                 var pointerEl = self._getPointerElement(
                     cartesian, axisPointerModel, axisType, targetShape
                 );
-                pointerEl.animateTo({
-                    shape: targetShape
-                }, 200, 'cubicOut');
-                // pointerEl.attr({
-                //     shape: targetShape
-                // });
+                moveAnimation
+                    ? pointerEl.animateTo({
+                        shape: targetShape
+                    }, 200, 'cubicOut')
+                    :  pointerEl.attr({
+                        shape: targetShape
+                    });
             }
 
             /**
@@ -393,13 +399,13 @@ define(function (require) {
                 var pointerEl = self._getPointerElement(
                     cartesian, axisPointerModel, axisType, targetShape
                 );
-                // FIXME 动画总是感觉不连贯
-                pointerEl.animateTo({
-                    shape: targetShape
-                }, 200, 'cubicOut');
-                // pointerEl.attr({
-                //     shape: targetShape
-                // });
+                moveAnimation
+                    ? pointerEl.animateTo({
+                        shape: targetShape
+                    }, 200, 'cubicOut')
+                    :  pointerEl.attr({
+                        shape: targetShape
+                    });
             }
         },
 
@@ -417,6 +423,8 @@ define(function (require) {
 
             var angleAxis = polar.getAngleAxis();
             var radiusAxis = polar.getRadiusAxis();
+
+            var moveAnimation = axisPointerType !== 'cross';
 
             if (axisPointerType === 'cross') {
                 movePolarLine('angle', point, radiusAxis.getExtent());
@@ -456,12 +464,14 @@ define(function (require) {
                 var pointerEl = self._getPointerElement(
                     polar, axisPointerModel, axisType, targetShape
                 );
-                pointerEl.animateTo({
-                    shape: targetShape
-                }, 200, 'cubicOut');
-                // pointerEl.attr({
-                //     shape: targetShape
-                // });
+
+                moveAnimation
+                    ? pointerEl.animateTo({
+                        shape: targetShape
+                    }, 200, 'cubicOut')
+                    :  pointerEl.attr({
+                        shape: targetShape
+                    });
             }
 
             /**
@@ -497,12 +507,13 @@ define(function (require) {
                 var pointerEl = self._getPointerElement(
                     polar, axisPointerModel, axisType, targetShape
                 );
-                pointerEl.animateTo({
-                    shape: targetShape
-                }, 200, 'cubicOut');
-                // pointerEl.attr({
-                //     shape: targetShape
-                // });
+                moveAnimation
+                    ? pointerEl.animateTo({
+                        shape: targetShape
+                    }, 200, 'cubicOut')
+                    :  pointerEl.attr({
+                        shape: targetShape
+                    });
             }
         },
 

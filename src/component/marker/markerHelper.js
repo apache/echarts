@@ -67,28 +67,33 @@ define(function (require) {
         // 1. If not specify the position with pixel directly
         // 2. If value is not a data array. Which uses xAxis, yAxis to specify the value on each dimension
         if (isNaN(item.x) || isNaN(item.y) && !zrUtil.isArray(item.value)) {
+            var valueAxisDim = valueAxis.dim;
+            var valueIndex = (valueAxisDim === 'angle' || valueAxisDim === 'x') ? 0 : 1;
             // Clone the option
             // Transform the properties xAxis, yAxis, radiusAxis, angleAxis, geoCoord to value
-            // Competitable with 2.x
             item = zrUtil.extend({}, item);
-
-            // Special types, Compatible with 2.0
             if (item.type && markerTypeCalculator[item.type]
                 && baseAxis && valueAxis) {
                 var value = markerTypeCalculator[item.type](
-                    data, baseAxis.dim, valueAxis.dim
+                    data, baseAxis.dim, valueAxisDim
                 );
-                value.push(+item.value);
+                if (item.value != null) {
+                    value.push(+item.value);
+                }
                 item.value = value;
             }
             else {
+                var originalValue = item.value;
                 // FIXME Only has one of xAxis and yAxis.
                 item.value = [
                     item.xAxis != null ? item.xAxis : item.radiusAxis,
-                    item.yAxis != null ? item.yAxis : item.angleAxis,
-                    +item.value
+                    item.yAxis != null ? item.yAxis : item.angleAxis
                 ];
+                if (originalValue != null) {
+                    item.value.push(+originalValue);
+                }
             }
+            item.__rawValue = item.value[valueIndex];
         }
         return item;
     };

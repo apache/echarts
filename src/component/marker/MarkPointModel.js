@@ -31,8 +31,9 @@ define(function (require) {
                         else {
                             mpModel.mergeOption(markPointOpt, true);
                         }
-                        // Use the same series index
+                        // Use the same series index and name
                         mpModel.seriesIndex = seriesModel.seriesIndex;
+                        mpModel.name = seriesModel.name;
                         seriesModel.markPointModel = mpModel;
                     }
                     else {
@@ -50,6 +51,9 @@ define(function (require) {
             symbolSize: 50,  // 标注大小
             // symbolRotate: null, // 标注旋转控制
             large: false,
+            tooltip: {
+                trigger: 'item'
+            },
             effect: {
                 show: false,
                 loop: true,

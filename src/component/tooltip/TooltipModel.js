@@ -43,7 +43,7 @@ define(function (require) {
             enterable: false,
 
             // 提示背景颜色，默认为透明度为0.7的黑色
-            backgroundColor: 'rgba(0,0,0,0.7)',
+            backgroundColor: 'rgba(50,50,50,0.7)',
 
             // 提示边框颜色
             borderColor: '#333',
