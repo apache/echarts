@@ -8,5 +8,5 @@ define(function (require) {
 
     echarts.registerVisualCoding('chart', require('./treemap/treemapVisual'));
 
-    echarts.registerLayout(require('./treemap/TreemapLayout'), true);
+    echarts.registerLayout(require('./treemap/treemapLayout'));
 });

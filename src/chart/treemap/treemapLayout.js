@@ -10,199 +10,189 @@ define(function (require) {
     var BoundingRect = require('zrender/core/BoundingRect');
     var helper = require('./helper');
 
-    var TreemapLayout = function () {
-        // FIXME
-        // 如果看效果不需要stick，则改成function形式的layout。
-    };
+    /**
+     * @public
+     */
+    function layout(ecModel, api, payload) {
+        // Layout result in each node:
+        // {x, y, width, height, area, borderWidth}
+        ecModel.eachSeriesByType('treemap', function (seriesModel) {
 
-    TreemapLayout.prototype = {
-
-        constructor: TreemapLayout,
-
-        /**
-         * @override
-         */
-        update: function (ecModel, api, payload) {
-            // Layout result in each node:
-            // {x, y, width, height, area, borderWidth}
-            ecModel.eachSeriesByType('treemap', function (seriesModel) {
-
-                if (helper.irrelevant(payload, seriesModel)) {
-                    return;
-                }
-
-                var ecWidth = api.getWidth();
-                var ecHeight = api.getHeight();
-
-                var size = seriesModel.get('size') || []; // Compatible with ec2.
-                var containerWidth = parsePercent(
-                    retrieveValue(seriesModel.get('width'), size[0]),
-                    ecWidth
-                );
-                var containerHeight = parsePercent(
-                    retrieveValue(seriesModel.get('height'), size[1]),
-                    ecHeight
-                );
-
-                var layoutInfo = layout.parsePositionInfo(
-                    {
-                        x: seriesModel.get('x'),
-                        y: seriesModel.get('y'),
-                        x2: seriesModel.get('x2'),
-                        y2: seriesModel.get('y2'),
-                        width: containerWidth,
-                        height: containerHeight
-                    },
-                    {
-                        width: api.getWidth(),
-                        height: api.getHeight()
-                    }
-                );
-
-                // Fetch payload info.
-                var payloadType = payload && payload.type;
-                var targetInfo = helper.retrieveTargetInfo(payload, seriesModel);
-                var rootRect = (payloadType === 'treemapRender' || payloadType === 'treemapMove')
-                    ? payload.rootRect : null;
-                var viewRoot = seriesModel.getViewRoot();
-
-                if (payloadType !== 'treemapMove') {
-                    var rootSize = payloadType === 'treemapZoomToNode'
-                        ? estimateRootSize(seriesModel, targetInfo, containerWidth, containerHeight)
-                        : rootRect
-                        ? [rootRect.width, rootRect.height]
-                        : [containerWidth, containerHeight];
-
-                    var sort = seriesModel.get('sort');
-                    if (sort && sort !== 'asc' && sort !== 'desc') {
-                        sort = 'desc';
-                    }
-                    var options = {
-                        squareRatio: seriesModel.get('squareRatio'),
-                        sort: sort
-                    };
-
-                    viewRoot.setLayout({
-                        x: 0, y: 0,
-                        width: rootSize[0], height: rootSize[1],
-                        area: rootSize[0] * rootSize[1]
-                    });
-
-                    this.squarify(viewRoot, options);
-                }
-
-                // Set root position
-                viewRoot.setLayout(
-                    calculateRootPosition(layoutInfo, rootRect, targetInfo),
-                    true
-                );
-
-                seriesModel.setLayoutInfo(layoutInfo);
-
-                // Optimize
-                // FIXME
-                // 现在没有clip功能，暂时取ec高宽。
-                prunning(
-                    viewRoot,
-                    new BoundingRect(-layoutInfo.x, -layoutInfo.y, ecWidth, ecHeight)
-                );
-
-            }, this);
-        },
-
-        /**
-         * Layout treemap with squarify algorithm.
-         * @see https://graphics.ethz.ch/teaching/scivis_common/Literature/squarifiedTreeMaps.pdf
-         * @see https://github.com/mbostock/d3/blob/master/src/layout/treemap.js
-         *
-         * @protected
-         * @param {module:echarts/data/Tree~TreeNode} node
-         * @param {Object} options
-         * @param {string} options.sort 'asc' or 'desc'
-         * @param {boolean} options.hideChildren
-         * @param {number} options.squareRatio
-         */
-        squarify: function (node, options) {
-            var width;
-            var height;
-
-            if (node.isRemoved()) {
+            if (helper.irrelevant(payload, seriesModel)) {
                 return;
             }
 
-            var thisLayout = node.getLayout();
-            width = thisLayout.width;
-            height = thisLayout.height;
+            var ecWidth = api.getWidth();
+            var ecHeight = api.getHeight();
 
-            // Considering border and gap
-            var itemStyleModel = node.getModel('itemStyle.normal');
-            var borderWidth = itemStyleModel.get('borderWidth');
-            var halfGapWidth = itemStyleModel.get('gapWidth') / 2;
-            var layoutOffset = borderWidth - halfGapWidth;
-            var nodeModel = node.getModel();
+            var size = seriesModel.get('size') || []; // Compatible with ec2.
+            var containerWidth = parsePercent(
+                retrieveValue(seriesModel.get('width'), size[0]),
+                ecWidth
+            );
+            var containerHeight = parsePercent(
+                retrieveValue(seriesModel.get('height'), size[1]),
+                ecHeight
+            );
 
-            node.setLayout({borderWidth: borderWidth}, true);
-
-            width = mathMax(width - 2 * layoutOffset, 0);
-            height = mathMax(height - 2 * layoutOffset, 0);
-
-            var totalArea = width * height;
-            var viewChildren = initChildren(node, nodeModel, totalArea, options);
-
-            if (!viewChildren.length) {
-                return;
-            }
-
-            var rect = {x: layoutOffset, y: layoutOffset, width: width, height: height};
-            var rowFixedLength = mathMin(width, height);
-            var best = Infinity; // the best row score so far
-            var row = [];
-            row.area = 0;
-
-            for (var i = 0, len = viewChildren.length; i < len;) {
-                var child = viewChildren[i];
-
-                row.push(child);
-                row.area += child.getLayout().area;
-                var score = worst(row, rowFixedLength, options.squareRatio);
-
-                // continue with this orientation
-                if (score <= best) {
-                    i++;
-                    best = score;
+            var layoutInfo = layout.parsePositionInfo(
+                {
+                    x: seriesModel.get('x'),
+                    y: seriesModel.get('y'),
+                    x2: seriesModel.get('x2'),
+                    y2: seriesModel.get('y2'),
+                    width: containerWidth,
+                    height: containerHeight
+                },
+                {
+                    width: api.getWidth(),
+                    height: api.getHeight()
                 }
-                // abort, and try a different orientation
-                else {
-                    row.area -= row.pop().getLayout().area;
-                    position(row, rowFixedLength, rect, halfGapWidth, false);
-                    rowFixedLength = mathMin(rect.width, rect.height);
-                    row.length = row.area = 0;
-                    best = Infinity;
+            );
+
+            // Fetch payload info.
+            var payloadType = payload && payload.type;
+            var targetInfo = helper.retrieveTargetInfo(payload, seriesModel);
+            var rootRect = (payloadType === 'treemapRender' || payloadType === 'treemapMove')
+                ? payload.rootRect : null;
+            var viewRoot = seriesModel.getViewRoot();
+
+            if (payloadType !== 'treemapMove') {
+                var rootSize = payloadType === 'treemapZoomToNode'
+                    ? estimateRootSize(seriesModel, targetInfo, containerWidth, containerHeight)
+                    : rootRect
+                    ? [rootRect.width, rootRect.height]
+                    : [containerWidth, containerHeight];
+
+                var sort = seriesModel.get('sort');
+                if (sort && sort !== 'asc' && sort !== 'desc') {
+                    sort = 'desc';
                 }
+                var options = {
+                    squareRatio: seriesModel.get('squareRatio'),
+                    sort: sort
+                };
+
+                viewRoot.setLayout({
+                    x: 0, y: 0,
+                    width: rootSize[0], height: rootSize[1],
+                    area: rootSize[0] * rootSize[1]
+                });
+
+                squarify(viewRoot, options);
             }
 
-            if (row.length) {
-                position(row, rowFixedLength, rect, halfGapWidth, true);
+            // Set root position
+            viewRoot.setLayout(
+                calculateRootPosition(layoutInfo, rootRect, targetInfo),
+                true
+            );
+
+            seriesModel.setLayoutInfo(layoutInfo);
+
+            // Optimize
+            // FIXME
+            // 现在没有clip功能，暂时取ec高宽。
+            prunning(
+                viewRoot,
+                new BoundingRect(-layoutInfo.x, -layoutInfo.y, ecWidth, ecHeight)
+            );
+
+        });
+    }
+
+    /**
+     * Layout treemap with squarify algorithm.
+     * @see https://graphics.ethz.ch/teaching/scivis_common/Literature/squarifiedTreeMaps.pdf
+     * @see https://github.com/mbostock/d3/blob/master/src/layout/treemap.js
+     *
+     * @protected
+     * @param {module:echarts/data/Tree~TreeNode} node
+     * @param {Object} options
+     * @param {string} options.sort 'asc' or 'desc'
+     * @param {boolean} options.hideChildren
+     * @param {number} options.squareRatio
+     */
+    function squarify(node, options) {
+        var width;
+        var height;
+
+        if (node.isRemoved()) {
+            return;
+        }
+
+        var thisLayout = node.getLayout();
+        width = thisLayout.width;
+        height = thisLayout.height;
+
+        // Considering border and gap
+        var itemStyleModel = node.getModel('itemStyle.normal');
+        var borderWidth = itemStyleModel.get('borderWidth');
+        var halfGapWidth = itemStyleModel.get('gapWidth') / 2;
+        var layoutOffset = borderWidth - halfGapWidth;
+        var nodeModel = node.getModel();
+
+        node.setLayout({borderWidth: borderWidth}, true);
+
+        width = mathMax(width - 2 * layoutOffset, 0);
+        height = mathMax(height - 2 * layoutOffset, 0);
+
+        var totalArea = width * height;
+        var viewChildren = initChildren(node, nodeModel, totalArea, options);
+
+        if (!viewChildren.length) {
+            return;
+        }
+
+        var rect = {x: layoutOffset, y: layoutOffset, width: width, height: height};
+        var rowFixedLength = mathMin(width, height);
+        var best = Infinity; // the best row score so far
+        var row = [];
+        row.area = 0;
+
+        for (var i = 0, len = viewChildren.length; i < len;) {
+            var child = viewChildren[i];
+
+            row.push(child);
+            row.area += child.getLayout().area;
+            var score = worst(row, rowFixedLength, options.squareRatio);
+
+            // continue with this orientation
+            if (score <= best) {
+                i++;
+                best = score;
             }
-
-            // Update option carefully.
-            var hideChildren;
-            if (!options.hideChildren) {
-                var childrenVisibleMin = nodeModel.get('childrenVisibleMin');
-                if (childrenVisibleMin != null && totalArea < childrenVisibleMin) {
-                    hideChildren = true;
-                }
-            }
-
-            for (var i = 0, len = viewChildren.length; i < len; i++) {
-                var childOption = zrUtil.extend({
-                    hideChildren: hideChildren
-                }, options);
-
-                this.squarify(viewChildren[i], childOption);
+            // abort, and try a different orientation
+            else {
+                row.area -= row.pop().getLayout().area;
+                position(row, rowFixedLength, rect, halfGapWidth, false);
+                rowFixedLength = mathMin(rect.width, rect.height);
+                row.length = row.area = 0;
+                best = Infinity;
             }
         }
-    };
+
+        if (row.length) {
+            position(row, rowFixedLength, rect, halfGapWidth, true);
+        }
+
+        // Update option carefully.
+        var hideChildren;
+        if (!options.hideChildren) {
+            var childrenVisibleMin = nodeModel.get('childrenVisibleMin');
+            if (childrenVisibleMin != null && totalArea < childrenVisibleMin) {
+                hideChildren = true;
+            }
+        }
+
+        for (var i = 0, len = viewChildren.length; i < len; i++) {
+            var childOption = zrUtil.extend({
+                hideChildren: hideChildren
+            }, options);
+
+            squarify(viewChildren[i], childOption);
+        }
+    }
 
     /**
      * Set area to each child, and calculate data extent for visual coding.
@@ -515,5 +505,6 @@ define(function (require) {
         }
     }
 
-    return TreemapLayout;
+    return layout;
+
 });
