@@ -46,7 +46,6 @@
                     data4.push((Math.random() + 0.3).toFixed(2));
                 }
 
-                console.profile('setOption');
                 chart.setOption({
                     tooltip : {         // Option config. Can be overwrited by series or data
                         trigger: 'axis',
@@ -59,6 +58,9 @@
                         borderRadius : 8,
                         borderWidth: 2,
                         padding: 10,    // [5, 10, 15, 20]
+                        axisPointer: {
+                            type: 'shadow'
+                        },
                         position : function(p) {
                             // 位置回调
                             // console.log && console.log(p);
@@ -73,7 +75,6 @@
                             fontWeight: 'bold'
                         },
                         formatter: function (params,ticket,callback) {
-                            console.log(params)
                             var res = 'Function formatter : <br/>' + params[0].name;
                             for (var i = 0, l = params.length; i < l; i++) {
                                 res += '<br/>' + params[i].seriesName + ' : ' + params[i].value;
@@ -81,7 +82,7 @@
                             setTimeout(function (){
                                 // 仅为了模拟异步回调
                                 callback(ticket, res);
-                            }, 1000)
+                            }, 1000);
                             return 'loading';
                         }
                         //formatter: "Template formatter: <br/>{b}<br/>{a}:{c}<br/>{a1}:{c1}"
@@ -124,7 +125,7 @@
                                 trigger: 'item',
                                 backgroundColor: 'black',
                                 position : [0, 0],
-                                formatter: "Series formatter: <br/>{a}<br/>{b}:{c}"
+                                formatter: 'Series formatter: <br/>{a}<br/>{b}:{c}'
                             },
                             stack: '数据项',
                             data:[
@@ -134,7 +135,7 @@
                                     itemStyle: {normal: {color: 'red'}},
                                     tooltip : {     // Data config.
                                         backgroundColor: 'blue',
-                                        formatter: "Data formatter: <br/>{a}<br/>{b}:{c}"
+                                        formatter: 'Data formatter: <br/>{a}<br/>{b}:{c}'
                                     }
                                 },
                                 134, 90,
