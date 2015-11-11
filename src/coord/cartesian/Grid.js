@@ -92,8 +92,8 @@ define(function(require, factory) {
             var extent = isHorizontal
                 ? [gridRect.x, gridRect.x + gridRect.width]
                 : [gridRect.y + gridRect.height, gridRect.y];
-
-            axis.setExtent(extent[0], extent[1]);
+            var idx = axis.inverse ? 1 : 0;
+            axis.setExtent(extent[idx], extent[1 - idx]);
         });
     };
 
