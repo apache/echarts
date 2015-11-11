@@ -99,11 +99,22 @@ define(function(require, factory) {
 
     /**
      * @param {string} axisType
-     * @param {number} [axisIndex=0]
+     * @param {number} [axisIndex]
      */
     gridProto.getAxis = function (axisType, axisIndex) {
-        var key = axisType + (axisIndex || 0);
-        return this._axesMap[key];
+        if (axisIndex != null) {
+            var key = axisType + axisIndex;
+            return this._axesMap[key];
+        }
+        else {
+            // Find first axis with axisType
+            var axesList = this._axesList;
+            for (var i = 0; i < axesList.length; i++) {
+                if (axesList[i].dim === axisType) {
+                    return axesList[i];
+                }
+            }
+        }
     };
 
     gridProto.getCartesian = function (xAxisIndex, yAxisIndex) {
@@ -284,7 +295,6 @@ define(function(require, factory) {
         ecModel.eachComponent('grid', function (gridModel, idx) {
             var grid = new Grid(gridModel, ecModel, api);
             grid.resize(gridModel, api);
-
 
             gridModel.coordinateSystem = grid;
 
