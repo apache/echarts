@@ -307,6 +307,9 @@ define(function(require, factory) {
 
         // Inject the coordinateSystems into seriesModel
         ecModel.eachSeries(function (seriesModel) {
+            if (seriesModel.get('coordinateSystem') !== 'cartesian2d') {
+                return;
+            }
             var xAxisIndex = seriesModel.get('xAxisIndex');
             // TODO Validate
             var xAxisModel = ecModel.getComponent('xAxis', xAxisIndex);
