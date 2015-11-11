@@ -224,6 +224,8 @@ define(function (require) {
         _updateController: function (mapOrGeoModel, ecModel, api) {
             var geo = mapOrGeoModel.coordinateSystem;
             var controller = this._controller;
+            // roamType is will be set default true if it is null
+            controller.enable(mapOrGeoModel.get('roam') || false);
             // FIXME mainType, subType 作为 component 的属性？
             var mainType = mapOrGeoModel.type.split('.')[0];
             controller.off('pan')

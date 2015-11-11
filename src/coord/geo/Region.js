@@ -43,7 +43,7 @@ define(function (require) {
          * @type {Array.<number>}
          */
         this.center = cp;
-    };
+    }
 
     Region.prototype = {
 
@@ -74,9 +74,9 @@ define(function (require) {
                 min[0] = min[1] = max[0] = max[1] = 0;
             }
 
-            return this._rect = new BoundingRect(
+            return (this._rect = new BoundingRect(
                 min[0], min[1], max[0] - min[0], max[1] - min[1]
-            );
+            ));
         },
 
         /**

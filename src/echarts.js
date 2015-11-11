@@ -1,9 +1,5 @@
 /**
- * TODO setTheme
- *      axis position 统一处理
- *      规范 Symbol 配置和绘制, customPath
- *
- *      每次 update 只刷新 model 变化的那些 component（需要做依赖收集）
+ * @module echarts
  */
 define(function (require) {
 
@@ -34,7 +30,7 @@ define(function (require) {
     /**
      * @module echarts~ECharts
      */
-    var ECharts = function (dom, theme, opts) {
+    function ECharts (dom, theme, opts) {
         opts = opts || {};
 
         /**
@@ -100,9 +96,10 @@ define(function (require) {
         this._layouts = zrUtil.map(layoutClasses, function (Layout) {
             return new Layout();
         });
-    };
+    }
 
     var echartsProto = ECharts.prototype;
+
     echartsProto.getDom = function () {
         return this._dom;
     };
@@ -423,7 +420,7 @@ define(function (require) {
     };
 
     /**
-     * Layout before each chart render there series after visual coding and data processing
+     * Layout before each chart render there series, after visual coding and data processing
      *
      * @param {module:echarts/model/Global} ecModel
      * @private
@@ -480,7 +477,7 @@ define(function (require) {
             updateZ(seriesModel, chart);
         }, this);
 
-        // Remove groups of charts
+        // Remove groups of unrendered charts
         each(this._chartsList, function (chart) {
             if (!chart.__keepAlive) {
                 chart.remove(ecModel, api);
@@ -560,7 +557,7 @@ define(function (require) {
     var visualCodingFuncs = {};
 
     /**
-     * @module echarts
+     * @alias
      */
     var echarts = {};
 
@@ -659,7 +656,7 @@ define(function (require) {
     };
 
     /**
-     * @param
+     * @param {echarts/scale/*} scale
      */
     echarts.registerScale = function (scale) {
         scaleClasses.register(scale);

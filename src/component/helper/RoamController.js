@@ -118,21 +118,32 @@ define(function (require) {
 
         Eventful.call(this);
 
-        this.enable = function () {
-            zr.on('mousedown', mousedownHandler);
-            zr.on('mousemove', mousemoveHandler);
-            zr.on('mouseup', mouseupHandler);
-            zr.on('mousewheel', mousewheelHandler);
+        /**
+         * @param  {boolean} [controlType=true] Specify the control type, which can be only 'pan' or 'zoom'
+         */
+        this.enable = function (controlType) {
+            // Disable previous first
+            this.disable();
+            if (controlType == null) {
+                controlType = true;
+            }
+            if (controlType && controlType !== 'zoom') {
+                zr.on('mousedown', mousedownHandler);
+                zr.on('mousemove', mousemoveHandler);
+                zr.on('mouseup', mouseupHandler);
+            }
+            if (controlType && controlType !== 'pan') {
+                zr.on('mousewheel', mousewheelHandler);
+            }
         };
 
-        this.disable = this.dispose = function () {
+        this.disable = function () {
             zr.off('mousedown', mousedownHandler);
             zr.off('mousemove', mousemoveHandler);
             zr.off('mouseup', mouseupHandler);
             zr.off('mousewheel', mousewheelHandler);
         };
-
-        this.enable();
+        this.dispose = this.disable;
 
         this.isDragging = function () {
             return this._dragging;

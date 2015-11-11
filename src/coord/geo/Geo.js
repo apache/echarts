@@ -1,7 +1,5 @@
 define(function (require) {
 
-    var vector = require('zrender/core/vector');
-
     var parseGeoJson = require('./parseGeoJson');
 
     var zrUtil = require('zrender/core/util');
@@ -10,7 +8,6 @@ define(function (require) {
 
     var View = require('../View');
 
-    var v2Copy = vector.copy;
 
     // Geo fix functions
     var geoFixFuncs = [
@@ -60,6 +57,8 @@ define(function (require) {
             var regionsMap = {};
             for (var i = 0; i < regions.length; i++) {
                 regionsMap[regions[i].name] = regions[i];
+                // Add geoJson
+                this.addGeoCoord(regions[i].name, regions[i].center);
             }
 
             this._regionsMap = regionsMap;
@@ -153,6 +152,21 @@ define(function (require) {
                 item[1] = lat;
                 return this.dataToPoint(item);
             }, this);
+        },
+
+        // Overwrite
+        /**
+         * @param {string|Array.<number>} data
+         * @return {Array.<number>}
+         */
+        dataToPoint: function (data) {
+            if (typeof data === 'string') {
+                // Map area name to geoCoord
+                data = this.getGeoCoord(data);
+            }
+            if (data) {
+                return View.prototype.dataToPoint.call(this, data);
+            }
         }
     };
 
