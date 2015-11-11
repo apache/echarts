@@ -285,16 +285,21 @@ define(function(require, factory) {
             var grid = new Grid(gridModel, ecModel, api);
             grid.resize(gridModel, api);
 
-            // Inject the coordinateSystems into seriesModel
-            ecModel.eachSeries(function (seriesModel) {
-                seriesModel.coordinateSystem = grid.getCartesian(
-                    seriesModel.get('xAxisIndex'), seriesModel.get('yAxisIndex')
-                );
-            });
 
             gridModel.coordinateSystem = grid;
 
             grids.push(grid);
+        });
+
+        // Inject the coordinateSystems into seriesModel
+        ecModel.eachSeries(function (seriesModel) {
+            var xAxisIndex = seriesModel.get('xAxisIndex');
+            // TODO Validate
+            var xAxisModel = ecModel.getComponent('xAxis', xAxisIndex);
+            var grid = grids[xAxisModel.get('gridIndex')];
+            seriesModel.coordinateSystem = grid.getCartesian(
+                xAxisIndex, seriesModel.get('yAxisIndex')
+            );
         });
 
         return grids;
