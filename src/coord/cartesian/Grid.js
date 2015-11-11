@@ -191,12 +191,12 @@ define(function(require, factory) {
 
                 if (ifAxisNeedsCrossZero(yAxis, xAxis)) {
                     yAxis.scale.unionExtent([0, 0]);
-                    niceScaleExtent(yAxis, yAxis.model);
                 }
                 if (ifAxisNeedsCrossZero(xAxis, yAxis)) {
                     xAxis.scale.unionExtent([0, 0]);
-                    niceScaleExtent(xAxis, xAxis.model);
                 }
+                niceScaleExtent(yAxis, yAxis.model);
+                niceScaleExtent(xAxis, xAxis.model);
 
             }, this);
         }, this);
