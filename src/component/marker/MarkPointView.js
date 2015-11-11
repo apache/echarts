@@ -1,11 +1,43 @@
 define(function (require) {
 
+    var SeriesModel = require('../../model/Series');
     var SymbolDraw = require('../../chart/helper/SymbolDraw');
     var zrUtil = require('zrender/core/util');
+    var formatUtil = require('../../util/format');
+    var retrieveValue = require('../../util/model').retrieveValue;
+
+    var addCommas = formatUtil.addCommas;
+    var encodeHTML = formatUtil.encodeHTML;
 
     var List = require('../../data/List');
 
     var markerHelper = require('./markerHelper');
+
+    // FIXME
+    var seriesModelProto = SeriesModel.prototype;
+    var markPointFormatMixin = {
+        getFormatParams: seriesModelProto.getFormatParams,
+
+        getFormattedLabel: seriesModelProto.getFormattedLabel,
+
+        formatTooltip: function (dataIndex) {
+            var data = this._data;
+            var value = data.getRawValue(dataIndex);
+            var formattedValue = zrUtil.isArray(value)
+                ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
+            var name = data.getName(dataIndex);
+            return this.name + '<br />'
+                + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
+        },
+
+        getData: function () {
+            return this._data;
+        },
+
+        setData: function (data) {
+            this._data = data;
+        }
+    };
 
     require('../../echarts').extendComponentView({
 
@@ -15,7 +47,7 @@ define(function (require) {
             this._symbolDrawMap = {};
         },
 
-        render: function (markPointModel, ecModel) {
+        render: function (markPointModel, ecModel, api) {
             var symbolDrawMap = this._symbolDrawMap;
             for (var name in symbolDrawMap) {
                 symbolDrawMap[name].__keep = false;
@@ -23,7 +55,7 @@ define(function (require) {
 
             ecModel.eachSeries(function (seriesModel) {
                 var mpModel = seriesModel.markPointModel;
-                mpModel && this._renderSeriesMP(seriesModel, mpModel);
+                mpModel && this._renderSeriesMP(seriesModel, mpModel, api);
             }, this);
 
             for (var name in symbolDrawMap) {
@@ -34,7 +66,7 @@ define(function (require) {
             }
         },
 
-        _renderSeriesMP: function (seriesModel, mpModel) {
+        _renderSeriesMP: function (seriesModel, mpModel, api) {
             var coordSys = seriesModel.coordinateSystem;
             var seriesName = seriesModel.name;
             var seriesData = seriesModel.getData();
@@ -47,6 +79,16 @@ define(function (require) {
 
             var mpData = createList(coordSys, seriesData, mpModel);
             var dims = coordSys.dimensions;
+
+            // Overwrite getRawValue
+            // FIXME
+            mpData.getRawValue = function (idx) {
+                var option = this.getItemModel(idx).option;
+                return retrieveValue(option.__rawValue, option.value, '');
+            };
+            // FIXME
+            zrUtil.mixin(mpModel, markPointFormatMixin);
+            mpModel.setData(mpData);
 
             mpData.each(function (idx) {
                 var itemModel = mpData.getItemModel(idx);
@@ -73,9 +115,16 @@ define(function (require) {
             });
 
             // TODO Text are wrong
-            symbolDraw.updateData(mpData, seriesModel, true);
-
+            symbolDraw.updateData(
+                mpData, mpModel, api, true
+            );
             this.group.add(symbolDraw.group);
+
+            // Set host model for tooltip
+            // FIXME
+            mpData.eachItemGraphicEl(function (el) {
+                el.hostModel = mpModel;
+            });
 
             symbolDraw.__keep = true;
         }
@@ -119,5 +168,5 @@ define(function (require) {
         }
 
         return mpData;
-    };
+    }
 });

@@ -2,15 +2,11 @@
 define(function (require) {
 
     var Polar = require('./Polar');
-    var IntervalScale = require('../../scale/Interval');
-    var OrdinalScale = require('../../scale/Ordinal');
     var numberUtil = require('../../util/number');
     var zrUtil = require('zrender/core/util');
 
-    var scaleClasses = require('../../scale/scale');
-
-    var CATEGORY_AXIS_TYPE = 'category';
-    var VALUE_AXIS_TYPE = 'value';
+    var axisHelper = require('../../coord/axisHelper');
+    var niceScaleExtent = axisHelper.niceScaleExtent;
 
     // 依赖 PolarModel 做预处理
     require('./PolarModel');
@@ -39,27 +35,6 @@ define(function (require) {
     }
 
     /**
-     * @param {module:echarts/coord/cartesian/AxisModel} axisModel
-     * @return {module:echarts/scale/*}
-     * @inner
-     */
-    function createScaleByModel(axisModel) {
-        var axisType = axisModel.get('type');
-        if (axisType) {
-            switch (axisType) {
-                // Buildin scale
-                case CATEGORY_AXIS_TYPE:
-                    return new OrdinalScale(axisModel.get('data'), [Infinity, -Infinity]);
-                case VALUE_AXIS_TYPE:
-                    return new IntervalScale();
-                // Extended scale, like time and log
-                default:
-                    return (scaleClasses.getClass(axisType) || IntervalScale).create(axisModel);
-            }
-        }
-    }
-
-    /**
      * Set common axis properties
      * @param {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
      * @param {module:echarts/coord/polar/AxisModel}
@@ -67,12 +42,19 @@ define(function (require) {
      */
     function setAxis(axis, axisModel) {
         axis.type = axisModel.get('type');
-        axis.scale = createScaleByModel(axisModel);
-        axis.onBand = axisModel.get('boundaryGap') && axis.type === CATEGORY_AXIS_TYPE;
+        axis.scale = axisHelper.createScaleByModel(axisModel);
+        axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
         axis.inverse = axisModel.get('inverse');
+
+        if (axisModel.type === 'angleAxis') {
+            var startAngle = axisModel.get('startAngle');
+            axis.setExtent(startAngle, startAngle + 360);
+            axis.inverse = axisModel.get('clockwise');
+        }
 
         // Inject axis instance
         axisModel.axis = axis;
+        axis.model = axisModel;
     }
 
     /**
@@ -96,18 +78,19 @@ define(function (require) {
 
                 var data = seriesModel.getData();
                 radiusAxis.scale.unionExtent(
-                    data.getDataExtent('radius', radiusAxis.type !== CATEGORY_AXIS_TYPE)
+                    data.getDataExtent('radius', radiusAxis.type !== 'category')
                 );
                 angleAxis.scale.unionExtent(
-                    data.getDataExtent('angle', angleAxis.type !== CATEGORY_AXIS_TYPE)
+                    data.getDataExtent('angle', angleAxis.type !== 'category')
                 );
             }
         });
 
         zrUtil.each(polarList, function (polar) {
-            // PENDING
-            polar.getAngleAxis().scale.niceExtent(12);
-            polar.getRadiusAxis().scale.niceExtent(5);
+            var angleAxis = polar.getAngleAxis();
+            var radiusAxis = polar.getRadiusAxis();
+            niceScaleExtent(angleAxis, angleAxis.model);
+            niceScaleExtent(radiusAxis, radiusAxis.model);
         });
     }
 
@@ -140,9 +123,11 @@ define(function (require) {
             // Fix extent of category angle axis
             zrUtil.each(polarList, function (polar) {
                 var angleAxis = polar.getAngleAxis();
-                if (angleAxis.type === CATEGORY_AXIS_TYPE && !angleAxis.onBand) {
-                    var angle = 360 - 360 / (angleAxis.scale.count() + 1);
-                    angleAxis.setExtent(0, angle);
+                if (angleAxis.type === 'category' && !angleAxis.onBand) {
+                    var extent = angleAxis.getExtent();
+                    var diff = 360 / (angleAxis.scale.count() + 1);
+                    angleAxis.inverse ? (extent[1] += diff) : (extent[1] -= diff);
+                    angleAxis.setExtent(extent[0], extent[1]);
                 }
             });
 

@@ -6,7 +6,7 @@ define(function (require) {
             var colorList = ecModel.get('color');
             var data = seriesModel.getData();
             var color = seriesModel.get(colorAccessPath) // Set in itemStyle
-                || colorList[seriesModel.seriesIndex];  // Default color
+                || colorList[seriesModel.seriesIndex % colorList.length];  // Default color
 
             // FIXME Set color function or use the platte color
             data.setVisual('color', color);

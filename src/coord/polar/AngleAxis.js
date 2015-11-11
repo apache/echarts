@@ -19,7 +19,7 @@ define(function(require) {
          * @type {string}
          */
         this.type = 'category';
-    };
+    }
 
     AngleAxis.prototype = {
 

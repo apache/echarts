@@ -119,7 +119,7 @@ define(function (require) {
                         textFont: textStyleModel.getFont()
                     },
                     silent: true
-                }))
+                }));
             }
         },
 
@@ -141,7 +141,7 @@ define(function (require) {
                 splitLines[colorIndex] = splitLines[colorIndex] || [];
                 splitLines[colorIndex].push(new graphic.Line({
                     shape: getAxisLineShape(polar, radiusExtent[0], radiusExtent[1], ticksAngles[i])
-                }))
+                }));
             }
 
             // Simple optimization

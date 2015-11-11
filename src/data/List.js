@@ -222,11 +222,12 @@ define(function (require) {
         );
         for (var idx = 0; idx < data.length; idx++) {
             var value = data[idx];
-            // Each data item contains `value` and other option
+            // Each data item is an option contains value or other properties
             // {
-            //  value: []
+            //  value:
+            //  itemStyle:
             // }
-            if (data[idx] != null && data[idx].hasOwnProperty(valueProp)) {
+            if (data[idx] != null && (typeof data[idx] === 'object') && !zrUtil.isArray(data[idx])) {
                 value = data[idx][valueProp];
                 var model = new Model(data[idx], this.hostModel, this.hostModel.ecModel);
 
@@ -234,6 +235,9 @@ define(function (require) {
                 optionModelIndices[idx] = modelIdx;
                 optionModels.push(model);
             }
+            // Each data item is value
+            // [1, 2]
+            // 2
             else {
                 // Reference to the undefined
                 optionModelIndices[idx] = -1;

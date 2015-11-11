@@ -105,10 +105,15 @@ define(function (require) {
      * @alias module:echarts/component/tooltip/TooltipContent
      * @constructor
      */
-    function TooltipContent(container) {
-        this.el = document.createElement('div');
+    function TooltipContent(container, api) {
+        var el = document.createElement('div');
 
-        container.appendChild(this.el);
+        this.el = el;
+
+        el.style.left = api.getWidth() / 2 + 'px';
+        el.style.top = api.getHeight() / 2 + 'px';
+
+        container.appendChild(el);
 
         this._container = container;
 

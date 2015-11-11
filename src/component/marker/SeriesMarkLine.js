@@ -167,18 +167,18 @@ define(function (require) {
                 {
                     stroke: fromData.getItemVisual(idx, 'color')
                 },
-                itemModel.getModel('itemStyle.normal.lineStyle').getLineStyle()
+                itemModel.getModel('lineStyle.normal').getLineStyle()
             ));
 
             graphic.setHoverStyle(
                 line,
-                itemModel.getModel('itemStyle.emphasis.lineStyle').getLineStyle()
+                itemModel.getModel('lineStyle.emphasis').getLineStyle()
             );
         });
 
         this._fromData = fromData;
         this._toData = toData;
-    }
+    };
 
     return SeriesMarkLine;
 });

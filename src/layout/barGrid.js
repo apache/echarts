@@ -3,6 +3,8 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var numberUtil = require('../util/number');
+    var parsePercent = numberUtil.parsePercent;
 
     function getSeriesStackId(seriesModel) {
         return seriesModel.get('stack') || '__ec_stack_' + seriesModel.seriesIndex;
@@ -31,7 +33,7 @@ define(function(require) {
 
                 var stackId = getSeriesStackId(seriesModel);
 
-                if (! stacks[stackId]) {
+                if (!stacks[stackId]) {
                     columnsOnAxis.autoWidthCount++;
                 }
                 stacks[stackId] = stacks[stackId] || {
@@ -62,16 +64,11 @@ define(function(require) {
 
             result[coordSysName] = {};
 
-            var categoryGap = columnsOnAxis.categoryGap;
-            var barGapPercent = columnsOnAxis.gap;
+            var stacks = columnsOnAxis.stacks;
             var categoryAxis = columnsOnAxis.axis;
             var bandWidth = categoryAxis.getBandWidth();
-            if (typeof categoryGap === 'string') {
-                categoryGap = (parseFloat(categoryGap) / 100) * bandWidth;
-            }
-            if (typeof (barGapPercent === 'string')) {
-                barGapPercent = parseFloat(barGapPercent) / 100;
-            }
+            var categoryGap = parsePercent(columnsOnAxis.categoryGap, bandWidth);
+            var barGapPercent = parsePercent(columnsOnAxis.gap, 1);
 
             var remainedWidth = columnsOnAxis.remainedWidth;
             var autoWidthCount = columnsOnAxis.autoWidthCount;
@@ -80,9 +77,9 @@ define(function(require) {
             autoWidth = Math.max(autoWidth, 0);
 
             // Find if any auto calculated bar exceeded maxBarWidth
-            zrUtil.each(columnsOnAxis.stacks, function (column, stack) {
+            zrUtil.each(stacks, function (column, stack) {
                 var maxWidth = column.maxWidth;
-                if (! column.width && maxWidth && maxWidth < autoWidth) {
+                if (!column.width && maxWidth && maxWidth < autoWidth) {
                     maxWidth = Math.min(maxWidth, remainedWidth);
                     remainedWidth -= maxWidth;
                     column.width = maxWidth;
@@ -95,14 +92,21 @@ define(function(require) {
                 / (autoWidthCount + (autoWidthCount - 1) * barGapPercent);
             autoWidth = Math.max(autoWidth, 0);
 
-            zrUtil.each(columnsOnAxis.stacks, function (column) {
-                if (! column.width) {
+            var widthSum = 0;
+            var lastColumn;
+            zrUtil.each(stacks, function (column, idx) {
+                if (!column.width) {
                     column.width = autoWidth;
                 }
+                lastColumn = column;
+                widthSum += column.width * (1 + barGapPercent);
             });
+            if (lastColumn) {
+                widthSum -= lastColumn.width * barGapPercent;
+            }
 
-            var offset = -bandWidth / 2 + categoryGap / 2;
-            zrUtil.each(columnsOnAxis.stacks, function (column, stackId) {
+            var offset = -widthSum / 2;
+            zrUtil.each(stacks, function (column, stackId) {
                 result[coordSysName][stackId] = result[coordSysName][stackId] || {
                     offset: offset,
                     width: column.width,
@@ -128,7 +132,7 @@ define(function(require) {
                 ecModel.getSeriesByType(seriesType),
                 function (seriesModel) {
                     return seriesModel.coordinateSystem
-                    && seriesModel.coordinateSystem.type === 'cartesian2d'
+                    && seriesModel.coordinateSystem.type === 'cartesian2d';
                 }
             )
         );
@@ -166,7 +170,7 @@ define(function(require) {
                             p: valueAxisStart,
                             // Negative stack
                             n: valueAxisStart
-                        }
+                        };
                     }
                     var sign = value >= 0 ? 'p' : 'n';
                     var coord = coords[idx];
