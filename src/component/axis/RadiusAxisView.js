@@ -121,10 +121,10 @@ define(function (require) {
                 labelTextAlign = labelRotate > 0 ? 'left' : 'right';
             }
             // Point to top
-            if (dir[0] > -0.3 && dir[0] <= 0) {
+            if (dir[0] < -0.6) {
                 labelTextAlign = 'right';
             }
-            else if (dir[0] < 0.3 && dir[0] >= 0) {
+            else if (dir[0] > 0.6) {
                 labelTextAlign = 'left';
             }
 
