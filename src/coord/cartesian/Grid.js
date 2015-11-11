@@ -159,6 +159,9 @@ define(function(require, factory) {
             each(axesMap.y, function (yAxis, yAxisIndex) {
                 var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
                 var cartesian = new Cartesian2D(key);
+
+                cartesian.grid = this;
+
                 this._coordsMap[key] = cartesian;
                 this._coordsList.push(cartesian);
 
@@ -294,6 +297,7 @@ define(function(require, factory) {
         var grids = [];
         ecModel.eachComponent('grid', function (gridModel, idx) {
             var grid = new Grid(gridModel, ecModel, api);
+            grid.name = 'grid_' + idx;
             grid.resize(gridModel, api);
 
             gridModel.coordinateSystem = grid;

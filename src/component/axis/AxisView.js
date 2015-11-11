@@ -25,6 +25,7 @@ define(function (require) {
         var grid = gridModel.coordinateSystem;
         var rect = grid.getRect();
 
+        // FIXME Other dimension has two axes
         var otherAxis = grid.getAxis(axis.dim === 'x' ? 'y' : 'x');
 
         var position = 0;

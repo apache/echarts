@@ -21,13 +21,6 @@ define(function (require) {
     /**
      * @inner
      */
-    function getAxisPointerKey(coordName, axisType) {
-        return coordName + axisType;
-    }
-
-    /**
-     * @inner
-     */
     function makeLineShape(x1, y1, x2, y2) {
         return {
             x1: x1,
@@ -271,10 +264,11 @@ define(function (require) {
                     this._showItemTooltipContent(seriesModel, dataIndex, e);
                 }
             }
+
+            this._showAxisPointer();
+            var allNotShow = true;
             zrUtil.each(this._seriesGroupByAxis, function (item) {
                 // Try show the axis pointer
-                this.group.show();
-
                 var allCoordSys = item.coordSys;
                 var coordSys = allCoordSys[0];
 
@@ -283,10 +277,11 @@ define(function (require) {
 
                 if (!coordSys.containPoint(point)) {
                     // Hide axis pointer
-                    this._hide();
+                    this._hideAxisPointer(coordSys.name);
                     return;
                 }
 
+                allNotShow = false;
                 // Make sure point is discrete on cateogry axis
                 var dimensions = coordSys.dimensions;
                 var value = coordSys.pointToData(point, true);
@@ -332,6 +327,10 @@ define(function (require) {
                     );
                 }
             }, this);
+
+            if (allNotShow) {
+                this._hide();
+            }
         },
 
         /**
@@ -562,21 +561,15 @@ define(function (require) {
             text.zlevel = tooltipModel.get('zlevel');
         },
 
-        /**
-         * Hide axis tooltip
-         */
-        _hideAxisPointer: function () {
-            this.group.hide();
-        },
-
         _getPointerElement: function (coordSys, pointerModel, axisType, initShape) {
             var tooltipModel = this._tooltipModel;
             var z = tooltipModel.get('z');
             var zlevel = tooltipModel.get('zlevel');
             var axisPointers = this._axisPointers;
-            var key = getAxisPointerKey(coordSys.name, axisType);
-            if (axisPointers[key]) {
-                return axisPointers[key];
+            var coordSysName = coordSys.name;
+            axisPointers[coordSysName] = axisPointers[coordSysName] || {};
+            if (axisPointers[coordSysName][axisType]) {
+                return axisPointers[coordSysName][axisType];
             }
 
             // Create if not exists
@@ -591,7 +584,7 @@ define(function (require) {
 
            isShadow ? (style.stroke = null) : (style.fill = null);
 
-            var el = axisPointers[key] = new graphic[elementType]({
+            var el = axisPointers[coordSysName][axisType] = new graphic[elementType]({
                 style: style,
                 z: z,
                 zlevel: zlevel,
@@ -786,6 +779,41 @@ define(function (require) {
                 }
 
                 tooltipContent.moveTo(x, y);
+            }
+        },
+
+        /**
+         * Show axis pointer
+         * @param {string} [coordSysName]
+         */
+        _showAxisPointer: function (coordSysName) {
+            if (coordSysName) {
+                var axisPointers = this._axisPointers[coordSysName];
+                axisPointers && zrUtil.each(axisPointers, function (el) {
+                    el.show();
+                });
+            }
+            else {
+                this.group.eachChild(function (child) {
+                    child.show();
+                });
+                this.group.show();
+            }
+        },
+        /**
+         * Hide axis pointer
+         * @param {string} [coordSysName]
+         */
+        _hideAxisPointer: function (coordSysName) {
+            this._lastHoverData = null;
+            if (coordSysName) {
+                var axisPointers = this._axisPointers[coordSysName];
+                axisPointers && zrUtil.each(axisPointers, function (el) {
+                    el.hide();
+                });
+            }
+            else {
+                this.group.hide();
             }
         },
 
