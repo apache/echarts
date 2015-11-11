@@ -34,7 +34,6 @@ define(function(require) {
 
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
 
-
     // x axis
     AxisModel.extend({
 

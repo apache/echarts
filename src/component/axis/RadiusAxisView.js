@@ -16,10 +16,11 @@ define(function (require) {
             this.group.removeAll();
 
             var polarModel = ecModel.getComponent('polar', radiusAxisModel.get('polarIndex'));
+            var angleAxis = polarModel.coordinateSystem.getAngleAxis();
             var radiusAxis = radiusAxisModel.axis;
             var polar = polarModel.coordinateSystem;
             var ticksCoords = radiusAxis.getTicksCoords();
-            var axisAngle = radiusAxisModel.get('axisAngle');
+            var axisAngle = angleAxis.getExtent()[0];
             var radiusExtent = radiusAxis.getExtent();
             zrUtil.each(elementList, function (name) {
                 if (radiusAxisModel.get(name +'.show')) {
@@ -95,6 +96,7 @@ define(function (require) {
             var axis = radiusAxisModel.axis;
             var labelModel = radiusAxisModel.getModel('axisLabel');
             var textStyleModel = labelModel.getModel('textStyle');
+            var tickModel = radiusAxisModel.getModel('axisTick');
 
             var labels = radiusAxisModel.formatLabels(axis.scale.getTicksLabels());
 
@@ -102,34 +104,42 @@ define(function (require) {
             var end = polar.coordToPoint([radiusExtent[1], axisAngle]);
 
             var len = vector.dist(end, start);
-            var direction = [
+            var dir = [
                 end[1] - start[1],
                 start[0] - end[0]
             ];
-            vector.normalize(direction, direction);
+            vector.normalize(dir, dir);
 
             var p = [];
+            var tickLen = tickModel.get('length');
             var labelMargin = labelModel.get('margin');
             var labelsPositions = axis.getLabelsCoords();
             var labelRotate = labelModel.get('rotate');
 
             var labelTextAlign = 'center';
             if (labelRotate) {
-                labelTextAlign = labelRotate > 0 ? 'left' : 'right'
+                labelTextAlign = labelRotate > 0 ? 'left' : 'right';
+            }
+            // Point to top
+            if (dir[0] > -0.3 && dir[0] <= 0) {
+                labelTextAlign = 'right';
+            }
+            else if (dir[0] < 0.3 && dir[0] >= 0) {
+                labelTextAlign = 'left';
             }
 
             // FIXME Text align and text baseline when axis angle is 90 degree
             for (var i = 0; i < labelsPositions.length; i++) {
                 // Get point on axis
                 vector.lerp(p, start, end, labelsPositions[i] / len);
-                vector.scaleAndAdd(p, p, direction, labelMargin);
+                vector.scaleAndAdd(p, p, dir, labelMargin + tickLen);
                 this.group.add(new graphic.Text({
                     style: {
                         x: p[0],
                         y: p[1],
                         text: labels[i],
                         textAlign: labelTextAlign,
-                        textBaseline: 'bottom',
+                        textBaseline: dir[1] > 0.4 ? 'bottom' : (dir[1] < -0.4 ? 'top' : 'middle'),
                         textFont: textStyleModel.getFont()
                     },
                     rotation: labelRotate * Math.PI / 180,

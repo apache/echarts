@@ -104,13 +104,14 @@ define(function (require) {
 
         /**
          * Set coord extent
-         * @param {number} min
-         * @param {number} max
+         * @param {number} start
+         * @param {number} end
          */
-        setExtent: function (min, max) {
+        setExtent: function (start, end) {
             var extent = this._extent;
-            extent[0] = min;
-            extent[1] = max;
+            var inverse = this.inverse;
+            extent[0] = inverse ? end : start;
+            extent[1] = inverse ? start : end;
         },
 
         /**
@@ -197,17 +198,17 @@ define(function (require) {
          */
          // FIXME Situation when labels is on ticks
         getBands: function () {
-            var extent = this._extent;
+            var extent = this.getExtent();
             var bands = [];
             var len = this.scale.count();
             var start = extent[0];
             var end = extent[1];
-            var size = end - start;
+            var span = end - start;
 
             for (var i = 0; i < len; i++) {
                 bands.push([
-                    size * i / len + start,
-                    size * (i + 1) / len + start
+                    span * i / len + start,
+                    span * (i + 1) / len + start
                 ]);
             }
             return bands;

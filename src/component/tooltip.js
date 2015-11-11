@@ -491,8 +491,9 @@ define(function (require) {
                     targetShape = makeSectorShape(
                         polar.cx, polar.cy,
                         otherExtent[0], otherExtent[1],
-                        (mouseCoord[1] - bandWidth / 2) * radian,
-                        (mouseCoord[1] + bandWidth / 2) * radian
+                        // In ECharts y is negative if angle is positive
+                        (-mouseCoord[1] - bandWidth / 2) * radian,
+                        (-mouseCoord[1] + bandWidth / 2) * radian
                     );
                 }
                 else {

@@ -47,8 +47,6 @@ define(function(require) {
 
             polarIndex: 0,
 
-            axisAngle: 0,
-
             splitNumber: 5
         }
     });
@@ -75,7 +73,9 @@ define(function(require) {
 
             polarIndex: 0,
 
-            clockWise: true,
+            startAngle: 90,
+
+            clockwise: true,
 
             splitNumber: 12,
 

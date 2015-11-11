@@ -159,7 +159,7 @@ define(function(require) {
             return this.coordToPoint([
                 this._radiusAxis.dataToRadius(data[0], clamp),
                 this._angleAxis.dataToAngle(data[1], clamp)
-            ])
+            ]);
         },
 
         /**
@@ -184,20 +184,24 @@ define(function(require) {
         pointToCoord: function (point) {
             var dx = point[0] - this.cx;
             var dy = point[1] - this.cy;
+            var angleAxis = this.getAngleAxis();
+            var extent = angleAxis.getExtent();
+            var minAngle = Math.min(extent[0], extent[1]);
+            var maxAngle = Math.max(extent[0], extent[1]);
 
             var radius = Math.sqrt(dx * dx + dy * dy);
             dx /= radius;
             dy /= radius;
 
-            var radian = Math.atan2(dy, dx);
+            var radian = Math.atan2(-dy, dx) / Math.PI * 180;
 
-            // Threshold to 0 - 360
-            // FIXME Angle Extent ?
-            if (radian < 0) {
-                radian += Math.PI * 2;
+            // move to angleExtent
+            var dir = radian < minAngle ? 1 : -1;
+            while (radian < minAngle || radian > maxAngle) {
+                radian += dir * 360;
             }
 
-            return [radius, radian / Math.PI * 180];
+            return [radius, radian];
         },
 
         /**
@@ -209,11 +213,12 @@ define(function(require) {
             var radius = coord[0];
             var radian = coord[1] / 180 * Math.PI;
             var x = Math.cos(radian) * radius + this.cx;
-            var y = Math.sin(radian) * radius + this.cy;
+            // Inverse the y
+            var y = -Math.sin(radian) * radius + this.cy;
 
             return [x, y];
         }
-    }
+    };
 
     return Polar;
 });

@@ -46,6 +46,12 @@ define(function (require) {
         axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
         axis.inverse = axisModel.get('inverse');
 
+        if (axisModel.type === 'angleAxis') {
+            var startAngle = axisModel.get('startAngle');
+            axis.setExtent(startAngle, startAngle + 360);
+            axis.inverse = axisModel.get('clockwise');
+        }
+
         // Inject axis instance
         axisModel.axis = axis;
         axis.model = axisModel;
@@ -118,8 +124,10 @@ define(function (require) {
             zrUtil.each(polarList, function (polar) {
                 var angleAxis = polar.getAngleAxis();
                 if (angleAxis.type === 'category' && !angleAxis.onBand) {
-                    var angle = 360 - 360 / (angleAxis.scale.count() + 1);
-                    angleAxis.setExtent(0, angle);
+                    var extent = angleAxis.getExtent();
+                    var diff = 360 / (angleAxis.scale.count() + 1);
+                    angleAxis.inverse ? (extent[1] += diff) : (extent[1] -= diff);
+                    angleAxis.setExtent(extent[0], extent[1]);
                 }
             });
 

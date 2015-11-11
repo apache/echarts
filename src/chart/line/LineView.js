@@ -173,7 +173,8 @@ define(function(require) {
                 group.add(polygon);
             }
 
-            polyline.setStyle(zrUtil.extend(
+            polyline.setStyle(zrUtil.defaults(
+                // Use color in lineStyle first
                 lineStyleModel.getLineStyle(),
                 {
                     stroke: data.getVisual('color'),
@@ -408,12 +409,13 @@ define(function(require) {
         },
 
         _createPolarClipShape: function (polar, animation) {
-            // var angleAxis = polar.getAngleAxis();
+            var angleAxis = polar.getAngleAxis();
             var radiusAxis = polar.getRadiusAxis();
 
             var radiusExtent = radiusAxis.getExtent();
+            var angleExtent = angleAxis.getExtent();
 
-            var PI2 = Math.PI * 2;
+            var RADIAN = Math.PI / 180;
 
             var clipPath = new graphic.Sector({
                 shape: {
@@ -421,16 +423,17 @@ define(function(require) {
                     cy: polar.cy,
                     r0: radiusExtent[0],
                     r: radiusExtent[1],
-                    startAngle: 0,
-                    endAngle: PI2
+                    startAngle: -angleExtent[0] * RADIAN,
+                    endAngle: -angleExtent[1] * RADIAN,
+                    clockwise: angleAxis.inverse
                 }
             });
 
             if (animation) {
-                clipPath.shape.endAngle = 0;
+                clipPath.shape.endAngle = -angleExtent[0] * RADIAN;
                 clipPath.animateTo({
                     shape: {
-                        endAngle: PI2
+                        endAngle: -angleExtent[1] * RADIAN
                     }
                 }, 1500, animation);
             }
