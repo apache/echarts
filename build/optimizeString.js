@@ -5,8 +5,8 @@ var estraverse = require('estraverse');
 var SYNTAX = estraverse.Syntax;
 
 var STR_MIN_LENGTH = 5;
-var STR_MIN_DIST = 80;
-var STR_MIN_COUNT = 4;
+var STR_MIN_DIST = 1000;
+var STR_MIN_COUNT = 2;
 
 function createDeclaration(declarations) {
     return {
@@ -72,15 +72,14 @@ function optimizeString(source) {
                     if (!stringVariables[value]) {
                         stringVariables[value] = {
                             count: 0,
-                            lastLoc: node.loc.start.line
+                            lastLoc: node.loc.start.line,
+                            name: '__echartsString__' + base54(stringRelaceCount++)
                         };
                     }
-                    if (stringVariables[value].count === STR_MIN_COUNT) {
-                        stringVariables[value].name = '__echartsString__' + base54(stringRelaceCount++);
-                    }
                     var diff = node.loc.start.line - stringVariables[value].lastLoc;
-                    stringVariables[value].lastLoc = node.loc.start.line;
+                    // GZIP ?
                     if (diff >= STR_MIN_DIST) {
+                        stringVariables[value].lastLoc = node.loc.start.line;
                         stringVariables[value].count++;
                     }
                 }
@@ -93,15 +92,13 @@ function optimizeString(source) {
                         if (!stringVariables[value]) {
                             stringVariables[value] = {
                                 count: 0,
-                                lastLoc: node.loc.start.line
+                                lastLoc: node.loc.start.line,
+                                name: '__echartsString__' + base54(stringRelaceCount++)
                             };
                         }
-                        if (stringVariables[value].count === STR_MIN_COUNT) {
-                            stringVariables[value].name = '__echartsString__' + base54(stringRelaceCount++);
-                        }
                         var diff = node.loc.start.line - stringVariables[value].lastLoc;
-                        stringVariables[value].lastLoc = node.loc.start.line;
                         if (diff >= STR_MIN_DIST) {
+                            stringVariables[value].lastLoc = node.loc.start.line;
                             stringVariables[value].count++;
                         }
                     }
