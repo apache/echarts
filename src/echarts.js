@@ -93,6 +93,9 @@ define(function (require) {
 
         // Init mouse events
         this._initEvents();
+
+        // In case some people write `window.onresize = chart.resize`
+        this.resize = zrUtil.bind(this.resize, this);
     }
 
     var echartsProto = ECharts.prototype;
@@ -230,22 +233,17 @@ define(function (require) {
         this._invokeUpdateMethod('updateLayout', ecModel, payload);
     };
 
+    /**
+     * Resize the chart
+     */
     echartsProto.resize = function () {
-        // var ecModel = this._model;
-
-        // this._coordinateSystem.resize(ecModel, this._extensionAPI);
-
-        // this._doVisualCoding(ecModel);
-
-        // this._doLayout(ecModel);
-
-        // this._doRender(ecModel);
-
+        this._zr.resize();
         this.update();
     };
 
     /**
-     * @return {[type]} [description]
+     * @param {Object} eventObj
+     * @return {Object}
      */
     echartsProto.makeActionFromEvent = function (eventObj) {
         var payload = zrUtil.extend({}, eventObj);
