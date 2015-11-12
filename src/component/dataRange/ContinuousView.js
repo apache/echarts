@@ -4,6 +4,7 @@ define(function(require) {
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
+    var modelUtil = require('../../util/model');
     var linearMap = numberUtil.linearMap;
     var LinearGradient = require('zrender/graphic/LinearGradient');
     var each = zrUtil.each;
@@ -280,21 +281,14 @@ define(function(require) {
             delta = delta || 0;
             var dataRangeModel = this.dataRangeModel;
             var handleEnds = this._handleEnds;
-            var extent = [0, dataRangeModel.itemSize[1]];
 
-            if (handleIndex === 'all') {
-                delta = getRealDelta(delta, handleEnds, extent);
-                handleEnds[0] += delta;
-                handleEnds[1] += delta;
-            }
-            else {
-                delta = getRealDelta(delta, handleEnds[handleIndex], extent);
-                handleEnds[handleIndex] += delta;
-
-                if (handleEnds[0] > handleEnds[1]) {
-                    handleEnds[1 - handleIndex] = handleEnds[handleIndex];
-                }
-            }
+            modelUtil.sliderMove(
+                delta,
+                handleEnds,
+                [0, dataRangeModel.itemSize[1]],
+                handleIndex === 'all' ? 'rigid' : 'push',
+                handleIndex
+            );
 
             // Update data interval.
             this._dataInterval = linearMap(
@@ -303,18 +297,6 @@ define(function(require) {
                 dataRangeModel.getExtent(),
                 true
             );
-
-            function getRealDelta(delta, handleEnds, extent) {
-                !handleEnds.length && (handleEnds = [handleEnds, handleEnds]);
-
-                if (delta < 0 && handleEnds[0] + delta < extent[0]) {
-                    delta = extent[0] - handleEnds[0];
-                }
-                if (delta > 0 && handleEnds[1] + delta > extent[1]) {
-                    delta = extent[1] - handleEnds[1];
-                }
-                return delta;
-            }
         },
 
         /**

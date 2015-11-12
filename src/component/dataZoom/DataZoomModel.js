@@ -8,6 +8,7 @@ define(function(require) {
     var echarts = require('../../echarts');
     var modelUtil = require('../../util/model');
     var numberUtil = require('../../util/number');
+    var AxisOperator = require('./AxisOperator');
     var asc = numberUtil.asc;
     var eachAxisDim = modelUtil.eachAxisDim;
 
@@ -24,23 +25,7 @@ define(function(require) {
             zlevel: 0,                 // 一级层叠
             z: 4,                      // 二级层叠
             show: false,
-            orient: 'horizontal',      // 布局方式，默认为水平布局，可选为：
-                                       // 'horizontal' ¦ 'vertical'
-            // x: {number},            // 水平安放位置，默认为根据grid参数适配，可选为：
-                                       // {number}（x坐标，单位px）
-            // y: {number},            // 垂直安放位置，默认为根据grid参数适配，可选为：
-                                       // {number}（y坐标，单位px）
-            // width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
-            // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
-            backgroundColor: 'rgba(0,0,0,0)',       // 背景颜色
-            dataBackgroundColor: '#ddd',            // 数据背景颜色
-            fillerColor: 'rgba(144,197,237,0.3)',   // 填充颜色
-            handleColor: 'rgba(70,130,180,0.7)',    // 手柄颜色
-            handleSize: 10,
-            // labelPrecision: 'auto',           // label小数精度
-            labelFormatter: null,
-            showDetail: true,
-            showDataShadow: null,     // 默认只有line bar k 默认显示dataShadow，其他默认不显示。
+            orient: null,             // 布局方式，默认根据axisIndex自适应。可选值为：'horizontal' ¦ 'vertical'
             xAxisIndex: null,         // 默认控制所有横向类目
             yAxisIndex: null,         // 默认控制所有横向类目
             filterMode: 'filter',       // 'filter' or 'empty'
@@ -52,13 +37,7 @@ define(function(require) {
             start: 0,               // 默认为0
             end: 100,               // 默认为全部 100%
             start2: 0,               // 默认为0
-            end2: 100,               // 默认为全部 100%
-            realtime: true,
-            inverse: false,           // 默认与所控制的轴相同
-            zoomLock: false,         // 是否锁定选择区域大小
-            textStyle: {
-                color: '#333'
-            }
+            end2: 100               // 默认为全部 100%
         },
 
         /**
@@ -67,17 +46,12 @@ define(function(require) {
         init: function (option, parentModel, ecModel) {
 
             /**
+             * can be 'axisIndex' or 'orient'
+             *
              * @private
-             * @type {Boolean}
+             * @type {string}
              */
-            this._autoAxisIndex = false;
-
-            /**
-             * key like x_0, y_1
-             * @private
-             * @type {Object}
-             */
-            this._needsCrossZeroBackup = {};
+            this._autoMode;
 
             /**
              * key like x_0, y_1
@@ -90,6 +64,12 @@ define(function(require) {
              * @private
              */
             this._dataInfo = {};
+
+            /**
+             * key like x_0, y_1
+             * @private
+             */
+            this._axisOperators = {};
 
             /**
              * @readOnly
@@ -115,46 +95,108 @@ define(function(require) {
 
             this.textStyleModel = this.getModel('textStyle');
 
-            this._resetAutoIndex(newOption, isInit);
-            // FIXME
-            // 是否有toolbox zoom控件时，自动加一个dataZoom option，而非和某个dataZoom option共用？
-            // dataZoom option中可加type来判断是普通还是toolbox还是移动端需要的图面拖拽。
-            // optionMerge时根据type进行merge。
-            this._resetTargetAxes(newOption);
-            // this._resetTargetSeries(newOption);
+            this._resetTarget(newOption, isInit);
+
+            this._giveAxisOperators();
 
             this._backup();
 
             this._resetRange();
-            this._resetInverse();
-
         },
 
-        _resetAutoIndex: function (newOption, isInit) {
+        /**
+         * @private
+         */
+        _giveAxisOperators: function () {
+            var axisOperators = this._axisOperators;
+
+            this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
+                var axisModel = this.dependentModels[dimNames.axis][axisIndex];
+
+                // If exists, share axisOperator with other dataZoomModels.
+                var axisOperator = axisModel.__dzAxisOperator || (
+                    // Use the first dataZoomModel as the main model of axisOperator.
+                    axisModel.__dzAxisOperator = new AxisOperator(
+                        dimNames.name, axisIndex, this, ecModel
+                    )
+                );
+                // FIXME
+                // dispose __dzAxisOperator
+
+                axisOperators[dimNames.name + '_' + axisIndex] = axisOperator;
+            }, this);
+        },
+
+        /**
+         * @private
+         */
+        _resetTarget: function (newOption, isInit) {
+
+            this._resetAutoMode(newOption, isInit);
+
+            var thisOption = this.option;
+
+            eachAxisDim(function (dimNames) {
+                var axisIndexName = dimNames.axisIndex;
+                thisOption[axisIndexName] = autoMode === 'axisIndex'
+                    ? [] : modelUtil.normalizeToArray(thisOption[axisIndexName]);
+            }, this);
+
+            var autoMode = this._autoMode;
+
+            if (autoMode === 'axisIndex') {
+                this._autoSetAxisIndex();
+            }
+            else if (autoMode === 'orient') {
+                this._autoSetOrient();
+            }
+        },
+
+        /**
+         * @private
+         */
+        _resetAutoMode: function (newOption, isInit) {
             // Consider this case:
             // There is no axisIndex specified at the begining,
             // which means that auto choise of axisIndex is required.
             // Then user modifies series using setOption and do not specify axisIndex either.
-            // At that moment axisIndex should be re-choised.
+            // At that moment axisIndex should be re-choised, but not remain last choise.
+            // So we keep auto mode util user specified axisIndex or orient in newOption.
             var option = isInit ? this.option : newOption;
-            this._autoAxisIndex = true;
+
+            var hasIndexSpecified = false;
             eachAxisDim(function (dimNames) {
-                option[dimNames.axisIndex] != null && (this._autoAxisIndex = false);
+                // When user set axisIndex as a empty array, we think that user specify axisIndex
+                // but do not want use auto mode. Because empty array may be encountered when
+                // some error occured.
+                if (option[dimNames.axisIndex] != null) {
+                    hasIndexSpecified = true;
+                }
             }, this);
+
+            var orient = option.orient;
+
+            if (orient == null && hasIndexSpecified) {
+                // Auto set orient by axisIndex.
+                this._autoMode = 'orient';
+            }
+            else if (orient != null && !hasIndexSpecified) {
+                // Auto set axisIndex by orient.
+                this._autoMode = 'axisIndex';
+            }
         },
 
-        _resetTargetAxes: function (newOption) {
+        /**
+         * @private
+         */
+        _autoSetAxisIndex: function () {
+            var autoAxisIndex = this._autoMode === 'axisIndex';
+            var orient = this.get('orient');
             var thisOption = this.option;
-            var autoAxisIndex = this._autoAxisIndex;
-
-            eachAxisDim(function (dimNames) {
-                thisOption[dimNames.axisIndex] = autoAxisIndex
-                    ? [] : modelUtil.normalizeToArray(thisOption[dimNames.axisIndex]);
-            }, this);
 
             if (autoAxisIndex) {
                 // Find axis that parallel to dataZoom as default.
-                var dimNames = this.get('orient') === 'vertical'
+                var dimNames = orient === 'vertical'
                     ? {dim: 'y', axisIndex: 'yAxisIndex', axis: 'yAxis'}
                     : {dim: 'x', axisIndex: 'xAxisIndex', axis: 'xAxis'};
 
@@ -208,6 +250,23 @@ define(function(require) {
             }
         },
 
+        /**
+         * @private
+         */
+        _autoSetOrient: function () {
+            var dim;
+
+            // Find the first axis
+            this.eachTargetAxis(function (dimNames) {
+                !dim && (dim = dimNames.name);
+            }, this);
+
+            this.option.orient = dim === 'y' ? 'vertical' : 'horizontal';
+        },
+
+        /**
+         * @private
+         */
         _isSeriesHasAllAxesTypeOf: function (seriesModel, axisType) {
             // FIXME
             // 需要series的xAxisIndex和yAxisIndex都首先自动设置上。
@@ -225,13 +284,21 @@ define(function(require) {
             return is;
         },
 
+        /**
+         * @private
+         */
         _backup: function () {
             this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
-                this._needsCrossZeroBackup[dimNames.axis + '_' + axisIndex] =
-                    ecModel.getComponent(dimNames.axis, axisIndex).get('scale');
+                this.getAxisOperator(dimNames.name, axisIndex).backupCrossZero(
+                    this,
+                    ecModel.getComponent(dimNames.axis, axisIndex).get('scale')
+                );
             }, this);
         },
 
+        /**
+         * @private
+         */
         _resetRange: function () {
             var thisOption = this.option;
 
@@ -253,17 +320,9 @@ define(function(require) {
 
             // Otherwise, determine it by dataZoom.orient (compatibale with the logic in ec2.)
             // targetDim === 'y' means start/end control 'y' and start2/end2 control 'x'.
-            // FIXME
-            // 不要这么做。不要 start2 end2 参数。
-            var targetDim2;
-            // if (targetDim === false) {
-            //     targetDim = thisOption.orient === 'vertical' ? 'y' : 'x';
-            //     targetDim2 = targetDim === 'x' ? 'y' : 'x';
-            // }
 
             var optAttrs = {};
             optAttrs[targetDim] = {start: 'start', end: 'end'};
-            targetDim2 && (optAttrs[targetDim2] = {start: 'start2', end: 'end2'});
 
             zrUtil.each(optAttrs, function (dimItem, targetDim) {
                 var startValue = thisOption[dimItem.start];
@@ -278,34 +337,21 @@ define(function(require) {
                 thisOption[dimItem.end] = endValue;
             }, this);
 
-            if (!targetDim2) {
-                thisOption.start2 = thisOption.end2 = null;
-            }
-
             // Set "needsCrossZero" to axes
             this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
                 var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
                 axisModel.setNeedsCrossZero && axisModel.setNeedsCrossZero(
                     thisOption.start === 0 && thisOption.end === 100
-                        ? this._needsCrossZeroBackup[dimNames.axis + '_' + axisIndex]
+                        ? this.getAxisOperator(dimNames.name, axisIndex).getCrossZero()
                         : false
                 );
             }, this);
         },
 
         /**
-         * @private
+         * @public
          */
-        _resetInverse: function () {
-            // Just use the first axis to determine mapping.
-            var targetAxisModel = this._getFirstTargetAxisModel();
-            this.option.inverse = targetAxisModel && targetAxisModel.get('inverse');
-        },
-
-        /**
-         * @private
-         */
-        _getFirstTargetAxisModel: function () {
+        getFirstTargetAxisModel: function () {
             var firstAxisModel;
             eachAxisDim(function (dimNames) {
                 if (firstAxisModel == null) {
@@ -336,35 +382,8 @@ define(function(require) {
             }, this);
         },
 
-        /**
-         * @public
-         * @param {string} dimName 'x', 'y', 'z'
-         * @param {number} axisIndex
-         * @return {Array} seriesModels
-         */
-        getTargetSeriesModels: function (dimName, axisIndex) {
-            var seriesModels = [];
-            this.ecModel.eachSeries(function (seriesModel) {
-                if (axisIndex === seriesModel.get(dimName + 'AxisIndex')) {
-                    seriesModels.push(seriesModel);
-                }
-            });
-            return seriesModels;
-        },
-
-        /**
-         * @public
-         */
-        recordDataInfo: function (dimName, axisIndex, dataWindow) {
-            this._dataInfo[dimName + '_' + axisIndex] = dataWindow.slice();
-        },
-
-        /**
-         * @public
-         */
-        getDataInfo: function (dimName, axisIndex) {
-            var ret = this._dataInfo[dimName + '_' + axisIndex];
-            return ret && ret.slice();
+        getAxisOperator: function (dimName, axisIndex) {
+            return this._axisOperators[dimName + '_' + axisIndex];
         },
 
         /**
@@ -387,7 +406,17 @@ define(function(require) {
          */
         getRange: function () {
             var thisOption = this.option;
-            var range = asc([thisOption.start, thisOption.end]);
+            var range = [thisOption.start, thisOption.end];
+
+            return this.fixRange(range);
+        },
+
+        /**
+         * @protected
+         */
+        fixRange: function (range) {
+            // Make sure range[0] <= range[1]
+            var range = asc(range);
 
             // Clamp
             range[0] > 100 && (range[0] = 100);

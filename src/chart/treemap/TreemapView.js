@@ -494,6 +494,7 @@
             // Init controller.
             if (!controller) {
                 controller = this._controller = new RoamController(api.getZr());
+                controller.enable();
                 controller.on('pan', bind(handle, this, this._onPan));
                 controller.on('zoom', bind(handle, this, this._onZoom));
             }
