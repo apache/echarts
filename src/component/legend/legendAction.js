@@ -12,7 +12,7 @@ define(function(require) {
      * @property {string} [from]
      * @property {string} seriesName
      */
-    echarts.registerAction('legendToggleSelect', function (event, ecModel) {
+    echarts.registerAction('legendToggleSelect', 'legendSelected', function (event, ecModel) {
         // Update all legend components
         ecModel.eachComponent('legend', function (legendModel) {
             legendModel && legendModel.toggleSelected(event.seriesName);

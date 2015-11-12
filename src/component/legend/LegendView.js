@@ -9,10 +9,9 @@ define(function (require) {
 
     var LEGEND_DISABLE_COLOR = '#ccc';
 
-    function createSelectActionDispatcher(uid, seriesName, api) {
+    function createSelectActionDispatcher(seriesName, api) {
         api.dispatch({
             type: 'legendToggleSelect',
-            from: uid,
             seriesName: seriesName
         });
     }
@@ -218,7 +217,7 @@ define(function (require) {
 
             this.group.add(itemGroup);
 
-            itemGroup.on('click', zrUtil.curry(createSelectActionDispatcher, this.uid, name, api), this);
+            itemGroup.on('click', zrUtil.curry(createSelectActionDispatcher, name, api), this);
         }
     });
 });

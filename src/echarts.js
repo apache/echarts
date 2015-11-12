@@ -19,6 +19,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var colorTool = require('zrender/tool/color');
     var env = require('zrender/core/env');
+    var Eventful = require('zrender/mixin/Eventful');
 
     var each = zrUtil.each;
 
@@ -88,6 +89,10 @@ define(function (require) {
          */
         this._coordinateSystem = new CoordinateSystemManager();
 
+        Eventful.call(this);
+
+        // Init mouse events
+        this._initEvents();
     }
 
     var echartsProto = ECharts.prototype;
@@ -152,7 +157,7 @@ define(function (require) {
      * @param {Object} payload
      */
     echartsProto.update = function (payload) {
-        console.time && console.time('update');
+        // console.time && console.time('update');
 
         var ecModel = this._model;
 
@@ -186,7 +191,7 @@ define(function (require) {
         }
         backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
 
-        console.time && console.timeEnd('update');
+        // console.time && console.timeEnd('update');
     };
 
     // PENDING
@@ -240,6 +245,15 @@ define(function (require) {
     };
 
     /**
+     * @return {[type]} [description]
+     */
+    echartsProto.makeActionFromEvent = function (eventObj) {
+        var payload = zrUtil.extend({}, eventObj);
+        payload.type = eventActionMap[eventObj.type];
+        return payload;
+    };
+
+    /**
      * @pubilc
      * @param {Object} payload
      * @param {string} [payload.type] Action type
@@ -248,9 +262,16 @@ define(function (require) {
     echartsProto.dispatch = function (payload) {
         var actionWrap = actions[payload.type];
         if (actionWrap) {
-            var updateMethod = actionWrap.actionInfo.update || 'update';
+            var actionInfo = actionWrap.actionInfo;
+            var updateMethod = actionInfo.update || 'update';
             actionWrap.action(payload, this._model);
             updateMethod !== 'none' && this[updateMethod](payload);
+
+            // Emit event outside
+            // Convert type to eventType
+            var eventObj = zrUtil.extend({}, payload);
+            eventObj.type = actionInfo.event || eventObj.type;
+            this.trigger(eventObj.type, eventObj);
         }
     };
 
@@ -279,6 +300,11 @@ define(function (require) {
 
     };
 
+    /**
+     * Prepare charts view instances
+     * @param  {module:echarts/model/Global} ecModel
+     * @private
+     */
     echartsProto._prepareCharts = function (ecModel) {
 
         var chartsList = this._chartsList;
@@ -327,6 +353,11 @@ define(function (require) {
         }
     };
 
+    /**
+     * Prepare component view instances
+     * @param  {module:echarts/model/Global} ecModel
+     * @private
+     */
     echartsProto._prepareComponents = function (ecModel) {
 
         var componentsMap = this._componentsMap;
@@ -418,9 +449,6 @@ define(function (require) {
      */
     echartsProto._doLayout = function (ecModel, payload) {
         var api = this._extensionAPI;
-        each(this._layouts, function (layout) {
-            layout.update(ecModel, api, payload);
-        });
         each(layoutFuncs, function (layout) {
             layout(ecModel, api, payload);
         });
@@ -475,6 +503,31 @@ define(function (require) {
         }, this);
     };
 
+    var MOUSE_EVENT_NAMES = [
+        'click', 'dblclick', 'mouseover', 'mouseout', 'globalout'
+    ];
+    /**
+     * @private
+     */
+    echartsProto._initEvents = function () {
+        var zr = this._zr;
+        each(MOUSE_EVENT_NAMES, function (eveName) {
+            zr.on(eveName, function (e) {
+                var ecModel = this.getModel();
+                var el = e.target;
+                if (el && el.dataIndex != null) {
+                    var hostModel = el.hostModel || ecModel.getSeriesByIndex(
+                        el.seriesIndex, true
+                    );
+                    var params = hostModel && hostModel.getDataParams(el.dataIndex) || {};
+                    params.event = e;
+                    params.type = eveName;
+                    this.trigger(eveName, params);
+                }
+            }, this);
+        }, this);
+    };
+
     echartsProto.dispose = function () {
         each(this._components, function (component) {
             component.dispose();
@@ -485,6 +538,8 @@ define(function (require) {
 
         this.zr.dispose();
     };
+
+    zrUtil.mixin(ECharts, Eventful);
 
     /**
      * @param {module:echarts/model/Series|module:echarts/model/Component} model
@@ -505,6 +560,12 @@ define(function (require) {
      * @inner
      */
     var actions = [];
+
+    /**
+     * Map from eventType to actionType
+     * @type {Object}
+     */
+    var eventActionMap = {};
 
     /**
      * @type {Array.<Function>}
@@ -577,21 +638,27 @@ define(function (require) {
      *
      * @param {(string|Object)} actionInfo
      * @param {string} actionInfo.type
-     * @param {string=} actionInfo.event
-     * @param {string=} actionInfo.update
-     * @param {Function=} action
+     * @param {string} [actionInfo.event]
+     * @param {string} [actionInfo.update]
+     * @param {string} [eventName]
+     * @param {Function} action
      */
-    echarts.registerAction = function (actionInfo, action) {
+    echarts.registerAction = function (actionInfo, eventName, action) {
+        if (typeof eventName === 'function') {
+            action = eventName;
+            eventName = '';
+        }
         var actionType = zrUtil.isObject(actionInfo)
             ? actionInfo.type
-            : ([actionInfo, actionInfo = {}][0]);
+            : ([actionInfo, actionInfo = {
+                event: eventName
+            }][0]);
+        eventName = actionInfo.event;
 
         if (!actions[actionType]) {
             actions[actionType] = {action: action, actionInfo: actionInfo};
         }
-
-        // TODO
-        // event
+        eventActionMap[eventName] = actionType;
     };
 
     /**

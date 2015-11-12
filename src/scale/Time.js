@@ -139,7 +139,7 @@ define(function (require) {
         TimeScale.prototype[methodName] = function (val) {
             val = +parseDate(val);
             return intervalScaleProto[methodName].call(this, val);
-        }
+        };
     });
 
     zrUtil.inherits(TimeScale, IntervalScale);
@@ -174,7 +174,7 @@ define(function (require) {
      */
     TimeScale.create = function () {
         return new TimeScale();
-    }
+    };
 
     require('./scale').register(TimeScale);
 
