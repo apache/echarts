@@ -126,7 +126,7 @@ define(function(require) {
          * @param {number} dataIndex
          * @return {Object}
          */
-        getFormatParams: function (dataIndex) {
+        getDataParams: function (dataIndex) {
             var data = this._data;
             var seriesIndex = this.seriesIndex;
             var seriesName = this.name;
@@ -161,7 +161,7 @@ define(function(require) {
             var data = this._data;
             var itemModel = data.getItemModel(dataIndex);
 
-            var params = this.getFormatParams(dataIndex);
+            var params = this.getDataParams(dataIndex);
             if (!formatter) {
                 formatter = itemModel.get('label.' + status + '.formatter');
             }

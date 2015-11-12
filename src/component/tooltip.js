@@ -623,7 +623,7 @@ define(function (require) {
                 var html;
 
                 var paramsList = zrUtil.map(seriesList, function (series) {
-                    return series.getFormatParams(dataIndex);
+                    return series.getDataParams(dataIndex);
                 });
 
                 tooltipContent.show(rootTooltipModel);
@@ -723,7 +723,7 @@ define(function (require) {
             if (tooltipModel.get('showContent')) {
                 var formatter = tooltipModel.get('formatter');
                 var positionFunc = tooltipModel.get('position');
-                var params = seriesModel.getFormatParams(dataIndex);
+                var params = seriesModel.getDataParams(dataIndex);
                 var html;
                 if (!formatter) {
                     html = seriesModel.formatTooltip(dataIndex);

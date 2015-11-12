@@ -87,7 +87,7 @@ define(function (require) {
                 // If color is a callback function
                 if (typeof color === 'function') {
                     // Use the first data
-                    color = color(seriesModel.getFormatParams(0));
+                    color = color(seriesModel.getDataParams(0));
                 }
 
                 // Using rect symbol defaultly

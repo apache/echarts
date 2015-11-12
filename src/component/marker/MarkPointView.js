@@ -16,7 +16,7 @@ define(function (require) {
     // FIXME
     var seriesModelProto = SeriesModel.prototype;
     var markPointFormatMixin = {
-        getFormatParams: seriesModelProto.getFormatParams,
+        getDataParams: seriesModelProto.getDataParams,
 
         getFormattedLabel: seriesModelProto.getFormattedLabel,
 

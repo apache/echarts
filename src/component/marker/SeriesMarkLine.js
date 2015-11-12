@@ -155,7 +155,6 @@ define(function (require) {
             })
             .remove(function (idx) {
                 var line = oldFromData.getItemGraphicEl(idx);
-
                 group.remove(line);
             })
             .execute();

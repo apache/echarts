@@ -14,7 +14,6 @@ define(function (require) {
      * @param {module:echarts/model/Global} ecModel
      */
     function Model(option, parentModel, ecModel) {
-
         /**
          * @type {module:echarts/model/Model}
          * @readOnly
