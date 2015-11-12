@@ -40,9 +40,9 @@ define(function(require) {
         },
 
         // Overwrite
-        getFormatParams: function (dataIndex) {
+        getDataParams: function (dataIndex) {
             var data = this._data;
-            var params = seriesModelProto.getFormatParams.call(this, dataIndex);
+            var params = seriesModelProto.getDataParams.call(this, dataIndex);
             params.percent = data.get('value', dataIndex) / data.getSum('value');
 
             params.$vars.push('percent');

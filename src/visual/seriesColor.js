@@ -16,7 +16,7 @@ define(function (require) {
                 if (typeof color === 'function' && (!color instanceof Gradient)) {
                     data.each(function (idx) {
                         data.setItemVisual(
-                            idx, 'color', color(seriesModel.getFormatParams(idx))
+                            idx, 'color', color(seriesModel.getDataParams(idx))
                         );
                     });
                 }

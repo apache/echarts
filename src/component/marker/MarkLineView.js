@@ -60,7 +60,7 @@ define(function (require) {
 
     var seriesModelProto = SeriesModel.prototype;
     var markLineFormatMixin = {
-        getFormatParams: seriesModelProto.getFormatParams,
+        getDataParams: seriesModelProto.getDataParams,
 
         getFormattedLabel: seriesModelProto.getFormattedLabel,
 

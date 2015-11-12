@@ -165,8 +165,8 @@ define(function(require) {
          * @param {number} dataIndex
          * @return {Object}
          */
-        getFormatParams: function (dataIndex) {
-            var params = SeriesModel.prototype.getFormatParams.apply(this, arguments);
+        getDataParams: function (dataIndex) {
+            var params = SeriesModel.prototype.getDataParams.apply(this, arguments);
 
             var data = this.getData();
             var node = data.tree.getNodeByDataIndex(dataIndex);
