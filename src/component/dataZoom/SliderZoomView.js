@@ -16,7 +16,7 @@ define(function (require) {
     var each = zrUtil.each;
 
     // Constants
-    var DEFAULT_LOCATION_EDGE_GAP = 2;
+    var DEFAULT_LOCATION_EDGE_GAP = 7;
     var DEFAULT_FRAME_BORDER_WIDTH = 1;
     var DEFAULT_FILLER_SIZE = 30;
     var HORIZONTAL = 'horizontal';
@@ -330,10 +330,10 @@ define(function (require) {
 
         _renderHandle: function () {
             var displaybles = this._displayables;
-            var frames = displaybles.frames = [];
             var handles = displaybles.handles = [];
             var handleLabels = displaybles.handleLabels = [];
             var barGroup = this._displayables.barGroup;
+            var size = this._size;
 
             barGroup.add(displaybles.filler = new Rect({
                 draggable: true,
@@ -345,23 +345,27 @@ define(function (require) {
                 style: {
                     fill: this.dataZoomModel.get('fillerColor'),
                     // text: ':::',
-                    text: '',
-                    textPosition : 'inside',
-                    stroke: this.dataZoomModel.get('dataBackgroundColor'),
-                    lineWidth: 1
+                    textPosition : 'inside'
                 }
             }));
 
-            each([0, 1], function (handleIndex) {
+            // Frame border.
+            barGroup.add(new Rect(graphic.subPixelOptimizeRect({
+                silent: true,
+                shape: {
+                    x: 0,
+                    y: 0,
+                    width: size[0],
+                    height: size[1]
+                },
+                style: {
+                    stroke: this.dataZoomModel.get('dataBackgroundColor'),
+                    lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
+                    fill: 'rgba(0,0,0,0)'
+                }
+            })));
 
-                barGroup.add(frames[handleIndex] = new Rect({
-                    silent: true,
-                    style: {
-                        stroke: this.dataZoomModel.get('dataBackgroundColor'),
-                        lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
-                        fill: 'rgba(0,0,0,0)'
-                    }
-                }));
+            each([0, 1], function (handleIndex) {
 
                 barGroup.add(handles[handleIndex] = new Rect({
                     style: {
@@ -434,26 +438,7 @@ define(function (require) {
             var size = this._size;
             var halfHandleSize = this._halfHandleSize;
 
-            var frameIntervals = [
-                [0, handleInterval[0] - halfHandleSize],
-                [handleInterval[1] + halfHandleSize, size[0]]
-            ];
-
             each([0, 1], function (handleIndex) {
-
-                // Frames
-                var frameInterval = frameIntervals[handleIndex];
-                displaybles.frames[handleIndex].setShape(graphic.subPixelOptimizeRect({
-                    shape: {
-                        x: frameInterval[0],
-                        y: 0,
-                        width: frameInterval[1] - frameInterval[0],
-                        height: size[1]
-                    },
-                    style: {
-                        lineWidth: DEFAULT_FRAME_BORDER_WIDTH
-                    }
-                }).shape);
 
                 // Handles
                 var handle = displaybles.handles[handleIndex];

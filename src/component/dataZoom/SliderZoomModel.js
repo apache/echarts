@@ -21,8 +21,8 @@ define(function(require) {
             // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配
             backgroundColor: 'rgba(0,0,0,0)',       // 背景颜色
             dataBackgroundColor: '#ccc',            // 数据背景颜色
-            fillerColor: 'rgba(144,197,237,0.3)',   // 填充颜色
-            handleColor: 'rgba(70,130,180,0.7)',    // 手柄颜色
+            fillerColor: 'rgba(144,197,237,0.25)',   // 填充颜色
+            handleColor: 'rgba(70,130,180,0.65)',    // 手柄颜色
             handleSize: 10,
             // labelPrecision: 'auto',           // label小数精度
             labelFormatter: null,
