@@ -180,9 +180,14 @@ define(function(require) {
                 // Auto set orient by axisIndex.
                 this._autoMode = 'orient';
             }
-            else if (orient != null && !hasIndexSpecified) {
-                // Auto set axisIndex by orient.
-                this._autoMode = 'axisIndex';
+            else {
+                if (orient == null) {
+                    this.option.orient = 'horizontal';
+                }
+                if (!hasIndexSpecified) {
+                    // Auto set axisIndex by orient.
+                    this._autoMode = 'axisIndex';
+                }
             }
         },
 
