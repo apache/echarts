@@ -418,6 +418,7 @@ define(function (require) {
      * @return {number}
      */
     listProto.getRawValue = function (idx) {
+        idx = this.getRawIndex(idx);
         var itemOpt = this._rawData[idx];
         var valueProp = this._valueProp;
         if (itemOpt && itemOpt.hasOwnProperty(valueProp)) {
