@@ -65,8 +65,7 @@ define(function (require) {
             var controller = this._controller;
             controller.rect = coordSys.getViewRect();
 
-            controller.disable();
-            seriesModel.get('roam') && controller.enable();
+            controller.enable(seriesModel.get('roam'));
 
             controller
                 .off('pan')

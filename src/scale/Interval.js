@@ -202,8 +202,8 @@ define(function (require) {
             }
 
             var niceExtent = [
-                mathCeil(extent[0] / interval) * interval,
-                mathFloor(extent[1] / interval) * interval
+                numberUtil.round(mathCeil(extent[0] / interval) * interval),
+                numberUtil.round(mathFloor(extent[1] / interval) * interval)
             ];
 
             this._interval = interval;

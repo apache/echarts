@@ -40,18 +40,18 @@
 
                 var data = [];
 
-                for (var i = 0; i < 100; i++) {
+                for (var i = 0; i < 120; i++) {
                     do {
                         var x = Math.round(Math.random() * (hours.length - 1));
                         var y = Math.round(Math.random() * (days.length - 1));
                         var key = y * 100 + x;
-                    } while(usedMap[key])
+                    } while(usedMap[key]);
 
                     usedMap[key] = true;
 
                     data.push([
                         x, y, Math.random() + 0.1
-                    ])
+                    ]);
                 }
 
                 chart.setOption({
@@ -59,6 +59,8 @@
                         data: ['Punch Card']
                     },
                     polar: {},
+                    tooltip: {
+                    },
                     angleAxis: {
                         type: 'category',
                         data: hours,
@@ -70,6 +72,7 @@
                                 type: 'dashed'
                             }
                         },
+                        startAngle: 0,
                         axisLine: {
                             show: false
                         }

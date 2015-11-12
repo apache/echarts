@@ -146,7 +146,7 @@ define(function (require) {
                     origin: p.slice(),
                     silent: true
                 }));
-            };
+            }
         },
 
         /**
@@ -172,7 +172,7 @@ define(function (require) {
                         r: ticksCoords[i]
                     },
                     silent: true
-                }))
+                }));
             }
 
             // Simple optimization

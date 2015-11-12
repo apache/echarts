@@ -159,6 +159,9 @@ define(function(require, factory) {
             each(axesMap.y, function (yAxis, yAxisIndex) {
                 var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
                 var cartesian = new Cartesian2D(key);
+
+                cartesian.grid = this;
+
                 this._coordsMap[key] = cartesian;
                 this._coordsList.push(cartesian);
 
@@ -188,12 +191,12 @@ define(function(require, factory) {
 
                 if (ifAxisNeedsCrossZero(yAxis, xAxis)) {
                     yAxis.scale.unionExtent([0, 0]);
-                    niceScaleExtent(yAxis, yAxis.model);
                 }
                 if (ifAxisNeedsCrossZero(xAxis, yAxis)) {
                     xAxis.scale.unionExtent([0, 0]);
-                    niceScaleExtent(xAxis, xAxis.model);
                 }
+                niceScaleExtent(yAxis, yAxis.model);
+                niceScaleExtent(xAxis, xAxis.model);
 
             }, this);
         }, this);
@@ -294,6 +297,7 @@ define(function(require, factory) {
         var grids = [];
         ecModel.eachComponent('grid', function (gridModel, idx) {
             var grid = new Grid(gridModel, ecModel, api);
+            grid.name = 'grid_' + idx;
             grid.resize(gridModel, api);
 
             gridModel.coordinateSystem = grid;
@@ -303,6 +307,9 @@ define(function(require, factory) {
 
         // Inject the coordinateSystems into seriesModel
         ecModel.eachSeries(function (seriesModel) {
+            if (seriesModel.get('coordinateSystem') !== 'cartesian2d') {
+                return;
+            }
             var xAxisIndex = seriesModel.get('xAxisIndex');
             // TODO Validate
             var xAxisModel = ecModel.getComponent('xAxis', xAxisIndex);

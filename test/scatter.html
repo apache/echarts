@@ -34,10 +34,10 @@
                     return (Math.random() * max).toFixed(3);
                 }
 
-                for (var i = 0; i < 200; i++) {
-                    data1.push([random(5), random(5), random(1)]);
-                    data2.push([random(10), random(10), random(1)]);
-                    data3.push([random(15), random(10), random(1)]);
+                for (var i = 0; i < 30; i++) {
+                    data1.push([random(5), random(5), random(2)]);
+                    data2.push([random(10), random(10), random(2)]);
+                    data3.push([random(15), random(10), random(2)]);
                 }
 
                 chart.setOption({
@@ -68,10 +68,17 @@
                     series: [{
                         name: 'scatter',
                         type: 'scatter',
-                        symbol: 'diamond',
+                        // symbol: 'diamond',
                         symbolSize: function (val) {
                             return val[2] * 40;
                         },
+                        // itemStyle: {
+                        //     normal: {
+                        //         color: function (params) {
+                        //             return 'rgba(30, 70, 50, ' + params.value[2] + ')';
+                        //         }
+                        //     }
+                        // },
                         data: data1
                     }, {
                         name: 'scatter2',
@@ -79,13 +86,13 @@
                         symbolSize: function (val) {
                             return val[2] * 40;
                         },
-                        itemStyle: {
-                            normal: {
-                                label: {
-                                    show: true
-                                }
-                            }
-                        },
+                        // itemStyle: {
+                        //     normal: {
+                        //         label: {
+                        //             show: true
+                        //         }
+                        //     }
+                        // },
                         data: data2
                     }, {
                         name: 'scatter3',

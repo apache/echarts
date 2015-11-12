@@ -4,7 +4,6 @@ define(function (require) {
 
     var Geo = require('./Geo');
 
-    var numberUtil = require('../../util/number');
     var layout = require('../../util/layout');
     var zrUtil = require('zrender/core/util');
 
@@ -15,7 +14,7 @@ define(function (require) {
      * @param {module:echarts/coord/geo/GeoModel|module:echarts/chart/map/MapModel} geoModel
      * @param {module:echarts/ExtensionAPI} api
      */
-    var resizeGeo = function (geoModel, api) {
+    function resizeGeo (geoModel, api) {
         var locModel = geoModel;
         if (geoModel.type === 'series.map') {
             locModel = geoModel.getModel('mapLocation');
@@ -52,7 +51,18 @@ define(function (require) {
 
         this.setPan(panX, panY);
         this.setZoom(zoom);
-    };
+    }
+
+    /**
+     * @param {module:echarts/coord/Geo} geo
+     * @param {module:echarts/model/Model} model
+     * @inner
+     */
+    function setGeoCoords(geo, model) {
+        zrUtil.each(model.get('geoCoord'), function (geoCoord, name) {
+            geo.addGeoCoord(name, geoCoord);
+        });
+    }
 
     var geoCreator = {
 
@@ -69,7 +79,10 @@ define(function (require) {
                 var geo = new Geo(name + idx, name, geoJson);
                 geoList.push(geo);
 
+                setGeoCoords(geo, geoModel);
+
                 geoModel.coordinateSystem = geo;
+                geo.model = geoModel;
 
                 // Inject resize method
                 geo.resize = resizeGeo;
@@ -112,6 +125,8 @@ define(function (require) {
 
                 zrUtil.each(mapSeries, function (singleMapSeries) {
                     singleMapSeries.coordinateSystem = geo;
+
+                    setGeoCoords(geo, singleMapSeries);
                 });
             });
 

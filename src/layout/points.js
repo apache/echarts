@@ -19,5 +19,5 @@ define(function (require) {
                 data.setItemLayout(idx, point);
             }, true);
         });
-    }
+    };
 });
