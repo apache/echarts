@@ -35,6 +35,15 @@ define(function (require) {
         opts = opts || {};
 
         /**
+         * @type {string}
+         */
+        this.id;
+        /**
+         * Group id
+         * @type {string}
+         */
+        this.group;
+        /**
          * @type {HTMLDomElement}
          * @private
          */
@@ -160,7 +169,7 @@ define(function (require) {
      * @param {Object} payload
      */
     echartsProto.update = function (payload) {
-        // console.time && console.time('update');
+        console.time && console.time('update');
 
         var ecModel = this._model;
 
@@ -194,7 +203,7 @@ define(function (require) {
         }
         backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
 
-        // console.time && console.timeEnd('update');
+        console.time && console.timeEnd('update');
     };
 
     // PENDING
@@ -526,7 +535,18 @@ define(function (require) {
         }, this);
     };
 
+    /**
+     * @return {boolean]
+     */
+    echartsProto.isDisposed = function () {
+        return this._disposed;
+    };
+    /**
+     * Dispose instance
+     */
     echartsProto.dispose = function () {
+        this._disposed = true;
+
         each(this._components, function (component) {
             component.dispose();
         });
@@ -535,6 +555,8 @@ define(function (require) {
         });
 
         this.zr.dispose();
+
+        instances[this.id] = null;
     };
 
     zrUtil.mixin(ECharts, Eventful);
@@ -560,7 +582,7 @@ define(function (require) {
     var actions = [];
 
     /**
-     * Map from eventType to actionType
+     * Map eventType to actionType
      * @type {Object}
      */
     var eventActionMap = {};
@@ -591,10 +613,24 @@ define(function (require) {
      */
     var visualCodingFuncs = {};
 
+    var instances = {};
+    var connectedGroups = {};
+
+    var idBase = new Date() - 0;
+    var groupIdBase = new Date() - 0;
+    var DOM_ATTRIBUTE_KEY = '_echarts_instance_';
     /**
-     * @alias
+     * @alias module:echarts
      */
-    var echarts = {};
+    var echarts = {
+        /**
+         * @type {number}
+         */
+        version: '3.0.0',
+        dependencies: {
+            zrender: '3.0.0'
+        }
+    };
 
     /**
      * @param {HTMLDomElement} dom
@@ -602,7 +638,103 @@ define(function (require) {
      * @param {Object} opts
      */
     echarts.init = function (dom, theme, opts) {
-        return new ECharts(dom, theme, opts);
+        // Check version
+        if ((zrender.version.replace('.', '') - 0) < (echarts.dependencies.zrender.replace('.', '') - 0)) {
+            console.error(
+                'ZRender ' + zrender.version
+                + ' is too old for ECharts ' + echarts.version
+                + '. Current version need ZRender '
+                + echarts.dependencies.zrender + '+'
+            );
+        }
+
+        var chart = new ECharts(dom, theme, opts);
+        chart.id = idBase++;
+        instances[chart.id] = chart;
+
+        // Connecting
+        zrUtil.each(eventActionMap, function (actionType, eventType) {
+            chart.on(eventType, function (event) {
+                if (connectedGroups[chart.group]) {
+                    if (chart.__connectedActionDispatching) {
+                        return;
+                    }
+                    chart.__connectedActionDispatching = true;
+                    var action = chart.makeActionFromEvent(event);
+                    for (var id in instances) {
+                        var otherChart = instances[id];
+                        if (otherChart !== chart && otherChart.group === chart.group) {
+                            otherChart.dispatch(action);
+                        }
+                    }
+                    chart.__connectedActionDispatching = false;
+                }
+            });
+        });
+
+        return chart;
+    };
+
+    /**
+     * @return {string|Array.<module:echarts~ECharts>} groupId
+     */
+    echarts.connect = function (groupId) {
+        // Is array of charts
+        if (zrUtil.isArray(groupId)) {
+            var charts = groupId;
+            groupId = null;
+            // If any chart has group
+            zrUtil.each(charts, function (chart) {
+                if (chart.group != null) {
+                    groupId = chart.group;
+                }
+            });
+            groupId = groupId || groupIdBase++;
+            zrUtil.each(charts, function (chart) {
+                chart.group = groupId;
+            });
+        }
+        connectedGroups[groupId] = true;
+        return groupId;
+    };
+
+    /**
+     * @return {string} groupId
+     */
+    echarts.disConnect = function (groupId) {
+        connectedGroups[groupId] = false;
+    };
+
+    /**
+     * Dispose a chart instance
+     * @param  {module:echarts~ECharts|HTMLDomElement|string} chart
+     */
+    echarts.dispose = function (chart) {
+        if (zrUtil.isDom(chart)) {
+            chart = echarts.getInstanceByDom(chart);
+        }
+        else if (typeof chart === 'string') {
+            chart = instances[chart];
+        }
+        if ((chart instanceof ECharts) && !chart.isDisposed()) {
+            chart.dispose();
+        }
+    };
+
+    /**
+     * @param  {HTMLDomElement} dom
+     * @return {echarts~ECharts}
+     */
+    echarts.getInstanceByDom = function (dom) {
+        var key = dom.getAttribute(DOM_ATTRIBUTE_KEY);
+        return instances[key];
+    };
+    /**
+     * @param {string} key
+     * @return {echarts~ECharts}
+     */
+    echarts.getInstanceById = function (key) {
+        return instances[key];
     };
 
     /**
@@ -651,6 +783,8 @@ define(function (require) {
             : ([actionInfo, actionInfo = {
                 event: eventName
             }][0]);
+
+        actionInfo.event = actionInfo.event || actionType;
         eventName = actionInfo.event;
 
         if (!actions[actionType]) {
@@ -670,7 +804,7 @@ define(function (require) {
     /**
      * @param {*} layout
      */
-    echarts.registerLayout = function (layout, isFactory) {
+    echarts.registerLayout = function (layout) {
         // PENDING All functions ?
         if (zrUtil.indexOf(layoutFuncs, layout) < 0) {
             layoutFuncs.push(layout);

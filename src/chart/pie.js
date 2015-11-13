@@ -6,6 +6,12 @@ define(function (require) {
     require('./pie/PieSeries');
     require('./pie/PieView');
 
+    require('../action/createDataSelectAction')('pie', {
+        type: 'pieToggleSelect',
+        event: 'pieSelected',
+        update: 'updateView'
+    });
+
     echarts.registerVisualCoding(
         'chart',  zrUtil.curry(require('../visual/dataColor'), 'pie')
     );
