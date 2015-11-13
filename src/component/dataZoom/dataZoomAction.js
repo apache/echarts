@@ -10,7 +10,11 @@ define(function(require) {
 
     echarts.registerAction('dataZoom', function (payload, ecModel) {
 
-        var fromDataZoomModel = ecModel.getComponentById(payload.dataZoomModelId);
+        var fromDataZoomModel = ecModel.queryComponent({
+            mainType: 'dataZoom',
+            name: payload.dataZoomName,
+            index: payload.dataZoomIndex
+        });
         if (!fromDataZoomModel) {
             return;
         }
@@ -26,7 +30,7 @@ define(function(require) {
         var effectedModels = linkedNodesFinder(fromDataZoomModel).nodes;
 
         zrUtil.each(effectedModels, function (dataZoomModel) {
-            dataZoomModel.setRange(payload.dataZoomRange);
+            dataZoomModel.setRange(payload.range);
         });
     });
 

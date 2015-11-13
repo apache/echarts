@@ -162,7 +162,7 @@ define(function(require) {
             this.api.dispatch({
                 type: 'selectDataRange',
                 from: this.uid,
-                dataRangeModelId: this.dataRangeModel.getId(),
+                dataRangeName: this.dataRangeModel.name,
                 selected: selected
             });
         }

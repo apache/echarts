@@ -16,7 +16,11 @@ define(function(require) {
 
     echarts.registerAction(actionInfo, function (payload, ecModel) {
 
-        var fromDataRangeModel = ecModel.getComponentById(payload.dataRangeModelId);
+        var fromDataRangeModel = ecModel.queryComponent({
+            mainType: 'dataRange',
+            name: payload.dataRangeName,
+            index: payload.dataRangeIndex
+        });
 
         fromDataRangeModel && fromDataRangeModel.setSelected(payload.selected);
 

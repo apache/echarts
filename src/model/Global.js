@@ -41,10 +41,10 @@ define(function (require) {
             this._componentsMap = {};
 
             /**
-             * @type {Object.<string, module:echarts/model/Model>}
+             * @type {Object.<string, Object.<string, module:echarts/model/Model>>}
              * @private
              */
-            this._componentsIdMap = {};
+            this._componentsMapByName = {};
 
             /**
              * All components before processing
@@ -92,6 +92,7 @@ define(function (require) {
         mergeOption: function (newOption) {
             var option = this.option;
             var componentsMap = this._componentsMap;
+            var componentsMapByName = this._componentsMapByName;
             var newCptTypes = [];
 
             // 如果不存在对应的 component model 则直接 merge
@@ -125,6 +126,7 @@ define(function (require) {
                 }
                 if (!componentsMap[componentType]) {
                     componentsMap[componentType] = [];
+                    componentsMapByName[componentType] = [];
                 }
 
                 var existComponents = this._mappingToExists(componentType, newCptOptionList);
@@ -149,10 +151,9 @@ define(function (require) {
                             newCptOptionList[i], this, this,
                             this._getComponentsByTypes(dependencies), i
                         );
-                        componentsMap[componentType][i] = componentModel;
-
-                        // Merge option is incremental
-                        this._componentsIdMap[componentModel.getId()] = componentModel;
+                        componentsMap[componentType][i] =
+                            componentsMapByName[componentType][componentModel.name] =
+                                componentModel;
                     }
                 }
             }
@@ -218,23 +219,39 @@ define(function (require) {
         },
 
         /**
-         * @param {string} type
+         * @param {string} mainType
          * @param {number} [idx=0]
          * @return {module:echarts/model/Component}
          */
-        getComponent: function (type, idx) {
-            var list = this._componentsMap[type];
+        getComponent: function (mainType, idx) {
+            var list = this._componentsMap[mainType];
             if (list) {
                 return list[idx || 0];
             }
         },
 
         /**
-         * @param {string} id
+         * @param {Object} condition
+         * @param {number} [condition.index] Either input name or index.
+         * @param {string} [condition.name] Either input name or index.
+         * @param {string} [condition.mainType] Main type (not include subType).
          * @return {module:echarts/model/Component}
          */
-        getComponentById: function (id) {
-            return this._componentsIdMap[id];
+        queryComponent: function (condition) {
+            var mainType = condition.mainType;
+            if (!mainType) {
+                return;
+            }
+
+            var byIndex = this._componentsMap[mainType];
+            var byName = this._componentsMapByName[mainType];
+
+            if (byIndex && condition.index != null) {
+                return byIndex[condition.index];
+            }
+            if (byName && condition.name != null) {
+                return byName[condition.name];
+            }
         },
 
         /**
@@ -247,14 +264,14 @@ define(function (require) {
          *     // (componentType is 'xxx' but not 'xxx.aa')
          * });
          *
-         * @param {string=} type
+         * @param {string=} mainType
          * @param {Function} cb
          * @param {*} context
          */
-        eachComponent: function (type, cb, context) {
-            if (typeof type === 'function') {
+        eachComponent: function (mainType, cb, context) {
+            if (typeof mainType === 'function') {
                 context = cb;
-                cb = type;
+                cb = mainType;
                 each(this._componentsMap, function (components, componentType) {
                     each(components, function (component, index) {
                         cb.call(this, componentType, component, index);
@@ -262,18 +279,18 @@ define(function (require) {
                 }, context);
             }
             else {
-                each(this._componentsMap[type], cb, context);
+                each(this._componentsMap[mainType], cb, context);
             }
         },
 
         /**
-         * @param {string} type
+         * @param {string} mainType
          * @param {Function} cb
          * @param {*} context
          * @return {module:echarts/model/Component}
          */
-        findComponent: function (type, cb, context) {
-            var components = this._componentsMap[type];
+        findComponent: function (mainType, cb, context) {
+            var components = this._componentsMap[mainType];
             if (components) {
                 for (var i = 0, len = components.length; i < len; i++) {
                     if (cb.call(context, components[i], i)) {
@@ -317,14 +334,14 @@ define(function (require) {
         },
 
         /**
-         * @param {string} type
+         * @param {string} subType
          * @param {boolean} beforeProcessing
          * @return {Array.<module:echarts/model/Series>}
          */
-        getSeriesByType: function (type, beforeProcessing) {
+        getSeriesByType: function (subType, beforeProcessing) {
             var series = this['_componentsMap' + (beforeProcessing ? 'All' : '')].series;
             return zrUtil.filter(series, function (oneSeries) {
-                return ComponentModel.parseComponentType(oneSeries.type).sub === type;
+                return ComponentModel.parseComponentType(oneSeries.type).sub === subType;
             });
         },
 
@@ -353,22 +370,22 @@ define(function (require) {
         },
 
         /**
-         * @parma {string} type
+         * @parma {string} subType
          * @param {Function} cb
          * @param {*} context
          */
-        eachSeriesByType: function (type, cb, context) {
-            return each(this.getSeriesByType(type), cb, context);
+        eachSeriesByType: function (subType, cb, context) {
+            return each(this.getSeriesByType(subType), cb, context);
         },
 
         /**
          * Iterate all series before filtered of given type
-         * @parma {string} type
+         * @parma {string} subType
          * @param {Function} cb
          * @param {*} context
          */
-        eachSeriesByTypeAll: function (type, cb, context) {
-            return each(this.getSeriesByType(type, true), cb, context);
+        eachSeriesByTypeAll: function (subType, cb, context) {
+            return each(this.getSeriesByType(subType, true), cb, context);
         },
 
         /**
