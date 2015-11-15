@@ -4,8 +4,10 @@
 define(function (require) {
 
     var graphic = require('../../util/graphic');
+    var numberUtil = require('../../util/number');
     var zrUtil = require('zrender/core/util');
     var symbolUtil = require('../../util/symbol');
+    var vector = require('zrender/core/vector');
 
     function tangentRotation(p1, p2) {
         return -Math.PI / 2 - Math.atan2(
@@ -15,7 +17,7 @@ define(function (require) {
     /**
      * @inner
      */
-    function createSymbol(data, idx, p1, p2, hasAnimation) {
+    function createSymbol(data, idx) {
         var color = data.getItemVisual(idx, 'color');
         var symbolType = data.getItemVisual(idx, 'symbol');
         var symbolSize = data.getItemVisual(idx, 'symbolSize');
@@ -32,23 +34,55 @@ define(function (require) {
             symbolSize[0], symbolSize[1], color
         );
 
-        if (hasAnimation) {
-            symbolPath.position = p1.slice();
-            symbolPath.animateTo({
-                position: p2
-            }, 1000);
-        }
-        else {
-            symbolPath.position = p2.slice();
-        }
+        return symbolPath;
+    }
 
+    function updateSymbolBeforeLineUpdate () {
+        var line = this;
+        var symbolFrom = line.__symbolFrom;
+        var symbolTo = line.__symbolTo;
+        var label = line.__label;
+        var lineShape = line.shape;
+        var fromPos = [lineShape.x1, lineShape.y1];
+        var toPos = [lineShape.x2, lineShape.y2];
+
+        var d = vector.sub([], toPos, fromPos);
+        vector.normalize(d, d);
+
+        symbolFrom.attr('position', fromPos);
+        symbolTo.attr('position', toPos);
         // Rotate the arrow
         // FIXME Hard coded ?
-        if (symbolType === 'arrow') {
-            symbolPath.rotation = tangentRotation(p1, p2);
+        if (symbolTo.type === 'arrow') {
+            symbolTo.attr('rotation', tangentRotation(fromPos, toPos));
         }
+        if (symbolFrom.type === 'arrow') {
+            symbolFrom.attr('rotation', tangentRotation(toPos, fromPos));
+        }
+        label.attr('position', toPos);
 
-        return symbolPath;
+        var textPosition;
+        var textAlign;
+        var textBaseline;
+        // End
+        if (line.__labelPosition === 'end') {
+            textPosition = [d[0] * 5 + toPos[0], d[1] * 5 + toPos[1]];
+            textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
+            textBaseline = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
+        }
+        // Start
+        else {
+            textPosition = [-d[0] * 5 + fromPos[0], -d[1] * 5 + fromPos[1]];
+            textAlign = d[0] > 0.8 ? 'right' : (d[0] < -0.8 ? 'left' : 'center');
+            textBaseline = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
+        }
+        label.attr({
+            style: {
+                textBaseline: textBaseline,
+                textAlign: textAlign
+            },
+            position: textPosition
+        });
     }
 
     /**
@@ -56,7 +90,6 @@ define(function (require) {
      * @constructor
      */
     function SeriesMarkLine() {
-
         this.group = new graphic.Group();
     }
 
@@ -66,7 +99,9 @@ define(function (require) {
      * @param {module:echarts/data/List} fromData
      * @param {module:echarts/data/List} toData
      */
-    seriesMarkLineProto.update = function (fromData, toData) {
+    seriesMarkLineProto.update = function (
+        fromData, toData, mlModel, enableAnimation
+    ) {
 
         var oldFromData = this._fromData;
         var oldToData = this._toData;
@@ -77,31 +112,57 @@ define(function (require) {
                 var p1 = fromData.getItemLayout(idx);
                 var p2 = toData.getItemLayout(idx);
 
+                var itemModel = fromData.getItemModel(idx);
+                var labelModel = itemModel.getModel('label.normal');
+                var textStyleModel = labelModel.getModel('textStyle');
+
                 var line = new graphic.Line({
                     shape: {
                         x1: p1[0],
                         y1: p1[1],
-                        x2: p1[0],
-                        y2: p1[1]
-                    }
-                });
-
-                line.animateTo({
-                    shape: {
                         x2: p2[0],
                         y2: p2[1]
                     }
-                }, 1000);
+                });
 
-                var symbolFrom = createSymbol(fromData, idx, p2, p1);
-                var symbolTo = createSymbol(toData, idx, p1, p2, true);
+                if (enableAnimation) {
+                    line.shape.x1 = p1[0];
+                    line.shape.y1 = p1[1];
+                    line.animateTo({
+                        shape: {
+                            x2: p2[0],
+                            y2: p2[1]
+                        }
+                    }, 1000);
+                }
+
+                var symbolFrom = createSymbol(fromData, idx);
+                var symbolTo = createSymbol(toData, idx);
+                var label = new graphic.Text({
+                    style: {
+                        text: mlModel.getFormattedLabel(idx, 'normal')
+                            || numberUtil.round(mlModel.getData().getRawValue(idx)),
+                        textFont: textStyleModel.getFont(),
+                        fill: textStyleModel.get('color') || fromData.getItemVisual(idx, 'color')
+                    }
+                });
 
                 group.add(line);
+
+                // symbols must added after line to make sure
+                // it will be updated after line#update.
+                // Or symbol position and rotation update in line#beforeUpdate will be one frame slow
                 group.add(symbolFrom);
                 group.add(symbolTo);
+                group.add(label);
 
                 line.__symbolFrom = symbolFrom;
                 line.__symbolTo = symbolTo;
+                line.__label = label;
+                line.__labelPosition = labelModel.get('position');
+
+                // Update symbol position and rotation
+                line.beforeUpdate = updateSymbolBeforeLineUpdate;
 
                 fromData.setItemGraphicEl(idx, line);
             })
@@ -123,30 +184,13 @@ define(function (require) {
                     }
                 }, 300, 'cubicOut');
 
-                var rotation = tangentRotation(p1, p2);
-
-                var symbolFrom = line.__symbolFrom;
-                var symbolTo = line.__symbolTo;
-
                 // Symbol changed
                 if (fromSymbolType !== oldFromData.getItemVisual(oldIdx, 'symbol')) {
-                    symbolFrom = line.__symbolFrom = createSymbol(fromData, newIdx, p2, p1);
-                }
-                else {
-                    symbolFrom && symbolFrom.animateTo({
-                        position: p1,
-                        rotation: rotation
-                    }, 300, 'cubicOut');
+                    line.__symbolFrom = createSymbol(fromData, newIdx, p2, p1);
                 }
                 // Symbol changed
                 if (toSymbolType !== oldToData.getItemVisual(oldIdx, 'symbol')) {
-                    symbolTo = line.__symbolTo = createSymbol(toData, newIdx, p1, p2);
-                }
-                else {
-                    symbolTo && symbolTo.animateTo({
-                        position: p2,
-                        rotation: rotation
-                    }, 300, 'cubicOut');
+                    line.__symbolTo = createSymbol(toData, newIdx, p1, p2);
                 }
 
                 fromData.setItemGraphicEl(newIdx, line);
