@@ -35,7 +35,7 @@ define(function (require) {
             polarIndex: 0,
 
             // symbol: null,        // 图形类型
-            symbolSize: 4,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
+            symbolSize: 10,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             // symbolRotate: null,  // 图形旋转控制
 
             label: {

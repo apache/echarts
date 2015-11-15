@@ -656,15 +656,14 @@ define(function (require) {
         zrUtil.each(eventActionMap, function (actionType, eventType) {
             chart.on(eventType, function (event) {
                 if (connectedGroups[chart.group]) {
-                    if (chart.__connectedActionDispatching) {
-                        return;
-                    }
                     chart.__connectedActionDispatching = true;
-                    var action = chart.makeActionFromEvent(event);
                     for (var id in instances) {
+                        var action = chart.makeActionFromEvent(event);
                         var otherChart = instances[id];
                         if (otherChart !== chart && otherChart.group === chart.group) {
-                            otherChart.dispatch(action);
+                            if (!otherChart.__connectedActionDispatching) {
+                                otherChart.dispatch(action);
+                            }
                         }
                     }
                     chart.__connectedActionDispatching = false;
