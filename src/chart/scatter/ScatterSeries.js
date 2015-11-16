@@ -47,7 +47,7 @@ define(function (require) {
                     // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                 },
                 emphasis: {
-                    show: false
+                    show: true
                 }
             },
             itemStyle: {

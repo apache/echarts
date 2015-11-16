@@ -2,6 +2,8 @@ define(function(require) {
 
     'use strict';
 
+    var zrUtil = require('zrender/core/util');
+
     var pathTool = require('zrender/tool/path');
     var round = Math.round;
     var Path = require('zrender/graphic/Path');
@@ -296,6 +298,23 @@ define(function(require) {
         // Emphasis, normal can be triggered manually
         el.on('emphasis', enterEmphasis)
           .on('normal', leaveEmphasis);
+    };
+
+    /**
+     * Set text option in the style
+     * @param {Object} style
+     * @param {module:echarts/model/Model} labelModel
+     * @param {string} color
+     */
+    graphic.setText = function (style, labelModel, color) {
+        var labelPosition = labelModel.get('position') || 'inside';
+        var labelColor = labelPosition === 'inside' ? 'white' : color;
+        var textStyleModel = labelModel.getModel('textStyle');
+        zrUtil.extend(style, {
+            textFont: textStyleModel.getFont(),
+            textPosition: labelPosition,
+            textFill: textStyleModel.get('color') || labelColor
+        });
     };
 
     /**

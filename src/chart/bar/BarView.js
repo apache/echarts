@@ -103,32 +103,45 @@ define(function (require) {
                 var color = data.getItemVisual(idx, 'color');
                 var layout = data.getItemLayout(idx);
 
+                var hoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+
                 rect.setStyle(zrUtil.defaults(
                     {
                         fill: color
                     },
                     itemModel.getModel('itemStyle.normal').getBarItemStyle()
                 ));
+
+                var labelPositionOutside = isHorizontal
+                    ? (layout.height > 0 ? 'bottom' : 'top')
+                    : (layout.width > 0 ? 'left' : 'right');
+
+                var labelModel = itemModel.getModel('label.normal');
+                var hoverLabelModel = itemModel.getModel('label.emphasis');
+                var labelText = seriesModel.getFormattedLabel(idx, 'normal')
+                            || data.getRawValue(idx);
+                var rectStyle = rect.style;
                 if (labelModel.get('show')) {
-                    var labelPosition = labelModel.get('position') || 'inside';
-                    // FIXME
-                    var labelColor = labelPosition.indexOf('inside') === 0 ? 'white' : color;
-                    var labelPositionOutside = isHorizontal
-                        ? (layout.height > 0 ? 'bottom' : 'top')
-                        : (layout.width > 0 ? 'left' : 'right');
-
-                    rect.setStyle({
-                        text: seriesModel.getFormattedLabel(idx, 'normal')
-                            || data.getRawValue(idx),
-                        textFont: labelModel.getModel('textStyle').getFont(),
-                        textPosition: labelPosition === 'outside' ? labelPositionOutside : labelPosition,
-                        textFill: labelColor
-                    });
-
-                    graphic.setHoverStyle(
-                        rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
-                    );
+                    graphic.setText(rectStyle, labelModel, color);
+                    rectStyle.text = labelText;
+                    if (rectStyle.textPosition === 'outside') {
+                        rectStyle.textPosition = labelPositionOutside;
+                    }
                 }
+                else {
+                    rectStyle.text = '';
+                }
+                if (hoverLabelModel.get('show')) {
+                    graphic.setText(hoverStyle, hoverLabelModel, color);
+                    hoverStyle.text = labelText;
+                    if (hoverStyle.textPosition === 'outside') {
+                        hoverStyle.textPosition = labelPositionOutside;
+                    }
+                }
+                else {
+                    hoverStyle.text = '';
+                }
+                graphic.setHoverStyle(rect, hoverStyle);
             });
         },
 

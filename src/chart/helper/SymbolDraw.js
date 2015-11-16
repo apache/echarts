@@ -171,36 +171,38 @@ define(function (require) {
         data.eachItemGraphicEl(function (el, idx) {
             var itemModel = data.getItemModel(idx);
             var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
-            var labelModel = itemModel.getModel('label.normal');
             var color = data.getItemVisual(idx, 'color');
 
-            el.setColor(color);
+            var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
             zrUtil.extend(
                 el.style,
-                normalItemStyleModel.getItemStyle(['color'])
+                normalItemStyleModel.getItemStyle()
             );
+            color && el.setColor(color);
 
+            var labelModel = itemModel.getModel('label.normal');
+            var hoverLabelModel = itemModel.getModel('label.emphasis');
+            var lastDim = data.dimensions[data.dimensions.length - 1];
+            var labelText = seriesModel.getFormattedLabel(idx, 'normal')
+                        || data.get(lastDim, idx);
+            var elStyle = el.style;
             if (labelModel.get('show')) {
-                var textStyleModel = labelModel.getModel('textStyle');
-                var labelPosition = labelModel.get('position') || 'inside';
-                var labelColor = labelPosition === 'inside' ? 'white' : color;
-                // Text use the value of last dimension
-                var lastDim = data.dimensions[data.dimensions.length - 1];
-                el.setStyle({
-                    // FIXME
-                    text: seriesModel.getFormattedLabel(idx, 'normal')
-                        || data.get(lastDim, idx),
-                    textFont: textStyleModel.getFont(),
-                    textPosition: labelPosition,
-                    textFill: textStyleModel.get('color') || labelColor
-                });
+                graphic.setText(elStyle, labelModel, color);
+                elStyle.text = labelText;
+            }
+            else {
+                elStyle.text = '';
+            }
+            if (hoverLabelModel.get('show')) {
+                graphic.setText(hoverStyle, hoverLabelModel, color);
+                hoverStyle.text = labelText;
+            }
+            else {
+                hoverStyle.text = '';
             }
 
-            graphic.setHoverStyle(
-                el,
-                itemModel.getModel(emphasisStyleAccessPath).getItemStyle()
-            );
+            graphic.setHoverStyle(el, hoverStyle);
         }, this);
 
         this._data = data;
