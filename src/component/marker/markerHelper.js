@@ -3,7 +3,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
 
-    var getPrecision = function (data, valueAxisDim, dataIndex) {
+    function getPrecision(data, valueAxisDim, dataIndex) {
         var precision = -1;
         do {
             precision = Math.max(
@@ -16,11 +16,13 @@ define(function (require) {
         } while (data);
 
         return precision;
-    };
+    }
 
-    var markerTypeCalculatorWithExtent = function (percent, data, baseAxisDim, valueAxisDim) {
+    function markerTypeCalculatorWithExtent(percent, data, baseAxisDim, valueAxisDim, valueIndex) {
         var extent = data.getDataExtent(valueAxisDim);
-        var valueIndex = (valueAxisDim === 'angle' || valueAxisDim === 'x') ? 0 : 1;
+        if (valueIndex == null) {
+            valueIndex = (valueAxisDim === 'angle' || valueAxisDim === 'x') ? 0 : 1;
+        }
         var valueArr = [];
         var min = extent[0];
         var max = extent[1];
@@ -35,7 +37,7 @@ define(function (require) {
         }
 
         return valueArr;
-    };
+    }
 
     var curry = zrUtil.curry;
     // TODO Specified percent
@@ -68,14 +70,16 @@ define(function (require) {
         // 2. If value is not a data array. Which uses xAxis, yAxis to specify the value on each dimension
         if (isNaN(item.x) || isNaN(item.y) && !zrUtil.isArray(item.value)) {
             var valueAxisDim = valueAxis.dim;
-            var valueIndex = (valueAxisDim === 'angle' || valueAxisDim === 'x') ? 0 : 1;
+            var valueIndex = item.valueIndex != null
+                ? item.valueIndex
+                : ((valueAxisDim === 'angle' || valueAxisDim === 'x') ? 0 : 1);
             // Clone the option
             // Transform the properties xAxis, yAxis, radiusAxis, angleAxis, geoCoord to value
             item = zrUtil.extend({}, item);
             if (item.type && markerTypeCalculator[item.type]
                 && baseAxis && valueAxis) {
                 var value = markerTypeCalculator[item.type](
-                    data, baseAxis.dim, valueAxisDim
+                    data, baseAxis.dim, valueAxisDim, valueIndex
                 );
                 if (item.value != null) {
                     value.push(+item.value);

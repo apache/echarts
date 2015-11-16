@@ -13,12 +13,16 @@ define(function (require) {
 
     var SeriesMarkLine = require('./SeriesMarkLine');
 
-    var markLineTransform = function (data, baseAxis, valueAxis, item) {
+    var markLineTransform = function (data, coordSys, baseAxis, valueAxis, item) {
         // Special type markLine like 'min', 'max', 'average'
         var mlType = item.type;
         if (!zrUtil.isArray(item)
             && mlType === 'min' || mlType === 'max' || mlType === 'average'
             ) {
+            if (item.valueIndex != null) {
+                baseAxis = coordSys.getAxis(coordSys.dimensions[1 - item.valueIndex]);
+                valueAxis = coordSys.getAxis(coordSys.dimensions[item.valueIndex]);
+            }
             var baseAxisKey = baseAxis.dim + 'Axis';
             var valueAxisKey = valueAxis.dim + 'Axis';
             var baseScaleExtent = baseAxis.scale.getExtent();
@@ -38,6 +42,8 @@ define(function (require) {
                 0.5 : (mlType === 'max' ? 1 : 0);
 
             var value = (extent[1] - extent[0]) * percent + extent[0];
+            // Round if axis is cateogry
+            value = valueAxis.coordToData(valueAxis.dataToCoord(value));
 
             mlFrom[valueAxisKey] = mlTo[valueAxisKey] = value;
 
@@ -96,7 +102,7 @@ define(function (require) {
             this._markLineMap = {};
         },
 
-        render: function (markLineModel, ecModel) {
+        render: function (markLineModel, ecModel, api) {
             var seriesMarkLineMap = this._markLineMap;
             for (var name in seriesMarkLineMap) {
                 seriesMarkLineMap[name].__keep = false;
@@ -104,7 +110,7 @@ define(function (require) {
 
             ecModel.eachSeries(function (seriesModel) {
                 var mlModel = seriesModel.markLineModel;
-                mlModel && this._renderSeriesML(seriesModel, mlModel, ecModel);
+                mlModel && this._renderSeriesML(seriesModel, mlModel, ecModel, api);
             }, this);
 
             for (var name in seriesMarkLineMap) {
@@ -114,7 +120,7 @@ define(function (require) {
             }
         },
 
-        _renderSeriesML: function (seriesModel, mlModel, ecModel) {
+        _renderSeriesML: function (seriesModel, mlModel, ecModel, api) {
             var coordSys = seriesModel.coordinateSystem;
             var seriesName = seriesModel.name;
             var seriesData = seriesModel.getData();
@@ -156,7 +162,7 @@ define(function (require) {
             });
 
             seriesMarkLine.update(
-                fromData, toData, mlModel, ecModel.get('animation')
+                fromData, toData, mlModel, api, ecModel.get('animation')
             );
 
             // Set host model for tooltip
@@ -227,7 +233,7 @@ define(function (require) {
 
             var optData = zrUtil.filter(
                 zrUtil.map(mlModel.get('data'), zrUtil.curry(
-                    markLineTransform, seriesData, baseAxis, valueAxis
+                    markLineTransform, seriesData, coordSys, baseAxis, valueAxis
                 )),
                 zrUtil.curry(
                     markLineFilter, coordSys, coordDataIdx
