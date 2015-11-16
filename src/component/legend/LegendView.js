@@ -7,12 +7,30 @@ define(function (require) {
     var layout = require('../../util/layout');
     var formatUtil = require('../../util/format');
 
+    var curry = zrUtil.curry;
+
     var LEGEND_DISABLE_COLOR = '#ccc';
 
-    function createSelectActionDispatcher(seriesName, api) {
+    function dispatchSelectAction(name, api) {
         api.dispatch({
             type: 'legendToggleSelect',
-            seriesName: seriesName
+            name: name
+        });
+    }
+
+    function dispatchHighlightAction(seriesName, dataName, api) {
+        api.dispatch({
+            type: 'highlight',
+            seriesName: seriesName,
+            name: dataName
+        });
+    }
+
+    function dispatchDownplayAction(seriesName, dataName, api) {
+        api.dispatch({
+            type: 'downplay',
+            seriesName: seriesName,
+            name: dataName
         });
     }
 
@@ -93,12 +111,16 @@ define(function (require) {
                 var legendSymbolType = data.getVisual('legendSymbol') || 'roundRect';
                 var symbolType = data.getVisual('symbol');
 
-                this._createItem(
+                var itemGroup = this._createItem(
                     seriesName, itemModel,
                     legendSymbolType, symbolType,
                     itemWidth, itemHeight, itemAlign, color,
-                    selectMode, api
+                    selectMode
                 );
+
+                itemGroup.on('click', curry(dispatchSelectAction, seriesName, api))
+                    .on('mouseover', curry(dispatchHighlightAction, seriesName, '', api))
+                    .on('mouseout', curry(dispatchDownplayAction, seriesName, '', api));
             }, this);
 
             ecModel.eachSeriesAll(function (seriesModel) {
@@ -119,12 +141,16 @@ define(function (require) {
 
                         var legendSymbolType = 'roundRect';
 
-                        this._createItem(
+                        var itemGroup = this._createItem(
                             name, legendDataMap[name],
                             legendSymbolType, null,
                             itemWidth, itemHeight, itemAlign, color,
-                            selectMode, api
+                            selectMode
                         );
+
+                        itemGroup.on('click', curry(dispatchSelectAction, name, api))
+                            .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, name, api))
+                            .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, name, api));
                     }, false, this);
                 }
             }, this);
@@ -174,7 +200,7 @@ define(function (require) {
             name, itemModel,
             legendSymbolType, symbolType,
             itemWidth, itemHeight, itemAlign, color,
-            selectMode, api
+            selectMode
         ) {
             var itemGroup = new graphic.Group();
 
@@ -217,7 +243,7 @@ define(function (require) {
 
             this.group.add(itemGroup);
 
-            itemGroup.on('click', zrUtil.curry(createSelectActionDispatcher, name, api), this);
+            return itemGroup;
         }
     });
 });
