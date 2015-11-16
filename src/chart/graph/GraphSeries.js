@@ -100,7 +100,7 @@ define(function (require) {
         defaultOption: {
             zlevel: 0,
             z: 2,
-            
+
             coordinateSystem: 'view',
 
             layout: null,
@@ -134,7 +134,7 @@ define(function (require) {
             // data: []
             // Or
             // nodes: []
-            // 
+            //
             // links: []
             // Or
             // edges: []
@@ -144,7 +144,7 @@ define(function (require) {
                     show: false
                 },
                 emphasis: {
-                    show: false
+                    show: true
                 }
             },
 

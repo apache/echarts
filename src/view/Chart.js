@@ -94,12 +94,12 @@ define(function (require) {
     function toggleHighlight(data, payload, state) {
         if (payload.dataIndex != null) {
             var el = data.getItemGraphicEl(payload.dataIndex);
-            el.trigger(state);
+            el && el.trigger(state);
         }
         else if (payload.name) {
             var dataIndex = data.indexOfName(payload.name);
             var el = data.getItemGraphicEl(dataIndex);
-            el.trigger(state);
+            el && el.trigger(state);
         }
         else {
             data.eachItemGraphicEl(function (el) {

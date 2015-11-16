@@ -175,11 +175,13 @@ define(function (require) {
 
             var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
+            el.setColor(color);
             zrUtil.extend(
                 el.style,
-                normalItemStyleModel.getItemStyle()
+                // Color must be excluded.
+                // Because symbol provide setColor individually to set fill and stroke
+                normalItemStyleModel.getItemStyle(['color'])
             );
-            color && el.setColor(color);
 
             var labelModel = itemModel.getModel('label.normal');
             var hoverLabelModel = itemModel.getModel('label.emphasis');
