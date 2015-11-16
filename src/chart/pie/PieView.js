@@ -81,7 +81,9 @@ define(function (require) {
         var labelLayout = layout.label;
         var labelLine = new graphic.Polyline({
             shape: {
-                points: labelLayout.linePoints
+                points: labelLayout.linePoints || [
+                    [layout.x, layout.y], [layout.x, layout.y], [layout.x, layout.y]
+                ]
             },
             silent: true
         });

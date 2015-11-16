@@ -136,7 +136,7 @@ define(function (require) {
             var lineData = mlData.line;
             lineData.getRawValue = function (idx) {
                 var option = this.getItemModel(idx).option;
-                return retrieveValue(option.__rawValue, option.value, '');
+                return retrieveValue(option && option.__rawValue, option && option.value, '');
             };
             zrUtil.extend(mlModel, markLineFormatMixin);
             mlModel.setData(lineData);
