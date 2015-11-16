@@ -53,8 +53,8 @@ define(function (require) {
             }];
         }
         return [
-            markerHelper.dataTransform(data, baseAxis, valueAxis, item[0]),
-            markerHelper.dataTransform(data, baseAxis, valueAxis, item[1]),
+            markerHelper.dataTransform(data, coordSys, item[0]),
+            markerHelper.dataTransform(data, coordSys, item[1]),
             item[2]
         ];
     };

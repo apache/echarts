@@ -20,9 +20,6 @@ define(function (require) {
 
     function markerTypeCalculatorWithExtent(percent, data, baseAxisDim, valueAxisDim, valueIndex) {
         var extent = data.getDataExtent(valueAxisDim);
-        if (valueIndex == null) {
-            valueIndex = (valueAxisDim === 'angle' || valueAxisDim === 'x') ? 0 : 1;
-        }
         var valueArr = [];
         var min = extent[0];
         var max = extent[1];
@@ -65,19 +62,33 @@ define(function (require) {
         average: curry(markerTypeCalculatorWithExtent, 0.5)
     };
 
-    var dataTransform = function (data, baseAxis, valueAxis, item) {
+    var dataTransform = function (data, coordSys, item) {
         // 1. If not specify the position with pixel directly
         // 2. If value is not a data array. Which uses xAxis, yAxis to specify the value on each dimension
         if (isNaN(item.x) || isNaN(item.y) && !zrUtil.isArray(item.value)) {
-            var valueAxisDim = valueAxis.dim;
+            var valueAxisDim;
+            var baseAxisDim;
+            var valueAxis;
+            var baseAxis;
+            if (item.valueIndex != null) {
+                valueAxisDim = coordSys.dimensions[item.valueIndex];
+                baseAxisDim = coordSys.dimensions[1 - item.valueIndex];
+                valueAxis = coordSys.getAxis(valueAxisDim);
+                baseAxis = coordSys.getAxis(baseAxisDim);
+            }
+            else {
+                baseAxis = coordSys.getBaseAxis();
+                valueAxis = coordSys.getOtherAxis(baseAxis);
+                baseAxisDim = baseAxis.dim;
+                valueAxisDim = valueAxis.dim;
+            }
             var valueIndex = item.valueIndex != null
                 ? item.valueIndex
                 : ((valueAxisDim === 'angle' || valueAxisDim === 'x') ? 0 : 1);
             // Clone the option
             // Transform the properties xAxis, yAxis, radiusAxis, angleAxis, geoCoord to value
             item = zrUtil.extend({}, item);
-            if (item.type && markerTypeCalculator[item.type]
-                && baseAxis && valueAxis) {
+            if (item.type && markerTypeCalculator[item.type] && baseAxis && valueAxis) {
                 var value = markerTypeCalculator[item.type](
                     data, baseAxis.dim, valueAxisDim, valueIndex
                 );

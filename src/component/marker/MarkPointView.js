@@ -144,8 +144,6 @@ define(function (require) {
         ), mpModel);
 
         if (coordSys) {
-            var baseAxis = coordSys.getBaseAxis();
-            var valueAxis = coordSys.getOtherAxis(baseAxis);
             var coordDimensions = coordSys.dimensions;
 
             var indexOf = zrUtil.indexOf;
@@ -158,7 +156,7 @@ define(function (require) {
             mpData.initData(
                 zrUtil.filter(
                     zrUtil.map(mpModel.get('data'), zrUtil.curry(
-                        markerHelper.dataTransform, seriesData, baseAxis, valueAxis
+                        markerHelper.dataTransform, seriesData, coordSys
                     )),
                     zrUtil.curry(
                         markerHelper.dataFilter, coordSys, coordDataIdx
