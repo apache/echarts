@@ -255,9 +255,10 @@ define(function (require) {
      * @pubilc
      * @param {Object} payload
      * @param {string} [payload.type] Action type
+     * @param {boolean} [silent=false] Whether trigger event.
      * @param {number} [payload.from] From uid
      */
-    echartsProto.dispatch = function (payload) {
+    echartsProto.dispatch = function (payload, silent) {
         var actionWrap = actions[payload.type];
         if (actionWrap) {
             var actionInfo = actionWrap.actionInfo;
@@ -265,11 +266,13 @@ define(function (require) {
             actionWrap.action(payload, this._model);
             updateMethod !== 'none' && this[updateMethod](payload);
 
-            // Emit event outside
-            // Convert type to eventType
-            var eventObj = zrUtil.extend({}, payload);
-            eventObj.type = actionInfo.event || eventObj.type;
-            this.trigger(eventObj.type, eventObj);
+            if (!silent) {
+                // Emit event outside
+                // Convert type to eventType
+                var eventObj = zrUtil.extend({}, payload);
+                eventObj.type = actionInfo.event || eventObj.type;
+                this.trigger(eventObj.type, eventObj);
+            }
         }
     };
 

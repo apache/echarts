@@ -48,16 +48,16 @@
                         type: 'dataZoom',
                         dataZoomIndex: 0,
                         range: payload.range
-                    });
+                    }, true);
                 });
 
-                // chart2.on('dataZoom', function (payload) {
-                //     chart1.dispatch({
-                //         type: 'dataZoom',
-                //         dataZoomIndex: 0,
-                //         range: payload.range
-                //     });
-                // });
+                chart2.on('dataZoom', function (payload) {
+                    chart1.dispatch({
+                        type: 'dataZoom',
+                        dataZoomIndex: 0,
+                        range: payload.range
+                    }, true);
+                });
 
             });
 
