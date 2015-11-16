@@ -139,7 +139,7 @@ define(function (require) {
 
         this._prepareCharts(ecModel);
 
-        this.update();
+        this._update();
 
         refreshImmediately && this._zr.refreshImmediately();
     };
@@ -167,8 +167,9 @@ define(function (require) {
 
     /**
      * @param {Object} payload
+     * @private
      */
-    echartsProto.update = function (payload) {
+    echartsProto._update = function (payload) {
         console.time && console.time('update');
 
         var ecModel = this._model;
@@ -209,8 +210,9 @@ define(function (require) {
     // PENDING
     /**
      * @param {Object} payload
+     * @private
      */
-    echartsProto.updateView = function (payload) {
+    echartsProto._updateView = function (payload) {
         var ecModel = this._model;
 
         this._doLayout(ecModel, payload);
@@ -222,8 +224,9 @@ define(function (require) {
 
     /**
      * @param {Object} payload
+     * @private
      */
-    echartsProto.updateVisual = function (payload) {
+    echartsProto._updateVisual = function (payload) {
         var ecModel = this._model;
 
         this._doVisualCoding(ecModel, payload);
@@ -233,8 +236,9 @@ define(function (require) {
 
     /**
      * @param {Object} payload
+     * @private
      */
-    echartsProto.updateLayout = function (payload) {
+    echartsProto._updateLayout = function (payload) {
         var ecModel = this._model;
 
         this._doLayout(ecModel, payload);
@@ -247,7 +251,7 @@ define(function (require) {
      */
     echartsProto.resize = function () {
         this._zr.resize();
-        this.update();
+        this._update();
     };
 
     /**
@@ -273,7 +277,7 @@ define(function (require) {
             var actionInfo = actionWrap.actionInfo;
             var updateMethod = actionInfo.update || 'update';
             actionWrap.action(payload, this._model);
-            updateMethod !== 'none' && this[updateMethod](payload);
+            updateMethod !== 'none' && this['_' + updateMethod](payload);
 
             if (!silent) {
                 // Emit event outside
