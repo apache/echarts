@@ -177,6 +177,7 @@ define(function (require) {
                         textBaseline: textBaseline
                     },
                     position: [textX, textY],
+                    silent: true,
                     z2: 1
                 });
 

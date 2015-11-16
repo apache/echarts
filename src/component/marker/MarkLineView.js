@@ -49,7 +49,7 @@ define(function (require) {
         return [
             markerHelper.dataTransform(data, baseAxis, valueAxis, item[0]),
             markerHelper.dataTransform(data, baseAxis, valueAxis, item[1]),
-            item[2] || {}
+            item[2]
         ];
     };
 
@@ -104,7 +104,7 @@ define(function (require) {
 
             ecModel.eachSeries(function (seriesModel) {
                 var mlModel = seriesModel.markLineModel;
-                mlModel && this._renderSeriesML(seriesModel, mlModel);
+                mlModel && this._renderSeriesML(seriesModel, mlModel, ecModel);
             }, this);
 
             for (var name in seriesMarkLineMap) {
@@ -114,7 +114,7 @@ define(function (require) {
             }
         },
 
-        _renderSeriesML: function (seriesModel, mlModel) {
+        _renderSeriesML: function (seriesModel, mlModel, ecModel) {
             var coordSys = seriesModel.coordinateSystem;
             var seriesName = seriesModel.name;
             var seriesData = seriesModel.getData();
@@ -138,7 +138,7 @@ define(function (require) {
                 var option = this.getItemModel(idx).option;
                 return retrieveValue(option.__rawValue, option.value, '');
             };
-            zrUtil.mixin(mlModel, markLineFormatMixin);
+            zrUtil.extend(mlModel, markLineFormatMixin);
             mlModel.setData(lineData);
 
             var symbolType = mlModel.get('symbol');
@@ -155,7 +155,9 @@ define(function (require) {
                 updateDataVisualAndLayout(toData, idx);
             });
 
-            seriesMarkLine.update(fromData, toData);
+            seriesMarkLine.update(
+                fromData, toData, mlModel, ecModel.get('animation')
+            );
 
             // Set host model for tooltip
             // FIXME

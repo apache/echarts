@@ -8,13 +8,18 @@ define(function (require) {
      * @param {boolean} hasAnimation
      * @inner
      */
-    function updateDataSelected(seriesModel, hasAnimation) {
+    function updateDataSelected(uid, seriesModel, hasAnimation, api) {
         var data = seriesModel.getData();
         var dataIndex = this.dataIndex;
         var name = data.getName(dataIndex);
         var selectedOffset = seriesModel.get('selectedOffset');
 
-        seriesModel.toggleSelected(name);
+        api.dispatch({
+            type: 'pieToggleSelect',
+            from: uid,
+            name: name,
+            seriesName: seriesModel.name
+        });
 
         data.each(function (idx) {
             toggleItemSelected(
@@ -120,7 +125,15 @@ define(function (require) {
             this._sectorGroup = sectorGroup;
         },
 
-        render: function (seriesModel, ecModel, api) {
+        render: function (seriesModel, ecModel, api, payload) {
+            if (
+                payload && (payload.from === this.uid
+                || (payload.type === 'pieToggleSelect'
+                    && payload.seriesName !== seriesModel.name))
+            ) {
+                return;
+            }
+
             var data = seriesModel.getData();
             var oldData = this._data;
             var sectorGroup = this._sectorGroup;
@@ -130,7 +143,9 @@ define(function (require) {
             var isFirstRender = !oldData;
 
             var firstSector;
-            var onSectorClick = zrUtil.curry(updateDataSelected, seriesModel, hasAnimation);
+            var onSectorClick = zrUtil.curry(
+                updateDataSelected, this.uid, seriesModel, hasAnimation, api
+            );
 
             var selectedMode = seriesModel.get('selectedMode');
 
@@ -142,8 +157,7 @@ define(function (require) {
                         layout, '', hasAnimation && !isFirstRender
                     );
 
-                    selectedMode
-                        && sector.on('click', onSectorClick);
+                    selectedMode && sector.on('click', onSectorClick);
 
                     data.setItemGraphicEl(idx, sector);
 
