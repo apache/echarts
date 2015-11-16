@@ -188,7 +188,11 @@ define(function (require) {
                     });
                     api.updateGraphicEl(labelLine, {
                         shape: {
-                            points: labelLayout.linePoints
+                            points: labelLayout.linePoints || [
+                                [labelLayout.x, labelLayout.y],
+                                [labelLayout.x, labelLayout.y],
+                                [labelLayout.x, labelLayout.y]
+                            ]
                         }
                     });
                     api.updateGraphicEl(labelText, {

@@ -8,6 +8,7 @@ define(function(require) {
     var colorTool = require('zrender/tool/color');
     var matrix = require('zrender/core/matrix');
     var vector = require('zrender/core/vector');
+    var Gradient = require('zrender/graphic/Gradient');
 
     var graphic = {};
 
@@ -172,8 +173,10 @@ define(function(require) {
 
             // Create hoverStyle on mouseover
             var hoverStyle = el.__hoverStl;
-            hoverStyle.fill = hoverStyle.fill || colorTool.lift(fill, -0.1);
-            hoverStyle.stroke = hoverStyle.stroke || colorTool.lift(stroke, -0.1);
+            hoverStyle.fill = hoverStyle.fill
+                || (fill instanceof Gradient) ? fill : colorTool.lift(fill, -0.1);
+            hoverStyle.stroke = hoverStyle.stroke
+                || (stroke instanceof Gradient) ? stroke : colorTool.lift(stroke, -0.1);
 
             var normalStyle = {};
             for (var name in hoverStyle) {

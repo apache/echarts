@@ -38,42 +38,42 @@ define(function (require) {
             }
         }
 
-        function changeX(list, isDownList, cx, cy, r, dir) {
-            var deltaX;
-            var deltaY;
-            var length;
-            var lastDeltaX = dir > 0
-                ? isDownList                // 右侧
-                    ? Number.MAX_VALUE      // 下
-                    : 0                     // 上
-                : isDownList                // 左侧
-                    ? Number.MAX_VALUE      // 下
-                    : 0;                    // 上
+        // function changeX(list, isDownList, cx, cy, r, dir) {
+        //     var deltaX;
+        //     var deltaY;
+        //     var length;
+        //     var lastDeltaX = dir > 0
+        //         ? isDownList                // 右侧
+        //             ? Number.MAX_VALUE      // 下
+        //             : 0                     // 上
+        //         : isDownList                // 左侧
+        //             ? Number.MAX_VALUE      // 下
+        //             : 0;                    // 上
 
-            for (var i = 0, l = list.length; i < l; i++) {
-                deltaY = Math.abs(list[i].y - cy);
-                length = list[i]._radius - r;
-                deltaX = (deltaY < r + length)
-                    ? Math.sqrt(
-                          (r + length + 20) * (r + length + 20)
-                          - Math.pow(list[i].y - cy, 2)
-                      )
-                    : Math.abs(
-                          list[i].x - cx
-                      );
-                if (isDownList && deltaX >= lastDeltaX) {
-                    // 右下，左下
-                    deltaX = lastDeltaX - 10;
-                }
-                if (!isDownList && deltaX <= lastDeltaX) {
-                    // 右上，左上
-                    deltaX = lastDeltaX + 10;
-                }
+        //     for (var i = 0, l = list.length; i < l; i++) {
+        //         deltaY = Math.abs(list[i].y - cy);
+        //         length = list[i].length;
+        //         deltaX = (deltaY < r + length)
+        //             ? Math.sqrt(
+        //                   (r + length + 20) * (r + length + 20)
+        //                   - Math.pow(list[i].y - cy, 2)
+        //               )
+        //             : Math.abs(
+        //                   list[i].x - cx
+        //               );
+        //         if (isDownList && deltaX >= lastDeltaX) {
+        //             // 右下，左下
+        //             deltaX = lastDeltaX - 10;
+        //         }
+        //         if (!isDownList && deltaX <= lastDeltaX) {
+        //             // 右上，左上
+        //             deltaX = lastDeltaX + 10;
+        //         }
 
-                list[i].x = cx + deltaX * dir;
-                lastDeltaX = deltaX;
-            }
-        }
+        //         list[i].x = cx + deltaX * dir;
+        //         lastDeltaX = deltaX;
+        //     }
+        // }
 
         var lastY = 0;
         var delta;
@@ -98,8 +98,8 @@ define(function (require) {
                 upList.push(list[i]);
             }
         }
-        changeX(downList, true, cx, cy, r, dir);
-        changeX(upList, false, cx, cy, r, dir);
+        // changeX(downList, true, cx, cy, r, dir);
+        // changeX(upList, false, cx, cy, r, dir);
     }
 
     function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight) {
@@ -126,6 +126,7 @@ define(function (require) {
                 else {
                     linePoints[2][0] = labelLayoutList[i].x - 3;
                 }
+                linePoints[1][1] = linePoints[2][1] = labelLayoutList[i].y;
             }
         }
     }
@@ -204,6 +205,8 @@ define(function (require) {
                 x: textX,
                 y: textY,
                 height: textRect.height,
+                length: labelLineLen,
+                length2: labelLineLen2,
                 linePoints: linePoints,
                 textAlign: textAlign,
                 textBaseline: textBaseline,

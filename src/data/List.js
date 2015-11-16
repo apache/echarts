@@ -374,11 +374,15 @@ define(function (require) {
      */
     listProto.getDataExtent = function (dim, stack) {
         var dimData = this._storage[dim];
-        var min = Infinity;
-        var max = -Infinity;
+        var dimExtent = (this._extent || (this._extent = {}))[dim];
         var value;
+        if (dimExtent) {
+            return dimExtent;
+        }
         // var dimInfo = this._dimensionInfos[dim];
         if (dimData) {
+            var min = Infinity;
+            var max = -Infinity;
             // var isOrdinal = dimInfo.type === 'ordinal';
             for (var i = 0, len = this.count(); i < len; i++) {
                 value = this.get(dim, i, stack);
@@ -390,8 +394,11 @@ define(function (require) {
                 value < min && (min = value);
                 value > max && (max = value);
             }
+            return (this._extent[dim] = [min, max]);
         }
-        return [min, max];
+        else {
+            return [Infinity, -Infinity];
+        }
     };
 
     /**
