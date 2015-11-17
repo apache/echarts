@@ -55,9 +55,9 @@ define(function (require) {
                         var animateTarget = {};
                         rectShape[animateProperty] = 0;
                         animateTarget[animateProperty] = layout[animateProperty];
-                        rect.animateTo({
+                        api.initGraphicEl(rect, {
                             shape: animateTarget
-                        }, 1000, 300 * dataIndex / data.count(), 'cubicOut');
+                        });
                     }
                 })
                 .update(function (newIndex, oldIndex) {
@@ -78,15 +78,15 @@ define(function (require) {
                     group.add(rect);
                 })
                 .remove(function (idx) {
-                    var el = oldData.getItemGraphicEl(idx);
-                    el.style.text = '';
-                    el.animateTo({
+                    var rect = oldData.getItemGraphicEl(idx);
+                    // Not show text when animating
+                    rect.style.text = '';
+                    api.updateGraphicEl(rect, {
                         shape: {
                             width: 0
                         }
-                    }, 300, 'cubicOut',
-                    function () {
-                        group.remove(el);
+                    }, function () {
+                        group.remove(rect);
                     });
                 })
                 .execute();
@@ -150,19 +150,18 @@ define(function (require) {
             });
         },
 
-        remove: function (ecModel) {
+        remove: function (ecModel, api) {
             var group = this.group;
             if (ecModel.get('animation')) {
                 if (this._data) {
                     this._data.eachItemGraphicEl(function (el) {
                         // Not show text when animating
                         el.style.text = '';
-                        el.animateTo({
+                        api.updateGraphicEl(el, {
                             shape: {
                                 width: 0
                             }
-                        }, 300, 'cubicOut',
-                        function () {
+                        }, function () {
                             group.remove(el);
                         });
                     });

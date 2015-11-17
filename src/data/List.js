@@ -374,7 +374,9 @@ define(function (require) {
      */
     listProto.getDataExtent = function (dim, stack) {
         var dimData = this._storage[dim];
-        var dimExtent = (this._extent || (this._extent = {}))[dim + stack];
+        var dimInfo = this.getDimensionInfo(dim);
+        stack = (dimInfo && dimInfo.stackable) && stack;
+        var dimExtent = (this._extent || (this._extent = {}))[dim + (!!stack)];
         var value;
         if (dimExtent) {
             return dimExtent;
@@ -569,7 +571,6 @@ define(function (require) {
 
         for (var i = 0; i < indices.length; i++) {
             if (dimSize === 0) {
-                // FIXME Pass value as parameter ?
                 cb.call(context, i);
             }
             // Simple optimization

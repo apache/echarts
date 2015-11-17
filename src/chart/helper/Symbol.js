@@ -120,6 +120,8 @@ define(function (require) {
 
     symbolProto.fadeOut = function (cb, api) {
         var symbolPath = this.childAt(0);
+        // Not show text when animating
+        symbolPath.style.text = '';
         api.updateGraphicEl(symbolPath, {
             scale: [0, 0]
         }, cb);
