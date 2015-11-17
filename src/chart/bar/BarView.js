@@ -97,6 +97,14 @@ define(function (require) {
         },
 
         _updateStyle: function (seriesModel, data, isHorizontal) {
+            function setLabel(style, model, color, labelText, labelPositionOutside) {
+                graphic.setText(style, model, color);
+                style.text = labelText;
+                if (style.textPosition === 'outside') {
+                    style.textPosition = labelPositionOutside;
+                }
+            }
+
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
                 var labelModel = itemModel.getModel('label.normal');
@@ -121,22 +129,19 @@ define(function (require) {
                 var labelText = seriesModel.getFormattedLabel(idx, 'normal')
                             || data.getRawValue(idx);
                 var rectStyle = rect.style;
-                if (labelModel.get('show')) {
-                    graphic.setText(rectStyle, labelModel, color);
-                    rectStyle.text = labelText;
-                    if (rectStyle.textPosition === 'outside') {
-                        rectStyle.textPosition = labelPositionOutside;
-                    }
+                var showLabel = labelModel.get('show');
+                if (showLabel) {
+                    setLabel(
+                        rectStyle, labelModel, color, labelText, labelPositionOutside
+                    );
                 }
                 else {
                     rectStyle.text = '';
                 }
-                if (hoverLabelModel.get('show')) {
-                    graphic.setText(hoverStyle, hoverLabelModel, color);
-                    hoverStyle.text = labelText;
-                    if (hoverStyle.textPosition === 'outside') {
-                        hoverStyle.textPosition = labelPositionOutside;
-                    }
+                if (zrUtil.retrieve(hoverLabelModel.get('show'), showLabel)) {
+                    setLabel(
+                        hoverStyle, hoverLabelModel, color, labelText, labelPositionOutside
+                    );
                 }
                 else {
                     hoverStyle.text = '';

@@ -179,14 +179,16 @@ define(function (require) {
             var labelText = seriesModel.getFormattedLabel(idx, 'normal')
                         || data.get(lastDim, idx);
             var elStyle = el.style;
-            if (labelModel.get('show')) {
+
+            var showLabel = labelModel.get('show');
+            if (showLabel) {
                 graphic.setText(elStyle, labelModel, color);
                 elStyle.text = labelText;
             }
             else {
                 elStyle.text = '';
             }
-            if (hoverLabelModel.get('show')) {
+            if (zrUtil.retrieve(hoverLabelModel.get('show'), showLabel)) {
                 graphic.setText(hoverStyle, hoverLabelModel, color);
                 hoverStyle.text = labelText;
             }
