@@ -13,20 +13,30 @@ define(function(require) {
             this[name] = zrUtil.bind(chartInstance[name], chartInstance);
         }, this);
 
+        function animateOrSetGraphicEl(isUpdate, el, props, cb) {
+            var ecModel = chartInstance.getModel();
+            var duration = ecModel.getShallow('animationDuration' + (isUpdate ? 'Update' : ''));
+            var animationEasing = ecModel.getShallow('animationEasing' + (isUpdate ? 'Update' : ''));
+
+            ecModel.getShallow('animation')
+                ? el.animateTo(props, duration, animationEasing, cb)
+                : (el.attr(props), cb && cb());
+        }
         /**
          * Update element property
-         * @param {module:zrender/Element}
+         * @param {module:zrender/Element} el
+         * @param {Object} props
+         * @param {Function} [cb]
          */
-        this.updateGraphicEl = function (el, props) {
-            var ecModel = chartInstance.getModel();
-            var duration = ecModel.getShallow('animationDurationUpdate');
-            var enableAnimation = ecModel.getShallow('animation');
-            var animationEasing = ecModel.getShallow('animationEasing');
+        this.updateGraphicEl = zrUtil.curry(animateOrSetGraphicEl, true);
 
-            enableAnimation
-                ? el.animateTo(props, duration, animationEasing)
-                : el.attr(props);
-        };
+        /**
+         * Init element property
+         * @param {module:zrender/Element} el
+         * @param {Object} props
+         * @param {Function} [cb]
+         */
+        this.initGraphicEl = zrUtil.curry(animateOrSetGraphicEl, false);
     }
 
     return ExtensionAPI;

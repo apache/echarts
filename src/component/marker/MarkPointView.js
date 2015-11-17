@@ -114,9 +114,7 @@ define(function (require) {
             });
 
             // TODO Text are wrong
-            symbolDraw.updateData(
-                mpData, mpModel, api, true
-            );
+            symbolDraw.updateData(mpData, api);
             this.group.add(symbolDraw.group);
 
             // Set host model for tooltip

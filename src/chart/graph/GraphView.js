@@ -37,14 +37,9 @@ define(function (require) {
             var symbolDraw = this._symbolDraw;
             var lineDraw = this._lineDraw;
 
-            symbolDraw.updateData(
-                data, seriesModel, api, true
-            );
+            symbolDraw.updateData(data, api);
 
-            lineDraw.updateData(
-                data.graph.edgeData,
-                seriesModel, api, false
-            );
+            lineDraw.updateData(data.graph.edgeData, api);
 
             // Save the original lineWidth
             data.graph.eachEdge(function (edge) {

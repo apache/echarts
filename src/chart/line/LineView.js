@@ -113,16 +113,12 @@ define(function(require) {
             var isSymbolIgnore = !isCoordSysPolar && !seriesModel.get('showAllSymbol')
                 && this._getSymbolIgnoreFunc(data, coordSys);
 
-
             // Initialization animation or coordinate system changed
             if (
                 !(polyline
                 && prevCoordSys.type === coordSys.type)
             ) {
-                symbolDraw.updateData(
-                    data, seriesModel, api, hasAnimation, isSymbolIgnore
-                );
-
+                symbolDraw.updateData(data, api, isSymbolIgnore);
                 polyline = this._newPolyline(group, points, coordSys, hasAnimation);
                 if (isAreaChart) {
                     polygon = this._newPolygon(
@@ -133,10 +129,6 @@ define(function(require) {
                 }
             }
             else {
-                symbolDraw.updateData(
-                    data, seriesModel, api, false, isSymbolIgnore
-                );
-
                 // Update clipPath
                 // FIXME Clip path used by more than one elements
                 if (hasAnimation) {
@@ -153,6 +145,8 @@ define(function(require) {
                 if (!isPointsSame(this._stackedOnPoints, stackedOnPoints)
                     || !isPointsSame(this._points, points)
                 ) {
+                    symbolDraw.updateData(data, api, isSymbolIgnore);
+
                     if (hasAnimation) {
                         this._updateAnimation(
                             data, stackedOnPoints, coordSys, api
@@ -333,7 +327,6 @@ define(function(require) {
             }
 
             var updatedDataInfo = [];
-            var addedDataIndices = [];
             var diffStatus = diff.status;
 
             for (var i = 0; i < diffStatus.length; i++) {
@@ -341,27 +334,16 @@ define(function(require) {
                 if (cmd === '=') {
                     var el = data.getItemGraphicEl(diffStatus[i].idx1);
                     if (el) {
+                        el.stopAnimation();
                         updatedDataInfo.push({
                             el: el,
                             ptIdx: i    // Index of points
                         });
                     }
                 }
-                else if (cmd === '+') {
-                    addedDataIndices.push(diffStatus[i].idx);
-                }
             }
 
             if (polyline.animators) {
-                for (var i = 0; i < addedDataIndices.length; i++) {
-                    var el = data.getItemGraphicEl(addedDataIndices[i]);
-                    if (el) {
-                        el.scale = [0, 0];
-                        el.animateTo({
-                            scale: [1, 1]
-                        }, 300, 300, 'cubicOut');
-                    }
-                }
                 polyline.animators[0].during(function () {
                     for (var i = 0; i < updatedDataInfo.length; i++) {
                         var el = updatedDataInfo[i].el;
@@ -441,11 +423,11 @@ define(function(require) {
             return clipPath;
         },
 
-        remove: function (ecModel) {
+        remove: function (ecModel, api) {
             var group = this.group;
             group.remove(this._polyline);
             group.remove(this._polygon);
-            this._symbolDraw.remove(ecModel.get('animation'));
+            this._symbolDraw.remove(api, true);
         }
     });
 });

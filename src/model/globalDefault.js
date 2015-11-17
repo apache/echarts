@@ -36,6 +36,7 @@ define(function () {
         animationThreshold: 2000,       // 动画元素阀值，产生的图形原素超过2000不出动画
         animationDuration: 1000,        // 过渡动画参数：进入
         animationDurationUpdate: 300,   // 过渡动画参数：更新
-        animationEasing: 'cubicOut'    //BounceOut
+        animationEasing: 'cubicOut',    //BounceOut
+        animationEasingUpdate: 'cubicOut'
     };
 });
