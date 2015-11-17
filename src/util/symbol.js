@@ -50,6 +50,7 @@ define(function(require) {
             path.lineTo(cx + width, cy);
             path.lineTo(cx, cy + height);
             path.lineTo(cx - width, cy);
+            path.closePath();
         }
     });
 
@@ -85,9 +86,7 @@ define(function(require) {
             var tanY = Math.cos(angle);
 
             path.arc(
-                x,
-                cy,
-                r,
+                x, cy, r,
                 Math.PI - angle,
                 Math.PI * 2 + angle
             );
@@ -104,6 +103,7 @@ define(function(require) {
                 x - dx + tanX * cpLen, cy + dy + tanY * cpLen,
                 x - dx, cy + dy
             );
+            path.closePath();
         }
     });
 

@@ -18,9 +18,15 @@ define(function (require) {
     function Symbol(data, idx, api) {
         graphic.Group.call(this);
 
-        var color = data.getItemVisual(idx, 'color');
+        this.updateSymbol(data, idx, api);
+    }
 
-        var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
+    var symbolProto = Symbol.prototype;
+
+    symbolProto._createSymbol = function (symbolType, data, idx, api) {
+        this.removeAll();
+
+        var color = data.getItemVisual(idx, 'color');
 
         var symbolPath = symbolUtil.createSymbol(
             symbolType, -0.5, -0.5, 1, 1, color
@@ -34,24 +40,33 @@ define(function (require) {
         this.add(symbolPath);
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
-        this._updateCommon(data, idx);
-
-        // var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
         api.initGraphicEl(symbolPath, {
             scale: size
         });
-    }
 
-    var symbolProto = Symbol.prototype;
+        this._symbolType = symbolType;
+    };
+
+    /**
+     * Update symbol properties
+     * @param  {module:echarts/data/List} data
+     * @param  {number} idx
+     * @param  {module:echarts/ExtensionAPI} api
+     */
     symbolProto.updateSymbol = function (data, idx, api) {
-        this._updateCommon(data, idx);
+        var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
 
-        var symbolPath = this.childAt(0);
-        var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
-        // var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
-        api.updateGraphicEl(symbolPath, {
-            scale: size
-        });
+        if (symbolType !== this._symbolType) {
+            this._createSymbol(symbolType, data, idx, api);
+        }
+        else {
+            var symbolPath = this.childAt(0);
+            var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
+            api.updateGraphicEl(symbolPath, {
+                scale: size
+            });
+        }
+        this._updateCommon(data, idx);
     };
 
     // Update common properties
@@ -66,7 +81,10 @@ define(function (require) {
 
         var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
+        symbolPath.rotation = itemModel.get('symbolRotate') * Math.PI / 180 || 0;
+
         symbolPath.setColor(color);
+
         zrUtil.extend(
             symbolPath.style,
             // Color must be excluded.
