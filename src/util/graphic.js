@@ -79,7 +79,7 @@ define(function(require) {
 
         var pathRect = path.getBoundingRect();
 
-        var m = rect.calculateTransform(pathRect);
+        var m = pathRect.calculateTransform(rect);
 
         path.applyTransform(m);
     };

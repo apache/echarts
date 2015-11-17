@@ -46,7 +46,9 @@ define(function (require) {
          * @param  {Object} payload
          */
         highlight: function (seriesModel, ecModel, api, payload) {
-            toggleHighlight(seriesModel.getData(), payload, 'emphasis');
+            if (seriesModel.get('legendHoverLink')) {
+                toggleHighlight(seriesModel.getData(), payload, 'emphasis');
+            }
         },
 
         /**
@@ -57,7 +59,9 @@ define(function (require) {
          * @param  {Object} payload
          */
         downplay: function (seriesModel, ecModel, api, payload) {
-            toggleHighlight(seriesModel.getData(), payload, 'normal');
+            if (seriesModel.get('legendHoverLink')) {
+                toggleHighlight(seriesModel.getData(), payload, 'normal');
+            }
         },
 
         /**

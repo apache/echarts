@@ -19,14 +19,10 @@ define(function(require) {
             zlevel: 0,                  // 一级层叠
             z: 2,                       // 二级层叠
             coordinateSystem: 'cartesian2d',
-            clickable: true,
             legendHoverLink: true,
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
-            gridIndex: 0,
-            // 'nearest', 'min', 'max', 'average'
-            dataFilter: 'nearest',
 
             label: {
                 normal: {

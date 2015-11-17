@@ -47,7 +47,7 @@ define(function (require) {
             z2: 100
         });
 
-        if (enableAnimation) {
+        if (enableAnimation && symbolEl.shape) {
             // FIXME Use scale to improve performance
             var zeroShape = symbolUtil.getSymbolShape(
                 symbolType, 0, 0, 0, 0

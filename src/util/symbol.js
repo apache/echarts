@@ -7,7 +7,31 @@ define(function(require) {
     var BoundingRect = require('zrender/core/BoundingRect');
 
     /**
+     * Triangle shape
+     * @inner
+     */
+    var Triangle = graphic.extendShape({
+        type: 'triangle',
+        shape: {
+            cx: 0,
+            cy: 0,
+            width: 0,
+            height: 0
+        },
+        buildPath: function (path, shape) {
+            var cx = shape.cx;
+            var cy = shape.cy;
+            var width = shape.width / 2;
+            var height = shape.height / 2;
+            path.moveTo(cx, cy - height);
+            path.lineTo(cx + width, cy + height);
+            path.lineTo(cx - width, cy + height);
+            path.closePath();
+        }
+    });
+    /**
      * Diamond shape
+     * @inner
      */
     var Diamond = graphic.extendShape({
         type: 'diamond',
@@ -31,6 +55,7 @@ define(function(require) {
 
     /**
      * Pin shape
+     * @inner
      */
     var Pin = graphic.extendShape({
         type: 'pin',
@@ -84,6 +109,7 @@ define(function(require) {
 
     /**
      * Arrow shape
+     * @inner
      */
     var Arrow = graphic.extendShape({
 
@@ -110,6 +136,10 @@ define(function(require) {
         }
     });
 
+    /**
+     * Map of path contructors
+     * @type {Object.<string, module:zrender/graphic/Path>}
+     */
     var symbolCtors = {
         line: graphic.Line,
 
@@ -125,7 +155,9 @@ define(function(require) {
 
         pin: Pin,
 
-        arrow: Arrow
+        arrow: Arrow,
+
+        triangle: Triangle
     };
 
     var symbolShapeMakers = {
@@ -146,7 +178,7 @@ define(function(require) {
                 y: y,
                 width: w,
                 height: h
-            }
+            };
         },
 
         roundRect: function (x, y, w, h, r) {
@@ -204,6 +236,15 @@ define(function(require) {
                 width: w,
                 height: h
             };
+        },
+
+        triangle: function (x, y, w, h) {
+            return {
+                cx: x + w / 2,
+                cy: y + h / 2,
+                width: w,
+                height: h
+            };
         }
     };
 
@@ -250,7 +291,7 @@ define(function(require) {
                 });
             }
             else if (symbolType.indexOf('path://') === 0) {
-                symbolPath = graphic.makePath(symbolType.slice(7), new BoundingRect(x, y, w, h));
+                symbolPath = graphic.makePath(symbolType.slice(7), {}, new BoundingRect(x, y, w, h));
             }
             else {
                 if (!symbolShapeMakers[symbolType]) {
@@ -301,7 +342,7 @@ define(function(require) {
                     }
                 };
             }
-            else if (!(symbolType.indexOf('path://') === 0)) {
+            else if (symbolType.indexOf('path://') !== 0) {
                 if (!symbolShapeMakers[symbolType]) {
                     symbolType = 'rect';
                 }

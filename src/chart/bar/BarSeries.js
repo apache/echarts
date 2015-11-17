@@ -19,7 +19,6 @@ define(function(require) {
             zlevel: 0,                  // 一级层叠
             z: 2,                       // 二级层叠
             coordinateSystem: 'cartesian2d',
-            clickable: true,
             legendHoverLink: true,
             // stack: null
 
