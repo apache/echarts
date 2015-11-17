@@ -13,7 +13,6 @@ define(function (require) {
         if (areaColor) {
             itemStyle.fill = areaColor;
         }
-        itemStyle.lineWidth && (itemStyle.lineWidth /= scale[0]);
 
         return itemStyle;
     }
@@ -144,6 +143,9 @@ define(function (require) {
                     var polygon = new graphic.Polygon({
                         shape: {
                             points: contour
+                        },
+                        style: {
+                            strokeNoScale: true
                         }
                     });
 
@@ -249,7 +251,6 @@ define(function (require) {
                         originY: mouseY
                     });
 
-                    // TODO Update lineWidth
                     if (this._updateGroup) {
                         var group = this.group;
                         var scale = group.scale;
@@ -257,11 +258,6 @@ define(function (require) {
                             if (el.type === 'text') {
                                 el.attr('scale', [1 / scale[0], 1 / scale[1]]);
                             }
-                            // else if (el.type === 'polygon') {
-                                // el.setStyle({
-
-                                // });
-                            // }
                         });
                     }
                 }, this);

@@ -25,28 +25,33 @@ define(function (require) {
         var symbolPath = symbolUtil.createSymbol(
             symbolType, -0.5, -0.5, 1, 1, color
         );
+        symbolPath.style.strokeNoScale = true;
+
         symbolPath.attr({
             z2: 100
         });
         symbolPath.attr('scale', [0, 0]);
         this.add(symbolPath);
-        var size = data.getItemVisual(idx, 'symbolSize');
+        var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
+
+        this._updateCommon(data, idx);
+
         // var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
         api.initGraphicEl(symbolPath, {
-            scale: normalizeSymbolSize(size)
+            scale: size
         });
-        this._updateCommon(data, idx);
     }
 
     var symbolProto = Symbol.prototype;
     symbolProto.updateSymbol = function (data, idx, api) {
+        this._updateCommon(data, idx);
+
         var symbolPath = this.childAt(0);
-        var size = data.getItemVisual(idx, 'symbolSize');
+        var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
         // var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
         api.updateGraphicEl(symbolPath, {
-            scale: normalizeSymbolSize(size)
+            scale: size
         });
-        this._updateCommon(data, idx);
     };
 
     // Update common properties
