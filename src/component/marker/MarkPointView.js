@@ -4,7 +4,6 @@ define(function (require) {
     var SymbolDraw = require('../../chart/helper/SymbolDraw');
     var zrUtil = require('zrender/core/util');
     var formatUtil = require('../../util/format');
-    var retrieveValue = require('../../util/model').retrieveValue;
 
     var addCommas = formatUtil.addCommas;
     var encodeHTML = formatUtil.encodeHTML;
@@ -84,7 +83,7 @@ define(function (require) {
             // FIXME
             mpData.getRawValue = function (idx) {
                 var option = this.getItemModel(idx).option;
-                return retrieveValue(option.__rawValue, option.value, '');
+                return zrUtil.retrieve(option.__rawValue, option.value, '');
             };
             // FIXME
             zrUtil.mixin(mpModel, markPointFormatMixin);

@@ -15,16 +15,6 @@ define(function (require) {
         return Math.abs(a - b) < 1e-4;
     }
 
-    // function isShapeSame(a, b) {
-    //     // return isAroundEqual(a[0], b[0]) && isAroundEqual(a[1], b[1]);
-    //     for (var name in a) {
-    //         if (!isAroundEqual(a[name], b[name])) {
-    //             return false;
-    //         }
-    //     }
-    //     return true;
-    // }
-
     function createSymbol(data, idx, enableAnimation) {
         var point = data.getItemLayout(idx);
         var color = data.getItemVisual(idx, 'color');

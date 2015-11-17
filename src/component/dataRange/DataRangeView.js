@@ -3,7 +3,6 @@ define(function (require) {
     var echarts = require('../../echarts');
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
-    var modelUtil = require('../../util/model');
     var formatUtil = require('../../util/format');
     var layout = require('../../util/layout');
     var VisualMapping = require('../../visual/VisualMapping');
@@ -144,7 +143,7 @@ define(function (require) {
 
             function getAlign(dim, values) {
                 var dim2 = dim + '2';
-                var v = modelUtil.retrieveValue(modelOption[dim], modelOption[dim2], 0);
+                var v = zrUtil.retrieve(modelOption[dim], modelOption[dim2], 0);
                 if (!itemAlign || itemAlign === 'auto') {
                     itemAlign = (orient === 'horizontal' && orient === itemOrient)
                         ? 'right'

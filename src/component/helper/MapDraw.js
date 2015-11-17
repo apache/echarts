@@ -257,11 +257,11 @@ define(function (require) {
                             if (el.type === 'text') {
                                 el.attr('scale', [1 / scale[0], 1 / scale[1]]);
                             }
-                            else if (el.type === 'polygon') {
+                            // else if (el.type === 'polygon') {
                                 // el.setStyle({
 
                                 // });
-                            }
+                            // }
                         });
                     }
                 }, this);

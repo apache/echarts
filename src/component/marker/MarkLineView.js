@@ -4,7 +4,6 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var List = require('../../data/List');
     var formatUtil = require('../../util/format');
-    var retrieveValue = require('../../util/model').retrieveValue;
 
     var addCommas = formatUtil.addCommas;
     var encodeHTML = formatUtil.encodeHTML;
@@ -142,7 +141,7 @@ define(function (require) {
             var lineData = mlData.line;
             lineData.getRawValue = function (idx) {
                 var option = this.getItemModel(idx).option;
-                return retrieveValue(option && option.__rawValue, option && option.value, '');
+                return zrUtil.retrieve(option && option.__rawValue, option && option.value, '');
             };
             zrUtil.extend(mlModel, markLineFormatMixin);
             mlModel.setData(lineData);

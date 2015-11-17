@@ -6,7 +6,7 @@ define(function (require) {
     var numberUtil = require('../../util/number');
     var layout = require('../../util/layout');
     var parsePercent = numberUtil.parsePercent;
-    var retrieveValue = require('../../util/model').retrieveValue;
+    var retrieveValue = zrUtil.retrieve;
     var BoundingRect = require('zrender/core/BoundingRect');
     var helper = require('./helper');
 
