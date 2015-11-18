@@ -39,7 +39,9 @@ define(function (require) {
             .update(function (newIdx, oldIdx) {
                 var symbolEl = oldData.getItemGraphicEl(oldIdx);
                 // Empty data
-                if (!data.hasValue(newIdx) || (isIgnore && isIgnore(newIdx))) {
+                if (!data.hasValue(newIdx) || (isIgnore && isIgnore(newIdx))
+                    || data.getItemVisual(newIdx, 'symbol') === 'none'
+                ) {
                     group.remove(symbolEl);
                     return;
                 }
