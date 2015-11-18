@@ -12,17 +12,15 @@ define(function (require) {
         },
 
         render: function (seriesModel, ecModel, api) {
-            this._symbolDraw.updateData(
-                seriesModel.getData(), seriesModel, api, ecModel.get('animation')
-            );
+            this._symbolDraw.updateData(seriesModel.getData(), api);
         },
 
         updateLayout: function () {
             this._symbolDraw.updateLayout();
         },
 
-        remove: function (ecModel) {
-            this._symbolDraw.remove(ecModel.get('animation'));
+        remove: function (ecModel, api) {
+            this._symbolDraw.remove(api, true);
         }
     });
 });

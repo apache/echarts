@@ -6,8 +6,8 @@ define(function (require) {
     var Rect = graphic.Rect;
     var numberUtil = require('../../util/number');
     var linearMap = numberUtil.linearMap;
-    var modelUtil = require('../../util/model');
-    var retrieveValue = modelUtil.retrieveValue;
+    var sliderMove = require('../helper/sliderMove');
+    var retrieveValue = zrUtil.retrieve;
     var parsePercent = numberUtil.parsePercent;
     var asc = numberUtil.asc;
     var bind = zrUtil.bind;
@@ -416,7 +416,7 @@ define(function (require) {
             var handleEnds = this._handleEnds;
             var viewExtend = this._getViewExtent();
 
-            modelUtil.sliderMove(
+            sliderMove(
                 delta,
                 handleEnds,
                 viewExtend,

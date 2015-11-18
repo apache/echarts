@@ -55,7 +55,7 @@ define(function(require) {
             legendHoverLink: true,
             // 默认全局居中
             center: ['50%', '50%'],
-            radius: [0, '40%'],
+            radius: [0, '75%'],
             // 默认顺时针
             clockwise: true,
             startAngle: 90,

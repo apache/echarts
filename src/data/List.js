@@ -397,11 +397,17 @@ define(function (require) {
      */
     listProto.getDataExtent = function (dim, stack) {
         var dimData = this._storage[dim];
-        var min = Infinity;
-        var max = -Infinity;
+        var dimInfo = this.getDimensionInfo(dim);
+        stack = (dimInfo && dimInfo.stackable) && stack;
+        var dimExtent = (this._extent || (this._extent = {}))[dim + (!!stack)];
         var value;
+        if (dimExtent) {
+            return dimExtent;
+        }
         // var dimInfo = this._dimensionInfos[dim];
         if (dimData) {
+            var min = Infinity;
+            var max = -Infinity;
             // var isOrdinal = dimInfo.type === 'ordinal';
             for (var i = 0, len = this.count(); i < len; i++) {
                 value = this.get(dim, i, stack);
@@ -413,8 +419,11 @@ define(function (require) {
                 value < min && (min = value);
                 value > max && (max = value);
             }
+            return (this._extent[dim + stack] = [min, max]);
         }
-        return [min, max];
+        else {
+            return [Infinity, -Infinity];
+        }
     };
 
     /**
@@ -585,7 +594,6 @@ define(function (require) {
 
         for (var i = 0; i < indices.length; i++) {
             if (dimSize === 0) {
-                // FIXME Pass value as parameter ?
                 cb.call(context, i);
             }
             // Simple optimization
@@ -648,6 +656,9 @@ define(function (require) {
         }
 
         this.indices = newIndices;
+
+        // Reset data extent
+        this._extent = {};
 
         return this;
     };

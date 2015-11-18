@@ -13,7 +13,6 @@
                 margin: 0;
             }
             #main {
-                width: 1000px;
                 background: #fff;
             }
         </style>
@@ -54,6 +53,9 @@
                         }
                     },
                     emphasis: {
+                        label: {
+                            position: 'outside'
+                        },
                         shadowBlur: 10,
                         shadowOffsetX: 0,
                         shadowOffsetY: 0,
@@ -61,7 +63,6 @@
                     }
                 };
 
-                console.profile('setOption');
                 chart.setOption({
                     legend: {
                         data: [{
@@ -120,9 +121,13 @@
                         data: data4
                     }]
                 });
-                console.profileEnd('setOption');
-            })
 
+                // chart.on('click', function (params) {
+                //     console.log(params);
+                // });
+                //
+                window.onresize = chart.resize;
+            });
         </script>
     </body>
 </html>

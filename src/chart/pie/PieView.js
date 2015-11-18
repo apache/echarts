@@ -67,10 +67,10 @@ define(function (require) {
      * Create sector, label, and label line for each data
      * @param {Object} layout
      * @param {string} text
-     * @param {boolean} hasAnimations
+     * @param {boolean} hasAnimation
      * @return {module:zrender/graphic/Sector}
      */
-    function createSectorAndLabel(layout, text, hasAnimation) {
+    function createSectorAndLabel(layout, text, hasAnimation, api) {
         var shape = zrUtil.extend({}, layout);
         delete shape.label;
 
@@ -81,7 +81,9 @@ define(function (require) {
         var labelLayout = layout.label;
         var labelLine = new graphic.Polyline({
             shape: {
-                points: labelLayout.linePoints
+                points: labelLayout.linePoints || [
+                    [layout.x, layout.y], [layout.x, layout.y], [layout.x, layout.y]
+                ]
             },
             silent: true
         });
@@ -106,11 +108,11 @@ define(function (require) {
 
         if (hasAnimation) {
             sector.shape.endAngle = layout.startAngle;
-            sector.animateTo({
+            api.updateGraphicEl(sector, {
                 shape: {
                     endAngle: layout.endAngle
                 }
-            }, 300, 'cubicOut');
+            });
         }
 
         return sector;
@@ -154,7 +156,7 @@ define(function (require) {
                     var layout = data.getItemLayout(idx);
 
                     var sector = createSectorAndLabel(
-                        layout, '', hasAnimation && !isFirstRender
+                        layout, '', !isFirstRender, api
                     );
 
                     selectedMode && sector.on('click', onSectorClick);
@@ -186,7 +188,11 @@ define(function (require) {
                     });
                     api.updateGraphicEl(labelLine, {
                         shape: {
-                            points: labelLayout.linePoints
+                            points: labelLayout.linePoints || [
+                                [labelLayout.x, labelLayout.y],
+                                [labelLayout.x, labelLayout.y],
+                                [labelLayout.x, labelLayout.y]
+                            ]
                         }
                     });
                     api.updateGraphicEl(labelText, {
@@ -225,7 +231,7 @@ define(function (require) {
 
                 var removeClipPath = zrUtil.bind(sectorGroup.removeClipPath, sectorGroup);
                 sectorGroup.setClipPath(this._createClipPath(
-                    shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath
+                    shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, api
                 ));
             }
 
@@ -290,7 +296,9 @@ define(function (require) {
             });
         },
 
-        _createClipPath: function (cx, cy, r, startAngle, clockwise, cb) {
+        _createClipPath: function (
+            cx, cy, r, startAngle, clockwise, cb, api
+        ) {
             var clipPath = new graphic.Sector({
                 shape: {
                     cx: cx,
@@ -303,11 +311,11 @@ define(function (require) {
                 }
             });
 
-            clipPath.animateTo({
+            api.initGraphicEl(clipPath, {
                 shape: {
                     endAngle: startAngle + (clockwise ? 1 : -1) * Math.PI * 2
                 }
-            }, 1000, 'cubicOut', cb);
+            }, cb);
 
             return clipPath;
         },

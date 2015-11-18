@@ -19,7 +19,6 @@ define(function(require) {
             zlevel: 0,                  // 一级层叠
             z: 2,                       // 二级层叠
             coordinateSystem: 'cartesian2d',
-            clickable: true,
             legendHoverLink: true,
             // stack: null
 
@@ -38,26 +37,19 @@ define(function(require) {
             barGap: '30%',
             // 类目间柱形距离，默认为类目间距的20%，可设固定值
             barCategoryGap: '20%',
-            label: {
-                normal: {
-                    show: false
-                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
+            // label: {
+            //     normal: {
+            //         show: false
+            //         formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
 
-                    // 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-                    //           'inside' | 'insideleft' | 'insideTop' | 'insideRight' | 'insideBottom' |
-                    //           'outside' |'left' | 'right'|'top'|'bottom'
-                    // position:
+            //         // 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
+            //         //           'inside' | 'insideleft' | 'insideTop' | 'insideRight' | 'insideBottom' |
+            //         //           'outside' |'left' | 'right'|'top'|'bottom'
+            //         position:
 
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                },
-                emphasis: {
-                    show: false
-                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-                    //           'inside'|'left'|'right'|'top'|'bottom'
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                }
-            },
+            //         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
+            //     }
+            // },
             itemStyle: {
                 normal: {
                     // color: '各异',

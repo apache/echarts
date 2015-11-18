@@ -100,7 +100,7 @@ define(function (require) {
      * @param {module:echarts/data/List} toData
      */
     seriesMarkLineProto.update = function (
-        fromData, toData, mlModel, enableAnimation
+        fromData, toData, mlModel, api, enableAnimation
     ) {
 
         var oldFromData = this._fromData;
@@ -126,8 +126,8 @@ define(function (require) {
                 });
 
                 if (enableAnimation) {
-                    line.shape.x1 = p1[0];
-                    line.shape.y1 = p1[1];
+                    line.shape.x2 = p1[0];
+                    line.shape.y2 = p1[1];
                     line.animateTo({
                         shape: {
                             x2: p2[0],
@@ -175,14 +175,14 @@ define(function (require) {
                 var fromSymbolType = fromData.getItemVisual(newIdx, 'symbol');
                 var toSymbolType = toData.getItemVisual(newIdx, 'symbol');
 
-                line.animateTo({
+                api.updateGraphicEl(line, {
                     shape: {
                         x1: p1[0],
                         y1: p1[1],
                         x2: p2[0],
                         y2: p2[1]
                     }
-                }, 300, 'cubicOut');
+                });
 
                 // Symbol changed
                 if (fromSymbolType !== oldFromData.getItemVisual(oldIdx, 'symbol')) {

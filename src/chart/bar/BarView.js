@@ -55,9 +55,9 @@ define(function (require) {
                         var animateTarget = {};
                         rectShape[animateProperty] = 0;
                         animateTarget[animateProperty] = layout[animateProperty];
-                        rect.animateTo({
+                        api.initGraphicEl(rect, {
                             shape: animateTarget
-                        }, 1000, 300 * dataIndex / data.count(), 'cubicOut');
+                        });
                     }
                 })
                 .update(function (newIndex, oldIndex) {
@@ -78,15 +78,15 @@ define(function (require) {
                     group.add(rect);
                 })
                 .remove(function (idx) {
-                    var el = oldData.getItemGraphicEl(idx);
-                    el.style.text = '';
-                    el.animateTo({
+                    var rect = oldData.getItemGraphicEl(idx);
+                    // Not show text when animating
+                    rect.style.text = '';
+                    api.updateGraphicEl(rect, {
                         shape: {
                             width: 0
                         }
-                    }, 300, 'cubicOut',
-                    function () {
-                        group.remove(el);
+                    }, function () {
+                        group.remove(rect);
                     });
                 })
                 .execute();
@@ -97,11 +97,21 @@ define(function (require) {
         },
 
         _updateStyle: function (seriesModel, data, isHorizontal) {
+            function setLabel(style, model, color, labelText, labelPositionOutside) {
+                graphic.setText(style, model, color);
+                style.text = labelText;
+                if (style.textPosition === 'outside') {
+                    style.textPosition = labelPositionOutside;
+                }
+            }
+
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
                 var labelModel = itemModel.getModel('label.normal');
                 var color = data.getItemVisual(idx, 'color');
                 var layout = data.getItemLayout(idx);
+
+                var hoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
 
                 rect.setStyle(zrUtil.defaults(
                     {
@@ -109,42 +119,49 @@ define(function (require) {
                     },
                     itemModel.getModel('itemStyle.normal').getBarItemStyle()
                 ));
-                if (labelModel.get('show')) {
-                    var labelPosition = labelModel.get('position') || 'inside';
-                    // FIXME
-                    var labelColor = labelPosition.indexOf('inside') === 0 ? 'white' : color;
-                    var labelPositionOutside = isHorizontal
-                        ? (layout.height > 0 ? 'bottom' : 'top')
-                        : (layout.width > 0 ? 'left' : 'right');
 
-                    rect.setStyle({
-                        text: seriesModel.getFormattedLabel(idx, 'normal')
-                            || data.getRawValue(idx),
-                        textFont: labelModel.getModel('textStyle').getFont(),
-                        textPosition: labelPosition === 'outside' ? labelPositionOutside : labelPosition,
-                        textFill: labelColor
-                    });
+                var labelPositionOutside = isHorizontal
+                    ? (layout.height > 0 ? 'bottom' : 'top')
+                    : (layout.width > 0 ? 'left' : 'right');
 
-                    graphic.setHoverStyle(
-                        rect, itemModel.getModel('itemStyle.emphasis').getBarItemStyle()
+                var labelModel = itemModel.getModel('label.normal');
+                var hoverLabelModel = itemModel.getModel('label.emphasis');
+                var labelText = seriesModel.getFormattedLabel(idx, 'normal')
+                            || data.getRawValue(idx);
+                var rectStyle = rect.style;
+                var showLabel = labelModel.get('show');
+                if (showLabel) {
+                    setLabel(
+                        rectStyle, labelModel, color, labelText, labelPositionOutside
                     );
                 }
+                else {
+                    rectStyle.text = '';
+                }
+                if (zrUtil.retrieve(hoverLabelModel.get('show'), showLabel)) {
+                    setLabel(
+                        hoverStyle, hoverLabelModel, color, labelText, labelPositionOutside
+                    );
+                }
+                else {
+                    hoverStyle.text = '';
+                }
+                graphic.setHoverStyle(rect, hoverStyle);
             });
         },
 
-        remove: function (ecModel) {
+        remove: function (ecModel, api) {
             var group = this.group;
             if (ecModel.get('animation')) {
                 if (this._data) {
                     this._data.eachItemGraphicEl(function (el) {
                         // Not show text when animating
                         el.style.text = '';
-                        el.animateTo({
+                        api.updateGraphicEl(el, {
                             shape: {
                                 width: 0
                             }
-                        }, 300, 'cubicOut',
-                        function () {
+                        }, function () {
                             group.remove(el);
                         });
                     });

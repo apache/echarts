@@ -5,18 +5,6 @@ define(function (require) {
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 
-    // Mixin axis label interval calculation helper
-    var axisLabelInterval = require('../../coord/cartesian/axisLabelInterval');
-    var Axis2D = require('../../coord/cartesian/Axis2D');
-
-    Axis2D.prototype.getLabelInterval = function () {
-        var labelInterval = this._labelInterval;
-        if (!labelInterval) {
-            labelInterval = this._labelInterval = axisLabelInterval(this);
-        }
-        return labelInterval;
-    };
-
     /**
      * @inner
      */

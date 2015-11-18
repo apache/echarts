@@ -2,7 +2,7 @@ define(function (require) {
 
     var DataZoomView = require('./DataZoomView');
     var zrUtil = require('zrender/core/util');
-    var modelUtil = require('../../util/model');
+    var sliderMove = require('../helper/sliderMove');
     var BoundingRect = require('zrender/core/BoundingRect');
     var RoamController = require('../../component/helper/RoamController');
     var bind = zrUtil.bind;
@@ -128,7 +128,7 @@ define(function (require) {
             * (range[1] - range[0])
             * directionInfo.pixel / directionInfo.pixelLength;
 
-        modelUtil.sliderMove(
+        sliderMove(
             percentDelta,
             range,
             [0, 100],

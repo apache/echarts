@@ -4,7 +4,7 @@ define(function(require) {
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
-    var modelUtil = require('../../util/model');
+    var sliderMove = require('../helper/sliderMove');
     var linearMap = numberUtil.linearMap;
     var LinearGradient = require('zrender/graphic/LinearGradient');
     var each = zrUtil.each;
@@ -282,7 +282,7 @@ define(function(require) {
             var dataRangeModel = this.dataRangeModel;
             var handleEnds = this._handleEnds;
 
-            modelUtil.sliderMove(
+            sliderMove(
                 delta,
                 handleEnds,
                 [0, dataRangeModel.itemSize[1]],

@@ -5,6 +5,7 @@ define(function (require) {
     var numberUtil = require('../../util/number');
     var parsePercent = numberUtil.parsePercent;
     var labelLayout = require('./labelLayout');
+    var zrUtil = require('zrender/core/util');
 
     var PI2 = Math.PI * 2;
     var RADIAN = Math.PI / 180;
@@ -14,13 +15,20 @@ define(function (require) {
             var center = seriesModel.get('center');
             var radius = seriesModel.get('radius');
 
+            if (!zrUtil.isArray(radius)) {
+                radius = [0, radius];
+            }
+            if (!zrUtil.isArray(center)) {
+                center = [center, center];
+            }
+
             var width = api.getWidth();
             var height = api.getHeight();
             var size = Math.min(width, height);
             var cx = parsePercent(center[0], width);
             var cy = parsePercent(center[1], height);
-            var r0 = parsePercent(radius[0], size);
-            var r = parsePercent(radius[1], size);
+            var r0 = parsePercent(radius[0], size / 2);
+            var r = parsePercent(radius[1], size / 2);
 
             var data = seriesModel.getData();
 

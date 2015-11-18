@@ -34,6 +34,11 @@ define(function (require) {
     function ECharts (dom, theme, opts) {
         opts = opts || {};
 
+        if (theme) {
+            each(optionPreprocessorFuncs, function (preProcess) {
+                preProcess(theme);
+            });
+        }
         /**
          * @type {string}
          */
@@ -90,7 +95,7 @@ define(function (require) {
          * @type {module:echarts/ExtensionAPI}
          * @private
          */
-        this._extensionAPI = new ExtensionAPI(this);
+        this._api = new ExtensionAPI(this);
 
         /**
          * @type {module:echarts/CoordinateSystem}
@@ -109,15 +114,26 @@ define(function (require) {
 
     var echartsProto = ECharts.prototype;
 
+    /**
+     * @return {HTMLDomElement}
+     */
     echartsProto.getDom = function () {
         return this._dom;
     };
 
+    /**
+     * @return {module:zrender~ZRender}
+     */
     echartsProto.getZr = function () {
         return this._zr;
     };
 
-    echartsProto.setOption = function (option, notMerge, refreshImmediately) {
+    /**
+     * @param {Object} option
+     * @param {boolean} notMerge
+     * @param {boolean} [notRefreshImmediately=false]
+     */
+    echartsProto.setOption = function (option, notMerge, notRefreshImmediately) {
         // PENDING
         option = zrUtil.clone(option, true);
 
@@ -139,9 +155,9 @@ define(function (require) {
 
         this._prepareCharts(ecModel);
 
-        this.update();
+        this._update();
 
-        refreshImmediately && this._zr.refreshImmediately();
+        !notRefreshImmediately && this._zr.refreshImmediately();
     };
 
     /**
@@ -167,8 +183,9 @@ define(function (require) {
 
     /**
      * @param {Object} payload
+     * @private
      */
-    echartsProto.update = function (payload) {
+    echartsProto._update = function (payload) {
         console.time && console.time('update');
 
         var ecModel = this._model;
@@ -183,7 +200,7 @@ define(function (require) {
 
         this._stackSeriesData(ecModel);
 
-        this._coordinateSystem.update(ecModel, this._extensionAPI);
+        this._coordinateSystem.update(ecModel, this._api);
 
         this._doLayout(ecModel, payload);
 
@@ -209,8 +226,9 @@ define(function (require) {
     // PENDING
     /**
      * @param {Object} payload
+     * @private
      */
-    echartsProto.updateView = function (payload) {
+    echartsProto._updateView = function (payload) {
         var ecModel = this._model;
 
         this._doLayout(ecModel, payload);
@@ -222,8 +240,9 @@ define(function (require) {
 
     /**
      * @param {Object} payload
+     * @private
      */
-    echartsProto.updateVisual = function (payload) {
+    echartsProto._updateVisual = function (payload) {
         var ecModel = this._model;
 
         this._doVisualCoding(ecModel, payload);
@@ -233,8 +252,9 @@ define(function (require) {
 
     /**
      * @param {Object} payload
+     * @private
      */
-    echartsProto.updateLayout = function (payload) {
+    echartsProto._updateLayout = function (payload) {
         var ecModel = this._model;
 
         this._doLayout(ecModel, payload);
@@ -243,11 +263,48 @@ define(function (require) {
     };
 
     /**
+     * @param {Object} payload
+     * @private
+     */
+    echartsProto._highlight = function (payload) {
+        this._toggleHighlight('highlight', payload);
+    };
+
+    /**
+     * @param {Object} payload
+     * @private
+     */
+    echartsProto._downplay = function (payload) {
+        this._toggleHighlight('downplay', payload);
+    };
+
+    /**
+     * @param {Object} payload
+     * @private
+     */
+    echartsProto._toggleHighlight = function (method, payload) {
+        var ecModel = this._model;
+        var seriesModel;
+        if (payload.seriesIndex) {
+            seriesModel = ecModel.getSeriesByIndex(payload.seriesIndex, true);
+        }
+        else if (payload.seriesName) {
+            seriesModel = ecModel.getSeriesByName(payload.seriesName, true);
+        }
+        if (seriesModel) {
+            var chartView = this._chartsMap[seriesModel.getId()];
+            if (chartView) {
+                chartView[method](seriesModel, ecModel, this._api, payload);
+            }
+        }
+    };
+
+    /**
      * Resize the chart
      */
     echartsProto.resize = function () {
         this._zr.resize();
-        this.update();
+        this._update();
     };
 
     /**
@@ -273,7 +330,7 @@ define(function (require) {
             var actionInfo = actionWrap.actionInfo;
             var updateMethod = actionInfo.update || 'update';
             actionWrap.action(payload, this._model);
-            updateMethod !== 'none' && this[updateMethod](payload);
+            updateMethod !== 'none' && this['_' + updateMethod](payload);
 
             if (!silent) {
                 // Emit event outside
@@ -290,7 +347,7 @@ define(function (require) {
      * @private
      */
     echartsProto._invokeUpdateMethod = function (methodName, ecModel, payload) {
-        var api = this._extensionAPI;
+        var api = this._api;
 
         // Update all components
         each(this._componentsList, function (component) {
@@ -335,7 +392,7 @@ define(function (require) {
                 );
                 if (Clazz) {
                     chart = new Clazz();
-                    chart.init(ecModel, this._extensionAPI);
+                    chart.init(ecModel, this._api);
                     chartsMap[id] = chart;
                     chartsList.push(chart);
                     zr.add(chart.group);
@@ -353,7 +410,7 @@ define(function (require) {
             var chart = chartsList[i];
             if (!chart.__keepAlive) {
                 zr.remove(chart.group);
-                chart.dispose(this._extensionAPI);
+                chart.dispose(this._api);
                 chartsList.splice(i, 1);
                 delete chartsMap[chart.__id];
             }
@@ -392,7 +449,7 @@ define(function (require) {
 
                 if (Clazz) {
                     component = new Clazz();
-                    component.init(ecModel, this._extensionAPI);
+                    component.init(ecModel, this._api);
                     componentsMap[id] = component;
                     componentsList.push(component);
 
@@ -409,7 +466,7 @@ define(function (require) {
             var component = componentsList[i];
             if (!component.__keepAlive) {
                 this._zr.remove(component.group);
-                component.dispose(this._extensionAPI);
+                component.dispose(this._api);
                 componentsList.splice(i, 1);
                 delete componentsMap[component.__id];
             }
@@ -458,7 +515,7 @@ define(function (require) {
      * @private
      */
     echartsProto._doLayout = function (ecModel, payload) {
-        var api = this._extensionAPI;
+        var api = this._api;
         each(layoutFuncs, function (layout) {
             layout(ecModel, api, payload);
         });
@@ -483,7 +540,7 @@ define(function (require) {
      * @private
      */
     echartsProto._doRender = function (ecModel, payload) {
-        var api = this._extensionAPI;
+        var api = this._api;
         // Render all components
         each(this._componentsList, function (component) {
             var componentModel = component.__model;
@@ -861,8 +918,19 @@ define(function (require) {
     };
 
     echarts.registerVisualCoding('echarts', require('./visual/seriesColor'));
-
     echarts.registerPreprocessor(require('./preprocessor/backwardCompat'));
+
+    // Default action
+    echarts.registerAction({
+        type: 'highlight',
+        event: 'highlight',
+        update: 'highlight'
+    }, zrUtil.noop);
+    echarts.registerAction({
+        type: 'downplay',
+        event: 'downplay',
+        update: 'downplay'
+    }, zrUtil.noop);
 
     return echarts;
 });

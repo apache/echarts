@@ -4,7 +4,6 @@ define(function (require) {
     var SymbolDraw = require('../../chart/helper/SymbolDraw');
     var zrUtil = require('zrender/core/util');
     var formatUtil = require('../../util/format');
-    var retrieveValue = require('../../util/model').retrieveValue;
 
     var addCommas = formatUtil.addCommas;
     var encodeHTML = formatUtil.encodeHTML;
@@ -84,7 +83,7 @@ define(function (require) {
             // FIXME
             mpData.getRawValue = function (idx) {
                 var option = this.getItemModel(idx).option;
-                return retrieveValue(option.__rawValue, option.value, '');
+                return zrUtil.retrieve(option.__rawValue, option.value, '');
             };
             // FIXME
             zrUtil.mixin(mpModel, markPointFormatMixin);
@@ -115,9 +114,7 @@ define(function (require) {
             });
 
             // TODO Text are wrong
-            symbolDraw.updateData(
-                mpData, mpModel, api, true
-            );
+            symbolDraw.updateData(mpData, api);
             this.group.add(symbolDraw.group);
 
             // Set host model for tooltip
@@ -144,8 +141,6 @@ define(function (require) {
         ), mpModel);
 
         if (coordSys) {
-            var baseAxis = coordSys.getBaseAxis();
-            var valueAxis = coordSys.getOtherAxis(baseAxis);
             var coordDimensions = coordSys.dimensions;
 
             var indexOf = zrUtil.indexOf;
@@ -158,7 +153,7 @@ define(function (require) {
             mpData.initData(
                 zrUtil.filter(
                     zrUtil.map(mpModel.get('data'), zrUtil.curry(
-                        markerHelper.dataTransform, seriesData, baseAxis, valueAxis
+                        markerHelper.dataTransform, seriesData, coordSys
                     )),
                     zrUtil.curry(
                         markerHelper.dataFilter, coordSys, coordDataIdx

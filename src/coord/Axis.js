@@ -122,7 +122,6 @@ define(function (require) {
          */
         dataToCoord: function (data, clamp) {
             data = this.scale.normalize(data);
-
             var extent = this.getExtent();
             if (this.onBand) {
                 fixExtentWithBands(extent, this.scale.count());

@@ -2,12 +2,15 @@ define(function(require) {
 
     'use strict';
 
+    var zrUtil = require('zrender/core/util');
+
     var pathTool = require('zrender/tool/path');
     var round = Math.round;
     var Path = require('zrender/graphic/Path');
     var colorTool = require('zrender/tool/color');
     var matrix = require('zrender/core/matrix');
     var vector = require('zrender/core/vector');
+    var Gradient = require('zrender/graphic/Gradient');
 
     var graphic = {};
 
@@ -76,7 +79,7 @@ define(function(require) {
 
         var pathRect = path.getBoundingRect();
 
-        var m = rect.calculateTransform(pathRect);
+        var m = pathRect.calculateTransform(rect);
 
         path.applyTransform(m);
     };
@@ -172,8 +175,10 @@ define(function(require) {
 
             // Create hoverStyle on mouseover
             var hoverStyle = el.__hoverStl;
-            hoverStyle.fill = hoverStyle.fill || colorTool.lift(fill, -0.1);
-            hoverStyle.stroke = hoverStyle.stroke || colorTool.lift(stroke, -0.1);
+            hoverStyle.fill = hoverStyle.fill
+                || (fill instanceof Gradient ? fill : colorTool.lift(fill, -0.1));
+            hoverStyle.stroke = hoverStyle.stroke
+                || (stroke instanceof Gradient ? stroke : colorTool.lift(stroke, -0.1));
 
             var normalStyle = {};
             for (var name in hoverStyle) {
@@ -293,6 +298,23 @@ define(function(require) {
         // Emphasis, normal can be triggered manually
         el.on('emphasis', enterEmphasis)
           .on('normal', leaveEmphasis);
+    };
+
+    /**
+     * Set text option in the style
+     * @param {Object} style
+     * @param {module:echarts/model/Model} labelModel
+     * @param {string} color
+     */
+    graphic.setText = function (style, labelModel, color) {
+        var labelPosition = labelModel.get('position') || 'inside';
+        var labelColor = labelPosition === 'inside' ? 'white' : color;
+        var textStyleModel = labelModel.getModel('textStyle');
+        zrUtil.extend(style, {
+            textFont: textStyleModel.getFont(),
+            textPosition: labelPosition,
+            textFill: textStyleModel.get('color') || labelColor
+        });
     };
 
     /**

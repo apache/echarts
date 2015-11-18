@@ -83,9 +83,14 @@ define(function(require) {
         type: 'line',
 
         init: function () {
+            var lineGroup = new graphic.Group();
+
             var symbolDraw = new SymbolDraw();
             this.group.add(symbolDraw.group);
+            this.group.add(lineGroup);
+
             this._symbolDraw = symbolDraw;
+            this._lineGroup = lineGroup;
         },
 
         render: function (seriesModel, ecModel, api) {
@@ -104,25 +109,22 @@ define(function(require) {
             var polyline = this._polyline;
             var polygon = this._polygon;
 
+            var lineGroup = this._lineGroup;
+
             var hasAnimation = ecModel.get('animation');
 
             var isAreaChart = !areaStyleModel.isEmpty();
             var stackedOnPoints = getStackedOnPoints(coordSys, data);
 
-
             var isSymbolIgnore = !isCoordSysPolar && !seriesModel.get('showAllSymbol')
                 && this._getSymbolIgnoreFunc(data, coordSys);
-
 
             // Initialization animation or coordinate system changed
             if (
                 !(polyline
                 && prevCoordSys.type === coordSys.type)
             ) {
-                symbolDraw.updateData(
-                    data, seriesModel, api, hasAnimation, isSymbolIgnore
-                );
-
+                symbolDraw.updateData(data, api, isSymbolIgnore);
                 polyline = this._newPolyline(group, points, coordSys, hasAnimation);
                 if (isAreaChart) {
                     polygon = this._newPolygon(
@@ -131,22 +133,20 @@ define(function(require) {
                         coordSys, hasAnimation
                     );
                 }
+                lineGroup.setClipPath(
+                    this._createClipShape(coordSys, true, api)
+                );
             }
             else {
-                symbolDraw.updateData(
-                    data, seriesModel, api, false, isSymbolIgnore
-                );
-
                 // Update clipPath
-                // FIXME Clip path used by more than one elements
                 if (hasAnimation) {
-                    polyline.setClipPath(
-                        this._createClipShape(coordSys)
-                    );
-                    polygon && polygon.setClipPath(
-                        this._createClipShape(coordSys)
+                    lineGroup.setClipPath(
+                        this._createClipShape(coordSys, false, api)
                     );
                 }
+
+                // Always update, or it is wrong in the case turning on legend
+                symbolDraw.updateData(data, api, isSymbolIgnore);
 
                 // In the case data zoom triggerred refreshing frequently
                 // Data may not change if line has a category axis. So it should animate nothing
@@ -169,8 +169,7 @@ define(function(require) {
                     }
                 }
                 // Add back
-                group.add(polyline);
-                group.add(polygon);
+                group.add(lineGroup);
             }
 
             polyline.setStyle(zrUtil.defaults(
@@ -219,11 +218,9 @@ define(function(require) {
         /**
          * @param {module:zrender/container/Group} group
          * @param {Array.<Array.<number>>} points
-         * @param {module:echarts/coord/cartesian/Cartesian2D|module:echarts/coord/polar/Polar} coordSys
-         * @param {boolean} hasAnimation
          * @private
          */
-        _newPolyline: function (group, points, coordSys, hasAnimation) {
+        _newPolyline: function (group, points) {
             var polyline = this._polyline;
             // Remove previous created polyline
             if (polyline) {
@@ -238,12 +235,7 @@ define(function(require) {
                 z2: 10
             });
 
-            if (hasAnimation) {
-                var clipPath = this._createClipShape(coordSys, true);
-                polyline.setClipPath(clipPath);
-            }
-
-            group.add(polyline);
+            this._lineGroup.add(polyline);
 
             this._polyline = polyline;
 
@@ -254,11 +246,9 @@ define(function(require) {
          * @param {module:zrender/container/Group} group
          * @param {Array.<Array.<number>>} stackedOnPoints
          * @param {Array.<Array.<number>>} points
-         * @param {module:echarts/coord/cartesian/Cartesian2D|module:echarts/coord/polar/Polar} coordSys
-         * @param {boolean} hasAnimation
          * @private
          */
-        _newPolygon: function (group, points, stackedOnPoints, coordSys, hasAnimation) {
+        _newPolygon: function (group, points, stackedOnPoints) {
             var polygon = this._polygon;
             // Remove previous created polygon
             if (polygon) {
@@ -273,12 +263,7 @@ define(function(require) {
                 silent: true
             });
 
-            if (hasAnimation) {
-                var clipPath = this._createClipShape(coordSys, true);
-                polygon.setClipPath(clipPath);
-            }
-
-            group.add(polygon);
+            this._lineGroup.add(polygon);
 
             this._polygon = polygon;
             return polygon;
@@ -333,7 +318,6 @@ define(function(require) {
             }
 
             var updatedDataInfo = [];
-            var addedDataIndices = [];
             var diffStatus = diff.status;
 
             for (var i = 0; i < diffStatus.length; i++) {
@@ -341,27 +325,16 @@ define(function(require) {
                 if (cmd === '=') {
                     var el = data.getItemGraphicEl(diffStatus[i].idx1);
                     if (el) {
+                        el.stopAnimation();
                         updatedDataInfo.push({
                             el: el,
                             ptIdx: i    // Index of points
                         });
                     }
                 }
-                else if (cmd === '+') {
-                    addedDataIndices.push(diffStatus[i].idx);
-                }
             }
 
             if (polyline.animators) {
-                for (var i = 0; i < addedDataIndices.length; i++) {
-                    var el = data.getItemGraphicEl(addedDataIndices[i]);
-                    if (el) {
-                        el.scale = [0, 0];
-                        el.animateTo({
-                            scale: [1, 1]
-                        }, 300, 300, 'cubicOut');
-                    }
-                }
                 polyline.animators[0].during(function () {
                     for (var i = 0; i < updatedDataInfo.length; i++) {
                         var el = updatedDataInfo[i].el;
@@ -376,13 +349,13 @@ define(function(require) {
             }
         },
 
-        _createClipShape: function (coordSys, hasAnimation) {
+        _createClipShape: function (coordSys, hasAnimation, api) {
             return coordSys.type === 'polar'
-                ? this._createPolarClipShape(coordSys, hasAnimation)
-                : this._createGridClipShape(coordSys, hasAnimation);
+                ? this._createPolarClipShape(coordSys, hasAnimation, api)
+                : this._createGridClipShape(coordSys, hasAnimation, api);
         },
 
-        _createGridClipShape: function (cartesian, animation) {
+        _createGridClipShape: function (cartesian, hasAnimation, api) {
             var xExtent = getAxisExtentWithGap(cartesian.getAxis('x'));
             var yExtent = getAxisExtentWithGap(cartesian.getAxis('y'));
 
@@ -395,20 +368,20 @@ define(function(require) {
                 }
             });
 
-            if (animation) {
+            if (hasAnimation) {
                 clipPath.shape[cartesian.getBaseAxis().isHorizontal() ? 'width' : 'height'] = 0;
-                clipPath.animateTo({
+                api.initGraphicEl(clipPath, {
                     shape: {
                         width: xExtent[1] - xExtent[0],
                         height: yExtent[1] - yExtent[0]
                     }
-                }, 1000);
+                });
             }
 
             return clipPath;
         },
 
-        _createPolarClipShape: function (polar, animation) {
+        _createPolarClipShape: function (polar, hasAnimation, api) {
             var angleAxis = polar.getAngleAxis();
             var radiusAxis = polar.getRadiusAxis();
 
@@ -429,23 +402,22 @@ define(function(require) {
                 }
             });
 
-            if (animation) {
+            if (hasAnimation) {
                 clipPath.shape.endAngle = -angleExtent[0] * RADIAN;
-                clipPath.animateTo({
+                api.initGraphicEl(clipPath, {
                     shape: {
                         endAngle: -angleExtent[1] * RADIAN
                     }
-                }, 1500, animation);
+                });
             }
 
             return clipPath;
         },
 
-        remove: function (ecModel) {
+        remove: function (ecModel, api) {
             var group = this.group;
-            group.remove(this._polyline);
-            group.remove(this._polygon);
-            this._symbolDraw.remove(ecModel.get('animation'));
+            group.remove(this._lineGroup);
+            this._symbolDraw.remove(api, true);
         }
     });
 });
