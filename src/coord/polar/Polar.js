@@ -188,6 +188,11 @@ define(function(require) {
             var extent = angleAxis.getExtent();
             var minAngle = Math.min(extent[0], extent[1]);
             var maxAngle = Math.max(extent[0], extent[1]);
+            // Fix fixed extent in polarCreator
+            // FIXME
+            angleAxis.inverse
+                ? (minAngle = maxAngle - 360)
+                : (maxAngle = minAngle + 360);
 
             var radius = Math.sqrt(dx * dx + dy * dy);
             dx /= radius;

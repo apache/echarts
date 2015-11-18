@@ -34,6 +34,11 @@ define(function (require) {
     function ECharts (dom, theme, opts) {
         opts = opts || {};
 
+        if (theme) {
+            each(optionPreprocessorFuncs, function (preProcess) {
+                preProcess(theme);
+            });
+        }
         /**
          * @type {string}
          */
