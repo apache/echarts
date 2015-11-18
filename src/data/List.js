@@ -12,10 +12,10 @@ define(function (require) {
         ? Array : global.Int32Array;
 
     var dataCtors = {
-        float: Float32Array,
-        int: Int32Array,
+        'float': Float32Array,
+        'int': Int32Array,
         // Ordinal data type can be string or int
-        ordinal: Array,
+        'ordinal': Array,
         'number': Array
     };
 
@@ -344,6 +344,29 @@ define(function (require) {
             }
         }
         return value;
+    };
+
+    /**
+     * Get value for multi dimensions.
+     * @param {Array.<string>} [dimensions] If ignored, using all dimensions.
+     * @param {number} idx
+     * @param {boolean} stack
+     * @return {number}
+     */
+    listProto.getValues = function (dimensions, idx, stack) {
+        var values = [];
+
+        if (!zrUtil.isArray(dimensions)) {
+            stack = idx;
+            idx = dimensions;
+            dimensions = this.dimensions;
+        }
+
+        for (var i = 0, len = dimensions.length; i < len; i++) {
+            values.push(this.get(dimensions[i], idx, stack));
+        }
+
+        return values;
     };
 
     /**
@@ -869,20 +892,32 @@ define(function (require) {
     };
     /**
      * @param {number} idx
-     * @param {module:zrender/Element} el
+     * @param {module:zrender/Element|Array.<module:zrender/Element>} el
      */
     listProto.setItemGraphicEl = function (idx, el) {
         var hostModel = this.hostModel;
-        // Add data index and series index for indexing the data by element
-        // Useful in tooltip
-        el.dataIndex = idx;
-        el.seriesIndex = hostModel && hostModel.seriesIndex;
-        if (el.type === 'group') {
-            el.traverse(setItemDataAndSeriesIndex, el);
+
+        if (zrUtil.isArray(el)) {
+            zrUtil.each(el, function (singleEl) {
+                addIndexToGraphicEl(singleEl, idx, hostModel);
+            });
+        }
+        else {
+            addIndexToGraphicEl(el, idx, hostModel);
         }
 
         this._graphicEls[idx] = el;
     };
+
+    function addIndexToGraphicEl(el, dataIndex, hostModel) {
+        // Add data index and series index for indexing the data by element
+        // Useful in tooltip
+        el.dataIndex = dataIndex;
+        el.seriesIndex = hostModel && hostModel.seriesIndex;
+        if (el.type === 'group') {
+            el.traverse(setItemDataAndSeriesIndex, el);
+        }
+    }
 
     /**
      * @param {number} idx
