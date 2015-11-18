@@ -90,6 +90,23 @@ define(function (require) {
         };
 
     /**
+     * Set state of single element
+     * @param  {module:zrender/Element} el
+     * @param  {string} state
+     */
+    function elSetState(el, state) {
+        if (el) {
+            if (el.type === 'group') {
+                for (var i = 0; i < el.childCount(); i++) {
+                    elSetState(el.childAt(i), state);
+                }
+            }
+            else {
+                el.trigger(state);
+            }
+        }
+    }
+    /**
      * @param  {module:echarts/data/List} data
      * @param  {Object} payload
      * @param  {string} state 'normal'|'emphasis'
@@ -98,16 +115,16 @@ define(function (require) {
     function toggleHighlight(data, payload, state) {
         if (payload.dataIndex != null) {
             var el = data.getItemGraphicEl(payload.dataIndex);
-            el && el.trigger(state);
+            elSetState(el, state);
         }
         else if (payload.name) {
             var dataIndex = data.indexOfName(payload.name);
             var el = data.getItemGraphicEl(dataIndex);
-            el && el.trigger(state);
+            elSetState(el, state);
         }
         else {
             data.eachItemGraphicEl(function (el) {
-                el.trigger(state);
+                elSetState(el, state);
             });
         }
     }

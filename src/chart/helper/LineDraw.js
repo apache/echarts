@@ -11,12 +11,9 @@ define(function (require) {
     /**
      * @param {module:echarts/data/List} data
      * @param {module:echarts/ExtensionAPI} api
-     * @param {boolean} [enableAnimation=false]
      * @param {Function} [isIgnore]
      */
-    lineDrawProto.updateData = function (
-        data, api, enableAnimation, isIgnore
-    ) {
+    lineDrawProto.updateData = function (data, api, isIgnore) {
         var group = this.group;
         var oldData = this._data;
         // var seriesModel = data.hostModel;
