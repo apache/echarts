@@ -145,13 +145,14 @@ define(function(require) {
                     );
                 }
 
+                // Always update, or it is wrong in the case turning on legend
+                symbolDraw.updateData(data, api, isSymbolIgnore);
+
                 // In the case data zoom triggerred refreshing frequently
                 // Data may not change if line has a category axis. So it should animate nothing
                 if (!isPointsSame(this._stackedOnPoints, stackedOnPoints)
                     || !isPointsSame(this._points, points)
                 ) {
-                    symbolDraw.updateData(data, api, isSymbolIgnore);
-
                     if (hasAnimation) {
                         this._updateAnimation(
                             data, stackedOnPoints, coordSys, api
