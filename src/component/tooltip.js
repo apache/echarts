@@ -1480,9 +1480,9 @@ define(function (require) {
                 // axis trigger
                 var dataIndex = params.dataIndex;
                 switch (chart.type) {
-                    case ecConfig.CHART_TYPE_LINE :
-                    case ecConfig.CHART_TYPE_BAR :
-                    case ecConfig.CHART_TYPE_K :
+                    case ecConfig.CHART_TYPE_LINE:
+                    case ecConfig.CHART_TYPE_BAR:
+                    case ecConfig.CHART_TYPE_K:
                         if (this.component.grid == null
                             || serie.data.length <= dataIndex
                         ) {
@@ -1644,6 +1644,35 @@ define(function (require) {
                             }
                         }
                         break;
+                    case ecConfig.CHART_TYPE_EVENTRIVER:
+                        var name = params.name;
+                        for (var i = 0, l = shapeList.length; i < l; i++) {
+                            if (shapeList[i].type === 'polygon'
+                                && ecData.get(shapeList[i], 'name') == name
+                            ) {
+                                this._curTarget = shapeList[i];
+                                var pointList = shapeList[i].style.pointList;
+                                var p = pointList[0];
+                                if (p) {
+                                    var left = p[0];
+                                    var right = p[0];
+                                    var top = p[1];
+                                    var bottom = p[1];
+                                    var i;
+
+                                    for (i = 1; i < pointList.length; i++) {
+                                        p = pointList[i];
+                                        left = Math.min(left, p[0]);
+                                        right = Math.max(right, p[0]);
+                                        top = Math.min(top, p[1]);
+                                        bottom = Math.max(bottom, p[1]);
+                                    }
+                                    x = (left + right) / 2;
+                                    y = (top + bottom) / 2;
+                                }
+                                break;
+                            }
+                        }
                 }
                 if (x != null && y != null) {
                     this._event = {
