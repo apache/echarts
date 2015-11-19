@@ -98,7 +98,7 @@ define(function (require) {
             var textStyleModel = labelModel.getModel('textStyle');
             var tickModel = radiusAxisModel.getModel('axisTick');
 
-            var labels = radiusAxisModel.formatLabels(axis.scale.getTicksLabels());
+            var labels = radiusAxisModel.getFormattedLabels();
 
             var start = polar.coordToPoint([radiusExtent[0], axisAngle]);
             var end = polar.coordToPoint([radiusExtent[1], axisAngle]);

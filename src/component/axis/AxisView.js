@@ -187,7 +187,7 @@ define(function (require) {
             var gridRect = gridModel.coordinateSystem.getRect();
 
             var ticks = axis.scale.getTicks();
-            var labels = axisModel.formatLabels(axis.scale.getTicksLabels());
+            var labels = axisModel.getFormattedLabels();
             var labelMargin = labelModel.get('margin');
             var labelRotate = labelModel.get('rotate');
 

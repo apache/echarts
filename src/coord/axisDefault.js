@@ -104,10 +104,13 @@ define(function (require) {
     }, defaultOption);
 
     var timeAxis = zrUtil.merge({}, valueAxis);
+    var logAxis = zrUtil.merge({}, valueAxis);
+    logAxis.scale = true;
 
     return {
         categoryAxis: categoryAxis,
         valueAxis: valueAxis,
-        timeAxis: timeAxis
+        timeAxis: timeAxis,
+        logAxis: logAxis
     };
 });

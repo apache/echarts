@@ -1,11 +1,13 @@
 /**
  * Interval scale
- * @module echarts/coord/scale/Interval
+ * @module echarts/scale/Interval
  */
 
 define(function (require) {
 
     var numberUtil = require('../util/number');
+    var formatUtil = require('../util/format');
+    var Scale = require('./Scale');
 
     var mathFloor = Math.floor;
     var mathCeil = Math.ceil;
@@ -13,120 +15,30 @@ define(function (require) {
      * @alias module:echarts/coord/scale/Interval
      * @constructor
      */
-    var IntervalScale = function () {
-
-        /**
-         * Extent
-         * @type {Array.<number>}
-         * @protected
-         */
-        this._extent = [Infinity, -Infinity];
-
-        /**
-         * Step is calculated in adjustExtent
-         * @type {Array.<number>}
-         * @protected
-         */
-        this._interval = 0;
-    };
-
-    IntervalScale.prototype = {
-
-        constructor: IntervalScale,
+    var IntervalScale = Scale.extend({
 
         type: 'interval',
 
-        /**
-         * If scale extent contain give value
-         * @param {number}
-         */
-        contain: function (val) {
-            var extent = this._extent;
-            return val >= extent[0] && val <= extent[1];
-        },
-
-        /**
-         * Normalize value to linear [0, 1]
-         * @param {number} val
-         * @return {number}
-         */
-        normalize: function (val) {
-            var extent = this._extent;
-            return (val - extent[0]) / (extent[1] - extent[0]);
-        },
-
-        /**
-         * Scale normalized value
-         * @param {number} val
-         * @return {number}
-         */
-        scale: function (val) {
-            var extent = this._extent;
-            return val * (extent[1] - extent[0]) + extent[0];
-        },
-
-        /**
-         * Set extent from data
-         * @param {Array.<number>} other
-         */
-        unionExtent: function (other) {
-            var extent = this._extent;
-            other[0] < extent[0] && (extent[0] = other[0]);
-            other[1] > extent[1] && (extent[1] = other[1]);
-        },
-
-        /**
-         * Get extent
-         * @return {Array.<number>}
-         */
-        getExtent: function () {
-            return this._extent.slice();
-        },
-
-        /**
-         * Set extent
-         * @param {number} start
-         * @param {number} end
-         */
-        setExtent: function (start, end) {
-            var thisExtent = this._extent;
-            if (!isNaN(start)) {
-                thisExtent[0] = start;
-            }
-            if (!isNaN(end)) {
-                thisExtent[1] = end;
-            }
-            if (thisExtent[0] === thisExtent[1]) {
-                // Expand extent
-                var expandSize = thisExtent[0] / 2;
-                thisExtent[0] -= expandSize;
-                thisExtent[1] += expandSize;
-            }
-        },
+        _interval: 0,
 
         /**
          * Get interval
          */
         getInterval: function () {
-            if (! this._interval) {
+            if (!this._interval) {
                 this.niceTicks();
             }
             return this._interval;
         },
 
         /**
-         * Set interval
-         * @param {number} interval
-         */
-        setInterval: function (interval) {
-            this._interval = interval;
-        },
-
-        /**
          * @return {Array.<number>}
          */
         getTicks: function () {
-            var interval = this.getInterval();
+            if (!this._interval) {
+                this.niceTicks();
+            }
+            var interval = this._interval;
             var extent = this._extent;
             var ticks = [];
 
@@ -165,9 +77,8 @@ define(function (require) {
          * @param {number} n
          * @return {number}
          */
-        // FIXME addCommas
         getLabel: function (data) {
-            return data + '';
+            return formatUtil.addCommas(data);
         },
 
         /**
@@ -229,7 +140,7 @@ define(function (require) {
                 extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
             }
         }
-    };
+    });
 
     /**
      * @return {module:echarts/scale/Time}
@@ -237,8 +148,6 @@ define(function (require) {
     IntervalScale.create = function () {
         return new IntervalScale();
     };
-
-    require('./scale').register(IntervalScale);
 
     return IntervalScale;
 });

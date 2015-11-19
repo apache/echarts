@@ -2,6 +2,7 @@ define(function (require) {
 
     var Group = require('zrender/container/Group');
     var componentUtil = require('../util/component');
+    var clazzUtil = require('../util/clazz');
 
     function Chart() {
 
@@ -130,10 +131,10 @@ define(function (require) {
     }
 
     // Enable Chart.extend.
-    componentUtil.enableClassExtend(Chart);
+    clazzUtil.enableClassExtend(Chart);
 
     // Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
-    componentUtil.enableClassManagement(Chart, {registerWhenExtend: true});
+    clazzUtil.enableClassManagement(Chart, {registerWhenExtend: true});
 
     return Chart;
 });

@@ -1,39 +1,34 @@
 define(function (require) {
 
-    var numberUtil = require('../util/number');
-    var formatUtil = require('../util/format');
     var zrUtil = require('zrender/core/util');
 
     function categoryDefaultFormatter(val) {
         return val;
     }
 
+    // function getName(obj) {
+    //     if (typeof obj === 'string') {
+    //         return obj;
+    //     }
+    //     return obj.name;
+    // }
+    /**
+     * Get categories
+     */
+    // function getCategories() {
+    //     return this.get('type') === 'category'
+    //         && zrUtil.map()
+    // }
+
     /**
      * Format labels
-     * @param {Array.<string>} labels
      * @return {Array.<string>}
      */
-    function formatLabels (labels) {
+    function getFormattedLabels () {
         var labelFormatter = this.get('axisLabel.formatter');
-
+        var labels = this.axis.scale.getTicksLabels();
         if (!labelFormatter) {
-            switch (this.get('type')) {
-                case 'category':
-                    labelFormatter = categoryDefaultFormatter;
-                    break;
-                case 'time':
-                    labelFormatter = function (time) {
-                        return time;
-                    }
-                    break;
-                case 'log':
-                    // TODO
-                    break;
-                default:
-                    labelFormatter = function (val) {
-                        return formatUtil.addCommas(numberUtil.round(val));
-                    };
-            }
+            return labels;
         }
         else if (typeof labelFormatter === 'string') {
             labelFormatter = (function (tpl) {
@@ -47,6 +42,6 @@ define(function (require) {
     }
 
     return {
-        formatLabels: formatLabels
+        getFormattedLabels: getFormattedLabels
     };
 });

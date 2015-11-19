@@ -20,7 +20,7 @@ define(function(require) {
         }
 
         var ticks = axis.scale.getTicks();
-        var labels = axisModel.formatLabels(axis.scale.getTicksLabels());
+        var labels = axisModel.getFormattedLabels();
         var font = labelModel.getModel('textStyle').getFont();
 
         var textSpaceTakenRect;

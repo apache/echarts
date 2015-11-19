@@ -13,7 +13,7 @@ define(function (require) {
     var ComponentView = require('./view/Component');
     var ChartView = require('./view/Chart');
 
-    var scaleClasses = require('./scale/scale');
+    var Scale = require('./scale/Scale');
 
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
@@ -388,7 +388,7 @@ define(function (require) {
             var chart = chartsMap[id];
             if (!chart) {
                 var Clazz = ChartView.getClass(
-                    ComponentModel.parseComponentType(seriesModel.type).sub
+                    ComponentModel.parseClassType(seriesModel.type).sub
                 );
                 if (Clazz) {
                     chart = new Clazz();
@@ -885,8 +885,8 @@ define(function (require) {
     /**
      * @param {echarts/scale/*} scale
      */
-    echarts.registerScale = function (scale) {
-        scaleClasses.register(scale);
+    echarts.extendScale = function (opts) {
+        return Scale.extend(opts);
     };
 
     /**

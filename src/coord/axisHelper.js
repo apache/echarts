@@ -2,7 +2,7 @@ define(function (require) {
 
     var OrdinalScale = require('../scale/Ordinal');
     var IntervalScale = require('../scale/Interval');
-    var scaleClasses = require('../scale/scale');
+    var Scale = require('../scale/Scale');
 
     var numberUtil = require('../util/number');
     var zrUtil = require('zrender/core/util');
@@ -60,7 +60,7 @@ define(function (require) {
                     return new IntervalScale();
                 // Extended scale, like time and log
                 default:
-                    return (scaleClasses.getClass(axisType) || IntervalScale).create(axisModel);
+                    return (Scale.getClass(axisType) || IntervalScale).create(axisModel);
             }
         }
     };
