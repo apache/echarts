@@ -2,23 +2,19 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
 
-    function categoryDefaultFormatter(val) {
-        return val;
+    function getName(obj) {
+        if (typeof obj === 'string') {
+            return obj;
+        }
+        return obj.value;
     }
-
-    // function getName(obj) {
-    //     if (typeof obj === 'string') {
-    //         return obj;
-    //     }
-    //     return obj.name;
-    // }
     /**
      * Get categories
      */
-    // function getCategories() {
-    //     return this.get('type') === 'category'
-    //         && zrUtil.map()
-    // }
+    function getCategories() {
+        return this.get('type') === 'category'
+            && zrUtil.map(this.get('data'), getName);
+    }
 
     /**
      * Format labels
@@ -42,6 +38,9 @@ define(function (require) {
     }
 
     return {
-        getFormattedLabels: getFormattedLabels
+
+        getFormattedLabels: getFormattedLabels,
+
+        getCategories: getCategories
     };
 });

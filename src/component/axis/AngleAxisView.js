@@ -3,6 +3,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
+    var Model = require('../../model/Model');
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 
@@ -89,8 +90,10 @@ define(function (require) {
         _axisLabel: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
             var axis = angleAxisModel.axis;
 
+            var categoryData = angleAxisModel.get('data');
+
             var labelModel = angleAxisModel.getModel('axisLabel');
-            var textStyleModel = labelModel.getModel('textStyle');
+            var axisTextStyleModel = labelModel.getModel('textStyle');
 
             var labels = angleAxisModel.getFormattedLabels();
 
@@ -109,10 +112,17 @@ define(function (require) {
                 var labelTextBaseline = Math.abs(p[1] - cy) / r < 0.3
                     ? 'middle' : (p[1] > cy ? 'top' : 'bottom');
 
+                var textStyleModel = axisTextStyleModel;
+                if (categoryData && categoryData[i] && categoryData[i].textStyle) {
+                    textStyleModel = new Model(
+                        categoryData[i].textStyle, axisTextStyleModel
+                    );
+                }
                 this.group.add(new graphic.Text({
                     style: {
                         x: p[0],
                         y: p[1],
+                        fill: textStyleModel.get('color'),
                         text: labels[i],
                         textAlign: labelTextAlign,
                         textBaseline: labelTextBaseline,

@@ -2,6 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
+    var Model = require('../../model/Model');
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
 
@@ -181,8 +182,10 @@ define(function (require) {
         _axisLabel: function (axisModel, gridModel, labelInterval) {
             var axis = axisModel.axis;
 
+            var categoryData = axisModel.get('data');
+
             var labelModel = axisModel.getModel('axisLabel');
-            var textStyleModel = labelModel.getModel('textStyle');
+            var axisTextStyleModel = labelModel.getModel('textStyle');
 
             var gridRect = gridModel.coordinateSystem.getRect();
 
@@ -201,6 +204,12 @@ define(function (require) {
                 var tick = ticks[i];
                 if (ifIgnoreOnTick(axis, i, labelInterval)) {
                      continue;
+                }
+                var textStyleModel = axisTextStyleModel;
+                if (categoryData && categoryData[i] && categoryData[i].textStyle) {
+                    textStyleModel = new Model(
+                        categoryData[i].textStyle, axisTextStyleModel
+                    );
                 }
 
                 var x;

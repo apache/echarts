@@ -5,6 +5,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var vector = require('zrender/core/vector');
     var graphic = require('../../util/graphic');
+    var Model = require('../../model/Model');
 
     var elementList = ['splitLine', 'splitArea', 'axisLine', 'axisTick', 'axisLabel'];
 
@@ -93,9 +94,12 @@ define(function (require) {
          * @private
          */
         _axisLabel: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
+
+            var categoryData = radiusAxisModel.get('data');
+
             var axis = radiusAxisModel.axis;
             var labelModel = radiusAxisModel.getModel('axisLabel');
-            var textStyleModel = labelModel.getModel('textStyle');
+            var axisTextStyleModel = labelModel.getModel('textStyle');
             var tickModel = radiusAxisModel.getModel('axisTick');
 
             var labels = radiusAxisModel.getFormattedLabels();
@@ -133,10 +137,18 @@ define(function (require) {
                 // Get point on axis
                 vector.lerp(p, start, end, labelsPositions[i] / len);
                 vector.scaleAndAdd(p, p, dir, labelMargin + tickLen);
+
+                var textStyleModel = axisTextStyleModel;
+                if (categoryData && categoryData[i] && categoryData[i].textStyle) {
+                    textStyleModel = new Model(
+                        categoryData[i].textStyle, axisTextStyleModel
+                    );
+                }
                 this.group.add(new graphic.Text({
                     style: {
                         x: p[0],
                         y: p[1],
+                        fill: textStyleModel.get('color'),
                         text: labels[i],
                         textAlign: labelTextAlign,
                         textBaseline: dir[1] > 0.4 ? 'bottom' : (dir[1] < -0.4 ? 'top' : 'middle'),

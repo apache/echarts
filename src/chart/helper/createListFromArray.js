@@ -127,7 +127,7 @@ define(function(require) {
 
         if (result.categoryAxisModel) {
             // FIXME Two category axis
-            var categories = result.categoryAxisModel.get('data');
+            var categories = result.categoryAxisModel.getCategories();
             if (categories) {
                 var dataLen = data.length;
                 // Ordered data is given explicitly like
@@ -136,11 +136,11 @@ define(function(require) {
                 if (data[0] && data[0].length > 1 && categories.length > dataLen) {
                     nameList = [];
                     for (var i = 0; i < dataLen; i++) {
-                        nameList[i] = categories[data[i][0]];
+                        nameList[i] = categories[i];
                     }
                 }
                 else {
-                    nameList = categories.slice();
+                    nameList = categories.slice(0);
                 }
             }
         }

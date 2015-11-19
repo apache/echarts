@@ -1,0 +1,146 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/util/graphic',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip'
+            ], function (echarts, graphic) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 5; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((-Math.random() - 0.2).toFixed(3));
+                    data2.push((Math.random() + 0.3).toFixed(3));
+                    data3.push((Math.random() + 0.2).toFixed(3));
+                }
+
+                xAxisData.push({
+                    value: '类目' + i,
+                    textStyle: {
+                        color: 'red'
+                    }
+                });
+                data1.push('-');
+                data2.push('-');
+                data3.push('-');
+
+                for (; i < 10; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((-Math.random() - 0.2).toFixed(3));
+                    data2.push((Math.random() + 0.3).toFixed(3));
+                    data3.push((Math.random() + 0.2).toFixed(3));
+                }
+
+                var itemStyle = {
+                    normal: {
+                        // borderColor: 'white',
+                        // borderWidth: 3,
+                        // shadowBlur: 10,
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 5,
+                        // shadowColor: 'rgba(0, 0, 0, 0.4)',
+                        lineStyle: {
+                            width: 2
+                            // shadowBlur: 10,
+                            // shadowOffsetX: 0,
+                            // shadowOffsetY: 5,
+                            // shadowColor: 'rgba(0, 0, 0, 0.4)'
+                        },
+                        areaStyle: {
+                        }
+                    }
+                };
+
+                chart.setOption({
+                    legend: {
+                        data: ['line', 'line2', 'line3']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    xAxis: {
+                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        data: xAxisData,
+                        boundaryGap: false,
+                        // inverse: true,
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                        boundaryGap: [0, 0],
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    series: [{
+                        name: 'line',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 10,
+                        data: data1,
+                        itemStyle: itemStyle,
+                        smooth: true
+                    }, {
+                        name: 'line2',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 10,
+                        data: data2,
+                        itemStyle: itemStyle,
+                        smooth: true
+                    }, {
+                        name: 'line3',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 10,
+                        data: data3,
+                        itemStyle: itemStyle,
+                        areaStyle: {
+                            normal: {
+                                color: new graphic.LinearGradient(0, 0, 0, 1, [{
+                                    offset: 0,
+                                    color: 'red'
+                                }, {
+                                    offset: 1,
+                                    color: 'black'
+                                }])
+                            }
+                        },
+                        smooth: true
+                    }]
+                });
+            });
+
+        </script>
+    </body>
+</html>
