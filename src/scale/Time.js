@@ -90,15 +90,7 @@ define(function (require) {
      * @alias module:echarts/coord/scale/Time
      * @constructor
      */
-    function TimeScale() {
-
-        IntervalScale.call(this);
-    }
-
-    TimeScale.prototype = {
-
-        constructor: TimeScale,
-
+    var TimeScale = IntervalScale.extend({
         type: 'time',
 
         // Overwrite
@@ -133,7 +125,7 @@ define(function (require) {
             this._interval = interval;
             this._niceExtent = niceExtent;
         }
-    };
+    });
 
     zrUtil.each(['contain', 'normalize'], function (methodName) {
         TimeScale.prototype[methodName] = function (val) {
@@ -141,8 +133,6 @@ define(function (require) {
             return intervalScaleProto[methodName].call(this, val);
         };
     });
-
-    zrUtil.inherits(TimeScale, IntervalScale);
 
     // Steps from d3
     var scaleLevels = [
@@ -175,8 +165,6 @@ define(function (require) {
     TimeScale.create = function () {
         return new TimeScale();
     };
-
-    require('./scale').register(TimeScale);
 
     return TimeScale;
 });

@@ -9,6 +9,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var arrayPush = Array.prototype.push;
     var componentUtil = require('../util/component');
+    var clazzUtil = require('../util/clazz');
 
     /**
      * @alias module:echarts/model/Component
@@ -96,7 +97,7 @@ define(function(require) {
     });
 
     // Reset ComponentModel.extend, add preConstruct.
-    componentUtil.enableClassExtend(
+    clazzUtil.enableClassExtend(
         ComponentModel,
         function (option, parentModel, ecModel, dependentModels, index) {
             this.ecModel = ecModel;
@@ -115,9 +116,10 @@ define(function(require) {
     );
 
     // Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
-    componentUtil.enableClassManagement(
-        ComponentModel, {subTypeDefaulter: true, registerWhenExtend: true}
+    clazzUtil.enableClassManagement(
+        ComponentModel, {registerWhenExtend: true}
     );
+    componentUtil.enableSubTypeDefaulter(ComponentModel);
 
     // Add capability of ComponentModel.topologicalTravel.
     componentUtil.enableTopologicalTravel(ComponentModel, getDependencies);
@@ -129,7 +131,7 @@ define(function(require) {
         });
         // Ensure main type
         return zrUtil.map(deps, function (type) {
-            return ComponentModel.parseComponentType(type).main;
+            return ComponentModel.parseClassType(type).main;
         });
     }
 

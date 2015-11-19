@@ -4,7 +4,7 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
-    var componentUtil = require('../util/component');
+    var clazzUtil = require('../util/clazz');
 
     /**
      * @alias module:echarts/model/Model
@@ -127,7 +127,7 @@ define(function (require) {
     };
 
     // Enable Model.extend.
-    componentUtil.enableClassExtend(Model);
+    clazzUtil.enableClassExtend(Model);
 
     var mixin = zrUtil.mixin;
     mixin(Model, require('./mixin/lineStyle'));

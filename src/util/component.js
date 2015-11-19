@@ -1,191 +1,44 @@
 define(function(require) {
 
     var zrUtil = require('zrender/core/util');
+    var clazz = require('./clazz');
+
+    var parseClassType = clazz.parseClassType;
 
     var base = 0;
-    var DELIMITER = '_';
-    var TYPE_DELIMITER = '.';
-    var IS_CONTAINER = '___EC__COMPONENT__CONTAINER___';
 
-    var util = {};
+    var componentUtil = {};
+
+    var DELIMITER = '_';
 
     /**
      * @public
      * @param {string} type
      * @return {string}
      */
-    util.getUID = function (type) {
+    componentUtil.getUID = function (type) {
         // Considering the case of crossing js context,
         // use Math.random to make id as unique as possible.
         return [(type || ''), base++, Math.random()].join(DELIMITER);
     };
 
     /**
-     * @public
-     */
-    var parseComponentType = util.parseComponentType = function (componentType) {
-        var ret = {main: '', sub: ''};
-        if (componentType) {
-            componentType = componentType.split(TYPE_DELIMITER);
-            ret.main = componentType[0] || '';
-            ret.sub = componentType[1] || '';
-        }
-        return ret;
-    };
-
-    /**
-     * @public
-     */
-    util.enableClassExtend = function (RootClass, preConstruct) {
-        RootClass.extend = function (proto) {
-            var ExtendedClass = function () {
-                preConstruct && preConstruct.apply(this, arguments);
-                RootClass.apply(this, arguments);
-            };
-
-            zrUtil.extend(ExtendedClass.prototype, proto);
-            ExtendedClass.extend = this.extend;
-            zrUtil.inherits(ExtendedClass, this);
-
-            return ExtendedClass;
-        };
-    };
-
-    /**
-     * @param {Object} entity
-     * @param {Object} options
-     * @param {boolean} [options.subTypeDefaulter]
-     * @param {boolean} [options.registerWhenExtend]
-     * @public
-     */
-    util.enableClassManagement = function (entity, options) {
-        options = options || {};
-
-        /**
-         * Component model classes
-         * key: componentType,
-         * value:
-         *     componentClass, when componentType is 'xxx'
-         *     or Object.<subKey, componentClass>, when componentType is 'xxx.yy'
-         * @type {Object}
-         */
-        var storage = {};
-
-        entity.registerClass = function (Clazz, componentType) {
-            if (componentType) {
-                componentType = parseComponentType(componentType);
-
-                if (!componentType.sub) {
-                    if (storage[componentType.main]) {
-                        throw new Error(componentType.main + 'exists');
-                    }
-                    storage[componentType.main] = Clazz;
-                }
-                else if (componentType.sub !== IS_CONTAINER) {
-                    var container = makeContainer(componentType);
-                    container[componentType.sub] = Clazz;
-                }
-            }
-            return Clazz;
-        };
-
-        entity.getClass = function (componentTypeMain, subType, throwWhenNotFound) {
-            var Clazz = storage[componentTypeMain];
-
-            if (Clazz && Clazz[IS_CONTAINER]) {
-                Clazz = subType ? Clazz[subType] : null;
-            }
-
-            if (throwWhenNotFound && !Clazz) {
-                throw new Error(
-                    'Component ' + componentTypeMain + '.' + (subType || '') + ' not exists'
-                );
-            }
-
-            return Clazz;
-        };
-
-        entity.getClassesByMainType = function (componentType) {
-            componentType = parseComponentType(componentType);
-
-            var result = [];
-            var obj = storage[componentType.main];
-
-            if (obj && obj[IS_CONTAINER]) {
-                zrUtil.each(obj, function (o, type) {
-                    type !== IS_CONTAINER && result.push(o);
-                });
-            }
-            else {
-                result.push(obj);
-            }
-
-            return result;
-        };
-
-        entity.hasClass = function (componentType) {
-            // Just consider componentType.main.
-            componentType = parseComponentType(componentType);
-            return !!storage[componentType.main];
-        };
-
-        /**
-         * @return {Array.<string>} Like ['aa', 'bb'], but can not be ['aa.xx']
-         */
-        entity.getAllClassMainTypes = function () {
-            var types = [];
-            zrUtil.each(storage, function (obj, type) {
-                types.push(type);
-            });
-            return types;
-        };
-
-        entity.parseComponentType = parseComponentType;
-
-        function makeContainer(componentType) {
-            var container = storage[componentType.main];
-            if (!container || !container[IS_CONTAINER]) {
-                container = storage[componentType.main] = {};
-                container[IS_CONTAINER] = true;
-            }
-            return container;
-        }
-
-        if (options.subTypeDefaulter) {
-            enableSubTypeDefaulter(entity, storage);
-        }
-
-        if (options.registerWhenExtend) {
-            var originalExtend = entity.extend;
-            if (originalExtend) {
-                entity.extend = function (proto) {
-                    var ExtendedClass = originalExtend.call(this, proto);
-                    return entity.registerClass(ExtendedClass, proto.type);
-                };
-            }
-        }
-
-        return entity;
-    };
-
-    /**
      * @inner
      */
-    function enableSubTypeDefaulter(entity, storage) {
+    componentUtil.enableSubTypeDefaulter = function (entity) {
 
         var subTypeDefaulters = {};
 
         entity.registerSubTypeDefaulter = function (componentType, defaulter) {
-            componentType = parseComponentType(componentType);
+            componentType = parseClassType(componentType);
             subTypeDefaulters[componentType.main] = defaulter;
         };
 
         entity.determineSubType = function (componentType, option) {
             var type = option.type;
             if (!type) {
-                var componentTypeMain = parseComponentType(componentType).main;
-                var Clazz = storage[componentTypeMain];
-                if (Clazz && Clazz[IS_CONTAINER] && subTypeDefaulters[componentTypeMain]) {
+                var componentTypeMain = parseClassType(componentType).main;
+                if (entity.hasSubTypes(componentType) && subTypeDefaulters[componentTypeMain]) {
                     type = subTypeDefaulters[componentTypeMain](option);
                 }
             }
@@ -193,7 +46,7 @@ define(function(require) {
         };
 
         return entity;
-    }
+    };
 
     /**
      * Topological travel on Activity Network (Activity On Vertices).
@@ -204,7 +57,7 @@ define(function(require) {
      * If there is circle dependencey, Error will be thrown.
      *
      */
-    util.enableTopologicalTravel = function (entity, dependencyGetter) {
+    componentUtil.enableTopologicalTravel = function (entity, dependencyGetter) {
 
         /**
          * @public
@@ -304,5 +157,5 @@ define(function(require) {
         }
     };
 
-    return util;
+    return componentUtil;
 });

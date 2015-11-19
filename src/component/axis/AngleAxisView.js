@@ -92,7 +92,7 @@ define(function (require) {
             var labelModel = angleAxisModel.getModel('axisLabel');
             var textStyleModel = labelModel.getModel('textStyle');
 
-            var labels = angleAxisModel.formatLabels(axis.scale.getTicksLabels());
+            var labels = angleAxisModel.getFormattedLabels();
 
             var labelMargin = labelModel.get('margin');
             var labelsAngles = axis.getLabelsCoords();
