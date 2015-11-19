@@ -90,10 +90,10 @@ define(function (require) {
      * @alias module:echarts/coord/scale/Time
      * @constructor
      */
-    var TimeScale = function () {
+    function TimeScale() {
 
         IntervalScale.call(this);
-    };
+    }
 
     TimeScale.prototype = {
 

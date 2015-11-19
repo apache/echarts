@@ -1,6 +1,6 @@
 /**
  * Interval scale
- * @module echarts/coord/scale/Interval
+ * @module echarts/scale/Interval
  */
 
 define(function (require) {
@@ -108,7 +108,7 @@ define(function (require) {
          * Get interval
          */
         getInterval: function () {
-            if (! this._interval) {
+            if (!this._interval) {
                 this.niceTicks();
             }
             return this._interval;

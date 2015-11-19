@@ -8,6 +8,20 @@ define(function (require) {
         return val;
     }
 
+    // function getName(obj) {
+    //     if (typeof obj === 'string') {
+    //         return obj;
+    //     }
+    //     return obj.name;
+    // }
+    /**
+     * Get categories
+     */
+    // function getCategories() {
+    //     return this.get('type') === 'category'
+    //         && zrUtil.map()
+    // }
+
     /**
      * Format labels
      * @param {Array.<string>} labels
@@ -24,10 +38,7 @@ define(function (require) {
                 case 'time':
                     labelFormatter = function (time) {
                         return time;
-                    }
-                    break;
-                case 'log':
-                    // TODO
+                    };
                     break;
                 default:
                     labelFormatter = function (val) {
