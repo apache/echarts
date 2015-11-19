@@ -103,6 +103,7 @@ define(function (require) {
         splitNumber: 6
     }, defaultOption);
 
+    // FIXME
     var timeAxis = zrUtil.merge({}, valueAxis);
     var logAxis = zrUtil.merge({}, valueAxis);
     logAxis.scale = true;
