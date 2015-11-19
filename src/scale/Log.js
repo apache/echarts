@@ -33,7 +33,7 @@ define(function (require) {
     logScaleProto.getTicks = function () {
         var ticks = intervalScaleProto.getTicks.call(this);
         return zrUtil.map(ticks, function (tick) {
-            return Math.pow(LOG_BASE, tick);
+            return numberUtil.round(Math.pow(LOG_BASE, tick));
         });
     };
 
