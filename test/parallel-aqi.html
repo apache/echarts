@@ -53,47 +53,6 @@
                     }
                 };
 
-                var baseAxis = {
-                    type: 'value',
-                    name: 'AQI指数',
-                    nameLocation: 'end',
-                    nameGap: 20,
-                    nameTextStyle: {
-                        color: '#fff',
-                        fontSize: 20
-                    },
-                    axisLine: {
-                        lineStyle: {
-                            color: '#fff'
-                        }
-                    },
-                    axisTick: {
-                        lineStyle: {
-                            color: '#777'
-                        }
-                    },
-                    splitLine: {
-                        show: false
-                    },
-                    axisLabel: {
-                        textStyle: {
-                            color: '#fff'
-                        }
-                    }
-                };
-
-                var dimensionCount = 8;
-                var dimensions = [];
-                var parallelAxis = [];
-                var parallelAxisIndex = [];
-                for (var i = 0; i < dimensionCount; i++) {
-                    dimensions.push('dim' + i);
-                    var axis = zrUtil.clone(baseAxis, true);
-                    axis.name = '指标' + i;
-                    parallelAxis.push(axis);
-                    parallelAxisIndex.push(i);
-                }
-
                 chart.setOption({
                     color: [
                         '#dd4444', '#fec42c', '#80F1BE'
@@ -105,12 +64,6 @@
                             color: '#fff',
                             fontSize: 20
                         }
-                    },
-                    grid: {
-                        x: '10%',
-                        x2: 200,
-                        y: '15%',
-                        y2: '10%'
                     },
                     tooltip: {
                         padding: 10,
@@ -131,10 +84,45 @@
                                 + schema[6].text + '：' + value[6] + '<br>';
                         }
                     },
-                    parallelAxis: parallelAxis,
+                    parallelAxis: [
+                        {dim: 'dim1', name: '指标1'},
+                        {dim: 'dim2', name: '指标2'},
+                        {dim: 'dim3', name: '指标3'},
+                        {dim: 'dim4', name: '指标4'},
+                        {dim: 'dim5', name: '指标5'},
+                        {dim: 'dim6', name: '指标6'},
+                        {dim: 'dim7', name: '指标7'},
+                        {dim: 'dim8', name: '指标8'}
+                    ],
                     parallel: {
-                        dimensions: dimensions,
-                        parallelAxisIndex: parallelAxisIndex
+                        axisDefault: {
+                            type: 'value',
+                            name: 'AQI指数',
+                            nameLocation: 'end',
+                            nameGap: 20,
+                            nameTextStyle: {
+                                color: '#fff',
+                                fontSize: 20
+                            },
+                            axisLine: {
+                                lineStyle: {
+                                    color: '#aaa'
+                                }
+                            },
+                            axisTick: {
+                                lineStyle: {
+                                    color: '#777'
+                                }
+                            },
+                            splitLine: {
+                                show: false
+                            },
+                            axisLabel: {
+                                textStyle: {
+                                    color: '#fff'
+                                }
+                            }
+                        }
                     },
                     series: [
                         {

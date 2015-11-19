@@ -32,6 +32,7 @@ define(function (require) {
             }, this);
 
             this.group.add(axisBuilder.getGroup());
+            this.group.z2 = 100;
         }
 
     });

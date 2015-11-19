@@ -5,25 +5,26 @@ define(function(require) {
 
     require('./AxisModel');
 
-    var VALID_DIM_TYPES = {value: 1, category: 1};
-
     Component.extend({
 
         type: 'parallel',
+
+        dependencies: ['parallelAxis'],
 
         /**
          * @type {module:echarts/coord/parallel/Parallel}
          */
         coordinateSystem: null,
 
+        /**
+         * Each item like: {name: 'dimX', axisType: 'value', axisIndex: 2}
+         * @type {Array.<Object>}
+         * @readOnly
+         */
+        dimensions: null,
+
         defaultOption: {
             show: false,
-
-            dimensions: 5,            // {number} 表示 dim数，如设为 3 会自动转化成 ['dim0', 'dim1', 'dim2']
-                                      // {Array.<string>} 表示哪些dim，如 ['dim3', 'dim2']
-                                      // {Array.<Object>} 表示哪些dim，如 [{name: 'dim3', axisType: 'category', ...]
-            parallelAxisIndex: null,  // {Array.<number>} 表示引用哪些axis，如 [2, 1, 4]
-                                      // {Object} 表示 mapping，如{dim1: 3, dim3: 1, others: 0}，others不设则自动取0
 
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
@@ -35,6 +36,8 @@ define(function(require) {
             // height: {totalHeight} - y - y2,
 
             layout: 'horizontal',      // 'horizontal' or 'vertical'
+
+            axisDefault: null,
 
             backgroundColor: 'rgba(0,0,0,0)',
             borderWidth: 0,
@@ -58,113 +61,41 @@ define(function(require) {
 
             newOption && zrUtil.merge(thisOption, newOption);
 
-            var parallelAxisIndex = thisOption.parallelAxisIndex;
-            var dimensions = thisOption.dimensions;
-
-            dimensions = completeDimensions(dimensions);
-            parallelAxisIndex = completeParallelAxisIndexByMapping(
-                parallelAxisIndex, dimensions
-            );
-            parallelAxisIndex = completeParallelAxisIndexWhenNone(
-                parallelAxisIndex, dimensions
-            );
-
-            thisOption.dimensions = dimensions;
-            thisOption.parallelAxisIndex = parallelAxisIndex;
+            this._initDimensions();
         },
 
         /**
-         * Whether series is in this coordinate system.
+         * Whether series or axis is in this coordinate system.
+         * @param {module:echarts/model/Series|module:echarts/coord/parallel/AxisModel} model
+         * @param {module:echarts/model/Global} ecModel
          */
-        containsSeries: function (seriesModel, ecModel) {
-            var parallelIndex;
-            return seriesModel.get('coordinateSystem') === 'parallel'
-                && (parallelIndex = seriesModel.get('parallelIndex')) != null
+        contains: function (model, ecModel) {
+            var parallelIndex = model.get('parallelIndex');
+            return parallelIndex != null
                 && ecModel.getComponent('parallel', parallelIndex) === this;
+        },
+
+        /**
+         * @private
+         */
+        _initDimensions: function () {
+            var dimensions = this.dimensions = [];
+
+            var axisModels = zrUtil.filter(this.dependentModels.parallelAxis, function (axisModel) {
+                // Can not use this.contains here, because
+                // initialization has not been completed yet.
+                return axisModel.get('parallelIndex') === this.componentIndex;
+            });
+
+            zrUtil.each(axisModels, function (axisModel) {
+                dimensions.push({
+                    name: axisModel.get('dim'),
+                    axisType: axisModel.get('type'),
+                    axisIndex: axisModel.componentIndex
+                });
+            });
         }
 
     });
-
-    function completeDimensions(dimensions) {
-        // If dimensions is not array, represents dimension count.
-        // Generate dimensions by dimension count.
-
-        if (!zrUtil.isArray(dimensions)) {
-            var count = dimensions;
-            dimensions = [];
-            for (var i = 0; i < count; i++) {
-                dimensions.push('dim' + i);
-            }
-        }
-
-        for (var i = 0; i < dimensions.length; i++) {
-            var dim = dimensions[i];
-            // dim might be string, represent dim name.
-            if (!zrUtil.isObject(dim)) {
-                dim = dimensions[i] = {name: dim};
-            }
-            if (!VALID_DIM_TYPES[dim.axisType]) {
-                dim.axisType = 'value';
-            }
-        }
-
-        return dimensions;
-    }
-
-    function completeParallelAxisIndexByMapping(parallelAxisIndex, dimensions) {
-        // If parallelAxisIndex is {}, represents mapping.
-        // like: {dim1: 3, dim3: 1, others: 0}
-        // Generate parallelAxisIndex by mapping.
-
-        if (zrUtil.isObject(parallelAxisIndex)
-            && !zrUtil.isArray(parallelAxisIndex)
-        ) {
-            var mapping = parallelAxisIndex;
-            parallelAxisIndex = [];
-
-            var otherAxisIndex = 0; // Others default 0.
-            zrUtil.each(mapping, function (axisIndex, dim) {
-                var dimIndex = getDimIndex(dimensions, dim);
-                if (dimIndex >= 0) {
-                    parallelAxisIndex[dimIndex] = dim;
-                }
-                else if (dim === 'others') {
-                    otherAxisIndex = axisIndex;
-                }
-            });
-
-            // Complete others.
-            zrUtil.each(parallelAxisIndex, function (axisIndex, idx) {
-                if (axisIndex == null) {
-                    parallelAxisIndex[idx] = otherAxisIndex;
-                }
-            });
-        }
-
-        return parallelAxisIndex;
-    }
-
-    function getDimIndex(dimensions, dimName) {
-        for (var i = 0; i < dimensions.length; i++) {
-            if (dimensions[i] === dimName) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    function completeParallelAxisIndexWhenNone(parallelAxisIndex, dimensions) {
-        if (!zrUtil.isObject(parallelAxisIndex)
-            || !zrUtil.isArray(parallelAxisIndex)
-        ) {
-            parallelAxisIndex = [];
-        }
-
-        if (parallelAxisIndex.length !== dimensions.length) {
-            // TODO
-        }
-
-        return parallelAxisIndex;
-    }
 
 });

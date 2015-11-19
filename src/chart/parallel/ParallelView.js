@@ -8,14 +8,12 @@ define(function (require) {
         type: 'parallel',
 
         init: function () {
-            this._dataGroup = new graphic.Group();
         },
 
         render: function (seriesModel, ecModel, api, payload) {
 
             var data = seriesModel.getData();
             var oldData = this._data;
-            var dataGroup = this._dataGroup;
             var group = this.group;
             var coordSys = seriesModel.coordinateSystem;
             var dimensions = coordSys.dimensions;
@@ -23,13 +21,23 @@ define(function (require) {
                 return dim.name;
             });
 
+            var dataGroup = this._dataGroup;
+            if (!dataGroup) {
+                this.group.add(
+                    dataGroup = this._dataGroup = new graphic.Group()
+                );
+            }
+
             var hasAnimation = ecModel.get('animation');
             var isFirstRender = !oldData;
 
             var lineStyleModel = seriesModel.getModel('lineStyle.normal');
             var globalColors = ecModel.get('color');
             var defaultColor = globalColors[seriesModel.seriesIndex % globalColors.length];
-            var lineStyle = zrUtil.defaults(lineStyleModel.getLineStyle(), {stroke: defaultColor});
+            var lineStyle = zrUtil.defaults(
+                lineStyleModel.getLineStyle(),
+                {stroke: defaultColor}
+            );
 
             // var onSectorClick = zrUtil.curry(
             //     updateDataSelected, this.uid, seriesModel, hasAnimation, api
@@ -91,9 +99,9 @@ define(function (require) {
                 })
                 .execute();
 
-            // Make sure data els is on top of labels
-            group.remove(dataGroup);
-            group.add(dataGroup);
+            // // Make sure data els is on top of labels
+            // group.remove(dataGroup);
+            // group.add(dataGroup);
 
             this._updateAll(data, seriesModel);
 
@@ -152,7 +160,9 @@ define(function (require) {
             // });
         },
 
-        dispose: function () {}
+        remove: function () {
+            this._dataGroup.remove();
+        }
     });
 
     function createEls(dataGroup, values, dimensions, coordSys, lineStyle) {

@@ -23,15 +23,27 @@ define(function(require) {
 
         defaultOption: {
 
-            type: 'value',
+            type: 'value', // 'value', 'category', ...
 
-            parallelIndex: null
+            dim: null, // 'dim0', 'dim1', 'dim2', ...
+
+            parallelIndex: null,
+
+            z: 10
         },
 
+        /**
+         * @override
+         */
         init: function (axisOption, parentModel, ecModel) {
+            this.mergeOption(axisOption, parentModel, ecModel);
+        },
 
+        /**
+         * @override
+         */
+        mergeOption: function (axisOption, parentModel, ecModel) {
             zrUtil.merge(axisOption, this.getDefaultOption(), false);
-
             mergeDefault(axisOption, ecModel);
         },
 

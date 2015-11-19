@@ -37,7 +37,7 @@ define(function(require) {
          * @type {Array.<number>}
          * @readOnly
          */
-        this.dimensions = parallelModel.get('dimensions');
+        this.dimensions = parallelModel.dimensions;
 
         /**
          * @type {module:zrender/core/BoundingRect}
@@ -59,12 +59,11 @@ define(function(require) {
          */
         _init: function (parallelModel, ecModel, api) {
 
-            var dimensions = parallelModel.get('dimensions');
-            var axisIndices = parallelModel.get('parallelAxisIndex');
+            var dimensions = parallelModel.dimensions;
 
-            each(axisIndices, function (axisIndex, idx) {
+            each(dimensions, function (dim) {
 
-                var axisModel = ecModel.getComponent('parallelAxis', axisIndex);
+                var axisModel = ecModel.getComponent('parallelAxis', dim.axisIndex);
                 var parallelIndex = axisModel.get('parallelIndex');
 
                 if (ecModel.getComponent('parallel', parallelIndex) !== parallelModel) {
@@ -72,8 +71,6 @@ define(function(require) {
                     // api.log('Axis should not be shared among coordinate systems!');
                     return;
                 }
-
-                var dim = dimensions[idx];
 
                 var axis = this._axesMap[dim.name] = new ParallelAxis(
                     dim.name,
@@ -104,7 +101,7 @@ define(function(require) {
         _updateAxesFromSeries: function (parallelModel, ecModel) {
             ecModel.eachSeries(function (seriesModel) {
 
-                if (!parallelModel.containsSeries(seriesModel, ecModel)) {
+                if (!parallelModel.contains(seriesModel, ecModel)) {
                     return;
                 }
 
@@ -201,7 +198,9 @@ define(function(require) {
                 this._axesLayout[dim.name] = {
                     position: position,
                     rotation: rotation,
-                    transform: transform
+                    transform: transform,
+                    tickDirection: 1,
+                    labelDirection: 1
                 };
             }, this);
         },

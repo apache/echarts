@@ -101,6 +101,7 @@ define(function(require) {
         function (option, parentModel, ecModel, dependentModels, index) {
             this.ecModel = ecModel;
             this.dependentModels = dependentModels;
+            this.componentIndex = index;
 
             // FIXME
             // 如果name重复，要进行提示。

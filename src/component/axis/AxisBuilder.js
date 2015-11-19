@@ -20,7 +20,6 @@ define(function (require) {
      * @param {number} [opt.lableInterval] Default label interval when label
      *                                     interval from model is null or 'auto'.
      * @param {number} [opt.isCartesian=false]
-     * @param {number} [opt.z2=0]
      */
     var AxisBuilder = function (axisModel, opt) {
 
@@ -39,8 +38,7 @@ define(function (require) {
          */
         this.group = new graphic.Group({
             position: opt.position.slice(),
-            rotation: opt.rotation,
-            z2: opt.z2
+            rotation: opt.rotation
         });
     };
 
@@ -210,7 +208,7 @@ define(function (require) {
             var opt = this.opt;
             var axisModel = this.axisModel;
 
-            var name = this.opt.name;
+            var name = this.opt.axisName;
             // If name is '', do not get name from axisMode.
             if (name == null) {
                 name = axisModel.get('name');

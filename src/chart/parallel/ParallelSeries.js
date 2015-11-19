@@ -13,7 +13,7 @@ define(function(require) {
         getInitialData: function (option, ecModel) {
             var dimensions = ecModel.getComponent(
                 'parallel', this.get('parallelIndex')
-            ).get('dimensions');
+            ).dimensions;
 
             dimensions = zrUtil.map(dimensions, function (dim) {
                 return dim.name;
@@ -59,6 +59,7 @@ define(function(require) {
             lineStyle: {
                 normal: {
                     width: 2,
+                    opacity: 0.6,
                     type: 'solid',
                     shadowColor: 'rgba(0,0,0,0)', //默认透明
                     shadowBlur: 0,
