@@ -10,12 +10,14 @@ define(function (require) {
     //     {
     //         axisLine: [],
     //         axisLabel: []
+    //         parallelIndex: 0  // ??? 是axis引用到coord，还是coord引用到axis？
     //     }
     // ],
     // parallel: [ // 如果没有写parallel则自动创建。FIXME 是不是应该强制用户写，自动创建埋bug？
     //     {
     //         dimensions: 3                 // number表示 count, 根据dimensionCount创建 []。
-    //                     ['dim1', 'dim3'], //
+    //                     ['dim1', 'dim3', {name: 'dim0', type: 'category'}], // FIXME 某列是category怎么指定？
+    //                                      // 默认dim type 是value。
     //
     //         parallelAxisIndex: [3, 1], // TODO 如果不设置则根据parallelAxisMap创建此项，
     //                                    // 如果没有parallelAxisMap则顺序引用。
@@ -29,7 +31,7 @@ define(function (require) {
     // ],
     // series: [
     //     {
-    //         parallelIndex: 0, // 缺省则0
+    //         parallelIndex: 0, // 缺省则0。series引用到axis，还是引用到coord？
     //         data: [
     //             [22, 23, 34, 6, 19],
     //             [22, 23, 34, 6, 19]

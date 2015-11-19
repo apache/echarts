@@ -31,11 +31,12 @@
                 'data/aqi/BJdata',
                 'data/aqi/GZdata',
                 'data/aqi/SHdata',
+                'zrender/core/util',
                 'echarts',
                 'echarts/chart/parallel',
                 // 'echarts/component/legend',
                 'echarts/component/parallel',
-            ], function (dataBJ, dataGZ, dataSH, echarts) {
+            ], function (dataBJ, dataGZ, dataSH, zrUtil, echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
@@ -52,7 +53,7 @@
                     }
                 };
 
-                var axis = {
+                var baseAxis = {
                     type: 'value',
                     name: 'AQI指数',
                     nameLocation: 'end',
@@ -60,6 +61,11 @@
                     nameTextStyle: {
                         color: '#fff',
                         fontSize: 20
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#fff'
+                        }
                     },
                     axisTick: {
                         lineStyle: {
@@ -76,10 +82,14 @@
                     }
                 };
 
-                var dimensions = 5;
+                var dimensionCount = 8;
+                var dimensions = [];
                 var parallelAxis = [];
                 var parallelAxisIndex = [];
-                for (var i = 0; i < dimensions.length; i++) {
+                for (var i = 0; i < dimensionCount; i++) {
+                    dimensions.push('dim' + i);
+                    var axis = zrUtil.clone(baseAxis, true);
+                    axis.name = '指标' + i;
                     parallelAxis.push(axis);
                     parallelAxisIndex.push(i);
                 }

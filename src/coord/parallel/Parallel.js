@@ -45,8 +45,6 @@ define(function(require) {
         this._rect;
 
         this._init(parallelModel, ecModel, api);
-
-        this.resize(parallelModel, api);
     }
 
     Parallel.prototype = {
@@ -77,11 +75,11 @@ define(function(require) {
 
                 var dim = dimensions[idx];
 
-                var axis = this._axesMap[dim] = new ParallelAxis(
-                    dim,
+                var axis = this._axesMap[dim.name] = new ParallelAxis(
+                    dim.name,
                     axisHelper.createScaleByModel(axisModel),
                     [0, 0],
-                    axisModel.get('type')
+                    dim.axisType // FIXME 检查和 axisModel.get('type') 的不一样
                 );
 
                 var isCategory = axis.type === 'category';
@@ -94,7 +92,27 @@ define(function(require) {
                 // Inject axisModel into axis
                 axis.model = axisModel;
 
-                axisHelper.niceScaleExtent(axis, axisModel);
+            }, this);
+
+            this._updateAxesFromSeries(parallelModel, ecModel);
+        },
+
+        /**
+         * Update properties from series
+         * @private
+         */
+        _updateAxesFromSeries: function (parallelModel, ecModel) {
+            ecModel.eachSeries(function (seriesModel) {
+
+                if (!parallelModel.containsSeries(seriesModel, ecModel)) {
+                    return;
+                }
+
+                var data = seriesModel.getData();
+
+                each(this.dimensions, function (dim) {
+                    this._axesMap[dim.name].scale.unionExtent(data.getDataExtent(dim.name));
+                }, this);
 
             }, this);
         },
@@ -136,26 +154,27 @@ define(function(require) {
             var sizeIdx = layout === 'horizontal' ? 0 : 1;
             var layoutLength = size[sizeIdx];
             var axisLength = size[1 - sizeIdx];
-
             var axisExtent = [0, axisLength];
+
             each(axes, function (axis) {
                 var idx = axis.inverse ? 1 : 0;
                 axis.setExtent(axisExtent[idx], axisExtent[1 - idx]);
+                axisHelper.niceScaleExtent(axis, axis.model);
             });
 
             each(dimensions, function (dim, idx) {
-                var axis = axes[dim];
+                var axis = axes[dim.name];
                 var pos = layoutLength * idx / (dimensions.length - 1);
                 var inverse = axis.inverse ? 'inverse' : 'forward';
 
                 var positionTable = {
                     horizontal: {
-                        x: pos,
-                        y: {forward: layoutLength, inverse: 0}
+                        x: {forward: pos, inverse: pos},
+                        y: {forward: axisLength, inverse: 0}
                     },
                     vertical: {
-                        x: {forward: 0, inverse: layoutLength},
-                        y: pos
+                        x: {forward: 0, inverse: axisLength},
+                        y: {forward: pos, inverse: pos}
                     }
                 };
                 var rotationTable = {
@@ -179,7 +198,7 @@ define(function(require) {
                 // TODO
                 // 根据axis order 更新 dimensions顺序。
 
-                this._axesLayout[dim] = {
+                this._axesLayout[dim.name] = {
                     position: position,
                     rotation: rotation,
                     transform: transform
@@ -209,7 +228,7 @@ define(function(require) {
          */
         axisCoordToPoint: function (coord, dim) {
             var axisLayout = this._axesLayout[dim];
-            var point = [0, coord];
+            var point = [coord, 0];
             vector.applyTransform(point, point, axisLayout.transform);
             return point;
         },

@@ -17,9 +17,13 @@ define(function (require) {
                 return;
             }
 
-            var coordSys = ecModel.getComponent('parallel', axisModel.get('parallelIndex'));
+            var coordSys = ecModel.getComponent(
+                'parallel', axisModel.get('parallelIndex')
+            ).coordinateSystem;
 
-            var axisBuilder = new AxisBuilder(coordSys.getAxisLayout(axisModel.axis.dim));
+            var axisBuilder = new AxisBuilder(
+                axisModel, coordSys.getAxisLayout(axisModel.axis.dim)
+            );
 
             zrUtil.each(elementList, function (name) {
                 if (axisModel.get(name +'.show')) {

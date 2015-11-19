@@ -1,6 +1,7 @@
 define(function(require) {
 
-    var createListFromArray = require('../helper/createListFromArray');
+    var List = require('../../data/List');
+    var zrUtil = require('zrender/core/util');
     var SeriesModel = require('../../model/Series');
 
     return SeriesModel.extend({
@@ -10,7 +11,18 @@ define(function(require) {
         dependencies: ['parallel'],
 
         getInitialData: function (option, ecModel) {
-            return createListFromArray(option.data, this, ecModel);
+            var dimensions = ecModel.getComponent(
+                'parallel', this.get('parallelIndex')
+            ).get('dimensions');
+
+            dimensions = zrUtil.map(dimensions, function (dim) {
+                return dim.name;
+            });
+
+            var list = new List(dimensions, this);
+            list.initData(option.data);
+
+            return list;
         },
 
         defaultOption: {

@@ -5,7 +5,7 @@ define(function (require) {
 
     var ParallelView = require('../../view/Chart').extend({
 
-        type: 'pie',
+        type: 'parallel',
 
         init: function () {
             this._dataGroup = new graphic.Group();
@@ -19,12 +19,17 @@ define(function (require) {
             var group = this.group;
             var coordSys = seriesModel.coordinateSystem;
             var dimensions = coordSys.dimensions;
+            var dimensionNames = zrUtil.map(dimensions, function (dim) {
+                return dim.name;
+            });
 
             var hasAnimation = ecModel.get('animation');
             var isFirstRender = !oldData;
 
             var lineStyleModel = seriesModel.getModel('lineStyle.normal');
-            var lineStyle = lineStyleModel.getLineStyle();
+            var globalColors = ecModel.get('color');
+            var defaultColor = globalColors[seriesModel.seriesIndex % globalColors.length];
+            var lineStyle = zrUtil.defaults(lineStyleModel.getLineStyle(), {stroke: defaultColor});
 
             // var onSectorClick = zrUtil.curry(
             //     updateDataSelected, this.uid, seriesModel, hasAnimation, api
@@ -34,7 +39,7 @@ define(function (require) {
 
             data.diff(oldData)
                 .add(function (dataIndex) {
-                    var values = data.getValues(dimensions, dataIndex);
+                    var values = data.getValues(dimensionNames, dataIndex);
 
                     var els = createEls(
                         dataGroup, values, dimensions, coordSys,
@@ -156,16 +161,35 @@ define(function (require) {
 
         var els = [];
         for (var i = 0, len = dimensions.length - 1; i < len; i++) {
+            var dimA = dimensions[i];
+            var dimB = dimensions[i + 1];
+            var valueA = values[i];
+            var valueB = values[i + 1];
+
+            if (isEmptyValue(valueA, dimA) || isEmptyValue(valueB, dimB)) {
+                continue;
+            }
+
             var points = [
-                coordSys.dataToPoint(values[i], dimensions[i]),
-                coordSys.dataToPoint(values[i + 1], dimensions[i + 1])
+                coordSys.dataToPoint(valueA, dimA.name),
+                coordSys.dataToPoint(valueB, dimB.name)
             ];
+
             dataGroup.add(els[i] = new graphic.Polyline({
-                points: points,
-                style: lineStyle
+                shape: {points: points},
+                style: lineStyle,
+                silent: true
             }));
         }
         return els;
+    }
+
+    // FIXME
+    // 公用方法?
+    function isEmptyValue(val, dim) {
+        return dim.axisType === 'category'
+            ? val == null
+            : (val == null || isNaN(val)); // axisType === 'value'
     }
 
     // function updateEls(els, values, dimensions, coordSys) {

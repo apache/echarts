@@ -1,10 +1,13 @@
 define(function(require) {
 
     var zrUtil = require('zrender/core/util');
+    var Component = require('../../model/Component');
 
     require('./AxisModel');
 
-    require('../../echarts').extendComponentModel({
+    var VALID_DIM_TYPES = {value: 1, category: 1};
+
+    Component.extend({
 
         type: 'parallel',
 
@@ -18,6 +21,7 @@ define(function(require) {
 
             dimensions: 5,            // {number} 表示 dim数，如设为 3 会自动转化成 ['dim0', 'dim1', 'dim2']
                                       // {Array.<string>} 表示哪些dim，如 ['dim3', 'dim2']
+                                      // {Array.<Object>} 表示哪些dim，如 [{name: 'dim3', axisType: 'category', ...]
             parallelAxisIndex: null,  // {Array.<number>} 表示引用哪些axis，如 [2, 1, 4]
                                       // {Object} 表示 mapping，如{dim1: 3, dim3: 1, others: 0}，others不设则自动取0
 
@@ -27,14 +31,23 @@ define(function(require) {
             y: 60,
             x2: 80,
             y2: 60,
+            // width: {totalWidth} - x - x2,
+            // height: {totalHeight} - y - y2,
 
             layout: 'horizontal',      // 'horizontal' or 'vertical'
 
-            // width: {totalWidth} - x - x2,
-            // height: {totalHeight} - y - y2,
             backgroundColor: 'rgba(0,0,0,0)',
             borderWidth: 0,
             borderColor: '#ccc'
+        },
+
+        /**
+         * @override
+         */
+        init: function (option, parentModel, ecModel, dependentModels, index) {
+            Component.prototype.init.apply(this, arguments);
+
+            this.mergeOption({});
         },
 
         /**
@@ -58,6 +71,16 @@ define(function(require) {
 
             thisOption.dimensions = dimensions;
             thisOption.parallelAxisIndex = parallelAxisIndex;
+        },
+
+        /**
+         * Whether series is in this coordinate system.
+         */
+        containsSeries: function (seriesModel, ecModel) {
+            var parallelIndex;
+            return seriesModel.get('coordinateSystem') === 'parallel'
+                && (parallelIndex = seriesModel.get('parallelIndex')) != null
+                && ecModel.getComponent('parallel', parallelIndex) === this;
         }
 
     });
@@ -71,6 +94,17 @@ define(function(require) {
             dimensions = [];
             for (var i = 0; i < count; i++) {
                 dimensions.push('dim' + i);
+            }
+        }
+
+        for (var i = 0; i < dimensions.length; i++) {
+            var dim = dimensions[i];
+            // dim might be string, represent dim name.
+            if (!zrUtil.isObject(dim)) {
+                dim = dimensions[i] = {name: dim};
+            }
+            if (!VALID_DIM_TYPES[dim.axisType]) {
+                dim.axisType = 'value';
             }
         }
 
@@ -90,7 +124,7 @@ define(function(require) {
 
             var otherAxisIndex = 0; // Others default 0.
             zrUtil.each(mapping, function (axisIndex, dim) {
-                var dimIndex = zrUtil.indexOf(dimensions, dim);
+                var dimIndex = getDimIndex(dimensions, dim);
                 if (dimIndex >= 0) {
                     parallelAxisIndex[dimIndex] = dim;
                 }
@@ -108,6 +142,15 @@ define(function(require) {
         }
 
         return parallelAxisIndex;
+    }
+
+    function getDimIndex(dimensions, dimName) {
+        for (var i = 0; i < dimensions.length; i++) {
+            if (dimensions[i] === dimName) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     function completeParallelAxisIndexWhenNone(parallelAxisIndex, dimensions) {
