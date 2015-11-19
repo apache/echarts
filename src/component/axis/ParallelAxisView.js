@@ -25,11 +25,7 @@ define(function (require) {
                 axisModel, coordSys.getAxisLayout(axisModel.axis.dim)
             );
 
-            zrUtil.each(elementList, function (name) {
-                if (axisModel.get(name +'.show')) {
-                    axisBuilder.add(name);
-                }
-            }, this);
+            zrUtil.each(elementList, axisBuilder.add, axisBuilder);
 
             this.group.add(axisBuilder.getGroup());
             this.group.z2 = 100;

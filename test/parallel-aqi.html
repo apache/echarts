@@ -18,7 +18,7 @@
             // Schema:
             // date,AQIindex,PM2.5,PM10,CO,NO2,SO2
             var schema = [
-                {name: 'date', index: 0, text: '日'},
+                {name: 'date', index: 0, text: '日期'},
                 {name: 'AQIindex', index: 1, text: 'AQI指数'},
                 {name: 'PM25', index: 2, text: 'PM2.5'},
                 {name: 'PM10', index: 3, text: 'PM10'},
@@ -73,7 +73,7 @@
                         formatter: function (obj) {
                             var value = obj[0].value;
                             return '<div style="border-bottom: 1px solid rgba(255,255,255,.3); font-size: 18px;padding-bottom: 7px;margin-bottom: 7px">'
-                                + obj[0].seriesName + ' ' + value[0] + '日：'
+                                + obj[0].seriesName + ' ' + value[0] + '日期：'
                                 + value[7]
                                 + '</div>'
                                 + schema[1].text + '：' + value[1] + '<br>'
@@ -85,24 +85,23 @@
                         }
                     },
                     parallelAxis: [
-                        {dim: 'dim1', name: '指标1'},
-                        {dim: 'dim2', name: '指标2'},
-                        {dim: 'dim3', name: '指标3'},
-                        {dim: 'dim4', name: '指标4'},
-                        {dim: 'dim5', name: '指标5'},
-                        {dim: 'dim6', name: '指标6'},
-                        {dim: 'dim7', name: '指标7'},
-                        {dim: 'dim8', name: '指标8'}
+                        {dim: 'dim0', name: schema[0].text, inverse: true, max: 31, nameLocation: 'start'},
+                        {dim: 'dim1', name: schema[1].text},
+                        {dim: 'dim2', name: schema[2].text},
+                        {dim: 'dim3', name: schema[3].text},
+                        {dim: 'dim4', name: schema[4].text},
+                        {dim: 'dim5', name: schema[5].text},
+                        {dim: 'dim6', name: schema[6].text}
                     ],
                     parallel: {
-                        axisDefault: {
+                        parallelAxisDefault: {
                             type: 'value',
                             name: 'AQI指数',
                             nameLocation: 'end',
                             nameGap: 20,
                             nameTextStyle: {
                                 color: '#fff',
-                                fontSize: 20
+                                fontSize: 14
                             },
                             axisLine: {
                                 lineStyle: {

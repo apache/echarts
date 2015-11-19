@@ -8,6 +8,21 @@ define(function (require) {
     var PI = Math.PI;
 
     /**
+     * A final axis is translated and rotated from a "standard axis".
+     * So opt.position and opt.rotation is required.
+     *
+     * A standard axis is and axis from [0, 0] to [0, axisExtent[1]],
+     * for example: (0, 0) ------------> (0, 50)
+     *
+     * tickDirection or labelDirection is 1 means tick or label is below
+     * the standard axis, whereas -1 means above the standard axis.
+     *
+     * Tips: like always,
+     * positive rotation represents anticlockwise, and negative rotation
+     * represents clockwise.
+     * The direction of position coordinate is the same as the direction
+     * of screen coordinate.
+     *
      * @param {module:zrender/container/Group} group
      * @param {Object} axisModel
      * @param {Object} opt Standard axis parameters.
@@ -88,6 +103,11 @@ define(function (require) {
          */
         axisLine: function () {
             var axisModel = this.axisModel;
+
+            if (!axisModel.get('axisLine.show')) {
+                return;
+            }
+
             var extent = this._getExtent();
 
             this.group.add(new graphic.Line({
@@ -111,6 +131,11 @@ define(function (require) {
          */
         axisTick: function () {
             var axisModel = this.axisModel;
+
+            if (!axisModel.get('axisTick.show')) {
+                return;
+            }
+
             var axis = axisModel.axis;
             var tickModel = axisModel.getModel('axisTick');
             var opt = this.opt;
@@ -157,8 +182,13 @@ define(function (require) {
          * @private
          */
         axisLabel: function () {
-            var opt = this.opt;
             var axisModel = this.axisModel;
+
+            if (!axisModel.get('axisLabel.show')) {
+                return;
+            }
+
+            var opt = this.opt;
             var axis = axisModel.axis;
             var labelModel = axisModel.getModel('axisLabel');
             var textStyleModel = labelModel.getModel('textStyle');
@@ -186,16 +216,14 @@ define(function (require) {
 
                 this.group.add(new graphic.Text({
                     style: {
-                        x: pos[0],
-                        y: pos[1],
                         text: labels[i],
                         textAlign: labelLayout.textAlign,
                         textBaseline: labelLayout.textBaseline,
                         textFont: textStyleModel.getFont(),
                         fill: textStyleModel.get('color')
                     },
+                    position: pos,
                     rotation: labelLayout.rotation,
-                    origin: pos,
                     silent: true
                 }));
             }
@@ -222,12 +250,11 @@ define(function (require) {
             var textStyleModel = axisModel.getModel('nameTextStyle');
             var gap = axisModel.get('nameGap') || 0;
 
-            var position = opt.position;
             var extent = this._getExtent();
-            var textX = nameLocation == 'start'
-                ? position[0] - gap
-                : position[0] + extent[1] + gap;
-            var textY = position[1];
+            var pos = [
+                nameLocation == 'start' ? -gap : extent[1] + gap,
+                0
+            ];
 
             var labelLayout;
 
@@ -247,7 +274,8 @@ define(function (require) {
                     textAlign: labelLayout.textAlign,
                     textBaseline: labelLayout.textBaseline
                 },
-                position: [textX, textY],
+                position: pos,
+                rotation: labelLayout.rotation,
                 silent: true,
                 z2: 1
             }));
@@ -299,21 +327,21 @@ define(function (require) {
         var textBaseline;
 
         if (isAroundZero(rotationDiff - PI / 2)) {
-            textBaseline = textPosition === 'start' ? 'top' : 'bottom';
+            textBaseline = textPosition === 'start' ? 'bottom' : 'top';
             textAlign = 'center';
         }
         else if (isAroundZero(rotationDiff - PI * 1.5)) {
-            textBaseline = textPosition === 'start' ? 'bottom' : 'top';
+            textBaseline = textPosition === 'start' ? 'top' : 'bottom';
             textAlign = 'center';
         }
         else {
             textBaseline = 'middle';
 
             if (rotationDiff < PI * 1.5 && rotationDiff > PI / 2) {
-                textAlign = textPosition === 'start' ? 'left' : 'right';
+                textAlign = textPosition === 'start' ? 'right' : 'left';
             }
             else {
-                textAlign = textPosition === 'start' ? 'right' : 'left';
+                textAlign = textPosition === 'start' ? 'left' : 'right';
             }
         }
 

@@ -51,7 +51,8 @@ define(function (require) {
             // formatter: null,
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
             textStyle: {
-                color: '#333'
+                color: '#333',
+                fontSize: 12
             }
         },
         // 分隔线

@@ -45,8 +45,8 @@ define(function (require) {
             var parallelIndex = axisOption.parallelIndex || 0;
             var parallelOption = modelUtil.normalizeToArray(option.parallel)[parallelIndex];
 
-            if (parallelOption && parallelOption.axisDefault) {
-                zrUtil.merge(axisOption, parallelOption.axisDefault, false);
+            if (parallelOption && parallelOption.parallelAxisDefault) {
+                zrUtil.merge(axisOption, parallelOption.parallelAxisDefault, false);
             }
         });
     }
