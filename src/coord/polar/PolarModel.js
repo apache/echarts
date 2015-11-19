@@ -40,7 +40,7 @@ define(function (require) {
 
             center: ['50%', '50%'],
 
-            radius: ['0%', '80%']
+            radius: '80%'
         }
     });
 });

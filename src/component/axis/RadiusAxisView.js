@@ -15,7 +15,9 @@ define(function (require) {
 
         render: function (radiusAxisModel, ecModel) {
             this.group.removeAll();
-
+            if (!radiusAxisModel.get('show')) {
+                return;
+            }
             var polarModel = ecModel.getComponent('polar', radiusAxisModel.get('polarIndex'));
             var angleAxis = polarModel.coordinateSystem.getAngleAxis();
             var radiusAxis = radiusAxisModel.axis;

@@ -24,6 +24,9 @@ define(function (require) {
 
         render: function (angleAxisModel, ecModel) {
             this.group.removeAll();
+            if (!angleAxisModel.get('show')) {
+                return;
+            }
 
             var polarModel = ecModel.getComponent('polar', angleAxisModel.get('polarIndex'));
             var angleAxis = angleAxisModel.axis;
