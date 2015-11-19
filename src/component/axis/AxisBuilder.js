@@ -22,6 +22,8 @@ define(function (require) {
      * represents clockwise.
      * The direction of position coordinate is the same as the direction
      * of screen coordinate.
+     * Do not need to consider axis 'inverse', which is auto processed by
+     * axis extent.
      *
      * @param {module:zrender/container/Group} group
      * @param {Object} axisModel
@@ -74,21 +76,29 @@ define(function (require) {
         },
 
         /**
+         * Extent is always form 'start' to 'end',
+         * when raw axis is 'inverse', the standard axis is like <----,
+         * and extent[0] > extent[1].
+         * when not 'inverse', the standard axis is like ---->,
+         * and extent[1] > extent[0].
          * @inner
          */
         _getExtent: function () {
             var opt = this.opt;
             var extent = this.axisModel.axis.getExtent();
 
+            // FIXME
+            // 改过后，extent须在inverse时反向。
+
             opt.offset = 0;
 
             // FIXME
-            // 修正axisExtent不统一
+            // 修正axisExtent不统一，并考虑inverse。
             if (opt.isCartesian) {
-                var min = Math.min(extent[0], extent[1]);
-                var max = Math.max(extent[0], extent[1]);
-                opt.offset = min;
-                extent = [0, max - opt.offset];
+                // var min = Math.min(extent[0], extent[1]);
+                // var max = Math.max(extent[0], extent[1]);
+                // opt.offset = min;
+                // extent = [0, max - opt.offset];
             }
 
             return extent;
@@ -194,7 +204,7 @@ define(function (require) {
             var textStyleModel = labelModel.getModel('textStyle');
             var labelMargin = labelModel.get('margin');
             var ticks = axis.scale.getTicks();
-            var labels = axisModel.formatLabels(axis.scale.getTicksLabels());
+            var labels = axisModel.getFormattedLabels();
 
             // Special label rotate.
             var labelRotation = opt.labelRotation;
@@ -251,8 +261,11 @@ define(function (require) {
             var gap = axisModel.get('nameGap') || 0;
 
             var extent = this._getExtent();
+            var gapSignal = extent[0] > extent[1] ? -1 : 1;
             var pos = [
-                nameLocation == 'start' ? -gap : extent[1] + gap,
+                nameLocation == 'start'
+                    ? extent[0] - gapSignal * gap
+                    : extent[1] + gapSignal * gap,
                 0
             ];
 
@@ -262,7 +275,7 @@ define(function (require) {
                 labelLayout = innerTextLayout(opt, opt.rotation);
             }
             else {
-                labelLayout = endTextLayout(opt, nameLocation);
+                labelLayout = endTextLayout(opt, nameLocation, this._getExtent());
             }
 
             this.group.add(new graphic.Text({
@@ -321,27 +334,30 @@ define(function (require) {
     /**
      * @inner
      */
-    function endTextLayout(opt, textPosition) {
+    function endTextLayout(opt, textPosition, extent) {
         var rotationDiff = remRadian(-opt.rotation);
         var textAlign;
         var textBaseline;
+        var inverse = extent[0] > extent[1];
+        var left = (textPosition === 'start' && !inverse)
+            || (textPosition !== 'start' && inverse);
 
         if (isAroundZero(rotationDiff - PI / 2)) {
-            textBaseline = textPosition === 'start' ? 'bottom' : 'top';
+            textBaseline = left ? 'bottom' : 'top';
             textAlign = 'center';
         }
         else if (isAroundZero(rotationDiff - PI * 1.5)) {
-            textBaseline = textPosition === 'start' ? 'top' : 'bottom';
+            textBaseline = left ? 'top' : 'bottom';
             textAlign = 'center';
         }
         else {
             textBaseline = 'middle';
 
             if (rotationDiff < PI * 1.5 && rotationDiff > PI / 2) {
-                textAlign = textPosition === 'start' ? 'right' : 'left';
+                textAlign = left ? 'right' : 'left';
             }
             else {
-                textAlign = textPosition === 'start' ? 'left' : 'right';
+                textAlign = left ? 'left' : 'right';
             }
         }
 

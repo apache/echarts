@@ -163,6 +163,7 @@ define(function(require) {
                 var axis = axes[dim.name];
                 var pos = layoutLength * idx / (dimensions.length - 1);
                 var inverse = axis.inverse ? 'inverse' : 'forward';
+                inverse = 'forward';
 
                 var positionTable = {
                     horizontal: {

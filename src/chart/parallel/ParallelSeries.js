@@ -59,7 +59,7 @@ define(function(require) {
             lineStyle: {
                 normal: {
                     width: 2,
-                    opacity: 0.6,
+                    opacity: 0.7,
                     type: 'solid',
                     shadowColor: 'rgba(0,0,0,0)', //默认透明
                     shadowBlur: 0,
