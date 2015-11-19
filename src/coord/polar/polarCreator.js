@@ -28,6 +28,7 @@ define(function (require) {
 
         var radiusAxis = this.getRadiusAxis();
         var size = Math.min(width, height) / 2;
+        // var idx = radiusAxis.inverse ? 1 : 0;
         radiusAxis.setExtent(
             parsePercent(radius[0], size),
             parsePercent(radius[1], size)
@@ -44,12 +45,12 @@ define(function (require) {
         axis.type = axisModel.get('type');
         axis.scale = axisHelper.createScaleByModel(axisModel);
         axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
-        axis.inverse = axisModel.get('inverse');
 
+        // FIXME Radius axis not support inverse axis
         if (axisModel.type === 'angleAxis') {
             var startAngle = axisModel.get('startAngle');
-            axis.setExtent(startAngle, startAngle + 360);
-            axis.inverse = axisModel.get('clockwise');
+            axis.inverse = axisModel.get('inverse') ^ axisModel.get('clockwise');
+            axis.setExtent(startAngle, startAngle + (axis.inverse ? -360 : 360));
         }
 
         // Inject axis instance

@@ -78,8 +78,6 @@ define(function (require) {
          */
         getExtent: function () {
             var ret = this._extent.slice();
-            this.inverse && ret.reverse();
-
             return ret;
         },
 
@@ -109,9 +107,8 @@ define(function (require) {
          */
         setExtent: function (start, end) {
             var extent = this._extent;
-            var inverse = this.inverse;
-            extent[0] = inverse ? end : start;
-            extent[1] = inverse ? start : end;
+            extent[0] = start;
+            extent[1] = end;
         },
 
         /**
@@ -219,11 +216,11 @@ define(function (require) {
          */
         getBandWidth: function () {
             var axisExtent = this._extent;
-            var extent = this.scale.getExtent();
+            var dataExtent = this.scale.getExtent();
 
-            var len = extent[1] - extent[0] + (this.onBand ? 1 : 0);
+            var len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
 
-            var size = axisExtent[1] - axisExtent[0];
+            var size = Math.abs(axisExtent[1] - axisExtent[0]);
 
             return Math.abs(size) / len;
         }
