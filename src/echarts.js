@@ -404,7 +404,7 @@ define(function (require) {
             if (!view) {
                 var classType = ComponentModel.parseClassType(model.type);
                 var Clazz = isComponent
-                    ? ComponentView.getClass(classType.main, classType)
+                    ? ComponentView.getClass(classType.main, classType.sub)
                     : ChartView.getClass(classType.sub);
                 if (Clazz) {
                     view = new Clazz();
