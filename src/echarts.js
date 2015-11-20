@@ -151,15 +151,21 @@ define(function (require) {
             ecModel.mergeOption(option);
         }
 
-        this._prepareComponents(ecModel);
+        this._prepareView('component', ecModel);
 
-        this._prepareCharts(ecModel);
+        this._prepareView('chart', ecModel);
 
         this._update();
 
         !notRefreshImmediately && this._zr.refreshImmediately();
     };
 
+    /**
+     * @DEPRECATED
+     */
+    echartsProto.setTheme = function () {
+        console.log('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
+    };
     /**
      * @return {module:echarts/model/Global}
      */
@@ -368,114 +374,68 @@ define(function (require) {
     };
 
     /**
-     * Prepare charts view instances
+     * Prepare view instances of charts and components
      * @param  {module:echarts/model/Global} ecModel
      * @private
      */
-    echartsProto._prepareCharts = function (ecModel) {
-
-        var chartsList = this._chartsList;
-        var chartsMap = this._chartsMap;
+    echartsProto._prepareView = function (type, ecModel) {
+        var isComponent = type === 'component';
+        var viewList = isComponent ? this._componentsList : this._chartsList;
+        var viewMap = isComponent ? this._componentsMap : this._chartsMap;
         var zr = this._zr;
 
-        for (var i = 0; i < chartsList.length; i++) {
-            chartsList[i].__keepAlive = false;
+        for (var i = 0; i < viewList.length; i++) {
+            viewList[i].__keepAlive = false;
         }
 
-        ecModel.eachSeries(function (seriesModel, idx) {
-            var id = seriesModel.getId();
+        ecModel[isComponent ? 'eachComponent' : 'eachSeries'](function (componentType, model) {
+            if (isComponent) {
+                if (componentType === 'series') {
+                    return;
+                }
+            }
+            else {
+                model = componentType;
+            }
 
-            var chart = chartsMap[id];
-            if (!chart) {
-                var Clazz = ChartView.getClass(
-                    ComponentModel.parseClassType(seriesModel.type).sub
-                );
+            var id = model.getId();
+
+            var view = viewMap[id];
+            if (!view) {
+                var classType = ComponentModel.parseClassType(model.type);
+                var Clazz = isComponent
+                    ? ComponentView.getClass(classType.main, classType)
+                    : ChartView.getClass(classType.sub);
                 if (Clazz) {
-                    chart = new Clazz();
-                    chart.init(ecModel, this._api);
-                    chartsMap[id] = chart;
-                    chartsList.push(chart);
-                    zr.add(chart.group);
+                    view = new Clazz();
+                    view.init(ecModel, this._api);
+                    viewMap[id] = view;
+                    viewList.push(view);
+                    zr.add(view.group);
                 }
                 else {
                     // Error
                 }
             }
 
-            chart.__keepAlive = true;
-            chart.__id = id;
+            view.__keepAlive = true;
+            view.__id = id;
+            view.__model = model;
         }, this);
 
-        for (var i = 0; i < chartsList.length;) {
-            var chart = chartsList[i];
-            if (!chart.__keepAlive) {
-                zr.remove(chart.group);
-                chart.dispose(this._api);
-                chartsList.splice(i, 1);
-                delete chartsMap[chart.__id];
+        for (var i = 0; i < viewList.length;) {
+            var view = viewList[i];
+            if (!view.__keepAlive) {
+                zr.remove(view.group);
+                view.dispose(this._api);
+                viewList.splice(i, 1);
+                delete viewMap[view.__id];
             }
             else {
                 i++;
             }
         }
     };
-
-    /**
-     * Prepare component view instances
-     * @param  {module:echarts/model/Global} ecModel
-     * @private
-     */
-    echartsProto._prepareComponents = function (ecModel) {
-
-        var componentsMap = this._componentsMap;
-        var componentsList = this._componentsList;
-
-        for (var i = 0; i < componentsList.length; i++) {
-            componentsList[i].__keepAlive = true;
-        }
-
-        ecModel.eachComponent(function (componentType, componentModel) {
-            if (componentType === 'series') {
-                return;
-            }
-
-            var id = componentModel.getId();
-            var component = componentsMap[id];
-            if (!component) {
-                // Create and add component
-                var Clazz = ComponentView.getClass(
-                    componentType, componentModel.option.type
-                );
-
-                if (Clazz) {
-                    component = new Clazz();
-                    component.init(ecModel, this._api);
-                    componentsMap[id] = component;
-                    componentsList.push(component);
-
-                    this._zr.add(component.group);
-                }
-            }
-            component.__id = id;
-            component.__keepAlive = true;
-            // Used in rendering
-            component.__model = componentModel;
-        }, this);
-
-        for (var i = 0; i < componentsList.length;) {
-            var component = componentsList[i];
-            if (!component.__keepAlive) {
-                this._zr.remove(component.group);
-                component.dispose(this._api);
-                componentsList.splice(i, 1);
-                delete componentsMap[component.__id];
-            }
-            else {
-                i++;
-            }
-        }
-    };
-
     /**
      * Processor data in each series
      *
@@ -614,7 +574,7 @@ define(function (require) {
             chart.dispose();
         });
 
-        this.zr.dispose();
+        this._zr.dispose();
 
         instances[this.id] = null;
     };
@@ -885,9 +845,9 @@ define(function (require) {
     /**
      * @param {echarts/scale/*} scale
      */
-    echarts.extendScale = function (opts) {
-        return Scale.extend(opts);
-    };
+    // echarts.extendScale = function (opts) {
+    //     return Scale.extend(opts);
+    // };
 
     /**
      * @param {Object} opts
