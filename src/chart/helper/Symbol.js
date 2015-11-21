@@ -18,7 +18,7 @@ define(function (require) {
     function Symbol(data, idx, api) {
         graphic.Group.call(this);
 
-        this.updateSymbol(data, idx, api);
+        this.updateData(data, idx, api);
     }
 
     var symbolProto = Symbol.prototype;
@@ -53,7 +53,7 @@ define(function (require) {
      * @param  {number} idx
      * @param  {module:echarts/ExtensionAPI} api
      */
-    symbolProto.updateSymbol = function (data, idx, api) {
+    symbolProto.updateData = function (data, idx, api) {
         var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
 
         if (symbolType !== this._symbolType) {
@@ -99,15 +99,14 @@ define(function (require) {
                     || data.get(lastDim, idx);
         var elStyle = symbolPath.style;
 
-        var showLabel = labelModel.get('show');
-        if (showLabel) {
+        if (labelModel.get('show')) {
             graphic.setText(elStyle, labelModel, color);
             elStyle.text = labelText;
         }
         else {
             elStyle.text = '';
         }
-        if (zrUtil.retrieve(hoverLabelModel.get('show'), showLabel)) {
+        if (hoverLabelModel.get('show')) {
             graphic.setText(hoverStyle, hoverLabelModel, color);
             hoverStyle.text = labelText;
         }

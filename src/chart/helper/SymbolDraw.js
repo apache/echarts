@@ -16,6 +16,7 @@ define(function (require) {
     var symbolDrawProto = SymbolDraw.prototype;
 
     /**
+     * Update symbols draw by new data
      * @param {module:echarts/data/List} data
      * @param {module:echarts/ExtensionAPI} api
      * @param {Array.<boolean>} [isIgnore]
@@ -51,7 +52,7 @@ define(function (require) {
                     symbolEl.attr('position', point);
                 }
                 else {
-                    symbolEl.updateSymbol(data, newIdx, api);
+                    symbolEl.updateData(data, newIdx, api);
                     api.updateGraphicEl(symbolEl, {
                         position: point
                     });

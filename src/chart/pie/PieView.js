@@ -32,16 +32,6 @@ define(function (require) {
         });
     }
 
-    function updateElementSelect(el, pos, hasAnimation) {
-        hasAnimation
-            // animateTo will stop revious animation like update transition
-            ? el.animate()
-                .when(200, {
-                    position: pos
-                })
-                .start('bounceOut')
-            : el.attr('position', pos);
-    }
     /**
      * @param {module:zrender/graphic/Sector} el
      * @param {Object} layout
@@ -58,55 +48,64 @@ define(function (require) {
 
         var offset = isSelected ? selectedOffset : 0;
         var position = [dx * offset, dy * offset];
-        updateElementSelect(el, position, hasAnimation);
-        updateElementSelect(el.__labelLine, position, hasAnimation);
-        updateElementSelect(el.__labelText, position, hasAnimation);
+
+        hasAnimation
+            // animateTo will stop revious animation like update transition
+            ? el.animate()
+                .when(200, {
+                    position: position
+                })
+                .start('bounceOut')
+            : el.attr('position', position);
     }
 
     /**
-     * Create sector, label, and label line for each data
-     * @param {Object} layout
-     * @param {string} text
-     * @param {boolean} hasAnimation
-     * @return {module:zrender/graphic/Sector}
+     * Piece of pie including Sector, Label, LabelLine
+     * @constructor
+     * @extends {module:zrender/graphic/Group}
      */
-    function createSectorAndLabel(layout, text, hasAnimation, api) {
-        var shape = zrUtil.extend({}, layout);
-        delete shape.label;
+    function PiePiece(data, idx, api) {
 
-        var sector = new graphic.Sector({
-            shape: shape
-        });
+        graphic.Group.call(this);
 
-        var labelLayout = layout.label;
-        var labelLine = new graphic.Polyline({
-            shape: {
-                points: labelLayout.linePoints || [
-                    [layout.x, layout.y], [layout.x, layout.y], [layout.x, layout.y]
-                ]
-            },
-            silent: true
-        });
+        var sector = new graphic.Sector();
+        var polyline = new graphic.Polyline();
+        var text = new graphic.Text();
+        this.add(sector);
+        this.add(polyline);
+        this.add(text);
 
-        var labelText = new graphic.Text({
-            style: {
-                x: labelLayout.x,
-                y: labelLayout.y,
-                text: text,
-                textAlign: labelLayout.textAlign,
-                textBaseline: labelLayout.textBaseline,
-                textFont: labelLayout.font
-            },
-            rotation: labelLayout.rotation,
-            origin: [labelLayout.x, labelLayout.y],
-            silent: true,
-            z2: 10
-        });
+        this.updateData(data, idx, api, true);
 
-        sector.__labelLine = labelLine;
-        sector.__labelText = labelText;
+        function onEmphasis() {
+            polyline.ignore = polyline.hoverIgnore;
+            text.ignore = text.hoverIgnore;
+        }
+        function onNormal() {
+            polyline.ignore = polyline.normalIgnore;
+            text.ignore = text.normalIgnore;
+        }
+        this.on('emphasis', onEmphasis);
+        this.on('normal', onNormal);
+        this.on('mouseover', onEmphasis);
+        this.on('mouseout', onNormal);
+    }
 
-        if (hasAnimation) {
+    var piePieceProto = PiePiece.prototype;
+
+    piePieceProto.updateData = function (data, idx, api, firstCreate) {
+
+        var sector = this.childAt(0);
+        var labelLine = this.childAt(1);
+        var labelText = this.childAt(2);
+
+        var seriesModel = data.hostModel;
+        var itemModel = data.getItemModel(idx);
+        var layout = data.getItemLayout(idx);
+        var sectorShape = zrUtil.extend({}, layout);
+        sectorShape.label = null;
+        if (firstCreate) {
+            sector.setShape(sectorShape);
             sector.shape.endAngle = layout.startAngle;
             api.updateGraphicEl(sector, {
                 shape: {
@@ -114,10 +113,112 @@ define(function (require) {
                 }
             });
         }
+        else {
+            api.updateGraphicEl(sector, {
+                shape: sectorShape
+            });
+        }
 
-        return sector;
-    }
+        var labelLayout = layout.label;
 
+        api.updateGraphicEl(labelLine, {
+            shape: {
+                points: labelLayout.linePoints || [
+                    [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
+                ]
+            }
+        });
+        api.updateGraphicEl(labelText, {
+            style: {
+                x: labelLayout.x,
+                y: labelLayout.y
+            }
+        });
+        labelText.attr({
+            style: {
+                textAlign: labelLayout.textAlign,
+                textBaseline: labelLayout.textBaseline,
+                textFont: labelLayout.font
+            },
+            rotation: labelLayout.rotation,
+            origin: [labelLayout.x, labelLayout.y],
+            z2: 10
+        });
+
+        // Update common style
+        var itemStyleModel = itemModel.getModel('itemStyle');
+        var visualColor = data.getItemVisual(idx, 'color');
+
+        sector.setStyle(
+            zrUtil.extend(
+                {
+                    fill: visualColor
+                },
+                itemStyleModel.getModel('normal').getItemStyle()
+            )
+        );
+        graphic.setHoverStyle(
+            sector,
+            itemStyleModel.getModel('emphasis').getItemStyle()
+        );
+
+        var labelModel = itemModel.getModel('label.normal');
+        var labelHoverModel = itemModel.getModel('label.emphasis');
+        var labelLineModel = itemModel.getModel('labelLine.normal');
+        var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
+
+        var textStyleModel = labelModel.getModel('textStyle');
+        var labelPosition = labelModel.get('position');
+        var isLabelInside = labelPosition === 'inside';
+
+        labelText.setStyle({
+            fill: textStyleModel.get('color')
+                || isLabelInside ? '#fff' : visualColor,
+            text: seriesModel.getFormattedLabel(idx, 'normal')
+                || data.getName(idx),
+            textFont: textStyleModel.getFont()
+        });
+
+        labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
+        labelText.hoverIgnore = !labelHoverModel.get('show');
+
+        labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show');
+        labelLine.hoverIgnore = !labelLineHoverModel.get('show');
+
+        // Default use item visual color
+        labelLine.setStyle({
+            stroke: visualColor
+        });
+        labelLine.setStyle(labelLineModel.getLineStyle());
+
+        sector.setStyle(
+            zrUtil.extend(
+                {
+                    fill: visualColor
+                },
+                itemStyleModel.getModel('normal').getItemStyle()
+            )
+        );
+        sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
+        labelText.hoverStyle = labelHoverModel.getModel('textStyle').getItemStyle();
+        labelLine.hoverStyle = labelLineHoverModel.getLineStyle();
+
+        graphic.setHoverStyle(this);
+
+        // Toggle selected
+        toggleItemSelected(
+            this,
+            data.getItemLayout(idx),
+            itemModel.get('selected'),
+            seriesModel.get('selectedOffset'),
+            seriesModel.ecModel.get('animation')
+        );
+    };
+
+    zrUtil.inherits(PiePiece, graphic.Group);
+
+
+    // Pie view
     var Pie = require('../../view/Chart').extend({
 
         type: 'pie',
@@ -138,13 +239,11 @@ define(function (require) {
 
             var data = seriesModel.getData();
             var oldData = this._data;
-            var sectorGroup = this._sectorGroup;
             var group = this.group;
 
             var hasAnimation = ecModel.get('animation');
             var isFirstRender = !oldData;
 
-            var firstSector;
             var onSectorClick = zrUtil.curry(
                 updateDataSelected, this.uid, seriesModel, hasAnimation, api
             );
@@ -153,147 +252,47 @@ define(function (require) {
 
             data.diff(oldData)
                 .add(function (idx) {
-                    var layout = data.getItemLayout(idx);
+                    var piePiece = new PiePiece(data, idx, api);
+                    if (isFirstRender) {
+                        piePiece.eachChild(function (child) {
+                            child.stopAnimation(true);
+                        });
+                    }
 
-                    var sector = createSectorAndLabel(
-                        layout, '', !isFirstRender, api
-                    );
+                    selectedMode && piePiece.on('click', onSectorClick);
 
-                    selectedMode && sector.on('click', onSectorClick);
+                    data.setItemGraphicEl(idx, piePiece);
 
-                    data.setItemGraphicEl(idx, sector);
-
-                    sectorGroup.add(sector);
-
-                    group.add(sector.__labelLine);
-                    group.add(sector.__labelText);
-
-                    firstSector = firstSector || sector;
+                    group.add(piePiece);
                 })
                 .update(function (newIdx, oldIdx) {
-                    var sector = oldData.getItemGraphicEl(oldIdx);
+                    var piePiece = oldData.getItemGraphicEl(oldIdx);
 
-                    var layout = data.getItemLayout(newIdx);
-                    var labelLayout = layout.label;
-
-                    var labelLine = sector.__labelLine;
-                    var labelText = sector.__labelText;
+                    piePiece.updateData(data, newIdx, api);
 
                     selectedMode
-                        ? sector.on('click', onSectorClick)
-                        : sector.off('click');
-
-                    api.updateGraphicEl(sector, {
-                        shape: layout
-                    });
-                    api.updateGraphicEl(labelLine, {
-                        shape: {
-                            points: labelLayout.linePoints || [
-                                [labelLayout.x, labelLayout.y],
-                                [labelLayout.x, labelLayout.y],
-                                [labelLayout.x, labelLayout.y]
-                            ]
-                        }
-                    });
-                    api.updateGraphicEl(labelText, {
-                        style: {
-                            x: labelLayout.x,
-                            y: labelLayout.y
-                        },
-                        rotation: labelLayout.rotation
-                    });
-
-                    // Set none animating style
-                    labelText.setStyle({
-                        textAlign: labelLayout.textAlign,
-                        textBaseline: labelLayout.textBaseline,
-                        textFont: labelLayout.font
-                    });
-
-                    sectorGroup.add(sector);
-                    data.setItemGraphicEl(newIdx, sector);
-
-                    group.add(labelLine);
-                    group.add(labelText);
+                        ? piePiece.on('click', onSectorClick)
+                        : piePiece.off('click');
+                    group.add(piePiece);
+                    data.setItemGraphicEl(newIdx, piePiece);
                 })
                 .remove(function (idx) {
-                    var sector = oldData.getItemGraphicEl(idx);
-                    sectorGroup.remove(sector);
-
-                    group.remove(sector.__labelLine);
-                    group.remove(sector.__labelText);
+                    var piePiece = oldData.getItemGraphicEl(idx);
+                    group.remove(piePiece);
                 })
                 .execute();
 
-            if (hasAnimation && isFirstRender && firstSector) {
-                var shape = firstSector.shape;
+            if (hasAnimation && isFirstRender && data.count() > 0) {
+                var shape = data.getItemLayout(0);
                 var r = Math.max(api.getWidth(), api.getHeight()) / 2;
 
-                var removeClipPath = zrUtil.bind(sectorGroup.removeClipPath, sectorGroup);
-                sectorGroup.setClipPath(this._createClipPath(
+                var removeClipPath = zrUtil.bind(group.removeClipPath, group);
+                group.setClipPath(this._createClipPath(
                     shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, api
                 ));
             }
 
-            // Make sure sectors is on top of labels
-            group.remove(sectorGroup);
-            group.add(sectorGroup);
-
-            this._updateAll(data, seriesModel);
-
             this._data = data;
-        },
-
-        _updateAll: function (data, seriesModel, hasAnimation) {
-            var selectedOffset = seriesModel.get('selectedOffset');
-            data.eachItemGraphicEl(function (sector, idx) {
-                var itemModel = data.getItemModel(idx);
-                var itemStyleModel = itemModel.getModel('itemStyle');
-                var visualColor = data.getItemVisual(idx, 'color');
-
-                sector.setStyle(
-                    zrUtil.extend(
-                        {
-                            fill: visualColor
-                        },
-                        itemStyleModel.getModel('normal').getItemStyle()
-                    )
-                );
-                graphic.setHoverStyle(
-                    sector,
-                    itemStyleModel.getModel('emphasis').getItemStyle()
-                );
-
-                // Set label style
-                var labelText = sector.__labelText;
-                var labelLine = sector.__labelLine;
-                var labelModel = itemModel.getModel('label.normal');
-                var textStyleModel = labelModel.getModel('textStyle');
-                var labelPosition = labelModel.get('position');
-                var isLabelInside = labelPosition === 'inside';
-                labelText.setStyle({
-                    fill: textStyleModel.get('color')
-                        || isLabelInside ? '#fff' : visualColor,
-                    text: seriesModel.getFormattedLabel(idx, 'normal')
-                        || data.getName(idx),
-                    textFont: textStyleModel.getFont()
-                });
-                labelText.attr('ignore', !labelModel.get('show'));
-                // Default use item visual color
-                labelLine.attr('ignore', !itemModel.get('labelLine.show'));
-                labelLine.setStyle({
-                    stroke: visualColor
-                });
-                labelLine.setStyle(itemModel.getModel('labelLine').getLineStyle());
-
-                toggleItemSelected(
-                    sector,
-                    data.getItemLayout(idx),
-                    itemModel.get('selected'),
-                    selectedOffset,
-                    hasAnimation
-                );
-            });
         },
 
         _createClipPath: function (
@@ -318,9 +317,7 @@ define(function (require) {
             }, cb);
 
             return clipPath;
-        },
-
-        dispose: function () {}
+        }
     });
 
     return Pie;

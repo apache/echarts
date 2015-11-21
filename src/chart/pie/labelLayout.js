@@ -145,7 +145,7 @@ define(function (require) {
             var labelModel = itemModel.getModel('label.normal');
             var labelPosition = labelModel.get('position');
 
-            var labelLineModel = itemModel.getModel('labelLine');
+            var labelLineModel = itemModel.getModel('labelLine.normal');
             var labelLineLen = labelLineModel.get('length');
             var labelLineLen2 = labelLineModel.get('length2');
 
