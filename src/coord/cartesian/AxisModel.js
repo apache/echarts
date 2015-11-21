@@ -6,14 +6,6 @@ define(function(require) {
     var defaultOption = require('../axisDefault');
     var zrUtil = require('zrender/core/util');
 
-    function mergeDefault(axisOption, ecModel) {
-        var axisType = axisOption.type + 'Axis';
-
-        zrUtil.merge(axisOption, ecModel.get(axisType));
-        zrUtil.merge(axisOption, ecModel.getTheme().get(axisType));
-        zrUtil.merge(axisOption, defaultOption[axisType]);
-    }
-
     var AxisModel = ComponentModel.extend({
 
         type: 'cartesian2dAxis',
@@ -32,45 +24,38 @@ define(function(require) {
         }
     });
 
+    function getAxisType(axisDim, option) {
+        return option.type || (axisDim === 'x' ? 'category' : 'value');
+    }
+
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
 
-    // x axis
-    AxisModel.extend({
+    function extendAxis(axisDim) {
+        // FIXME axisType is fixed ?
+        zrUtil.each(['value', 'category', 'time', 'log'], function (axisType) {
+            AxisModel.extend({
+                type: axisDim + 'Axis.' + axisType,
+                mergeDefaultAndTheme: function (option, ecModel) {
+                    var themeModel = ecModel.getTheme();
+                    zrUtil.merge(option, themeModel.get(axisType + 'Axis'));
+                    zrUtil.merge(option, this.getDefaultOption());
 
-        type: 'xAxis',
+                    option.type = getAxisType(axisDim, option);
+                },
+                defaultOption: zrUtil.extend(
+                    defaultOption[axisType + 'Axis'],
+                    {
+                        gridIndex: 0
+                    }
+                )
+            });
+        });
+        // Defaulter
+        ComponentModel.registerSubTypeDefaulter(axisDim + 'Axis', zrUtil.curry(getAxisType, axisDim));
+    }
 
-        init: function (axisOption, parentModel, ecModel) {
-
-            zrUtil.merge(axisOption, this.getDefaultOption(), false);
-
-            mergeDefault(axisOption, ecModel);
-        },
-
-        defaultOption: {
-            type: 'category',
-
-            gridIndex: 0
-        }
-    });
-
-    // y axis
-    AxisModel.extend({
-
-        type: 'yAxis',
-
-        init: function (axisOption, parentModel, ecModel) {
-
-            zrUtil.merge(axisOption, this.getDefaultOption(), false);
-
-            mergeDefault(axisOption, ecModel);
-        },
-
-        defaultOption: {
-            type: 'value',
-
-            gridIndex: 0
-        }
-    });
+    extendAxis('x');
+    extendAxis('y');
 
     return AxisModel;
 });
