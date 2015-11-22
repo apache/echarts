@@ -73,8 +73,8 @@ define(function (require) {
     axisHelper.ifAxisCrossZero = function (axis) {
         var dataExtent = axis.scale.getExtent();
         return !((dataExtent[0] > 0 && dataExtent[1] > 0)
-                || (dataExtent[0] < 0 && dataExtent[1] < 0))
-            || axisHelper.ifAxisNeedsCrossZero(axis);
+                    || (dataExtent[0] < 0 && dataExtent[1] < 0))
+                || axisHelper.ifAxisNeedsCrossZero(axis);
     };
 
     /**

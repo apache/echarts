@@ -189,10 +189,10 @@ define(function(require, factory) {
                     xAxis.onZero = false;
                 }
 
-                if (ifAxisNeedsCrossZero(yAxis, xAxis)) {
+                if (ifAxisNeedsCrossZero(yAxis)) {
                     yAxis.scale.unionExtent([0, 0]);
                 }
-                if (ifAxisNeedsCrossZero(xAxis, yAxis)) {
+                if (ifAxisNeedsCrossZero(xAxis)) {
                     xAxis.scale.unionExtent([0, 0]);
                 }
                 niceScaleExtent(yAxis, yAxis.model);
@@ -210,7 +210,8 @@ define(function(require, factory) {
                 var axisPosition = axisModel.get('position');
                 if (axisType === 'x') {
                     // Fix position
-                    if (axisPosition !== 'top' || axisPosition !== 'bottom') {
+                    if (axisPosition !== 'top' && axisPosition !== 'bottom') {
+                        // Default bottom of X
                         axisPosition = 'bottom';
                     }
                     if (axisPositionUsed[axisPosition]) {
@@ -219,7 +220,8 @@ define(function(require, factory) {
                 }
                 else {
                     // Fix position
-                    if (axisPosition !== 'left' || axisPosition !== 'right') {
+                    if (axisPosition !== 'left' && axisPosition !== 'right') {
+                        // Default left of Y
                         axisPosition = 'left';
                     }
                     if (axisPositionUsed[axisPosition]) {

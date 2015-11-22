@@ -13,7 +13,7 @@ define(function (require) {
 
             // Only visible series has each data be visual encoded
             if (!ecModel.isSeriesFiltered(seriesModel)) {
-                if (typeof color === 'function' && (!color instanceof Gradient)) {
+                if (typeof color === 'function' && !(color instanceof Gradient)) {
                     data.each(function (idx) {
                         data.setItemVisual(
                             idx, 'color', color(seriesModel.getDataParams(idx))

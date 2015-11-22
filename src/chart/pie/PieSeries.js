@@ -47,6 +47,7 @@ define(function(require) {
         getDataParams: function (dataIndex) {
             var data = this._data;
             var params = seriesModelProto.getDataParams.call(this, dataIndex);
+            // FIXME toFixed?
             params.percent = (data.get('value', dataIndex) / data.getSum('value')) * 100;
 
             params.$vars.push('percent');

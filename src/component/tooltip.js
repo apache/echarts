@@ -66,6 +66,9 @@ define(function (require) {
      * @inner
      */
     function formatTpl(tpl, paramsList) {
+        if (!zrUtil.isArray(paramsList)) {
+            paramsList = [paramsList];
+        }
         var seriesLen = paramsList.length;
         if (!seriesLen) {
             return '';
