@@ -148,6 +148,12 @@ define(function(require) {
                 // Always update, or it is wrong in the case turning on legend
                 symbolDraw.updateData(data, api, isSymbolIgnore);
 
+                // Stop symbol animation and sync with line points
+                // FIXME performance?
+                data.eachItemGraphicEl(function (el) {
+                    el.stopAnimation();
+                });
+
                 // In the case data zoom triggerred refreshing frequently
                 // Data may not change if line has a category axis. So it should animate nothing
                 if (!isPointsSame(this._stackedOnPoints, stackedOnPoints)
@@ -278,7 +284,7 @@ define(function(require) {
                 var labelInterval = categoryAxis.getLabelInterval();
                 return function (idx) {
                     return (typeof labelInterval === 'function')
-                            && !labelInterval(idx, categoryAxis.scale.getItem(idx))
+                            && !labelInterval(idx, categoryAxis.scale.getLabel(idx))
                             || idx % (labelInterval + 1);
                 };
             }
@@ -325,7 +331,6 @@ define(function(require) {
                 if (cmd === '=') {
                     var el = data.getItemGraphicEl(diffStatus[i].idx1);
                     if (el) {
-                        el.stopAnimation();
                         updatedDataInfo.push({
                             el: el,
                             ptIdx: i    // Index of points
@@ -338,12 +343,7 @@ define(function(require) {
                 polyline.animators[0].during(function () {
                     for (var i = 0; i < updatedDataInfo.length; i++) {
                         var el = updatedDataInfo[i].el;
-                        vector.copy(
-                            el.position,
-                            // synchronizing with the point on line
-                            polyline.shape.points[updatedDataInfo[i].ptIdx]
-                        );
-                        el.dirty();
+                        el.attr('position', polyline.shape.points[updatedDataInfo[i].ptIdx]);
                     }
                 });
             }

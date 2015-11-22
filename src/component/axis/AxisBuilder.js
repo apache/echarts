@@ -374,7 +374,7 @@ define(function (require) {
     function ifIgnoreOnTick(axis, i, interval) {
         return axis.scale.type === 'ordinal'
             && (typeof interval === 'function')
-                && !interval(i, axis.scale.getItem(i))
+                && !interval(i, axis.scale.getLabel(i))
                 || i % (interval + 1);
     }
 
