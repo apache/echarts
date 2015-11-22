@@ -25,12 +25,16 @@ define(function(require) {
             };
 
             this.updateSelectedMap();
+
+            this._defaultLabelLine();
         },
 
         // Overwrite
         mergeOption: function (newOption) {
             seriesModelProto.mergeOption.call(this, newOption);
             this.updateSelectedMap();
+
+            this._defaultLabelLine();
         },
 
         getInitialData: function (option, ecModel) {
@@ -47,6 +51,20 @@ define(function(require) {
 
             params.$vars.push('percent');
             return params;
+        },
+
+        _defaultLabelLine: function () {
+            // Extend labelLine emphasis
+            this.defaultEmphasis('labelLine', ['show']);
+
+            var option = this.option;
+            var labelLineNormalOpt = option.labelLine.normal;
+            var labelLineEmphasisOpt = option.labelLine.emphasis;
+            // Not show label line if `label.normal.show = false`
+            labelLineNormalOpt.show = labelLineNormalOpt.show
+                && option.label.normal.show;
+            labelLineEmphasisOpt.show = labelLineEmphasisOpt.show
+                && option.label.emphasis.show;
         },
 
         defaultOption: {

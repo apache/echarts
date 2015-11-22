@@ -167,7 +167,7 @@ define(function (require) {
                 textAlign = 'center';
             }
             else {
-                var isLabelInside = labelPosition === 'inside';
+                var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
                 var x1 = (isLabelInside ? layout.r / 2 * dx : layout.r * dx) + cx;
                 var y1 = (isLabelInside ? layout.r / 2 * dy : layout.r * dy) + cy;
 

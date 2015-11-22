@@ -40,7 +40,7 @@ define(function (require) {
             var labelModel = itemModel.getModel('label.normal');
             var labelPosition = labelModel.get('position');
 
-            var labelLineModel = itemModel.getModel('labelLine');
+            var labelLineModel = itemModel.getModel('labelLine.normal');
 
             var layout = data.getItemLayout(idx);
             var points = layout.points;

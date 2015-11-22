@@ -879,7 +879,6 @@ define(function (require) {
 
     echarts.registerVisualCoding('echarts', require('./visual/seriesColor'));
     echarts.registerPreprocessor(require('./preprocessor/backwardCompat'));
-    echarts.registerPreprocessor(require('./preprocessor/fillLabel'));
 
     // Default action
     echarts.registerAction({

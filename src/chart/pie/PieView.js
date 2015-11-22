@@ -169,7 +169,7 @@ define(function (require) {
 
         var textStyleModel = labelModel.getModel('textStyle');
         var labelPosition = labelModel.get('position');
-        var isLabelInside = labelPosition === 'inside';
+        var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
 
         labelText.setStyle({
             fill: textStyleModel.get('color')
