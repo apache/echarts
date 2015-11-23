@@ -93,6 +93,19 @@ define(function (require) {
 
     var piePieceProto = PiePiece.prototype;
 
+    function getLabelStyle(data, idx, state, labelModel) {
+        var textStyleModel = labelModel.getModel('textStyle');
+        var position = labelModel.get('position');
+        var isLabelInside = position === 'inside' || position === 'inner';
+        return {
+            fill: textStyleModel.get('color')
+                || isLabelInside ? '#fff' : data.getItemVisual(idx, 'color'),
+            textFont: textStyleModel.getFont(),
+            text: data.hostModel.getFormattedLabel(idx, state)
+                || data.getName(idx)
+        };
+    }
+
     piePieceProto.updateData = function (data, idx, api, firstCreate) {
 
         var sector = this.childAt(0);
@@ -167,17 +180,7 @@ define(function (require) {
         var labelLineModel = itemModel.getModel('labelLine.normal');
         var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
 
-        var textStyleModel = labelModel.getModel('textStyle');
-        var labelPosition = labelModel.get('position');
-        var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
-
-        labelText.setStyle({
-            fill: textStyleModel.get('color')
-                || isLabelInside ? '#fff' : visualColor,
-            text: seriesModel.getFormattedLabel(idx, 'normal')
-                || data.getName(idx),
-            textFont: textStyleModel.getFont()
-        });
+        labelText.setStyle(getLabelStyle(data, idx, 'normal', labelModel));
 
         labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
         labelText.hoverIgnore = !labelHoverModel.get('show');
@@ -189,7 +192,7 @@ define(function (require) {
         labelLine.setStyle({
             stroke: visualColor
         });
-        labelLine.setStyle(labelLineModel.getLineStyle());
+        labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
         sector.setStyle(
             zrUtil.extend(
@@ -200,8 +203,8 @@ define(function (require) {
             )
         );
         sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
-        labelText.hoverStyle = labelHoverModel.getModel('textStyle').getItemStyle();
-        labelLine.hoverStyle = labelLineHoverModel.getLineStyle();
+        labelText.hoverStyle = getLabelStyle(data, idx, 'emphasis', labelHoverModel);
+        labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
 
         graphic.setHoverStyle(this);
 

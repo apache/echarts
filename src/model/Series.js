@@ -4,6 +4,7 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var formatUtil = require('../util/format');
+    var modelUtil = require('../util/model');
     var ComponentModel = require('./Component');
 
     var encodeHTML = formatUtil.encodeHTML;
@@ -64,7 +65,7 @@ define(function(require) {
             zrUtil.merge(option, this.getDefaultOption());
 
             // Default label emphasis `position` and `show`
-            this.defaultEmphasis('label');
+            modelUtil.defaultEmphasis(option.label);
         },
 
         mergeOption: function (newSeriesOption, ecModel) {
@@ -76,25 +77,11 @@ define(function(require) {
                 this._data = data;
                 this._dataBeforeProcessed = data.cloneShallow();
             }
-
-            this.defaultEmphasis('label');
-        },
-
-        /**
-         * Util for default emphasis option from normal option like `position` and `show`
-         * @param {string} optName
-         * @param {Array.<string>} [subOpts=['position', 'show']]
-         */
-        defaultEmphasis: function (optName, subOpts) {
-            var opt = this.get(optName);
-            if (opt && opt.normal) {
-                var emphasisOpt = opt.emphasis = opt.emphasis || {};
-
-                subOpts = subOpts || ['position', 'show'];
-                zrUtil.each(subOpts, function (subOptName) {
-                    emphasisOpt[subOptName] = zrUtil.retrieve(emphasisOpt[subOptName], opt.normal[subOptName]);
-                });
-            }
+            // FIXME
+            // Default label emphasis `position` and `show`
+            // Do it after option is merged. In case newSeriesOption only
+            // set the value in emphasis
+            // modelUtil.defaultNormalEmphasis(this.option.label);
         },
 
         /**

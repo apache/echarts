@@ -85,7 +85,7 @@ define(function (require) {
     number.round = function (x) {
         // PENDING
         return +(+x).toFixed(12);
-    }
+    };
 
     number.asc = function (arr) {
         arr.sort(function (a, b) {

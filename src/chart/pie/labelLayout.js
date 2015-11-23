@@ -216,7 +216,8 @@ define(function (require) {
 
             labelLayoutList.push(layout.label);
         });
-
-        !hasLabelRotate && avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight);
+        if (!hasLabelRotate && seriesModel.get('avoidLabelOverlap')) {
+            avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight);
+        }
     };
 });

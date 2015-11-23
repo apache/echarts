@@ -4,6 +4,7 @@ define(function(require) {
 
     var List = require('../../data/List');
     var SeriesModel = require('../../model/Series');
+    var modelUtil = require('../../util/model');
 
     var FunnelSeries = SeriesModel.extend({
 
@@ -17,14 +18,8 @@ define(function(require) {
             this.legendDataProvider = function () {
                 return this._dataBeforeProcessed;
             };
-
             // Extend labelLine emphasis
-            // this._defaultLabelLine();
-        },
-
-        mergeOption: function (newOption) {
-            SeriesModel.prototype.mergeOption.call(this, newOption);
-            this._defaultLabelLine();
+            this._defaultLabelLine(option);
         },
 
         getInitialData: function (option, ecModel) {
@@ -33,11 +28,10 @@ define(function(require) {
             return list;
         },
 
-        _defaultLabelLine: function () {
+        _defaultLabelLine: function (option) {
             // Extend labelLine emphasis
-            this.defaultEmphasis('labelLine', ['show']);
+            modelUtil.defaultEmphasis(option.labelLine, ['show']);
 
-            var option = this.option;
             var labelLineNormalOpt = option.labelLine.normal;
             var labelLineEmphasisOpt = option.labelLine.emphasis;
             // Not show label line if `label.normal.show = false`

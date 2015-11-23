@@ -302,15 +302,15 @@ define(function(require) {
 
     /**
      * Set text option in the style
-     * @param {Object} style
+     * @param {Object} textStyle
      * @param {module:echarts/model/Model} labelModel
      * @param {string} color
      */
-    graphic.setText = function (style, labelModel, color) {
+    graphic.setText = function (textStyle, labelModel, color) {
         var labelPosition = labelModel.get('position') || 'inside';
-        var labelColor = labelPosition === 'inside' ? 'white' : color;
+        var labelColor = labelPosition.indexOf('inside') >= 0 ? 'white' : color;
         var textStyleModel = labelModel.getModel('textStyle');
-        zrUtil.extend(style, {
+        zrUtil.extend(textStyle, {
             textFont: textStyleModel.getFont(),
             textPosition: labelPosition,
             textFill: textStyleModel.get('color') || labelColor

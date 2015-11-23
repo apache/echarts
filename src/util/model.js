@@ -4,7 +4,7 @@ define(function(require) {
 
     var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
 
-    var util = {};
+    var modelUtil = {};
 
     /**
      * Create "each" method to iterate names.
@@ -14,11 +14,11 @@ define(function(require) {
      * @param  {Array.<string>=} attrs
      * @return {Function}
      */
-    util.createNameEach = function (names, attrs) {
+    modelUtil.createNameEach = function (names, attrs) {
         names = names.slice();
-        var capitalNames = zrUtil.map(names, util.capitalFirst);
+        var capitalNames = zrUtil.map(names, modelUtil.capitalFirst);
         attrs = (attrs || []).slice();
-        var capitalAttrs = zrUtil.map(attrs, util.capitalFirst);
+        var capitalAttrs = zrUtil.map(attrs, modelUtil.capitalFirst);
 
         return function (callback, context) {
             zrUtil.each(names, function (name, index) {
@@ -36,7 +36,7 @@ define(function(require) {
     /**
      * @public
      */
-    util.capitalFirst = function (str) {
+    modelUtil.capitalFirst = function (str) {
         return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
     };
 
@@ -54,14 +54,14 @@ define(function(require) {
      *                            }
      * @param {Object} context
      */
-    util.eachAxisDim = util.createNameEach(AXIS_DIMS, ['axisIndex', 'axis', 'index']);
+    modelUtil.eachAxisDim = modelUtil.createNameEach(AXIS_DIMS, ['axisIndex', 'axis', 'index']);
 
     /**
      * If value is not array, then translate it to array.
      * @param  {*} value
      * @return {Array} [value] or value
      */
-    util.normalizeToArray = function (value) {
+    modelUtil.normalizeToArray = function (value) {
         return zrUtil.isArray(value)
             ? value
             : value == null
@@ -80,7 +80,7 @@ define(function(require) {
      * @param {Function} edgeIdGetter Giving node and edgeType, return an array of edge id.
      * @return {Function} Input: sourceNode, Output: Like {nodes: [], dims: {}}
      */
-    util.createLinkedNodesFinder = function (forEachNode, forEachEdgeType, edgeIdGetter) {
+    modelUtil.createLinkedNodesFinder = function (forEachNode, forEachEdgeType, edgeIdGetter) {
 
         return function (sourceNode) {
             var result = {
@@ -139,5 +139,36 @@ define(function(require) {
         }
     };
 
-    return util;
+    /**
+     * Sync default option between normal and emphasis like `position` and `show`
+     * In case some one will write code like
+     *     label: {
+     *         normal: {
+     *             show: false
+     *         },
+     *         emphasis: {
+     *             show: true,
+     *             position: 'outside',
+     *             textStyle: {
+     *                 fontSize: 18
+     *             }
+     *         }
+     *     }
+     * @param {Object} opt
+     * @param {Array.<string>} [subOpts=['position', 'show']]
+     */
+     modelUtil.defaultEmphasis = function (opt, subOpts) {
+        if (opt) {
+            var emphasisOpt = opt.emphasis = opt.emphasis || {};
+            var normalOpt = opt.normal = opt.normal || {};
+
+            subOpts = subOpts || ['position', 'show', 'textStyle'];
+            // Default emphasis option from normal
+            zrUtil.each(subOpts, function (subOptName) {
+                emphasisOpt[subOptName] = zrUtil.retrieve(emphasisOpt[subOptName], normalOpt[subOptName]);
+            });
+        }
+    };
+
+    return modelUtil;
 });

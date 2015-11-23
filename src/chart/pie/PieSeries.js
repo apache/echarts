@@ -5,6 +5,7 @@ define(function(require) {
     var List = require('../../data/List');
     var SeriesModel = require('../../model/Series');
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../../util/model');
 
     var dataSelectableMixin = require('../helper/dataSelectableMixin');
 
@@ -26,15 +27,13 @@ define(function(require) {
 
             this.updateSelectedMap();
 
-            this._defaultLabelLine();
+            this._defaultLabelLine(option);
         },
 
         // Overwrite
         mergeOption: function (newOption) {
             seriesModelProto.mergeOption.call(this, newOption);
             this.updateSelectedMap();
-
-            this._defaultLabelLine();
         },
 
         getInitialData: function (option, ecModel) {
@@ -54,11 +53,10 @@ define(function(require) {
             return params;
         },
 
-        _defaultLabelLine: function () {
+        _defaultLabelLine: function (option) {
             // Extend labelLine emphasis
-            this.defaultEmphasis('labelLine', ['show']);
+            modelUtil.defaultEmphasis(option.labelLine, ['show']);
 
-            var option = this.option;
             var labelLineNormalOpt = option.labelLine.normal;
             var labelLineEmphasisOpt = option.labelLine.emphasis;
             // Not show label line if `label.normal.show = false`
@@ -82,6 +80,8 @@ define(function(require) {
             minAngle: 0,
             // 选中是扇区偏移量
             selectedOffset: 10,
+
+            // If use strategy to avoid label overlapping
             avoidLabelOverlap: true,
             // 选择模式，默认关闭，可选single，multiple
             // selectedMode: false,
