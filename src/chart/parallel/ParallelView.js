@@ -32,11 +32,10 @@ define(function (require) {
             var isFirstRender = !oldData;
 
             var lineStyleModel = seriesModel.getModel('lineStyle.normal');
-            var globalColors = ecModel.get('color');
-            var defaultColor = globalColors[seriesModel.seriesIndex % globalColors.length];
-            var lineStyle = zrUtil.defaults(
+
+            var lineStyle = zrUtil.extend(
                 lineStyleModel.getLineStyle(),
-                {stroke: defaultColor}
+                {stroke: data.getVisual('color')}
             );
 
             // var onSectorClick = zrUtil.curry(
