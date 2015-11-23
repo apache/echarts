@@ -67,7 +67,7 @@ define(function (require) {
                 .off('zoom')
                 .on('pan', function (dx, dy) {
                     api.dispatch({
-                        name: seriesModel.name,
+                        seriesId: seriesModel.id,
                         type: 'graphRoam',
                         dx: dx,
                         dy: dy
@@ -75,7 +75,7 @@ define(function (require) {
                 })
                 .on('zoom', function (zoom, mouseX, mouseY) {
                     api.dispatch({
-                        name: seriesModel.name,
+                        seriesId: seriesModel.id,
                         type: 'graphRoam',
                         zoom:  zoom,
                         originX: mouseX,

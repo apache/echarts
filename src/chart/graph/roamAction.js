@@ -20,8 +20,7 @@ define(function (require) {
      */
 
     echarts.registerAction(actionInfo, function (payload, ecModel) {
-        var seriesModel = ecModel.getSeriesByName(payload.name);
-        if (seriesModel) {
+        ecModel.eachComponent({mainType: 'series', payload: payload}, function (seriesModel) {
             var coordSys = seriesModel.coordinateSystem;
 
             var roamDetailModel = seriesModel.getModel('roamDetail');
@@ -35,6 +34,6 @@ define(function (require) {
 
             coordSys && coordSys.setPan(res.x, res.y);
             coordSys && coordSys.setZoom(res.zoom);
-        }
+        });
     });
 });

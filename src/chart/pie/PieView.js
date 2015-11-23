@@ -18,7 +18,7 @@ define(function (require) {
             type: 'pieToggleSelect',
             from: uid,
             name: name,
-            seriesName: seriesModel.name
+            seriesId: seriesModel.id
         });
 
         data.each(function (idx) {

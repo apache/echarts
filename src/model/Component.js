@@ -119,23 +119,16 @@ define(function(require) {
     // Reset ComponentModel.extend, add preConstruct.
     clazzUtil.enableClassExtend(
         ComponentModel,
-        function (option, parentModel, ecModel, dependentModels, index) {
+        function (option, parentModel, ecModel, dependentModels, index, keyInfo) {
 
             this.ecModel = ecModel;
             this.dependentModels = dependentModels;
             this.componentIndex = index;
 
-            var type = this.type;
-            if (type) {
-                type = clazzUtil.parseClassType(type);
-                this.mainType = type.main;
-                this.subType = type.sub;
-            }
-
-            // option.name and option.id has been completed and validated
-            // in module:echarts/model/Global
-            this.name = option.name;
-            this.id = option.id;
+            this.name = keyInfo.name;
+            this.id = keyInfo.id;
+            this.mainType = keyInfo.mainType;
+            this.subType = keyInfo.subType;
 
             this.uid = componentUtil.getUID('componentModel');
         }

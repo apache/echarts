@@ -589,7 +589,7 @@ define(function (require) {
             this.api.dispatch({
                 type: 'dataZoom',
                 from: this.uid,
-                dataZoomName: this.dataZoomModel.name,
+                dataZoomId: this.dataZoomModel.id,
                 range: this._range.slice()
             });
         },

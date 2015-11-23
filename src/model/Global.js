@@ -90,19 +90,19 @@ define(function (require) {
             var newCptTypes = [];
 
             // 如果不存在对应的 component model 则直接 merge
-            each(newOption, function (componentOption, componentType) {
-                if (!ComponentModel.hasClass(componentType)) {
+            each(newOption, function (componentOption, mainType) {
+                if (!ComponentModel.hasClass(mainType)) {
                     if (componentOption && typeof componentOption === 'object') {
-                        option[componentType] = option[componentType] == null
+                        option[mainType] = option[mainType] == null
                             ? zrUtil.clone(componentOption)
-                            : zrUtil.merge(option[componentType], componentOption);
+                            : zrUtil.merge(option[mainType], componentOption);
                     }
                     else {
-                        option[componentType] = componentOption;
+                        option[mainType] = componentOption;
                     }
                 }
                 else {
-                    newCptTypes.push(componentType);
+                    newCptTypes.push(mainType);
                 }
             });
 
@@ -111,31 +111,30 @@ define(function (require) {
                 newCptTypes, ComponentModel.getAllClassMainTypes(), visitComponent, this
             );
 
-            function visitComponent(componentType, dependencies) {
-                var newCptOptionList = newOption[componentType];
+            function visitComponent(mainType, dependencies) {
+                var newCptOptionList = newOption[mainType];
 
                 // Normalize
                 if (!(zrUtil.isArray(newCptOptionList))) {
                     newCptOptionList = [newCptOptionList];
                 }
-                if (!componentsMap[componentType]) {
-                    componentsMap[componentType] = [];
+                if (!componentsMap[mainType]) {
+                    componentsMap[mainType] = [];
                 }
 
-                var existComponents = this._mappingToExists(componentType, newCptOptionList);
+                var existComponents = this._mappingToExists(
+                    mainType, newCptOptionList
+                );
 
-                this._completeOptionKeys(
-                    componentType, newCptOptionList, existComponents
+                var keyInfoList = this._makeKeyInfo(
+                    mainType, newCptOptionList, existComponents
                 );
 
                 each(newCptOptionList, function (newCptOption, index) {
                     var componentModel = existComponents[index];
 
-                    var subType = this._determineSubType(
-                        componentType, newCptOption, componentModel
-                    );
                     var ComponentModelClass = ComponentModel.getClass(
-                        componentType, subType, true
+                        mainType, keyInfoList[index].subType, true
                     );
 
                     if (componentModel && componentModel instanceof ComponentModelClass) {
@@ -145,17 +144,87 @@ define(function (require) {
                         // PENDING Global as parent ?
                         componentModel = new ComponentModelClass(
                             newCptOption, this, this,
-                            this._getComponentsByTypes(dependencies), index
+                            this._getComponentsByTypes(dependencies),
+                            index, keyInfoList[index]
                         );
-                        componentsMap[componentType][index] = componentModel;
+                        componentsMap[mainType][index] = componentModel;
                     }
                 }, this);
             }
 
             // Backup data
-            each(componentsMap, function (components, componentType) {
-                this._componentsMapAll[componentType] = components.slice();
+            each(componentsMap, function (components, mainType) {
+                this._componentsMapAll[mainType] = components.slice();
             }, this);
+        },
+
+        /**
+         * @private
+         */
+        _makeKeyInfo: function (mainType, newCptOptionList, existComponents) {
+            // We use this id to hash component models and view instances
+            // in echarts. id can be specified by user, or auto generated.
+
+            // The id generation rule ensures when setOption are called in
+            // no-merge mode, new model is able to replace old model, and
+            // new view instance are able to mapped to old instance.
+            // So we generate id by name and type.
+
+            // name can be duplicated among components, which is convenient
+            // to specify multi components (like series) by one name.
+
+            // raw option should not be modified. for example, xxx.name might
+            // be rendered, so default name ('') should not be replaced by
+            // generated name. So we use keyInfoList wrap key info.
+            var keyInfoList = [];
+
+            // We use a prefix when generating name or id to prevent
+            // user using the generated name or id directly.
+            var prefix = '\0';
+
+            // Ensure that each id is distinct.
+            var idSet = {};
+
+            each(newCptOptionList, function (opt, index) {
+
+                var existCpt = existComponents[index];
+
+                // Complete subType
+                var subType = this._determineSubType(mainType, opt, existCpt);
+                var type = mainType + '.' + subType;
+                var id;
+                var name;
+
+                if (existCpt) {
+                    id = existCpt.id;
+                    name = existCpt.name;
+                }
+                else {
+                    name = opt.name;
+                    if (name == null) {
+                        name = prefix + type;
+                    }
+                    id = opt.id;
+                    if (id == null) {
+                        // Using delimiter to escapse dulipcation.
+                        id = prefix + type + '|' + index;
+                    }
+                }
+
+                if (idSet[id]) {
+                    // FIXME
+                    // how to throw
+                    throw new Error('id duplicates: ' + id);
+                }
+                idSet[id] = 1;
+
+                keyInfoList.push({
+                    id: id, name: name, mainType: mainType, subType: subType
+                });
+
+            }, this);
+
+            return keyInfoList;
         },
 
         /**
@@ -165,12 +234,9 @@ define(function (require) {
             var subType = newCptOption.type
                 ? newCptOption.type
                 : existComponent
-                ? existComponent.option.type
+                ? existComponent.subType
                 // Use determinSubType only when there is no existComponent.
                 : ComponentModel.determineSubType(componentType, newCptOption);
-
-            // Dont make option.type === undefined, otherwise some problem will occur in merge.
-            subType && (newCptOption.type = subType);
 
             return subType;
         },
@@ -216,66 +282,6 @@ define(function (require) {
             });
 
             return result;
-        },
-
-        /**
-         * @private
-         */
-        _completeOptionKeys: function (mainType, newCptOptionList, existComponents) {
-            // We use this id to hash component models and view instances
-            // in echarts. id can be specified by user, or auto generated.
-
-            // The id generation rule ensures when setOption are called in
-            // no-merge mode, new model is able to replace old model, and
-            // new view instance are able to mapped to old instance.
-            // So we generate id by name and type.
-
-            // name can be duplicated among components, which is convenient
-            // to specify multi components (like series) by one name.
-
-            // We use a prefix when generating name or id to prevent
-            // user using the generated name or id directly.
-            var prefix = '\0';
-
-            // Ensure that each id is distinct.
-            var idSet = {};
-
-            each(newCptOptionList, function (opt, index) {
-
-                var existCpt = existComponents[index];
-
-                // Complete subType
-                var subType = this._determineSubType(mainType, opt, existCpt);
-                var type = mainType + '.' + subType;
-                var id;
-                var name;
-
-                if (existCpt) {
-                    id = opt.id = existCpt.id;
-                    opt.name = existCpt.name;
-                }
-                else {
-                    name = opt.name;
-                    if (name == null) {
-                        // Using delimiter to escapse dulipcation.
-                        name = opt.name = [prefix, type, index].join('-');
-                    }
-                    id = opt.id;
-                    if (id == null) {
-                        // The delimiter should not be the same as name delimeter,
-                        // ohterwise duplication might occurs.
-                        id = opt.id = [prefix, name, type, index].join('|');
-                    }
-                }
-
-                if (idSet[id]) {
-                    // FIXME
-                    // how to throw
-                    throw new Error('id duplicates: ' + id);
-                }
-                idSet[id] = 1;
-
-            }, this);
         },
 
         /**
