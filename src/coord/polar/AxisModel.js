@@ -49,11 +49,13 @@ define(function(require) {
 
                     option.type = getAxisType(axisDim, option);
                 },
-                defaultOption: zrUtil.extend(
+                defaultOption: zrUtil.merge(
                     axisDefault[axisType + 'Axis'],
-                    zrUtil.extend({
-                        polarIndex: 0
-                    }, polarAxisDefaultExtendedOption[axisType])
+                    zrUtil.extend(
+                        {polarIndex: 0},
+                        polarAxisDefaultExtendedOption[axisDim]
+                    ),
+                    true
                 )
             });
         });
