@@ -62,10 +62,22 @@ define(function (require) {
         average: curry(markerTypeCalculatorWithExtent, 0.5)
     };
 
+    /**
+     * Transform markPoint data item to format used in List by do the following
+     * 1. Calculate statistic like `max`, `min`, `average`
+     * 2. Convert `item.xAxis`, `item.yAxis` to `item.value` array
+     * @param  {module:echarts/data/List} data
+     * @param  {module:echarts/coord/*} [coordSys]
+     * @param  {Object} item
+     * @return {Object}
+     */
     var dataTransform = function (data, coordSys, item) {
         // 1. If not specify the position with pixel directly
         // 2. If value is not a data array. Which uses xAxis, yAxis to specify the value on each dimension
-        if (isNaN(item.x) || isNaN(item.y) && !zrUtil.isArray(item.value)) {
+        if (isNaN(item.x) || isNaN(item.y)
+            && !zrUtil.isArray(item.value)
+            && coordSys
+        ) {
             var valueAxisDim;
             var baseAxisDim;
             var valueAxis;
@@ -113,11 +125,20 @@ define(function (require) {
         return item;
     };
 
-    // Filter data which is out of coordinateSystem range
+
+    /**
+     * Filter data which is out of coordinateSystem range
+     * [dataFilter description]
+     * @param  {module:echarts/coord/*} [coordSys]
+     * @param  {Array.<number>} coordDataIdx
+     * @param  {Object} item
+     * @return {boolean}
+     */
     var dataFilter = function (coordSys, coordDataIdx, item) {
         var value = item.value;
         value = [value[coordDataIdx[0]], value[coordDataIdx[1]]];
-        return coordSys.containData(value);
+        // Alwalys return true if there is no coordSys
+        return coordSys ? coordSys.containData(value) : true;
     };
 
     return {

@@ -77,7 +77,7 @@ define(function (require) {
             }
 
             var mpData = createList(coordSys, seriesData, mpModel);
-            var dims = coordSys.dimensions;
+            var dims = coordSys && coordSys.dimensions;
 
             // Overwrite getRawValue
             // FIXME
@@ -97,7 +97,7 @@ define(function (require) {
                 if (xPx != null && yPx != null) {
                     point = [xPx, yPx];
                 }
-                else {
+                else if (coordSys) {
                     var x = mpData.get(dims[0], idx);
                     var y = mpData.get(dims[1], idx);
                     point = coordSys.dataToPoint([x, y]);
@@ -129,7 +129,7 @@ define(function (require) {
 
     /**
      * @inner
-     * @param {module:echarts/coord/*} coordSys
+     * @param {module:echarts/coord/*} [coordSys]
      * @param {module:echarts/data/List} seriesData
      * @param {module:echarts/model/Model} mpModel
      */

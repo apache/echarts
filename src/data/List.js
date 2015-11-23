@@ -790,18 +790,17 @@ define(function (require) {
 
     /**
      * Create a data differ
-     * @param {module:echarts/data/List} oldList
+     * @param {module:echarts/data/List} otherList
      * @return {module:echarts/data/DataDiffer}
      */
-    listProto.diff = function (oldList) {
+    listProto.diff = function (otherList) {
         var idList = this._idList;
         return new DataDiffer(
-            oldList ? oldList.indices : [], this.indices, function (idx) {
+            otherList ? otherList.indices : [], this.indices, function (idx) {
                 return idList[idx] || (idx + '');
             }
         );
     };
-
     /**
      * Get visual property.
      * @param {string} key

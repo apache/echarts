@@ -145,13 +145,13 @@ define(function(require) {
                     );
                 }
 
-                // Always update, or it is wrong in the case turning on legend
+                // Always update, or it is wrong in the case turning on legend because points is not changed
                 symbolDraw.updateData(data, api, isSymbolIgnore);
 
                 // Stop symbol animation and sync with line points
                 // FIXME performance?
                 data.eachItemGraphicEl(function (el) {
-                    el.stopAnimation();
+                    el.stopAnimation(true);
                 });
 
                 // In the case data zoom triggerred refreshing frequently
@@ -293,6 +293,7 @@ define(function(require) {
         /**
          * @private
          */
+        // FIXME Two value axis
         _updateAnimation: function (data, stackedOnPoints, coordSys, api) {
             var polyline = this._polyline;
             var polygon = this._polygon;
@@ -339,7 +340,7 @@ define(function(require) {
                 }
             }
 
-            if (polyline.animators) {
+            if (polyline.animators && polyline.animators.length) {
                 polyline.animators[0].during(function () {
                     for (var i = 0; i < updatedDataInfo.length; i++) {
                         var el = updatedDataInfo[i].el;

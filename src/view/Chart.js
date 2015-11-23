@@ -97,13 +97,11 @@ define(function (require) {
      */
     function elSetState(el, state) {
         if (el) {
+            el.trigger(state);
             if (el.type === 'group') {
                 for (var i = 0; i < el.childCount(); i++) {
                     elSetState(el.childAt(i), state);
                 }
-            }
-            else {
-                el.trigger(state);
             }
         }
     }
