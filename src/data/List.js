@@ -331,16 +331,18 @@ define(function (require) {
         var value = storage[dim] && storage[dim][dataIndex];
         var dimensionInfo = this._dimensionInfos[dim];
         // FIXME ordinal data type is not stackable
-        if (
-            stack && this.stackedOn
-            && dimensionInfo && dimensionInfo.stackable
-        ) {
-            var stackedValue = this.stackedOn.get(dim, idx, stack);
-            // Considering positive stack, negative stack and empty data
-            if ((value >= 0 && stackedValue > 0)  // Positive stack
-                || (value <= 0 && stackedValue < 0) // Negative stack
-            ) {
-                value += stackedValue;
+        if (stack && dimensionInfo && dimensionInfo.stackable) {
+            var stackedOn = this.stackedOn;
+            while (stackedOn) {
+                // Get no stacked data of stacked on
+                var stackedValue = stackedOn.get(dim, idx);
+                // Considering positive stack, negative stack and empty data
+                if ((value >= 0 && stackedValue > 0)  // Positive stack
+                    || (value <= 0 && stackedValue < 0) // Negative stack
+                ) {
+                    value += stackedValue;
+                }
+                stackedOn = stackedOn.stackedOn;
             }
         }
         return value;

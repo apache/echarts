@@ -308,7 +308,7 @@ define(function(require) {
      */
     graphic.setText = function (style, labelModel, color) {
         var labelPosition = labelModel.get('position') || 'inside';
-        var labelColor = labelPosition === 'inside' ? 'white' : color;
+        var labelColor = labelPosition.indexOf('inside') >= 0 ? 'white' : color;
         var textStyleModel = labelModel.getModel('textStyle');
         zrUtil.extend(style, {
             textFont: textStyleModel.getFont(),
