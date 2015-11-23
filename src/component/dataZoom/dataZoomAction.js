@@ -10,14 +10,6 @@ define(function(require) {
 
     echarts.registerAction('dataZoom', function (payload, ecModel) {
 
-        var fromDataZoomModel = ecModel.queryComponent({
-            mainType: 'dataZoom',
-            name: payload.dataZoomName,
-            index: payload.dataZoomIndex
-        });
-        if (!fromDataZoomModel) {
-            return;
-        }
 
         var linkedNodesFinder = modelUtil.createLinkedNodesFinder(
             zrUtil.bind(ecModel.eachComponent, ecModel, 'dataZoom'),
@@ -27,11 +19,35 @@ define(function(require) {
             }
         );
 
-        var effectedModels = linkedNodesFinder(fromDataZoomModel).nodes;
+        var effectedModels = [];
+
+        ecModel.eachComponent({mainType: 'dataZoom', payload: payload}, function (model) {
+            distinctPush(effectedModels, linkedNodesFinder(model).nodes);
+        });
 
         zrUtil.each(effectedModels, function (dataZoomModel) {
             dataZoomModel.setRange(payload.range);
         });
+
     });
+
+    function distinctPush(target, source) {
+        var targetLen = target.length;
+
+        for (var i = 0, len = source.length; i < len; i++) {
+            var src = source[i];
+
+            var has = false;
+            for (var j = 0; j < targetLen; j++) {
+                if (src === target[j]) {
+                    has = true;
+                }
+            }
+
+            if (!has) {
+                target.push(src);
+            }
+        }
+    }
 
 });

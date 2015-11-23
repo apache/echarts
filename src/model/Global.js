@@ -12,6 +12,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var Model = require('./Model');
     var each = zrUtil.each;
+    var filter = zrUtil.filter;
 
     var ComponentModel = require('./Component');
 
@@ -39,12 +40,6 @@ define(function (require) {
              * @private
              */
             this._componentsMap = {};
-
-            /**
-             * @type {Object.<string, Object.<string, module:echarts/model/Model>>}
-             * @private
-             */
-            this._componentsMapByName = {};
 
             /**
              * All components before processing
@@ -92,7 +87,6 @@ define(function (require) {
         mergeOption: function (newOption) {
             var option = this.option;
             var componentsMap = this._componentsMap;
-            var componentsMapByName = this._componentsMapByName;
             var newCptTypes = [];
 
             // 如果不存在对应的 component model 则直接 merge
@@ -126,14 +120,16 @@ define(function (require) {
                 }
                 if (!componentsMap[componentType]) {
                     componentsMap[componentType] = [];
-                    componentsMapByName[componentType] = [];
                 }
 
                 var existComponents = this._mappingToExists(componentType, newCptOptionList);
 
-                for (var i = 0; i < newCptOptionList.length; i++) {
-                    var componentModel = existComponents[i];
-                    var newCptOption = newCptOptionList[i];
+                this._completeOptionKeys(
+                    componentType, newCptOptionList, existComponents
+                );
+
+                each(newCptOptionList, function (newCptOption, index) {
+                    var componentModel = existComponents[index];
 
                     var subType = this._determineSubType(
                         componentType, newCptOption, componentModel
@@ -148,14 +144,12 @@ define(function (require) {
                     else {
                         // PENDING Global as parent ?
                         componentModel = new ComponentModelClass(
-                            newCptOptionList[i], this, this,
-                            this._getComponentsByTypes(dependencies), i
+                            newCptOption, this, this,
+                            this._getComponentsByTypes(dependencies), index
                         );
-                        componentsMap[componentType][i] =
-                            componentsMapByName[componentType][componentModel.name] =
-                                componentModel;
+                        componentsMap[componentType][index] = componentModel;
                     }
-                }
+                }, this);
             }
 
             // Backup data
@@ -188,6 +182,19 @@ define(function (require) {
             var result = [];
             var existComponents = (this._componentsMap[componentType] || []).slice();
 
+            // Mapping by id if specified.
+            each(newComponentOptionList, function (componentOption, index) {
+                if (!componentOption.id) {
+                    return;
+                }
+                for (var i = 0, len = existComponents.length; i < len; i++) {
+                    if (existComponents[i].getId() === componentOption.id) {
+                        result[index] = existComponents.splice(i, 1)[0];
+                        return;
+                    }
+                }
+            });
+
             // Mapping by name if specified.
             each(newComponentOptionList, function (componentOption, index) {
                 if (!componentOption.name) {
@@ -196,7 +203,7 @@ define(function (require) {
                 for (var i = 0, len = existComponents.length; i < len; i++) {
                     if (existComponents[i].name === componentOption.name) {
                         result[index] = existComponents.splice(i, 1)[0];
-                        break;
+                        return;
                     }
                 }
             });
@@ -209,6 +216,66 @@ define(function (require) {
             });
 
             return result;
+        },
+
+        /**
+         * @private
+         */
+        _completeOptionKeys: function (mainType, newCptOptionList, existComponents) {
+            // We use this id to hash component models and view instances
+            // in echarts. id can be specified by user, or auto generated.
+
+            // The id generation rule ensures when setOption are called in
+            // no-merge mode, new model is able to replace old model, and
+            // new view instance are able to mapped to old instance.
+            // So we generate id by name and type.
+
+            // name can be duplicated among components, which is convenient
+            // to specify multi components (like series) by one name.
+
+            // We use a prefix when generating name or id to prevent
+            // user using the generated name or id directly.
+            var prefix = '\0';
+
+            // Ensure that each id is distinct.
+            var idSet = {};
+
+            each(newCptOptionList, function (opt, index) {
+
+                var existCpt = existComponents[index];
+
+                // Complete subType
+                var subType = this._determineSubType(mainType, opt, existCpt);
+                var type = mainType + '.' + subType;
+                var id;
+                var name;
+
+                if (existCpt) {
+                    id = opt.id = existCpt.id;
+                    opt.name = existCpt.name;
+                }
+                else {
+                    name = opt.name;
+                    if (name == null) {
+                        // Using delimiter to escapse dulipcation.
+                        name = opt.name = [prefix, type, index].join('-');
+                    }
+                    id = opt.id;
+                    if (id == null) {
+                        // The delimiter should not be the same as name delimeter,
+                        // ohterwise duplication might occurs.
+                        id = opt.id = [prefix, name, type, index].join('|');
+                    }
+                }
+
+                if (idSet[id]) {
+                    // FIXME
+                    // how to throw
+                    throw new Error('id duplicates: ' + id);
+                }
+                idSet[id] = 1;
+
+            }, this);
         },
 
         /**
@@ -232,26 +299,53 @@ define(function (require) {
 
         /**
          * @param {Object} condition
-         * @param {number} [condition.index] Either input name or index.
-         * @param {string} [condition.name] Either input name or index.
-         * @param {string} [condition.mainType] Main type (not include subType).
-         * @return {module:echarts/model/Component}
+         * @param {string} condition.mainType
+         * @param {string} [condition.subType] If ignore, only query by mainType
+         * @param {number} [condition.index] Either input index or id or name.
+         * @param {string} [condition.id] Either input index or id or name.
+         * @param {string} [condition.name] Either input index or id or name.
+         * @return {Array.<module:echarts/model/Component>}
          */
-        queryComponent: function (condition) {
+        queryComponents: function (condition) {
             var mainType = condition.mainType;
             if (!mainType) {
-                return;
+                return [];
             }
 
-            var byIndex = this._componentsMap[mainType];
-            var byName = this._componentsMapByName[mainType];
+            var index = condition.index;
+            var id = condition.id;
+            var name = condition.name;
 
-            if (byIndex && condition.index != null) {
-                return byIndex[condition.index];
+            var cpts = this._componentsMap[mainType];
+
+            if (!cpts || !cpts.length) {
+                return [];
             }
-            if (byName && condition.name != null) {
-                return byName[condition.name];
+
+            var result;
+
+            if (index != null) {
+                var cpt = cpts[index];
+                result = cpt ? [cpt] : [];
             }
+            else if (id != null) {
+                result = filter(cpts, function (cpt) {
+                    return cpt.id === id;
+                });
+            }
+            else if (name != null) {
+                result = filter(cpts, function (cpt) {
+                    return cpt.name === name;
+                });
+            }
+
+            var subType = condition.subType;
+
+            return subType == null
+                ? result
+                : filter(result, function (cpt) {
+                    return cpt.subType === subType;
+                });
         },
 
         /**
@@ -263,6 +357,14 @@ define(function (require) {
          *     // componentType does not include subType
          *     // (componentType is 'xxx' but not 'xxx.aa')
          * });
+         * eachComponent(
+         *     {mainType: 'dataZoom', payload: {dataZoomId: 'abc'}},
+         *     function (model, index) {...}
+         * );
+         * eachComponent(
+         *     {mainType: 'series', subType: 'pie', payload: {seriesName: 'uio'}},
+         *     function (model, index) {...}
+         * );
          *
          * @param {string=} mainType
          * @param {Function} cb
@@ -278,8 +380,24 @@ define(function (require) {
                     }, this);
                 }, context);
             }
-            else {
+
+            else if (zrUtil.isString(mainType)) {
                 each(this._componentsMap[mainType], cb, context);
+            }
+
+            // Query by payload.
+            else if (zrUtil.isObject(mainType)) {
+                var condition = zrUtil.extend({}, mainType);
+                var payload = condition.payload;
+                var mainType = condition.mainType;
+
+                // Style in payload: xxxIndex, xxxId, xxxName,
+                // where xxx is mainType.
+                condition.index = payload[mainType + 'Index'];
+                condition.id = payload[mainType + 'Id'];
+                condition.name = payload[mainType + 'Name'];
+
+                each(this.queryComponents(condition), cb, context);
             }
         },
 

@@ -7,11 +7,16 @@ define(function (require) {
          * @property {string} name
          */
         echarts.registerAction(actionInfo, function (payload, ecModel) {
-            ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-                if (seriesModel.name === payload.seriesName && seriesModel.toggleSelected) {
-                    seriesModel.toggleSelected(payload.name);
+
+            ecModel.eachComponent(
+                {mainType: 'series', subType: seriesType, payload: payload},
+                function (seriesModel) {
+                    if (seriesModel.toggleSelected) {
+                        seriesModel.toggleSelected(payload.name);
+                    }
                 }
-            });
+            );
+
         });
     };
 });

@@ -24,8 +24,32 @@ define(function(require) {
 
         /**
          * @readOnly
+         * @type {string}
+         */
+        id: '',
+
+        /**
+         * @readOnly
          */
         name: '',
+
+        /**
+         * @readOnly
+         * @type {string}
+         */
+        mainType: '',
+
+        /**
+         * @readOnly
+         * @type {string}
+         */
+        subType: '',
+
+        /**
+         * @readOnly
+         * @type {number}
+         */
+        componentIndex: null,
 
         /**
          * @type {Object}
@@ -83,16 +107,11 @@ define(function(require) {
         },
 
         /**
-         * Two ids are different if and only if their component types
-         * or names are different. We use this id to hash component models
-         * and view instances in echarts. When setOption are called in
-         * no-merge mode, new models are able to replace old model, and
-         * view instances are able to mapped to previous.
          * @public
          * @return {string} id
          */
         getId: function () {
-            return this.name + '__' + this.type;
+            return this.id;
         }
 
     });
@@ -101,6 +120,7 @@ define(function(require) {
     clazzUtil.enableClassExtend(
         ComponentModel,
         function (option, parentModel, ecModel, dependentModels, index) {
+
             this.ecModel = ecModel;
             this.dependentModels = dependentModels;
             this.componentIndex = index;
@@ -112,13 +132,10 @@ define(function(require) {
                 this.subType = type.sub;
             }
 
-            // FIXME
-            // 如果name重复，要进行提示。
-            var componentName = option.name;
-            if (componentName == null) {
-                componentName = this.type + '' + index;
-            }
-            this.name = componentName + '';
+            // option.name and option.id has been completed and validated
+            // in module:echarts/model/Global
+            this.name = option.name;
+            this.id = option.id;
 
             this.uid = componentUtil.getUID('componentModel');
         }
