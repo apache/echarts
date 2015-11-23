@@ -44,7 +44,7 @@ define(function (require) {
         axis.onBand = axisModel.get('boundaryGap') && axis.type === 'category';
 
         // FIXME Radius axis not support inverse axis
-        if (axisModel.type === 'angleAxis') {
+        if (axisModel.mainType === 'angleAxis') {
             var startAngle = axisModel.get('startAngle');
             axis.inverse = axisModel.get('inverse') ^ axisModel.get('clockwise');
             axis.setExtent(startAngle, startAngle + (axis.inverse ? -360 : 360));

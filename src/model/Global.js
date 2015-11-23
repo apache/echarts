@@ -341,7 +341,7 @@ define(function (require) {
         getSeriesByType: function (subType, beforeProcessing) {
             var series = this['_componentsMap' + (beforeProcessing ? 'All' : '')].series;
             return zrUtil.filter(series, function (oneSeries) {
-                return ComponentModel.parseClassType(oneSeries.type).sub === subType;
+                return oneSeries.subType === subType;
             });
         },
 

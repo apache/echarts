@@ -58,9 +58,8 @@ define(function(require) {
         },
 
         mergeDefaultAndTheme: function (option, ecModel) {
-            var componentType = ComponentModel.parseClassType(this.type);
             var themeModel = ecModel.getTheme();
-            zrUtil.merge(option, themeModel.get(componentType.main));
+            zrUtil.merge(option, themeModel.get(this.mainType));
             zrUtil.merge(option, this.getDefaultOption());
         },
 
@@ -106,6 +105,13 @@ define(function(require) {
             this.dependentModels = dependentModels;
             this.componentIndex = index;
 
+            var type = this.type;
+            if (type) {
+                type = clazzUtil.parseClassType(type);
+                this.mainType = type.main;
+                this.subType = type.sub;
+            }
+
             // FIXME
             // 如果name重复，要进行提示。
             var componentName = option.name;
@@ -134,7 +140,7 @@ define(function(require) {
         });
         // Ensure main type
         return zrUtil.map(deps, function (type) {
-            return ComponentModel.parseClassType(type).main;
+            return clazzUtil.parseClassType(type).main;
         });
     }
 
