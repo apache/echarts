@@ -40,7 +40,7 @@ define(function (require) {
             var labelModel = itemModel.getModel('label.normal');
             var labelPosition = labelModel.get('position');
 
-            var labelLineModel = itemModel.getModel('labelLine');
+            var labelLineModel = itemModel.getModel('labelLine.normal');
 
             var layout = data.getItemLayout(idx);
             var points = layout.points;
@@ -120,7 +120,8 @@ define(function (require) {
             var y = viewRect.y;
 
             var getLinePoints = function (idx, offY) {
-                var val = data.get('value', idx);
+                // End point index is data.count() and we assign it 0
+                var val = data.get('value', idx) || 0;
                 var itemWidth = number.linearMap(val, dataExtent, sizeExtent);
                 var x0;
                 switch (funnelAlign) {
@@ -152,13 +153,7 @@ define(function (require) {
                 var idx = indices[i];
                 var nextIdx = indices[i + 1];
                 var start = getLinePoints(idx, y);
-                var end = nextIdx == null
-                    // End point
-                    ? [
-                        [viewRect.x + viewRect.width / 2, y + itemHeight],
-                        [viewRect.x + viewRect.width / 2, y + itemHeight]
-                      ]
-                    : getLinePoints(nextIdx, y + itemHeight);
+                var end = getLinePoints(nextIdx, y + itemHeight);
 
                 y += itemHeight + gap;
 

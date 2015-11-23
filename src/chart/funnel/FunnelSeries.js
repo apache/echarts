@@ -5,7 +5,7 @@ define(function(require) {
     var List = require('../../data/List');
     var SeriesModel = require('../../model/Series');
 
-    var PieSeries = SeriesModel.extend({
+    var FunnelSeries = SeriesModel.extend({
 
         type: 'series.funnel',
 
@@ -17,12 +17,34 @@ define(function(require) {
             this.legendDataProvider = function () {
                 return this._dataBeforeProcessed;
             };
+
+            // Extend labelLine emphasis
+            // this._defaultLabelLine();
+        },
+
+        mergeOption: function (newOption) {
+            SeriesModel.prototype.mergeOption.call(this, newOption);
+            this._defaultLabelLine();
         },
 
         getInitialData: function (option, ecModel) {
             var list = new List(['value'], this);
             list.initData(option.data);
             return list;
+        },
+
+        _defaultLabelLine: function () {
+            // Extend labelLine emphasis
+            this.defaultEmphasis('labelLine', ['show']);
+
+            var option = this.option;
+            var labelLineNormalOpt = option.labelLine.normal;
+            var labelLineEmphasisOpt = option.labelLine.emphasis;
+            // Not show label line if `label.normal.show = false`
+            labelLineNormalOpt.show = labelLineNormalOpt.show
+                && option.label.normal.show;
+            labelLineEmphasisOpt.show = labelLineEmphasisOpt.show
+                && option.label.emphasis.show;
         },
 
         defaultOption: {
@@ -55,13 +77,16 @@ define(function(require) {
                 }
             },
             labelLine: {
-                show: true,
-                length: 20,
-                lineStyle: {
-                    // color: 各异,
-                    width: 1,
-                    type: 'solid'
-                }
+                normal: {
+                    show: true,
+                    length: 20,
+                    lineStyle: {
+                        // color: 各异,
+                        width: 1,
+                        type: 'solid'
+                    }
+                },
+                emphasis: {}
             },
             itemStyle: {
                 normal: {
@@ -76,5 +101,5 @@ define(function(require) {
         }
     });
 
-    return PieSeries;
+    return FunnelSeries;
 });

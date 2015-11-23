@@ -249,7 +249,7 @@ define(function(require) {
      * @inner
      */
     function onElementMouseOver() {
-        // Only if element is not inemphasis status
+        // Only if element is not in emphasis status
         !this.__isEmphasis && doEnterHover(this);
     }
 
@@ -257,7 +257,7 @@ define(function(require) {
      * @inner
      */
     function onElementMouseOut() {
-        // Only if element is not inemphasis status
+        // Only if element is not in emphasis status
         !this.__isEmphasis && doLeaveHover(this);
     }
 

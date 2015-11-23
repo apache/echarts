@@ -83,13 +83,14 @@ define(function (require) {
             }
 
             var legendDataMap = {};
+            var legendDrawedMap = {};
             zrUtil.each(legendModel.getData(), function (itemModel) {
                 var seriesName = itemModel.get('name');
                 var seriesModel = ecModel.getSeriesByName(seriesName, true);
 
                 legendDataMap[seriesName] = itemModel;
 
-                if (!seriesModel) {
+                if (!seriesModel || legendDrawedMap[seriesName]) {
                     // Series not exists
                     return;
                 }
@@ -121,6 +122,8 @@ define(function (require) {
                 itemGroup.on('click', curry(dispatchSelectAction, seriesName, api))
                     .on('mouseover', curry(dispatchHighlightAction, seriesName, '', api))
                     .on('mouseout', curry(dispatchDownplayAction, seriesName, '', api));
+
+                legendDrawedMap[seriesName] = true;
             }, this);
 
             ecModel.eachSeriesAll(function (seriesModel) {
@@ -129,7 +132,8 @@ define(function (require) {
                     data.each(function (idx) {
                         var name = data.getName(idx);
 
-                        if (!legendDataMap[name]) {
+                        // Avoid mutiple series use the same data name
+                        if (!legendDataMap[name] || legendDrawedMap[name]) {
                             return;
                         }
 
@@ -151,6 +155,8 @@ define(function (require) {
                         itemGroup.on('click', curry(dispatchSelectAction, name, api))
                             .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, name, api))
                             .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, name, api));
+
+                        legendDrawedMap[name] = true;
                     }, false, this);
                 }
             }, this);

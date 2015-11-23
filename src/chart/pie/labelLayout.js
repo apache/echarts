@@ -145,7 +145,7 @@ define(function (require) {
             var labelModel = itemModel.getModel('label.normal');
             var labelPosition = labelModel.get('position');
 
-            var labelLineModel = itemModel.getModel('labelLine');
+            var labelLineModel = itemModel.getModel('labelLine.normal');
             var labelLineLen = labelLineModel.get('length');
             var labelLineLen2 = labelLineModel.get('length2');
 
@@ -167,7 +167,7 @@ define(function (require) {
                 textAlign = 'center';
             }
             else {
-                var isLabelInside = labelPosition === 'inside';
+                var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
                 var x1 = (isLabelInside ? layout.r / 2 * dx : layout.r * dx) + cx;
                 var y1 = (isLabelInside ? layout.r / 2 * dy : layout.r * dy) + cy;
 

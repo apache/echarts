@@ -58,7 +58,9 @@ define(function(require) {
         },
 
         mergeDefaultAndTheme: function (option, ecModel) {
-            zrUtil.merge(option, ecModel.getTheme().get(this.type));
+            var componentType = ComponentModel.parseClassType(this.type);
+            var themeModel = ecModel.getTheme();
+            zrUtil.merge(option, themeModel.get(componentType.main));
             zrUtil.merge(option, this.getDefaultOption());
         },
 

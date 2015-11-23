@@ -25,12 +25,16 @@ define(function(require) {
             };
 
             this.updateSelectedMap();
+
+            this._defaultLabelLine();
         },
 
         // Overwrite
         mergeOption: function (newOption) {
             seriesModelProto.mergeOption.call(this, newOption);
             this.updateSelectedMap();
+
+            this._defaultLabelLine();
         },
 
         getInitialData: function (option, ecModel) {
@@ -43,10 +47,25 @@ define(function(require) {
         getDataParams: function (dataIndex) {
             var data = this._data;
             var params = seriesModelProto.getDataParams.call(this, dataIndex);
-            params.percent = data.get('value', dataIndex) / data.getSum('value');
+            // FIXME toFixed?
+            params.percent = (data.get('value', dataIndex) / data.getSum('value')) * 100;
 
             params.$vars.push('percent');
             return params;
+        },
+
+        _defaultLabelLine: function () {
+            // Extend labelLine emphasis
+            this.defaultEmphasis('labelLine', ['show']);
+
+            var option = this.option;
+            var labelLineNormalOpt = option.labelLine.normal;
+            var labelLineEmphasisOpt = option.labelLine.emphasis;
+            // Not show label line if `label.normal.show = false`
+            labelLineNormalOpt.show = labelLineNormalOpt.show
+                && option.label.normal.show;
+            labelLineEmphasisOpt.show = labelLineEmphasisOpt.show
+                && option.label.emphasis.show;
         },
 
         defaultOption: {
@@ -84,15 +103,17 @@ define(function(require) {
             },
             // Enabled when label.normal.position is 'outer'
             labelLine: {
-                show: true,
-                // 引导线两段中的第一段长度
-                length: 20,
-                // 引导线两段中的第二段长度
-                length2: 5,
-                lineStyle: {
-                    // color: 各异,
-                    width: 1,
-                    type: 'solid'
+                normal: {
+                    show: true,
+                    // 引导线两段中的第一段长度
+                    length: 20,
+                    // 引导线两段中的第二段长度
+                    length2: 5,
+                    lineStyle: {
+                        // color: 各异,
+                        width: 1,
+                        type: 'solid'
+                    }
                 }
             },
             itemStyle: {

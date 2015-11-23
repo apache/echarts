@@ -66,6 +66,9 @@ define(function (require) {
      * @inner
      */
     function formatTpl(tpl, paramsList) {
+        if (!zrUtil.isArray(paramsList)) {
+            paramsList = [paramsList];
+        }
         var seriesLen = paramsList.length;
         if (!seriesLen) {
             return '';
@@ -625,6 +628,11 @@ define(function (require) {
                 var paramsList = zrUtil.map(seriesList, function (series) {
                     return series.getDataParams(dataIndex);
                 });
+                // If only one series
+                // FIXME
+                if (paramsList.length === 1) {
+                    paramsList = paramsList[0];
+                }
 
                 tooltipContent.show(rootTooltipModel);
 
@@ -730,7 +738,7 @@ define(function (require) {
                 }
                 else {
                     if (typeof formatter === 'string') {
-                        html = formatTpl(formatter, [params]);
+                        html = formatTpl(formatter, params);
                     }
                     else if (typeof formatter === 'function') {
                         var self = this;
@@ -749,7 +757,7 @@ define(function (require) {
                             }
                         };
                         self._ticket = ticket;
-                        html = formatter([params], ticket, callback);
+                        html = formatter(params, ticket, callback);
                     }
                 }
 

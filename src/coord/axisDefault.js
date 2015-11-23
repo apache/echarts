@@ -15,7 +15,7 @@ define(function (require) {
         // 坐标轴文字样式，默认取全局样式
         nameTextStyle: {},
         // 文字与轴线距离
-        nameGap: 5,
+        nameGap: 15,
         // 坐标轴线
         axisLine: {
             // 默认显示，属性show控制显示与否

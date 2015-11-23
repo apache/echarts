@@ -129,8 +129,7 @@ define(function (require) {
                 var labelText = seriesModel.getFormattedLabel(idx, 'normal')
                             || data.getRawValue(idx);
                 var rectStyle = rect.style;
-                var showLabel = labelModel.get('show');
-                if (showLabel) {
+                if (labelModel.get('show')) {
                     setLabel(
                         rectStyle, labelModel, color, labelText, labelPositionOutside
                     );
@@ -138,7 +137,7 @@ define(function (require) {
                 else {
                     rectStyle.text = '';
                 }
-                if (zrUtil.retrieve(hoverLabelModel.get('show'), showLabel)) {
+                if (hoverLabelModel.get('show')) {
                     setLabel(
                         hoverStyle, hoverLabelModel, color, labelText, labelPositionOutside
                     );

@@ -149,7 +149,9 @@ define(function (require) {
         },
 
         setContent: function (content) {
-            this.el.innerHTML = content;
+            var el = this.el;
+            el.innerHTML = content;
+            el.style.display = content ? 'block' : 'none';
         },
 
         moveTo: function (x, y) {

@@ -5,7 +5,7 @@ define(function (require) {
 
     var POSSIBLE_STYLES = [
         'areaStyle', 'lineStyle', 'nodeStyle', 'linkStyle',
-        'chordStyle', 'label'
+        'chordStyle', 'label', 'labelLine'
     ];
 
     var each = zrUtil.each;

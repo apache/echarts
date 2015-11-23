@@ -6,14 +6,6 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var ComponentModel = require('../../model/Component');
 
-    function mergeDefault(axisOption, ecModel) {
-        var axisType = axisOption.type + 'Axis';
-
-        zrUtil.merge(axisOption, ecModel.get(axisType));
-        zrUtil.merge(axisOption, ecModel.getTheme().get(axisType));
-        zrUtil.merge(axisOption, axisDefault[axisType]);
-    }
-
     var PolarAxisModel = ComponentModel.extend({
         type: 'polarAxis',
         /**
@@ -24,55 +16,8 @@ define(function(require) {
 
     zrUtil.merge(PolarAxisModel.prototype, require('../axisModelCommonMixin'));
 
-
-    // Radius axis
-    PolarAxisModel.extend({
-
-        type: 'radiusAxis',
-
-        /**
-         * @type {module:echarts/coord/polar/RadiusAxis}
-         */
-        axis: null,
-
-        init: function (axisOption, parentModel, ecModel) {
-            zrUtil.merge(axisOption, this.getDefaultOption(), false);
-
-            mergeDefault(axisOption, ecModel);
-        },
-
-        defaultOption: {
-
-            type: 'value',
-
-            polarIndex: 0,
-
-            splitNumber: 5
-        }
-    });
-
-    // Angle axis
-    PolarAxisModel.extend({
-
-        type: 'angleAxis',
-
-        /**
-         * @type {module:echarts/coord/polar/AngleAxis}
-         */
-        axis: null,
-
-        init: function (axisOption, parentModel, ecModel) {
-            zrUtil.merge(axisOption, this.getDefaultOption(), false);
-
-            mergeDefault(axisOption, ecModel);
-        },
-
-        defaultOption: {
-
-            type: 'category',
-
-            polarIndex: 0,
-
+    var polarAxisDefaultExtendedOption = {
+        angle: {
             startAngle: 90,
 
             clockwise: true,
@@ -82,6 +27,40 @@ define(function(require) {
             axisLabel: {
                 rotate: false
             }
+        },
+        radius: {
+            splitNumber: 5
         }
-    });
+    };
+
+    function getAxisType(axisDim, option) {
+        return option.type || (axisDim === 'angle' ? 'category' : 'value');
+    }
+
+    function extendAxis(axisDim) {
+        // FIXME axisType is fixed ?
+        zrUtil.each(['value', 'category', 'time', 'log'], function (axisType) {
+            PolarAxisModel.extend({
+                type: axisDim + 'Axis.' + axisType,
+                mergeDefaultAndTheme: function (option, ecModel) {
+                    var themeModel = ecModel.getTheme();
+                    zrUtil.merge(option, themeModel.get(axisType + 'Axis'));
+                    zrUtil.merge(option, this.getDefaultOption());
+
+                    option.type = getAxisType(axisDim, option);
+                },
+                defaultOption: zrUtil.extend(
+                    axisDefault[axisType + 'Axis'],
+                    zrUtil.extend({
+                        polarIndex: 0
+                    }, polarAxisDefaultExtendedOption[axisType])
+                )
+            });
+        });
+        // Defaulter
+        ComponentModel.registerSubTypeDefaulter(axisDim + 'Axis', zrUtil.curry(getAxisType, axisDim));
+    }
+
+    extendAxis('angle');
+    extendAxis('radius');
 });

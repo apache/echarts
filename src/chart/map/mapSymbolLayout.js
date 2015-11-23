@@ -44,7 +44,7 @@ define(function (require) {
                 }
             });
 
-            // Show label of those region not has legendSymbol( which is offset 0)
+            // Show label of those region not has legendSymbol(which is offset 0)
             var data = mapSeries.getData();
             data.each(function (idx) {
                 var name = data.getName(idx);

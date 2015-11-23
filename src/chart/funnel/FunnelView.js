@@ -185,7 +185,7 @@ define(function (require) {
                     textFont: textStyleModel.getFont()
                 });
                 // Default use item visual color
-                labelLine.attr('ignore', !itemModel.get('labelLine.show'));
+                labelLine.attr('ignore', !itemModel.get('labelLine.normal.show'));
                 labelLine.setStyle({
                     stroke: visualColor
                 });

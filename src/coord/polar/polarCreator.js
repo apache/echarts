@@ -29,10 +29,7 @@ define(function (require) {
         var radiusAxis = this.getRadiusAxis();
         var size = Math.min(width, height) / 2;
         // var idx = radiusAxis.inverse ? 1 : 0;
-        radiusAxis.setExtent(
-            parsePercent(radius[0], size),
-            parsePercent(radius[1], size)
-        );
+        radiusAxis.setExtent(0, parsePercent(radius, size));
     }
 
     /**

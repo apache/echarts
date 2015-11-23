@@ -51,12 +51,20 @@ define(function(require) {
             this._dataBeforeProcessed = this._data.cloneShallow();
         },
 
+        /**
+         * Util for merge default and theme to option
+         * @param  {Object} option
+         * @param  {module:echarts/model/Global} ecModel
+         */
         mergeDefaultAndTheme: function (option, ecModel) {
             zrUtil.merge(
                 option,
                 ecModel.getTheme().get(ComponentModel.parseClassType(this.type).sub)
             );
             zrUtil.merge(option, this.getDefaultOption());
+
+            // Default label emphasis `position` and `show`
+            this.defaultEmphasis('label');
         },
 
         mergeOption: function (newSeriesOption, ecModel) {
@@ -67,6 +75,25 @@ define(function(require) {
             if (data) {
                 this._data = data;
                 this._dataBeforeProcessed = data.cloneShallow();
+            }
+
+            this.defaultEmphasis('label');
+        },
+
+        /**
+         * Util for default emphasis option from normal option like `position` and `show`
+         * @param {string} optName
+         * @param {Array.<string>} [subOpts=['position', 'show']]
+         */
+        defaultEmphasis: function (optName, subOpts) {
+            var opt = this.get(optName);
+            if (opt && opt.normal) {
+                var emphasisOpt = opt.emphasis = opt.emphasis || {};
+
+                subOpts = subOpts || ['position', 'show'];
+                zrUtil.each(subOpts, function (subOptName) {
+                    emphasisOpt[subOptName] = zrUtil.retrieve(emphasisOpt[subOptName], opt.normal[subOptName]);
+                });
             }
         },
 

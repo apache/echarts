@@ -58,18 +58,11 @@ define(function(require) {
             },
             lineStyle: {
                 normal: {
-                    width: 2,
-                    opacity: 0.7,
-                    type: 'solid',
-                    shadowColor: 'rgba(0,0,0,0)', //默认透明
-                    shadowBlur: 0,
-                    shadowOffsetX: 0,
-                    shadowOffsetY: 0
+                    width: 1,
+                    opacity: 0.6,
+                    type: 'solid'
                 }
             },
-            // areaStyle: {
-
-            // },
             // smooth: false,
             // 拐点图形类型
             symbol: 'emptyCircle',

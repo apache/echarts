@@ -55,7 +55,9 @@ define(function (require) {
             switch (axisType) {
                 // Buildin scale
                 case 'category':
-                    return new OrdinalScale(axisModel.get('data'), [Infinity, -Infinity]);
+                    return new OrdinalScale(
+                        axisModel.getCategories(), [Infinity, -Infinity]
+                    );
                 case 'value':
                     return new IntervalScale();
                 // Extended scale, like time and log
@@ -71,8 +73,8 @@ define(function (require) {
     axisHelper.ifAxisCrossZero = function (axis) {
         var dataExtent = axis.scale.getExtent();
         return !((dataExtent[0] > 0 && dataExtent[1] > 0)
-                || (dataExtent[0] < 0 && dataExtent[1] < 0))
-            || axisHelper.ifAxisNeedsCrossZero(axis);
+                    || (dataExtent[0] < 0 && dataExtent[1] < 0))
+                || axisHelper.ifAxisNeedsCrossZero(axis);
     };
 
     /**

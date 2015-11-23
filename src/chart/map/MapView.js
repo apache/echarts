@@ -59,6 +59,7 @@ define(function (require) {
                 var textStyleModel = labelModel.getModel('textStyle');
 
                 var layout = data.getItemLayout(idx);
+
                 var point = layout.point;
                 var offset = layout.offset;
 
