@@ -87,9 +87,6 @@ define(function (require) {
             var opt = this.opt;
             var extent = this.axisModel.axis.getExtent();
 
-            // FIXME
-            // 改过后，extent须在inverse时反向。
-
             opt.offset = 0;
 
             // FIXME

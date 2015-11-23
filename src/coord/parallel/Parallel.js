@@ -160,32 +160,29 @@ define(function(require) {
             });
 
             each(dimensions, function (dim, idx) {
-                var axis = axes[dim.name];
                 var pos = layoutLength * idx / (dimensions.length - 1);
-                var inverse = axis.inverse ? 'inverse' : 'forward';
-                inverse = 'forward';
 
                 var positionTable = {
                     horizontal: {
-                        x: {forward: pos, inverse: pos},
-                        y: {forward: axisLength, inverse: 0}
+                        x: pos,
+                        y: axisLength
                     },
                     vertical: {
-                        x: {forward: 0, inverse: axisLength},
-                        y: {forward: pos, inverse: pos}
+                        x: 0,
+                        y: pos
                     }
                 };
                 var rotationTable = {
-                    horizontal: {forward: PI / 2, inverse: PI * 1.5},
-                    vertical: {forward: 0, inverse: PI}
+                    horizontal: PI / 2,
+                    vertical: 0
                 };
 
                 var position = [
-                    positionTable[layout]['x'][inverse] + rect.x,
-                    positionTable[layout]['y'][inverse] + rect.y
+                    positionTable[layout].x + rect.x,
+                    positionTable[layout].y + rect.y
                 ];
 
-                var rotation = rotationTable[layout][inverse];
+                var rotation = rotationTable[layout];
                 var transform = matrix.create();
                 matrix.rotate(transform, transform, rotation);
                 matrix.translate(transform, transform, position);

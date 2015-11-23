@@ -28,9 +28,11 @@
         'echarts/chart/graph',
         'echarts/chart/gauge',
         'echarts/chart/funnel',
+        'echarts/chart/parallel',
 
         'echarts/component/geo',
         'echarts/component/polar',
+        'echarts/component/parallel',
 
         'echarts/component/title',
 
@@ -39,7 +41,9 @@
         'echarts/component/dataRange',
 
         'echarts/component/markPoint',
-        'echarts/component/markLine'
+        'echarts/component/markLine',
+
+        'echarts/parser/gexf'
     ],
     out: '../dist/echarts.js'
 }
