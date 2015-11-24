@@ -153,60 +153,58 @@ define(function(require) {
 
             var barMinHeight = seriesModel.get('barMinHeight') || 0;
 
-            if (data.type === 'list') {
-                var valueAxisStart = baseAxis.onZero
-                    ? valueAxis.dataToCoord(0) : valueAxis.getExtent()[0];
-                var coords = cartesian.dataToPoints(data, true);
-                lastStackCoords[stackId] = lastStackCoords[stackId] || [];
+            var valueAxisStart = baseAxis.onZero
+                ? valueAxis.dataToCoord(0) : valueAxis.getExtent()[0];
+            var coords = cartesian.dataToPoints(data, true);
+            lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 
-                data.each(valueAxis.dim, function (value, idx) {
-                    // 空数据
-                    if (isNaN(value)) {
-                        return;
-                    }
-                    if (!lastStackCoords[stackId][idx]) {
-                        lastStackCoords[stackId][idx] = {
-                            // Positive stack
-                            p: valueAxisStart,
-                            // Negative stack
-                            n: valueAxisStart
-                        };
-                    }
-                    var sign = value >= 0 ? 'p' : 'n';
-                    var coord = coords[idx];
-                    var lastCoord = lastStackCoords[stackId][idx][sign];
-                    var x, y, width, height;
-                    if (valueAxis.isHorizontal()) {
-                        x = lastCoord;
-                        y = coord[1] + columnOffset;
-                        width = coord[0] - lastCoord;
-                        height = columnWidth;
+            data.each(valueAxis.dim, function (value, idx) {
+                // 空数据
+                if (isNaN(value)) {
+                    return;
+                }
+                if (!lastStackCoords[stackId][idx]) {
+                    lastStackCoords[stackId][idx] = {
+                        // Positive stack
+                        p: valueAxisStart,
+                        // Negative stack
+                        n: valueAxisStart
+                    };
+                }
+                var sign = value >= 0 ? 'p' : 'n';
+                var coord = coords[idx];
+                var lastCoord = lastStackCoords[stackId][idx][sign];
+                var x, y, width, height;
+                if (valueAxis.isHorizontal()) {
+                    x = lastCoord;
+                    y = coord[1] + columnOffset;
+                    width = coord[0] - lastCoord;
+                    height = columnWidth;
 
-                        if (Math.abs(width) < barMinHeight) {
-                            width = (width < 0 ? -1 : 1) * barMinHeight;
-                        }
+                    if (Math.abs(width) < barMinHeight) {
+                        width = (width < 0 ? -1 : 1) * barMinHeight;
                     }
-                    else {
-                        x = coord[0] + columnOffset;
-                        y = lastCoord;
-                        width = columnWidth;
-                        height = coord[1] - lastCoord;
+                    lastStackCoords[stackId][idx][sign] += width;
+                }
+                else {
+                    x = coord[0] + columnOffset;
+                    y = lastCoord;
+                    width = columnWidth;
+                    height = coord[1] - lastCoord;
 
-                        if (Math.abs(height) < barMinHeight) {
-                            height = (height < 0 ? -1 : 1) * barMinHeight;
-                        }
+                    if (Math.abs(height) < barMinHeight) {
+                        height = (height < 0 ? -1 : 1) * barMinHeight;
                     }
-
                     lastStackCoords[stackId][idx][sign] += height;
+                }
 
-                    data.setItemLayout(idx, {
-                        x: x,
-                        y: y,
-                        width: width,
-                        height: height
-                    });
-                }, true);
-            }
+                data.setItemLayout(idx, {
+                    x: x,
+                    y: y,
+                    width: width,
+                    height: height
+                });
+            }, true);
         }, this);
     }
 

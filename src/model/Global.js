@@ -537,17 +537,6 @@ define(function (require) {
             );
         },
 
-        /**
-         * @param {Function} cb
-         * @param {*} context
-         */
-        mapSeries: function (cb, context) {
-            var componentsMap = this._componentsMap;
-            componentsMap.series = zrUtil.map(
-                componentsMap.series, cb, context
-            );
-        },
-
         restoreData: function () {
             var componentsMap = this._componentsMap;
             var componentTypes = [];

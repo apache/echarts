@@ -13,7 +13,7 @@ define(function (require) {
     var ComponentView = require('./view/Component');
     var ChartView = require('./view/Chart');
 
-    var Scale = require('./scale/Scale');
+    // var Scale = require('./scale/Scale');
 
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
@@ -65,7 +65,7 @@ define(function (require) {
          * @type {Object}
          * @private
          */
-        this._theme = zrUtil.clone(theme);
+        this._theme = zrUtil.clone(theme, true);
 
         /**
          * @type {Array.<module:echarts/view/Chart>}

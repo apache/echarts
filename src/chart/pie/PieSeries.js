@@ -70,6 +70,8 @@ define(function(require) {
             zlevel: 0,
             z: 2,
             legendHoverLink: true,
+
+            hoverAnimation: true,
             // 默认全局居中
             center: ['50%', '50%'],
             radius: [0, '75%'],

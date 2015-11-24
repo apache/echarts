@@ -103,6 +103,10 @@ define(function (require) {
 
             coordinateSystem: 'view',
 
+            legendHoverLink: true,
+
+            hoverAnimation: true,
+
             layout: null,
 
             x: 'center',

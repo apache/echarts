@@ -50,9 +50,9 @@ define(function (require) {
         var prevX = encodeOffsets[0];
         var prevY = encodeOffsets[1];
 
-        for (var i = 0; i < coordinate.length; i+=2) {
+        for (var i = 0; i < coordinate.length; i += 2) {
             var x = coordinate.charCodeAt(i) - 64;
-            var y = coordinate.charCodeAt(i+1) - 64;
+            var y = coordinate.charCodeAt(i + 1) - 64;
             // ZigZag decoding
             x = (x >> 1) ^ (-(x & 1));
             y = (y >> 1) ^ (-(y & 1));
@@ -91,7 +91,10 @@ define(function (require) {
 
         decode(geoJson);
 
-        return zrUtil.map(geoJson.features, function (featureObj) {
+        return zrUtil.map(zrUtil.filter(geoJson.features, function (featureObj) {
+            // Output of mapshaper may have geometry null
+            return featureObj.geometry && featureObj.properties;
+        }), function (featureObj) {
             var properties = featureObj.properties;
             var geometry = featureObj.geometry;
 

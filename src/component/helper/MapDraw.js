@@ -146,7 +146,8 @@ define(function (require) {
                         },
                         style: {
                             strokeNoScale: true
-                        }
+                        },
+                        culling: true
                     });
 
                     polygon.setStyle(itemStyle);

@@ -26,6 +26,7 @@ define(function (require) {
             z: 2,                       // 二级层叠
             legendHoverLink: true,
 
+            hoverAnimation: true,
             // Cartesian coordinate system
             xAxisIndex: 0,
             yAxisIndex: 0,

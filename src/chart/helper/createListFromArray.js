@@ -114,7 +114,7 @@ define(function(require) {
             // 多个散点图系列在同一个地区的时候
             return {
                 dimensions: [
-                    {name: 'lon'},
+                    {name: 'lng'},
                     {name: 'lat'},
                     {name: 'value'}
                 ]

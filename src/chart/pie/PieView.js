@@ -216,6 +216,27 @@ define(function (require) {
             seriesModel.get('selectedOffset'),
             seriesModel.ecModel.get('animation')
         );
+
+        function onEmphasis() {
+            sector.animateTo({
+                shape: {
+                    r: layout.r + 10
+                }
+            }, 300, 'elasticOut');
+        }
+        function onNormal() {
+            sector.animateTo({
+                shape: {
+                    r: layout.r
+                }
+            }, 300, 'elasticOut');
+        }
+        if (itemModel.get('hoverAnimation')) {
+            sector.on('mouseover', onEmphasis)
+                .on('mouseout', onNormal)
+                .on('emphasis', onEmphasis)
+                .on('normal', onNormal);
+        }
     };
 
     zrUtil.inherits(PiePiece, graphic.Group);

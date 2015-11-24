@@ -29,7 +29,7 @@ define(function (require) {
          * @param {Array.<string>}
          * @readOnly
          */
-        this.dimensions = ['lon', 'lat'];
+        this.dimensions = ['lng', 'lat'];
 
         this._nameCoordMap = {};
 
@@ -147,7 +147,7 @@ define(function (require) {
          */
         dataToPoints: function (data) {
             var item = [];
-            return data.mapArray(['lon', 'lat'], function (lon, lat) {
+            return data.mapArray(['lng', 'lat'], function (lon, lat) {
                 item[0] = lon;
                 item[1] = lat;
                 return this.dataToPoint(item);

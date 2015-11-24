@@ -25,7 +25,7 @@ define(function (require) {
     function mousemove(e) {
         if (this._dragging) {
             var rawE = e.event;
-            rawE.preventDefault();
+            rawE.preventDefault && rawE.preventDefault();
 
             var x = e.offsetX;
             var y = e.offsetY;
