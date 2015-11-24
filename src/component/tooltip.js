@@ -218,9 +218,7 @@ define(function (require) {
                 // Use hostModel in element if possible
                 // Used when mouseover on a element like markPoint or edge
                 // In which case, the data is not main data in series.
-                var hostModel = el.hostModel || ecModel.getSeriesByIndex(
-                    el.seriesIndex, true
-                );
+                var hostModel = el.hostModel || ecModel.getSeriesByIndex(el.seriesIndex);
                 var dataIndex = el.dataIndex;
                 var itemModel = hostModel.getData().getItemModel(dataIndex);
                 // Series or single data may use item trigger when global is axis trigger
@@ -262,7 +260,7 @@ define(function (require) {
             if (axisPointerType === 'cross') {
                 var el = e.target;
                 if (el && el.dataIndex != null) {
-                    var seriesModel = ecModel.getSeriesByIndex(el.seriesIndex, true);
+                    var seriesModel = ecModel.getSeriesByIndex(el.seriesIndex);
                     var dataIndex = el.dataIndex;
                     this._showItemTooltipContent(seriesModel, dataIndex, e);
                 }

@@ -2,26 +2,7 @@ define(function (require) {
 
     var helper = {
 
-        irrelevant: function (payload, seriesModel) {
-            // It is irrelavant only when seriesID or seriesName is
-            // specified and not equals to seriesModel's.
-            return payload
-                && (
-                    payload.seriesId != null
-                    ? seriesModel.getId() !== payload.seriesId
-                    : payload.seriesName != null
-                    // FIXME
-                    // seriesModel.getId() ???
-                    ? payload.seriesName !== seriesModel.get('name')
-                    : false
-                );
-
-        },
-
         retrieveTargetInfo: function (payload, seriesModel) {
-            if (helper.irrelevant(payload, seriesModel)) {
-                return;
-            }
             if (!payload || payload.type !== 'treemapZoomToNode') {
                 return;
             }

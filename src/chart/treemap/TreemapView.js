@@ -72,7 +72,11 @@
          * @override
          */
         render: function (seriesModel, ecModel, api, payload) {
-            if (helper.irrelevant(payload, seriesModel)) {
+
+            var models = ecModel.findComponents({
+                mainType: 'series', subType: 'treemap', query: payload
+            });
+            if (zrUtil.indexOf(models, seriesModel) < 0) {
                 return;
             }
 

@@ -36,8 +36,10 @@ define(function(require) {
         legendDataProvider: null,
 
         init: function (option, parentModel, ecModel, extraOpt) {
+
             /**
              * @type {number}
+             * @readOnly
              */
             this.seriesIndex = this.componentIndex;
 

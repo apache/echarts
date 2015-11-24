@@ -5,7 +5,7 @@ define(function (require) {
         var offset = 0;
         var colorList = ecModel.get('color');
 
-        ecModel.eachSeriesByTypeAll(seriesType, function (seriesModel) {
+        ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
             var dataAll = seriesModel.getDataAll();
             if (!ecModel.isSeriesFiltered(seriesModel)) {
                 var data = seriesModel.getData();

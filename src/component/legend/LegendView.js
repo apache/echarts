@@ -86,7 +86,7 @@ define(function (require) {
             var legendDrawedMap = {};
             zrUtil.each(legendModel.getData(), function (itemModel) {
                 var seriesName = itemModel.get('name');
-                var seriesModel = ecModel.getSeriesByName(seriesName, true);
+                var seriesModel = ecModel.getSeriesByName(seriesName)[0];
 
                 legendDataMap[seriesName] = itemModel;
 
@@ -126,7 +126,7 @@ define(function (require) {
                 legendDrawedMap[seriesName] = true;
             }, this);
 
-            ecModel.eachSeriesAll(function (seriesModel) {
+            ecModel.eachRawSeries(function (seriesModel) {
                 if (seriesModel.legendDataProvider) {
                     var data = seriesModel.legendDataProvider();
                     data.each(function (idx) {

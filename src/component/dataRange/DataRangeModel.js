@@ -248,26 +248,9 @@ define(function(require) {
             // Because series and data may be modified in processing stage.
             // So we do not support the feature "auto min/max".
 
-            // var dataExtent = [Infinity, -Infinity];
-            // zrUtil.each(thisOption.seriesIndex, function (seriesIndex) {
-            //     var data = this.ecModel.getSeriesByIndex(seriesIndex).getData();
-            //     // FIXME
-            //     // 只考虑了list
-            //     if (data.type === 'list') {
-            //         var oneExtent = data.getDataExtent(this.getDataDimension(data));
-            //         oneExtent[0] < dataExtent[0] && (dataExtent[0] = oneExtent[0]);
-            //         oneExtent[1] > dataExtent[1] && (dataExtent[1] = oneExtent[1]);
-            //     }
-            // }, this);
-
             var extent = asc([thisOption.min, thisOption.max]);
 
-            // extent[0] = Math.max(extent[0], dataExtent[0]);
-            // extent[1] = Math.min(extent[1], dataExtent[1]);
-
             this._dataExtent = extent;
-
-
         },
 
         /**
@@ -442,7 +425,7 @@ define(function(require) {
          */
         eachTargetSeries: function (callback, context) {
             zrUtil.each(this.option.seriesIndex, function (seriesIndex) {
-                callback.call(context, this.ecModel.getSeriesByIndex(seriesIndex, true));
+                callback.call(context, this.ecModel.getSeriesByIndex(seriesIndex));
             }, this);
         },
 
