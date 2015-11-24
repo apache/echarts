@@ -14,7 +14,7 @@ define(function(require) {
 
     echarts.registerAction(actionInfo, function (payload, ecModel) {
 
-        ecModel.eachComponent({mainType: 'dataRange', payload: payload}, function (model) {
+        ecModel.eachComponent({mainType: 'dataRange', query: payload}, function (model) {
             model.setSelected(payload.selected);
         });
 

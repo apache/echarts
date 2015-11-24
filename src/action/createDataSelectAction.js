@@ -9,7 +9,7 @@ define(function (require) {
         echarts.registerAction(actionInfo, function (payload, ecModel) {
 
             ecModel.eachComponent(
-                {mainType: 'series', subType: seriesType, payload: payload},
+                {mainType: 'series', subType: seriesType, query: payload},
                 function (seriesModel) {
                     if (seriesModel.toggleSelected) {
                         seriesModel.toggleSelected(payload.name);

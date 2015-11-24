@@ -21,7 +21,7 @@ define(function(require) {
 
         var effectedModels = [];
 
-        ecModel.eachComponent({mainType: 'dataZoom', payload: payload}, function (model) {
+        ecModel.eachComponent({mainType: 'dataZoom', query: payload}, function (model) {
             distinctPush(effectedModels, linkedNodesFinder(model).nodes);
         });
 

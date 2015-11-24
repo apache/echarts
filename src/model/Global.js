@@ -364,13 +364,15 @@ define(function (require) {
          *     // (componentType is 'xxx' but not 'xxx.aa')
          * });
          * eachComponent(
-         *     {mainType: 'dataZoom', payload: {dataZoomId: 'abc'}},
+         *     {mainType: 'dataZoom', query: {dataZoomId: 'abc'}},
          *     function (model, index) {...}
          * );
          * eachComponent(
-         *     {mainType: 'series', subType: 'pie', payload: {seriesName: 'uio'}},
+         *     {mainType: 'series', subType: 'pie', query: {seriesName: 'uio'}},
          *     function (model, index) {...}
          * );
+         * Pattern of query attribute: {xxxIndex, xxxId, xxxName},
+         * where xxx is mainType.
          *
          * @param {string=} mainType
          * @param {Function} cb
@@ -391,17 +393,15 @@ define(function (require) {
                 each(this._componentsMap[mainType], cb, context);
             }
 
-            // Query by payload.
+            // Query.
             else if (zrUtil.isObject(mainType)) {
                 var condition = zrUtil.extend({}, mainType);
-                var payload = condition.payload;
+                var query = condition.query;
                 var mainType = condition.mainType;
 
-                // Style in payload: xxxIndex, xxxId, xxxName,
-                // where xxx is mainType.
-                condition.index = payload[mainType + 'Index'];
-                condition.id = payload[mainType + 'Id'];
-                condition.name = payload[mainType + 'Name'];
+                condition.index = query[mainType + 'Index'];
+                condition.id = query[mainType + 'Id'];
+                condition.name = query[mainType + 'Name'];
 
                 each(this.queryComponents(condition), cb, context);
             }
