@@ -122,8 +122,12 @@ define(function (require) {
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
         function onEmphasis() {
+            var ratio = size[1] / size[0];
             this.animateTo({
-                scale: [size[0] * 1.1, size[1] * 1.1]
+                scale: [
+                    Math.max(size[0] * 1.1, size[0] + 6),
+                    Math.max(size[1] * 1.1, size[1] + 6 * ratio)
+                ]
             }, 400, 'elasticOut');
         }
         function onNormal() {

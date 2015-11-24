@@ -13,13 +13,11 @@ var startCode = fs.readFileSync('wrap/start.js', 'utf-8');
 var nutCode = fs.readFileSync('wrap/nut.js', 'utf-8');
 var endCode = fs.readFileSync('wrap/end.js', 'utf-8');
 
-mainCode = require('./optimizeString')(mainCode);
-
 endCode = etpl.compile(endCode)({
     parts: config.include
 });
 
-var sourceCode = [startCode, nutCode, mainCode, endCode].join('\n');
+var sourceCode = [startCode, nutCode, require('./optimizeString')(mainCode), endCode].join('\n');
 
 var ast = UglifyJS.parse(sourceCode);
 /* jshint camelcase: false */
@@ -32,5 +30,5 @@ ast.figure_out_scope();
 ast.compute_char_frequency();
 ast.mangle_names();
 
-fs.writeFileSync('../dist/echarts.js', sourceCode, 'utf-8');
+fs.writeFileSync('../dist/echarts.js', [startCode, nutCode, mainCode, endCode].join('\n'), 'utf-8');
 fs.writeFileSync('../dist/echarts.min.js', ast.print_to_string(), 'utf-8');
