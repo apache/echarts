@@ -60,6 +60,11 @@ define(function (require) {
 
                 var layout = data.getItemLayout(idx);
 
+                if (!layout || !layout.point) {
+                    // Not exists in map
+                    return;
+                }
+
                 var point = layout.point;
                 var offset = layout.offset;
 

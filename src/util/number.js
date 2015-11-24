@@ -9,8 +9,7 @@ define(function (require) {
     var number = {};
 
     function _trim(str) {
-        return str.replace(/^\s+/, '').replace(/\s+$/, '');
-    }
+        return str.replace(/^\s+/, '').replace(/\s+$/, ''); }
 
     /**
      * Linear mapping a value from domain to range

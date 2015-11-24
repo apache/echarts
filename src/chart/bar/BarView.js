@@ -7,6 +7,15 @@ define(function (require) {
 
     zrUtil.extend(require('../../model/Model').prototype, require('./barItemStyle'));
 
+    function fixLayoutWithLineWidth(layout, lineWidth) {
+        var signX = layout.width > 0 ? 1 : -1;
+        var signY = layout.height > 0 ? 1 : -1;
+        layout.x += signX * lineWidth / 2;
+        layout.y += signY * lineWidth / 2;
+        layout.width -= signX * lineWidth;
+        layout.height -= signY * lineWidth;
+    }
+
     return require('../../echarts').extendChartView({
 
         type: 'bar',
@@ -32,6 +41,8 @@ define(function (require) {
 
             var enableAnimation = ecModel.get('animation');
 
+            var barBorderWidthQuery = ['itemStyle', 'normal', 'barBorderWidth'];
+
             data.diff(oldData)
                 .add(function (dataIndex) {
                     // 空数据
@@ -40,6 +51,10 @@ define(function (require) {
                     }
 
                     var layout = data.getItemLayout(dataIndex);
+
+                    var lineWidth = data.getItemModel(dataIndex).get(barBorderWidthQuery) || 0;
+                    fixLayoutWithLineWidth(layout, lineWidth);
+
                     var rect = new graphic.Rect({
                         shape: zrUtil.extend({}, layout)
                     });
@@ -68,8 +83,12 @@ define(function (require) {
                         return;
                     }
 
+                    var layout = data.getItemLayout(newIndex);
+                    var lineWidth = data.getItemModel(newIndex).get(barBorderWidthQuery) || 0;
+                    fixLayoutWithLineWidth(layout, lineWidth);
+
                     api.updateGraphicEl(rect, {
-                        shape: data.getItemLayout(newIndex)
+                        shape: layout
                     });
 
                     data.setItemGraphicEl(newIndex, rect);

@@ -3,7 +3,6 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
-    var vector = require('zrender/core/vector');
     var SymbolDraw = require('../helper/SymbolDraw');
     var lineAnimationDiff = require('./lineAnimationDiff');
     var graphic = require('../../util/graphic');

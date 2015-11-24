@@ -37,7 +37,7 @@ define(function (require) {
             z2: 100
         });
         symbolPath.attr('scale', [0, 0]);
-        this.add(symbolPath);
+
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
         api.initGraphicEl(symbolPath, {
@@ -45,6 +45,8 @@ define(function (require) {
         });
 
         this._symbolType = symbolType;
+
+        this.add(symbolPath);
     };
 
     /**
@@ -72,6 +74,7 @@ define(function (require) {
     // Update common properties
     var normalStyleAccessPath = ['itemStyle', 'normal'];
     var emphasisStyleAccessPath = ['itemStyle', 'emphasis'];
+
     symbolProto._updateCommon = function (data, idx) {
         var symbolPath = this.childAt(0);
         var seriesModel = data.hostModel;
@@ -115,6 +118,25 @@ define(function (require) {
         }
 
         graphic.setHoverStyle(symbolPath, hoverStyle);
+
+        var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
+
+        function onEmphasis() {
+            this.animateTo({
+                scale: [size[0] * 1.1, size[1] * 1.1]
+            }, 400, 'elasticOut');
+        }
+        function onNormal() {
+            this.animateTo({
+                scale: size
+            }, 400, 'elasticOut');
+        }
+        if (itemModel.get('hoverAnimation')) {
+            symbolPath.on('mouseover', onEmphasis)
+                .on('mouseout', onNormal)
+                .on('emphasis', onEmphasis)
+                .on('normal', onNormal);
+        }
     };
 
     symbolProto.fadeOut = function (cb, api) {

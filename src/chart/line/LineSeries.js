@@ -20,6 +20,8 @@ define(function(require) {
             z: 2,                       // 二级层叠
             coordinateSystem: 'cartesian2d',
             legendHoverLink: true,
+
+            hoverAnimation: true,
             // stack: null
             xAxisIndex: 0,
             yAxisIndex: 0,
