@@ -237,7 +237,7 @@ define(function (require) {
             }
 
             var size = this._size;
-            var data = info.series.getDataAll();
+            var data = info.series.getRawData();
 
             var otherDataExtent = data.getDataExtent(info.otherDim);
             // Nice extent.

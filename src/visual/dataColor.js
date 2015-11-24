@@ -6,7 +6,7 @@ define(function (require) {
         var colorList = ecModel.get('color');
 
         ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
-            var dataAll = seriesModel.getDataAll();
+            var dataAll = seriesModel.getRawData();
             if (!ecModel.isSeriesFiltered(seriesModel)) {
                 var data = seriesModel.getData();
                 data.each(function (idx) {
