@@ -35,11 +35,11 @@ define(function(require) {
         // PENDING
         legendDataProvider: null,
 
-        init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
+        init: function (option, parentModel, ecModel, extraOpt) {
             /**
              * @type {number}
              */
-            this.seriesIndex = seriesIndex;
+            this.seriesIndex = this.componentIndex;
 
             this.mergeDefaultAndTheme(option, ecModel);
 

@@ -130,6 +130,8 @@ define(function (require) {
                     mainType, newCptOptionList, existComponents
                 );
 
+                var dependentModels = this._getComponentsByTypes(dependencies);
+
                 each(newCptOptionList, function (newCptOption, index) {
                     var componentModel = existComponents[index];
 
@@ -144,8 +146,13 @@ define(function (require) {
                         // PENDING Global as parent ?
                         componentModel = new ComponentModelClass(
                             newCptOption, this, this,
-                            this._getComponentsByTypes(dependencies),
-                            index, keyInfoList[index]
+                            zrUtil.extend(
+                                {
+                                    dependentModels: dependentModels,
+                                    componentIndex: index
+                                },
+                                keyInfoList[index]
+                            )
                         );
                         componentsMap[mainType][index] = componentModel;
                     }

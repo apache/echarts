@@ -12,7 +12,7 @@ define(function (require) {
         /**
          * @overrite
          */
-        init: function (option, parentModel, ecModel, dependentModels, idx, createdBySelf) {
+        init: function (option, parentModel, ecModel, extraOpt, createdBySelf) {
             this.mergeDefaultAndTheme(option, ecModel);
             this.mergeOption(option, createdBySelf);
         },
@@ -26,7 +26,7 @@ define(function (require) {
                         var mlModel = seriesModel.markLineModel;
                         if (!mlModel) {
                             mlModel = new MarkLineModel(
-                                markLineOpt, this, ecModel, [], 0, true
+                                markLineOpt, this, ecModel, {}, true
                             );
                         }
                         else {

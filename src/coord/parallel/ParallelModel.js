@@ -47,7 +47,7 @@ define(function(require) {
         /**
          * @override
          */
-        init: function (option, parentModel, ecModel, dependentModels, index) {
+        init: function () {
             Component.prototype.init.apply(this, arguments);
 
             this.mergeOption({});
