@@ -67,6 +67,16 @@ define(function(require) {
             width: 0,
             height: 0
         },
+
+        beforeBrush: function () {
+            var style = this.style;
+            if (style.textPosition === 'inside') {
+                style.textPosition = ['50%', '40%'];
+                style.textAlign = 'center';
+                style.textBaseline = 'middle';
+            }
+        },
+
         buildPath: function (path, shape) {
             var x = shape.x;
             var y = shape.y;

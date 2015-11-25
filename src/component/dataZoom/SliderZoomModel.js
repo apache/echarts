@@ -27,7 +27,7 @@ define(function(require) {
             // labelPrecision: 'auto',           // label小数精度
             labelFormatter: null,
             showDetail: true,
-            showDataShadow: null,     // 默认只有line bar k 默认显示dataShadow，其他默认不显示。
+            showDataShadow: null,
             realtime: true,
             zoomLock: false,         // 是否锁定选择区域大小
             textStyle: {

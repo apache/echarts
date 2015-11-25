@@ -72,18 +72,17 @@ define(function (require) {
 
                 // 直线指示器样式设置
                 lineStyle: {
-                    color: '#48b',
-                    width: 2,
+                    color: '#555',
+                    width: 1,
                     type: 'solid'
                 },
 
                 crossStyle: {
-                    color: '#1e90ff',
+                    color: '#555',
                     width: 1,
                     type: 'dashed',
 
                     // TODO formatter
-
                     textStyle: {}
                 },
 
