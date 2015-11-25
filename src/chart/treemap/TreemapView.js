@@ -540,7 +540,7 @@
                 this.api.dispatch({
                     type: 'treemapMove',
                     from: this.uid,
-                    seriesId: this.seriesModel.getId(),
+                    seriesId: this.seriesModel.id,
                     rootRect: {
                         x: rootLayout.x + dx, y: rootLayout.y + dy,
                         width: rootLayout.width, height: rootLayout.height
@@ -587,7 +587,7 @@
                 this.api.dispatch({
                     type: 'treemapRender',
                     from: this.uid,
-                    seriesId: this.seriesModel.getId(),
+                    seriesId: this.seriesModel.id,
                     rootRect: {
                         x: rect.x, y: rect.y,
                         width: rect.width, height: rect.height
@@ -664,7 +664,7 @@
             this.api.dispatch({
                 type: 'treemapZoomToNode',
                 from: this.uid,
-                seriesId: this.seriesModel.getId(),
+                seriesId: this.seriesModel.id,
                 targetNode: targetInfo.node
             });
         },

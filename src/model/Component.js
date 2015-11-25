@@ -104,14 +104,6 @@ define(function(require) {
                 this.__defaultOption = defaultOption;
             }
             return this.__defaultOption;
-        },
-
-        /**
-         * @public
-         * @return {string} id
-         */
-        getId: function () {
-            return this.id;
         }
 
     });

@@ -294,7 +294,7 @@ define(function (require) {
         ecModel.eachComponent(
             {mainType: 'series', query: payload},
             function (seriesModel) {
-                var chartView = this._chartsMap[seriesModel.getId()];
+                var chartView = this._chartsMap[seriesModel.id];
                 if (chartView) {
                     chartView[method](seriesModel, ecModel, this._api, payload);
                 }
@@ -363,7 +363,7 @@ define(function (require) {
 
         // Upate all charts
         ecModel.eachSeries(function (seriesModel, idx) {
-            var chart = this._chartsMap[seriesModel.getId()];
+            var chart = this._chartsMap[seriesModel.id];
             chart[methodName](seriesModel, ecModel, api, payload);
 
             updateZ(seriesModel, chart);
@@ -396,9 +396,7 @@ define(function (require) {
                 model = componentType;
             }
 
-            var id = model.getId();
-
-            var view = viewMap[id];
+            var view = viewMap[model.id];
             if (!view) {
                 var classType = ComponentModel.parseClassType(model.type);
                 var Clazz = isComponent
@@ -407,7 +405,7 @@ define(function (require) {
                 if (Clazz) {
                     view = new Clazz();
                     view.init(ecModel, this._api);
-                    viewMap[id] = view;
+                    viewMap[model.id] = view;
                     viewList.push(view);
                     zr.add(view.group);
                 }
@@ -417,7 +415,7 @@ define(function (require) {
             }
 
             view.__keepAlive = true;
-            view.__id = id;
+            view.__id = model.id;
             view.__model = model;
         }, this);
 
@@ -513,7 +511,7 @@ define(function (require) {
 
         // Render all charts
         ecModel.eachSeries(function (seriesModel, idx) {
-            var chart = this._chartsMap[seriesModel.getId()];
+            var chart = this._chartsMap[seriesModel.id];
             chart.__keepAlive = true;
             chart.render(seriesModel, ecModel, api, payload);
 
