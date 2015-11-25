@@ -1,4 +1,4 @@
-{
+({
     // appDir: './',
     // baseUrl: '../src',
     optimize: 'none',
@@ -18,8 +18,8 @@
     include:[
         'echarts/chart/line',
         'echarts/chart/bar',
-        'echarts/chart/pie',
         'echarts/component/grid',
+        'echarts/chart/pie',
         'echarts/component/legend',
 
         'echarts/chart/scatter',
@@ -43,7 +43,9 @@
         'echarts/component/markPoint',
         'echarts/component/markLine',
 
-        'echarts/parser/gexf'
+        'echarts/parser/gexf',
+        'echarts/scale/Time',
+        'echarts/scale/Log'
     ],
     out: '../dist/echarts.js'
-}
+})

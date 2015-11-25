@@ -84,7 +84,7 @@ define(function (require) {
 
         var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
-        symbolPath.rotation = itemModel.get('symbolRotate') * Math.PI / 180 || 0;
+        symbolPath.rotation = itemModel.getShallow('symbolRotate') * Math.PI / 180 || 0;
 
         symbolPath.setColor(color);
 
@@ -109,7 +109,7 @@ define(function (require) {
         else {
             elStyle.text = '';
         }
-        if (hoverLabelModel.get('show')) {
+        if (hoverLabelModel.getShallow('show')) {
             graphic.setText(hoverStyle, hoverLabelModel, color);
             hoverStyle.text = labelText;
         }
@@ -135,7 +135,7 @@ define(function (require) {
                 scale: size
             }, 400, 'elasticOut');
         }
-        if (itemModel.get('hoverAnimation')) {
+        if (itemModel.getShallow('hoverAnimation')) {
             symbolPath.on('mouseover', onEmphasis)
                 .on('mouseout', onNormal)
                 .on('emphasis', onEmphasis)

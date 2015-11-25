@@ -130,18 +130,46 @@ define(function (require) {
 
             // Reset
             this.group.removeAll();
+
+            /**
+             * @type {Object}
+             * @private
+             */
             this._axisPointers = {};
 
+            /**
+             * @private
+             * @type {module:echarts/component/tooltip/TooltipModel}
+             */
             this._tooltipModel = tooltipModel;
 
+            /**
+             * @private
+             * @type {module:echarts/model/Global}
+             */
             this._ecModel = ecModel;
 
+            /**
+             * @private
+             * @type {module:echarts/ExtensionAPI}
+             */
             this._api = api;
 
-            this._lastHoverData = null;
+            /**
+             * @type {Object}
+             * @private
+             */
+            this._lastHover = {
+                // data
+                // dataIndex
+                // seriesIndex
+            };
 
             this._tooltipContent.update();
 
+            /**
+             * @type {Object.<string, Array>}
+             */
             this._seriesGroupByAxis = this._prepareAxisTriggerData(
                 tooltipModel, ecModel
             );
@@ -228,8 +256,6 @@ define(function (require) {
                 else {
                     // Reset ticket
                     this._ticket = '';
-                    // Reset lastHoverData
-                    this._lastHoverData = null;
                     // If either single data or series use item trigger
                     this._hideAxisPointer();
                     this._showItemTooltipContent(hostModel, dataIndex, e);
@@ -256,6 +282,7 @@ define(function (require) {
         _showAxisTooltip: function (tooltipModel, ecModel, e) {
             var axisPointerModel = tooltipModel.getModel('axisPointer');
             var axisPointerType = axisPointerModel.get('type');
+            var api = this._api;
 
             if (axisPointerType === 'cross') {
                 var el = e.target;
@@ -268,9 +295,9 @@ define(function (require) {
 
             this._showAxisPointer();
             var allNotShow = true;
-            zrUtil.each(this._seriesGroupByAxis, function (item) {
+            zrUtil.each(this._seriesGroupByAxis, function (seriesCoordSysSameAxis) {
                 // Try show the axis pointer
-                var allCoordSys = item.coordSys;
+                var allCoordSys = seriesCoordSysSameAxis.coordSys;
                 var coordSys = allCoordSys[0];
 
                 // If mouse position is not in the grid or polar
@@ -294,21 +321,22 @@ define(function (require) {
                 }
 
                 var contentNotChange = false;
+                var lastHover = this._lastHover;
                 if (axisPointerType === 'cross') {
                     // If hover data not changed
                     // Possible when two axes are all category
-                    if (dataEqual(this._lastHoverData, value)) {
+                    if (dataEqual(lastHover.data, value)) {
                         contentNotChange = true;
                     }
-                    this._lastHoverData = value;
+                    lastHover.data = value;
                 }
                 else {
                     var valIndex = zrUtil.indexOf(dimensions, axisType);
                     // If hover data not changed on the axis dimension
-                    if (this._lastHoverData === value[valIndex]) {
+                    if (lastHover.data === value[valIndex]) {
                         contentNotChange = true;
                     }
-                    this._lastHoverData = value[valIndex];
+                    lastHover.data = value[valIndex];
                 }
 
                 if (coordSys.type === 'cartesian2d' && !contentNotChange) {
@@ -324,7 +352,7 @@ define(function (require) {
 
                 if (axisPointerType !== 'cross') {
                     this._showSeriesTooltipContent(
-                        coordSys, item.series, point, value, contentNotChange
+                        coordSys, seriesCoordSysSameAxis.series, point, value, contentNotChange
                     );
                 }
             }, this);
@@ -615,9 +643,30 @@ define(function (require) {
             var data = seriesList[0].getData();
             var baseAxis = coordSys.getBaseAxis();
 
+            var val = value[baseAxis.dim === 'x' ? 0 : 1];
+            var dataIndex = data.indexOfNearest(baseAxis.dim, val);
+
+            var lastHover = this._lastHover;
+            if (lastHover.seriesIndex != null) {
+                this._api.dispatch({
+                    type: 'downplay',
+                    seriesIndex: lastHover.seriesIndex,
+                    dataIndex: lastHover.dataIndex
+                });
+            }
+            var seriesIndices = zrUtil.map(seriesList, function (series) {
+                return series.seriesIndex;
+            });
+            // Dispatch highlight action
+            this._api.dispatch({
+                type: 'highlight',
+                seriesIndex: seriesIndices,
+                dataIndex: dataIndex
+            });
+            lastHover.seriesIndex = seriesIndices;
+            lastHover.dataIndex = dataIndex;
+
             if (baseAxis && rootTooltipModel.get('showContent')) {
-                var val = value[baseAxis.dim === 'x' ? 0 : 1];
-                var dataIndex = data.indexOfNearest(baseAxis.dim, val);
 
                 var formatter = rootTooltipModel.get('formatter');
                 var positionFunc = rootTooltipModel.get('position');
@@ -811,7 +860,17 @@ define(function (require) {
          * @param {string} [coordSysName]
          */
         _hideAxisPointer: function (coordSysName) {
-            this._lastHoverData = null;
+            var lastHover = this._lastHover;
+            if (lastHover.seriesIndex != null && lastHover.dataIndex != null) {
+                this._api.dispatch({
+                    type: 'downplay',
+                    seriesIndex: lastHover.seriesIndex,
+                    dataIndex: lastHover.dataIndex
+                });
+            }
+            // Reset lastHover
+            this._lastHover = {};
+
             if (coordSysName) {
                 var axisPointers = this._axisPointers[coordSysName];
                 axisPointers && zrUtil.each(axisPointers, function (el) {
