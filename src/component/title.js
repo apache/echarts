@@ -132,46 +132,49 @@ define(function(require) {
             group.add(textEl);
             group.add(subTextEl);
 
-            layout.positionGroup(
-                group, {
+            var groupRect = group.getBoundingRect();
+            var positionInfo = layout.parsePositionInfo(
+                {
                     x: titleModel.get('x'),
                     y: titleModel.get('y'),
                     x2: titleModel.get('x2'),
-                    y2: titleModel.get('y2')
+                    y2: titleModel.get('y2'),
+                    width: groupRect.width,
+                    height: groupRect.height
                 }, {
                     width: api.getWidth(),
                     height: api.getHeight()
-                }, titleModel.get('padding'), true, false
+                }, titleModel.get('padding')
             );
             // Adjust text align based on position
             if (!textAlign) {
-                var percent = group.position[0] / api.getWidth();
+                var percent = positionInfo.x / api.getWidth();
 
                 if (percent < 0.2) {
                     textAlign = 'left';
                 }
                 else if (percent < 0.6) {
+                    positionInfo.x += positionInfo.width / 2;
                     textAlign = 'center';
                 }
                 else {
+                    positionInfo.x += positionInfo.width;
                     textAlign = 'right';
                 }
             }
+            group.position = [positionInfo.x, positionInfo.y];
             textEl.style.textAlign = subTextEl.style.textAlign = textAlign;
             textEl.dirty();
             subTextEl.dirty();
 
             // Render background
-            var padding = formatUtil.normalizeCssArray(
-                titleModel.get('padding')
-            );
-            var boundingRect = group.getBoundingRect();
+            var padding = positionInfo.margin;
             var rect = new graphic.Rect({
                 shape: {
-                    x: boundingRect.x - padding[3],
-                    y: boundingRect.y - padding[0],
-                    width: boundingRect.width + padding[1] + padding[3],
-                    height: boundingRect.height + padding[0] + padding[2]
+                    x: positionInfo.x - padding[3],
+                    y: positionInfo.y - padding[0],
+                    width: positionInfo.width + padding[1] + padding[3],
+                    height: positionInfo.height + padding[0] + padding[2]
                 },
                 style: {
                     stroke: titleModel.get('borderColor'),

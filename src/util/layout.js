@@ -138,14 +138,11 @@ define(function(require) {
      * @param {number|string} [positionInfo.aspect] Aspect is width / height
      * @param {Object} containerRect
      * @param {string|number} [margin]
-     * @param {boolean} [notAlignX=false]
-     * @param {boolean} [notAlignY=false]
      *
      * @return {module:zrender/core/BoundingRect}
      */
     layout.parsePositionInfo = function (
-        positionInfo, containerRect, margin,
-        notAlignX, notAlignY
+        positionInfo, containerRect, margin
     ) {
         margin = formatUtil.normalizeCssArray(margin || 0);
 
@@ -189,26 +186,23 @@ define(function(require) {
             y = containerHeight - y2 - height - verticalMargin;
         }
 
-        if (!notAlignX) {
-            switch (positionInfo.x || positionInfo.x2) {
-                case 'center':
-                    x = containerWidth / 2 - width / 2 - margin[3];
-                    break;
-                case 'right':
-                    x = containerWidth - width - horizontalMargin;
-                    break;
-            }
+        // Align x and y
+        switch (positionInfo.x || positionInfo.x2) {
+            case 'center':
+                x = containerWidth / 2 - width / 2 - margin[3];
+                break;
+            case 'right':
+                x = containerWidth - width - horizontalMargin;
+                break;
         }
-        if (!notAlignY) {
-            switch (positionInfo.y || positionInfo.y2) {
-                case 'middle':
-                case 'center':
-                    y = containerHeight / 2 - height / 2 - margin[0];
-                    break;
-                case 'bottom':
-                    y = containerHeight - height - verticalMargin;
-                    break;
-            }
+        switch (positionInfo.y || positionInfo.y2) {
+            case 'middle':
+            case 'center':
+                y = containerHeight / 2 - height / 2 - margin[0];
+                break;
+            case 'bottom':
+                y = containerHeight - height - verticalMargin;
+                break;
         }
 
         var rect = new BoundingRect(x + margin[3], y + margin[0], width, height);
@@ -230,12 +224,9 @@ define(function(require) {
      * @param {number|string} [positionInfo.y2]
      * @param {Object} containerRect
      * @param {string|number} margin
-     * @param {boolean} [notAlignX=false]
-     * @param {boolean} [notAlignY=false]
      */
     layout.positionGroup = function (
-        group, positionInfo, containerRect, margin,
-        notAlignX, notAlignY
+        group, positionInfo, containerRect, margin
     ) {
         var groupRect = group.getBoundingRect();
 
@@ -245,8 +236,7 @@ define(function(require) {
         }, positionInfo);
 
         positionInfo = layout.parsePositionInfo(
-            positionInfo, containerRect, margin,
-            notAlignX, notAlignY
+            positionInfo, containerRect, margin
         );
 
         group.position = [
