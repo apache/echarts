@@ -116,6 +116,11 @@ define(function(require) {
             zrUtil.extend(this, extraOpt);
 
             this.uid = componentUtil.getUID('componentModel');
+
+            this.setReadOnly([
+                'type', 'id', 'uid', 'name', 'mainType', 'subType',
+                'dependentModels', 'componentIndex'
+            ]);
         }
     );
 

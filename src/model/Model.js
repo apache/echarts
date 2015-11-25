@@ -123,6 +123,10 @@ define(function (require) {
         clone: function () {
             var Ctor = this.constructor;
             return new Ctor(zrUtil.clone(this.option, true));
+        },
+
+        setReadOnly: function (properties) {
+            clazzUtil.setReadOnly(this, properties);
         }
     };
 

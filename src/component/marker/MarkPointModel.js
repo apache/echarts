@@ -24,16 +24,18 @@ define(function (require) {
                     if (markPointOpt && markPointOpt.data) {
                         var mpModel = seriesModel.markPointModel;
                         if (!mpModel) {
+                            var opt = {
+                                // Use the same series index and name
+                                seriesIndex: seriesModel.seriesIndex,
+                                name: seriesModel.name
+                            };
                             mpModel = new MarkPointModel(
-                                markPointOpt, this, ecModel, {}, true
+                                markPointOpt, this, ecModel, opt, true
                             );
                         }
                         else {
                             mpModel.mergeOption(markPointOpt, true);
                         }
-                        // Use the same series index and name
-                        mpModel.seriesIndex = seriesModel.seriesIndex;
-                        mpModel.name = seriesModel.name;
                         seriesModel.markPointModel = mpModel;
                     }
                     else {

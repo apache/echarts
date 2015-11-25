@@ -25,16 +25,18 @@ define(function (require) {
                     if (markLineOpt && markLineOpt.data) {
                         var mlModel = seriesModel.markLineModel;
                         if (!mlModel) {
+                            var opt = {
+                                // Use the same series index and name
+                                seriesIndex: seriesModel.seriesIndex,
+                                name: seriesModel.name
+                            };
                             mlModel = new MarkLineModel(
-                                markLineOpt, this, ecModel, {}, true
+                                markLineOpt, this, ecModel, opt, true
                             );
                         }
                         else {
                             mlModel.mergeOption(markLineOpt, true);
                         }
-                        // Use the same series index and name
-                        mlModel.seriesIndex = seriesModel.seriesIndex;
-                        mlModel.name = seriesModel.name;
                         seriesModel.markLineModel = mlModel;
                     }
                     else {
