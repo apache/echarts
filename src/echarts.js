@@ -151,11 +151,11 @@ define(function (require) {
             ecModel.mergeOption(option);
         }
 
-        this._prepareView('component', ecModel);
+        prepareView.call(this, 'component', ecModel);
 
-        this._prepareView('chart', ecModel);
+        prepareView.call(this, 'chart', ecModel);
 
-        this._update();
+        updateMethods.update.call(this);
 
         !notRefreshImmediately && this._zr.refreshImmediately();
     };
@@ -187,108 +187,113 @@ define(function (require) {
         return this._zr.getHeight();
     };
 
-    /**
-     * @param {Object} payload
-     * @private
-     */
-    echartsProto._update = function (payload) {
-        console.time && console.time('update');
 
-        var ecModel = this._model;
+    var updateMethods = {
 
-        ecModel.restoreData();
+        /**
+         * @param {Object} payload
+         * @private
+         */
+        update: function (payload) {
+            console.time && console.time('update');
 
-        // TODO
-        // Save total ecModel here for undo/redo (after restoring data and before processing data).
-        // Undo (restoration of total ecModel) can be carried out in 'action' or outside API call.
+            var ecModel = this._model;
 
-        this._processData(ecModel);
+            ecModel.restoreData();
 
-        this._stackSeriesData(ecModel);
+            // TODO
+            // Save total ecModel here for undo/redo (after restoring data and before processing data).
+            // Undo (restoration of total ecModel) can be carried out in 'action' or outside API call.
 
-        this._coordinateSystem.update(ecModel, this._api);
+            processData.call(this, ecModel);
 
-        this._doLayout(ecModel, payload);
+            stackSeriesData.call(this, ecModel);
 
-        this._doVisualCoding(ecModel, payload);
+            this._coordinateSystem.update(ecModel, this._api);
 
-        this._doRender(ecModel, payload);
+            doLayout.call(this, ecModel, payload);
 
-        // Set background
-        var backgroundColor = ecModel.get('backgroundColor');
-        // In IE8
-        if (!env.canvasSupported) {
-            var colorArr = colorTool.parse(backgroundColor);
-            backgroundColor = colorTool.stringify(colorArr, 'rgb');
-            if (colorArr[3] === 0) {
-                backgroundColor = 'transparent';
+            doVisualCoding.call(this, ecModel, payload);
+
+            doRender.call(this, ecModel, payload);
+
+            // Set background
+            var backgroundColor = ecModel.get('backgroundColor');
+            // In IE8
+            if (!env.canvasSupported) {
+                var colorArr = colorTool.parse(backgroundColor);
+                backgroundColor = colorTool.stringify(colorArr, 'rgb');
+                if (colorArr[3] === 0) {
+                    backgroundColor = 'transparent';
+                }
             }
+            backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
+
+            console.time && console.timeEnd('update');
+        },
+
+        // PENDING
+        /**
+         * @param {Object} payload
+         * @private
+         */
+        updateView: function (payload) {
+            var ecModel = this._model;
+
+            doLayout.call(this, ecModel, payload);
+
+            doVisualCoding.call(this, ecModel, payload);
+
+            invokeUpdateMethod.call(this, 'updateView', ecModel, payload);
+        },
+
+        /**
+         * @param {Object} payload
+         * @private
+         */
+        updateVisual: function (payload) {
+            var ecModel = this._model;
+
+            doVisualCoding.call(this, ecModel, payload);
+
+            invokeUpdateMethod.call(this, 'updateVisual', ecModel, payload);
+        },
+
+        /**
+         * @param {Object} payload
+         * @private
+         */
+        updateLayout: function (payload) {
+            var ecModel = this._model;
+
+            doLayout.call(this, ecModel, payload);
+
+            invokeUpdateMethod.call(this, 'updateLayout', ecModel, payload);
+        },
+
+        /**
+         * @param {Object} payload
+         * @private
+         */
+        highlight: function (payload) {
+            toggleHighlight.call(this, 'highlight', payload);
+        },
+
+        /**
+         * @param {Object} payload
+         * @private
+         */
+        downplay: function (payload) {
+            toggleHighlight.call(this, 'downplay', payload);
         }
-        backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
 
-        console.time && console.timeEnd('update');
-    };
-
-    // PENDING
-    /**
-     * @param {Object} payload
-     * @private
-     */
-    echartsProto._updateView = function (payload) {
-        var ecModel = this._model;
-
-        this._doLayout(ecModel, payload);
-
-        this._doVisualCoding(ecModel, payload);
-
-        this._invokeUpdateMethod('updateView', ecModel, payload);
     };
 
     /**
      * @param {Object} payload
      * @private
      */
-    echartsProto._updateVisual = function (payload) {
-        var ecModel = this._model;
-
-        this._doVisualCoding(ecModel, payload);
-
-        this._invokeUpdateMethod('updateVisual', ecModel, payload);
-    };
-
-    /**
-     * @param {Object} payload
-     * @private
-     */
-    echartsProto._updateLayout = function (payload) {
-        var ecModel = this._model;
-
-        this._doLayout(ecModel, payload);
-
-        this._invokeUpdateMethod('updateLayout', ecModel, payload);
-    };
-
-    /**
-     * @param {Object} payload
-     * @private
-     */
-    echartsProto._highlight = function (payload) {
-        this._toggleHighlight('highlight', payload);
-    };
-
-    /**
-     * @param {Object} payload
-     * @private
-     */
-    echartsProto._downplay = function (payload) {
-        this._toggleHighlight('downplay', payload);
-    };
-
-    /**
-     * @param {Object} payload
-     * @private
-     */
-    echartsProto._toggleHighlight = function (method, payload) {
+    function toggleHighlight(method, payload) {
         var ecModel = this._model;
 
         ecModel.eachComponent(
@@ -301,7 +306,7 @@ define(function (require) {
             },
             this
         );
-    };
+    }
 
     /**
      * Resize the chart
@@ -334,7 +339,7 @@ define(function (require) {
             var actionInfo = actionWrap.actionInfo;
             var updateMethod = actionInfo.update || 'update';
             actionWrap.action(payload, this._model);
-            updateMethod !== 'none' && this['_' + updateMethod](payload);
+            updateMethod !== 'none' && updateMethods[updateMethod].call(this, payload);
 
             if (!silent) {
                 // Emit event outside
@@ -350,7 +355,7 @@ define(function (require) {
      * @param {string} methodName
      * @private
      */
-    echartsProto._invokeUpdateMethod = function (methodName, ecModel, payload) {
+    function invokeUpdateMethod(methodName, ecModel, payload) {
         var api = this._api;
 
         // Update all components
@@ -369,14 +374,14 @@ define(function (require) {
             updateZ(seriesModel, chart);
         }, this);
 
-    };
+    }
 
     /**
      * Prepare view instances of charts and components
      * @param  {module:echarts/model/Global} ecModel
      * @private
      */
-    echartsProto._prepareView = function (type, ecModel) {
+    function prepareView(type, ecModel) {
         var isComponent = type === 'component';
         var viewList = isComponent ? this._componentsList : this._chartsList;
         var viewMap = isComponent ? this._componentsMap : this._chartsMap;
@@ -431,25 +436,26 @@ define(function (require) {
                 i++;
             }
         }
-    };
+    }
+
     /**
      * Processor data in each series
      *
      * @param {module:echarts/model/Global} ecModel
      * @private
      */
-    echartsProto._processData = function (ecModel) {
+    function processData(ecModel) {
         each(PROCESSOR_STAGES, function (stage) {
             each(dataProcessorFuncs[stage] || [], function (process) {
                 process(ecModel);
             });
         });
-    };
+    }
 
     /**
      * @private
      */
-    echartsProto._stackSeriesData = function (ecModel) {
+    function stackSeriesData(ecModel) {
         var stackedDataMap = {};
         ecModel.eachSeries(function (series) {
             var stack = series.get('stack');
@@ -462,7 +468,7 @@ define(function (require) {
                 stackedDataMap[stack] = data;
             }
         });
-    };
+    }
 
     /**
      * Layout before each chart render there series, after visual coding and data processing
@@ -470,12 +476,12 @@ define(function (require) {
      * @param {module:echarts/model/Global} ecModel
      * @private
      */
-    echartsProto._doLayout = function (ecModel, payload) {
+    function doLayout(ecModel, payload) {
         var api = this._api;
         each(layoutFuncs, function (layout) {
             layout(ecModel, api, payload);
         });
-    };
+    }
 
     /**
      * Code visual infomation from data after data processing
@@ -483,19 +489,19 @@ define(function (require) {
      * @param {module:echarts/model/Global} ecModel
      * @private
      */
-    echartsProto._doVisualCoding = function (ecModel, payload) {
+    function doVisualCoding(ecModel, payload) {
         each(VISUAL_CODING_STAGES, function (stage) {
             each(visualCodingFuncs[stage] || [], function (visualCoding) {
                 visualCoding(ecModel, payload);
             });
         });
-    };
+    }
 
     /**
      * Render each chart and component
      * @private
      */
-    echartsProto._doRender = function (ecModel, payload) {
+    function doRender(ecModel, payload) {
         var api = this._api;
         // Render all components
         each(this._componentsList, function (component) {
@@ -524,7 +530,7 @@ define(function (require) {
                 chart.remove(ecModel, api);
             }
         }, this);
-    };
+    }
 
     var MOUSE_EVENT_NAMES = [
         'click', 'dblclick', 'mouseover', 'mouseout', 'globalout'
