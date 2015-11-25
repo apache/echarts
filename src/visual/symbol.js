@@ -24,7 +24,9 @@ define(function (require) {
                 if (typeof symbolSize === 'function') {
                     data.each(function (idx) {
                         var rawValue = data.getRawValue(idx);
-                        data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue));
+                        // FIXME
+                        var params = seriesModel.getDataParams(idx);
+                        data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));
                     });
                 }
                 data.each(function (idx) {
