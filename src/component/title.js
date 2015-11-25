@@ -5,7 +5,6 @@ define(function(require) {
     var echarts = require('../echarts');
     var graphic = require('../util/graphic');
     var layout = require('../util/layout');
-    var formatUtil = require('../util/format');
 
     // Model
     echarts.extendComponentModel({

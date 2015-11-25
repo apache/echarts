@@ -282,7 +282,6 @@ define(function (require) {
         _showAxisTooltip: function (tooltipModel, ecModel, e) {
             var axisPointerModel = tooltipModel.getModel('axisPointer');
             var axisPointerType = axisPointerModel.get('type');
-            var api = this._api;
 
             if (axisPointerType === 'cross') {
                 var el = e.target;
@@ -646,25 +645,28 @@ define(function (require) {
             var val = value[baseAxis.dim === 'x' ? 0 : 1];
             var dataIndex = data.indexOfNearest(baseAxis.dim, val);
 
+            // FIXME Not here
             var lastHover = this._lastHover;
-            if (lastHover.seriesIndex != null) {
+            if (lastHover.seriesIndex != null && !contentNotChange) {
                 this._api.dispatch({
                     type: 'downplay',
                     seriesIndex: lastHover.seriesIndex,
                     dataIndex: lastHover.dataIndex
                 });
             }
-            var seriesIndices = zrUtil.map(seriesList, function (series) {
-                return series.seriesIndex;
-            });
             // Dispatch highlight action
-            this._api.dispatch({
-                type: 'highlight',
-                seriesIndex: seriesIndices,
-                dataIndex: dataIndex
-            });
-            lastHover.seriesIndex = seriesIndices;
-            lastHover.dataIndex = dataIndex;
+            if (!contentNotChange) {
+                var seriesIndices = zrUtil.map(seriesList, function (series) {
+                    return series.seriesIndex;
+                });
+                this._api.dispatch({
+                    type: 'highlight',
+                    seriesIndex: seriesIndices,
+                    dataIndex: dataIndex
+                });
+                lastHover.seriesIndex = seriesIndices;
+                lastHover.dataIndex = dataIndex;
+            }
 
             if (baseAxis && rootTooltipModel.get('showContent')) {
 

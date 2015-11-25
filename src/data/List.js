@@ -909,13 +909,15 @@ define(function (require) {
     listProto.setItemGraphicEl = function (idx, el) {
         var hostModel = this.hostModel;
 
-        if (zrUtil.isArray(el)) {
-            zrUtil.each(el, function (singleEl) {
-                addIndexToGraphicEl(singleEl, idx, hostModel);
-            });
-        }
-        else {
-            addIndexToGraphicEl(el, idx, hostModel);
+        if (el) {
+            if (zrUtil.isArray(el)) {
+                zrUtil.each(el, function (singleEl) {
+                    addIndexToGraphicEl(singleEl, idx, hostModel);
+                });
+            }
+            else {
+                addIndexToGraphicEl(el, idx, hostModel);
+            }
         }
 
         this._graphicEls[idx] = el;

@@ -2,10 +2,9 @@
 define(function (require) {
 
     return function (seriesType, ecModel) {
-        var offset = 0;
         var colorList = ecModel.get('color');
 
-        ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
+        ecModel.eachSeriesByType(seriesType, function (seriesModel) {
             var dataAll = seriesModel.getRawData();
             if (!ecModel.isSeriesFiltered(seriesModel)) {
                 var data = seriesModel.getData();
@@ -13,13 +12,12 @@ define(function (require) {
                     var itemModel = data.getItemModel(idx);
                     var rawIdx = data.getRawIndex(idx);
                     var color = itemModel.get('itemStyle.normal.color')
-                        || colorList[(offset + rawIdx) % colorList.length];
+                        || colorList[rawIdx % colorList.length];
                     // Legend may use the visual info in data before processed
                     dataAll.setItemVisual(rawIdx, 'color', color);
                     data.setItemVisual(idx, 'color', color);
                 });
             }
-            offset += dataAll.count();
         });
     };
 });
