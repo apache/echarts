@@ -12,6 +12,8 @@ define(function (require) {
     var each = zrUtil.each;
     var filter = zrUtil.filter;
     var map = zrUtil.map;
+    var isArray = zrUtil.isArray;
+    var indexOf = zrUtil.indexOf;
 
     var ComponentModel = require('./Component');
 
@@ -338,17 +340,27 @@ define(function (require) {
             var result;
 
             if (index != null) {
-                var cpt = cpts[index];
-                result = cpt ? [cpt] : [];
+                if (!isArray(index)) {
+                    index = [index];
+                }
+                result = filter(map(index, function (idx) {
+                    return cpts[idx];
+                }), function (val) {
+                    return !!val;
+                });
             }
             else if (id != null) {
+                var isIdArray = isArray(id);
                 result = filter(cpts, function (cpt) {
-                    return cpt.id === id;
+                    return (isIdArray && indexOf(id, cpt.id) >= 0)
+                        || (!isIdArray && cpt.id === id);
                 });
             }
             else if (name != null) {
+                var isNameArray = isArray(name);
                 result = filter(cpts, function (cpt) {
-                    return cpt.name === name;
+                    return (isNameArray && indexOf(name, cpt.name) >= 0)
+                        || (!isNameArray && cpt.name === name);
                 });
             }
 
