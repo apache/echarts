@@ -192,44 +192,63 @@ define(function (require) {
             // Ensure that each id is distinct.
             var idSet = {};
 
+            // key: name, value: count by single name.
+            var nameCount = {};
+
+            // Complete subType
             each(newCptOptionList, function (opt, index) {
-
                 var existCpt = existComponents[index];
-
-                // Complete subType
                 var subType = this._determineSubType(mainType, opt, existCpt);
-                var type = mainType + '.' + subType;
-                var id;
-                var name;
+                var item = {mainType: mainType, subType: subType};
+                keyInfoList.push(item);
+            }, this);
 
-                if (existCpt) {
-                    id = existCpt.id;
-                    name = existCpt.name;
-                }
-                else {
-                    name = opt.name;
-                    if (name == null) {
-                        name = prefix + type;
-                    }
-                    id = opt.id;
-                    if (id == null) {
-                        // Using delimiter to escapse dulipcation.
-                        id = prefix + type + '|' + index;
-                    }
-                }
+            function eachOpt(cb) {
+                each(newCptOptionList, function (opt, index) {
+                    var existCpt = existComponents[index];
+                    var item = keyInfoList[index];
+                    var fullType = mainType + '.' + item.subType;
+                    cb.call(this, item, opt, existCpt, fullType);
+                }, this);
+            }
 
-                if (idSet[id]) {
+            // Make name
+            eachOpt(function (item, opt, existCpt, fullType) {
+                item.name = existCpt
+                    ? existCpt.name
+                    : opt.name != null
+                    ? opt.name
+                    : prefix + '-';
+                // init nameCount
+                nameCount[item.name] = 0;
+            });
+
+            // Make id
+            eachOpt(function (item, opt, existCpt, fullType) {
+                var itemName = item.name;
+
+                item.id = existCpt
+                    ? existCpt.id
+                    : opt.id != null
+                    ? opt.id
+                    // (1) Using delimiter to escapse dulipcation.
+                    // (2) Using type tu ensure that view with different
+                    //     type will not be mapped.
+                    // (3) Consider this situatoin:
+                    //      optionA: [{name: 'a'}, {name: 'a'}, {..}]
+                    //      optionB [{..}, {name: 'a'}, {name: 'a'}]
+                    //     Using nameCount to ensure that series with
+                    //     the same name between optionA and optionB
+                    //     can be mapped.
+                    : prefix + [fullType, itemName, nameCount[itemName]++].join('|');
+
+                if (idSet[item.id]) {
                     // FIXME
                     // how to throw
-                    throw new Error('id duplicates: ' + id);
+                    throw new Error('id duplicates: ' + item.id);
                 }
-                idSet[id] = 1;
-
-                keyInfoList.push({
-                    id: id, name: name, mainType: mainType, subType: subType
-                });
-
-            }, this);
+                idSet[item.id] = 1;
+            });
 
             return keyInfoList;
         },
@@ -245,7 +264,9 @@ define(function (require) {
                 // Use determinSubType only when there is no existComponent.
                 : ComponentModel.determineSubType(componentType, newCptOption);
 
-            return subType;
+            // FIXME
+            // tooltip, markline, markpoint may be no subType
+            return subType || '\0-';
         },
 
         /**
@@ -261,7 +282,7 @@ define(function (require) {
                     return;
                 }
                 for (var i = 0, len = existComponents.length; i < len; i++) {
-                    if (existComponents[i].getId() === componentOption.id) {
+                    if (existComponents[i].id === componentOption.id) {
                         result[index] = existComponents.splice(i, 1)[0];
                         return;
                     }
