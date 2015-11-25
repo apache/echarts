@@ -1,18 +1,34 @@
 define(function (require) {
 
     var SymbolDraw = require('../helper/SymbolDraw');
+    var LargeSymbolDraw = require('../helper/LargeSymbolDraw');
 
     require('../../echarts').extendChartView({
 
         type: 'scatter',
 
         init: function () {
-            this._symbolDraw = new SymbolDraw();
-            this.group.add(this._symbolDraw.group);
+            this._normalSymbolDraw = new SymbolDraw();
+            this._largeSymbolDraw = new LargeSymbolDraw();
         },
 
         render: function (seriesModel, ecModel, api) {
-            this._symbolDraw.updateData(seriesModel.getData(), api);
+            var data = seriesModel.getData();
+            var largeSymbolDraw = this._largeSymbolDraw;
+            var normalSymbolDraw = this._normalSymbolDraw;
+            var group = this.group;
+
+            var symbolDraw = seriesModel.get('large') && data.count() > seriesModel.get('largeThreshold')
+                ? largeSymbolDraw : normalSymbolDraw;
+
+            this._symbolDraw = symbolDraw;
+            symbolDraw.updateData(data, api);
+            group.add(symbolDraw.group);
+
+            group.remove(
+                symbolDraw === largeSymbolDraw
+                ? normalSymbolDraw.group : largeSymbolDraw.group
+            );
         },
 
         updateLayout: function () {

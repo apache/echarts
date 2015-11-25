@@ -98,15 +98,17 @@ define(function (require) {
                 })
                 .remove(function (idx) {
                     var rect = oldData.getItemGraphicEl(idx);
-                    // Not show text when animating
-                    rect.style.text = '';
-                    api.updateGraphicEl(rect, {
-                        shape: {
-                            width: 0
-                        }
-                    }, function () {
-                        group.remove(rect);
-                    });
+                    if (rect) {
+                        // Not show text when animating
+                        rect.style.text = '';
+                        api.updateGraphicEl(rect, {
+                            shape: {
+                                width: 0
+                            }
+                        }, function () {
+                            group.remove(rect);
+                        });
+                    }
                 })
                 .execute();
 

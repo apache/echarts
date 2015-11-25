@@ -94,7 +94,8 @@ define(function (require) {
                 }
             },
             textStyle: {
-                color: '#fff'
+                color: '#fff',
+                fontSize: 14
             }
         }
     });
