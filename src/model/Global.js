@@ -484,6 +484,7 @@ define(function (require) {
      * @inner
      */
     function mappingToExists(existComponents, newComponentOptionList) {
+        existComponents = (existComponents || []).slice();
         var result = [];
 
         // Mapping by id if specified.
@@ -613,17 +614,16 @@ define(function (require) {
     /**
      * @inner
      */
-    function determineSubType(componentType, newCptOption, existComponent) {
+    function determineSubType(mainType, newCptOption, existComponent) {
         var subType = newCptOption.type
             ? newCptOption.type
             : existComponent
             ? existComponent.subType
-            // Use determinSubType only when there is no existComponent.
-            : ComponentModel.determineSubType(componentType, newCptOption);
+            // Use determineSubType only when there is no existComponent.
+            : ComponentModel.determineSubType(mainType, newCptOption);
 
-        // FIXME
-        // tooltip, markline, markpoint may be no subType
-        return subType || '\0-';
+        // tooltip, markline, markpoint may always has no subType
+        return subType;
     }
 
     /**
