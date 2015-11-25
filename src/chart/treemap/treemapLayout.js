@@ -16,11 +16,8 @@ define(function (require) {
     function update(ecModel, api, payload) {
         // Layout result in each node:
         // {x, y, width, height, area, borderWidth}
-        ecModel.eachSeriesByType('treemap', function (seriesModel) {
-
-            if (helper.irrelevant(payload, seriesModel)) {
-                return;
-            }
+        var condition = {mainType: 'series', subType: 'treemap', query: payload};
+        ecModel.eachComponent(condition, function (seriesModel) {
 
             var ecWidth = api.getWidth();
             var ecHeight = api.getHeight();
@@ -203,7 +200,7 @@ define(function (require) {
         orderBy !== 'asc' && orderBy !== 'desc' && (orderBy = null);
 
         if (options.hideChildren) {
-            return node.viewChildren = [];
+            return (node.viewChildren = []);
         }
 
         // Sort children, order by desc.
@@ -335,7 +332,8 @@ define(function (require) {
         var areaMin = Infinity;
 
         for (var i = 0, area, len = row.length; i < len; i++) {
-            if (area = row[i].getLayout().area) {
+            area = row[i].getLayout().area;
+            if (area) {
                 area < areaMin && (areaMin = area);
                 area > areaMax && (areaMax = area);
             }
@@ -416,7 +414,7 @@ define(function (require) {
         var viewArea = containerWidth * containerHeight;
         var area = viewArea * seriesModel.get('zoomToNodeRatio');
 
-        while (parent = currNode.parentNode) {
+        while (parent = currNode.parentNode) { // jshint ignore:line
             var sum = 0;
             var siblings = parent.children;
 

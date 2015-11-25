@@ -1,7 +1,7 @@
 define(function (require) {
     var Gradient = require('zrender/graphic/Gradient');
     return function (ecModel) {
-        ecModel.eachSeriesAll(function (seriesModel) {
+        ecModel.eachRawSeries(function (seriesModel) {
             var colorAccessPath = ['itemStyle', 'normal', 'color'];
             var colorList = ecModel.get('color');
             var data = seriesModel.getData();

@@ -139,8 +139,8 @@
 
                     tooltip: {
                         formatter: function (info) {
-                            var value = info[0].value;
-                            var treePathInfo = info[0].treePathInfo;
+                            var value = info.value;
+                            var treePathInfo = info.treePathInfo;
                             var treePath = [];
 
                             for (var i = 1; i < treePathInfo.length; i++) {

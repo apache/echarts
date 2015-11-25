@@ -71,12 +71,18 @@ define(function(require) {
         polar: function (data, seriesModel, ecModel) {
             var dimensions = [];
             var categoryAxisModel;
+            var polarIndex = seriesModel.get('polarIndex') || 0;
+
             var axisFinder = function (axisModel) {
                 return axisModel.get('polarIndex') === polarIndex;
             };
-            var polarIndex = seriesModel.get('polarIndex') || 0;
-            var angleAxisModel = ecModel.findComponent('angleAxis', axisFinder);
-            var radiusAxisModel = ecModel.findComponent('radiusAxis', axisFinder);
+
+            var angleAxisModel = ecModel.findComponents({
+                mainType: 'angleAxis', filter: axisFinder
+            })[0];
+            var radiusAxisModel = ecModel.findComponents({
+                mainType: 'radiusAxis', filter: axisFinder
+            })[0];
 
             var isRadiusAxisCategory = radiusAxisModel.get('type') === 'category';
             if (angleAxisModel.get('type') === 'category') {

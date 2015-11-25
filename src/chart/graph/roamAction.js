@@ -20,7 +20,7 @@ define(function (require) {
      */
 
     echarts.registerAction(actionInfo, function (payload, ecModel) {
-        ecModel.eachComponent({mainType: 'series', payload: payload}, function (seriesModel) {
+        ecModel.eachComponent({mainType: 'series', query: payload}, function (seriesModel) {
             var coordSys = seriesModel.coordinateSystem;
 
             var roamDetailModel = seriesModel.getModel('roamDetail');

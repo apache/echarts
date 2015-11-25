@@ -131,8 +131,9 @@ define(function(require) {
             zrUtil.filter(
                 ecModel.getSeriesByType(seriesType),
                 function (seriesModel) {
-                    return seriesModel.coordinateSystem
-                    && seriesModel.coordinateSystem.type === 'cartesian2d';
+                    return !ecModel.isSeriesFiltered(seriesModel)
+                        && seriesModel.coordinateSystem
+                        && seriesModel.coordinateSystem.type === 'cartesian2d';
                 }
             )
         );

@@ -240,7 +240,7 @@
                 var amountIndex2011 = mode === 1 ? 0 : 1;
 
                 return function (info) {
-                    var value = info[0].value;
+                    var value = info.value;
 
                     var amount = value[amountIndex];
                     amount = isValidNumber(amount)
@@ -263,7 +263,7 @@
                         : '-';
 
                     return [
-                        '<div class="tooltip-title">' + formatUtil.encodeHTML(info[0].name) + '</div>',
+                        '<div class="tooltip-title">' + formatUtil.encodeHTML(info.name) + '</div>',
                         '2012 Amount: &nbsp;&nbsp;' + amount + '<br>',
                         'Per Household: &nbsp;&nbsp;' + perHousehold + '<br>',
                         '2011 Amount: &nbsp;&nbsp;' + amount2011 + '<br>',

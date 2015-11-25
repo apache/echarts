@@ -290,19 +290,17 @@ define(function (require) {
      */
     echartsProto._toggleHighlight = function (method, payload) {
         var ecModel = this._model;
-        var seriesModel;
-        if (payload.seriesIndex) {
-            seriesModel = ecModel.getSeriesByIndex(payload.seriesIndex, true);
-        }
-        else if (payload.seriesName) {
-            seriesModel = ecModel.getSeriesByName(payload.seriesName, true);
-        }
-        if (seriesModel) {
-            var chartView = this._chartsMap[seriesModel.getId()];
-            if (chartView) {
-                chartView[method](seriesModel, ecModel, this._api, payload);
-            }
-        }
+
+        ecModel.eachComponent(
+            {mainType: 'series', query: payload},
+            function (seriesModel) {
+                var chartView = this._chartsMap[seriesModel.getId()];
+                if (chartView) {
+                    chartView[method](seriesModel, ecModel, this._api, payload);
+                }
+            },
+            this
+        );
     };
 
     /**
@@ -543,9 +541,7 @@ define(function (require) {
                 var ecModel = this.getModel();
                 var el = e.target;
                 if (el && el.dataIndex != null) {
-                    var hostModel = el.hostModel || ecModel.getSeriesByIndex(
-                        el.seriesIndex, true
-                    );
+                    var hostModel = el.hostModel || ecModel.getSeriesByIndex(el.seriesIndex);
                     var params = hostModel && hostModel.getDataParams(el.dataIndex) || {};
                     params.event = e;
                     params.type = eveName;

@@ -35,11 +35,13 @@ define(function(require) {
         // PENDING
         legendDataProvider: null,
 
-        init: function (option, parentModel, ecModel, dependentModels, seriesIndex) {
+        init: function (option, parentModel, ecModel, extraOpt) {
+
             /**
              * @type {number}
+             * @readOnly
              */
-            this.seriesIndex = seriesIndex;
+            this.seriesIndex = this.componentIndex;
 
             this.mergeDefaultAndTheme(option, ecModel);
 
@@ -47,9 +49,12 @@ define(function(require) {
              * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
              * @private
              */
-            this._data = this.getInitialData(option, ecModel);
+            this._dataBeforeProcessed = this.getInitialData(option, ecModel);
 
-            this._dataBeforeProcessed = this._data.cloneShallow();
+            // When using module:echarts/data/Tree or module:echarts/data/Graph,
+            // cloneShallow will cause this._data.graph.data pointing to new data list.
+            // Wo we make this._dataBeforeProcessed first, and then make this._data.
+            this._data = this._dataBeforeProcessed.cloneShallow();
         },
 
         /**
@@ -108,7 +113,7 @@ define(function(require) {
          * Get data before processed
          * @return {module:echarts/data/List}
          */
-        getDataAll: function () {
+        getRawData: function () {
             return this._dataBeforeProcessed;
         },
 

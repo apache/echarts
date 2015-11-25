@@ -49,7 +49,7 @@ define(function(require) {
          * @readOnly
          * @type {number}
          */
-        componentIndex: null,
+        componentIndex: 0,
 
         /**
          * @type {Object}
@@ -69,7 +69,7 @@ define(function(require) {
          * @type {Object.<string, Array.<module:echarts/model/Model>>}
          * @readOnly
          */
-        dependentModels: null,
+        dependentModels: [],
 
         /**
          * @type {string}
@@ -77,7 +77,7 @@ define(function(require) {
          */
         uid: null,
 
-        init: function (option, parentModel, ecModel, dependentModels, index) {
+        init: function (option, parentModel, ecModel, extraOpt) {
             this.mergeDefaultAndTheme(this.option, this.ecModel);
         },
 
@@ -119,16 +119,9 @@ define(function(require) {
     // Reset ComponentModel.extend, add preConstruct.
     clazzUtil.enableClassExtend(
         ComponentModel,
-        function (option, parentModel, ecModel, dependentModels, index, keyInfo) {
-
-            this.ecModel = ecModel;
-            this.dependentModels = dependentModels;
-            this.componentIndex = index;
-
-            this.name = keyInfo.name;
-            this.id = keyInfo.id;
-            this.mainType = keyInfo.mainType;
-            this.subType = keyInfo.subType;
+        function (option, parentModel, ecModel, extraOpt) {
+            // Set dependentModels, componentIndex, name, id, mainType, subType.
+            zrUtil.extend(this, extraOpt);
 
             this.uid = componentUtil.getUID('componentModel');
         }

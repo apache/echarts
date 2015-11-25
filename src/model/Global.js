@@ -5,14 +5,13 @@
  *
  */
 
-// FIXME Filter 后 series 是否能够被 getComponent 或者 getComponenentById 获取？
-
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Model = require('./Model');
     var each = zrUtil.each;
     var filter = zrUtil.filter;
+    var map = zrUtil.map;
 
     var ComponentModel = require('./Component');
 
@@ -42,11 +41,12 @@ define(function (require) {
             this._componentsMap = {};
 
             /**
-             * All components before processing
-             * @type {Object.<string, module:echarts/model/Model>}
+             * Mapping between filtered series list and raw series list.
+             * key: filtered series indices, value: raw series indices.
+             * @type {Array.<nubmer>}
              * @private
              */
-            this._componentsMapAll = {};
+            this._seriesIndices;
 
             /**
              * @type {module:echarts/model/Model}
@@ -130,6 +130,8 @@ define(function (require) {
                     mainType, newCptOptionList, existComponents
                 );
 
+                var dependentModels = this._getComponentsByTypes(dependencies);
+
                 each(newCptOptionList, function (newCptOption, index) {
                     var componentModel = existComponents[index];
 
@@ -144,18 +146,23 @@ define(function (require) {
                         // PENDING Global as parent ?
                         componentModel = new ComponentModelClass(
                             newCptOption, this, this,
-                            this._getComponentsByTypes(dependencies),
-                            index, keyInfoList[index]
+                            zrUtil.extend(
+                                {
+                                    dependentModels: dependentModels,
+                                    componentIndex: index
+                                },
+                                keyInfoList[index]
+                            )
                         );
                         componentsMap[mainType][index] = componentModel;
                     }
                 }, this);
-            }
 
-            // Backup data
-            each(componentsMap, function (components, mainType) {
-                this._componentsMapAll[mainType] = components.slice();
-            }, this);
+                // Backup series for filtering.
+                if (mainType === 'series') {
+                    this._seriesIndices = createSeriesIndices(componentsMap.series);
+                }
+            }
         },
 
         /**
@@ -345,13 +352,60 @@ define(function (require) {
                 });
             }
 
-            var subType = condition.subType;
+            return filterBySubType(result, condition);
+        },
 
-            return subType == null
-                ? result
-                : filter(result, function (cpt) {
-                    return cpt.subType === subType;
-                });
+        /**
+         * The interface is different from queryComponents,
+         * which is convenient for inner usage.
+         *
+         * @usage
+         * findComponents(
+         *     {mainType: 'dataZoom', query: {dataZoomId: 'abc'}},
+         *     function (model, index) {...}
+         * );
+         * findComponents(
+         *     {mainType: 'series', subType: 'pie', query: {seriesName: 'uio'}},
+         *     function (model, index) {...}
+         * );
+         * findComponents(
+         *     {mainType: 'series'},
+         *     function (model, index) {...}
+         * );
+         *
+         * @param {Object} condition
+         * @param {string} condition.mainType Mandatory.
+         * @param {string} [condition.subType] Optional.
+         * @param {Object} [condition.query] like {xxxIndex, xxxId, xxxName},
+         *        where xxx is mainType.
+         *        If query attribute is null/undefined, do not filtering by
+         *        query conditions, which is convenient for no-payload
+         *        situations like visual coding, layout.
+         * @param {Function} [condition.filter] parameter: component, return boolean.
+         */
+        findComponents: function (condition) {
+            var mainType = condition.mainType;
+            var query = condition.query;
+            var result;
+
+            if (query) {
+                condition.index = query[mainType + 'Index'];
+                condition.id = query[mainType + 'Id'];
+                condition.name = query[mainType + 'Name'];
+
+                result = this.queryComponents(condition);
+            }
+            else {
+                result = filterBySubType(
+                    this._componentsMap[mainType], condition
+                );
+            }
+
+            if (condition.filter) {
+                result = filter(result, condition.filter);
+            }
+
+            return result;
         },
 
         /**
@@ -364,107 +418,65 @@ define(function (require) {
          *     // (componentType is 'xxx' but not 'xxx.aa')
          * });
          * eachComponent(
-         *     {mainType: 'dataZoom', payload: {dataZoomId: 'abc'}},
+         *     {mainType: 'dataZoom', query: {dataZoomId: 'abc'}},
          *     function (model, index) {...}
          * );
          * eachComponent(
-         *     {mainType: 'series', subType: 'pie', payload: {seriesName: 'uio'}},
+         *     {mainType: 'series', subType: 'pie', query: {seriesName: 'uio'}},
          *     function (model, index) {...}
          * );
          *
-         * @param {string=} mainType
+         * @param {string|Object=} mainType When mainType is object, the definition
+         *                                  is the same as the method 'findComponents'.
          * @param {Function} cb
          * @param {*} context
          */
         eachComponent: function (mainType, cb, context) {
+            var componentsMap = this._componentsMap;
+
             if (typeof mainType === 'function') {
                 context = cb;
                 cb = mainType;
-                each(this._componentsMap, function (components, componentType) {
+                each(componentsMap, function (components, componentType) {
                     each(components, function (component, index) {
-                        cb.call(this, componentType, component, index);
-                    }, this);
-                }, context);
+                        cb.call(context, componentType, component, index);
+                    });
+                });
             }
-
             else if (zrUtil.isString(mainType)) {
-                each(this._componentsMap[mainType], cb, context);
+                each(componentsMap[mainType], cb, context);
             }
-
-            // Query by payload.
             else if (zrUtil.isObject(mainType)) {
-                var condition = zrUtil.extend({}, mainType);
-                var payload = condition.payload;
-                var mainType = condition.mainType;
-
-                // Style in payload: xxxIndex, xxxId, xxxName,
-                // where xxx is mainType.
-                condition.index = payload[mainType + 'Index'];
-                condition.id = payload[mainType + 'Id'];
-                condition.name = payload[mainType + 'Name'];
-
-                each(this.queryComponents(condition), cb, context);
-            }
-        },
-
-        /**
-         * @param {string} mainType
-         * @param {Function} cb
-         * @param {*} context
-         * @return {module:echarts/model/Component}
-         */
-        findComponent: function (mainType, cb, context) {
-            var components = this._componentsMap[mainType];
-            if (components) {
-                for (var i = 0, len = components.length; i < len; i++) {
-                    if (cb.call(context, components[i], i)) {
-                        // Return first found
-                        return components[i];
-                    }
-                }
+                each(this.findComponents(mainType), cb, context);
             }
         },
 
         /**
          * @param {string} name
-         * @param {boolean} beforeProcessing
-         * @return {module:echarts/model/Series}
+         * @return {Array.<module:echarts/model/Series>}
          */
-        getSeriesByName: function (name, beforeProcessing) {
-            var series = this['_componentsMap' + (beforeProcessing ? 'All' : '')].series;
-            for (var i = 0, len = series.length; i < len; i++) {
-                // name should be unique.
-                if (series[i].name === name) {
-                    return series[i];
-                }
-            }
+        getSeriesByName: function (name) {
+            var series = this._componentsMap.series;
+            return filter(series, function (oneSeries) {
+                return oneSeries.name === name;
+            });
         },
 
-        // FIXME Index of series is confusing
         /**
          * @param {number} seriesIndex
-         * @param {boolean} beforeProcessing
          * @return {module:echarts/model/Series}
          */
-        getSeriesByIndex: function (seriesIndex, beforeProcessing) {
-            // return this._componentsMap.series[seriesIndex];
-            var series = this['_componentsMap' + (beforeProcessing ? 'All' : '')].series;
-            for (var i = 0, len = series.length; i < len; i++) {
-                // name should be unique.
-                if (series[i].seriesIndex === seriesIndex) {
-                    return series[i];
-                }
-            }
+        getSeriesByIndex: function (seriesIndex) {
+            return this._componentsMap.series[seriesIndex];
         },
 
         /**
          * @param {string} subType
-         * @param {boolean} beforeProcessing
          * @return {Array.<module:echarts/model/Series>}
          */
-        getSeriesByType: function (subType, beforeProcessing) {
-            var series = this['_componentsMap' + (beforeProcessing ? 'All' : '')].series;
-            return zrUtil.filter(series, function (oneSeries) {
+        getSeriesByType: function (subType) {
+            var series = this._componentsMap.series;
+            return filter(series, function (oneSeries) {
                 return oneSeries.subType === subType;
             });
         },
@@ -477,46 +489,65 @@ define(function (require) {
         },
 
         /**
+         * After filtering, series may be different
+         * frome raw series.
+         *
          * @param {Function} cb
          * @param {*} context
          */
         eachSeries: function (cb, context) {
+            assertSeriesInitialized(this);
+            each(this._seriesIndices, function (rawSeriesIndex) {
+                var series = this._componentsMap.series[rawSeriesIndex];
+                cb.call(context, series, rawSeriesIndex);
+            }, this);
+        },
+
+        /**
+         * Iterate raw series before filtered.
+         *
+         * @param {Function} cb
+         * @param {*} context
+         */
+        eachRawSeries: function (cb, context) {
             each(this._componentsMap.series, cb, context);
         },
 
         /**
-         * Iterate all series before filtered
-         * @param {Function} cb
-         * @param {*} context
-         */
-        eachSeriesAll: function (cb, context) {
-            each(this._componentsMapAll.series, cb, context);
-        },
-
-        /**
+         * After filtering, series may be different.
+         * frome raw series.
+         *
          * @parma {string} subType
          * @param {Function} cb
          * @param {*} context
          */
         eachSeriesByType: function (subType, cb, context) {
-            return each(this.getSeriesByType(subType), cb, context);
+            assertSeriesInitialized(this);
+            each(this._seriesIndices, function (rawSeriesIndex) {
+                var series = this._componentsMap.series[rawSeriesIndex];
+                if (series.subType === subType) {
+                    cb.call(context, series, rawSeriesIndex);
+                }
+            }, this);
         },
 
         /**
-         * Iterate all series before filtered of given type
+         * Iterate raw series before filtered of given type.
+         *
          * @parma {string} subType
          * @param {Function} cb
          * @param {*} context
          */
-        eachSeriesByTypeAll: function (subType, cb, context) {
-            return each(this.getSeriesByType(subType, true), cb, context);
+        eachRawSeriesByType: function (subType, cb, context) {
+            return each(this.getSeriesByType(subType), cb, context);
         },
 
         /**
-         * @param {}
+         * @param {module:echarts/model/Series} seriesModel
          */
         isSeriesFiltered: function (seriesModel) {
-            return zrUtil.indexOf(this._componentsMap.series, seriesModel) < 0;
+            assertSeriesInitialized(this);
+            return zrUtil.indexOf(this._seriesIndices, seriesModel.componentIndex) < 0;
         },
 
         /**
@@ -524,18 +555,20 @@ define(function (require) {
          * @param {*} context
          */
         filterSeries: function (cb, context) {
-            var componentsMap = this._componentsMap;
-            componentsMap.series = zrUtil.filter(
-                componentsMap.series, cb, context
+            assertSeriesInitialized(this);
+            var filteredSeries = filter(
+                this._componentsMap.series, cb, context
             );
+            this._seriesIndices = createSeriesIndices(filteredSeries);
         },
 
         restoreData: function () {
             var componentsMap = this._componentsMap;
-            var componentTypes = [];
 
-            each(this._componentsMapAll, function (components, componentType) {
-                componentsMap[componentType] = components.slice();
+            this._seriesIndices = createSeriesIndices(componentsMap.series);
+
+            var componentTypes = [];
+            each(componentsMap, function (components, componentType) {
                 componentTypes.push(componentType);
             });
 
@@ -568,6 +601,30 @@ define(function (require) {
             return ret;
         }
     });
+
+    function createSeriesIndices(seriesModels) {
+        return map(seriesModels, function (series) {
+            return series.componentIndex;
+        }, this);
+    }
+
+    function filterBySubType(components, condition) {
+        return condition.hasOwnProperty('subType')
+            ? filter(components, function (cpt) {
+                return cpt.subType === condition.subType;
+            })
+            : components;
+    }
+
+    function assertSeriesInitialized(ecModel) {
+        // Components that use _seriesIndices should depends on series component,
+        // which make sure that their initialization is after series.
+        if (!ecModel._seriesIndices) {
+            // FIXME
+            // 验证和提示怎么写
+            throw new Error('Series is not initialized. Please depends sereis.');
+        }
+    }
 
     return GlobalModel;
 });

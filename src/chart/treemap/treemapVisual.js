@@ -3,17 +3,14 @@ define(function (require) {
     var VisualMapping = require('../../visual/VisualMapping');
     var zrColor = require('zrender/tool/color');
     var zrUtil = require('zrender/core/util');
-    var helper = require('./helper');
     var isArray = zrUtil.isArray;
 
     var ITEM_STYLE_NORMAL = 'itemStyle.normal';
 
     return function (ecModel, payload) {
-        ecModel.eachSeriesByType('treemap', function (seriesModel) {
 
-            if (helper.irrelevant(payload, seriesModel)) {
-                return;
-            }
+        var condition = {mainType: 'series', subType: 'treemap', query: payload};
+        ecModel.eachComponent(condition, function (seriesModel) {
 
             var tree = seriesModel.getData().tree;
             var root = tree.root;

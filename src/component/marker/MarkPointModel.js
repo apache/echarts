@@ -11,7 +11,7 @@ define(function (require) {
         /**
          * @overrite
          */
-        init: function (option, parentModel, ecModel, dependentModels, idx, createdBySelf) {
+        init: function (option, parentModel, ecModel, extraOpt, createdBySelf) {
             this.mergeDefaultAndTheme(option, ecModel);
             this.mergeOption(option, createdBySelf);
         },
@@ -25,7 +25,7 @@ define(function (require) {
                         var mpModel = seriesModel.markPointModel;
                         if (!mpModel) {
                             mpModel = new MarkPointModel(
-                                markPointOpt, this, ecModel, [], 0, true
+                                markPointOpt, this, ecModel, {}, true
                             );
                         }
                         else {
