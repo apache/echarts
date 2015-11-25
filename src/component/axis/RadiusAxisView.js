@@ -207,6 +207,43 @@ define(function (require) {
          */
         _splitArea: function (radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords) {
 
+            var splitAreaModel = radiusAxisModel.getModel('splitArea');
+            var areaStyleModel = splitAreaModel.getModel('areaStyle');
+            var areaColors = areaStyleModel.get('color');
+            var lineCount = 0;
+
+            areaColors = areaColors instanceof Array ? areaColors : [areaColors];
+
+            var splitAreas = [];
+
+            var prevRadius = ticksCoords[0];
+            for (var i = 1; i < ticksCoords.length; i++) {
+                var colorIndex = (lineCount++) % areaColors.length;
+                splitAreas[colorIndex] = splitAreas[colorIndex] || [];
+                splitAreas[colorIndex].push(new graphic.Sector({
+                    shape: {
+                        cx: polar.cx,
+                        cy: polar.cy,
+                        r0: prevRadius,
+                        r: ticksCoords[i],
+                        startAngle: 0,
+                        endAngle: Math.PI * 2
+                    },
+                    silent: true
+                }));
+                prevRadius = ticksCoords[i];
+            }
+
+            // Simple optimization
+            // Batching the lines if color are the same
+            for (var i = 0; i < splitAreas.length; i++) {
+                this.group.add(graphic.mergePath(splitAreas[i], {
+                    style: zrUtil.defaults({
+                        fill: areaColors[i % areaColors.length]
+                    }, areaStyleModel.getAreaStyle()),
+                    silent: true
+                }));
+            }
         }
     });
 });

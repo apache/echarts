@@ -175,6 +175,50 @@ define(function (require) {
          */
         _splitArea: function (angleAxisModel, polar, ticksAngles, radiusExtent) {
 
+            var splitAreaModel = angleAxisModel.getModel('splitArea');
+            var areaStyleModel = splitAreaModel.getModel('areaStyle');
+            var areaColors = areaStyleModel.get('color');
+            var lineCount = 0;
+
+            areaColors = areaColors instanceof Array ? areaColors : [areaColors];
+
+            var splitAreas = [];
+
+            var RADIAN = Math.PI / 180;
+            var prevAngle = -ticksAngles[0] * RADIAN;
+            var r0 = Math.min(radiusExtent[0], radiusExtent[1]);
+            var r1 = Math.max(radiusExtent[0], radiusExtent[1]);
+
+            var clockwise = angleAxisModel.get('clockwise');
+
+            for (var i = 1; i < ticksAngles.length; i++) {
+                var colorIndex = (lineCount++) % areaColors.length;
+                splitAreas[colorIndex] = splitAreas[colorIndex] || [];
+                splitAreas[colorIndex].push(new graphic.Sector({
+                    shape: {
+                        cx: polar.cx,
+                        cy: polar.cy,
+                        r0: r0,
+                        r: r1,
+                        startAngle: prevAngle,
+                        endAngle: -ticksAngles[i] * RADIAN,
+                        clockwise: clockwise
+                    },
+                    silent: true
+                }));
+                prevAngle = -ticksAngles[i] * RADIAN;
+            }
+
+            // Simple optimization
+            // Batching the lines if color are the same
+            for (var i = 0; i < splitAreas.length; i++) {
+                this.group.add(graphic.mergePath(splitAreas[i], {
+                    style: zrUtil.defaults({
+                        fill: areaColors[i % areaColors.length]
+                    }, areaStyleModel.getAreaStyle()),
+                    silent: true
+                }));
+            }
         }
     });
 });
