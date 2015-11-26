@@ -27,12 +27,17 @@ define(function (require) {
 
     var IMMUTABLE_PROPERTIES = [
         'stackedOn', '_nameList', '_idList',
-        '_rawData', '_valueProp', '_optionModels'
+        '_rawData', '_valueProp', '_optionModels',
+        // Get raw value may be wrapped by creator
+        // FIXME
+        'getRawValue'
     ];
 
     var transferImmuProperties = function (a, b) {
         zrUtil.each(IMMUTABLE_PROPERTIES, function (propName) {
-            a[propName] = b[propName];
+            if (b.hasOwnProperty(propName)) {
+                a[propName] = b[propName];
+            }
         });
     };
 

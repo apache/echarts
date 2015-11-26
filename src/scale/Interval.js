@@ -32,6 +32,13 @@ define(function (require) {
         },
 
         /**
+         * Set interval
+         */
+        setInterval: function (interval) {
+            this._interval = interval;
+        },
+
+        /**
          * @return {Array.<number>}
          */
         getTicks: function () {
@@ -84,7 +91,7 @@ define(function (require) {
         /**
          * Update interval and extent of intervals for nice ticks
          * Algorithm from d3.js
-         * @param  {number} [approxTickNum = 10] Given approx tick number
+         * @param {number} [approxTickNum = 10] Given approx tick number
          */
         niceTicks: function (approxTickNum) {
             approxTickNum = approxTickNum || 10;
@@ -128,7 +135,7 @@ define(function (require) {
          * @param {boolean} [fixMax=false]
          */
         niceExtent: function (approxTickNum, fixMin, fixMax) {
-            this.niceTicks(approxTickNum);
+            this.niceTicks(approxTickNum, fixMin, fixMax);
 
             var extent = this._extent;
             var interval = this._interval;

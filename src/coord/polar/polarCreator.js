@@ -119,11 +119,12 @@ define(function (require) {
             setPolarAxisFromSeries(polarList, ecModel, api);
 
             // Fix extent of category angle axis
+            // FIXME
             zrUtil.each(polarList, function (polar) {
                 var angleAxis = polar.getAngleAxis();
                 if (angleAxis.type === 'category' && !angleAxis.onBand) {
                     var extent = angleAxis.getExtent();
-                    var diff = 360 / (angleAxis.scale.count() + 1);
+                    var diff = 360 / angleAxis.scale.count();
                     angleAxis.inverse ? (extent[1] += diff) : (extent[1] -= diff);
                     angleAxis.setExtent(extent[0], extent[1]);
                 }

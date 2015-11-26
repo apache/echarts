@@ -43,6 +43,16 @@ define(function (require) {
         }
         scale.setExtent(min, max);
         scale.niceExtent(model.get('splitNumber'), fixMin, fixMax);
+
+        // If some one specified the min, max. And the default calculated interval
+        // is not good enough. He can specify the interval. It is often appeared
+        // in angle axis with angle 0 - 360. Interval calculated in interval scale is hard
+        // to be 60.
+        // FIXME
+        var interval = model.get('interval');
+        if (interval != null) {
+            scale.setInterval && scale.setInterval(interval);
+        }
     };
 
     /**

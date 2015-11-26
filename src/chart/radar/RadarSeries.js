@@ -4,6 +4,9 @@ define(function(require) {
 
     var createListFromArray = require('../helper/createListFromArray');
     var SeriesModel = require('../../model/Series');
+    var zrUtil = require('zrender/core/util');
+    var numberUtil = require('../../util/number');
+    var linearMap = numberUtil.linearMap;
 
     // Must have polar coordinate system
     require('../../component/polar');
@@ -15,7 +18,34 @@ define(function(require) {
         dependencies: ['polar'],
 
         getInitialData: function (option, ecModel) {
-            return createListFromArray(option.data, this, ecModel);
+            var indicators = option.indicator;
+            var data = createListFromArray(option.data, this, ecModel);
+            if (indicators) {
+                var indicatorMap = zrUtil.reduce(indicators, function (map, value, idx) {
+                    map[value.name] = value;
+                    return map;
+                }, {});
+                // Linear map to indicator min-max
+                // Only radius axis can be value
+                data = data.map(['radius'], function (radius, idx) {
+                    var indicator = indicatorMap[data.getName(idx)];
+                    if (indicator && indicator.max) {
+                        // Map to 0-1 percent value
+                        return linearMap(radius, [indicator.min || 0, indicator.max], [0, 1]);
+                    }
+                });
+
+                // FIXME
+                var oldGetRawValue = data.getRawValue;
+                data.getRawValue = function (idx) {
+                    var val = oldGetRawValue.call(this, idx);
+                    var indicator = indicatorMap[data.getName(idx)];
+                    if (indicator && indicator.max != null) {
+                        return linearMap(val, [0, 1], [indicator.min || 0, indicator.max]);
+                    }
+                };
+            }
+            return data;
         },
 
         defaultOption: {
@@ -40,6 +70,13 @@ define(function(require) {
             // symbolRotate: null,
             // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
             showAllSymbol: false
+
+            // Indicators for each chart
+            // indicator: [{
+            //     name: '',
+            //     min: 0,
+            //     max: 100
+            // }]
         }
     });
 });
