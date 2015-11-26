@@ -31,7 +31,7 @@ define(function (require) {
             }
             if (thisExtent[0] === thisExtent[1]) {
                 // Expand extent
-                var expandSize = thisExtent[0] / 2;
+                var expandSize = thisExtent[0] / 2 || 1;
                 thisExtent[0] -= expandSize;
                 thisExtent[1] += expandSize;
             }
