@@ -140,10 +140,10 @@ define(function (require) {
                 // 'center' | 'left' | 'right' | 'x%' | {number}
                 x: 'center',
                 // 'center' | 'top' | 'bottom' | 'x%' | {number}
-                y: 'center',
+                y: 'center'
                 // x2
                 // y2
-                width: '60%'    // 自适应
+                // width: '60%'
                 // height   // 自适应
             },
             // 数值合并方式，默认加和，可选为：

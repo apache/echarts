@@ -22,13 +22,27 @@ define(function (require) {
 
         var rect = this.getBoundingRect();
 
+        var width = locModel.get('width');
+        var height = locModel.get('height');
+
+        if (!width && !height) {
+            var viewportWidth = api.getWidth();
+            var viewportHeight = api.getHeight();
+            if (rect.width / viewportWidth > rect.height / viewportHeight) {
+                width = viewportWidth * 0.8;
+            }
+            else {
+                height = viewportHeight * 0.8;
+            }
+        }
+
         var viewRect = layout.parsePositionInfo({
             x: locModel.get('x'),
             y: locModel.get('y'),
             x2: locModel.get('x2'),
             y2: locModel.get('y2'),
-            width: locModel.get('width'),
-            height: locModel.get('height'),
+            width: width,
+            height: height,
             // 0.75 rate
             aspect: rect.width / rect.height * 0.75
         }, {
