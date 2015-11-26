@@ -19,8 +19,9 @@ define(function (require) {
      * @inner
      */
     function assembleTransition(duration) {
-        var transitionText = 'left ' + duration + 's,'
-                            + 'top ' + duration + 's';
+        var transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
+        var transitionText = 'left ' + duration + 's ' + transitionCurve + ','
+                            + 'top ' + duration + 's ' + transitionCurve;
         return zrUtil.map(vendors, function (vendorPrefix) {
             return vendorPrefix + 'transition:' + transitionText;
         }).join(';');

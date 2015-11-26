@@ -31,9 +31,6 @@ define(function (require) {
             // 数据孤岛内容格式器
             islandFormatter: '{a} <br/>{b} : {c}',
 
-            // 显示延迟，添加显示延迟可以避免频繁切换，单位ms
-            showDelay: 20,
-
             // 隐藏延迟，单位ms
             hideDelay: 100,
 
