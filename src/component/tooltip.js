@@ -679,9 +679,9 @@ define(function (require) {
                 });
                 // If only one series
                 // FIXME
-                if (paramsList.length === 1) {
-                    paramsList = paramsList[0];
-                }
+                // if (paramsList.length === 1) {
+                //     paramsList = paramsList[0];
+                // }
 
                 tooltipContent.show(rootTooltipModel);
 
