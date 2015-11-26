@@ -326,7 +326,7 @@ define(function (require) {
      */
     echartsProto.resize = function () {
         this._zr.resize();
-        this._update();
+        updateMethods.update.call(this);
     };
 
     /**
