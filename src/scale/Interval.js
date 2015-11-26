@@ -21,6 +21,21 @@ define(function (require) {
 
         _interval: 0,
 
+        setExtent: function (start, end) {
+            var thisExtent = this._extent;
+            if (!isNaN(start)) {
+                thisExtent[0] = start;
+            }
+            if (!isNaN(end)) {
+                thisExtent[1] = end;
+            }
+            if (thisExtent[0] === thisExtent[1]) {
+                // Expand extent
+                var expandSize = thisExtent[0] / 2;
+                thisExtent[0] -= expandSize;
+                thisExtent[1] += expandSize;
+            }
+        },
         /**
          * Get interval
          */

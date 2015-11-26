@@ -3,10 +3,12 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
 
     function getName(obj) {
-        if (typeof obj === 'string') {
+        if (zrUtil.isObject(obj) && obj.value != null) {
+            return obj.value;
+        }
+        else {
             return obj;
         }
-        return obj.value;
     }
     /**
      * Get categories

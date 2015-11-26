@@ -120,8 +120,9 @@ define(function (require) {
         dataToCoord: function (data, clamp) {
             data = this.scale.normalize(data);
             var extent = this.getExtent();
-            if (this.onBand) {
-                fixExtentWithBands(extent, this.scale.count());
+            var scale = this.scale;
+            if (this.onBand && scale.type === 'ordinal') {
+                fixExtentWithBands(extent, scale.count());
             }
 
             return linearMap(data, [0, 1], extent, clamp);
