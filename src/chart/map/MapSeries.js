@@ -136,16 +136,16 @@ define(function (require) {
             coordinateSystem: 'geo',
             // 各省的 map 暂时都用中文
             map: 'china',
-            mapLocation: {
-                // 'center' | 'left' | 'right' | 'x%' | {number}
-                x: 'center',
-                // 'center' | 'top' | 'bottom' | 'x%' | {number}
-                y: 'center'
-                // x2
-                // y2
-                // width: '60%'
-                // height   // 自适应
-            },
+
+            // 'center' | 'left' | 'right' | 'x%' | {number}
+            x: 'center',
+            // 'center' | 'top' | 'bottom' | 'x%' | {number}
+            y: 'center',
+            // x2
+            // y2
+            // width: '60%'
+            // height   // 自适应
+
             // 数值合并方式，默认加和，可选为：
             // 'sum' | 'average' | 'max' | 'min'
             // mapValueCalculation: 'sum',
