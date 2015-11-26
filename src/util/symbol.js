@@ -71,7 +71,7 @@ define(function(require) {
         beforeBrush: function () {
             var style = this.style;
             if (style.textPosition === 'inside') {
-                style.textPosition = ['50%', '40%'];
+                style.textPosition = ['50%', '35%'];
                 style.textAlign = 'center';
                 style.textBaseline = 'middle';
             }

@@ -123,7 +123,8 @@ define(function (require) {
             zr.on('mousemove', this._mouseMove, this);
             zr.on('mouseout', this._hide, this);
 
-            this._tooltipContent = new TooltipContent(api.getDom(), api);
+            var tooltipContent = new TooltipContent(api.getDom(), api);
+            this._tooltipContent = tooltipContent;
         },
 
         render: function (tooltipModel, ecModel, api) {
@@ -165,7 +166,9 @@ define(function (require) {
                 // seriesIndex
             };
 
-            this._tooltipContent.update();
+            var tooltipContent = this._tooltipContent;
+            tooltipContent.update();
+            tooltipContent.enterable = tooltipModel.get('enterbale');
 
             /**
              * @type {Object.<string, Array>}
@@ -234,7 +237,7 @@ define(function (require) {
         _mouseMove: function (e) {
             var el = e.target;
             var tooltipModel = this._tooltipModel;
-            var trigger = tooltipModel.get('trigger');
+            var globalTrigger = tooltipModel.get('trigger');
             var ecModel = this._ecModel;
 
             if (!tooltipModel) {
@@ -250,7 +253,7 @@ define(function (require) {
                 var dataIndex = el.dataIndex;
                 var itemModel = hostModel.getData().getItemModel(dataIndex);
                 // Series or single data may use item trigger when global is axis trigger
-                if ((itemModel.get('tooltip.trigger') || trigger) === 'axis') {
+                if ((itemModel.get('tooltip.trigger') || globalTrigger) === 'axis') {
                     this._showAxisTooltip(tooltipModel, ecModel, e);
                 }
                 else {
@@ -262,7 +265,7 @@ define(function (require) {
                 }
             }
             else {
-                if (trigger === 'item') {
+                if (globalTrigger === 'item') {
                     this._hide();
                 }
                 else {
