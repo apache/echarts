@@ -57,17 +57,17 @@ define(function (require) {
                 });
                 // Convert map series which only has markPoint without data to scatter series
                 if (!(seriesOpt.data && seriesOpt.data.length)) {
-                    // Use same geo if multiple map series has same map type
-                    var geoOpt = newCreatedGeoOptMap[seriesOpt.map];
-                    if (!geoOpt) {
-                        geoOpt = newCreatedGeoOptMap[seriesOpt.map] = createGeoFromMap(seriesOpt);
-                    }
 
                     if (!option.geo) {
                         option.geo = [];
                     }
                     var geoIndex = option.geo.length;
+                    // Use same geo if multiple map series has same map type
+                    var geoOpt = newCreatedGeoOptMap[seriesOpt.map];
+                    if (!geoOpt) {
+                        geoOpt = newCreatedGeoOptMap[seriesOpt.map] = createGeoFromMap(seriesOpt);
                     option.geo.push(geoOpt);
+                    }
 
                     var scatterSeries = seriesOpt.markPoint;
                     scatterSeries.type = 'scatter';
