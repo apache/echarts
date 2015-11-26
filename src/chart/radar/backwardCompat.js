@@ -106,7 +106,7 @@ define(function (require) {
                     // indicators will be normalized to 0 - 1
                     radiusAxisOpt.min = 0;
                     radiusAxisOpt.max = 1;
-                    radiusAxisOpt.interval = 1 / (polarOpt.splitNumber || 4);
+                    radiusAxisOpt.interval = 1 / (polarOpt.splitNumber || 5);
                     radiusAxisOpt.axisLine = {
                         show: false
                     };
@@ -179,7 +179,7 @@ define(function (require) {
                             max = Math.max(max, valuePerIndicator[i]);
                         }
                         intervalScale.setExtent(min, max);
-                        intervalScale.niceExtent(polarOpt.splitNumber || 4);
+                        intervalScale.niceExtent(polarOpt.splitNumber || 5);
                         var intervalExtent = intervalScale.getExtent();
                         if (indicators[idx].min == null) {
                             indicators[idx].min = intervalExtent[0];
