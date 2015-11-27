@@ -37,9 +37,9 @@ define(function (require) {
             var symbolDraw = this._symbolDraw;
             var lineDraw = this._lineDraw;
 
-            symbolDraw.updateData(data, api);
+            symbolDraw.updateData(data);
 
-            lineDraw.updateData(data.graph.edgeData, null, null, api);
+            lineDraw.updateData(data.graph.edgeData, null, null);
 
             // Save the original lineWidth
             data.graph.eachEdge(function (edge) {

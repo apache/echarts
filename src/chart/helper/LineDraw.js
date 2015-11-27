@@ -149,11 +149,11 @@ define(function (require) {
 
                 var line = createLine(linePoints);
                 line.shape.percent = 0;
-                api.initGraphicEl(line, {
+                graphic.initProps(line, {
                     shape: {
                         percent: 1
                     }
-                });
+                }, seriesModel);
 
                 lineGroup.add(line);
 
@@ -210,7 +210,7 @@ define(function (require) {
                     target.shape.cpy1 = cp1[1];
                 }
 
-                api.updateGraphicEl(line, target);
+                graphic.updateProps(line, target, seriesModel);
 
                 // Symbol changed
                 if (fromData) {

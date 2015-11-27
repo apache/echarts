@@ -53,9 +53,8 @@ define(function (require) {
     /**
      * Update symbols draw by new data
      * @param {module:echarts/data/List} data
-     * @param {module:echarts/ExtensionAPI} api
      */
-    largeSymbolProto.updateData = function (data, api) {
+    largeSymbolProto.updateData = function (data) {
         var symbolEl = this._symbolEl;
 
         var seriesModel = data.hostModel;

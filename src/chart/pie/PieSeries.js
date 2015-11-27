@@ -129,7 +129,9 @@ define(function(require) {
                     borderColor: 'rgba(0,0,0,0)',
                     borderWidth: 1
                 }
-            }
+            },
+
+            animationEasing: 'cubicOut'
         }
     });
 

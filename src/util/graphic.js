@@ -318,6 +318,35 @@ define(function(require) {
         });
     };
 
+    function animateOrSetProps(isUpdate, el, props, seriesModel, cb) {
+        var postfix = isUpdate ? 'Update' : '';
+        var duration = seriesModel
+            && seriesModel.getShallow('animationDuration' + postfix);
+        var animationEasing = seriesModel
+            && seriesModel.getShallow('animationEasing' + postfix);
+
+        seriesModel && seriesModel.getShallow('animation')
+            ? el.animateTo(props, duration, animationEasing, cb)
+            : (el.attr(props), cb && cb());
+    }
+    /**
+     * Update graphic element properties with or without animation according to the configuration in series
+     * @param {module:zrender/Element} el
+     * @param {Object} props
+     * @param {module:echarts/model/Series} [seriesModel]
+     * @param {Function} cb
+     */
+    graphic.updateProps = zrUtil.curry(animateOrSetProps, true);
+
+    /**
+     * Init graphic element properties with or without animation according to the configuration in series
+     * @param {module:zrender/Element} el
+     * @param {Object} props
+     * @param {module:echarts/model/Series} [seriesModel]
+     * @param {Function} cb
+     */
+    graphic.initProps = zrUtil.curry(animateOrSetProps, false);
+
     /**
      * Get transform matrix of target (param target),
      * in coordinate of its ancestor (param ancestor)

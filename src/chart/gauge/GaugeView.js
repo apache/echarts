@@ -278,11 +278,11 @@ define(function (require) {
                         }
                     });
 
-                    api.updateGraphicEl(pointer, {
+                    graphic.updateProps(pointer, {
                         shape: {
                             angle: linearMap(data.get('value', idx), valueExtent, angleExtent)
                         }
-                    });
+                    }, seriesModel);
 
                     group.add(pointer);
                     data.setItemGraphicEl(idx, pointer);
@@ -290,11 +290,11 @@ define(function (require) {
                 .update(function (newIdx, oldIdx) {
                     var pointer = oldData.getItemGraphicEl(oldIdx);
 
-                    api.updateGraphicEl(pointer, {
+                    graphic.updateProps(pointer, {
                         shape: {
                             angle: linearMap(data.get('value', newIdx), valueExtent, angleExtent)
                         }
-                    });
+                    }, seriesModel);
 
                     group.add(pointer);
                     data.setItemGraphicEl(newIdx, pointer);

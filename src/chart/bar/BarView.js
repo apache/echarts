@@ -57,9 +57,9 @@ define(function (require) {
                     var animateTarget = {};
                     rectShape[animateProperty] = 0;
                     animateTarget[animateProperty] = layout[animateProperty];
-                    api[isUpdate? 'updateGraphicEl' : 'initGraphicEl'](rect, {
+                    graphic[isUpdate? 'updateProps' : 'initProps'](rect, {
                         shape: animateTarget
-                    });
+                    }, seriesModel);
                 }
                 return rect;
             }
@@ -92,9 +92,9 @@ define(function (require) {
                     var lineWidth = data.getItemModel(newIndex).get(barBorderWidthQuery) || 0;
                     fixLayoutWithLineWidth(layout, lineWidth);
 
-                    api.updateGraphicEl(rect, {
+                    graphic.updateProps(rect, {
                         shape: layout
-                    });
+                    }, seriesModel);
 
                     data.setItemGraphicEl(newIndex, rect);
 
@@ -106,11 +106,11 @@ define(function (require) {
                     if (rect) {
                         // Not show text when animating
                         rect.style.text = '';
-                        api.updateGraphicEl(rect, {
+                        graphic.updateProps(rect, {
                             shape: {
                                 width: 0
                             }
-                        }, function () {
+                        }, seriesModel, function () {
                             group.remove(rect);
                         });
                     }
@@ -182,11 +182,11 @@ define(function (require) {
                     this._data.eachItemGraphicEl(function (el) {
                         // Not show text when animating
                         el.style.text = '';
-                        api.updateGraphicEl(el, {
+                        graphic.updateProps(el, {
                             shape: {
                                 width: 0
                             }
-                        }, function () {
+                        }, ecModel, function () {
                             group.remove(el);
                         });
                     });

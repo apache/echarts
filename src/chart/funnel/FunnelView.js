@@ -92,26 +92,26 @@ define(function (require) {
                     var layout = data.getItemLayout(newIdx);
                     var labelLayout = layout.label;
 
-                    api.updateGraphicEl(poly, {
+                    graphic.updateProps(poly, {
                         shape: {
                             points: layout.points
                         }
-                    });
+                    }, seriesModel);
 
                     var labelLine = poly.__labelLine;
                     var labelText = poly.__labelText;
 
-                    api.updateGraphicEl(labelLine, {
+                    graphic.updateProps(labelLine, {
                         shape: {
                             points: labelLayout.linePoints
                         }
-                    });
-                    api.updateGraphicEl(labelText, {
+                    }, seriesModel);
+                    graphic.updateProps(labelText, {
                         style: {
                             x: labelLayout.x,
                             y: labelLayout.y
                         }
-                    });
+                    }, seriesModel);
                     // Set none animating style
                     labelText.setStyle({
                         textAlign: labelLayout.textAlign,

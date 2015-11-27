@@ -22,7 +22,7 @@ define(function (require) {
                 ? largeSymbolDraw : normalSymbolDraw;
 
             this._symbolDraw = symbolDraw;
-            symbolDraw.updateData(data, api);
+            symbolDraw.updateData(data);
             group.add(symbolDraw.group);
 
             group.remove(

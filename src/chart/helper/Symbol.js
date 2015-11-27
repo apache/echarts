@@ -15,17 +15,18 @@ define(function (require) {
      * @constructor
      * @extends {module:zrender/graphic/Group}
      */
-    function Symbol(data, idx, api) {
+    function Symbol(data, idx) {
         graphic.Group.call(this);
 
-        this.updateData(data, idx, api);
+        this.updateData(data, idx);
     }
 
     var symbolProto = Symbol.prototype;
 
-    symbolProto._createSymbol = function (symbolType, data, idx, api) {
+    symbolProto._createSymbol = function (symbolType, data, idx) {
         this.removeAll();
 
+        var seriesModel = data.hostModel;
         var color = data.getItemVisual(idx, 'color');
 
         var symbolPath = symbolUtil.createSymbol(
@@ -40,9 +41,9 @@ define(function (require) {
 
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
-        api.initGraphicEl(symbolPath, {
+        graphic.initProps(symbolPath, {
             scale: size
-        });
+        }, seriesModel);
 
         this._symbolType = symbolType;
 
@@ -76,22 +77,24 @@ define(function (require) {
      * Update symbol properties
      * @param  {module:echarts/data/List} data
      * @param  {number} idx
-     * @param  {module:echarts/ExtensionAPI} api
      */
-    symbolProto.updateData = function (data, idx, api) {
+    symbolProto.updateData = function (data, idx) {
         var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
+        var seriesModel = data.hostModel;
 
         if (symbolType !== this._symbolType) {
-            this._createSymbol(symbolType, data, idx, api);
+            this._createSymbol(symbolType, data, idx);
         }
         else {
             var symbolPath = this.childAt(0);
             var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
-            api.updateGraphicEl(symbolPath, {
+            graphic.updateProps(symbolPath, {
                 scale: size
-            });
+            }, seriesModel);
         }
         this._updateCommon(data, idx);
+
+        this._seriesModel = seriesModel;
     };
 
     // Update common properties
@@ -168,13 +171,13 @@ define(function (require) {
         }
     };
 
-    symbolProto.fadeOut = function (cb, api) {
+    symbolProto.fadeOut = function (cb) {
         var symbolPath = this.childAt(0);
         // Not show text when animating
         symbolPath.style.text = '';
-        api.updateGraphicEl(symbolPath, {
+        graphic.updateProps(symbolPath, {
             scale: [0, 0]
-        }, cb);
+        }, this._seriesModel, cb);
     };
 
     zrUtil.inherits(Symbol, graphic.Group);
