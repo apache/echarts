@@ -2,7 +2,6 @@ define(function (require) {
 
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
-    var each = zrUtil.each;
 
     var ParallelView = require('../../view/Chart').extend({
 
@@ -52,7 +51,8 @@ define(function (require) {
 
             function add(newDataIndex) {
                 var values = data.getValues(dimensionNames, newDataIndex);
-                var els = [];
+                var elGroup = new graphic.Group();
+                dataGroup.add(elGroup);
 
                 eachAxisPair(
                     values, dimensions, coordSys,
@@ -60,52 +60,52 @@ define(function (require) {
                         // FIXME
                         // init animation
                         if (pointPair) {
-                            els[pairIndex] = createEl(pointPair, dataGroup);
+                            elGroup.add(createEl(pointPair));
                         }
                     }
                 );
 
-                setStyle(els, data, newDataIndex, lineStyle);
-                data.setItemGraphicEl(newDataIndex, els);
+                setStyle(elGroup, data, newDataIndex, lineStyle);
+                data.setItemGraphicEl(newDataIndex, elGroup);
             }
 
             function update(newDataIndex, oldDataIndex) {
                 var values = data.getValues(dimensionNames, newDataIndex);
-                var els = oldData.getItemGraphicEl(oldDataIndex);
+                var elGroup = oldData.getItemGraphicEl(oldDataIndex);
+                var newEls = [];
+                var elGroupIndex = 0;
 
                 eachAxisPair(
                     values, dimensions, coordSys,
                     function (pointPair, pairIndex) {
-                        var el = els[pairIndex];
+                        var el = elGroup.childAt(elGroupIndex++);
 
                         if (pointPair && !el) {
-                            els[pairIndex] = createEl(pointPair, dataGroup);
+                            newEls.push(createEl(pointPair));
                         }
                         else if (pointPair) {
                             el.setShape({points: pointPair});
-                        }
-                        else {
-                            els[pairIndex] = null;
-                            dataGroup.remove(el);
                         }
                     }
                 );
 
                 // Remove redundent els
-                for (var i = axisPairCount(dimensions), len = els.length; i < len; i++) {
-                    els[i] = null;
-                    dataGroup.remove(els[i]);
+                for (var i = elGroup.childCount() - 1; i >= elGroupIndex; i--) {
+                    elGroup.remove(elGroup.childAt(i));
                 }
 
-                setStyle(els, data, newDataIndex, lineStyle);
-                data.setItemGraphicEl(newDataIndex, els);
+                // Add new els
+                for (var i = 0, len = newEls.length; i < len; i++) {
+                    elGroup.add(newEls[i]);
+                }
+
+                setStyle(elGroup, data, newDataIndex, lineStyle);
+                data.setItemGraphicEl(newDataIndex, elGroup);
             }
 
             function remove(oldDataIndex) {
-                var els = oldData.getItemGraphicEl(oldDataIndex);
-                each(els, function (el) {
-                    el && dataGroup.remove(el);
-                });
+                var elGroup = oldData.getItemGraphicEl(oldDataIndex);
+                dataGroup.remove(elGroup);
             }
         },
 
@@ -114,15 +114,12 @@ define(function (require) {
          */
         remove: function () {
             this._dataGroup && this._dataGroup.removeAll();
+            this._data = null;
         }
     });
 
-    function axisPairCount(dimensions) {
-        return dimensions.length - 1;
-    }
-
     function eachAxisPair(values, dimensions, coordSys, cb) {
-        for (var i = 0, len = axisPairCount(dimensions); i < len; i++) {
+        for (var i = 0, len = dimensions.length - 1; i < len; i++) {
             var dimA = dimensions[i];
             var dimB = dimensions[i + 1];
             var valueA = values[i];
@@ -140,23 +137,18 @@ define(function (require) {
         }
     }
 
-    function createEl(pointPair, dataGroup) {
-        var el = new graphic.Polyline({
+    function createEl(pointPair) {
+        return new graphic.Polyline({
             shape: {points: pointPair},
             silent: true
         });
-        dataGroup.add(el);
-        return el;
     }
 
-    function setStyle(els, data, dataIndex, lineStyle) {
-        each(els, function (el, pairIndex) {
-            if (!el) {
-                return;
-            }
+    function setStyle(elGroup, data, dataIndex, lineStyle) {
+        elGroup.eachChild(function (el) {
             el.setStyle(lineStyle);
             var opacity = data.getItemVisual(dataIndex, 'opacity', true);
-            opacity != null && el.setStyle('opacity', opacity);
+            el.setStyle('opacity', opacity);
         });
     }
 

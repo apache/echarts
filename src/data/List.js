@@ -909,32 +909,22 @@ define(function (require) {
     };
     /**
      * @param {number} idx
-     * @param {module:zrender/Element|Array.<module:zrender/Element>} el
+     * @param {module:zrender/Element} el
      */
     listProto.setItemGraphicEl = function (idx, el) {
         var hostModel = this.hostModel;
 
-        if (zrUtil.isArray(el)) {
-            zrUtil.each(el, function (singleEl) {
-                singleEl && addIndexToGraphicEl(singleEl, idx, hostModel);
-            });
+        if (el) {
+            // Add data index and series index for indexing the data by element
+            // Useful in tooltip
+            el.dataIndex = idx;
+            el.seriesIndex = hostModel && hostModel.seriesIndex;
+            if (el.type === 'group') {
+                el.traverse(setItemDataAndSeriesIndex, el);
+            }
+            this._graphicEls[idx] = el;
         }
-        else {
-            addIndexToGraphicEl(el, idx, hostModel);
-        }
-
-        this._graphicEls[idx] = el;
     };
-
-    function addIndexToGraphicEl(el, dataIndex, hostModel) {
-        // Add data index and series index for indexing the data by element
-        // Useful in tooltip
-        el.dataIndex = dataIndex;
-        el.seriesIndex = hostModel && hostModel.seriesIndex;
-        if (el.type === 'group') {
-            el.traverse(setItemDataAndSeriesIndex, el);
-        }
-    }
 
     /**
      * @param {number} idx

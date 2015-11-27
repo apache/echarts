@@ -63,29 +63,30 @@ define(function (require) {
         },
 
         /**
-         * @param {number} [value] When attempting to detect 'no activeIntervals set',
+         * @param {number|string} [value] When attempting to detect 'no activeIntervals set',
          *                         value can not be input.
-         * @return {boolean|string} When no activeIntervals set, it returns null,
-         *                          which means active.
+         * @return {string} 'normal': no activeIntervals set,
+         *                  'active',
+         *                  'inactive'.
          * @public
          */
-        isActive: function (value) {
+        getActiveState: function (value) {
             var activeIntervals = this._activeIntervals;
 
             if (!activeIntervals) {
-                return null;
+                return 'normal';
             }
 
             if (value == null) {
-                return false;
+                return 'inactive';
             }
 
             for (var i = 0, len = activeIntervals.length; i < len; i++) {
                 if (activeIntervals[i][0] <= value && value <= activeIntervals[i][1]) {
-                    return true;
+                    return 'active';
                 }
             }
-            return false;
+            return 'inactive';
         }
     };
 

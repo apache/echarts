@@ -24,7 +24,8 @@
                 {name: 'PM10', index: 3, text: 'PM10'},
                 {name: 'CO', index: 4, text: '一氧化碳（CO）'},
                 {name: 'NO2', index: 5, text: '二氧化氮（NO2）'},
-                {name: 'SO2', index: 6, text: '二氧化硫（SO2）'}
+                {name: 'SO2', index: 6, text: '二氧化硫（SO2）'},
+                {name: '等级', index: 7, text: '等级'}
             ];
 
             require([
@@ -92,7 +93,9 @@
                         {dim: 'dim3', name: schema[3].text},
                         {dim: 'dim4', name: schema[4].text},
                         {dim: 'dim5', name: schema[5].text},
-                        {dim: 'dim6', name: schema[6].text}
+                        {dim: 'dim6', name: schema[6].text},
+                        {dim: 'dim7', name: schema[7].text,
+                        type: 'category', data: ['优', '良', '轻度污染', '重度污染', '严重污染']}
                     ],
                     parallel: {
                         y2: 100,
@@ -130,20 +133,26 @@
                             name: '北京',
                             type: 'parallel',
                             lineStyle: lineStyle,
-                            data: dataBJ
+                            // data: dataBJ
+                            data: [
+                                [ 1, 32,12 , 19, 28,1.39,24, 8,"优"],
+                            ]
                         },
                         {
                             name: '上海',
                             type: 'parallel',
                             lineStyle: lineStyle,
-                            data: dataSH
+                            // data: dataSH
+                            data: [
+                                [ 1, 332,212 , 119, 128,12.39,124, 18,"良"],
+                            ]
                         },
-                        {
-                            name: '广州',
-                            type: 'parallel',
-                            lineStyle: lineStyle,
-                            data: dataGZ
-                        }
+                        // {
+                        //     name: '广州',
+                        //     type: 'parallel',
+                        //     lineStyle: lineStyle,
+                        //     data: dataGZ
+                        // }
                     ]
                 });
             });

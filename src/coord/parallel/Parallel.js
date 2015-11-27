@@ -217,6 +217,48 @@ define(function(require) {
         },
 
         /**
+         * @param {module:echarts/data/List} data
+         * @param {Functio} cb param: {string} activeState 'active' or 'inactive' or 'normal'
+         *                            {number} dataIndex
+         * @param {Object} context
+         */
+        eachActiveState: function (data, callback, context) {
+            var dimensions = this.dimensions;
+            var dimensionNames = this.getDimensionNames();
+            var axesMap = this._axesMap;
+            var hasActiveSet = false;
+
+            for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
+                if (axesMap[dimensions[j].name].getActiveState() !== 'normal') {
+                    hasActiveSet = true;
+                }
+            }
+
+            for (var i = 0, len = data.count(); i < len; i++) {
+                var values = data.getValues(dimensionNames, i);
+                var activeState;
+
+                if (!hasActiveSet) {
+                    activeState = 'normal';
+                }
+                else {
+                    activeState = 'active';
+                    for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
+                        var dimName = dimensions[j].name;
+                        var state = axesMap[dimName].getActiveState(values[j], j);
+
+                        if (state === 'inactive') {
+                            activeState = 'inactive';
+                            break;
+                        }
+                    }
+                }
+
+                callback.call(context, activeState, i);
+            }
+        },
+
+        /**
          * Convert coords of each axis to Point.
          *  Return point. For example: [10, 20]
          * @param {Array.<number>} coords
@@ -228,13 +270,6 @@ define(function(require) {
             var point = [coord, 0];
             vector.applyTransform(point, point, axisLayout.transform);
             return point;
-        },
-
-        /**
-         * Get axis
-         */
-        getAxis: function (dim) {
-            return this._axesMap[dim];
         },
 
         /**

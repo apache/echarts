@@ -15,7 +15,7 @@ define(function (require) {
     var mathMax = Math.max;
     var mathPow = Math.pow;
 
-    var UNSELECT_THRESHOLD = 3;
+    var UNSELECT_THRESHOLD = 2;
     var EVENTS = ['mousedown', 'mousemove', 'mouseup'];
 
     /**
