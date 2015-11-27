@@ -120,6 +120,8 @@ define(function (require) {
 
                     // Only visual color of each item will be used. It can be encoded by dataRange
                     // But visual color of series is used in symbol drawing
+                    //
+                    // Visual color for each series is for the symbol draw
                     var visualColor = data.getItemVisual(dataIdx, 'color', true);
 
                     itemStyleModel = itemModel.getModel(itemStyleAccessPath);

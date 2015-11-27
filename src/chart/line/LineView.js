@@ -4,10 +4,13 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var SymbolDraw = require('../helper/SymbolDraw');
+    var Symbol = require('../helper/Symbol');
     var lineAnimationDiff = require('./lineAnimationDiff');
     var graphic = require('../../util/graphic');
 
     var polyHelper = require('./poly');
+
+    var ChartView = require('../../view/Chart');
 
     function isPointsSame(points1, points2) {
         if (points1.length !== points2.length) {
@@ -77,7 +80,16 @@ define(function(require) {
         }, true);
     }
 
-    return require('../../echarts').extendChartView({
+    function queryDataIndex(data, payload) {
+        if (payload.dataIndex != null) {
+            return payload.dataIndex;
+        }
+        else if (payload.name != null) {
+            return data.indexOfName(payload.name);
+        }
+    }
+
+    return ChartView.extend({
 
         type: 'line',
 
@@ -218,6 +230,58 @@ define(function(require) {
             this._coordSys = coordSys;
             this._stackedOnPoints = stackedOnPoints;
             this._points = points;
+        },
+
+        highlight: function (seriesModel, ecModel, api, payload) {
+            var data = seriesModel.getData();
+            var dataIndex = queryDataIndex(data, payload);
+
+            if (dataIndex >= 0) {
+                var symbol = data.getItemGraphicEl(dataIndex);
+                if (!symbol) {
+                    // Create a temporary symbol if it is not exists
+                    symbol = new Symbol(data, dataIndex, api);
+                    symbol.position = data.getItemLayout(dataIndex);
+                    symbol.setZ(
+                        seriesModel.get('zlevel'),
+                        seriesModel.get('z')
+                    );
+                    symbol.__temp = true;
+                    data.setItemGraphicEl(dataIndex, symbol);
+
+                    this.group.add(symbol);
+                }
+                symbol.highlight();
+            }
+            else {
+                // Highlight whole series
+                ChartView.prototype.highlight.call(
+                    this, seriesModel, ecModel, api, payload
+                );
+            }
+        },
+
+        downplay: function (seriesModel, ecModel, api, payload) {
+            var data = seriesModel.getData();
+            var dataIndex = queryDataIndex(data, payload);
+            if (dataIndex >= 0) {
+                var symbol = data.getItemGraphicEl(dataIndex);
+                if (symbol) {
+                    if (symbol.__temp) {
+                        data.setItemGraphicEl(dataIndex, null);
+                        this.group.remove(symbol);
+                    }
+                    else {
+                        symbol.downplay();
+                    }
+                }
+            }
+            else {
+                // Downplay whole series
+                ChartView.prototype.downplay.call(
+                    this, seriesModel, ecModel, api, payload
+                );
+            }
         },
 
         /**

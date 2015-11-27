@@ -38,6 +38,10 @@ define(function (require) {
             symbolSize: 10,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
             // symbolRotate: null,  // 图形旋转控制
 
+            large: false,
+            // Available when large is true
+            largeThreshold: 2000,
+
             // label: {
                 // normal: {
                     // show: false

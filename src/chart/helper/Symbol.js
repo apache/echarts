@@ -50,6 +50,29 @@ define(function (require) {
     };
 
     /**
+     * Highlight symbol
+     */
+    symbolProto.highlight = function () {
+        this.childAt(0).trigger('emphasis');
+    };
+
+    /**
+     * Downplay symbol
+     */
+    symbolProto.downplay = function () {
+        this.childAt(0).trigger('normal');
+    };
+
+    /**
+     * @param {number} zlevel
+     * @param {number} z
+     */
+    symbolProto.setZ = function (zlevel, z) {
+        var symbolPath = this.childAt(0);
+        symbolPath.zlevel = zlevel;
+        symbolPath.z = z;
+    };
+    /**
      * Update symbol properties
      * @param  {module:echarts/data/List} data
      * @param  {number} idx

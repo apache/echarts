@@ -13,4 +13,6 @@ define(function (require) {
     echarts.registerVisualCoding('chart', require('./map/mapVisual'));
 
     echarts.registerProcessor('statistic', require('./map/mapDataStatistic'));
+
+    echarts.registerPreprocessor(require('./map/backwardCompat'));
 });

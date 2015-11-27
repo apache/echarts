@@ -15,20 +15,29 @@ define(function (require) {
      * @param {module:echarts/ExtensionAPI} api
      */
     function resizeGeo (geoModel, api) {
-        var locModel = geoModel;
-        if (geoModel.type === 'series.map') {
-            locModel = geoModel.getModel('mapLocation');
-        }
-
         var rect = this.getBoundingRect();
 
+        var width = geoModel.get('width');
+        var height = geoModel.get('height');
+
+        if (!width && !height) {
+            var viewportWidth = api.getWidth();
+            var viewportHeight = api.getHeight();
+            if (rect.width / viewportWidth > rect.height / viewportHeight) {
+                width = viewportWidth * 0.8;
+            }
+            else {
+                height = viewportHeight * 0.8;
+            }
+        }
+
         var viewRect = layout.parsePositionInfo({
-            x: locModel.get('x'),
-            y: locModel.get('y'),
-            x2: locModel.get('x2'),
-            y2: locModel.get('y2'),
-            width: locModel.get('width'),
-            height: locModel.get('height'),
+            x: geoModel.get('x'),
+            y: geoModel.get('y'),
+            x2: geoModel.get('x2'),
+            y2: geoModel.get('y2'),
+            width: width,
+            height: height,
             // 0.75 rate
             aspect: rect.width / rect.height * 0.75
         }, {

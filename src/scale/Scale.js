@@ -32,12 +32,15 @@ define(function (require) {
     };
 
     /**
-     * Normalize value to linear [0, 1]
+     * Normalize value to linear [0, 1], return 0.5 if extent span is 0
      * @param {number} val
      * @return {number}
      */
     scaleProto.normalize = function (val) {
         var extent = this._extent;
+        if (extent[1] === extent[0]) {
+            return 0.5;
+        }
         return (val - extent[0]) / (extent[1] - extent[0]);
     };
 
@@ -59,6 +62,8 @@ define(function (require) {
         var extent = this._extent;
         other[0] < extent[0] && (extent[0] = other[0]);
         other[1] > extent[1] && (extent[1] = other[1]);
+        // Set again
+        this.setExtent(extent[0], extent[1]);
     };
 
     /**
@@ -81,12 +86,6 @@ define(function (require) {
         }
         if (!isNaN(end)) {
             thisExtent[1] = end;
-        }
-        if (thisExtent[0] === thisExtent[1]) {
-            // Expand extent
-            var expandSize = thisExtent[0] / 2;
-            thisExtent[0] -= expandSize;
-            thisExtent[1] += expandSize;
         }
     };
 

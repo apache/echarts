@@ -43,6 +43,26 @@ define(function (require) {
 
             var barBorderWidthQuery = ['itemStyle', 'normal', 'barBorderWidth'];
 
+            function createRect(dataIndex, isUpdate) {
+                var layout = data.getItemLayout(dataIndex);
+                var rect = new graphic.Rect({
+                    shape: zrUtil.extend({}, layout)
+                });
+                var lineWidth = data.getItemModel(dataIndex).get(barBorderWidthQuery) || 0;
+                fixLayoutWithLineWidth(layout, lineWidth);
+                // Animation
+                if (enableAnimation) {
+                    var rectShape = rect.shape;
+                    var animateProperty = isHorizontal ? 'height' : 'width';
+                    var animateTarget = {};
+                    rectShape[animateProperty] = 0;
+                    animateTarget[animateProperty] = layout[animateProperty];
+                    api[isUpdate? 'updateGraphicEl' : 'initGraphicEl'](rect, {
+                        shape: animateTarget
+                    });
+                }
+                return rect;
+            }
             data.diff(oldData)
                 .add(function (dataIndex) {
                     // 空数据
@@ -50,30 +70,12 @@ define(function (require) {
                         return;
                     }
 
-                    var layout = data.getItemLayout(dataIndex);
-
-                    var lineWidth = data.getItemModel(dataIndex).get(barBorderWidthQuery) || 0;
-                    fixLayoutWithLineWidth(layout, lineWidth);
-
-                    var rect = new graphic.Rect({
-                        shape: zrUtil.extend({}, layout)
-                    });
+                    var rect = createRect(dataIndex);
 
                     data.setItemGraphicEl(dataIndex, rect);
 
                     group.add(rect);
 
-                    // Animation
-                    if (enableAnimation) {
-                        var rectShape = rect.shape;
-                        var animateProperty = isHorizontal ? 'height' : 'width';
-                        var animateTarget = {};
-                        rectShape[animateProperty] = 0;
-                        animateTarget[animateProperty] = layout[animateProperty];
-                        api.initGraphicEl(rect, {
-                            shape: animateTarget
-                        });
-                    }
                 })
                 .update(function (newIndex, oldIndex) {
                     var rect = oldData.getItemGraphicEl(oldIndex);
@@ -81,6 +83,9 @@ define(function (require) {
                     if (!data.hasValue(newIndex)) {
                         group.remove(rect);
                         return;
+                    }
+                    if (!rect) {
+                        rect = createRect(newIndex, true);
                     }
 
                     var layout = data.getItemLayout(newIndex);
@@ -98,15 +103,17 @@ define(function (require) {
                 })
                 .remove(function (idx) {
                     var rect = oldData.getItemGraphicEl(idx);
-                    // Not show text when animating
-                    rect.style.text = '';
-                    api.updateGraphicEl(rect, {
-                        shape: {
-                            width: 0
-                        }
-                    }, function () {
-                        group.remove(rect);
-                    });
+                    if (rect) {
+                        // Not show text when animating
+                        rect.style.text = '';
+                        api.updateGraphicEl(rect, {
+                            shape: {
+                                width: 0
+                            }
+                        }, function () {
+                            group.remove(rect);
+                        });
+                    }
                 })
                 .execute();
 

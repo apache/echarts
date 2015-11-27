@@ -19,8 +19,9 @@ define(function (require) {
      * @inner
      */
     function assembleTransition(duration) {
-        var transitionText = 'left ' + duration + 's,'
-                            + 'top ' + duration + 's';
+        var transitionCurve = 'cubic-bezier(0.23, 1, 0.32, 1)';
+        var transitionText = 'left ' + duration + 's ' + transitionCurve + ','
+                            + 'top ' + duration + 's ' + transitionCurve;
         return zrUtil.map(vendors, function (vendorPrefix) {
             return vendorPrefix + 'transition:' + transitionText;
         }).join(';');
@@ -110,19 +111,44 @@ define(function (require) {
 
         this.el = el;
 
-        el.style.left = api.getWidth() / 2 + 'px';
-        el.style.top = api.getHeight() / 2 + 'px';
+        this._x = api.getWidth() / 2;
+        this._y = api.getHeight() / 2;
 
         container.appendChild(el);
 
         this._container = container;
 
         this._show = false;
+
+        /**
+         * @private
+         */
+        this._hideTimeout;
+
+        var self = this;
+        el.onmouseover = function () {
+            // clear the timeout in hideLater and keep showing tooltip
+            if (self.enterable) {
+                clearTimeout(self._hideTimeout);
+                self._show = true;
+            }
+            self._inContent = true;
+        };
+        el.onmouseout = function () {
+            if (self.enterable) {
+                if (self._show) {
+                    self.hideLater(self._hideDelay);
+                }
+            }
+            self._inContent = false;
+        };
     }
 
     TooltipContent.prototype = {
 
         constructor: TooltipContent,
+
+        enterable: true,
 
         /**
          * Update when tooltip is rendered
@@ -143,7 +169,9 @@ define(function (require) {
         show: function (tooltipModel) {
             clearTimeout(this._hideTimeout);
 
-            this.el.style.cssText = gCssText + assembleCssText(tooltipModel);
+            this.el.style.cssText = gCssText + assembleCssText(tooltipModel)
+                // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
+                + ';left:' + this._x + 'px;top:' + this._y + 'px;';
 
             this._show = true;
         },
@@ -158,21 +186,29 @@ define(function (require) {
             var style = this.el.style;
             style.left = x + 'px';
             style.top = y + 'px';
+
+            this._x = x;
+            this._y = y;
         },
 
         hide: function () {
-            if (this._show) {
-                this.el.style.display = 'none';
-            }
-
+            this.el.style.display = 'none';
             this._show = false;
         },
 
         // showLater: function ()
 
         hideLater: function (time) {
-            if (time) {
-                this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time);
+            if (this._show && !(this._inContent && this.enterable)) {
+                if (time) {
+                    // Set show false to avoid invoke hideLater mutiple times
+                    this._hideDelay = time;
+                    this._show = false;
+                    this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time);
+                }
+                else {
+                    this.hide();
+                }
             }
         },
 

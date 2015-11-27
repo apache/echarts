@@ -123,7 +123,8 @@ define(function (require) {
             zr.on('mousemove', this._mouseMove, this);
             zr.on('mouseout', this._hide, this);
 
-            this._tooltipContent = new TooltipContent(api.getDom(), api);
+            var tooltipContent = new TooltipContent(api.getDom(), api);
+            this._tooltipContent = tooltipContent;
         },
 
         render: function (tooltipModel, ecModel, api) {
@@ -165,7 +166,9 @@ define(function (require) {
                 // seriesIndex
             };
 
-            this._tooltipContent.update();
+            var tooltipContent = this._tooltipContent;
+            tooltipContent.update();
+            tooltipContent.enterable = tooltipModel.get('enterbale');
 
             /**
              * @type {Object.<string, Array>}
@@ -234,7 +237,7 @@ define(function (require) {
         _mouseMove: function (e) {
             var el = e.target;
             var tooltipModel = this._tooltipModel;
-            var trigger = tooltipModel.get('trigger');
+            var globalTrigger = tooltipModel.get('trigger');
             var ecModel = this._ecModel;
 
             if (!tooltipModel) {
@@ -250,7 +253,7 @@ define(function (require) {
                 var dataIndex = el.dataIndex;
                 var itemModel = hostModel.getData().getItemModel(dataIndex);
                 // Series or single data may use item trigger when global is axis trigger
-                if ((itemModel.get('tooltip.trigger') || trigger) === 'axis') {
+                if ((itemModel.get('tooltip.trigger') || globalTrigger) === 'axis') {
                     this._showAxisTooltip(tooltipModel, ecModel, e);
                 }
                 else {
@@ -262,7 +265,7 @@ define(function (require) {
                 }
             }
             else {
-                if (trigger === 'item') {
+                if (globalTrigger === 'item') {
                     this._hide();
                 }
                 else {
@@ -282,7 +285,6 @@ define(function (require) {
         _showAxisTooltip: function (tooltipModel, ecModel, e) {
             var axisPointerModel = tooltipModel.getModel('axisPointer');
             var axisPointerType = axisPointerModel.get('type');
-            var api = this._api;
 
             if (axisPointerType === 'cross') {
                 var el = e.target;
@@ -646,25 +648,28 @@ define(function (require) {
             var val = value[baseAxis.dim === 'x' ? 0 : 1];
             var dataIndex = data.indexOfNearest(baseAxis.dim, val);
 
+            // FIXME Not here
             var lastHover = this._lastHover;
-            if (lastHover.seriesIndex != null) {
+            if (lastHover.seriesIndex != null && !contentNotChange) {
                 this._api.dispatch({
                     type: 'downplay',
                     seriesIndex: lastHover.seriesIndex,
                     dataIndex: lastHover.dataIndex
                 });
             }
-            var seriesIndices = zrUtil.map(seriesList, function (series) {
-                return series.seriesIndex;
-            });
             // Dispatch highlight action
-            this._api.dispatch({
-                type: 'highlight',
-                seriesIndex: seriesIndices,
-                dataIndex: dataIndex
-            });
-            lastHover.seriesIndex = seriesIndices;
-            lastHover.dataIndex = dataIndex;
+            if (!contentNotChange) {
+                var seriesIndices = zrUtil.map(seriesList, function (series) {
+                    return series.seriesIndex;
+                });
+                this._api.dispatch({
+                    type: 'highlight',
+                    seriesIndex: seriesIndices,
+                    dataIndex: dataIndex
+                });
+                lastHover.seriesIndex = seriesIndices;
+                lastHover.dataIndex = dataIndex;
+            }
 
             if (baseAxis && rootTooltipModel.get('showContent')) {
 
@@ -677,9 +682,9 @@ define(function (require) {
                 });
                 // If only one series
                 // FIXME
-                if (paramsList.length === 1) {
-                    paramsList = paramsList[0];
-                }
+                // if (paramsList.length === 1) {
+                //     paramsList = paramsList[0];
+                // }
 
                 tooltipContent.show(rootTooltipModel);
 

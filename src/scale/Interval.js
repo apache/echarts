@@ -21,6 +21,21 @@ define(function (require) {
 
         _interval: 0,
 
+        setExtent: function (start, end) {
+            var thisExtent = this._extent;
+            if (!isNaN(start)) {
+                thisExtent[0] = start;
+            }
+            if (!isNaN(end)) {
+                thisExtent[1] = end;
+            }
+            if (thisExtent[0] === thisExtent[1]) {
+                // Expand extent
+                var expandSize = thisExtent[0] / 2 || 1;
+                thisExtent[0] -= expandSize;
+                thisExtent[1] += expandSize;
+            }
+        },
         /**
          * Get interval
          */
@@ -29,6 +44,13 @@ define(function (require) {
                 this.niceTicks();
             }
             return this._interval;
+        },
+
+        /**
+         * Set interval
+         */
+        setInterval: function (interval) {
+            this._interval = interval;
         },
 
         /**
@@ -84,7 +106,7 @@ define(function (require) {
         /**
          * Update interval and extent of intervals for nice ticks
          * Algorithm from d3.js
-         * @param  {number} [approxTickNum = 10] Given approx tick number
+         * @param {number} [approxTickNum = 10] Given approx tick number
          */
         niceTicks: function (approxTickNum) {
             approxTickNum = approxTickNum || 10;
@@ -128,7 +150,7 @@ define(function (require) {
          * @param {boolean} [fixMax=false]
          */
         niceExtent: function (approxTickNum, fixMin, fixMax) {
-            this.niceTicks(approxTickNum);
+            this.niceTicks(approxTickNum, fixMin, fixMax);
 
             var extent = this._extent;
             var interval = this._interval;

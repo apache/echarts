@@ -29,6 +29,13 @@ define(function (require) {
     var PROCESSOR_STAGES = ['transform', 'filter', 'statistic'];
 
     /**
+     * @module echarts~MessageCenter
+     */
+    function MessageCenter() {
+        Eventful.call(this);
+    }
+    zrUtil.mixin(MessageCenter, Eventful);
+    /**
      * @module echarts~ECharts
      */
     function ECharts (dom, theme, opts) {
@@ -104,6 +111,12 @@ define(function (require) {
         this._coordinateSystem = new CoordinateSystemManager();
 
         Eventful.call(this);
+
+        /**
+         * @type {module:echarts~MessageCenter}
+         * @private
+         */
+        this._messageCenter = new MessageCenter();
 
         // Init mouse events
         this._initEvents();
@@ -313,7 +326,7 @@ define(function (require) {
      */
     echartsProto.resize = function () {
         this._zr.resize();
-        this._update();
+        updateMethods.update.call(this);
     };
 
     /**
@@ -346,7 +359,7 @@ define(function (require) {
                 // Convert type to eventType
                 var eventObj = zrUtil.extend({}, payload);
                 eventObj.type = actionInfo.event || eventObj.type;
-                this.trigger(eventObj.type, eventObj);
+                this._messageCenter.trigger(eventObj.type, eventObj);
             }
         }
     };
@@ -553,6 +566,12 @@ define(function (require) {
                 }
             }, this);
         }, this);
+
+        zrUtil.each(eventActionMap, function (actionType, eventType) {
+            this._messageCenter.on(eventType, function (event) {
+                this.trigger(eventType, event);
+            }, this);
+        }, this);
     };
 
     /**
@@ -674,7 +693,8 @@ define(function (require) {
 
         // Connecting
         zrUtil.each(eventActionMap, function (actionType, eventType) {
-            chart.on(eventType, function (event) {
+            // FIXME
+            chart._messageCenter.on(eventType, function (event) {
                 if (connectedGroups[chart.group]) {
                     chart.__connectedActionDispatching = true;
                     for (var id in instances) {

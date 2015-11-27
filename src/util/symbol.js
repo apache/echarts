@@ -71,7 +71,7 @@ define(function(require) {
         beforeBrush: function () {
             var style = this.style;
             if (style.textPosition === 'inside') {
-                style.textPosition = ['50%', '40%'];
+                style.textPosition = ['50%', '35%'];
                 style.textAlign = 'center';
                 style.textBaseline = 'middle';
             }
@@ -172,104 +172,120 @@ define(function(require) {
 
     var symbolShapeMakers = {
 
-        line: function (x, y, w, h) {
+        line: function (x, y, w, h, shape) {
             // FIXME
-            return {
-                x1: x,
-                y1: y + h / 2,
-                x2: x + w,
-                y2: y + h / 2
-            };
+            shape.x1 = x;
+            shape.y1 = y + h / 2;
+            shape.x2 = x + w;
+            shape.y2 = y + h / 2;
         },
 
-        rect: function (x, y, w, h) {
-            return {
-                x: x,
-                y: y,
-                width: w,
-                height: h
-            };
+        rect: function (x, y, w, h, shape) {
+            shape.x = x;
+            shape.y = y;
+            shape.width = w;
+            shape.height = h;
         },
 
-        roundRect: function (x, y, w, h, r) {
-            return {
-                x: x,
-                y: y,
-                width: w,
-                height: h,
-                r: r || Math.min(w, h) / 4
-            };
+        roundRect: function (x, y, w, h, shape) {
+            shape.x = x;
+            shape.y = y;
+            shape.width = w;
+            shape.height = h;
+            shape.r = Math.min(w, h) / 4;
         },
 
-        square: function (x, y, size) {
-            return {
-                x: x,
-                y: y,
-                width: size / 2,
-                height: size / 2
-            };
-        },
-
-        circle: function (x, y, w, h) {
-            // Put circle in the center of square
+        square: function (x, y, w, h, shape) {
             var size = Math.min(w, h);
-            return {
-                cx: x + w / 2,
-                cy: y + h / 2,
-                r: size / 2
-            };
+            shape.x = x;
+            shape.y = y;
+            shape.width = size;
+            shape.height = size;
         },
 
-        diamond: function (x, y, w, h) {
-            return {
-                cx: x + w / 2,
-                cy: y + h / 2,
-                width: w,
-                height: h
-            };
+        circle: function (x, y, w, h, shape) {
+            // Put circle in the center of square
+            shape.cx = x + w / 2;
+            shape.cy = y + h / 2;
+            shape.r = Math.min(w, h) / 2;
         },
 
-        pin: function (x, y, w, h) {
-            return {
-                x: x + w / 2,
-                // FIXME Why not y + h ?
-                y: y + h / 2,
-                width: w,
-                height: h
-            };
+        diamond: function (x, y, w, h, shape) {
+            shape.cx = x + w / 2;
+            shape.cy = y + h / 2;
+            shape.width = w;
+            shape.height = h;
         },
 
-        arrow: function (x, y, w, h) {
-            return {
-                x: x + w / 2,
-                y: y + h / 2,
-                width: w,
-                height: h
-            };
+        pin: function (x, y, w, h, shape) {
+            shape.x = x + w / 2;
+            shape.y = y + h / 2;
+            shape.width = w;
+            shape.height = h;
         },
 
-        triangle: function (x, y, w, h) {
-            return {
-                cx: x + w / 2,
-                cy: y + h / 2,
-                width: w,
-                height: h
-            };
+        arrow: function (x, y, w, h, shape) {
+            shape.x = x + w / 2;
+            shape.y = y + h / 2;
+            shape.width = w;
+            shape.height = h;
+        },
+
+        triangle: function (x, y, w, h, shape) {
+            shape.cx = x + w / 2;
+            shape.cy = y + h / 2;
+            shape.width = w;
+            shape.height = h;
         }
     };
 
+    var symbolBuildProxies = {};
+    for (var name in  symbolCtors) {
+        symbolBuildProxies[name] = new symbolCtors[name]();
+    }
+
+    var Symbol = graphic.extendShape({
+
+        type: 'symbol',
+
+        shape: {
+            symbolType: '',
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+        },
+
+        buildPath: function (ctx, shape) {
+            var proxySymbol = symbolBuildProxies[shape.symbolType];
+            if (proxySymbol) {
+                symbolShapeMakers[shape.symbolType](
+                    shape.x, shape.y, shape.width, shape.height, proxySymbol.shape
+                );
+                proxySymbol.buildPath(ctx, proxySymbol.shape);
+            }
+        }
+    });
+
     // Provide setColor helper method to avoid determine if set the fill or stroke outside
     var symbolPathSetColor = function (color) {
-        var symbolStyle = this.style;
-        if (this.__isEmptyBrush) {
-            symbolStyle.stroke = color;
+        if (this.type !== 'image') {
+            var symbolStyle = this.style;
+            var symbolShape = this.shape;
+            if (symbolShape.symbolType === 'line') {
+                symbolStyle.stroke = color;
+            }
+            else if (this.__isEmptyBrush) {
+                symbolStyle.stroke = color;
+                symbolStyle.fill = '#fff';
+            }
+            else {
+                // FIXME 判断图形默认是填充还是描边，使用 onlyStroke ?
+                symbolStyle.fill && (symbolStyle.fill = color);
+                symbolStyle.stroke && (symbolStyle.stroke = color);
+            }
+            this.dirty();
         }
-        else {
-            // FIXME 判断图形默认是填充还是描边，使用 onlyStroke ?
-            symbolStyle.fill && (symbolStyle.fill = color);
-            symbolStyle.stroke && (symbolStyle.stroke = color);
-        }
-        this.dirty();
     };
 
     var symbolUtil = {
@@ -304,19 +320,18 @@ define(function(require) {
                 symbolPath = graphic.makePath(symbolType.slice(7), {}, new BoundingRect(x, y, w, h));
             }
             else {
+                // Default rect
                 if (!symbolShapeMakers[symbolType]) {
                     symbolType = 'rect';
                 }
-                symbolPath = new symbolCtors[symbolType]({
-                    shape: symbolShapeMakers[symbolType](x, y, w, h)
-                });
-            }
-
-            var symbolStyle = symbolPath.style;
-            if (isEmpty) {
-                symbolStyle.set({
-                    fill: '#fff',
-                    lineWidth: 2
+                symbolPath = new Symbol({
+                    shape: {
+                        symbolType: symbolType,
+                        x: x,
+                        y: y,
+                        width: w,
+                        height: h
+                    }
                 });
             }
 
@@ -327,39 +342,6 @@ define(function(require) {
             symbolPath.setColor(color);
 
             return symbolPath;
-        },
-
-        /**
-         * Get symbol shape object by given x, y, w, h
-         * @param {string} symbolType
-         * @param {number} x
-         * @param {number} y
-         * @param {number} w
-         * @param {number} h
-         * @return {Object}
-         */
-        getSymbolShape: function (symbolType, x, y, w, h) {
-            if (symbolType.indexOf('empty') === 0) {
-                symbolType = symbolType.substr(5, 1).toLowerCase() + symbolType.substr(6);
-            }
-            if (symbolType.indexOf('image://') === 0) {
-                return {
-                    style: {
-                        x: x,
-                        y: y,
-                        width: w,
-                        height: h
-                    }
-                };
-            }
-            else if (symbolType.indexOf('path://') !== 0) {
-                if (!symbolShapeMakers[symbolType]) {
-                    symbolType = 'rect';
-                }
-                return {
-                    shape: symbolShapeMakers[symbolType](x, y, w, h)
-                };
-            }
         }
     };
 

@@ -12,4 +12,6 @@ define(function (require) {
     echarts.registerLayout(zrUtil.curry(
         require('../layout/points'), 'radar'
     ));
+
+    echarts.registerPreprocessor(require('./radar/backwardCompat'));
 });

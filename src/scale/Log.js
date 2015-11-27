@@ -56,7 +56,7 @@ define(function (require) {
         setExtent: function (start, end) {
             start = mathLog(start) / mathLog(LOG_BASE);
             end = mathLog(end) / mathLog(LOG_BASE);
-            scaleProto.setExtent.call(this, start, end);
+            intervalScaleProto.setExtent.call(this, start, end);
         },
 
         /**

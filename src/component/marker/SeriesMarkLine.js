@@ -37,6 +37,10 @@ define(function (require) {
         return symbolPath;
     }
 
+    function isSymbolArrow(symbol) {
+        return symbol.type === 'symbol' && symbol.shape.symbolType === 'arrow';
+    }
+
     function updateSymbolBeforeLineUpdate () {
         var line = this;
         var symbolFrom = line.__symbolFrom;
@@ -53,10 +57,10 @@ define(function (require) {
         symbolTo.attr('position', toPos);
         // Rotate the arrow
         // FIXME Hard coded ?
-        if (symbolTo.type === 'arrow') {
+        if (isSymbolArrow(symbolTo)) {
             symbolTo.attr('rotation', tangentRotation(fromPos, toPos));
         }
-        if (symbolFrom.type === 'arrow') {
+        if (isSymbolArrow(symbolFrom)) {
             symbolFrom.attr('rotation', tangentRotation(toPos, fromPos));
         }
         label.attr('position', toPos);
