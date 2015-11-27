@@ -124,9 +124,6 @@ define(function (require) {
 
             // Add to new container.
             container.add(this.group);
-
-            // Ensure transform matrix built.
-            container.updateTransformFromRoot();
         },
 
         disable: function () {
@@ -168,9 +165,6 @@ define(function (require) {
         var x = e.offsetX;
         var y = e.offsetY;
         var container = getContainer(this);
-
-        // Ensure transform matrix built.
-        container.updateTransformFromRoot();
 
         if (isInContainer(x, y, container)) {
             this._dragging = true;

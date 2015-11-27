@@ -325,19 +325,13 @@ define(function(require) {
      * @param {module:zrender/mixin/Transformable} ancestor
      */
     graphic.getTransform = function (target, ancestor) {
-        var node = target;
-        var nodeList = [];
-
-        while (node && node !== ancestor) {
-            nodeList.push(node);
-            node = node.parent;
-        }
-
         var mat = matrix.identity([]);
 
-        for (var i = nodeList.length - 1; i >= 0; i--) {
-            mat = matrix.mul(mat, mat, nodeList[i].getLocalTransform());
+        while (target && target !== ancestor) {
+            matrix.mul(mat, target.getLocalTransform(), mat);
+            target = target.parent;
         }
+
         return mat;
     };
 
