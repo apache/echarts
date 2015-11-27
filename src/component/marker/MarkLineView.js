@@ -179,7 +179,7 @@ define(function (require) {
                 ]);
             });
 
-            lineDraw.update(lineData, fromData, toData, mlModel, api);
+            lineDraw.updateData(lineData, fromData, toData, api);
 
             // Set host model for tooltip
             // FIXME

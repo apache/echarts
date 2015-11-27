@@ -37,6 +37,25 @@ define(function (require) {
         return symbolPath;
     }
 
+    function createLine(points) {
+        var line = new graphic[points[2] ? 'BezierCurve' : 'Line']({
+            name: 'line',
+            shape: {
+                x1: points[0][0],
+                y1: points[0][1],
+                x2: points[1][0],
+                y2: points[1][1]
+            }
+        });
+        if (points[2]) {
+            line.setShape({
+                cpx1: points[2][0],
+                cpy1: points[2][1]
+            });
+        }
+        return line;
+    }
+
     function isSymbolArrow(symbol) {
         return symbol.type === 'symbol' && symbol.shape.symbolType === 'arrow';
     }
@@ -47,9 +66,8 @@ define(function (require) {
         var symbolFrom = lineGroup.childOfName('fromSymbol');
         var symbolTo = lineGroup.childOfName('toSymbol');
         var label = lineGroup.childOfName('label');
-        var lineShape = line.shape;
-        var fromPos = [lineShape.x1, lineShape.y1];
-        var toPos = [lineShape.x2, lineShape.y2];
+        var fromPos = line.pointAt(0);
+        var toPos = line.pointAt(line.shape.percent);
 
         var d = vector.sub([], toPos, fromPos);
         vector.normalize(d, d);
@@ -109,23 +127,19 @@ define(function (require) {
      * @param {module:echarts/data/List} lineData
      * @param {module:echarts/data/List} [fromData]
      * @param {module:echarts/data/List} [toData]
-     * @param {module:echarts/model/Model} seriesModel
      * @param {module:echarts/ExtensionAPI} api
      */
-    lineDrawProto.update = function (
-        lineData, fromData, toData, seriesModel, api
-    ) {
+    lineDrawProto.updateData = function (lineData, fromData, toData, api) {
 
         var oldFromData = this._fromData;
         var oldToData = this._toData;
         var oldLineData = this._lineData;
         var group = this.group;
+        var seriesModel = lineData.hostModel;
 
         lineData.diff(oldLineData)
             .add(function (idx) {
                 var linePoints = lineData.getItemLayout(idx);
-                var p1 = linePoints[0];
-                var p2 = linePoints[1];
 
                 var itemModel = lineData.getItemModel(idx);
                 var labelModel = itemModel.getModel('label.normal');
@@ -133,16 +147,11 @@ define(function (require) {
 
                 var lineGroup = new graphic.Group();
 
-                var line = new graphic.Line({
-                    name: 'line',
-                    shape: {
-                        x1: p1[0], y1: p1[1],
-                        x2: p1[0], y2: p1[1]
-                    }
-                });
+                var line = createLine(linePoints);
+                line.shape.percent = 0;
                 api.initGraphicEl(line, {
                     shape: {
-                        x2: p2[0], y2: p2[1]
+                        percent: 1
                     }
                 });
 
@@ -187,15 +196,21 @@ define(function (require) {
                 var linePoints = lineData.getItemLayout(newIdx);
                 var p1 = linePoints[0];
                 var p2 = linePoints[1];
-
-                api.updateGraphicEl(line, {
+                var cp1 = linePoints[2];
+                var target = {
                     shape: {
                         x1: p1[0],
                         y1: p1[1],
                         x2: p2[0],
                         y2: p2[1]
                     }
-                });
+                };
+                if (cp1) {
+                    target.shape.cpx1 = cp1[0];
+                    target.shape.cpy1 = cp1[1];
+                }
+
+                api.updateGraphicEl(line, target);
 
                 // Symbol changed
                 if (fromData) {
@@ -223,7 +238,7 @@ define(function (require) {
                 group.add(lineGroup);
             })
             .remove(function (idx) {
-                group.remove(lineData.getItemGraphicEl(idx));
+                group.remove(oldLineData.getItemGraphicEl(idx));
             })
             .execute();
 

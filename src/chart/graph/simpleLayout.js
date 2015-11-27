@@ -28,17 +28,7 @@ define(function (require) {
                             (p1[1] + p2[1]) / 2 - inv * (p2[0] - p1[0]) * curveness
                         ];
                     }
-                    var shape = {
-                        x1: p1[0],
-                        y1: p1[1],
-                        x2: p2[0],
-                        y2: p2[1]
-                    };
-                    if (cp1) {
-                        shape.cpx1 = cp1[0];
-                        shape.cpy1 = cp1[1];
-                    }
-                    edge.setLayout(shape);
+                    edge.setLayout([p1, p2, cp1]);
                 });
 
             }
