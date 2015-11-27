@@ -19,9 +19,11 @@ define(function (require) {
             // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
             trigger: 'item',
 
-            // If the tooltip follow the mouse position
-            // TODO
-            // followMouse: true,
+            // 触发条件，支持 'click' | 'mousemove'
+            triggerOn: 'mousemove',
+
+            // 是否永远显示 content
+            // alwaysShowContent: false,
 
             // 位置 {Array} | {Function}
             // position: null

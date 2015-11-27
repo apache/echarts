@@ -70,7 +70,9 @@ define(function(require) {
             zrUtil.merge(option, this.getDefaultOption());
 
             // Default label emphasis `position` and `show`
-            modelUtil.defaultEmphasis(option.label);
+            modelUtil.defaultEmphasis(
+                option.label, ['position', 'show', 'textStyle', 'distance', 'formatter']
+            );
         },
 
         mergeOption: function (newSeriesOption, ecModel) {
