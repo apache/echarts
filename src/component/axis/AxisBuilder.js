@@ -36,6 +36,8 @@ define(function (require) {
      * @param {number} [opt.lableRotation] by degree, default get from axisModel.
      * @param {number} [opt.lableInterval] Default label interval when label
      *                                     interval from model is null or 'auto'.
+     * @param {number} [opt.strokeContainThreshold] Default label interval when label
+     * @param {number} [opt.silent=true]
      * @param {number} [opt.isCartesian=false]
      */
     var AxisBuilder = function (axisModel, opt) {
@@ -109,6 +111,7 @@ define(function (require) {
          * @private
          */
         axisLine: function () {
+            var opt = this.opt;
             var axisModel = this.axisModel;
 
             if (!axisModel.get('axisLine.show')) {
@@ -128,7 +131,8 @@ define(function (require) {
                     {lineCap: 'round'},
                     axisModel.getModel('axisLine.lineStyle').getLineStyle()
                 ),
-                silent: true,
+                strokeContainThreshold: opt.strokeContainThreshold,
+                silent: !!opt.silent,
                 z2: 1
             }));
         },

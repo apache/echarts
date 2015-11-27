@@ -231,10 +231,27 @@ define(function(require) {
         },
 
         /**
+         * Get axis
+         */
+        getAxis: function (dim) {
+            return this._axesMap[dim];
+        },
+
+        /**
          * Get axis layout.
          */
         getAxisLayout: function (dim) {
             return zrUtil.clone(this._axesLayout[dim], true);
+        },
+
+        /**
+         * Get dimension names.
+         * @return {Array.<string>}
+         */
+        getDimensionNames: function () {
+            return zrUtil.map(this.dimensions, function (dim) {
+                return dim.name;
+            });
         }
 
     };

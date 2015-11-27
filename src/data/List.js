@@ -911,7 +911,7 @@ define(function (require) {
 
         if (zrUtil.isArray(el)) {
             zrUtil.each(el, function (singleEl) {
-                addIndexToGraphicEl(singleEl, idx, hostModel);
+                singleEl && addIndexToGraphicEl(singleEl, idx, hostModel);
             });
         }
         else {

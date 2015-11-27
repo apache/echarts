@@ -3,6 +3,7 @@ define(function(require) {
     var ComponentModel = require('../../model/Component');
     var defaultOption = require('../axisDefault');
     var zrUtil = require('zrender/core/util');
+    var makeStyleMapper = require('../../model/mixin/makeStyleMapper');
 
     function mergeDefault(axisOption, ecModel) {
         var axisType = axisOption.type + 'Axis';
@@ -29,6 +30,13 @@ define(function(require) {
 
             parallelIndex: null,
 
+            areaSelectStyle: {
+                width: 20,
+                borderWidth: 2,
+                borderColor: 'rgba(160,197,232,0.3)',
+                color: 'rgba(160,197,232,0.3)'
+            },
+
             z: 10
         },
 
@@ -48,18 +56,17 @@ define(function(require) {
         },
 
         /**
-         * @public
-         * @param {boolean} needs Whether axis needs cross zero.
+         * @return {Object}
          */
-        setNeedsCrossZero: function (needs) {
-            this.option.scale = !needs;
-        },
-
-        /**
-         * @public
-         */
-        setParallelIndex: function (parallelIndex) {
-            this.option.parallelIndex = parallelIndex;
+        getAreaSelectStyle: function () {
+            return makeStyleMapper(
+                [
+                    ['fill', 'color'],
+                    ['lineWidth', 'borderWidth'],
+                    ['stroke', 'borderColor'],
+                    ['width', 'width']
+                ]
+            ).call(this.getModel('areaSelectStyle'));
         }
 
     });
