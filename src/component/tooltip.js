@@ -118,11 +118,6 @@ define(function (require) {
         _axisPointers: {},
 
         init: function (ecModel, api) {
-            var zr = api.getZr();
-
-            zr.on('mousemove', this._mouseMove, this);
-            zr.on('mouseout', this._hide, this);
-
             var tooltipContent = new TooltipContent(api.getDom(), api);
             this._tooltipContent = tooltipContent;
         },
@@ -170,6 +165,8 @@ define(function (require) {
             tooltipContent.update();
             tooltipContent.enterable = tooltipModel.get('enterbale');
 
+            this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
+
             /**
              * @type {Object.<string, Array>}
              */
@@ -180,6 +177,19 @@ define(function (require) {
             var crossText = this._crossText;
             if (crossText) {
                 this.group.add(crossText);
+            }
+
+            var zr = this._api.getZr();
+            var tryShow = this._tryShow;
+            zr.off('click', tryShow);
+            zr.off('mousemove', tryShow);
+            zr.off('mouseout', this._hide);
+            if (tooltipModel.get('triggerOn') === 'click') {
+                zr.on('click', tryShow, this);
+            }
+            else {
+                zr.on('mousemove', tryShow, this);
+                zr.on('mouseout', this._hide, this);
             }
         },
 
@@ -234,7 +244,7 @@ define(function (require) {
          * @param {Object} e
          * @private
          */
-        _mouseMove: function (e) {
+        _tryShow: function (e) {
             var el = e.target;
             var tooltipModel = this._tooltipModel;
             var globalTrigger = tooltipModel.get('trigger');
@@ -889,12 +899,15 @@ define(function (require) {
 
         _hide: function () {
             this._hideAxisPointer();
-            this._tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
+            if (!this._alwaysShowContent) {
+                this._tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
+            }
         },
 
         dispose: function (api) {
             var zr = api.getZr();
-            zr.off('mousemove', this._mouseMove);
+            zr.off('click', this._tryShow);
+            zr.off('mousemove', this._tryShow);
             zr.off('mouseout', this._hide);
         }
     });
