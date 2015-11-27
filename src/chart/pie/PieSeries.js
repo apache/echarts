@@ -47,7 +47,7 @@ define(function(require) {
             var data = this._data;
             var params = seriesModelProto.getDataParams.call(this, dataIndex);
             // FIXME toFixed?
-            params.percent = (data.get('value', dataIndex) / data.getSum('value') * 100).toFixed(2);
+            params.percent = +(data.get('value', dataIndex) / data.getSum('value') * 100).toFixed(2);
 
             params.$vars.push('percent');
             return params;
