@@ -33,8 +33,8 @@ define(function(require) {
             areaSelectStyle: {
                 width: 20,
                 borderWidth: 2,
-                borderColor: 'rgba(160,197,232,0.3)',
-                color: 'rgba(160,197,232,0.3)'
+                borderColor: 'rgba(160,197,232,0.4)',
+                color: 'rgba(160,197,232,0.4)'
             },
 
             z: 10

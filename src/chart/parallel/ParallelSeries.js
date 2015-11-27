@@ -33,6 +33,7 @@ define(function(require) {
             parallelIndex: 0,
 
             inactiveOpacity: 0.2,
+            activeOpacity: 1,
 
             label: {
                 normal: {

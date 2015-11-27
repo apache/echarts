@@ -15,11 +15,18 @@ define(function (require) {
             var color = itemStyleModel.get('color')
                 || globalColors[seriesModel.seriesIndex % globalColors.length];
             var inactiveOpacity = seriesModel.get('inactiveOpacity');
+            var activeOpacity = seriesModel.get('activeOpacity');
 
             var coordSys = seriesModel.coordinateSystem;
             var dimensions = coordSys.dimensions;
             var dimensionNames = coordSys.getDimensionNames();
             var data = seriesModel.getData();
+
+            var opacityMap = {
+                all: null,
+                active: activeOpacity,
+                inactive: inactiveOpacity
+            };
 
             var hasActiveSet = false;
             for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
@@ -30,24 +37,24 @@ define(function (require) {
 
             for (var i = 0, len = data.count(); i < len; i++) {
                 var values = data.getValues(dimensionNames, i);
-                var isActive;
+                var activeState;
 
                 if (!hasActiveSet) {
-                    isActive = true;
+                    activeState = 'all';
                 }
                 else {
-                    isActive = false;
+                    activeState = 'inactive';
                     for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
                         var dimName = dimensions[j].name;
 
                         if (coordSys.getAxis(dimName).isActive(values[j], j)) {
-                            isActive = true;
+                            activeState = 'active';
                             break;
                         }
                     }
                 }
 
-                data.setItemVisual(i, 'opacity', isActive ? 1 : inactiveOpacity);
+                data.setItemVisual(i, 'opacity', opacityMap[activeState]);
             }
 
             data.setVisual('color', color);

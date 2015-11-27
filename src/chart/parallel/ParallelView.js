@@ -155,7 +155,8 @@ define(function (require) {
                 return;
             }
             el.setStyle(lineStyle);
-            el.setStyle('opacity', data.getItemVisual(dataIndex, 'opacity', true));
+            var opacity = data.getItemVisual(dataIndex, 'opacity', true);
+            opacity != null && el.setStyle('opacity', opacity);
         });
     }
 

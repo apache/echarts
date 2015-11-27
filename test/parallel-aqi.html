@@ -34,7 +34,7 @@
                 'zrender/core/util',
                 'echarts',
                 'echarts/chart/parallel',
-                // 'echarts/component/legend',
+                'echarts/component/legend',
                 'echarts/component/parallel',
             ], function (dataBJ, dataGZ, dataSH, zrUtil, echarts) {
 
@@ -43,9 +43,9 @@
                 });
 
 
-                var itemStyle = {
+                var lineStyle = {
                     normal: {
-                        opacity: 0.8,
+                        opacity: 0.5,
                         shadowBlur: 10,
                         shadowOffsetX: 0,
                         shadowOffsetY: 0,
@@ -58,11 +58,12 @@
                         '#dd4444', '#fec42c', '#80F1BE'
                     ],
                     legend: {
-                        y: 'top',
+                        y2: 30,
                         data: ['北京', '上海', '广州'],
+                        itemGap: 20,
                         textStyle: {
                             color: '#fff',
-                            fontSize: 20
+                            fontSize: 18
                         }
                     },
                     tooltip: {
@@ -94,6 +95,7 @@
                         {dim: 'dim6', name: schema[6].text}
                     ],
                     parallel: {
+                        y2: 100,
                         parallelAxisDefault: {
                             type: 'value',
                             name: 'AQI指数',
@@ -127,19 +129,19 @@
                         {
                             name: '北京',
                             type: 'parallel',
-                            itemStyle: itemStyle,
+                            lineStyle: lineStyle,
                             data: dataBJ
                         },
                         {
                             name: '上海',
                             type: 'parallel',
-                            itemStyle: itemStyle,
+                            lineStyle: lineStyle,
                             data: dataSH
                         },
                         {
                             name: '广州',
                             type: 'parallel',
-                            itemStyle: itemStyle,
+                            lineStyle: lineStyle,
                             data: dataGZ
                         }
                     ]
