@@ -97,6 +97,8 @@ define(function (require) {
     // Update common properties
     var normalStyleAccessPath = ['itemStyle', 'normal'];
     var emphasisStyleAccessPath = ['itemStyle', 'emphasis'];
+    var normalLabelAccessPath = ['label', 'normal'];
+    var emphasisLabelAccessPath = ['label', 'emphasis'];
 
     symbolProto._updateCommon = function (data, idx) {
         var symbolPath = this.childAt(0);
@@ -118,8 +120,8 @@ define(function (require) {
             normalItemStyleModel.getItemStyle(['color'])
         );
 
-        var labelModel = itemModel.getModel('label.normal');
-        var hoverLabelModel = itemModel.getModel('label.emphasis');
+        var labelModel = itemModel.getModel(normalLabelAccessPath);
+        var hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
         var lastDim = data.dimensions[data.dimensions.length - 1];
         var labelText = seriesModel.getFormattedLabel(idx, 'normal')
                     || data.get(lastDim, idx);
@@ -144,21 +146,21 @@ define(function (require) {
 
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
-        function onEmphasis() {
-            var ratio = size[1] / size[0];
-            this.animateTo({
-                scale: [
-                    Math.max(size[0] * 1.1, size[0] + 6),
-                    Math.max(size[1] * 1.1, size[1] + 6 * ratio)
-                ]
-            }, 400, 'elasticOut');
-        }
-        function onNormal() {
-            this.animateTo({
-                scale: size
-            }, 400, 'elasticOut');
-        }
         if (itemModel.getShallow('hoverAnimation')) {
+            var onEmphasis = function() {
+                var ratio = size[1] / size[0];
+                this.animateTo({
+                    scale: [
+                        Math.max(size[0] * 1.1, size[0] + 6),
+                        Math.max(size[1] * 1.1, size[1] + 6 * ratio)
+                    ]
+                }, 400, 'elasticOut');
+            };
+            var onNormal = function() {
+                this.animateTo({
+                    scale: size
+                }, 400, 'elasticOut');
+            };
             symbolPath.on('mouseover', onEmphasis)
                 .on('mouseout', onNormal)
                 .on('emphasis', onEmphasis)

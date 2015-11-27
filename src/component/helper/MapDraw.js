@@ -175,13 +175,14 @@ define(function (require) {
                  ) {
                     var text = new graphic.Text({
                         style: {
-                            text: region.name,
+                            text: showLabel ? region.name : '',
                             fill: textStyleModel.get('color'),
                             textFont: textStyleModel.getFont(),
                             textAlign: 'center',
                             textBaseline: 'middle'
                         },
                         hoverStyle: {
+                            text: hoverShowLabel ? region.name : '',
                             fill: hoverTextStyleModel.get('color'),
                             textFont: hoverTextStyleModel.getFont()
                         },
@@ -190,17 +191,6 @@ define(function (require) {
                         z2: 10,
                         silent: true
                     });
-                    var emphasisLabel = function() {
-                        text.attr('ignore', !hoverShowLabel);
-                    };
-                    var normalLabel = function() {
-                        text.attr('ignore', !showLabel);
-                    };
-                    regionGroup.on('mouseover', emphasisLabel)
-                        .on('mouseout', normalLabel)
-                        .on('emphasis', emphasisLabel)
-                        .on('normal', normalLabel);
-                    text.ignore = !showLabel;
 
                     regionGroup.add(text);
                 }
