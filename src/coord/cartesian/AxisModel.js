@@ -3,8 +3,8 @@ define(function(require) {
     'use strict';
 
     var ComponentModel = require('../../model/Component');
-    var defaultOption = require('../axisDefault');
     var zrUtil = require('zrender/core/util');
+    var axisModelCreator = require('../axisModelCreator');
 
     var AxisModel = ComponentModel.extend({
 
@@ -31,32 +31,10 @@ define(function(require) {
 
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
 
-    function extendAxis(axisDim) {
-        // FIXME axisType is fixed ?
-        zrUtil.each(['value', 'category', 'time', 'log'], function (axisType) {
-            AxisModel.extend({
-                type: axisDim + 'Axis.' + axisType,
-                mergeDefaultAndTheme: function (option, ecModel) {
-                    var themeModel = ecModel.getTheme();
-                    zrUtil.merge(option, themeModel.get(axisType + 'Axis'));
-                    zrUtil.merge(option, this.getDefaultOption());
+    var extraOption = {gridIndex: 0};
 
-                    option.type = getAxisType(axisDim, option);
-                },
-                defaultOption: zrUtil.extend(
-                    defaultOption[axisType + 'Axis'],
-                    {
-                        gridIndex: 0
-                    }
-                )
-            });
-        });
-        // Defaulter
-        ComponentModel.registerSubTypeDefaulter(axisDim + 'Axis', zrUtil.curry(getAxisType, axisDim));
-    }
-
-    extendAxis('x');
-    extendAxis('y');
+    axisModelCreator('x', AxisModel, getAxisType, extraOption);
+    axisModelCreator('y', AxisModel, getAxisType, extraOption);
 
     return AxisModel;
 });

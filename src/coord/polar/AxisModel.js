@@ -2,9 +2,9 @@ define(function(require) {
 
     'use strict';
 
-    var axisDefault = require('../axisDefault');
     var zrUtil = require('zrender/core/util');
     var ComponentModel = require('../../model/Component');
+    var axisModelCreator = require('../axisModelCreator');
 
     var PolarAxisModel = ComponentModel.extend({
         type: 'polarAxis',
@@ -18,6 +18,8 @@ define(function(require) {
 
     var polarAxisDefaultExtendedOption = {
         angle: {
+            polarIndex: 0,
+
             startAngle: 90,
 
             clockwise: true,
@@ -29,6 +31,8 @@ define(function(require) {
             }
         },
         radius: {
+            polarIndex: 0,
+
             splitNumber: 5
         }
     };
@@ -37,32 +41,7 @@ define(function(require) {
         return option.type || (axisDim === 'angle' ? 'category' : 'value');
     }
 
-    function extendAxis(axisDim) {
-        // FIXME axisType is fixed ?
-        zrUtil.each(['value', 'category', 'time', 'log'], function (axisType) {
-            PolarAxisModel.extend({
-                type: axisDim + 'Axis.' + axisType,
-                mergeDefaultAndTheme: function (option, ecModel) {
-                    var themeModel = ecModel.getTheme();
-                    zrUtil.merge(option, themeModel.get(axisType + 'Axis'));
-                    zrUtil.merge(option, this.getDefaultOption());
+    axisModelCreator('angle', PolarAxisModel, getAxisType, polarAxisDefaultExtendedOption.angle);
+    axisModelCreator('radius', PolarAxisModel, getAxisType, polarAxisDefaultExtendedOption.radius);
 
-                    option.type = getAxisType(axisDim, option);
-                },
-                defaultOption: zrUtil.merge(
-                    axisDefault[axisType + 'Axis'],
-                    zrUtil.extend(
-                        {polarIndex: 0},
-                        polarAxisDefaultExtendedOption[axisDim]
-                    ),
-                    true
-                )
-            });
-        });
-        // Defaulter
-        ComponentModel.registerSubTypeDefaulter(axisDim + 'Axis', zrUtil.curry(getAxisType, axisDim));
-    }
-
-    extendAxis('angle');
-    extendAxis('radius');
 });
