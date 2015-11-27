@@ -155,17 +155,19 @@ define(function(require) {
      *         }
      *     }
      * @param {Object} opt
-     * @param {Array.<string>} [subOpts=['position', 'show']]
+     * @param {Array.<string>} subOpts
      */
      modelUtil.defaultEmphasis = function (opt, subOpts) {
         if (opt) {
             var emphasisOpt = opt.emphasis = opt.emphasis || {};
             var normalOpt = opt.normal = opt.normal || {};
 
-            subOpts = subOpts || ['position', 'show', 'textStyle'];
             // Default emphasis option from normal
             zrUtil.each(subOpts, function (subOptName) {
-                emphasisOpt[subOptName] = zrUtil.retrieve(emphasisOpt[subOptName], normalOpt[subOptName]);
+                var val = zrUtil.retrieve(emphasisOpt[subOptName], normalOpt[subOptName]);
+                if (val != null) {
+                    emphasisOpt[subOptName] = val;
+                }
             });
         }
     };
