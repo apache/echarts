@@ -155,7 +155,9 @@ define(function(require) {
             var rawValue = data.getRawValue(dataIndex);
             var name = data.getName(dataIndex, true);
 
-            var itemOpt = this.option.data[rawDataIndex];
+            var option = this.option;
+            // Data may not exists in the option given by user
+            var itemOpt = option.data && option.data[rawDataIndex];
 
             return {
                 seriesIndex: seriesIndex,
