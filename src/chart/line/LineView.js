@@ -157,7 +157,7 @@ define(function(require) {
                 }
 
                 // Always update, or it is wrong in the case turning on legend because points is not changed
-                symbolDraw.updateData(data, api, isSymbolIgnore);
+                symbolDraw.updateData(data, isSymbolIgnore);
 
                 // Stop symbol animation and sync with line points
                 // FIXME performance?
@@ -360,6 +360,7 @@ define(function(require) {
         _updateAnimation: function (data, stackedOnPoints, coordSys, api) {
             var polyline = this._polyline;
             var polygon = this._polygon;
+            var seriesModel = data.hostModel;
 
             var diff = lineAnimationDiff(
                 this._data, data,
@@ -368,23 +369,23 @@ define(function(require) {
             );
             polyline.shape.points = diff.current;
 
-            api.updateGraphicEl(polyline, {
+            graphic.updateProps(polyline, {
                 shape: {
                     points: diff.next
                 }
-            });
+            }, seriesModel);
 
             if (polygon) {
                 polygon.setShape({
                     points: diff.current,
                     stackedOnPoints: diff.stackedOnCurrent
                 });
-                api.updateGraphicEl(polygon, {
+                graphic.updateProps(polygon, {
                     shape: {
                         points: diff.next,
                         stackedOnPoints: diff.stackedOnNext
                     }
-                });
+                }, seriesModel);
             }
 
             var updatedDataInfo = [];
