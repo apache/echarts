@@ -36,7 +36,7 @@
                 'echarts',
                 'echarts/chart/parallel',
                 'echarts/component/legend',
-                'echarts/component/dataZoom',
+                // 'echarts/component/dataZoom',
                 'echarts/component/parallel',
             ], function (dataBJ, dataGZ, dataSH, zrUtil, echarts) {
 
@@ -83,11 +83,11 @@
                                 + schema[6].text + '：' + value[6] + '<br>';
                         }
                     },
-                    dataZoom: {
-                        show: true,
-                        orient: 'vertical',
-                        parallelAxisIndex: [0]
-                    },
+                    // dataZoom: {
+                    //     show: true,
+                    //     orient: 'vertical',
+                    //     parallelAxisIndex: [0]
+                    // },
                     parallelAxis: [
                         {dim: 'dim0', name: schema[0].text, inverse: true, max: 31, nameLocation: 'start'},
                         {dim: 'dim1', name: schema[1].text},
