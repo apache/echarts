@@ -23,7 +23,7 @@ define(function (require) {
             onZero: true,
             // 属性lineStyle控制线条样式
             lineStyle: {
-                color: '#000',
+                color: '#333',
                 width: 1,
                 type: 'solid'
             }

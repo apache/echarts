@@ -64,7 +64,7 @@ define(function (require) {
      * @constructor
      * @extends {module:zrender/graphic/Group}
      */
-    function PiePiece(data, idx, api) {
+    function PiePiece(data, idx) {
 
         graphic.Group.call(this);
 
@@ -75,7 +75,7 @@ define(function (require) {
         this.add(polyline);
         this.add(text);
 
-        this.updateData(data, idx, api, true);
+        this.updateData(data, idx, true);
 
         function onEmphasis() {
             polyline.ignore = polyline.hoverIgnore;
@@ -106,7 +106,7 @@ define(function (require) {
         };
     }
 
-    piePieceProto.updateData = function (data, idx, api, firstCreate) {
+    piePieceProto.updateData = function (data, idx, firstCreate) {
 
         var sector = this.childAt(0);
         var labelLine = this.childAt(1);
@@ -120,33 +120,33 @@ define(function (require) {
         if (firstCreate) {
             sector.setShape(sectorShape);
             sector.shape.endAngle = layout.startAngle;
-            api.updateGraphicEl(sector, {
+            graphic.updateProps(sector, {
                 shape: {
                     endAngle: layout.endAngle
                 }
-            });
+            }, seriesModel);
         }
         else {
-            api.updateGraphicEl(sector, {
+            graphic.updateProps(sector, {
                 shape: sectorShape
             });
         }
 
         var labelLayout = layout.label;
 
-        api.updateGraphicEl(labelLine, {
+        graphic.updateProps(labelLine, {
             shape: {
                 points: labelLayout.linePoints || [
                     [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
                 ]
             }
-        });
-        api.updateGraphicEl(labelText, {
+        }, seriesModel);
+        graphic.updateProps(labelText, {
             style: {
                 x: labelLayout.x,
                 y: labelLayout.y
             }
-        });
+        }, seriesModel);
         labelText.attr({
             style: {
                 textAlign: labelLayout.textAlign,
@@ -276,7 +276,7 @@ define(function (require) {
 
             data.diff(oldData)
                 .add(function (idx) {
-                    var piePiece = new PiePiece(data, idx, api);
+                    var piePiece = new PiePiece(data, idx);
                     if (isFirstRender) {
                         piePiece.eachChild(function (child) {
                             child.stopAnimation(true);
@@ -292,7 +292,7 @@ define(function (require) {
                 .update(function (newIdx, oldIdx) {
                     var piePiece = oldData.getItemGraphicEl(oldIdx);
 
-                    piePiece.updateData(data, newIdx, api);
+                    piePiece.updateData(data, newIdx);
 
                     selectedMode
                         ? piePiece.on('click', onSectorClick)
@@ -312,7 +312,7 @@ define(function (require) {
 
                 var removeClipPath = zrUtil.bind(group.removeClipPath, group);
                 group.setClipPath(this._createClipPath(
-                    shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, api
+                    shape.cx, shape.cy, r, shape.startAngle, shape.clockwise, removeClipPath, seriesModel
                 ));
             }
 
@@ -320,7 +320,7 @@ define(function (require) {
         },
 
         _createClipPath: function (
-            cx, cy, r, startAngle, clockwise, cb, api
+            cx, cy, r, startAngle, clockwise, cb, seriesModel
         ) {
             var clipPath = new graphic.Sector({
                 shape: {
@@ -334,11 +334,11 @@ define(function (require) {
                 }
             });
 
-            api.initGraphicEl(clipPath, {
+            graphic.initProps(clipPath, {
                 shape: {
                     endAngle: startAngle + (clockwise ? 1 : -1) * Math.PI * 2
                 }
-            }, cb);
+            }, seriesModel, cb);
 
             return clipPath;
         }

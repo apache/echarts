@@ -45,6 +45,7 @@ define(function (require) {
             // label: {
                 // normal: {
                     // show: false
+                    // distance: 5,
                     // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                     // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
                     //           'inside'|'left'|'right'|'top'|'bottom'

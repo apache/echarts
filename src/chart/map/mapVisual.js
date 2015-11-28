@@ -13,5 +13,5 @@ define(function (require) {
                 'color': color
             });
         });
-    }
+    };
 });

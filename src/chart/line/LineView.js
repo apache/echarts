@@ -135,7 +135,7 @@ define(function(require) {
                 !(polyline
                 && prevCoordSys.type === coordSys.type)
             ) {
-                symbolDraw.updateData(data, api, isSymbolIgnore);
+                symbolDraw.updateData(data, isSymbolIgnore);
                 polyline = this._newPolyline(group, points, coordSys, hasAnimation);
                 if (isAreaChart) {
                     polygon = this._newPolygon(
@@ -145,19 +145,19 @@ define(function(require) {
                     );
                 }
                 lineGroup.setClipPath(
-                    this._createClipShape(coordSys, true, api)
+                    this._createClipShape(coordSys, true, seriesModel)
                 );
             }
             else {
                 // Update clipPath
                 if (hasAnimation) {
                     lineGroup.setClipPath(
-                        this._createClipShape(coordSys, false, api)
+                        this._createClipShape(coordSys, false, seriesModel)
                     );
                 }
 
                 // Always update, or it is wrong in the case turning on legend because points is not changed
-                symbolDraw.updateData(data, api, isSymbolIgnore);
+                symbolDraw.updateData(data, isSymbolIgnore);
 
                 // Stop symbol animation and sync with line points
                 // FIXME performance?
@@ -360,6 +360,7 @@ define(function(require) {
         _updateAnimation: function (data, stackedOnPoints, coordSys, api) {
             var polyline = this._polyline;
             var polygon = this._polygon;
+            var seriesModel = data.hostModel;
 
             var diff = lineAnimationDiff(
                 this._data, data,
@@ -368,23 +369,23 @@ define(function(require) {
             );
             polyline.shape.points = diff.current;
 
-            api.updateGraphicEl(polyline, {
+            graphic.updateProps(polyline, {
                 shape: {
                     points: diff.next
                 }
-            });
+            }, seriesModel);
 
             if (polygon) {
                 polygon.setShape({
                     points: diff.current,
                     stackedOnPoints: diff.stackedOnCurrent
                 });
-                api.updateGraphicEl(polygon, {
+                graphic.updateProps(polygon, {
                     shape: {
                         points: diff.next,
                         stackedOnPoints: diff.stackedOnNext
                     }
-                });
+                }, seriesModel);
             }
 
             var updatedDataInfo = [];
@@ -413,13 +414,13 @@ define(function(require) {
             }
         },
 
-        _createClipShape: function (coordSys, hasAnimation, api) {
+        _createClipShape: function (coordSys, hasAnimation, seriesModel) {
             return coordSys.type === 'polar'
-                ? this._createPolarClipShape(coordSys, hasAnimation, api)
-                : this._createGridClipShape(coordSys, hasAnimation, api);
+                ? this._createPolarClipShape(coordSys, hasAnimation, seriesModel)
+                : this._createGridClipShape(coordSys, hasAnimation, seriesModel);
         },
 
-        _createGridClipShape: function (cartesian, hasAnimation, api) {
+        _createGridClipShape: function (cartesian, hasAnimation, seriesModel) {
             var xExtent = getAxisExtentWithGap(cartesian.getAxis('x'));
             var yExtent = getAxisExtentWithGap(cartesian.getAxis('y'));
 
@@ -434,18 +435,18 @@ define(function(require) {
 
             if (hasAnimation) {
                 clipPath.shape[cartesian.getBaseAxis().isHorizontal() ? 'width' : 'height'] = 0;
-                api.initGraphicEl(clipPath, {
+                graphic.initProps(clipPath, {
                     shape: {
                         width: xExtent[1] - xExtent[0],
                         height: yExtent[1] - yExtent[0]
                     }
-                });
+                }, seriesModel);
             }
 
             return clipPath;
         },
 
-        _createPolarClipShape: function (polar, hasAnimation, api) {
+        _createPolarClipShape: function (polar, hasAnimation, seriesModel) {
             var angleAxis = polar.getAngleAxis();
             var radiusAxis = polar.getRadiusAxis();
 
@@ -468,20 +469,20 @@ define(function(require) {
 
             if (hasAnimation) {
                 clipPath.shape.endAngle = -angleExtent[0] * RADIAN;
-                api.initGraphicEl(clipPath, {
+                graphic.initGraphicEl(clipPath, {
                     shape: {
                         endAngle: -angleExtent[1] * RADIAN
                     }
-                });
+                }, seriesModel);
             }
 
             return clipPath;
         },
 
-        remove: function (ecModel, api) {
+        remove: function (ecModel) {
             var group = this.group;
             group.remove(this._lineGroup);
-            this._symbolDraw.remove(api, true);
+            this._symbolDraw.remove(true);
         }
     });
 });

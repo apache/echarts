@@ -37,9 +37,9 @@ define(function (require) {
             var symbolDraw = this._symbolDraw;
             var lineDraw = this._lineDraw;
 
-            symbolDraw.updateData(data, api);
+            symbolDraw.updateData(data);
 
-            lineDraw.updateData(data.graph.edgeData, api);
+            lineDraw.updateData(data.graph.edgeData, null, null);
 
             // Save the original lineWidth
             data.graph.eachEdge(function (edge) {
@@ -108,7 +108,8 @@ define(function (require) {
             });
 
             data.graph.eachEdge(function (edge) {
-                edge.getGraphicEl().setStyle(
+                var lineGroup = edge.getGraphicEl();
+                lineGroup.childOfName('line').setStyle(
                     'lineWidth',
                     edge.__lineWidth * edgeScale / groupScale
                 );

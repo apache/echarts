@@ -8,9 +8,13 @@ define(function (require) {
 
     /**
      * @constructor
+     * @alias module:echarts/chart/helper/SymbolDraw
+     * @param {module:zrender/graphic/Group} [symbolCtor]
      */
-    function SymbolDraw() {
+    function SymbolDraw(symbolCtor) {
         this.group = new graphic.Group();
+
+        this._symbolCtor = symbolCtor || Symbol;
     }
 
     var symbolDrawProto = SymbolDraw.prototype;
@@ -18,11 +22,11 @@ define(function (require) {
     /**
      * Update symbols draw by new data
      * @param {module:echarts/data/List} data
-     * @param {module:echarts/ExtensionAPI} api
      * @param {Array.<boolean>} [isIgnore]
      */
-    symbolDrawProto.updateData = function (data, api, isIgnore) {
+    symbolDrawProto.updateData = function (data, isIgnore) {
         var group = this.group;
+        var seriesModel = data.hostModel;
         var oldData = this._data;
 
         data.diff(oldData)
@@ -31,7 +35,7 @@ define(function (require) {
                     data.hasValue(newIdx) && !(isIgnore && isIgnore(newIdx))
                     && data.getItemVisual(newIdx, 'symbol') !== 'none'
                 ) {
-                    var symbolEl = new Symbol(data, newIdx, api);
+                    var symbolEl = new Symbol(data, newIdx);
                     symbolEl.attr('position', data.getItemLayout(newIdx));
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
@@ -48,14 +52,14 @@ define(function (require) {
                 }
                 var point = data.getItemLayout(newIdx);
                 if (!symbolEl) {
-                    symbolEl = new Symbol(data, newIdx, api);
+                    symbolEl = new Symbol(data, newIdx);
                     symbolEl.attr('position', point);
                 }
                 else {
-                    symbolEl.updateData(data, newIdx, api);
-                    api.updateGraphicEl(symbolEl, {
+                    symbolEl.updateData(data, newIdx);
+                    graphic.updateProps(symbolEl, {
                         position: point
-                    });
+                    }, seriesModel);
                 }
 
                 // Add back
@@ -67,7 +71,7 @@ define(function (require) {
                 var el = oldData.getItemGraphicEl(oldIdx);
                 el && el.fadeOut(function () {
                     group.remove(el);
-                }, api);
+                });
             })
             .execute();
 
@@ -84,7 +88,7 @@ define(function (require) {
         }
     };
 
-    symbolDrawProto.remove = function (api, enableAnimation) {
+    symbolDrawProto.remove = function (enableAnimation) {
         var group = this.group;
         var data = this._data;
         if (data) {
@@ -92,7 +96,7 @@ define(function (require) {
                 data.eachItemGraphicEl(function (el) {
                     el.fadeOut(function () {
                         group.remove(el);
-                    }, api);
+                    });
                 });
             }
             else {

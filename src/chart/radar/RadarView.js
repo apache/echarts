@@ -51,15 +51,15 @@ define(function (require) {
             if (polylineShape.points.length !== points.length) {
                 polygonShape.points = getInitialPoints();
                 polylineShape.points = getInitialPoints();
-                api.initGraphicEl(polyline, target);
-                api.initGraphicEl(polygon, target);
+                graphic.initProps(polyline, target, seriesModel);
+                graphic.initProps(polygon, target, seriesModel);
             }
             else {
-                api.updateGraphicEl(polyline, target);
-                api.updateGraphicEl(polygon, target);
+                graphic.updateProps(polyline, target, seriesModel);
+                graphic.updateProps(polygon, target, seriesModel);
             }
 
-            this._symbolDraw.updateData(data, api);
+            this._symbolDraw.updateData(data);
 
             polyline.setStyle(
                 zrUtil.extend(

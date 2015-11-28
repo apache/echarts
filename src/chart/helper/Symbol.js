@@ -15,17 +15,18 @@ define(function (require) {
      * @constructor
      * @extends {module:zrender/graphic/Group}
      */
-    function Symbol(data, idx, api) {
+    function Symbol(data, idx) {
         graphic.Group.call(this);
 
-        this.updateData(data, idx, api);
+        this.updateData(data, idx);
     }
 
     var symbolProto = Symbol.prototype;
 
-    symbolProto._createSymbol = function (symbolType, data, idx, api) {
+    symbolProto._createSymbol = function (symbolType, data, idx) {
         this.removeAll();
 
+        var seriesModel = data.hostModel;
         var color = data.getItemVisual(idx, 'color');
 
         var symbolPath = symbolUtil.createSymbol(
@@ -40,9 +41,9 @@ define(function (require) {
 
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
-        api.initGraphicEl(symbolPath, {
+        graphic.initProps(symbolPath, {
             scale: size
-        });
+        }, seriesModel);
 
         this._symbolType = symbolType;
 
@@ -76,27 +77,31 @@ define(function (require) {
      * Update symbol properties
      * @param  {module:echarts/data/List} data
      * @param  {number} idx
-     * @param  {module:echarts/ExtensionAPI} api
      */
-    symbolProto.updateData = function (data, idx, api) {
+    symbolProto.updateData = function (data, idx) {
         var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
+        var seriesModel = data.hostModel;
 
         if (symbolType !== this._symbolType) {
-            this._createSymbol(symbolType, data, idx, api);
+            this._createSymbol(symbolType, data, idx);
         }
         else {
             var symbolPath = this.childAt(0);
             var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
-            api.updateGraphicEl(symbolPath, {
+            graphic.updateProps(symbolPath, {
                 scale: size
-            });
+            }, seriesModel);
         }
         this._updateCommon(data, idx);
+
+        this._seriesModel = seriesModel;
     };
 
     // Update common properties
     var normalStyleAccessPath = ['itemStyle', 'normal'];
     var emphasisStyleAccessPath = ['itemStyle', 'emphasis'];
+    var normalLabelAccessPath = ['label', 'normal'];
+    var emphasisLabelAccessPath = ['label', 'emphasis'];
 
     symbolProto._updateCommon = function (data, idx) {
         var symbolPath = this.childAt(0);
@@ -118,8 +123,8 @@ define(function (require) {
             normalItemStyleModel.getItemStyle(['color'])
         );
 
-        var labelModel = itemModel.getModel('label.normal');
-        var hoverLabelModel = itemModel.getModel('label.emphasis');
+        var labelModel = itemModel.getModel(normalLabelAccessPath);
+        var hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
         var lastDim = data.dimensions[data.dimensions.length - 1];
         var labelText = seriesModel.getFormattedLabel(idx, 'normal')
                     || data.get(lastDim, idx);
@@ -144,21 +149,21 @@ define(function (require) {
 
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
-        function onEmphasis() {
-            var ratio = size[1] / size[0];
-            this.animateTo({
-                scale: [
-                    Math.max(size[0] * 1.1, size[0] + 6),
-                    Math.max(size[1] * 1.1, size[1] + 6 * ratio)
-                ]
-            }, 400, 'elasticOut');
-        }
-        function onNormal() {
-            this.animateTo({
-                scale: size
-            }, 400, 'elasticOut');
-        }
         if (itemModel.getShallow('hoverAnimation')) {
+            var onEmphasis = function() {
+                var ratio = size[1] / size[0];
+                this.animateTo({
+                    scale: [
+                        Math.max(size[0] * 1.1, size[0] + 6),
+                        Math.max(size[1] * 1.1, size[1] + 6 * ratio)
+                    ]
+                }, 400, 'elasticOut');
+            };
+            var onNormal = function() {
+                this.animateTo({
+                    scale: size
+                }, 400, 'elasticOut');
+            };
             symbolPath.on('mouseover', onEmphasis)
                 .on('mouseout', onNormal)
                 .on('emphasis', onEmphasis)
@@ -166,13 +171,13 @@ define(function (require) {
         }
     };
 
-    symbolProto.fadeOut = function (cb, api) {
+    symbolProto.fadeOut = function (cb) {
         var symbolPath = this.childAt(0);
         // Not show text when animating
         symbolPath.style.text = '';
-        api.updateGraphicEl(symbolPath, {
+        graphic.updateProps(symbolPath, {
             scale: [0, 0]
-        }, cb);
+        }, this._seriesModel, cb);
     };
 
     zrUtil.inherits(Symbol, graphic.Group);

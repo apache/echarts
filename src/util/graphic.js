@@ -307,15 +307,45 @@ define(function(require) {
      * @param {string} color
      */
     graphic.setText = function (textStyle, labelModel, color) {
-        var labelPosition = labelModel.get('position') || 'inside';
+        var labelPosition = labelModel.getShallow('position') || 'inside';
         var labelColor = labelPosition.indexOf('inside') >= 0 ? 'white' : color;
         var textStyleModel = labelModel.getModel('textStyle');
         zrUtil.extend(textStyle, {
+            textDistance: labelModel.getShallow('distance') || 5,
             textFont: textStyleModel.getFont(),
             textPosition: labelPosition,
             textFill: textStyleModel.get('color') || labelColor
         });
     };
+
+    function animateOrSetProps(isUpdate, el, props, seriesModel, cb) {
+        var postfix = isUpdate ? 'Update' : '';
+        var duration = seriesModel
+            && seriesModel.getShallow('animationDuration' + postfix);
+        var animationEasing = seriesModel
+            && seriesModel.getShallow('animationEasing' + postfix);
+
+        seriesModel && seriesModel.getShallow('animation')
+            ? el.animateTo(props, duration, animationEasing, cb)
+            : (el.attr(props), cb && cb());
+    }
+    /**
+     * Update graphic element properties with or without animation according to the configuration in series
+     * @param {module:zrender/Element} el
+     * @param {Object} props
+     * @param {module:echarts/model/Series} [seriesModel]
+     * @param {Function} cb
+     */
+    graphic.updateProps = zrUtil.curry(animateOrSetProps, true);
+
+    /**
+     * Init graphic element properties with or without animation according to the configuration in series
+     * @param {module:zrender/Element} el
+     * @param {Object} props
+     * @param {module:echarts/model/Series} [seriesModel]
+     * @param {Function} cb
+     */
+    graphic.initProps = zrUtil.curry(animateOrSetProps, false);
 
     /**
      * Get transform matrix of target (param target),

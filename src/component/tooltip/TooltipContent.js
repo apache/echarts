@@ -201,8 +201,8 @@ define(function (require) {
         hideLater: function (time) {
             if (this._show && !(this._inContent && this.enterable)) {
                 if (time) {
-                    // Set show false to avoid invoke hideLater mutiple times
                     this._hideDelay = time;
+                    // Set show false to avoid invoke hideLater mutiple times
                     this._show = false;
                     this._hideTimeout = setTimeout(zrUtil.bind(this.hide, this), time);
                 }

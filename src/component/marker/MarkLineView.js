@@ -10,7 +10,7 @@ define(function (require) {
 
     var markerHelper = require('./markerHelper');
 
-    var SeriesMarkLine = require('./SeriesMarkLine');
+    var LineDraw = require('../../chart/helper/LineDraw');
 
     var markLineTransform = function (data, coordSys, baseAxis, valueAxis, item) {
         // Special type markLine like 'min', 'max', 'average'
@@ -31,7 +31,7 @@ define(function (require) {
 
             var extent = data.getDataExtent(valueAxis.dim, true);
 
-            delete mlFrom.type; // Remove type
+            mlFrom.type = null;
 
             // FIXME Polar should use circle
             mlFrom[baseAxisKey] = baseScaleExtent[0];
@@ -47,15 +47,20 @@ define(function (require) {
             mlFrom[valueAxisKey] = mlTo[valueAxisKey] = value;
 
             item = [mlFrom, mlTo, { // Extra option for tooltip and label
-                __rawValue: value,
-                name: item.name
+                __rawValue: value
             }];
         }
-        return [
+        item = [
             markerHelper.dataTransform(data, coordSys, item[0]),
             markerHelper.dataTransform(data, coordSys, item[1]),
-            item[2]
+            {}
         ];
+
+        // Merge from option and to option into line option
+        zrUtil.merge(item[2], item[0]);
+        zrUtil.merge(item[2], item[1]);
+
+        return item;
     };
 
     function markLineFilter(coordSys, dimensionInverse, item) {
@@ -102,9 +107,9 @@ define(function (require) {
         },
 
         render: function (markLineModel, ecModel, api) {
-            var seriesMarkLineMap = this._markLineMap;
-            for (var name in seriesMarkLineMap) {
-                seriesMarkLineMap[name].__keep = false;
+            var lineDrawMap = this._markLineMap;
+            for (var name in lineDrawMap) {
+                lineDrawMap[name].__keep = false;
             }
 
             ecModel.eachSeries(function (seriesModel) {
@@ -112,9 +117,9 @@ define(function (require) {
                 mlModel && this._renderSeriesML(seriesModel, mlModel, ecModel, api);
             }, this);
 
-            for (var name in seriesMarkLineMap) {
-                if (!seriesMarkLineMap[name].__keep) {
-                    this.group.remove(seriesMarkLineMap[name].group);
+            for (var name in lineDrawMap) {
+                if (!lineDrawMap[name].__keep) {
+                    this.group.remove(lineDrawMap[name].group);
                 }
             }
         },
@@ -124,18 +129,19 @@ define(function (require) {
             var seriesName = seriesModel.name;
             var seriesData = seriesModel.getData();
 
-            var seriesMarkLineMap = this._markLineMap;
-            var seriesMarkLine = seriesMarkLineMap[seriesName];
-            if (!seriesMarkLine) {
-                seriesMarkLine = seriesMarkLineMap[seriesName] = new SeriesMarkLine();
+            var lineDrawMap = this._markLineMap;
+            var lineDraw = lineDrawMap[seriesName];
+            if (!lineDraw) {
+                lineDraw = lineDrawMap[seriesName] = new LineDraw();
             }
-            this.group.add(seriesMarkLine.group);
+            this.group.add(lineDraw.group);
 
             var mlData = createList(coordSys, seriesData, mlModel);
             var dims = coordSys.dimensions;
 
             var fromData = mlData.from;
             var toData = mlData.to;
+            var lineData = mlData.line;
 
             // Line data for tooltip and formatter
             var lineData = mlData.line;
@@ -155,19 +161,32 @@ define(function (require) {
                 symbolSize = [symbolSize, symbolSize];
             }
 
+            // Update visual and layout of from symbol and to symbol
             mlData.from.each(function (idx) {
                 updateDataVisualAndLayout(fromData, idx, true);
                 updateDataVisualAndLayout(toData, idx);
             });
 
-            seriesMarkLine.update(
-                fromData, toData, mlModel, api, ecModel.get('animation')
-            );
+            // Update visual and layout of line
+            lineData.each(function (idx) {
+                var lineColor = lineData.getItemModel(idx).get('lineStyle.normal.color');
+                lineData.setItemVisual(idx, {
+                    color: lineColor || fromData.getItemVisual(idx, 'color')
+                });
+                lineData.setItemLayout(idx, [
+                    fromData.getItemLayout(idx),
+                    toData.getItemLayout(idx)
+                ]);
+            });
+
+            lineDraw.updateData(lineData, fromData, toData, api);
 
             // Set host model for tooltip
             // FIXME
-            mlData.from.eachItemGraphicEl(function (el, idx) {
-                el.hostModel = mlModel;
+            mlData.line.eachItemGraphicEl(function (el, idx) {
+                el.eachChild(function (child) {
+                    child.hostModel = mlModel;
+                });
             });
 
             function updateDataVisualAndLayout(data, idx, isFrom) {
@@ -197,7 +216,7 @@ define(function (require) {
                 });
             }
 
-            seriesMarkLine.__keep = true;
+            lineDraw.__keep = true;
         }
     });
 

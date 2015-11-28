@@ -20,9 +20,13 @@
         'echarts/chart/bar',
         'echarts/component/grid',
         'echarts/chart/pie',
+        'echarts/chart/scatter',
+        'echarts/component/tooltip',
+        'echarts/component/polar',
+        'echarts/chart/radar',
+
         'echarts/component/legend',
 
-        'echarts/chart/scatter',
         'echarts/chart/map',
         'echarts/chart/treemap',
         'echarts/chart/graph',
@@ -31,13 +35,11 @@
         'echarts/chart/parallel',
 
         'echarts/component/geo',
-        'echarts/component/polar',
         'echarts/component/parallel',
 
         'echarts/component/title',
 
         'echarts/component/dataZoom',
-        'echarts/component/tooltip',
         'echarts/component/dataRange',
 
         'echarts/component/markPoint',

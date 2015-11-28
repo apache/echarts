@@ -2,6 +2,7 @@ define(function (require) {
 
     var graphic = require('../../util/graphic');
     var symbolUtil = require('../../util/symbol');
+    var zrUtil = require('zrender/core/util');
 
     var LargeSymbolPath = graphic.extendShape({
         shape: {
@@ -20,18 +21,18 @@ define(function (require) {
             for (var i = 0; i < points.length; i++) {
                 var pt = points[i];
                 var size = sizes[i];
-                if (size < 4) {
+                if (size[0] < 4) {
                     // Optimize for small symbol
                     path.rect(
-                        pt[0] - size / 2, pt[1] - size / 2,
-                        size, size
+                        pt[0] - size[0] / 2, pt[1] - size[1] / 2,
+                        size[0], size[1]
                     );
                 }
                 else {
-                    symbolProxyShape.x = pt[0] - size / 2;
-                    symbolProxyShape.y = pt[1] - size / 2;
-                    symbolProxyShape.width = size;
-                    symbolProxyShape.height = size;
+                    symbolProxyShape.x = pt[0] - size[0] / 2;
+                    symbolProxyShape.y = pt[1] - size[1] / 2;
+                    symbolProxyShape.width = size[0];
+                    symbolProxyShape.height = size[1];
 
                     symbolProxy.buildPath(path, symbolProxyShape);
                 }
@@ -52,9 +53,8 @@ define(function (require) {
     /**
      * Update symbols draw by new data
      * @param {module:echarts/data/List} data
-     * @param {module:echarts/ExtensionAPI} api
      */
-    largeSymbolProto.updateData = function (data, api) {
+    largeSymbolProto.updateData = function (data) {
         var symbolEl = this._symbolEl;
 
         var seriesModel = data.hostModel;
@@ -63,7 +63,11 @@ define(function (require) {
             points: data.mapArray(data.getItemLayout),
             sizes: data.mapArray(
                 function (idx) {
-                    return data.getItemVisual(idx, 'symbolSize');
+                    var size = data.getItemVisual(idx, 'symbolSize');
+                    if (!zrUtil.isArray(size)) {
+                        size = [size, size];
+                    }
+                    return size;
                 }
             )
         });
