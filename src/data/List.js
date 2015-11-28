@@ -6,13 +6,13 @@ define(function (require) {
 
     var UNDEFINED = 'undefined';
     var global = window;
-    var Float32Array = typeof global.Float32Array === UNDEFINED
-        ? Array : global.Float32Array;
+    var Float64Array = typeof global.Float64Array === UNDEFINED
+        ? Array : global.Float64Array;
     var Int32Array = typeof global.Int32Array === UNDEFINED
         ? Array : global.Int32Array;
 
     var dataCtors = {
-        'float': Float32Array,
+        'float': Float64Array,
         'int': Int32Array,
         // Ordinal data type can be string or int
         'ordinal': Array,
@@ -908,8 +908,9 @@ define(function (require) {
         child.dataIndex = this.dataIndex;
     };
     /**
+     * Set graphic element relative to data. It can be set as null
      * @param {number} idx
-     * @param {module:zrender/Element} el
+     * @param {module:zrender/Element} [el]
      */
     listProto.setItemGraphicEl = function (idx, el) {
         var hostModel = this.hostModel;
@@ -922,8 +923,9 @@ define(function (require) {
             if (el.type === 'group') {
                 el.traverse(setItemDataAndSeriesIndex, el);
             }
-            this._graphicEls[idx] = el;
         }
+
+        this._graphicEls[idx] = el;
     };
 
     /**

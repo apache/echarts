@@ -130,6 +130,15 @@ define(function(require) {
             var isSymbolIgnore = !isCoordSysPolar && !seriesModel.get('showAllSymbol')
                 && this._getSymbolIgnoreFunc(data, coordSys);
 
+            // Remove temporary symbols
+            var oldData = this._data;
+            oldData && oldData.eachItemGraphicEl(function (el, idx) {
+                if (el.__temp) {
+                    group.remove(el);
+                    oldData.setItemGraphicEl(idx, null);
+                }
+            });
+
             // Initialization animation or coordinate system changed
             if (
                 !(polyline
@@ -236,7 +245,7 @@ define(function(require) {
             var data = seriesModel.getData();
             var dataIndex = queryDataIndex(data, payload);
 
-            if (dataIndex >= 0) {
+            if (dataIndex != null && dataIndex >= 0) {
                 var symbol = data.getItemGraphicEl(dataIndex);
                 if (!symbol) {
                     // Create a temporary symbol if it is not exists
@@ -264,7 +273,7 @@ define(function(require) {
         downplay: function (seriesModel, ecModel, api, payload) {
             var data = seriesModel.getData();
             var dataIndex = queryDataIndex(data, payload);
-            if (dataIndex >= 0) {
+            if (dataIndex != null && dataIndex >= 0) {
                 var symbol = data.getItemGraphicEl(dataIndex);
                 if (symbol) {
                     if (symbol.__temp) {
