@@ -59,16 +59,15 @@ define(function (require) {
         this.group = new graphic.Group();
 
         /**
-         * @type {Array.<number>}
-         * @private
+         * @type {module:zrender/core/BoundingRect}
          */
-        this._cursorCurrent;
+        this._containerRect = null;
 
         /**
          * @type {Array.<nubmer>}
          * @private
          */
-        this._cursorBegin;
+        this._track = [];
 
         /**
          * @type {boolean}
@@ -80,12 +79,6 @@ define(function (require) {
          * @private
          */
         this._cover;
-
-        /**
-         * Selected param for event trigger.
-         * @private
-         */
-        this._selected;
 
         /**
          * @type {boolean}
@@ -122,8 +115,24 @@ define(function (require) {
             // Remove from old container.
             removeGroup.call(this);
 
+            // boundingRect will change when dragging, so we have
+            // to keep initial boundingRect.
+            this._containerRect = container.getBoundingRect();
+
             // Add to new container.
             container.add(this.group);
+        },
+
+        /**
+         * Update cover location.
+         * @param {Array.<number>|Object} ranges
+         */
+        update: function (ranges) {
+            // TODO
+            // Only support one interval yet.
+            if (ranges) {
+                renderCover.call(this, zrUtil.clone(ranges, true));
+            }
         },
 
         disable: function () {
@@ -145,13 +154,14 @@ define(function (require) {
     zrUtil.mixin(SelectController, Eventful);
 
 
-    function getContainer(me) {
-        return me.group.parent;
+    function isInContainer(x, y) {
+        var localPos = this.group.transformCoordToLocal(x, y);
+        return this._containerRect.contain(localPos[0], localPos[1]);
     }
 
-    function isInContainer(x, y, container) {
-        var localPos = container.transformCoordToLocal(x, y);
-        return container.getBoundingRect().contain(localPos[0], localPos[1]);
+    function preventDefault(e) {
+        var rawE = e.event;
+        rawE.preventDefault && rawE.preventDefault();
     }
 
     function mousedown(e) {
@@ -159,17 +169,14 @@ define(function (require) {
             return;
         }
 
-        var rawE = e.event;
-        rawE.preventDefault && rawE.preventDefault();
+        preventDefault(e);
 
         var x = e.offsetX;
         var y = e.offsetY;
-        var container = getContainer(this);
 
-        if (isInContainer(x, y, container)) {
+        if (isInContainer.call(this, x, y)) {
             this._dragging = true;
-            this._cursorCurrent = [x, y];
-            this._cursorBegin = [x, y];
+            this._track = [[x, y]];
         }
     }
 
@@ -178,11 +185,9 @@ define(function (require) {
             return;
         }
 
-        var rawE = e.event;
-        rawE.preventDefault && rawE.preventDefault();
+        preventDefault(e);
 
-        this._cursorCurrent = [e.offsetX, e.offsetY];
-        renderCover.call(this);
+        updateViewByCursor.call(this, e);
     }
 
     function mouseup(e) {
@@ -190,15 +195,42 @@ define(function (require) {
             return;
         }
 
-        this._cursorCurrent = [e.offsetX, e.offsetY];
-        renderCover.call(this);
+        preventDefault(e);
+
+        updateViewByCursor.call(this, e);
 
         this._dragging = false;
+        this._track = [];
     }
 
-    function shouldCreateCover() {
-        var p1 = this._cursorCurrent;
-        var p2 = this._cursorBegin;
+    function updateViewByCursor(e) {
+        var x = e.offsetX;
+        var y = e.offsetY;
+
+        if (isInContainer.call(this, x, y)) {
+            this._track.push([x, y]);
+
+            // Create or update cover.
+            var ranges = shouldShowCover.call(this)
+                ? coverRenderers[this.type].getRanges.call(this)
+                // Remove cover.
+                : [];
+
+            renderCover.call(this, ranges);
+
+            this.trigger('selected', zrUtil.clone(ranges, true));
+        }
+    }
+
+    function shouldShowCover(p1, p2) {
+        var track = this._track;
+
+        if (!track.length) {
+            return false;
+        }
+
+        var p2 = track[track.length - 1];
+        var p1 = track[0];
         var dx = p2[0] - p1[0];
         var dy = p2[1] - p1[1];
         var dist = mathPow(dx * dx + dy * dy, 0.5);
@@ -206,33 +238,28 @@ define(function (require) {
         return dist > UNSELECT_THRESHOLD;
     }
 
-    function renderCover() {
-        // Create or update cover.
-        if (shouldCreateCover.call(this)) {
-            var type = this.type;
+    function renderCover(ranges) {
+        var coverRenderer = coverRenderers[this.type];
 
+        if (ranges.length) {
             if (!this._cover) {
-                this._cover = coverRenderers[type].create.call(this);
+                this._cover = coverRenderer.create.call(this);
                 this.group.add(this._cover);
             }
-
-            coverRenderers[type].update.call(this);
+            coverRenderer.update.call(this, ranges);
         }
-        // Remove cover.
         else {
             this.group.remove(this._cover);
             this._cover = null;
-            this._selected = null;
         }
-
-        this.trigger('selected', this._selected);
     }
 
     function removeGroup() {
         // container may 'removeAll' outside.
-        var container = getContainer(this);
+        var group = this.group;
+        var container = group.parent;
         if (container) {
-            container.remove(this.group);
+            container.remove(group);
         }
     }
 
@@ -244,9 +271,23 @@ define(function (require) {
             style: {
                 stroke: opt.stroke,
                 fill: opt.fill,
-                lineWidth: opt.lineWidth
+                lineWidth: opt.lineWidth,
+                opacity: opt.opacity
             }
         });
+    }
+
+    function getLocalTrack() {
+        return zrUtil.map(this._track, function (point) {
+            return this.group.transformCoordToLocal(point[0], point[1]);
+        }, this);
+    }
+
+    function getLocalTrackEnds() {
+        var localTrack = getLocalTrack.call(this);
+        var tail = localTrack.length - 1;
+        tail < 0 && (tail = 0);
+        return [localTrack[0], localTrack[tail]];
     }
 
     /**
@@ -259,31 +300,23 @@ define(function (require) {
 
             create: createRectCover,
 
-            update: function () {
-                var opt = this.opt;
-                var group = this.group;
+            getRanges: function () {
+                var ends = getLocalTrackEnds.call(this);
+                var min = mathMin(ends[0][0], ends[1][0]);
+                var max = mathMax(ends[0][0], ends[1][0]);
 
-                var cursorCurrent = this._cursorCurrent;
-                var cursorBegin = this._cursorBegin;
-                var localCurr = group.transformCoordToLocal(
-                    cursorCurrent[0], cursorCurrent[1]
-                );
-                var localBegin = group.transformCoordToLocal(
-                    cursorBegin[0], cursorBegin[1]
-                );
+                return [[min, max]];
+            },
 
-                var min = mathMin(localCurr[0], localBegin[0]);
-                var max = mathMax(localCurr[0], localBegin[0]);
-                var width = opt.width;
-
+            update: function (ranges) {
+                var range = ranges[0];
+                var width = this.opt.width;
                 this._cover.setShape({
-                    x: min,
+                    x: range[0],
                     y: -width / 2,
-                    width: max - min,
+                    width: range[1] - range[0],
                     height: width
                 });
-
-                this._selected = [min, max];
             }
         },
 
@@ -291,27 +324,28 @@ define(function (require) {
 
             create: createRectCover,
 
-            update: function () {
-                var cursorCurrent = this._cursorCurrent;
-                var cursorBegin = this._cursorBegin;
+            getRanges: function () {
+                var ends = getLocalTrackEnds.call(this);
+
                 var min = [
-                    mathMin(cursorCurrent[0], cursorBegin[0]),
-                    mathMin(cursorCurrent[1], cursorBegin[1])
+                    mathMin(ends[1][0], ends[0][0]),
+                    mathMin(ends[1][1], ends[0][1])
                 ];
                 var max = [
-                    mathMax(cursorCurrent[0], cursorBegin[0]),
-                    mathMax(cursorCurrent[1], cursorBegin[1])
+                    mathMax(ends[1][0], ends[0][0]),
+                    mathMax(ends[1][1], ends[0][1])
                 ];
 
-                var rect = {
+                return [{
                     x: min[0],
                     y: min[1],
                     width: max[0] - min[0],
                     height: max[1] - min[1]
-                };
+                }];
+            },
 
-                this._cover.setShape(rect);
-                this._selected = rect;
+            update: function (ranges) {
+                this._cover.setShape(ranges[0]);
             }
         }
     };

@@ -17,11 +17,18 @@ define(function(require) {
         coordinateSystem: null,
 
         /**
-         * Each item like: {name: 'dimX', axisType: 'value', axisIndex: 2}
-         * @type {Array.<Object>}
+         * Each item like: 'dim0', 'dim1', 'dim2', ...
+         * @type {Array.<string>}
          * @readOnly
          */
         dimensions: null,
+
+        /**
+         * Coresponding to dimensions.
+         * @type {Array.<number>}
+         * @readOnly
+         */
+        parallelAxisIndex: null,
 
         defaultOption: {
             show: false,
@@ -80,6 +87,7 @@ define(function(require) {
          */
         _initDimensions: function () {
             var dimensions = this.dimensions = [];
+            var parallelAxisIndex = this.parallelAxisIndex = [];
 
             var axisModels = zrUtil.filter(this.dependentModels.parallelAxis, function (axisModel) {
                 // Can not use this.contains here, because
@@ -88,11 +96,8 @@ define(function(require) {
             });
 
             zrUtil.each(axisModels, function (axisModel) {
-                dimensions.push({
-                    name: axisModel.get('dim'),
-                    axisType: axisModel.get('type'),
-                    axisIndex: axisModel.componentIndex
-                });
+                dimensions.push(axisModel.get('dim'));
+                parallelAxisIndex.push(axisModel.componentIndex);
             });
         }
 

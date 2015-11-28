@@ -32,7 +32,6 @@ define(function (require) {
             var oldData = this._data;
             var coordSys = seriesModel.coordinateSystem;
             var dimensions = coordSys.dimensions;
-            var dimensionNames = coordSys.getDimensionNames();
 
             // var hasAnimation = ecModel.get('animation');
             var lineStyleModel = seriesModel.getModel('lineStyle.normal');
@@ -50,7 +49,7 @@ define(function (require) {
             this._data = data;
 
             function add(newDataIndex) {
-                var values = data.getValues(dimensionNames, newDataIndex);
+                var values = data.getValues(dimensions, newDataIndex);
                 var elGroup = new graphic.Group();
                 dataGroup.add(elGroup);
 
@@ -70,7 +69,7 @@ define(function (require) {
             }
 
             function update(newDataIndex, oldDataIndex) {
-                var values = data.getValues(dimensionNames, newDataIndex);
+                var values = data.getValues(dimensions, newDataIndex);
                 var elGroup = oldData.getItemGraphicEl(oldDataIndex);
                 var newEls = [];
                 var elGroupIndex = 0;
@@ -126,11 +125,13 @@ define(function (require) {
             var valueB = values[i + 1];
 
             cb(
-                (isEmptyValue(valueA, dimA) || isEmptyValue(valueB, dimB))
+                (isEmptyValue(valueA, coordSys.getAxis(dimA).type)
+                    || isEmptyValue(valueB, coordSys.getAxis(dimB).type)
+                )
                     ? null
                     : [
-                        coordSys.dataToPoint(valueA, dimA.name),
-                        coordSys.dataToPoint(valueB, dimB.name)
+                        coordSys.dataToPoint(valueA, dimA),
+                        coordSys.dataToPoint(valueB, dimB)
                     ],
                 i
             );
@@ -154,8 +155,8 @@ define(function (require) {
 
     // FIXME
     // 公用方法?
-    function isEmptyValue(val, dim) {
-        return dim.axisType === 'category'
+    function isEmptyValue(val, axisType) {
+        return axisType === 'category'
             ? val == null
             : (val == null || isNaN(val)); // axisType === 'value'
     }

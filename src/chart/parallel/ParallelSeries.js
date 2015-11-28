@@ -11,16 +11,29 @@ define(function(require) {
         dependencies: ['parallel'],
 
         getInitialData: function (option, ecModel) {
-            var dimensions = ecModel.getComponent(
+            var parallelModel = ecModel.getComponent(
                 'parallel', this.get('parallelIndex')
-            ).dimensions;
+            );
+            var dimensions = parallelModel.dimensions;
+            var parallelAxisIndices = parallelModel.parallelAxisIndex;
 
-            dimensions = zrUtil.map(dimensions, function (dim) {
-                return dim.name;
+            var rawData = option.data;
+
+            var dimensionsInfo = zrUtil.map(dimensions, function (dim, index) {
+                var axisModel = ecModel.getComponent(
+                    'parallelAxis', parallelAxisIndices[index]
+                );
+                if (axisModel.get('type') === 'category') {
+                    translateCategoryValue(axisModel, dim, rawData);
+                    return {name: dim, type: 'ordinal'};
+                }
+                else {
+                    return dim;
+                }
             });
 
-            var list = new List(dimensions, this);
-            list.initData(option.data);
+            var list = new List(dimensionsInfo, this);
+            list.initData(rawData);
 
             return list;
         },
@@ -31,9 +44,6 @@ define(function(require) {
 
             coordinateSystem: 'parallel',
             parallelIndex: 0,
-
-            inactiveOpacity: 0.2,
-            activeOpacity: 1,
 
             label: {
                 normal: {
@@ -51,10 +61,13 @@ define(function(require) {
                     // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                 }
             },
+
+            inactiveOpacity: 0.05,
+            activeOpacity: 1,
             lineStyle: {
                 normal: {
-                    width: 1,
-                    opacity: 0.6,
+                    width: 2,
+                    opacity: 0.45,
                     type: 'solid'
                 }
             },
@@ -69,4 +82,24 @@ define(function(require) {
             showAllSymbol: false
         }
     });
+
+    function translateCategoryValue(axisModel, dim, rawData) {
+        var axisData = axisModel.get('data');
+
+        // FIXME
+        // 这转换是否放在公用地方
+
+        var dimIndex = +dim.replace('dim', '');
+        if (axisData && axisData.length) {
+            zrUtil.each(rawData, function (dataItem) {
+                if (!dataItem) {
+                    return;
+                }
+                var index = zrUtil.indexOf(axisData, dataItem[dimIndex]);
+                dataItem[dimIndex] = index >= 0 ? index : NaN;
+            });
+        }
+        // FIXME
+        // 如果没有设置axis data, 应自动算出，或者提示。
+    }
 });

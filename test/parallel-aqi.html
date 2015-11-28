@@ -8,7 +8,7 @@
     <body>
         <style>
             body {
-                background: #000;
+                /*background: #000;*/
             }
         </style>
         <div id="main"></div>
@@ -22,9 +22,9 @@
                 {name: 'AQIindex', index: 1, text: 'AQI指数'},
                 {name: 'PM25', index: 2, text: 'PM2.5'},
                 {name: 'PM10', index: 3, text: 'PM10'},
-                {name: 'CO', index: 4, text: '一氧化碳（CO）'},
-                {name: 'NO2', index: 5, text: '二氧化氮（NO2）'},
-                {name: 'SO2', index: 6, text: '二氧化硫（SO2）'},
+                {name: 'CO', index: 4, text: '一氧化碳 (CO)'},
+                {name: 'NO2', index: 5, text: '二氧化氮 (NO2)'},
+                {name: 'SO2', index: 6, text: '二氧化硫 (SO2)'},
                 {name: '等级', index: 7, text: '等级'}
             ];
 
@@ -43,28 +43,25 @@
                     renderer: 'canvas'
                 });
 
-
+window.cc = chart;
                 var lineStyle = {
                     normal: {
-                        opacity: 0.5,
-                        shadowBlur: 10,
-                        shadowOffsetX: 0,
-                        shadowOffsetY: 0,
-                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        // opacity: 0.5,
+                        // shadowBlur: 10,
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 0,
+                        // shadowColor: 'rgba(0, 0, 0, 0.5)'
                     }
                 };
 
                 chart.setOption({
-                    color: [
-                        '#dd4444', '#fec42c', '#80F1BE'
-                    ],
                     legend: {
                         y2: 30,
                         data: ['北京', '上海', '广州'],
                         itemGap: 20,
                         textStyle: {
-                            color: '#fff',
-                            fontSize: 18
+                            // color: '#fff',
+                            fontSize: 16
                         }
                     },
                     tooltip: {
@@ -89,13 +86,13 @@
                     parallelAxis: [
                         {dim: 'dim0', name: schema[0].text, inverse: true, max: 31, nameLocation: 'start'},
                         {dim: 'dim1', name: schema[1].text},
-                        {dim: 'dim2', name: schema[2].text},
-                        {dim: 'dim3', name: schema[3].text},
-                        {dim: 'dim4', name: schema[4].text},
-                        {dim: 'dim5', name: schema[5].text},
-                        {dim: 'dim6', name: schema[6].text},
-                        {dim: 'dim7', name: schema[7].text,
-                        type: 'category', data: ['优', '良', '轻度污染', '重度污染', '严重污染']}
+                        // {dim: 'dim2', name: schema[2].text},
+                        // {dim: 'dim3', name: schema[3].text},
+                        // {dim: 'dim4', name: schema[4].text},
+                        // {dim: 'dim5', name: schema[5].text},
+                        // {dim: 'dim6', name: schema[6].text},
+                        // {dim: 'dim7', name: schema[7].text,
+                        // type: 'category', data: ['优', '良', '轻度污染', '中度污染', '重度污染', '严重污染']}
                     ],
                     parallel: {
                         y2: 100,
@@ -105,17 +102,17 @@
                             nameLocation: 'end',
                             nameGap: 20,
                             nameTextStyle: {
-                                color: '#fff',
+                                // color: '#fff',
                                 fontSize: 14
                             },
                             axisLine: {
                                 lineStyle: {
-                                    color: '#aaa'
+                                    // color: '#aaa'
                                 }
                             },
                             axisTick: {
                                 lineStyle: {
-                                    color: '#777'
+                                    // color: '#777'
                                 }
                             },
                             splitLine: {
@@ -123,7 +120,7 @@
                             },
                             axisLabel: {
                                 textStyle: {
-                                    color: '#fff'
+                                    // color: '#fff'
                                 }
                             }
                         }
@@ -133,26 +130,26 @@
                             name: '北京',
                             type: 'parallel',
                             lineStyle: lineStyle,
-                            // data: dataBJ
-                            data: [
-                                [ 1, 32,12 , 19, 28,1.39,24, 8,"优"],
-                            ]
+                            data: dataBJ
+                            // data: [
+                            //     [ 1, 32,12 , 19, 28,1.39,24, 8,"优"],
+                            // ]
                         },
                         {
                             name: '上海',
                             type: 'parallel',
                             lineStyle: lineStyle,
-                            // data: dataSH
-                            data: [
-                                [ 1, 332,212 , 119, 128,12.39,124, 18,"良"],
-                            ]
+                            data: dataSH
+                            // data: [
+                            //     [ 1, 332,212 , 119, 128,12.39,124, 18,"良"],
+                            // ]
                         },
-                        // {
-                        //     name: '广州',
-                        //     type: 'parallel',
-                        //     lineStyle: lineStyle,
-                        //     data: dataGZ
-                        // }
+                        {
+                            name: '广州',
+                            type: 'parallel',
+                            lineStyle: lineStyle,
+                            data: dataGZ
+                        }
                     ]
                 });
             });

@@ -11,13 +11,13 @@ define(function (require) {
     /**
      * @payload
      * @property {string} parallelAxisId
-     * @property {Array.<Array.<number>>|boolean} intervals
+     * @property {Array.<Array.<number>>} intervals
      */
     echarts.registerAction(actionInfo, function (payload, ecModel) {
         ecModel.eachComponent(
             {mainType: 'parallelAxis', query: payload},
             function (parallelAxisModel) {
-                parallelAxisModel.axis.setActiveIntervals(payload.intervals);
+                parallelAxisModel.axis.model.setActiveIntervals(payload.intervals);
             }
         );
 

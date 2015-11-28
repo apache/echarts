@@ -19,10 +19,12 @@ define(function (require) {
          * @override
          */
         render: function (axisModel, ecModel, api, payload) {
-
             if (fromAxisAreaSelect(axisModel, ecModel, payload)) {
                 return;
             }
+
+            this.axisModel = axisModel;
+            this.api = api;
 
             this.group.removeAll();
 
@@ -54,7 +56,7 @@ define(function (require) {
             var axisGroup = axisBuilder.getGroup();
 
             this.group.add(axisGroup);
-            this.group.z2 = 100;
+            this.group.z = axisModel.get('z');
 
             this._buildSelectController(
                 axisGroup, areaSelectStyle, axisModel, api
@@ -73,23 +75,37 @@ define(function (require) {
                     areaSelectStyle
                 );
 
-                selectController.on('selected', function (standardViewExtent) {
-                    var intervals = standardViewExtent
-                        ? [[
-                            axis.coordToData(standardViewExtent[0], true),
-                            axis.coordToData(standardViewExtent[1], true)
-                        ]]
-                        : true;
-
-                    api.dispatch({
-                        type: 'axisAreaSelect',
-                        parallelAxisId: axisModel.id,
-                        intervals: intervals
-                    });
-                });
+                selectController.on('selected', zrUtil.bind(this._onSelected, this));
             }
 
             selectController.enable(axisGroup);
+
+            // After filtering, axis may change, select area needs to be update.
+            var ranges = zrUtil.map(axisModel.activeIntervals, function (interval) {
+                return [
+                    axis.dataToCoord(interval[0], true),
+                    axis.dataToCoord(interval[1], true)
+                ];
+            });
+            selectController.update(ranges);
+        },
+
+        _onSelected: function (ranges) {
+            // Do not cache these object, because the mey be changed.
+            var axisModel = this.axisModel;
+            var axis = axisModel.axis;
+
+            var intervals = zrUtil.map(ranges, function (range) {
+                return [
+                    axis.coordToData(range[0], true),
+                    axis.coordToData(range[1], true)
+                ];
+            });
+            this.api.dispatch({
+                type: 'axisAreaSelect',
+                parallelAxisId: axisModel.id,
+                intervals: intervals
+            });
         },
 
         /**

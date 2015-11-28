@@ -1,59 +1,25 @@
 define(function(require) {
 
     var ComponentModel = require('../../model/Component');
-    var defaultOption = require('../axisDefault');
     var zrUtil = require('zrender/core/util');
     var makeStyleMapper = require('../../model/mixin/makeStyleMapper');
-
-    function mergeDefault(axisOption, ecModel) {
-        var axisType = axisOption.type + 'Axis';
-
-        zrUtil.merge(axisOption, ecModel.get(axisType));
-        zrUtil.merge(axisOption, ecModel.getTheme().get(axisType));
-        zrUtil.merge(axisOption, defaultOption[axisType]);
-    }
+    var axisModelCreator = require('../axisModelCreator');
+    var numberUtil = require('../../util/number');
 
     var AxisModel = ComponentModel.extend({
 
-        type: 'parallelAxis',
+        type: 'baseParallelAxis',
 
         /**
          * @type {module:echarts/coord/parallel/Axis}
          */
         axis: null,
 
-        defaultOption: {
-
-            type: 'value', // 'value', 'category', ...
-
-            dim: null, // 'dim0', 'dim1', 'dim2', ...
-
-            parallelIndex: null,
-
-            areaSelectStyle: {
-                width: 20,
-                borderWidth: 2,
-                borderColor: 'rgba(160,197,232,0.4)',
-                color: 'rgba(160,197,232,0.4)'
-            },
-
-            z: 10
-        },
-
         /**
-         * @override
+         * @type {Array.<Array.<number>}
+         * @readOnly
          */
-        init: function (axisOption, parentModel, ecModel) {
-            this.mergeOption(axisOption, parentModel, ecModel);
-        },
-
-        /**
-         * @override
-         */
-        mergeOption: function (axisOption, parentModel, ecModel) {
-            zrUtil.merge(axisOption, this.getDefaultOption(), false);
-            mergeDefault(axisOption, ecModel);
-        },
+        activeIntervals: [],
 
         /**
          * @return {Object}
@@ -64,14 +30,88 @@ define(function(require) {
                     ['fill', 'color'],
                     ['lineWidth', 'borderWidth'],
                     ['stroke', 'borderColor'],
-                    ['width', 'width']
+                    ['width', 'width'],
+                    ['opacity', 'opacity']
                 ]
             ).call(this.getModel('areaSelectStyle'));
+        },
+
+        /**
+         * The code of this feature is put on AxisModel but not ParallelAxis,
+         * because axisModel can be alive after echarts updating but instance of
+         * ParallelAxis having been disposed. this._activeInterval should be kept
+         * when action dispatched (i.e. legend click).
+         *
+         * @param {Array.<Array<number>>} intervals interval.length === 0
+         *                                          means set all active.
+         * @public
+         */
+        setActiveIntervals: function (intervals) {
+            var activeIntervals = this.activeIntervals = zrUtil.clone(intervals, true);
+
+            // Normalize
+            if (activeIntervals) {
+                for (var i = activeIntervals.length - 1; i >= 0; i--) {
+                    numberUtil.asc(activeIntervals[i]);
+                }
+            }
+        },
+
+        /**
+         * @param {number|string} [value] When attempting to detect 'no activeIntervals set',
+         *                         value can not be input.
+         * @return {string} 'normal': no activeIntervals set,
+         *                  'active',
+         *                  'inactive'.
+         * @public
+         */
+        getActiveState: function (value) {
+            var activeIntervals = this.activeIntervals;
+
+            if (!activeIntervals.length) {
+                return 'normal';
+            }
+
+            if (value == null) {
+                return 'inactive';
+            }
+
+            for (var i = 0, len = activeIntervals.length; i < len; i++) {
+                if (activeIntervals[i][0] <= value && value <= activeIntervals[i][1]) {
+                    return 'active';
+                }
+            }
+            return 'inactive';
         }
 
     });
 
+    var defaultOption = {
+
+        type: 'value',
+
+        dim: null, // 'dim0', 'dim1', 'dim2', ...
+
+        parallelIndex: null,
+
+        areaSelectStyle: {
+            width: 20,
+            borderWidth: 1,
+            borderColor: 'rgba(160,197,232)',
+            color: 'rgba(160,197,232)',
+            opacity: 0.3
+        },
+
+        z: 10
+    };
+
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
+
+    function getAxisType(axisName, option) {
+        return option.type || (option.data ? 'category' : 'value');
+    }
+
+    axisModelCreator('parallel', AxisModel, getAxisType, defaultOption);
 
     return AxisModel;
 });

@@ -2,7 +2,6 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Axis = require('../Axis');
-    var numberUtil = require('../../util/number');
 
     /**
      * @constructor module:echarts/coord/parallel/ParallelAxis
@@ -12,7 +11,7 @@ define(function (require) {
      * @param {Array.<number>} coordExtent
      * @param {string} axisType
      */
-    var ParallelAxis = function (dim, scale, coordExtent, axisType) {
+    var ParallelAxis = function (dim, scale, coordExtent, axisType, axisIndex) {
 
         Axis.call(this, dim, scale, coordExtent);
 
@@ -27,12 +26,10 @@ define(function (require) {
         this.type = axisType || 'value';
 
         /**
-         * null means all active. Empty array means no active.
-         *
-         * @type {Array.<Array.<number>}
-         * @private
+         * @type {number}
+         * @readOnly
          */
-        this._activeIntervals = null;
+        this.axisIndex = axisIndex;
     };
 
     ParallelAxis.prototype = {
@@ -43,51 +40,8 @@ define(function (require) {
          * Axis model
          * @param {module:echarts/coord/parallel/AxisModel}
          */
-        model: null,
+        model: null
 
-        /**
-         * @param {Array.<Array<number>>|boolan} interval If input true, means set all active.
-         * @public
-         */
-        setActiveIntervals: function (intervals) {
-            var activeIntervals = this._activeIntervals = intervals === true
-                ? null
-                : zrUtil.clone(intervals, true);
-
-            // Normalize
-            if (activeIntervals) {
-                for (var i = activeIntervals.length - 1; i >= 0; i--) {
-                    numberUtil.asc(activeIntervals[i]);
-                }
-            }
-        },
-
-        /**
-         * @param {number|string} [value] When attempting to detect 'no activeIntervals set',
-         *                         value can not be input.
-         * @return {string} 'normal': no activeIntervals set,
-         *                  'active',
-         *                  'inactive'.
-         * @public
-         */
-        getActiveState: function (value) {
-            var activeIntervals = this._activeIntervals;
-
-            if (!activeIntervals) {
-                return 'normal';
-            }
-
-            if (value == null) {
-                return 'inactive';
-            }
-
-            for (var i = 0, len = activeIntervals.length; i < len; i++) {
-                if (activeIntervals[i][0] <= value && value <= activeIntervals[i][1]) {
-                    return 'active';
-                }
-            }
-            return 'inactive';
-        }
     };
 
     zrUtil.inherits(ParallelAxis, Axis);

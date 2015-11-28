@@ -11,6 +11,8 @@ define(function(require) {
         type: 'parallel'
     });
 
-    echarts.registerPreprocessor(require('../preprocessor/parallel'));
+    echarts.registerPreprocessor(
+        require('../coord/parallel/parallelPreprocessor')
+    );
 
 });

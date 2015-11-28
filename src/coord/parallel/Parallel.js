@@ -34,7 +34,7 @@ define(function(require) {
 
         /**
          * Always follow axis order.
-         * @type {Array.<number>}
+         * @type {Array.<string>}
          * @readOnly
          */
         this.dimensions = parallelModel.dimensions;
@@ -60,23 +60,19 @@ define(function(require) {
         _init: function (parallelModel, ecModel, api) {
 
             var dimensions = parallelModel.dimensions;
+            var parallelAxisIndex = parallelModel.parallelAxisIndex;
 
-            each(dimensions, function (dim) {
+            each(dimensions, function (dim, idx) {
 
-                var axisModel = ecModel.getComponent('parallelAxis', dim.axisIndex);
-                var parallelIndex = axisModel.get('parallelIndex');
+                var axisIndex = parallelAxisIndex[idx];
+                var axisModel = ecModel.getComponent('parallelAxis', axisIndex);
 
-                if (ecModel.getComponent('parallel', parallelIndex) !== parallelModel) {
-                    // FIXME
-                    // api.log('Axis should not be shared among coordinate systems!');
-                    return;
-                }
-
-                var axis = this._axesMap[dim.name] = new ParallelAxis(
-                    dim.name,
+                var axis = this._axesMap[dim] = new ParallelAxis(
+                    dim,
                     axisHelper.createScaleByModel(axisModel),
                     [0, 0],
-                    dim.axisType // FIXME 检查和 axisModel.get('type') 的不一样
+                    axisModel.get('type'),
+                    axisIndex
                 );
 
                 var isCategory = axis.type === 'category';
@@ -108,7 +104,7 @@ define(function(require) {
                 var data = seriesModel.getData();
 
                 each(this.dimensions, function (dim) {
-                    this._axesMap[dim.name].scale.unionExtent(data.getDataExtent(dim.name));
+                    this._axesMap[dim].scale.unionExtent(data.getDataExtent(dim));
                 }, this);
 
             }, this);
@@ -193,7 +189,7 @@ define(function(require) {
                 // TODO
                 // 根据axis order 更新 dimensions顺序。
 
-                this._axesLayout[dim.name] = {
+                this._axesLayout[dim] = {
                     position: position,
                     rotation: rotation,
                     transform: transform,
@@ -201,6 +197,15 @@ define(function(require) {
                     labelDirection: 1
                 };
             }, this);
+        },
+
+        /**
+         * Get axis by dim.
+         * @param {string} dim
+         * @return {module:echarts/coord/parallel/ParallelAxis} [description]
+         */
+        getAxis: function (dim) {
+            return this._axesMap[dim];
         },
 
         /**
@@ -224,18 +229,17 @@ define(function(require) {
          */
         eachActiveState: function (data, callback, context) {
             var dimensions = this.dimensions;
-            var dimensionNames = this.getDimensionNames();
             var axesMap = this._axesMap;
             var hasActiveSet = false;
 
             for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
-                if (axesMap[dimensions[j].name].getActiveState() !== 'normal') {
+                if (axesMap[dimensions[j]].model.getActiveState() !== 'normal') {
                     hasActiveSet = true;
                 }
             }
 
             for (var i = 0, len = data.count(); i < len; i++) {
-                var values = data.getValues(dimensionNames, i);
+                var values = data.getValues(dimensions, i);
                 var activeState;
 
                 if (!hasActiveSet) {
@@ -244,8 +248,8 @@ define(function(require) {
                 else {
                     activeState = 'active';
                     for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
-                        var dimName = dimensions[j].name;
-                        var state = axesMap[dimName].getActiveState(values[j], j);
+                        var dimName = dimensions[j];
+                        var state = axesMap[dimName].model.getActiveState(values[j], j);
 
                         if (state === 'inactive') {
                             activeState = 'inactive';
@@ -277,16 +281,6 @@ define(function(require) {
          */
         getAxisLayout: function (dim) {
             return zrUtil.clone(this._axesLayout[dim], true);
-        },
-
-        /**
-         * Get dimension names.
-         * @return {Array.<string>}
-         */
-        getDimensionNames: function () {
-            return zrUtil.map(this.dimensions, function (dim) {
-                return dim.name;
-            });
         }
 
     };

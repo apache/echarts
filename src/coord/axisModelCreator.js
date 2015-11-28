@@ -12,7 +12,7 @@ define(function (require) {
      * @param {string} axisName 'x' 'y' 'radius' 'angle' 'parallel'
      * @param {module:echarts/model/Component} BaseAxisModelClass
      * @param {Function} axisTypeDefaulter
-     * @param {Object} extraDefaultOption
+     * @param {Object} [extraDefaultOption]
      */
     return function (axisName, BaseAxisModelClass, axisTypeDefaulter, extraDefaultOption) {
 
