@@ -36,6 +36,7 @@
                 'echarts',
                 'echarts/chart/parallel',
                 'echarts/component/legend',
+                'echarts/component/dataZoom',
                 'echarts/component/parallel',
             ], function (dataBJ, dataGZ, dataSH, zrUtil, echarts) {
 
@@ -43,7 +44,6 @@
                     renderer: 'canvas'
                 });
 
-window.cc = chart;
                 var lineStyle = {
                     normal: {
                         // opacity: 0.5,
@@ -83,16 +83,21 @@ window.cc = chart;
                                 + schema[6].text + '：' + value[6] + '<br>';
                         }
                     },
+                    dataZoom: {
+                        show: true,
+                        orient: 'vertical',
+                        parallelAxisIndex: [0]
+                    },
                     parallelAxis: [
                         {dim: 'dim0', name: schema[0].text, inverse: true, max: 31, nameLocation: 'start'},
                         {dim: 'dim1', name: schema[1].text},
-                        // {dim: 'dim2', name: schema[2].text},
-                        // {dim: 'dim3', name: schema[3].text},
-                        // {dim: 'dim4', name: schema[4].text},
-                        // {dim: 'dim5', name: schema[5].text},
-                        // {dim: 'dim6', name: schema[6].text},
-                        // {dim: 'dim7', name: schema[7].text,
-                        // type: 'category', data: ['优', '良', '轻度污染', '中度污染', '重度污染', '严重污染']}
+                        {dim: 'dim2', name: schema[2].text},
+                        {dim: 'dim3', name: schema[3].text},
+                        {dim: 'dim4', name: schema[4].text},
+                        {dim: 'dim5', name: schema[5].text},
+                        {dim: 'dim6', name: schema[6].text},
+                        {dim: 'dim7', name: schema[7].text,
+                        type: 'category', data: ['优', '良', '轻度污染', '中度污染', '重度污染', '严重污染']}
                     ],
                     parallel: {
                         y2: 100,

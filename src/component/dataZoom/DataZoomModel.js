@@ -16,7 +16,9 @@ define(function(require) {
 
         type: 'dataZoom',
 
-        dependencies: ['xAxis', 'yAxis', 'zAxis', 'radiusAxis', 'angleAxis', 'series'],
+        dependencies: [
+            'xAxis', 'yAxis', 'zAxis', 'radiusAxis', 'angleAxis', 'series'
+        ],
 
         /**
          * @protected
