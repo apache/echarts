@@ -218,18 +218,19 @@ define(function (require) {
         );
 
         function onEmphasis() {
-            sector.animateTo({
-                shape: {
+            // animateTo will stop revious animation like update transition
+            sector.animateShape()
+                .when(300, {
                     r: layout.r + 10
-                }
-            }, 300, 'elasticOut');
+                })
+                .start('elasticOut');
         }
         function onNormal() {
-            sector.animateTo({
-                shape: {
+            sector.animateShape()
+                .when(300, {
                     r: layout.r
-                }
-            }, 300, 'elasticOut');
+                })
+                .start('elasticOut');
         }
         if (itemModel.get('hoverAnimation')) {
             sector.on('mouseover', onEmphasis)
