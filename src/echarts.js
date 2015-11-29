@@ -439,6 +439,7 @@ define(function (require) {
                 }
                 else {
                     // Error
+                    return;
                 }
             }
 
