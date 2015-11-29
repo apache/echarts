@@ -36,6 +36,14 @@ define(function (require) {
                 thisExtent[1] += expandSize;
             }
         },
+
+        unionExtent: function (other) {
+            var extent = this._extent;
+            other[0] < extent[0] && (extent[0] = other[0]);
+            other[1] > extent[1] && (extent[1] = other[1]);
+
+            IntervalScale.prototype.setExtent.call(this, extent[0], extent[1]);
+        },
         /**
          * Get interval
          */

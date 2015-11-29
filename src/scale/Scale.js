@@ -62,8 +62,8 @@ define(function (require) {
         var extent = this._extent;
         other[0] < extent[0] && (extent[0] = other[0]);
         other[1] > extent[1] && (extent[1] = other[1]);
-        // Set again
-        this.setExtent(extent[0], extent[1]);
+        // not setExtent because in log axis it may transformed to power
+        // this.setExtent(extent[0], extent[1]);
     };
 
     /**
