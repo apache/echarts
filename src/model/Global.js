@@ -75,7 +75,7 @@ define(function (require) {
 
             // 如果不存在对应的 component model 则直接 merge
             each(newOption, function (componentOption, mainType) {
-                if (!isObject(componentOption)) {
+                if (componentOption == null) {
                     return;
                 }
 

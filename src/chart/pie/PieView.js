@@ -129,7 +129,7 @@ define(function (require) {
         else {
             graphic.updateProps(sector, {
                 shape: sectorShape
-            });
+            }, seriesModel);
         }
 
         var labelLayout = layout.label;

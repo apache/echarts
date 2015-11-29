@@ -1,3 +1,13 @@
+/*!
+ * ECharts, a javascript interactive chart library.
+ *
+ * Copyright (c) 2015, Baidu Inc.
+ * All rights reserved.
+ *
+ * LICENSE
+ * https://github.com/ecomfe/echarts/blob/master/LICENSE.txt
+ */
+
 /**
  * @module echarts
  */
