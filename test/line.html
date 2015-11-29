@@ -1,8 +1,10 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="esl.js"></script>
         <script src="config.js"></script>
+        <script src="lib/facePrint.js"></script>
     </head>
     <body>
         <style>
@@ -11,6 +13,7 @@
                 height: 100%;
             }
         </style>
+        <div id="info"></div>
         <div id="main"></div>
         <script>
 
@@ -19,7 +22,8 @@
                 'echarts/chart/line',
                 'echarts/component/legend',
                 'echarts/component/grid',
-                'echarts/component/tooltip'
+                'echarts/component/tooltip',
+                'echarts/component/dataZoomInside'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -78,11 +82,21 @@
                             show: false
                         }
                     },
+                    grid: {
+                        x: '10%',
+                        x2: '10%'
+                    },
                     yAxis: {
                         splitArea: {
                             show: true
                         }
                     },
+                    dataZoom: {
+                        type: 'inside',
+                        start: 10,
+                        end: 30
+                    },
+                    animation: false,
                     series: [{
                         name: 'line',
                         type: 'line',
