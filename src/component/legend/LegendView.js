@@ -243,6 +243,12 @@ define(function (require) {
             });
             itemGroup.add(text);
 
+            // Add a invisible rect to increase the area of mouse hover
+            itemGroup.add(new graphic.Rect({
+                shape: itemGroup.getBoundingRect(),
+                invisible: true
+            }));
+
             itemGroup.eachChild(function (child) {
                 child.silent = !selectMode;
             });
