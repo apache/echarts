@@ -101,7 +101,7 @@ define(function (require) {
                     axis.coordToData(range[1], true)
                 ];
             });
-            this.api.dispatch({
+            this.api.dispatchAction({
                 type: 'axisAreaSelect',
                 parallelAxisId: axisModel.id,
                 intervals: intervals

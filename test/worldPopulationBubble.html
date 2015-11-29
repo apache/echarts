@@ -457,6 +457,7 @@
                         }
                     });
 
+                    console.profile('setOption');
                     chart.setOption({
                         title : {
                             text: 'World Population (2011)',
@@ -475,54 +476,62 @@
                         },
                         dataRange: {
                             show: false,
-                            min: min,
+                            min: 0,
                             max: max,
                             inRange: {
-                                symbolSize: [4, 100]
+                                symbolSize: [6, 100]
+                            }
+                        },
+                        geo: {
+                            name: 'World Population (2010)',
+                            type: 'map',
+                            map: 'world',
+                            roam: true,
+                            label: {
+                                emphasis: {
+                                    show: false
+                                }
+                            },
+                            itemStyle: {
+                                normal: {
+                                    areaColor: '#393948',
+                                    borderColor: '#111'
+                                },
+                                emphasis: {
+                                    areaColor: '#393948'
+                                }
                             }
                         },
                         series : [
                             {
-                                name: 'World Population (2010)',
-                                type: 'map',
-                                map: 'world',
-                                roam: true,
-                                label: {
-                                    emphasis: {
-                                        show: false
-                                    }
-                                },
-                                itemStyle: {
-                                    normal: {
-                                        areaColor: '#393948',
-                                        borderColor: '#111'
-                                    },
-                                    emphasis: {
-                                        areaColor: '#393948'
-                                    }
-                                },
-                                markPoint: {
-                                    data: mapData.map(function (itemOpt) {
-                                        return {
-                                            name: itemOpt.name,
-                                            geoCoord: [latlong[itemOpt.code].longitude, latlong[itemOpt.code].latitude],
-                                            value: itemOpt.value,
-                                            label: {
-                                                emphasis: {
-                                                    show: true
-                                                }
-                                            },
-                                            itemStyle: {
-                                                normal: {
-                                                    color: itemOpt.color
-                                                }
+                                type: 'scatter',
+                                coordinateSystem: 'geo',
+                                data: mapData.map(function (itemOpt) {
+                                    return {
+                                        name: itemOpt.name,
+                                        value: [
+                                            latlong[itemOpt.code].longitude,
+                                            latlong[itemOpt.code].latitude,
+                                            itemOpt.value
+                                        ],
+                                        label: {
+                                            emphasis: {
+                                                position: 'right',
+                                                show: true
                                             }
-                                        };
-                                    })
-                                }
+                                        },
+                                        itemStyle: {
+                                            normal: {
+                                                color: itemOpt.color
+                                            }
+                                        }
+                                    };
+                                })
                             }
                         ]
                     });
+
+                    console.profileEnd('setOption');
                 });
             });
 

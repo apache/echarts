@@ -12,14 +12,14 @@ define(function (require) {
     var LEGEND_DISABLE_COLOR = '#ccc';
 
     function dispatchSelectAction(name, api) {
-        api.dispatch({
+        api.dispatchAction({
             type: 'legendToggleSelect',
             name: name
         });
     }
 
     function dispatchHighlightAction(seriesName, dataName, api) {
-        api.dispatch({
+        api.dispatchAction({
             type: 'highlight',
             seriesName: seriesName,
             name: dataName
@@ -27,7 +27,7 @@ define(function (require) {
     }
 
     function dispatchDownplayAction(seriesName, dataName, api) {
-        api.dispatch({
+        api.dispatchAction({
             type: 'downplay',
             seriesName: seriesName,
             name: dataName

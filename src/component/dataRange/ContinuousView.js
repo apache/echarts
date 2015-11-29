@@ -247,7 +247,7 @@ define(function(require) {
             var vertex = this._applyTransform([dx, dy], this._shapes.barGroup, true);
             this._updateInterval(handleIndex, vertex[1]);
 
-            this.api.dispatch({
+            this.api.dispatchAction({
                 type: 'selectDataRange',
                 from: this.uid,
                 dataRangeId: this.dataRangeModel.id,

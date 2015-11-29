@@ -586,7 +586,7 @@ define(function (require) {
         },
 
         _dispatchAction: function () {
-            this.api.dispatch({
+            this.api.dispatchAction({
                 type: 'dataZoom',
                 from: this.uid,
                 dataZoomId: this.dataZoomModel.id,

@@ -225,7 +225,7 @@ define(function (require) {
             var mainType = mapOrGeoModel.type.split('.')[0];
             controller.off('pan')
                 .on('pan', function (dx, dy) {
-                    api.dispatch({
+                    api.dispatchAction({
                         type: 'geoRoam',
                         component: mainType,
                         name: mapOrGeoModel.name,
@@ -235,7 +235,7 @@ define(function (require) {
                 });
             controller.off('zoom')
                 .on('zoom', function (zoom, mouseX, mouseY) {
-                    api.dispatch({
+                    api.dispatchAction({
                         type: 'geoRoam',
                         component: mainType,
                         name: mapOrGeoModel.name,

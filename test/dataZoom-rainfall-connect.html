@@ -44,7 +44,7 @@
                 var chart2 = createChart2(data, echarts);
 
                 chart1.on('dataZoom', function (payload) {
-                    chart2.dispatch({
+                    chart2.dispatchAction({
                         type: 'dataZoom',
                         dataZoomIndex: 0,
                         range: payload.range
@@ -52,7 +52,7 @@
                 });
 
                 chart2.on('dataZoom', function (payload) {
-                    chart1.dispatch({
+                    chart1.dispatchAction({
                         type: 'dataZoom',
                         dataZoomIndex: 0,
                         range: payload.range

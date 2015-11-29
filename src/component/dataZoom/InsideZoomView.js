@@ -101,7 +101,7 @@ define(function (require) {
     });
 
     function dispatch(me, range) {
-        me.api.dispatch({
+        me.api.dispatchAction({
             type: 'dataZoom',
             from: me.uid,
             dataZoomId: me.dataZoomModel.id,

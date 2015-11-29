@@ -537,7 +537,7 @@
                     return;
                 }
 
-                this.api.dispatch({
+                this.api.dispatchAction({
                     type: 'treemapMove',
                     from: this.uid,
                     seriesId: this.seriesModel.id,
@@ -584,7 +584,7 @@
 
                 rect.applyTransform(m);
 
-                this.api.dispatch({
+                this.api.dispatchAction({
                     type: 'treemapRender',
                     from: this.uid,
                     seriesId: this.seriesModel.id,
@@ -661,7 +661,7 @@
          * @private
          */
         _zoomToNode: function (targetInfo) {
-            this.api.dispatch({
+            this.api.dispatchAction({
                 type: 'treemapZoomToNode',
                 from: this.uid,
                 seriesId: this.seriesModel.id,

@@ -735,7 +735,7 @@ define(function (require) {
             // FIXME Not here
             var lastHover = this._lastHover;
             if (lastHover.seriesIndex != null && !contentNotChange) {
-                this._api.dispatch({
+                this._api.dispatchAction({
                     type: 'downplay',
                     seriesIndex: lastHover.seriesIndex,
                     dataIndex: lastHover.dataIndex
@@ -746,7 +746,7 @@ define(function (require) {
                 var seriesIndices = zrUtil.map(seriesList, function (series) {
                     return series.seriesIndex;
                 });
-                this._api.dispatch({
+                this._api.dispatchAction({
                     type: 'highlight',
                     seriesIndex: seriesIndices,
                     dataIndex: dataIndex
@@ -906,7 +906,7 @@ define(function (require) {
         _hideAxisPointer: function (coordSysName) {
             var lastHover = this._lastHover;
             if (lastHover.seriesIndex != null && lastHover.dataIndex != null) {
-                this._api.dispatch({
+                this._api.dispatchAction({
                     type: 'downplay',
                     seriesIndex: lastHover.seriesIndex,
                     dataIndex: lastHover.dataIndex

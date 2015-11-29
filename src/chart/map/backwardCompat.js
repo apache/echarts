@@ -61,18 +61,17 @@ define(function (require) {
                     if (!option.geo) {
                         option.geo = [];
                     }
-                    var geoIndex = option.geo.length;
                     // Use same geo if multiple map series has same map type
                     var geoOpt = newCreatedGeoOptMap[seriesOpt.map];
                     if (!geoOpt) {
                         geoOpt = newCreatedGeoOptMap[seriesOpt.map] = createGeoFromMap(seriesOpt);
-                    option.geo.push(geoOpt);
+                        option.geo.push(geoOpt);
                     }
 
                     var scatterSeries = seriesOpt.markPoint;
                     scatterSeries.type = 'scatter';
                     scatterSeries.coordinateSystem = 'geo';
-                    scatterSeries.geoIndex = geoIndex;
+                    scatterSeries.geoIndex = zrUtil.indexOf(option.geo, geoOpt);
                     scatterSeries.name = seriesOpt.name;
 
                     option.series.splice(zrUtil.indexOf(option.series, seriesOpt), 1, scatterSeries);

@@ -159,7 +159,7 @@ define(function(require) {
             }
             selected[index] = !selected[index];
 
-            this.api.dispatch({
+            this.api.dispatchAction({
                 type: 'selectDataRange',
                 from: this.uid,
                 dataRangeId: this.dataRangeModel.id,

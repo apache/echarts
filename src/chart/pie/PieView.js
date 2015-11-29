@@ -14,7 +14,7 @@ define(function (require) {
         var name = data.getName(dataIndex);
         var selectedOffset = seriesModel.get('selectedOffset');
 
-        api.dispatch({
+        api.dispatchAction({
             type: 'pieToggleSelect',
             from: uid,
             name: name,
