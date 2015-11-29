@@ -364,13 +364,8 @@ define(function(require) {
         _getSymbolIgnoreFunc: function (data, coordSys) {
             var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
             // `getLabelInterval` is provided by echarts/component/axis
-            if (categoryAxis && categoryAxis.getLabelInterval) {
-                var labelInterval = categoryAxis.getLabelInterval();
-                return function (idx) {
-                    return (typeof labelInterval === 'function')
-                            && !labelInterval(idx, categoryAxis.scale.getLabel(idx))
-                            || idx % (labelInterval + 1);
-                };
+            if (categoryAxis && categoryAxis.isLabelIgnored) {
+                return zrUtil.bind(categoryAxis.isLabelIgnored, categoryAxis);
             }
         },
 

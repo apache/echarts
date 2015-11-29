@@ -30,6 +30,19 @@ define(function(require, factory) {
         return ecModel.getComponent('grid', axisModel.get('gridIndex')) === gridModel;
     }
 
+    function getLabelUnionRect(axis) {
+        var axisModel = axis.model;
+        var labels = axisModel.getFormattedLabels();
+        var rect;
+        for (var i = 0; i < labels.length; i++) {
+            if (!axis.isLabelIgnored(i)) {
+                var singleRect = axisModel.getTextRect(labels[i]);
+                rect ? rect.union(singleRect) : (rect = singleRect);
+            }
+        }
+        return rect;
+    }
+
     function Grid(gridModel, ecModel, api) {
         /**
          * @type {Object.<string, module:echarts/coord/cartesian/Cartesian2D>}
@@ -87,7 +100,24 @@ define(function(require, factory) {
 
         this._rect = gridRect;
 
-        each(this._axesList, function (axis) {
+        var axesList = this._axesList;
+        // Minus label size
+        if (gridModel.get('containLabel')) {
+            each(axesList, function (axis) {
+                var labelUnionRect = getLabelUnionRect(axis);
+                var dim = axis.isHorizontal() ? 'height' : 'width';
+                var margin = axis.model.get('axisLabel.margin');
+                gridRect[dim] -= labelUnionRect[dim];
+                if (axis.isHorizontal()) {
+                    gridRect.y += (axis.position === 'top' ? 1 : -1) * (labelUnionRect.height + margin);
+                }
+                else {
+                    gridRect.x += (axis.position === 'left' ? 1 : -1) * (labelUnionRect.width + margin);
+                }
+            });
+        }
+
+        each(axesList, function (axis) {
             var isHorizontal = axis.isHorizontal();
             var extent = isHorizontal
                 ? [gridRect.x, gridRect.x + gridRect.width]

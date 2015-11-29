@@ -31,7 +31,9 @@ define(function(require) {
 
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
 
-    var extraOption = {gridIndex: 0};
+    var extraOption = {
+        gridIndex: 0
+    };
 
     axisModelCreator('x', AxisModel, getAxisType, extraOption);
     axisModelCreator('y', AxisModel, getAxisType, extraOption);

@@ -6,9 +6,7 @@ define(function(require) {
 
     require('./AxisModel');
 
-    var zrUtil = require('zrender/core/util');
-
-    var GridModel = require('../../echarts').extendComponentModel({
+    return require('../../echarts').extendComponentModel({
 
         type: 'grid',
 
@@ -23,10 +21,12 @@ define(function(require) {
             show: false,
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
-            x: 80,
+            x: '10%',
             y: 60,
-            x2: 80,
+            x2: '10%',
             y2: 60,
+            // If grid size contain label
+            containLabel: false,
             // width: {totalWidth} - x - x2,
             // height: {totalHeight} - y - y2,
             backgroundColor: 'rgba(0,0,0,0)',
