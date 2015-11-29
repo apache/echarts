@@ -90,6 +90,7 @@ define(function (require) {
          */
         _onZoom: function (controller, coordInfo, scale, mouseX, mouseY) {
             var dataZoomModel = this.dataZoomModel;
+            scale = 1 / scale;
             var range = scaleCartesian(
                 scale, [mouseX, mouseY], dataZoomModel.getRange(),
                 controller, coordInfo, dataZoomModel
