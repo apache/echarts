@@ -91,7 +91,7 @@ define(function (require) {
         return tpl;
     }
 
-    function adjustedTooltipPosition(x, y, el, viewWidth, viewHeight) {
+    function refixTooltipPosition(x, y, el, viewWidth, viewHeight) {
         var width = el.clientWidth;
         var height = el.clientHeight;
         var gap = 20;
@@ -109,6 +109,78 @@ define(function (require) {
             y += gap;
         }
         return [x, y];
+    }
+
+    function calcTooltipPosition(position, rect, dom) {
+        var domWidth = dom.clientWidth;
+        var domHeight = dom.clientHeight;
+        var gap = 5;
+        var x = 0;
+        var y = 0;
+        var rectWidth = rect.width;
+        var rectHeight = rect.height;
+        switch (position) {
+            case 'top':
+                x = rect.x + rectWidth / 2 - domWidth / 2;
+                y = rect.y - domHeight - gap;
+                break;
+            case 'bottom':
+                x = rect.x + rectWidth / 2 - domWidth / 2;
+                y = rect.y + rectHeight + gap;
+                break;
+            case 'left':
+                x = rect.x - domWidth - gap;
+                y = rect.y + rectHeight / 2 - domHeight / 2;
+                break;
+            case 'right':
+                x = rect.x + rectWidth + gap;
+                y = rect.y + rectHeight / 2 - domHeight / 2;
+        }
+        return [x, y];
+    }
+
+    /**
+     * @param  {string|Function|Array.<number>} positionExpr
+     * @param  {number} x Mouse x
+     * @param  {number} y Mouse y
+     * @param  {module:echarts/component/tooltip/TooltipContent} content
+     * @param  {Object|<Array.<Object>} params
+     * @param  {module:zrender/Element} el target element
+     * @param  {module:echarts/ExtensionAPI} api
+     * @return {Array.<number>}
+     */
+    function updatePosition(positionExpr, x, y, content, params, el, api) {
+        var viewWidth = api.getWidth();
+        var viewHeight = api.getHeight();
+
+        var rect = el && el.getBoundingRect().clone();
+        el && el.transform && rect.applyTransform(el.transform);
+        if (typeof positionExpr === 'function') {
+            // Callback of position can be an array or a string specify the positiont
+            var positionExpr = positionExpr([x, y], params, rect);
+        }
+
+        if (zrUtil.isArray(positionExpr)) {
+            x = parsePercent(positionExpr[0], viewWidth);
+            y = parsePercent(positionExpr[1], viewHeight);
+        }
+        // Specify tooltip position by string 'top' 'bottom' 'left' 'right' around graphic element
+        else if (typeof positionExpr === 'string' && el) {
+            var pos = calcTooltipPosition(
+                positionExpr, rect, content.el
+            );
+            x = pos[0];
+            y = pos[1];
+        }
+        else {
+            var pos = refixTooltipPosition(
+                x, y, content.el, viewWidth, viewHeight
+            );
+            x = pos[0];
+            y = pos[1];
+        }
+
+        content.moveTo(x, y);
     }
 
     require('../echarts').extendComponentView({
@@ -417,9 +489,9 @@ define(function (require) {
                     cartesian, axisPointerModel, axisType, targetShape
                 );
                 moveAnimation
-                    ? pointerEl.animateTo({
+                    ? graphic.updateProps(pointerEl, {
                         shape: targetShape
-                    }, 200, 'cubicOut')
+                    }, axisPointerModel)
                     :  pointerEl.attr({
                         shape: targetShape
                     });
@@ -440,9 +512,9 @@ define(function (require) {
                     cartesian, axisPointerModel, axisType, targetShape
                 );
                 moveAnimation
-                    ? pointerEl.animateTo({
+                    ? graphic.updateProps(pointerEl, {
                         shape: targetShape
-                    }, 200, 'cubicOut')
+                    }, axisPointerModel)
                     :  pointerEl.attr({
                         shape: targetShape
                     });
@@ -506,9 +578,9 @@ define(function (require) {
                 );
 
                 moveAnimation
-                    ? pointerEl.animateTo({
+                    ? graphic.updateProps(pointerEl, {
                         shape: targetShape
-                    }, 200, 'cubicOut')
+                    }, axisPointerModel)
                     :  pointerEl.attr({
                         shape: targetShape
                     });
@@ -549,9 +621,9 @@ define(function (require) {
                     polar, axisPointerModel, axisType, targetShape
                 );
                 moveAnimation
-                    ? pointerEl.animateTo({
+                    ? graphic.updateProps(pointerEl, {
                         shape: targetShape
-                    }, 200, 'cubicOut')
+                    }, axisPointerModel)
                     :  pointerEl.attr({
                         shape: targetShape
                     });
@@ -658,6 +730,8 @@ define(function (require) {
             var val = value[baseAxis.dim === 'x' ? 0 : 1];
             var dataIndex = data.indexOfNearest(baseAxis.dim, val);
 
+            var api = this._api;
+
             // FIXME Not here
             var lastHover = this._lastHover;
             if (lastHover.seriesIndex != null && !contentNotChange) {
@@ -684,7 +758,7 @@ define(function (require) {
             if (baseAxis && rootTooltipModel.get('showContent')) {
 
                 var formatter = rootTooltipModel.get('formatter');
-                var positionFunc = rootTooltipModel.get('position');
+                var positionExpr = rootTooltipModel.get('position');
                 var html;
 
                 var paramsList = zrUtil.map(seriesList, function (series) {
@@ -720,14 +794,10 @@ define(function (require) {
                                 if (cbTicket === self._ticket) {
                                     tooltipContent.setContent(html);
 
-                                    if (!positionFunc) {
-                                        var pos = adjustedTooltipPosition(
-                                            point[0], point[1], tooltipContent.el, viewWidth, viewHeight
-                                        );
-                                        x = pos[0];
-                                        y = pos[1];
-                                        tooltipContent.moveTo(x, y);
-                                    }
+                                    updatePosition(
+                                        positionExpr, point[0], point[1],
+                                        tooltipContent, paramsList, null, api
+                                    );
                                 }
                             };
                             self._ticket = ticket;
@@ -738,29 +808,10 @@ define(function (require) {
                     tooltipContent.setContent(html);
                 }
 
-                var api = this._api;
-                var viewWidth = api.getWidth();
-                var viewHeight = api.getHeight();
-                var x = point[0];
-                var y = point[1];
-                if (typeof positionFunc === 'function') {
-                    var pos = positionFunc([x, y], paramsList);
-                    x = parsePercent(pos[0], viewWidth);
-                    y = parsePercent(pos[1], viewHeight);
-                }
-                else if (zrUtil.isArray(positionFunc)) {
-                    x = parsePercent(positionFunc[0], viewWidth);
-                    y = parsePercent(positionFunc[1], viewHeight);
-                }
-                else {
-                    var pos = adjustedTooltipPosition(
-                        x, y, tooltipContent.el, viewWidth, viewHeight
-                    );
-                    x = pos[0];
-                    y = pos[1];
-                }
-
-                tooltipContent.moveTo(x, y);
+                updatePosition(
+                    positionExpr, point[0], point[1],
+                    tooltipContent, paramsList, null, api
+                );
             }
         },
 
@@ -792,7 +843,7 @@ define(function (require) {
 
             if (tooltipModel.get('showContent')) {
                 var formatter = tooltipModel.get('formatter');
-                var positionFunc = tooltipModel.get('position');
+                var positionExpr = tooltipModel.get('position');
                 var params = seriesModel.getDataParams(dataIndex);
                 var html;
                 if (!formatter) {
@@ -808,14 +859,11 @@ define(function (require) {
                         var callback = function (cbTicket, html) {
                             if (cbTicket === self._ticket) {
                                 tooltipContent.setContent(html);
-                                if (!positionFunc) {
-                                    var pos = adjustedTooltipPosition(
-                                        e.offsetX, e.offsetY, tooltipContent.el, viewWidth, viewHeight
-                                    );
-                                    x = pos[0];
-                                    y = pos[1];
-                                    tooltipContent.moveTo(x, y);
-                                }
+
+                                updatePosition(
+                                    positionExpr, e.offsetX, e.offsetY,
+                                    tooltipContent, params, e.target, api
+                                );
                             }
                         };
                         self._ticket = ticket;
@@ -826,29 +874,10 @@ define(function (require) {
                 tooltipContent.show(tooltipModel);
                 tooltipContent.setContent(html);
 
-                var x = e.offsetX;
-                var y = e.offsetY;
-
-                var viewWidth = api.getWidth();
-                var viewHeight = api.getHeight();
-                if (typeof positionFunc === 'function') {
-                    var pos = positionFunc([x, y], params);
-                    x = parsePercent(pos[0], viewWidth);
-                    y = parsePercent(pos[1], viewHeight);
-                }
-                else if (zrUtil.isArray(positionFunc)) {
-                    x = parsePercent(positionFunc[0], viewWidth);
-                    y = parsePercent(positionFunc[1], viewHeight);
-                }
-                else {
-                    var pos = adjustedTooltipPosition(
-                        x, y, tooltipContent.el, viewWidth, viewHeight
-                    );
-                    x = pos[0];
-                    y = pos[1];
-                }
-
-                tooltipContent.moveTo(x, y);
+                updatePosition(
+                    positionExpr, e.offsetX, e.offsetY,
+                    tooltipContent, params, e.target, api
+                );
             }
         },
 

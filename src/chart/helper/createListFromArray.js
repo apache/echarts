@@ -45,7 +45,7 @@ define(function(require) {
                 }, {
                     name: 'y',
                     // If two category axes
-                    type: isYAxisCategory ? 'ordinal' : 'number',
+                    type: isYAxisCategory ? 'ordinal' : 'float',
                     stackable: !isYAxisCategory
                 }];
 
@@ -92,7 +92,7 @@ define(function(require) {
                 }, {
                     name: 'radius',
                     // If two category axes
-                    type: isRadiusAxisCategory ? 'ordinal' : 'number',
+                    type: isRadiusAxisCategory ? 'ordinal' : 'float',
                     stackable: !isRadiusAxisCategory
                 }];
 

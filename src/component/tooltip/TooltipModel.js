@@ -69,6 +69,9 @@ define(function (require) {
                 // 极坐标系会默认选择 angle 轴
                 axis: 'auto',
 
+                animation: true,
+                animationDurationUpdate: 200,
+
                 // 直线指示器样式设置
                 lineStyle: {
                     color: '#555',
