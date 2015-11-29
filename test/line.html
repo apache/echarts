@@ -64,6 +64,7 @@
                     legend: {
                         data: ['line', 'line2', 'line3']
                     },
+                    dataRange: null, // 用于测试 option 中含有null的情况。
                     tooltip: {
                         trigger: 'axis',
                         axisPointer: {
@@ -97,7 +98,8 @@
                         end: 30
                     },
                     animation: false,
-                    series: [{
+                    series: [null,  // 用于测试 option 中含有null的情况。
+                    {
                         name: 'line',
                         type: 'line',
                         stack: 'all',

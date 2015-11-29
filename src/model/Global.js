@@ -14,6 +14,7 @@ define(function (require) {
     var map = zrUtil.map;
     var isArray = zrUtil.isArray;
     var indexOf = zrUtil.indexOf;
+    var isObject = zrUtil.isObject;
 
     var ComponentModel = require('./Component');
 
@@ -74,15 +75,14 @@ define(function (require) {
 
             // 如果不存在对应的 component model 则直接 merge
             each(newOption, function (componentOption, mainType) {
+                if (!isObject(componentOption)) {
+                    return;
+                }
+
                 if (!ComponentModel.hasClass(mainType)) {
-                    if (componentOption && typeof componentOption === 'object') {
-                        option[mainType] = option[mainType] == null
-                            ? zrUtil.clone(componentOption)
-                            : zrUtil.merge(option[mainType], componentOption);
-                    }
-                    else {
-                        option[mainType] = componentOption;
-                    }
+                    option[mainType] = option[mainType] == null
+                        ? zrUtil.clone(componentOption, true)
+                        : zrUtil.merge(option[mainType], componentOption, true);
                 }
                 else {
                     newCptTypes.push(mainType);
@@ -118,6 +118,10 @@ define(function (require) {
                 );
 
                 each(newCptOptionList, function (newCptOption, index) {
+                    if (!isObject(newCptOption)) {
+                        return;
+                    }
+
                     var componentModel = existComponents[index];
 
                     var ComponentModelClass = ComponentModel.getClass(
@@ -315,7 +319,7 @@ define(function (require) {
             else if (zrUtil.isString(mainType)) {
                 each(componentsMap[mainType], cb, context);
             }
-            else if (zrUtil.isObject(mainType)) {
+            else if (isObject(mainType)) {
                 each(this.findComponents(mainType), cb, context);
             }
         },
@@ -501,7 +505,7 @@ define(function (require) {
 
         // Mapping by id if specified.
         each(newComponentOptionList, function (componentOption, index) {
-            if (!componentOption.id) {
+            if (!isObject(componentOption) || !componentOption.id) {
                 return;
             }
             for (var i = 0, len = existComponents.length; i < len; i++) {
@@ -514,7 +518,7 @@ define(function (require) {
 
         // Mapping by name if specified.
         each(newComponentOptionList, function (componentOption, index) {
-            if (!componentOption.name) {
+            if (!isObject(componentOption) || !componentOption.name) {
                 return;
             }
             for (var i = 0, len = existComponents.length; i < len; i++) {
@@ -567,14 +571,20 @@ define(function (require) {
 
         // Complete subType
         each(newCptOptionList, function (opt, index) {
+            if (!isObject(opt)) {
+                return;
+            }
             var existCpt = existComponents[index];
             var subType = determineSubType(mainType, opt, existCpt);
             var item = {mainType: mainType, subType: subType};
-            keyInfoList.push(item);
+            keyInfoList[index] = item;
         });
 
         function eachOpt(cb) {
             each(newCptOptionList, function (opt, index) {
+                if (!isObject(opt)) {
+                    return;
+                }
                 var existCpt = existComponents[index];
                 var item = keyInfoList[index];
                 var fullType = mainType + '.' + item.subType;

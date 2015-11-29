@@ -34,6 +34,10 @@ define(function (require) {
 
     return function (option) {
         zrUtil.each(option.series, function (seriesOpt) {
+            if (!zrUtil.isObject(seriesOpt)) {
+                return;
+            }
+
             var seriesType = seriesOpt.type;
 
             compatStyle(seriesOpt);
