@@ -5,18 +5,32 @@
     var infoDom;
     var msgs = [];
 
+    var count = 0;
+
     window.facePrint = function (msg, delimiter, max) {
         if (!infoDom) {
             infoDom = createInfoDom();
         }
 
         msgs.push(encodeHTML(msg));
+        count++;
 
-        if (msgs.length > (max || 50)) {
+        if (msgs.length > (max || 30)) {
             msgs.shift();
         }
 
-        infoDom.innerHTML = msgs.join(delimiter || ' ');
+        if (delimiter) {
+            infoDom.innerHTML = msgs.join(delimiter);
+        }
+        else {
+            var str = '';
+            // Make some change in view, otherwise user may
+            // be not aware that log is still printing.
+            for (var i = 0; i < msgs.length; i++) {
+                str += msgs[i] + ' ' + (count - msgs.length + i) + ' ';
+            }
+            infoDom.innerHTML = str;
+        }
     };
 
     function createInfoDom() {

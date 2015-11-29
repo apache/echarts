@@ -1,9 +1,11 @@
 <html>
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="esl.js"></script>
         <script src="config.js"></script>
         <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
     </head>
     <body>
         <style>
@@ -25,7 +27,7 @@
                 'echarts/component/dataRange'
             ], function (echarts) {
 
-                require(['map/china'], function () {
+                require(['map/js/china'], function () {
                     var chart = echarts.init(document.getElementById('main'), null, {
                         renderer: 'canvas'
                     });

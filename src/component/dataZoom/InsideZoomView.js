@@ -89,10 +89,6 @@ define(function (require) {
          * @private
          */
         _onZoom: function (controller, coordInfo, scale, mouseX, mouseY) {
-            if (controller.isDragging()) {
-                return;
-            }
-
             var dataZoomModel = this.dataZoomModel;
             var range = scaleCartesian(
                 scale, [mouseX, mouseY], dataZoomModel.getRange(),

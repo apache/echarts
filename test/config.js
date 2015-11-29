@@ -2,7 +2,8 @@ require.config({
     paths: {
         'geoJson': '../geoData/geoJson',
         'theme': '../theme',
-        'data': './data'
+        'data': './data',
+        'map': '../map'
     },
     packages: [
         {
