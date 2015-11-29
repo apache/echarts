@@ -489,9 +489,9 @@ define(function (require) {
                     cartesian, axisPointerModel, axisType, targetShape
                 );
                 moveAnimation
-                    ? pointerEl.animateTo({
+                    ? graphic.updateProps(pointerEl, {
                         shape: targetShape
-                    }, 200, 'cubicOut')
+                    }, axisPointerModel)
                     :  pointerEl.attr({
                         shape: targetShape
                     });
@@ -512,9 +512,9 @@ define(function (require) {
                     cartesian, axisPointerModel, axisType, targetShape
                 );
                 moveAnimation
-                    ? pointerEl.animateTo({
+                    ? graphic.updateProps(pointerEl, {
                         shape: targetShape
-                    }, 200, 'cubicOut')
+                    }, axisPointerModel)
                     :  pointerEl.attr({
                         shape: targetShape
                     });
@@ -578,9 +578,9 @@ define(function (require) {
                 );
 
                 moveAnimation
-                    ? pointerEl.animateTo({
+                    ? graphic.updateProps(pointerEl, {
                         shape: targetShape
-                    }, 200, 'cubicOut')
+                    }, axisPointerModel)
                     :  pointerEl.attr({
                         shape: targetShape
                     });
@@ -621,9 +621,9 @@ define(function (require) {
                     polar, axisPointerModel, axisType, targetShape
                 );
                 moveAnimation
-                    ? pointerEl.animateTo({
+                    ? graphic.updateProps(pointerEl, {
                         shape: targetShape
-                    }, 200, 'cubicOut')
+                    }, axisPointerModel)
                     :  pointerEl.attr({
                         shape: targetShape
                     });

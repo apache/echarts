@@ -318,14 +318,14 @@ define(function(require) {
         });
     };
 
-    function animateOrSetProps(isUpdate, el, props, seriesModel, cb) {
+    function animateOrSetProps(isUpdate, el, props, animatableModel, cb) {
         var postfix = isUpdate ? 'Update' : '';
-        var duration = seriesModel
-            && seriesModel.getShallow('animationDuration' + postfix);
-        var animationEasing = seriesModel
-            && seriesModel.getShallow('animationEasing' + postfix);
+        var duration = animatableModel
+            && animatableModel.getShallow('animationDuration' + postfix);
+        var animationEasing = animatableModel
+            && animatableModel.getShallow('animationEasing' + postfix);
 
-        seriesModel && seriesModel.getShallow('animation')
+        animatableModel && animatableModel.getShallow('animation')
             ? el.animateTo(props, duration, animationEasing, cb)
             : (el.attr(props), cb && cb());
     }
@@ -333,7 +333,7 @@ define(function(require) {
      * Update graphic element properties with or without animation according to the configuration in series
      * @param {module:zrender/Element} el
      * @param {Object} props
-     * @param {module:echarts/model/Series} [seriesModel]
+     * @param {module:echarts/model/Model} [animatableModel]
      * @param {Function} cb
      */
     graphic.updateProps = zrUtil.curry(animateOrSetProps, true);
@@ -342,7 +342,7 @@ define(function(require) {
      * Init graphic element properties with or without animation according to the configuration in series
      * @param {module:zrender/Element} el
      * @param {Object} props
-     * @param {module:echarts/model/Series} [seriesModel]
+     * @param {module:echarts/model/Model} [animatableModel]
      * @param {Function} cb
      */
     graphic.initProps = zrUtil.curry(animateOrSetProps, false);
