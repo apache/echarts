@@ -250,7 +250,14 @@ define(function (require) {
                     backgroundColor = 'transparent';
                 }
             }
-            backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
+            if (env.node) {
+                this._zr.configLayer(0, {
+                    clearColor: backgroundColor
+                });
+            }
+            else {
+                backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
+            }
 
             console.time && console.timeEnd('update');
         },

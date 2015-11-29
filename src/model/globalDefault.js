@@ -1,5 +1,9 @@
 define(function () {
-    var platform = navigator.platform || '';
+    var platform = '';
+    // Navigator not exists in node
+    if (typeof navigator !== 'undefined') {
+        platform = navigator.platform || '';
+    }
     return {
         // 全图默认背景
         backgroundColor: 'rgba(0,0,0,0)',
