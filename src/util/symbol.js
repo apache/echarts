@@ -272,7 +272,7 @@ define(function(require) {
         if (this.type !== 'image') {
             var symbolStyle = this.style;
             var symbolShape = this.shape;
-            if (symbolShape.symbolType === 'line') {
+            if (symbolShape && symbolShape.symbolType === 'line') {
                 symbolStyle.stroke = color;
             }
             else if (this.__isEmptyBrush) {
