@@ -56,7 +56,6 @@ define(function (require) {
             var axisGroup = axisBuilder.getGroup();
 
             this.group.add(axisGroup);
-            this.group.z = axisModel.get('z');
 
             this._buildSelectController(
                 axisGroup, areaSelectStyle, axisModel, api
