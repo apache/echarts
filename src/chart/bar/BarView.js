@@ -45,11 +45,12 @@ define(function (require) {
 
             function createRect(dataIndex, isUpdate) {
                 var layout = data.getItemLayout(dataIndex);
+                var lineWidth = data.getItemModel(dataIndex).get(barBorderWidthQuery) || 0;
+                fixLayoutWithLineWidth(layout, lineWidth);
+
                 var rect = new graphic.Rect({
                     shape: zrUtil.extend({}, layout)
                 });
-                var lineWidth = data.getItemModel(dataIndex).get(barBorderWidthQuery) || 0;
-                fixLayoutWithLineWidth(layout, lineWidth);
                 // Animation
                 if (enableAnimation) {
                     var rectShape = rect.shape;

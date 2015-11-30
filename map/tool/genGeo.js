@@ -105,7 +105,7 @@ function makeChina() {
     var jsonStr = JSON.stringify(compress(geoJson));
     fs.writeFileSync(
         '../json/china.json',
-        JSON.stringify(jsonStr),
+        jsonStr,
         'utf-8'
     );
     fs.writeFileSync(
@@ -150,6 +150,8 @@ function makeProvince(provinceName) {
     );
 }
 
+makeChina();
+
 provinceFullList.forEach(function (provinceName) {
     if (provinceName === '台湾省') {
         return;
@@ -157,8 +159,6 @@ provinceFullList.forEach(function (provinceName) {
     console.log('Generating ' + provinceName);
     makeProvince(provinceName);
 });
-
-makeChina();
 
 var worldNameMap = {
     // 'United States': 'United States of America',

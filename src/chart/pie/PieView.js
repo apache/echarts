@@ -129,7 +129,7 @@ define(function (require) {
         else {
             graphic.updateProps(sector, {
                 shape: sectorShape
-            });
+            }, seriesModel);
         }
 
         var labelLayout = layout.label;
@@ -218,19 +218,18 @@ define(function (require) {
         );
 
         function onEmphasis() {
-            // animateTo will stop revious animation like update transition
-            sector.animateShape()
-                .when(300, {
+            sector.animateTo({
+                shape: {
                     r: layout.r + 10
-                })
-                .start('elasticOut');
+                }
+            }, 300, 'elasticOut');
         }
         function onNormal() {
-            sector.animateShape()
-                .when(300, {
+            sector.animateTo({
+                shape: {
                     r: layout.r
-                })
-                .start('elasticOut');
+                }
+            }, 300, 'elasticOut');
         }
         if (itemModel.get('hoverAnimation')) {
             sector.on('mouseover', onEmphasis)

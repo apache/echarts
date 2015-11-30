@@ -7,6 +7,7 @@ echarts.format = require('echarts/util/format');
 /** for: ${parts} as ${mod} */
 require("${mod}");
 /** /for */
-exports['echarts'] = echarts;
+
+return echarts;
 
 }));

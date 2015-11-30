@@ -5,11 +5,11 @@
 define(function (require) {
 
     var UNDEFINED = 'undefined';
-    var global = window;
-    var Float64Array = typeof global.Float64Array === UNDEFINED
-        ? Array : global.Float64Array;
-    var Int32Array = typeof global.Int32Array === UNDEFINED
-        ? Array : global.Int32Array;
+    var globalObj = typeof window === 'undefined' ? global : window;
+    var Float64Array = typeof globalObj.Float64Array === UNDEFINED
+        ? Array : globalObj.Float64Array;
+    var Int32Array = typeof globalObj.Int32Array === UNDEFINED
+        ? Array : globalObj.Int32Array;
 
     var dataCtors = {
         'float': Float64Array,
