@@ -1,8 +1,10 @@
 define(function (require) {
 
     'use strict';
+    var modelUtil = require('../../util/model');
+    var ComponentModel = require('../../model/Component');
 
-    require('../../echarts').extendComponentModel({
+    ComponentModel.extend({
 
         type: 'geo',
 
@@ -10,6 +12,15 @@ define(function (require) {
          * @type {module:echarts/coord/geo/Geo}
          */
         coordinateSystem: null,
+
+        init: function (option) {
+            ComponentModel.prototype.init.apply(this, arguments);
+
+            // Default label emphasis `position` and `show`
+            modelUtil.defaultEmphasis(
+                option.label, ['position', 'show', 'textStyle', 'distance', 'formatter']
+            );
+        },
 
         defaultOption: {
 
@@ -64,6 +75,26 @@ define(function (require) {
                 emphasis: {                 // 也是选中样式
                     color: 'rgba(255,215,0,0.8)'
                 }
+            }
+        },
+
+        /**
+         * Format label
+         * @param {string} name Region name
+         * @param {string} [status='normal'] 'normal' or 'emphasis'
+         * @return {string}
+         */
+        getFormattedLabel: function (name, status) {
+            var formatter = this.get('label.' + status + '.formatter');
+            var params = {
+                name: name
+            };
+            if (typeof formatter === 'function') {
+                params.status = status;
+                return formatter(params);
+            }
+            else if (typeof formatter === 'string') {
+                return formatter.replace('{a}', params.seriesName);
             }
         },
 

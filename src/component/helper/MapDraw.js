@@ -173,16 +173,19 @@ define(function (require) {
                  || (data && !isDataNaN && (!showLabel && hoverShowLabel))
                  || (itemLayout && itemLayout.showLabel)
                  ) {
+                    var query = data ? dataIdx : region.name;
+                    var formattedStr = mapOrGeoModel.getFormattedLabel(query, 'normal');
+                    var hoverFormattedStr = mapOrGeoModel.getFormattedLabel(query, 'emphasis');
                     var text = new graphic.Text({
                         style: {
-                            text: showLabel ? region.name : '',
+                            text: showLabel ? (formattedStr || region.name) : '',
                             fill: textStyleModel.get('color'),
                             textFont: textStyleModel.getFont(),
                             textAlign: 'center',
                             textBaseline: 'middle'
                         },
                         hoverStyle: {
-                            text: hoverShowLabel ? region.name : '',
+                            text: hoverShowLabel ? (hoverFormattedStr || region.name) : '',
                             fill: hoverTextStyleModel.get('color'),
                             textFont: hoverTextStyleModel.getFont()
                         },
