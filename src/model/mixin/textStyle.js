@@ -11,6 +11,7 @@ define(function (require) {
             var ecModel = this.ecModel;
             var gTextStyleModel = ecModel && ecModel.getModel('textStyle');
             return [
+                // FIXME in node-canvas fontWeight is before fontStyle
                 this.getShallow('fontStyle') || getShallow(gTextStyleModel, 'fontStyle'),
                 this.getShallow('fontWeight') || getShallow(gTextStyleModel, 'fontWeight'),
                 (this.getShallow('fontSize') || getShallow(gTextStyleModel, 'fontSize') || 12) + 'px',
