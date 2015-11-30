@@ -915,6 +915,26 @@ define(function (require) {
         return ComponentView.extend(opts);
     };
 
+    /**
+     * ZRender need a canvas context to do measureText.
+     * But in node environment canvas may be created by node-canvas.
+     * So we need to specify how to create a canvas instead of using document.createElement('canvas')
+     *
+     * Be careful of using it in the browser.
+     *
+     * @param {Function} creator
+     * @example
+     *     var Canvas = require('canvas');
+     *     var echarts = require('echarts');
+     *     echarts.setCanvasCreator(function () {
+     *         // Small size is enough.
+     *         return new Canvas(32, 32);
+     *     });
+     */
+    echarts.setCanvasCreator = function (creator) {
+        zrUtil.createCanvas = creator;
+    };
+
     echarts.registerVisualCoding('echarts', require('./visual/seriesColor'));
     echarts.registerPreprocessor(require('./preprocessor/backwardCompat'));
 
