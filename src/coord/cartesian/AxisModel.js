@@ -25,8 +25,8 @@ define(function(require) {
     });
 
     function getAxisType(axisDim, option) {
-        // Default xAxis and axis with data is category axis
-        return option.type || ((axisDim === 'x' || option.data) ? 'category' : 'value');
+        // Default axis with data is category axis
+        return option.type || (option.data ? 'category' : 'value');
     }
 
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
