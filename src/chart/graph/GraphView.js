@@ -5,6 +5,8 @@ define(function (require) {
     var LineDraw = require('../helper/LineDraw');
     var RoamController = require('../../component/helper/RoamController');
 
+    var modelUtil = require('../../util/model');
+
     require('../../echarts').extendChartView({
 
         type: 'graph',
@@ -39,7 +41,27 @@ define(function (require) {
 
             symbolDraw.updateData(data);
 
-            lineDraw.updateData(data.graph.edgeData, null, null);
+            var edgeData = data.graph.edgeData;
+            var rawOption = seriesModel.option;
+            var formatModel = modelUtil.createDataFormatModel(
+                seriesModel, edgeData, rawOption.edges || rawOption.links
+            );
+            formatModel.formatTooltip = function (dataIndex) {
+                var params = this.getDataParams(dataIndex);
+                var rawDataOpt = params.data;
+                var html = rawDataOpt.source + ' > ' + rawDataOpt.target;
+                if (params.value) {
+                    html += ':' + params.value;
+                }
+                return html;
+            };
+            lineDraw.updateData(edgeData, null, null);
+            edgeData.eachItemGraphicEl(function (el) {
+                el.traverse(function (child) {
+                    child.hostModel = formatModel;
+                });
+            });
+
 
             // Save the original lineWidth
             data.graph.eachEdge(function (edge) {
@@ -57,6 +79,10 @@ define(function (require) {
 
             this._updateNodeAndLinkScale();
 
+            this._updateController(seriesModel, coordSys, api);
+        },
+
+        _updateController: function (seriesModel, coordSys, api) {
             var controller = this._controller;
             controller.rect = coordSys.getViewRect();
 

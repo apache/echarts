@@ -460,7 +460,11 @@ define(function (require) {
         idx = this.getRawIndex(idx);
         var itemOpt = this._rawData[idx];
         var valueProp = this._valueProp;
-        if (itemOpt && itemOpt.hasOwnProperty(valueProp)) {
+        // FIXME Value may not exist in data item object when data is links
+        // if (itemOpt && itemOpt.hasOwnProperty(valueProp)) {
+        //     return itemOpt[valueProp];
+        // }
+        if (zrUtil.isObject(itemOpt) && !zrUtil.isArray(itemOpt)) {
             return itemOpt[valueProp];
         }
         return itemOpt;
