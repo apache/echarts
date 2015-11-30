@@ -1,9 +1,9 @@
 define(function (require) {
 
-    var SeriesModel = require('../../model/Series');
     var zrUtil = require('zrender/core/util');
     var List = require('../../data/List');
     var formatUtil = require('../../util/format');
+    var modelUtil = require('../../util/model');
 
     var addCommas = formatUtil.addCommas;
     var encodeHTML = formatUtil.encodeHTML;
@@ -68,12 +68,7 @@ define(function (require) {
             && markerHelper.dataFilter(coordSys, dimensionInverse, item[1]);
     }
 
-    var seriesModelProto = SeriesModel.prototype;
     var markLineFormatMixin = {
-        getDataParams: seriesModelProto.getDataParams,
-
-        getFormattedLabel: seriesModelProto.getFormattedLabel,
-
         formatTooltip: function (dataIndex) {
             var data = this._data;
             var value = data.getRawValue(dataIndex);
@@ -84,6 +79,10 @@ define(function (require) {
                 + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
         },
 
+        getRawDataArray: function () {
+            return this.option.data;
+        },
+
         getData: function () {
             return this._data;
         },
@@ -92,6 +91,8 @@ define(function (require) {
             this._data = data;
         }
     };
+
+    zrUtil.extend(markLineFormatMixin, modelUtil.dataFormatMixin);
 
     require('../../echarts').extendComponentView({
 
@@ -179,7 +180,7 @@ define(function (require) {
                 ]);
             });
 
-            lineDraw.updateData(lineData, fromData, toData, api);
+            lineDraw.updateData(lineData, fromData, toData);
 
             // Set host model for tooltip
             // FIXME

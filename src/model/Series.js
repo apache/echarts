@@ -119,6 +119,14 @@ define(function(require) {
             return this._dataBeforeProcessed;
         },
 
+        /**
+         * Get raw data array given by user
+         * @return {Array.<Object>}
+         */
+        getRawDataArray: function () {
+            return this.option.data;
+        },
+
         // FIXME
         /**
          * Default tooltip formatter
@@ -142,72 +150,12 @@ define(function(require) {
                 : (encodeHTML(this.name) + ' : ' + formattedValue);
         },
 
-        /**
-         * Get params for formatter
-         * @param {number} dataIndex
-         * @return {Object}
-         */
-        getDataParams: function (dataIndex) {
-            var data = this._data;
-            var seriesIndex = this.seriesIndex;
-            var seriesName = this.name;
-            var rawDataIndex = data.getRawIndex(dataIndex);
-            var rawValue = data.getRawValue(dataIndex);
-            var name = data.getName(dataIndex, true);
-
-            var option = this.option;
-            // Data may not exists in the option given by user
-            var itemOpt = option.data && option.data[rawDataIndex];
-
-            return {
-                seriesIndex: seriesIndex,
-                seriesName: seriesName,
-                name: name,
-                dataIndex: rawDataIndex,
-                data: itemOpt,
-                value: rawValue,
-
-                // Param name list for mapping `a`, `b`, `c`, `d`, `e`
-                $vars: ['seriesName', 'name', 'value']
-            };
-        },
-
-        /**
-         * Format label
-         * @param {number} dataIndex
-         * @param {string} [status='normal'] 'normal' or 'emphasis'
-         * @param {Function|string} [formatter] Default use the `itemStyle[status].label.formatter`
-         * @return {string}
-         */
-        getFormattedLabel: function (dataIndex, status, formatter) {
-            status = status || 'normal';
-            var data = this._data;
-            var itemModel = data.getItemModel(dataIndex);
-
-            var params = this.getDataParams(dataIndex);
-            if (!formatter) {
-                formatter = itemModel.get('label.' + status + '.formatter');
-            }
-
-            if (typeof formatter === 'function') {
-                params.status = status;
-                return formatter(params);
-            }
-            else if (typeof formatter === 'string') {
-                // TODO ETPL ?
-                return formatter.replace('{a}','{a0}')
-                                .replace('{b}','{b0}')
-                                .replace('{c}','{c0}')
-                                .replace('{a0}', params.seriesName)
-                                .replace('{b0}', params.name)
-                                .replace('{c0}', addCommas(params.value));
-            }
-        },
-
         restoreData: function () {
             this._data = this._dataBeforeProcessed.cloneShallow();
         }
     });
+
+    zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
 
     return SeriesModel;
 });

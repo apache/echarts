@@ -1,5 +1,9 @@
 define(function(require) {
 
+    var formatUtil = require('../util/format');
+    var addCommas = formatUtil.addCommas;
+    var Model = require('../model/Model');
+
     var zrUtil = require('zrender/core/util');
 
     var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
@@ -169,6 +173,93 @@ define(function(require) {
                     emphasisOpt[subOptName] = val;
                 }
             });
+        }
+    };
+
+    /**
+     * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
+     * @param {module:echarts/model/Series} seriesModel
+     * @param {module:echarts/data/List} data
+     * @param {Array.<Object>} rawData
+     */
+    modelUtil.createDataFormatModel = function (seriesModel, data, rawData) {
+        var model = new Model();
+        zrUtil.mixin(model, modelUtil.dataFormatMixin);
+        model.seriesIndex = seriesModel.seriesIndex;
+        model.name = seriesModel.name;
+
+        model.getData = function () {
+            return data;
+        };
+        model.getRawDataArray = function () {
+            return rawData;
+        };
+        return model;
+    };
+
+    modelUtil.dataFormatMixin = {
+        /**
+         * Get params for formatter
+         * @param {number} dataIndex
+         * @return {Object}
+         */
+        getDataParams: function (dataIndex) {
+            var data = this.getData();
+
+            var seriesIndex = this.seriesIndex;
+            var seriesName = this.name;
+
+            var rawDataIndex = data.getRawIndex(dataIndex);
+            var rawValue = data.getRawValue(dataIndex);
+            var name = data.getName(dataIndex, true);
+
+            // Data may not exists in the option given by user
+            var rawDataArray = this.getRawDataArray();
+            var itemOpt = rawDataArray && rawDataArray[rawDataIndex];
+
+            return {
+                seriesIndex: seriesIndex,
+                seriesName: seriesName,
+                name: name,
+                dataIndex: rawDataIndex,
+                data: itemOpt,
+                value: rawValue,
+
+                // Param name list for mapping `a`, `b`, `c`, `d`, `e`
+                $vars: ['seriesName', 'name', 'value']
+            };
+        },
+
+        /**
+         * Format label
+         * @param {number} dataIndex
+         * @param {string} [status='normal'] 'normal' or 'emphasis'
+         * @param {Function|string} [formatter] Default use the `itemStyle[status].label.formatter`
+         * @return {string}
+         */
+        getFormattedLabel: function (dataIndex, status, formatter) {
+            status = status || 'normal';
+            var data = this.getData();
+            var itemModel = data.getItemModel(dataIndex);
+
+            var params = this.getDataParams(dataIndex);
+            if (!formatter) {
+                formatter = itemModel.get('label.' + status + '.formatter');
+            }
+
+            if (typeof formatter === 'function') {
+                params.status = status;
+                return formatter(params);
+            }
+            else if (typeof formatter === 'string') {
+                // TODO ETPL ?
+                return formatter.replace('{a}','{a0}')
+                                .replace('{b}','{b0}')
+                                .replace('{c}','{c0}')
+                                .replace('{a0}', params.seriesName)
+                                .replace('{b0}', params.name)
+                                .replace('{c0}', addCommas(params.value));
+            }
         }
     };
 

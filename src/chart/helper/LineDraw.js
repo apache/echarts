@@ -127,9 +127,8 @@ define(function (require) {
      * @param {module:echarts/data/List} lineData
      * @param {module:echarts/data/List} [fromData]
      * @param {module:echarts/data/List} [toData]
-     * @param {module:echarts/ExtensionAPI} api
      */
-    lineDrawProto.updateData = function (lineData, fromData, toData, api) {
+    lineDrawProto.updateData = function (lineData, fromData, toData) {
 
         var oldFromData = this._fromData;
         var oldToData = this._toData;

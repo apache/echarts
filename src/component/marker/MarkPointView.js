@@ -1,9 +1,9 @@
 define(function (require) {
 
-    var SeriesModel = require('../../model/Series');
     var SymbolDraw = require('../../chart/helper/SymbolDraw');
     var zrUtil = require('zrender/core/util');
     var formatUtil = require('../../util/format');
+    var modelUtil = require('../../util/model');
 
     var addCommas = formatUtil.addCommas;
     var encodeHTML = formatUtil.encodeHTML;
@@ -13,14 +13,13 @@ define(function (require) {
     var markerHelper = require('./markerHelper');
 
     // FIXME
-    var seriesModelProto = SeriesModel.prototype;
     var markPointFormatMixin = {
-        getDataParams: seriesModelProto.getDataParams,
-
-        getFormattedLabel: seriesModelProto.getFormattedLabel,
+        getRawDataArray: function () {
+            return this.option.data;
+        },
 
         formatTooltip: function (dataIndex) {
-            var data = this._data;
+            var data = this.getData();
             var value = data.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
@@ -37,6 +36,8 @@ define(function (require) {
             this._data = data;
         }
     };
+
+    zrUtil.extend(markPointFormatMixin, modelUtil.dataFormatMixin);
 
     require('../../echarts').extendComponentView({
 
@@ -85,6 +86,7 @@ define(function (require) {
                 var option = this.getItemModel(idx).option;
                 return zrUtil.retrieve(option.__rawValue, option.value, '');
             };
+
             // FIXME
             zrUtil.mixin(mpModel, markPointFormatMixin);
             mpModel.setData(mpData);
@@ -120,7 +122,9 @@ define(function (require) {
             // Set host model for tooltip
             // FIXME
             mpData.eachItemGraphicEl(function (el) {
-                el.hostModel = mpModel;
+                el.traverse(function (child) {
+                    child.hostModel = mpModel;
+                });
             });
 
             symbolDraw.__keep = true;
