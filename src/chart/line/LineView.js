@@ -485,7 +485,7 @@ define(function(require) {
 
             if (hasAnimation) {
                 clipPath.shape.endAngle = -angleExtent[0] * RADIAN;
-                graphic.initGraphicEl(clipPath, {
+                graphic.initProps(clipPath, {
                     shape: {
                         endAngle: -angleExtent[1] * RADIAN
                     }
