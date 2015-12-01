@@ -68,15 +68,6 @@ define(function(require) {
             height: 0
         },
 
-        beforeBrush: function () {
-            var style = this.style;
-            if (style.textPosition === 'inside') {
-                style.textPosition = ['50%', '35%'];
-                style.textAlign = 'center';
-                style.textBaseline = 'middle';
-            }
-        },
-
         buildPath: function (path, shape) {
             var x = shape.x;
             var y = shape.y;
@@ -254,6 +245,17 @@ define(function(require) {
             y: 0,
             width: 0,
             height: 0
+        },
+
+        beforeBrush: function () {
+            var style = this.style;
+            var shape = this.shape;
+            // FIXME
+            if (shape.symbolType === 'pin' && style.textPosition === 'inside') {
+                style.textPosition = ['50%', '40%'];
+                style.textAlign = 'center';
+                style.textBaseline = 'middle';
+            }
         },
 
         buildPath: function (ctx, shape) {

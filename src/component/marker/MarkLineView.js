@@ -185,7 +185,7 @@ define(function (require) {
             // Set host model for tooltip
             // FIXME
             mlData.line.eachItemGraphicEl(function (el, idx) {
-                el.eachChild(function (child) {
+                el.traverse(function (child) {
                     child.hostModel = mlModel;
                 });
             });
