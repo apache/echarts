@@ -1,10 +1,8 @@
 define(function (require) {
 
     return function (ecModel) {
-        var offset = 0;
-        var colorList = ecModel.get('color');
-
         ecModel.eachSeriesByType('graph', function (seriesModel) {
+            var colorList = seriesModel.get('color');
             var categoriesData = seriesModel.getCategoriesData();
             var data = seriesModel.getData();
 
@@ -16,11 +14,9 @@ define(function (require) {
                 var itemModel = categoriesData.getItemModel(idx);
                 var rawIdx = categoriesData.getRawIndex(idx);
                 var color = itemModel.get('itemStyle.normal.color')
-                    || colorList[(offset + rawIdx) % colorList.length];
+                    || colorList[rawIdx % colorList.length];
                 categoriesData.setItemVisual(idx, 'color', color);
             });
-
-            offset += categoriesData.count();
 
             // Assign category color to visual
             if (categoriesData.count()) {

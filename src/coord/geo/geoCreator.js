@@ -20,17 +20,6 @@ define(function (require) {
         var width = geoModel.get('width');
         var height = geoModel.get('height');
 
-        if (!width && !height) {
-            var viewportWidth = api.getWidth();
-            var viewportHeight = api.getHeight();
-            if (rect.width / viewportWidth > rect.height / viewportHeight) {
-                width = viewportWidth * 0.8;
-            }
-            else {
-                height = viewportHeight * 0.8;
-            }
-        }
-
         var viewRect = layout.parsePositionInfo({
             x: geoModel.get('x'),
             y: geoModel.get('y'),

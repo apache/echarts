@@ -168,6 +168,15 @@ define(function(require) {
             height = containerHeight - y2 - verticalMargin - y;
         }
 
+        if (isNaN(width) && isNaN(height)) {
+            if (aspect  > containerWidth / containerHeight) {
+                width = containerWidth * 0.8;
+            }
+            else {
+                height = containerHeight * 0.8;
+            }
+        }
+
         if (aspect != null) {
             // Calculate width or height with given aspect
             if (isNaN(width)) {

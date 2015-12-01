@@ -101,6 +101,9 @@ define(function (require) {
             zlevel: 0,
             z: 2,
 
+            color: ['#5793f3', '#d14a61', '#fd9c35', '#675bba', '#fec42c',
+                    '#dd4444', '#d4df5a', '#cd4870'],
+
             coordinateSystem: 'view',
 
             legendHoverLink: true,
@@ -113,8 +116,8 @@ define(function (require) {
             y: 'center',
             x2: null,
             y2: null,
-            width: '90%',
-            height: '90%',
+            // width: '80%',
+            // height: '80%',
 
             symbol: 'circle',
             symbolSize: 10,

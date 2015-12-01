@@ -4,14 +4,15 @@ define(function (require) {
     var layout = require('../../util/layout');
     var bbox = require('zrender/core/bbox');
 
-    function getViewRect(seriesModel, api) {
+    function getViewRect(seriesModel, api, aspect) {
         return layout.parsePositionInfo({
             x: seriesModel.get('x'),
             y: seriesModel.get('y'),
             x2: seriesModel.get('x2'),
             y2: seriesModel.get('y2'),
             width: seriesModel.get('width'),
-            height: seriesModel.get('height')
+            height: seriesModel.get('height'),
+            aspect: aspect
         }, {
             width: api.getWidth(),
             height: api.getHeight()
@@ -23,7 +24,6 @@ define(function (require) {
             var coordSysType = seriesModel.get('coordinateSystem');
             if (!coordSysType || coordSysType === 'view') {
                 var viewCoordSys = new View();
-                var viewRect = getViewRect(seriesModel, api);
 
                 var data = seriesModel.getData();
                 var positions = data.mapArray(function (idx) {
@@ -35,6 +35,10 @@ define(function (require) {
                 var max = [];
 
                 bbox.fromPoints(positions, min, max);
+
+                var viewRect = getViewRect(
+                    seriesModel, api, (max[0] - min[0]) / (max[1] - min[1]) || 1
+                );
                 // Position may be NaN, use view rect instead
                 if (isNaN(min[0]) || isNaN(min[1])) {
                     min = [viewRect.x, viewRect.y];
@@ -44,24 +48,10 @@ define(function (require) {
                 var bbWidth = max[0] - min[0];
                 var bbHeight = max[1] - min[1];
 
-                var aspect = bbWidth / bbHeight;
-
                 var viewWidth = viewRect.width;
                 var viewHeight = viewRect.height;
 
                 viewCoordSys = seriesModel.coordinateSystem = new View();
-
-                // Uniform scale on width and height
-                if (viewWidth / viewHeight > aspect) {
-                    viewWidth = aspect * viewHeight;
-                }
-                else {
-                    viewHeight = aspect * viewWidth;
-                }
-
-                // Adjust x and y
-                viewRect.x += (viewRect.width - viewWidth) / 2;
-                viewRect.y += (viewRect.height - viewHeight) / 2;
 
                 viewCoordSys.setBoundingRect(
                     min[0], min[1], bbWidth, bbHeight
