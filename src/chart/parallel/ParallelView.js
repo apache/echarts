@@ -14,8 +14,8 @@ define(function (require) {
              * @private
              */
             this._dataGroup = new graphic.Group();
-            this.group.add(this._dataGroup);
 
+            this.group.add(this._dataGroup);
             /**
              * @type {module:echarts/data/List}
              */
@@ -45,6 +45,15 @@ define(function (require) {
                 .update(update)
                 .remove(remove)
                 .execute();
+
+            // First create
+            if (!this._data) {
+                dataGroup.setClipPath(createGridClipShape(
+                    coordSys, seriesModel, function () {
+                        dataGroup.removeClipPath();
+                    }
+                ));
+            }
 
             this._data = data;
 
@@ -83,7 +92,11 @@ define(function (require) {
                             newEls.push(createEl(pointPair));
                         }
                         else if (pointPair) {
-                            el.setShape({points: pointPair});
+                            graphic.updateProps(el, {
+                                shape: {
+                                    points: pointPair
+                                }
+                            }, seriesModel);
                         }
                     }
                 );
@@ -116,6 +129,28 @@ define(function (require) {
             this._data = null;
         }
     });
+
+    function createGridClipShape(coordSys, seriesModel, cb) {
+        var parallelModel = coordSys.model;
+        var rect = coordSys.getRect();
+        var rectEl = new graphic.Rect({
+            shape: {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height
+            }
+        });
+        var dim = parallelModel.get('layout') === 'horizontal' ? 'width' : 'height';
+        rectEl.setShape(dim, 0);
+        graphic.initProps(rectEl, {
+            shape: {
+                width: rect.width,
+                height: rect.height
+            }
+        }, seriesModel, cb);
+        return rectEl;
+    }
 
     function eachAxisPair(values, dimensions, coordSys, cb) {
         for (var i = 0, len = dimensions.length - 1; i < len; i++) {

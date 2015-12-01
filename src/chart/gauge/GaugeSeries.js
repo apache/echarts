@@ -41,7 +41,7 @@ define(function (require) {
                 // 默认显示，属性show控制显示与否
                 show: true,
                 lineStyle: {       // 属性lineStyle控制线条样式
-                    color: [[0.2, '#228b22'],[0.8, '#48b'],[1, '#ff4500']],
+                    color: [[0.2, '#91c7ae'],[0.8, '#63869e'],[1, '#c23531']],
                     width: 30
                 }
             },

@@ -52,6 +52,8 @@ define(function (require) {
          * @param {number} width
          * @param {number} height
          */
+
+        // PENDING to getRect
         setBoundingRect: function (x, y, width, height) {
             this._rect = new BoundingRect(x, y, width, height);
             return this._rect;
@@ -60,6 +62,7 @@ define(function (require) {
         /**
          * @return {module:zrender/core/BoundingRect}
          */
+        // PENDING to getRect
         getBoundingRect: function () {
             return this._rect;
         },

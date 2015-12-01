@@ -71,6 +71,7 @@ define(function (require) {
 
                 animation: true,
                 animationDurationUpdate: 200,
+                animationEasingUpdate: 'exponentialOut',
 
                 // 直线指示器样式设置
                 lineStyle: {

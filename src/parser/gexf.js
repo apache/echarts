@@ -19,7 +19,7 @@ define(function(require) {
             return null;
         }
 
-        var gexfRoot = doc.firstChild;
+        var gexfRoot = getChildByTagName(doc, 'gexf');
 
         if (!gexfRoot) {
             return null;
@@ -106,15 +106,15 @@ define(function(require) {
 
                     if (attribute) {
                         switch (attribute.type) {
-                            case "integer":
-                            case "long":
+                            case 'integer':
+                            case 'long':
                                 attValue = parseInt(attValue);
                                 break;
-                            case "float":
-                            case "double":
+                            case 'float':
+                            case 'double':
                                 attValue = parseFloat(attValue);
                                 break;
-                            case "boolean":
+                            case 'boolean':
                                 attValue = attValue.toLowerCase() == 'true';
                                 break;
                             default:
@@ -203,6 +203,12 @@ define(function(require) {
 
         return children;
     }
+
+    var echarts = require('../echarts');
+    echarts.parser = echarts.parser || {};
+    echarts.parser.gexf = {
+        parse: parse
+    };
 
     return {
         parse: parse

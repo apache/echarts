@@ -15,6 +15,7 @@ define(function(require) {
             coordSys.resize(parallelModel, api);
 
             parallelModel.coordinateSystem = coordSys;
+            coordSys.model = parallelModel;
 
             coordSysList.push(coordSys);
         });

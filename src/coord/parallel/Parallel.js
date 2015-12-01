@@ -135,6 +135,13 @@ define(function(require) {
         },
 
         /**
+         * @return {module:zrender/core/BoundingRect}
+         */
+        getRect: function () {
+            return this._rect;
+        },
+
+        /**
          * @private
          */
         _layoutAxes: function (parallelModel) {

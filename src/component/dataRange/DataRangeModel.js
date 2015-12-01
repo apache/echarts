@@ -79,8 +79,8 @@ define(function(require) {
             itemWidth: null,              // 值域图形宽度
             itemHeight: null,             // 值域图形高度
             precision: 0,              // 小数精度，默认为0，无小数点
-            // color: ['#bf444c', '#d88273', '#f6efa6'],//颜色（deprecated，兼容ec2，对应数值由高到低）
-            color: ['#006edd', '#e0ffff'],//颜色（deprecated，兼容ec2，对应数值由高到低）
+            color: ['#bf444c', '#d88273', '#f6efa6'],//颜色（deprecated，兼容ec2，对应数值由高到低）
+            // color: ['#006edd', '#e0ffff'],//颜色（deprecated，兼容ec2，对应数值由高到低）
 
             // formatter: null,
             text: null,                // 文本，如['高', '低']，兼容ec2，text[0]对应高值，text[1]对应低值

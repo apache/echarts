@@ -343,6 +343,9 @@ define(function (require) {
                     this._ticket = '';
                     // If either single data or series use item trigger
                     this._hideAxisPointer();
+                    // Reset last hover and dispatch downplay action
+                    this._resetLastHover();
+
                     this._showItemTooltipContent(hostModel, dataIndex, e);
                 }
             }
@@ -899,11 +902,8 @@ define(function (require) {
                 this.group.show();
             }
         },
-        /**
-         * Hide axis pointer
-         * @param {string} [coordSysName]
-         */
-        _hideAxisPointer: function (coordSysName) {
+
+        _resetLastHover: function () {
             var lastHover = this._lastHover;
             if (lastHover.seriesIndex != null && lastHover.dataIndex != null) {
                 this._api.dispatchAction({
@@ -914,7 +914,12 @@ define(function (require) {
             }
             // Reset lastHover
             this._lastHover = {};
-
+        },
+        /**
+         * Hide axis pointer
+         * @param {string} [coordSysName]
+         */
+        _hideAxisPointer: function (coordSysName) {
             if (coordSysName) {
                 var axisPointers = this._axisPointers[coordSysName];
                 axisPointers && zrUtil.each(axisPointers, function (el) {
@@ -928,6 +933,7 @@ define(function (require) {
 
         _hide: function () {
             this._hideAxisPointer();
+            this._resetLastHover();
             if (!this._alwaysShowContent) {
                 this._tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
             }
