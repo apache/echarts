@@ -328,10 +328,12 @@ define(function (require) {
 
         ecModel.eachComponent(
             {mainType: 'series', query: payload},
-            function (seriesModel) {
+            function (seriesModel, index, payloadInfo) {
                 var chartView = this._chartsMap[seriesModel.id];
                 if (chartView) {
-                    chartView[method](seriesModel, ecModel, this._api, payload);
+                    chartView[method](
+                        seriesModel, ecModel, this._api, payloadInfo
+                    );
                 }
             },
             this

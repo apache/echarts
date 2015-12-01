@@ -131,15 +131,15 @@ define(function (require) {
             }
         },
 
-        colorS: makePartialColorVisualHandler(function (color, value) {
+        colorSaturation: makePartialColorVisualHandler(function (color, value) {
             return zrColor.modifyHSL(color, null, value);
         }),
 
-        colorL: makePartialColorVisualHandler(function (color, value) {
+        colorLightness: makePartialColorVisualHandler(function (color, value) {
             return zrColor.modifyHSL(color, null, null, value);
         }),
 
-        colorA: makePartialColorVisualHandler(function (color, value) {
+        colorAlpha: makePartialColorVisualHandler(function (color, value) {
             return zrColor.modifyAlpha(color, value);
         }),
 
@@ -400,7 +400,7 @@ define(function (require) {
     };
 
     /**
-     * 'color', 'colorS', 'colorA', ... are in the same visualCluster named 'color'.
+     * 'color', 'colorSaturation', 'colorAlpha', ... are in the same visualCluster named 'color'.
      * Other visuals are in the cluster named as the same as theirselves.
      *
      * @public
@@ -432,11 +432,11 @@ define(function (require) {
     };
 
     /**
-     * Give order to visual types, considering colorS, colorA depends on color.
+     * Give order to visual types, considering colorSaturation, colorAlpha depends on color.
      *
      * @public
-     * @param {(Object|Array)} visualTypes If Object, like: {color: ..., colorS: ...}
-     *                                     IF Array, like: ['color', 'symbol', 'colorS']
+     * @param {(Object|Array)} visualTypes If Object, like: {color: ..., colorSaturation: ...}
+     *                                     IF Array, like: ['color', 'symbol', 'colorSaturation']
      * @return {Array.<string>} Sorted visual types.
      */
     VisualMapping.prepareVisualTypes = function (visualTypes) {
@@ -455,7 +455,7 @@ define(function (require) {
         }
 
         visualTypes.sort(function (type1, type2) {
-            // color should be front of colorS, colorA, ...
+            // color should be front of colorSaturation, colorAlpha, ...
             // symbol and symbolSize do not matter.
             return (type2 === 'color' && type1 !== 'color' && type1.indexOf('color') === 0)
                 ? 1 : -1;

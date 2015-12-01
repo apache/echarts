@@ -38,7 +38,8 @@ define(function(require) {
     };
 
     function getAxisType(axisDim, option) {
-        return option.type || (axisDim === 'angle' ? 'category' : 'value');
+        // Default axis with data is category axis
+        return option.type || (option.data ? 'category' : 'value');
     }
 
     axisModelCreator('angle', PolarAxisModel, getAxisType, polarAxisDefaultExtendedOption.angle);

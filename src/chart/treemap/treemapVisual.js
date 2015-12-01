@@ -55,12 +55,12 @@ define(function (require) {
 
         // calculate border color
         var borderColor = nodeItemStyleModel.get('borderColor');
-        var borderColorS = nodeItemStyleModel.get('borderColorS');
+        var borderColorSaturation = nodeItemStyleModel.get('borderColorSaturation');
         var thisNodeColor;
-        if (borderColorS != null) {
+        if (borderColorSaturation != null) {
             // For performance, do not always execute 'calculateColor'.
             thisNodeColor = calculateColor(visuals, node);
-            borderColor = calculateBorderColor(borderColorS, thisNodeColor);
+            borderColor = calculateBorderColor(borderColorSaturation, thisNodeColor);
         }
         node.setVisual('borderColor', borderColor);
 
@@ -97,7 +97,7 @@ define(function (require) {
     ) {
         var visuals = zrUtil.extend({}, designatedVisual);
 
-        zrUtil.each(['color', 'colorA', 'colorS'], function (visualName) {
+        zrUtil.each(['color', 'colorAlpha', 'colorSaturation'], function (visualName) {
             // Priority: thisNode > thisLevel > parentNodeDesignated > seriesModel
             var val = nodeItemStyleModel.get(visualName, true); // Ignore parent
             val == null && levelItemStyle && (val = levelItemStyle[visualName]);
@@ -114,22 +114,22 @@ define(function (require) {
         var color = getValueVisualDefine(visuals, 'color');
 
         if (color) {
-            var colorA = getValueVisualDefine(visuals, 'colorA');
-            var colorS = getValueVisualDefine(visuals, 'colorS');
-            if (colorS) {
-                color = zrColor.modifyHSL(color, null, null, colorS);
+            var colorAlpha = getValueVisualDefine(visuals, 'colorAlpha');
+            var colorSaturation = getValueVisualDefine(visuals, 'colorSaturation');
+            if (colorSaturation) {
+                color = zrColor.modifyHSL(color, null, null, colorSaturation);
             }
-            if (colorA) {
-                color = zrColor.modifyAlpha(color, colorA);
+            if (colorAlpha) {
+                color = zrColor.modifyAlpha(color, colorAlpha);
             }
 
             return color;
         }
     }
 
-    function calculateBorderColor(borderColorS, thisNodeColor) {
+    function calculateBorderColor(borderColorSaturation, thisNodeColor) {
         return thisNodeColor != null
-             ? zrColor.modifyHSL(thisNodeColor, null, null, borderColorS)
+             ? zrColor.modifyHSL(thisNodeColor, null, null, borderColorSaturation)
              : null;
     }
 
@@ -152,8 +152,8 @@ define(function (require) {
                 visuals.color != null
                 && visuals.color !== 'none'
                 && (
-                    getRangeVisual(nodeModel, 'colorA')
-                    || getRangeVisual(nodeModel, 'colorS')
+                    getRangeVisual(nodeModel, 'colorAlpha')
+                    || getRangeVisual(nodeModel, 'colorSaturation')
                 )
             );
 

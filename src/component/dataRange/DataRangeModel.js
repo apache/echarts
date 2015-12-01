@@ -50,10 +50,10 @@ define(function(require) {
             categories: null,          // 描述 category 数据。如：['some1', 'some2', 'some3']，设置后，min max失效。
             dimension: null,
 
-            inRange: null,             // 'color', 'colorH', 'colorS', 'colorL', 'colorA',
+            inRange: null,             // 'color', 'colorH', 'colorSaturation', 'colorLightness', 'colorAlpha',
                                        // 'symbol', 'symbolSize'
 
-            outOfRange: null,          // 'color', 'colorH', 'colorS', 'colorL', 'colorA',
+            outOfRange: null,          // 'color', 'colorH', 'colorSaturation', 'colorLightness', 'colorAlpha',
                                        // 'symbol', 'symbolSize'
 
             orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
@@ -378,7 +378,7 @@ define(function(require) {
                     var itemSize = this.itemSize;
                     var visuals = controller[state];
 
-                    // Set inactive color for controller if no other color attr (like colorA) specified.
+                    // Set inactive color for controller if no other color attr (like colorAlpha) specified.
                     if (!visuals) {
                         visuals = controller[state] = {
                             color: isCategory ? inactiveColor : [inactiveColor]
