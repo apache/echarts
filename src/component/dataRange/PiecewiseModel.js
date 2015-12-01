@@ -21,7 +21,7 @@ define(function(require) {
             itemHeight: 14,            // 值域图形高度，线性渐变垂直布局高度为该值 * 10
             itemSymbol: 'roundRect',
             splitList: null,           // 值顺序：由高到低, item can be:
-                                    // {min, max, value, color, colorS, colorA, symbol, symbolSize}
+                                    // {min, max, value, color, colorSaturation, colorAlpha, symbol, symbolSize}
             selectedMode: 'multiple',
             itemGap: 10                // 各个item之间的间隔，单位px，默认为10，
                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔

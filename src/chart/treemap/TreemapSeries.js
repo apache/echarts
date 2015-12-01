@@ -83,18 +83,18 @@ define(function(require) {
             itemStyle: {
                 normal: {
                     color: null,         // 各异 如不需，可设为'none'
-                    colorA: null,        // 默认不设置 如不需，可设为'none'
-                    colorS: null,        // 默认不设置 如不需，可设为'none'
+                    colorAlpha: null,        // 默认不设置 如不需，可设为'none'
+                    colorSaturation: null,        // 默认不设置 如不需，可设为'none'
                     borderWidth: 0,
                     gapWidth: 0,
                     borderColor: '#fff',
-                    borderColorS: null   // 如果设置，则borderColor的设置无效，而是取当前节点计算出的颜色，再经由borderColorS处理。
+                    borderColorSaturation: null   // 如果设置，则borderColor的设置无效，而是取当前节点计算出的颜色，再经由borderColorSaturation处理。
                 },
                 emphasis: {}
             },
             color: 'none',    // 为数组，表示同一level的color 选取列表。默认空，在level[0].color中取系统color列表。
-            colorA: null,   // 为数组，表示同一level的color alpha 选取范围。
-            colorS: null,   // 为数组，表示同一level的color alpha 选取范围。
+            colorAlpha: null,   // 为数组，表示同一level的color alpha 选取范围。
+            colorSaturation: null,   // 为数组，表示同一level的color alpha 选取范围。
             colorMappingBy: 'index', // 'value' or 'index' or 'id'.
             visibleMin: 10,    // If area less than this threshold (unit: pixel^2), node will not be rendered.
                                // Only works when sort is 'asc' or 'desc'.

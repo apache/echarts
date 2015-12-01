@@ -30,17 +30,17 @@ define(function (require) {
             inactive: ['rgba(0,0,0,0)']
         },
 
-        colorS: {
+        colorSaturation: {
             active: [0.3, 1],
             inactive: [0, 0]
         },
 
-        colorL: {
+        colorLightness: {
             active: [0.9, 0.5],
             inactive: [0, 0]
         },
 
-        colorA: {
+        colorAlpha: {
             active: [0.3, 1],
             inactive: [0, 0]
         },
