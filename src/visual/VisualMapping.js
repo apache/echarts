@@ -131,6 +131,10 @@ define(function (require) {
             }
         },
 
+        colorHue: makePartialColorVisualHandler(function (color, value) {
+            return zrColor.modifyHSL(color, value);
+        }),
+
         colorSaturation: makePartialColorVisualHandler(function (color, value) {
             return zrColor.modifyHSL(color, null, value);
         }),

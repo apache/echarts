@@ -30,6 +30,11 @@ define(function (require) {
             inactive: ['rgba(0,0,0,0)']
         },
 
+        colorHue: {
+            active: [0, 360],
+            inactive: [0, 0]
+        },
+
         colorSaturation: {
             active: [0.3, 1],
             inactive: [0, 0]
