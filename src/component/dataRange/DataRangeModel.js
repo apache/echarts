@@ -50,10 +50,10 @@ define(function(require) {
             categories: null,          // 描述 category 数据。如：['some1', 'some2', 'some3']，设置后，min max失效。
             dimension: null,
 
-            inRange: null,             // 'color', 'colorH', 'colorSaturation', 'colorLightness', 'colorAlpha',
+            inRange: null,             // 'color', 'colorHue', 'colorSaturation', 'colorLightness', 'colorAlpha',
                                        // 'symbol', 'symbolSize'
 
-            outOfRange: null,          // 'color', 'colorH', 'colorSaturation', 'colorLightness', 'colorAlpha',
+            outOfRange: null,          // 'color', 'colorHue', 'colorSaturation', 'colorLightness', 'colorAlpha',
                                        // 'symbol', 'symbolSize'
 
             orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
