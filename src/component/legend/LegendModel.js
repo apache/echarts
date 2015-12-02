@@ -41,8 +41,17 @@ define(function(require) {
              */
             this._availableNames = availableNames;
 
+            // If has any selected in option.selected
+            var selectedMap = this.option.selected;
+            var hasSelected = false;
+            for (var name in selectedMap) {
+                if (selectedMap[name]) {
+                    legendData[0] && this.select(name);
+                    hasSelected = true;
+                }
+            }
             // Try select the first if selectedMode is single
-            legendData[0] && this.select(legendData[0].get('name'));
+            !hasSelected && legendData[0] && this.select(legendData[0].get('name'));
         },
 
         /**

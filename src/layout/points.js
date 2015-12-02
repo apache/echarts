@@ -8,7 +8,7 @@ define(function (require) {
             var dims = coordSys.dimensions;
             data.each(dims, function (x, y, idx) {
                 var point;
-                if (data.hasValue(idx)) {
+                if (!isNaN(x) && !isNaN(y)) {
                     point = coordSys.dataToPoint([x, y]);
                 }
                 else {

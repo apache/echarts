@@ -53,10 +53,7 @@ define(function(require) {
                         shadowOffsetX: 0,
                         shadowOffsetY: 0,
                         textStyle: {
-                            color: '#fff',
-                            fontFamily: 'Arial',
-                            fontSize: 12,
-                            fontWeight: 'normal'
+                            color: '#fff'
                         }
                     },
                     emphasis: {
@@ -72,10 +69,6 @@ define(function(require) {
                         align: 'center',
                         baseline: 'middle',
                         color: '#fff',
-                        fontFamily: 'Arial',
-                        fontSize: 13,
-                        fontStyle: 'normal',
-                        fontWeight: 'normal',
                         ellipsis: true
                     }
                 }

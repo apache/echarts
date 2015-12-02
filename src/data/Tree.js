@@ -316,7 +316,7 @@ define(function(require) {
          * @type {Array.<module:echarts/model/Model}
          */
         this.levelModels = zrUtil.map(levelOptions || [], function (levelDefine) {
-            return new Model(levelDefine, hostModel);
+            return new Model(levelDefine, hostModel, hostModel.ecModel);
         });
     }
 
