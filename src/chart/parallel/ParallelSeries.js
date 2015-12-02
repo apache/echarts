@@ -80,14 +80,15 @@ define(function(require) {
 
     function translateCategoryValue(axisModel, dim, rawData) {
         var axisData = axisModel.get('data');
+        var numberDim = +dim.replace('dim', '');
 
         if (axisData && axisData.length) {
             zrUtil.each(rawData, function (dataItem) {
                 if (!dataItem) {
                     return;
                 }
-                var index = zrUtil.indexOf(axisData, dataItem[dim]);
-                dataItem[dim] = index >= 0 ? index : NaN;
+                var index = zrUtil.indexOf(axisData, dataItem[numberDim]);
+                dataItem[numberDim] = index >= 0 ? index : NaN;
             });
         }
         // FIXME
