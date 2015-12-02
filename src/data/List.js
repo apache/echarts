@@ -585,7 +585,7 @@ define(function (require) {
 
 
     function normalizeDimensions(dimensions) {
-        if (typeof (dimensions) === 'string') {
+        if (!zrUtil.isArray(dimensions)) {
             dimensions = [dimensions];
         }
         return dimensions;

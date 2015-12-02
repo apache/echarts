@@ -75,7 +75,9 @@ define(function (require) {
                     // Warning
                 // }
                 var geo = new Geo(
-                    name + idx, name, mapData.geoJson, mapData.specialAreas
+                    name + idx, name,
+                    mapData.geoJson, mapData.specialAreas,
+                    geoModel.get('nameMap')
                 );
                 geoList.push(geo);
 
@@ -115,8 +117,13 @@ define(function (require) {
                     // Warning
                 // }
 
+                var nameMapList = zrUtil.map(mapSeries, function (singleMapSeries) {
+                    return singleMapSeries.get('nameMap');
+                });
                 var geo = new Geo(
-                    mapType, mapType, mapData.geoJson, mapData.specialAreas
+                    mapType, mapType,
+                    mapData.geoJson, mapData.specialAreas,
+                    zrUtil.mergeAll(nameMapList)
                 );
                 geoList.push(geo);
 

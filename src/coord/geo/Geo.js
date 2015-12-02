@@ -16,7 +16,17 @@ define(function (require) {
         require('./fix/geoCoord')
     ];
 
-    function Geo(name, map, geoJson, specialAreas) {
+    /**
+     * [Geo description]
+     * @param {string} name Geo name
+     * @param {string} map Map type
+     * @param {Object} geoJson
+     * @param {Object} [specialAreas]
+     *        Specify the positioned areas by left, top, width, height
+     * @param {Object.<string, string>} [nameMap]
+     *        Specify name alias
+     */
+    function Geo(name, map, geoJson, specialAreas, nameMap) {
 
         View.call(this, name);
 
@@ -33,7 +43,7 @@ define(function (require) {
 
         this._nameCoordMap = {};
 
-        this.loadGeoJson(geoJson, specialAreas);
+        this.loadGeoJson(geoJson, specialAreas, nameMap);
     }
 
     Geo.prototype = {
@@ -44,27 +54,36 @@ define(function (require) {
 
         /**
          * @param {Object} geoJson
+         * @param {Object} [specialAreas]
+         *        Specify the positioned areas by left, top, width, height
+         * @param {Object.<string, string>} [nameMap]
+         *        Specify name alias
          */
-        loadGeoJson: function (geoJson, specialAreas) {
+        loadGeoJson: function (geoJson, specialAreas, nameMap) {
             // https://jsperf.com/try-catch-performance-overhead
             try {
                 this.regions = geoJson ? parseGeoJson(geoJson) : [];
-                specialAreas = specialAreas || {};
-                this._specialAreas = specialAreas;
             }
             catch (e) {
                 throw 'Invalid geoJson format\n' + e;
             }
+            specialAreas = specialAreas || {};
+            nameMap = nameMap || {};
             var regions = this.regions;
             var regionsMap = {};
             for (var i = 0; i < regions.length; i++) {
-                regionsMap[regions[i].name] = regions[i];
+                var regionName = regions[i].name;
+                // Try use the alias in nameMap
+                regionName = nameMap[regionName] || regionName;
+                regions[i].name = regionName;
+
+                regionsMap[regionName] = regions[i];
                 // Add geoJson
-                this.addGeoCoord(regions[i].name, regions[i].center);
+                this.addGeoCoord(regionName, regions[i].center);
 
                 // Some area like Alaska in USA map needs to be tansformed
                 // to look better
-                var specialArea = specialAreas[regions[i].name];
+                var specialArea = specialAreas[regionName];
                 if (specialArea) {
                     regions[i].transformTo(
                         specialArea.left, specialArea.top, specialArea.width, specialArea.height

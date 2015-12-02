@@ -44,14 +44,13 @@ define(function(require) {
             // There is no space for current label;
             else if (textSpaceTakenRect.intersect(rect)) {
                 accumulatedLabelInterval++;
-                continue;
+                autoLabelInterval = Math.max(autoLabelInterval, accumulatedLabelInterval);
             }
             else {
                 textSpaceTakenRect.union(rect);
+                // Reset
+                accumulatedLabelInterval = 0;
             }
-            autoLabelInterval = Math.max(autoLabelInterval, accumulatedLabelInterval);
-            // Reset
-            accumulatedLabelInterval = 0;
         }
 
         return autoLabelInterval;

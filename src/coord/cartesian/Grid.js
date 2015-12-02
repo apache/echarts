@@ -85,7 +85,6 @@ define(function(require, factory) {
      * @param {module:echarts/ExtensionAPI} api
      */
     gridProto.resize = function (gridModel, api) {
-
         var gridRect = layout.parsePositionInfo({
             x: gridModel.get('x'),
             y: gridModel.get('y'),

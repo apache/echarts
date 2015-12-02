@@ -5,12 +5,29 @@ define(function(require) {
     'use strict';
 
     require('./AxisModel');
+    var ComponentModel = require('../../model/Component');
 
-    return require('../../echarts').extendComponentModel({
+    return ComponentModel.extend({
 
         type: 'grid',
 
         dependencies: ['xAxis', 'yAxis'],
+
+        mergeDefaultAndTheme: function (option, ecModel) {
+            // Not specify layout with x2, width, y2, height
+            // FIXME 通用？
+            if (option.x2 == null || option.width == null || option.x != null) {
+                option.x = option.x || '10%';
+                option.x2 = option.x2 || '10%';
+            }
+            if (option.y2 == null || option.height == null || option.y != null) {
+                option.y = option.y || 60;
+                option.y2 = option.y2 || 60;
+            }
+            ComponentModel.prototype.mergeDefaultAndTheme.call(
+                this, option, ecModel
+            );
+        },
 
         /**
          * @type {module:echarts/coord/cartesian/Grid}
@@ -21,10 +38,10 @@ define(function(require) {
             show: false,
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
-            x: '10%',
-            y: 60,
-            x2: '10%',
-            y2: 60,
+            // x: '10%',
+            // y: 60,
+            // x2: '10%',
+            // y2: 60,
             // If grid size contain label
             containLabel: false,
             // width: {totalWidth} - x - x2,
