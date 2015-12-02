@@ -90,7 +90,10 @@ define(function(require) {
 
         type: 'value',
 
-        dim: null, // 'dim0', 'dim1', 'dim2', ...
+        /**
+         * @type {Array.<number>}
+         */
+        dim: null, // 0, 1, 2, ...
 
         parallelIndex: null,
 

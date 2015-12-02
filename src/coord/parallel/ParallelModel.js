@@ -96,7 +96,7 @@ define(function(require) {
             });
 
             zrUtil.each(axisModels, function (axisModel) {
-                dimensions.push(axisModel.get('dim'));
+                dimensions.push('dim' + axisModel.get('dim'));
                 parallelAxisIndex.push(axisModel.componentIndex);
             });
         }

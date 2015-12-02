@@ -81,17 +81,13 @@ define(function(require) {
     function translateCategoryValue(axisModel, dim, rawData) {
         var axisData = axisModel.get('data');
 
-        // FIXME
-        // 这转换是否放在公用地方
-
-        var dimIndex = +dim.replace('dim', '');
         if (axisData && axisData.length) {
             zrUtil.each(rawData, function (dataItem) {
                 if (!dataItem) {
                     return;
                 }
-                var index = zrUtil.indexOf(axisData, dataItem[dimIndex]);
-                dataItem[dimIndex] = index >= 0 ? index : NaN;
+                var index = zrUtil.indexOf(axisData, dataItem[dim]);
+                dataItem[dim] = index >= 0 ? index : NaN;
             });
         }
         // FIXME
