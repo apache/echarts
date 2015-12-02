@@ -78,9 +78,9 @@
                         borderColor: '#777',
                         borderWidth: 1,
                         formatter: function (obj) {
-                            var value = obj[0].value;
+                            var value = obj.value;
                             return '<div style="border-bottom: 1px solid rgba(255,255,255,.3); font-size: 18px;padding-bottom: 7px;margin-bottom: 7px">'
-                                + obj[0].seriesName + ' ' + value[0] + '日：'
+                                + obj.seriesName + ' ' + value[0] + '日：'
                                 + value[7]
                                 + '</div>'
                                 + schema[1].text + '：' + value[1] + '<br>'
@@ -136,13 +136,13 @@
                             textStyle: {
                                 color: '#fff'
                             }
-                        },
+                        }
                     },
                     dataRange: [
                         {
                             x: 'right',
                             y: 'top',
-                            dimension: 'dim7',
+                            dimension: 7,
                             categories: ['优', '良', '轻度污染', '中度污染', '重度污染', '严重污染'],
                             calculable: true,
                             precision: 0.1,

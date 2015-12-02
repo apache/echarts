@@ -9,9 +9,10 @@ define(function (require) {
         var value0 = retrieveValue(data[0]);
         var dimSize = zrUtil.isArray(value0) && value0.length || 1;
 
+        defaultNames = defaultNames || [];
         for (var i = 0; i < dimSize; i++) {
             if (!dimensions[i]) {
-                var name = defaultNames && defaultNames[i] || ('dim' + i);
+                var name = defaultNames[i] || ('extra' + (i - defaultNames.length));
                 dimensions[i] = guessOrdinal(data, i)
                     ? {type: 'ordinal', name: name}
                     : name;

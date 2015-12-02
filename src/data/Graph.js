@@ -9,7 +9,6 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
-    var Model = require('../model/Model');
 
     /**
      * @alias module:echarts/data/Graph
@@ -285,7 +284,7 @@ define(function(require) {
             edges[i].dataIndex = -1;
         }
         for (var i = 0, len = edgeData.count(); i < len; i++) {
-            edges[edgeData.getRawIndex(i)].dataIndex = i;  
+            edges[edgeData.getRawIndex(i)].dataIndex = i;
         }
     };
 
@@ -437,7 +436,8 @@ define(function(require) {
              * @return {number}
              */
             getValue: function (dimension) {
-                return this[hostName][dataName].get(dimension || 'value', this.dataIndex);
+                var data = this[hostName][dataName];
+                return data.get(data.getDimension(dimension || 'value'), this.dataIndex);
             },
 
             /**

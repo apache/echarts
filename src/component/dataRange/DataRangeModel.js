@@ -259,8 +259,7 @@ define(function(require) {
         getDataDimension: function (list) {
             var optDim = this.option.dimension;
             return optDim != null
-                ? optDim
-                : list.dimensions[list.dimensions.length - 1];
+                ? optDim : list.dimensions.length - 1;
         },
 
         /**
