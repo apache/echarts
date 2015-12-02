@@ -91,6 +91,26 @@ define(function (require) {
                 }
             }
             return false;
+        },
+
+        transformTo: function (x, y, width, height) {
+            var rect = this.getBoundingRect();
+            var aspect = rect.width / rect.height;
+            if (!width) {
+                width = aspect * height;
+            }
+            else if (!height) {
+                height = width / aspect ;
+            }
+            var target = new BoundingRect(x, y, width, height);
+            var transform = rect.calculateTransform(target);
+            var contours = this.contours;
+            for (var i = 0; i < contours.length; i++) {
+                for (var p = 0; p < contours[i].length; p++) {
+                    vec2.applyTransform(contours[i][p], contours[i][p], transform);
+                }
+            }
+            this._rect.copy(target);
         }
     };
 

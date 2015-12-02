@@ -16,7 +16,7 @@ define(function (require) {
         require('./fix/geoCoord')
     ];
 
-    function Geo(name, map, geoJson) {
+    function Geo(name, map, geoJson, specialAreas) {
 
         View.call(this, name);
 
@@ -33,7 +33,7 @@ define(function (require) {
 
         this._nameCoordMap = {};
 
-        this.loadGeoJson(geoJson);
+        this.loadGeoJson(geoJson, specialAreas);
     }
 
     Geo.prototype = {
@@ -45,10 +45,12 @@ define(function (require) {
         /**
          * @param {Object} geoJson
          */
-        loadGeoJson: function (geoJson) {
+        loadGeoJson: function (geoJson, specialAreas) {
             // https://jsperf.com/try-catch-performance-overhead
             try {
                 this.regions = geoJson ? parseGeoJson(geoJson) : [];
+                specialAreas = specialAreas || {};
+                this._specialAreas = specialAreas;
             }
             catch (e) {
                 throw 'Invalid geoJson format\n' + e;
@@ -59,6 +61,15 @@ define(function (require) {
                 regionsMap[regions[i].name] = regions[i];
                 // Add geoJson
                 this.addGeoCoord(regions[i].name, regions[i].center);
+
+                // Some area like Alaska in USA map needs to be tansformed
+                // to look better
+                var specialArea = specialAreas[regions[i].name];
+                if (specialArea) {
+                    regions[i].transformTo(
+                        specialArea.left, specialArea.top, specialArea.width, specialArea.height
+                    );
+                }
             }
 
             this._regionsMap = regionsMap;

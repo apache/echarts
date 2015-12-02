@@ -76,7 +76,8 @@ define(function (require) {
             // Shallow clone
             option = zrUtil.extend({}, option);
 
-            var geoJson = echarts.getMap(option.mapType);
+            var map = echarts.getMap(option.mapType);
+            var geoJson = map && map.geoJson;
             geoJson && option.data
                 && (option.data = fillData(option.data, geoJson));
 
