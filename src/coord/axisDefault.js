@@ -104,7 +104,11 @@ define(function (require) {
     }, defaultOption);
 
     // FIXME
-    var timeAxis = zrUtil.merge({}, valueAxis);
+    var timeAxis = zrUtil.merge({
+        scale: true,
+        min: 'dataMin',
+        max: 'dataMax'
+    }, valueAxis);
     var logAxis = zrUtil.merge({}, valueAxis);
     logAxis.scale = true;
 

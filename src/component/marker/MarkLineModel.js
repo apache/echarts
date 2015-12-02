@@ -109,7 +109,8 @@ define(function (require) {
                     borderWidth: 2
                 }
                 // emphasis: {}
-            }
+            },
+            animationEasing: 'linear'
         }
     });
 

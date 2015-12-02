@@ -24,6 +24,9 @@ define(function(require) {
         return list;
     }
 
+    function isStackable(axisType) {
+        return axisType !== 'category' && axisType !== 'time';
+    }
     /**
      * Creaters for each coord system.
      * @return {Object} {dimensions, categoryAxisModel};
@@ -46,7 +49,7 @@ define(function(require) {
                     name: 'y',
                     // If two category axes
                     type: isYAxisCategory ? 'ordinal' : 'float',
-                    stackable: !isYAxisCategory
+                    stackable: isStackable(yAxisType)
                 }];
 
                 categoryAxisModel = xAxisModel;
@@ -57,7 +60,7 @@ define(function(require) {
                     type: 'ordinal'
                 }, {
                     name: 'x',
-                    stackable: true
+                    stackable: isStackable(xAxisType)
                 }];
 
                 categoryAxisModel = yAxisModel;
@@ -93,7 +96,7 @@ define(function(require) {
                     name: 'radius',
                     // If two category axes
                     type: isRadiusAxisCategory ? 'ordinal' : 'float',
-                    stackable: !isRadiusAxisCategory
+                    stackable: isStackable(radiusAxisModel.get('type'))
                 }];
 
                 categoryAxisModel = angleAxisModel;
@@ -104,7 +107,7 @@ define(function(require) {
                     type: 'ordinal'
                 }, {
                     name: 'angle',
-                    stackable: true
+                    stackable: isStackable(angleAxisModel.get('type'))
                 }];
 
                 categoryAxisModel = radiusAxisModel;

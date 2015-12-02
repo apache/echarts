@@ -651,7 +651,7 @@
          * @override
          */
         remove: function () {
-            this._containerGroup.removeAll();
+            this._containerGroup && this._containerGroup.removeAll();
             this._storage = createStorage();
             this._state = 'ready';
             this._breadcrumb && this._breadcrumb.remove();

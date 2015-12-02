@@ -259,9 +259,15 @@ define(function(require) {
         },
 
         buildPath: function (ctx, shape) {
-            var proxySymbol = symbolBuildProxies[shape.symbolType];
-            if (proxySymbol) {
-                symbolShapeMakers[shape.symbolType](
+            var symbolType = shape.symbolType;
+            var proxySymbol = symbolBuildProxies[symbolType];
+            if (shape.symbolType !== 'none') {
+                if (!proxySymbol) {
+                    // Default rect
+                    symbolType = 'rect';
+                    proxySymbol = symbolBuildProxies[symbolType];
+                }
+                symbolShapeMakers[symbolType](
                     shape.x, shape.y, shape.width, shape.height, proxySymbol.shape
                 );
                 proxySymbol.buildPath(ctx, proxySymbol.shape);
@@ -322,10 +328,6 @@ define(function(require) {
                 symbolPath = graphic.makePath(symbolType.slice(7), {}, new BoundingRect(x, y, w, h));
             }
             else {
-                // Default rect
-                if (!symbolShapeMakers[symbolType]) {
-                    symbolType = 'rect';
-                }
                 symbolPath = new Symbol({
                     shape: {
                         symbolType: symbolType,

@@ -68,8 +68,8 @@ define(function(require) {
             // 拐点图形旋转控制
             // symbolRotate: null,
 
-            // 不显示 symbol, 只有在 tooltip hover 的时候显示
-            // notShowSymbol: false,
+            // 是否显示 symbol, 只有在 tooltip hover 的时候显示
+            showSymbol: true,
             // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
             // showAllSymbol: false
 

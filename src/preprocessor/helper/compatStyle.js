@@ -8,7 +8,7 @@ define(function (require) {
     ];
 
     function compatItemStyle(opt) {
-        var itemStyleOpt = opt.itemStyle;
+        var itemStyleOpt = opt && opt.itemStyle;
         if (itemStyleOpt) {
             zrUtil.each(POSSIBLE_STYLES, function (styleName) {
                 var normalItemStyleOpt = itemStyleOpt.normal;

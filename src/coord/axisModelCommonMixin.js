@@ -24,19 +24,28 @@ define(function (require) {
      */
     function getFormattedLabels () {
         var labelFormatter = this.get('axisLabel.formatter');
-        var labels = this.axis.scale.getTicksLabels();
-        if (!labelFormatter) {
-            return labels;
-        }
-        else if (typeof labelFormatter === 'string') {
+        var axis = this.axis;
+        var scale = axis.scale;
+        var labels = scale.getTicksLabels();
+        var ticks = scale.getTicks();
+        if (typeof labelFormatter === 'string') {
             labelFormatter = (function (tpl) {
                 return function (val) {
                     return tpl.replace('{value}', val);
                 };
             })(labelFormatter);
+            return zrUtil.map(labels, labelFormatter);
         }
-
-        return zrUtil.map(labels, labelFormatter);
+        else if (typeof labelFormatter === 'function') {
+            return zrUtil.map(ticks, function (tick) {
+                return labelFormatter(
+                    axis.type === 'category' ? scale.getLabel(tick) : tick
+                );
+            }, this);
+        }
+        else {
+            return labels;
+        }
     }
 
     return {

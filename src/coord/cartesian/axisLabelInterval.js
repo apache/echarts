@@ -37,6 +37,7 @@ define(function(require) {
                 labels[i], font, 'center', 'top'
             );
             rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
+            rect[isAxisHorizontal ? 'width' : 'height'] *= 1.5;
             if (!textSpaceTakenRect) {
                 textSpaceTakenRect = rect.clone();
             }

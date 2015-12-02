@@ -192,7 +192,7 @@ define(function(require) {
             var isAreaChart = !areaStyleModel.isEmpty();
             var stackedOnPoints = getStackedOnPoints(coordSys, data);
 
-            var showSymbol = !seriesModel.get('notShowSymbol');
+            var showSymbol = seriesModel.get('showSymbol');
 
             var isSymbolIgnore = showSymbol && !isCoordSysPolar && !seriesModel.get('showAllSymbol')
                 && this._getSymbolIgnoreFunc(data, coordSys);
@@ -206,7 +206,7 @@ define(function(require) {
                 }
             });
 
-            // Remove previous created symbols if notShowSymbol changed to true
+            // Remove previous created symbols if showSymbol changed to false
             if (!showSymbol) {
                 symbolDraw.remove();
             }
