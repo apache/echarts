@@ -292,7 +292,7 @@ define(function (require) {
                 each(query.batch, function (batchItem) {
                     batchItem = zrUtil.defaults(zrUtil.extend({}, batchItem), query);
                     batchItem.batch = null;
-                    var res = doQuery(batchItem);
+                    var res = doQuery.call(this, batchItem);
                     each(res, function (re) {
                         result.push(re);
                         batchQueries.push(batchItem);
@@ -301,7 +301,7 @@ define(function (require) {
                 return result;
             }
             else {
-                return doQuery(query);
+                return doQuery.call(this, query);
             }
 
             function doQuery(q) {
