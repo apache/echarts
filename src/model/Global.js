@@ -274,10 +274,9 @@ define(function (require) {
          * @param {string} [condition.subType] Optional.
          * @param {Object} [condition.query] like {xxxIndex, xxxId, xxxName},
          *        where xxx is mainType.
-         *        If query attribute is null/undefined, do not filtering by
-         *        query conditions, which is convenient for no-payload
-         *        situations like visual coding, layout.
-         *        If query.batch is an array, query by each batch item.
+         *        If query attribute is null/undefined or has no index/id/name,
+         *        do not filtering by query conditions, which is convenient for
+         *        no-payload situations or when target of action is global.
          * @param {Function} [condition.filter] parameter: component, return boolean.
          * @return {Array.<module:echarts/model/Component>} If condition.query.batch
          *        exist, result by batch is stored on 'batch' prop of returned array,
@@ -286,20 +285,14 @@ define(function (require) {
         findComponents: function (condition) {
             var query = condition.query;
             var mainType = condition.mainType;
-            var subType = condition.subType;
 
-            if (!query) {
-                return doFilter(filterBySubType(
-                    this._componentsMap[mainType], condition
-                ));
-            }
-            else if (query.batch) {
+            if (query && query.batch) {
                 var result = [];
                 var batchQueries = result.batchQueries = [];
                 each(query.batch, function (batchItem) {
                     batchItem = zrUtil.defaults(zrUtil.extend({}, batchItem), query);
                     batchItem.batch = null;
-                    var res = doFilter(this.queryComponents(getCond(batchItem)));
+                    var res = doQuery(batchItem);
                     each(res, function (re) {
                         result.push(re);
                         batchQueries.push(batchItem);
@@ -308,17 +301,35 @@ define(function (require) {
                 return result;
             }
             else {
-                return doFilter(this.queryComponents(getCond(query)));
+                return doQuery(query);
             }
 
-            function getCond(q) {
-                return {
-                    mainType: mainType,
-                    subType: subType,
-                    index: q[mainType + 'Index'],
-                    id: q[mainType + 'Id'],
-                    name: q[mainType + 'Name']
-                };
+            function doQuery(q) {
+                var queryCond = getQueryCond(q);
+                var result = queryCond
+                    ? this.queryComponents(queryCond)
+                    : this._componentsMap[mainType];
+
+                return doFilter(filterBySubType(result, condition));
+            }
+
+            function getQueryCond(q) {
+                var indexAttr = mainType + 'Index';
+                var idAttr = mainType + 'Id';
+                var nameAttr = mainType + 'Name';
+                return q && (
+                        q.hasOwnProperty(indexAttr)
+                        || q.hasOwnProperty(idAttr)
+                        || q.hasOwnProperty(nameAttr)
+                    )
+                    ? {
+                        mainType: mainType,
+                        // subType will be filtered finally.
+                        index: q[indexAttr],
+                        id: q[idAttr],
+                        name: q[nameAttr]
+                    }
+                    : null;
             }
 
             function doFilter(res) {
@@ -722,7 +733,9 @@ define(function (require) {
      * @inner
      */
     function filterBySubType(components, condition) {
-        return condition.subType !== void 0
+        // Using hasOwnProperty for restrict. Consider
+        // subType is undefined in user payload.
+        return condition.hasOwnProperty('subType')
             ? filter(components, function (cpt) {
                 return cpt.subType === condition.subType;
             })
