@@ -37,9 +37,10 @@ define(function (require) {
             return zrUtil.map(labels, labelFormatter);
         }
         else if (typeof labelFormatter === 'function') {
-            return zrUtil.map(ticks, function (tick) {
+            return zrUtil.map(ticks, function (tick, idx) {
                 return labelFormatter(
-                    axis.type === 'category' ? scale.getLabel(tick) : tick
+                    axis.type === 'category' ? scale.getLabel(tick) : tick,
+                    idx
                 );
             }, this);
         }

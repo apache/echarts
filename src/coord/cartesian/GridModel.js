@@ -17,12 +17,12 @@ define(function(require) {
             // Not specify layout with x2, width, y2, height
             // FIXME 通用？
             if (option.x2 == null || option.width == null || option.x != null) {
-                option.x = option.x || '10%';
-                option.x2 = option.x2 || '10%';
+                option.x = option.x != null ? option.x : '10%';
+                option.x2 = option.x2 != null ? option.x2 : '10%';
             }
             if (option.y2 == null || option.height == null || option.y != null) {
-                option.y = option.y || 60;
-                option.y2 = option.y2 || 60;
+                option.y = option.y != null ? option.y : 60;
+                option.y2 = option.y2 != null ? option.y2 : 60;
             }
             ComponentModel.prototype.mergeDefaultAndTheme.call(
                 this, option, ecModel

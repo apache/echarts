@@ -85,6 +85,7 @@ define(function(require, factory) {
      * @param {module:echarts/ExtensionAPI} api
      */
     gridProto.resize = function (gridModel, api) {
+
         var gridRect = layout.parsePositionInfo({
             x: gridModel.get('x'),
             y: gridModel.get('y'),
@@ -100,30 +101,37 @@ define(function(require, factory) {
         this._rect = gridRect;
 
         var axesList = this._axesList;
+
+        adjustAxes();
         // Minus label size
         if (gridModel.get('containLabel')) {
             each(axesList, function (axis) {
                 var labelUnionRect = getLabelUnionRect(axis);
                 var dim = axis.isHorizontal() ? 'height' : 'width';
                 var margin = axis.model.get('axisLabel.margin');
-                gridRect[dim] -= labelUnionRect[dim];
-                if (axis.isHorizontal()) {
-                    gridRect.y += (axis.position === 'top' ? 1 : -1) * (labelUnionRect.height + margin);
+                gridRect[dim] -= labelUnionRect[dim] + margin;
+                if (axis.position === 'top') {
+                    gridRect.y += labelUnionRect.height + margin;
                 }
-                else {
-                    gridRect.x += (axis.position === 'left' ? 1 : -1) * (labelUnionRect.width + margin);
+                else if (axis.position === 'left')  {
+                    gridRect.x += labelUnionRect.width + margin;
                 }
             });
+
+            adjustAxes();
         }
 
-        each(axesList, function (axis) {
-            var isHorizontal = axis.isHorizontal();
-            var extent = isHorizontal
-                ? [gridRect.x, gridRect.x + gridRect.width]
-                : [gridRect.y + gridRect.height, gridRect.y];
-            var idx = axis.inverse ? 1 : 0;
-            axis.setExtent(extent[idx], extent[1 - idx]);
-        });
+
+        function adjustAxes() {
+            each(axesList, function (axis) {
+                var isHorizontal = axis.isHorizontal();
+                var extent = isHorizontal
+                    ? [gridRect.x, gridRect.x + gridRect.width]
+                    : [gridRect.y + gridRect.height, gridRect.y];
+                var idx = axis.inverse ? 1 : 0;
+                axis.setExtent(extent[idx], extent[1 - idx]);
+            });
+        }
     };
 
     /**
