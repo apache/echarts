@@ -33,6 +33,7 @@
         'echarts/chart/gauge',
         'echarts/chart/funnel',
         'echarts/chart/parallel',
+        'echarts/chart/sankey',
 
         'echarts/component/geo',
         'echarts/component/parallel',
@@ -47,7 +48,8 @@
 
         'echarts/parser/gexf',
         'echarts/scale/Time',
-        'echarts/scale/Log'
+        'echarts/scale/Log',
+        'zrender/vml/vml'
     ],
     out: '../dist/echarts.js'
 })
