@@ -109,6 +109,7 @@ define(function (require) {
      */
     function TooltipContent(container, api) {
         var el = document.createElement('div');
+        var zr = api.getZr();
 
         this.el = el;
 
@@ -134,6 +135,15 @@ define(function (require) {
                 self._show = true;
             }
             self._inContent = true;
+        };
+        el.onmousemove = function (e) {
+            if (!self.enterable) {
+                // Try trigger zrender event to avoid mouse
+                // in and out shape too frequently
+                var handler = zr.handler;
+                eventUtil.normalizeEvent(e);
+                handler.dispatch('mousemove', e);
+            }
         };
         el.onmouseout = function () {
             if (self.enterable) {

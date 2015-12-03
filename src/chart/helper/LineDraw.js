@@ -17,7 +17,7 @@ define(function (require) {
     /**
      * @inner
      */
-    function createSymbol(data, idx) {
+    function createSymbol(name, data, idx) {
         var color = data.getItemVisual(idx, 'color');
         var symbolType = data.getItemVisual(idx, 'symbol');
         var symbolSize = data.getItemVisual(idx, 'symbolSize');
@@ -33,6 +33,7 @@ define(function (require) {
             symbolType, -symbolSize[0] / 2, -symbolSize[1] / 2,
             symbolSize[0], symbolSize[1], color
         );
+        symbolPath.name = name;
 
         return symbolPath;
     }
@@ -106,8 +107,9 @@ define(function (require) {
         }
         label.attr({
             style: {
-                textBaseline: textBaseline,
-                textAlign: textAlign
+                // Use the user specified text align and baseline first
+                textBaseline: label.__textBaseline || textBaseline,
+                textAlign: label.__textAlign || textAlign
             },
             position: textPosition
         });
@@ -140,10 +142,6 @@ define(function (require) {
             .add(function (idx) {
                 var linePoints = lineData.getItemLayout(idx);
 
-                var itemModel = lineData.getItemModel(idx);
-                var labelModel = itemModel.getModel('label.normal');
-                var textStyleModel = labelModel.getModel('textStyle');
-
                 var lineGroup = new graphic.Group();
 
                 var line = createLine(linePoints);
@@ -157,28 +155,19 @@ define(function (require) {
                 lineGroup.add(line);
 
                 var label = new graphic.Text({
-                    name: 'label',
-                    style: {
-                        text: seriesModel.getFormattedLabel(idx, 'normal')
-                            || numberUtil.round(seriesModel.getData().getRawValue(idx)),
-                        textFont: textStyleModel.getFont(),
-                        fill: textStyleModel.get('color') || lineData.getItemVisual(idx, 'color')
-                    }
+                    name: 'label'
                 });
                 lineGroup.add(label);
-                label.__position = labelModel.get('position');
 
                 if (fromData) {
-                    var symbolFrom = createSymbol(fromData, idx);
-                    symbolFrom.name = 'fromSymbol';
+                    var symbolFrom = createSymbol('fromSymbol', fromData, idx);
                     // symbols must added after line to make sure
                     // it will be updated after line#update.
                     // Or symbol position and rotation update in line#beforeUpdate will be one frame slow
                     lineGroup.add(symbolFrom);
                 }
                 if (toData) {
-                    var symbolTo = createSymbol(toData, idx);
-                    symbolTo.name = 'toSymbol';
+                    var symbolTo = createSymbol('toSymbol', toData, idx);
                     lineGroup.add(symbolTo);
                 }
 
@@ -201,7 +190,8 @@ define(function (require) {
                         x1: p1[0],
                         y1: p1[1],
                         x2: p2[0],
-                        y2: p2[1]
+                        y2: p2[1],
+                        percent: 1
                     }
                 };
                 if (cp1) {
@@ -215,8 +205,7 @@ define(function (require) {
                 if (fromData) {
                     var fromSymbolType = fromData.getItemVisual(newIdx, 'symbol');
                     if (!oldFromData || fromSymbolType !== oldFromData.getItemVisual(oldIdx, 'symbol')) {
-                        var symbolFrom = createSymbol(fromData, newIdx);
-                        symbolFrom.name = 'fromSymbol';
+                        var symbolFrom = createSymbol('fromSymbol', fromData, newIdx);
                         lineGroup.remove(line.childOfName('fromSymbol'));
                         lineGroup.add(symbolFrom);
                     }
@@ -225,8 +214,7 @@ define(function (require) {
                     var toSymbolType = toData.getItemVisual(newIdx, 'symbol');
                     // Symbol changed
                     if (!oldToData || toSymbolType !== oldToData.getItemVisual(oldIdx, 'symbol')) {
-                        var symbolTo = createSymbol(toData, newIdx);
-                        symbolTo.name = 'toSymbol';
+                        var symbolTo = createSymbol('toSymbol', toData, newIdx);
                         lineGroup.remove(line.childOfName('toSymbol'));
                         lineGroup.add(symbolTo);
                     }
@@ -245,12 +233,37 @@ define(function (require) {
             var line = lineGroup.childOfName('line');
             var itemModel = lineData.getItemModel(idx);
 
+            var labelModel = itemModel.getModel('label.normal');
+            var textStyleModel = labelModel.getModel('textStyle');
+            var labelHoverModel = itemModel.getModel('label.emphasis');
+            var textStyleHoverModel = labelHoverModel.getModel('textStyle');
+
+            var defaultText = numberUtil.round(seriesModel.getData().getRawValue(idx));
             line.setStyle(zrUtil.defaults(
                 {
                     stroke: lineData.getItemVisual(idx, 'color')
                 },
                 itemModel.getModel('lineStyle.normal').getLineStyle()
             ));
+
+            var label = lineGroup.childOfName('label');
+            label.setStyle({
+                text: labelModel.get('show')
+                    ? seriesModel.getFormattedLabel(idx, 'normal') || defaultText
+                    : '',
+                textFont: textStyleModel.getFont(),
+                fill: textStyleModel.get('color') || lineData.getItemVisual(idx, 'color')
+            });
+            label.hoverStyle = {
+                text: labelHoverModel.get('show')
+                    ? seriesModel.getFormattedLabel(idx, 'emphasis') || defaultText
+                    : '',
+                textFont: textStyleModel.getFont(),
+                fill: textStyleHoverModel.get('color')
+            };
+            label.__textAlign = textStyleModel.get('align');
+            label.__textBaseline = textStyleModel.get('baseline');
+            label.__position = labelModel.get('position');
 
             graphic.setHoverStyle(
                 line,

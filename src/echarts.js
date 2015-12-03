@@ -13,6 +13,8 @@
  */
 define(function (require) {
 
+    require('zrender/vml/vml');
+
     var GlobalModel = require('./model/Global');
     var ExtensionAPI = require('./ExtensionAPI');
     var CoordinateSystemManager = require('./CoordinateSystem');
@@ -346,6 +348,33 @@ define(function (require) {
     echartsProto.resize = function () {
         this._zr.resize();
         updateMethods.update.call(this);
+
+        // Resize loading effect
+        this._loadingFX && this._loadingFX.resize();
+    };
+
+    var defaultLoadingEffect = require('./loading/default');
+    /**
+     * Show loading effect
+     * @param  {string} [name='default']
+     * @param  {Object} [cfg]
+     */
+    echartsProto.showLoading = function (name, cfg) {
+        if (zrUtil.isObject(name)) {
+            cfg = name;
+            name = 'default';
+        }
+        var el = defaultLoadingEffect(this._api, cfg);
+        this._loadingFX = el;
+        this._zr.add(el);
+    };
+
+    /**
+     * Hide loading effect
+     */
+    echartsProto.hideLoading = function () {
+        this._zr.remove(this._loadingFX);
+        this._loadingFX = null;
     };
 
     /**

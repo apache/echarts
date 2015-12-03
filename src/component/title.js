@@ -147,18 +147,19 @@ define(function(require) {
             );
             // Adjust text align based on position
             if (!textAlign) {
-                var percent = positionInfo.x / api.getWidth();
+                var p = positionInfo.x / api.getWidth();
+                var p2 = (positionInfo.x + positionInfo.width) / api.getWidth();
 
-                if (percent < 0.2) {
+                if (p < 0.2) {
                     textAlign = 'left';
                 }
-                else if (percent < 0.6) {
-                    positionInfo.x += positionInfo.width / 2;
-                    textAlign = 'center';
-                }
-                else {
+                else if (p2 > 0.8) {
                     positionInfo.x += positionInfo.width;
                     textAlign = 'right';
+                }
+                else {
+                    positionInfo.x += positionInfo.width / 2;
+                    textAlign = 'center';
                 }
             }
             group.position = [positionInfo.x, positionInfo.y];

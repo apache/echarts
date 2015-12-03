@@ -76,7 +76,7 @@ define(function (require) {
                 // }
                 var geo = new Geo(
                     name + idx, name,
-                    mapData.geoJson, mapData.specialAreas,
+                    mapData && mapData.geoJson, mapData && mapData.specialAreas,
                     geoModel.get('nameMap')
                 );
                 geoList.push(geo);
@@ -122,7 +122,7 @@ define(function (require) {
                 });
                 var geo = new Geo(
                     mapType, mapType,
-                    mapData.geoJson, mapData.specialAreas,
+                    mapData && mapData.geoJson, mapData && mapData.specialAreas,
                     zrUtil.mergeAll(nameMapList)
                 );
                 geoList.push(geo);
