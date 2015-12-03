@@ -2,6 +2,35 @@ define(function (require) {
 
     var graphic = require('../../util/graphic');
     var modelUtil = require('../../util/model');
+    var zrUtil = require('zrender/core/util');
+
+    var SankeyShape = graphic.extendShape({
+        shape: {
+            x1: 0, y1: 0,
+            x2: 0, y2: 0,
+            cpx1: 0, cpy1: 0,
+            cpx2: 0, cpy2: 0,
+
+            extent: 0
+        },
+
+        buildPath: function (ctx, shape) {
+            var halfExtent = shape.extent / 2;
+            ctx.moveTo(shape.x1, shape.y1 - halfExtent);
+            ctx.bezierCurveTo(
+                shape.cpx1, shape.cpy1 - halfExtent,
+                shape.cpx2, shape.cpy2 - halfExtent,
+                shape.x2, shape.y2 - halfExtent
+            );
+            ctx.lineTo(shape.x2, shape.y2 + halfExtent);
+            ctx.bezierCurveTo(
+                shape.cpx2, shape.cpy2 + halfExtent,
+                shape.cpx1, shape.cpy1 + halfExtent,
+                shape.x1, shape.y1 + halfExtent
+            );
+            ctx.closePath();
+        }
+    });
 
     return require('../../echarts').extendChartView({
 
@@ -16,12 +45,13 @@ define(function (require) {
         render: function(seriesModel, ecModel, api) {
             var graph = seriesModel.getGraph();
             var group = this.group;
+            var layoutInfo = seriesModel.layoutInfo;
+
             this._model = seriesModel;
 
             group.removeAll();
 
-            group.position = [seriesModel.layoutInfo.x, seriesModel.layoutInfo.y];
-            var textStyle = seriesModel.getModel('label.normal').getModel('textStyle');
+            group.position = [layoutInfo.x, layoutInfo.y];
 
             var edgeData = graph.edgeData;
             var rawOption = seriesModel.option;
@@ -41,50 +71,73 @@ define(function (require) {
 
             // generate a rect  for each node
             graph.eachNode(function (node) {
+                var layout = node.getLayout();
+                var itemModel = node.getModel();
+                var labelModel = itemModel.getModel('label.normal');
+                var textStyleModel = labelModel.getModel('textStyle');
+                var labelHoverModel = itemModel.getModel('label.emphasis');
+                var textStyleHoverModel = labelHoverModel.getModel('textStyle');
+
                 var rect = new graphic.Rect({
                     shape: {
-                        x: node.getLayout().x,
-                        y: node.getLayout().y,
+                        x: layout.x,
+                        y: layout.y,
                         width: node.getLayout().dx,
                         height: node.getLayout().dy
                     },
                     style: {
-                        stroke: '#000',
+                        // Get formatted label in label.normal option. Use node id if it is not specified
+                        text: labelModel.get('show')
+                            ? seriesModel.getFormattedLabel(node.dataIndex, 'normal') || node.id
+                            // Use empty string to hide the label
+                            : '',
+                        textFont: textStyleModel.getFont(),
+                        textFill: textStyleModel.get('color'),
+                        textPosition: labelModel.get('position')
+                    }
+                });
+
+                rect.setStyle(zrUtil.defaults(
+                    {
                         fill: node.getVisual('color')
-                    }
-                });
+                    },
+                    itemModel.getModel('itemStyle.normal').getItemStyle()
+                ));
 
-                // rect.setHoverStyle(rect, node.inEdges.)
+                graphic.setHoverStyle(rect, zrUtil.extend(
+                    node.getModel('itemStyle.emphasis'),
+                    {
+                        text: labelHoverModel.get('show')
+                            ? seriesModel.getFormattedLabel(node.dataIndex, 'emphasis') || node.id
+                            : '',
+                        textFont: textStyleHoverModel.getFont(),
+                        textFill: textStyleHoverModel.get('color'),
+                        textPosition: labelHoverModel.get('position')
+                    }
+                ));
+
                 group.add(rect);
-
-                var text = new graphic.Text({
-                    style: {
-                        x: node.getLayout().x + node.getLayout().dx + 4,
-                        y: node.getLayout().y + node.getLayout().dy / 2,
-                        text: node.id,
-                        textAlign: 'start',
-                        textBaseline: 'middle',
-                        textFont: textStyle.getFont()                        
-                    }
-                });
-                group.add(text);
             });
 
             // generate a bezire Curve for each edge
             graph.eachEdge(function (edge) {
-                var curve = new graphic.BezierCurve();
+                var curve = new SankeyShape();
 
                 curve.dataIndex = edge.dataIndex;
                 curve.hostModel = formatModel;
 
-                curve.style.lineWidth = Math.max(1, edge.getLayout().dy);
-
                 var lineStyleModel = edge.getModel('lineStyle.normal');
                 var curvature = lineStyleModel.get('curveness');
-                var x1 = edge.node1.getLayout().x + edge.node1.getLayout().dx;
-                var y1 = edge.node1.getLayout().y + edge.getLayout().sy + edge.getLayout().dy / 2;
-                var x2 = edge.node2.getLayout().x;
-                var y2 = edge.node2.getLayout().y + edge.getLayout().ty + edge.getLayout().dy /2;
+                var n1Layout = edge.node1.getLayout();
+                var n2Layout = edge.node2.getLayout();
+                var edgeLayout = edge.getLayout();
+
+                curve.shape.extent = Math.max(1, edgeLayout.dy);
+
+                var x1 = n1Layout.x + n1Layout.dx;
+                var y1 = n1Layout.y + edgeLayout.sy + edgeLayout.dy / 2;
+                var x2 = n2Layout.x;
+                var y2 = n2Layout.y + edgeLayout.ty + edgeLayout.dy /2;
                 var cpx1 = x1 * (1 - curvature) + x2 * curvature;
                 var cpy1 = y1;
                 var cpx2 = x1 * curvature + x2 * (1 - curvature);
@@ -101,10 +154,8 @@ define(function (require) {
                     cpy2: cpy2
                 });
 
-                // 'width' is just for 'lineWidth', lineWidth get from the computation,so user can't set it
-                curve.setStyle(lineStyleModel.getLineStyle(['width']));
-
-                graphic.setHoverStyle(curve, edge.getModel('lineStyle.emphasis').getLineStyle());
+                curve.setStyle(lineStyleModel.getItemStyle());
+                graphic.setHoverStyle(curve, edge.getModel('lineStyle.emphasis').getItemStyle());
 
                 group.add(curve);
 

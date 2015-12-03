@@ -60,8 +60,10 @@ define(function (require) {
             label: {
                 normal: {
                     show: true,
+                    position: 'right',
                     textStyle: {
-                        fontSize: 6
+                        color: '#000',
+                        fontSize: 12
                     }
                 },
                 emphasis: {
@@ -76,7 +78,7 @@ define(function (require) {
 
             lineStyle: {
                 normal: {
-                    color: '#000',
+                    color: '#314656',
                     opacity: 0.2,
                     curveness: 0.5
                 },

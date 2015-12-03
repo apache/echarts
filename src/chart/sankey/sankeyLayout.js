@@ -29,13 +29,9 @@ define(function (require) {
                 return node.getLayout().value === 0;
             });
 
-            if (filteredNodes.length !== 0) {
-                var iterations = 0;
-            }
-            else {
-                var iterations = seriesModel.get('layoutIterations');
-            }
-  
+            var iterations = filteredNodes.length !== 0
+                ? 0 : seriesModel.get('layoutIterations');
+
             layoutSankey(nodes, edges, nodeWidth, nodeGap, width, height, iterations);
         });
     };
@@ -65,7 +61,7 @@ define(function (require) {
 
     /**
      * compute the value of each node by summing the associated edge's value.
-     * @param {module:echarts/data/Graph~Node} nodes 
+     * @param {module:echarts/data/Graph~Node} nodes
      */
     function computeNodeValues(nodes) {
         zrUtil.each(nodes, function (node) {
@@ -78,9 +74,9 @@ define(function (require) {
 
     /**
      * compute the x-position for each node.
-     * @param {module:echarts/data/Graph~Node} nodes 
-     * @param  {number} nodeWidth 
-     * @param  {number} width     
+     * @param {module:echarts/data/Graph~Node} nodes
+     * @param  {number} nodeWidth
+     * @param  {number} width
      */
     function computeNodeBreadths(nodes, nodeWidth, width) {
         var remainNodes = nodes;
@@ -110,9 +106,9 @@ define(function (require) {
     /**
      * all the node without outEgdes are assigned maximum breadth and
      * be aligned in the last column.
-     * @param {module:echarts/data/Graph~Node} nodes 
-     * @param {number} x 
-     */ 
+     * @param {module:echarts/data/Graph~Node} nodes
+     * @param {number} x
+     */
     function moveSinksRight(nodes, x) {
         zrUtil.each(nodes, function (node) {
             if(!node.outEdges.length) {
@@ -123,7 +119,7 @@ define(function (require) {
 
     /**
      * scale node x-position to the width.
-     * @param {module:echarts/data/Graph~Node} nodes 
+     * @param {module:echarts/data/Graph~Node} nodes
      * @param {number} kx
      */
     function scaleNodeBreadths(nodes, kx) {
@@ -135,12 +131,12 @@ define(function (require) {
 
     /**
      * using Gauss-Seidel iterations method to compute the node depth(y-position).
-     * @param {module:echarts/data/Graph~Node} nodes 
+     * @param {module:echarts/data/Graph~Node} nodes
      * @param {module:echarts/data/Graph~Edge} edges
      * @param {number} height
      * @param {numbber} nodeGap
      * @param {number} iterations
-     */ 
+     */
     function computeNodeDepths(nodes, edges, height, nodeGap, iterations) {
         var nodesByBreadth = nest()
             .key(function (d) {
@@ -166,13 +162,13 @@ define(function (require) {
 
     /**
      * compute the original y-position for each node.
-     * @param {module:echarts/data/Graph~Node} nodes 
+     * @param {module:echarts/data/Graph~Node} nodes
      * @param {Array.<Array.<module:echarts/data/Graph~Node>>} nodesByBreadth
      * @param {module:echarts/data/Graph~Edge} edges
      * @param {number} height
      * @param {number} nodeGap
      */
-    function initializeNodeDepth(nodes, nodesByBreadth, edges, height, nodeGap) {      
+    function initializeNodeDepth(nodes, nodesByBreadth, edges, height, nodeGap) {
         var kyArray = [];
         zrUtil.each(nodesByBreadth, function (nodes) {
             var n = nodes.length;
@@ -180,19 +176,19 @@ define(function (require) {
             zrUtil.each(nodes, function (node) {
                 sum += node.getLayout().value;
             });
-            ky = (height - (n-1) * nodeGap) / sum;
+            var ky = (height - (n-1) * nodeGap) / sum;
             kyArray.push(ky);
         });
         kyArray.sort(function (a, b) {
             return a - b;
         });
-        ky0 = kyArray[0];
+        var ky0 = kyArray[0];
 
         zrUtil.each(nodesByBreadth, function (nodes) {
             zrUtil.each(nodes, function (node, i) {
                 node.setLayout({y: i}, true);
-                var nodeDy = node.getLayout().value * ky0; 
-                node.setLayout({dy: nodeDy}, true);               
+                var nodeDy = node.getLayout().value * ky0;
+                node.setLayout({dy: nodeDy}, true);
             });
         });
 
@@ -231,7 +227,7 @@ define(function (require) {
             // if the bottommost node goes outside the biunds, push it back up
             dy = y0 - nodeGap - height;
             if (dy > 0) {
-                nodeY = node.getLayout().y -dy;
+                var nodeY = node.getLayout().y -dy;
                 node.setLayout({y: nodeY}, true);
                 y0 = node.getLayout().y;
                 for (i = n - 2; i >= 0; --i) {
@@ -243,12 +239,12 @@ define(function (require) {
                     }
                     y0 = node.getLayout().y;
                 }
-            }       
+            }
         });
     }
 
     /**
-     * change the y-position of the nodes, except most the right side nodes. 
+     * change the y-position of the nodes, except most the right side nodes.
      * @param {Array.<Array.<module:echarts/data/Graph~Node>>} nodesByBreadth
      * @param {number} alpha
      */
@@ -258,10 +254,10 @@ define(function (require) {
                 if (node.outEdges.length) {
                     var y = sum(node.outEdges, weightedTarget) / sum(node.outEdges, getEdgeValue);
                     var nodeY = node.getLayout().y + (y - center(node)) * alpha;
-                    node.setLayout({y: nodeY}, true);                                     
+                    node.setLayout({y: nodeY}, true);
                 }
             });
-        }); 
+        });
     }
 
     function weightedTarget(edge) {
@@ -279,7 +275,7 @@ define(function (require) {
                 if (node.inEdges.length) {
                     var y = sum(node.inEdges, weightedSource) / sum(node.inEdges, getEdgeValue);
                     var nodeY = node.getLayout().y + (y - center(node)) * alpha;
-                    node.setLayout({y: nodeY}, true);                   
+                    node.setLayout({y: nodeY}, true);
                 }
             });
         });
@@ -291,7 +287,7 @@ define(function (require) {
 
     /**
      * compute the depth(y-position) of each edge.
-     * @param {module:echarts/data/Graph~Node} nodes 
+     * @param {module:echarts/data/Graph~Node} nodes
      */
     function computeEdgeDepths(nodes) {
         zrUtil.each(nodes, function (node) {
@@ -317,7 +313,7 @@ define(function (require) {
     }
 
     function ascendingSourceDepth(a, b) {
-        return a.node1.getLayout().y - b.node1.getLayout().y; 
+        return a.node1.getLayout().y - b.node1.getLayout().y;
     }
 
     function sum(array, f) {
@@ -359,5 +355,5 @@ define(function (require) {
     function getEdgeValue(edge) {
         return edge.getValue();
     }
-    
+
 });
