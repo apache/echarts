@@ -1,7 +1,7 @@
 define(function(require) {
 
     require('../coord/parallel/parallelCreator');
-    require('../coord/parallel/parallelModel');
+    require('../coord/parallel/ParallelModel');
     require('./parallelAxis');
 
     var echarts = require('../echarts');
