@@ -23,7 +23,7 @@ define(function (require) {
     }
 
     function mousemove(e) {
-        if (this._dragging && e.gestureEvent !== 'pinchchange') {
+        if (this._dragging && e.gestureEvent !== 'pinch') {
 
             var rawE = e.event;
             rawE.preventDefault && rawE.preventDefault();
