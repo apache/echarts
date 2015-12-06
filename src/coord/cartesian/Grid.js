@@ -107,14 +107,16 @@ define(function(require, factory) {
         if (gridModel.get('containLabel')) {
             each(axesList, function (axis) {
                 var labelUnionRect = getLabelUnionRect(axis);
-                var dim = axis.isHorizontal() ? 'height' : 'width';
-                var margin = axis.model.get('axisLabel.margin');
-                gridRect[dim] -= labelUnionRect[dim] + margin;
-                if (axis.position === 'top') {
-                    gridRect.y += labelUnionRect.height + margin;
-                }
-                else if (axis.position === 'left')  {
-                    gridRect.x += labelUnionRect.width + margin;
+                if (labelUnionRect) {
+                    var dim = axis.isHorizontal() ? 'height' : 'width';
+                    var margin = axis.model.get('axisLabel.margin');
+                    gridRect[dim] -= labelUnionRect[dim] + margin;
+                    if (axis.position === 'top') {
+                        gridRect.y += labelUnionRect.height + margin;
+                    }
+                    else if (axis.position === 'left')  {
+                        gridRect.x += labelUnionRect.width + margin;
+                    }
                 }
             });
 

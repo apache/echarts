@@ -79,7 +79,7 @@ define(function (require) {
             group.removeAll();
 
             if (itemAlign === 'auto') {
-                itemAlign = group.position[0] / api.getWidth() < 0.7 ? 'left' : 'right';
+                itemAlign = legendModel.get('x') === 'right' ? 'right' : 'left';
             }
 
             var legendDataMap = {};
