@@ -84,10 +84,13 @@ define(function (require) {
          * @return {boolean}
          */
         contain: function (coord) {
+            var rect = this.getBoundingRect();
             var contours = this.contours;
-            for (var i = 0, len = contours.length; i < len; i++) {
-                if (polygonContain.contain(contours[i], coord[0], coord[1])) {
-                    return true;
+            if (rect.contain(coord[0], coord[1])) {
+                for (var i = 0, len = contours.length; i < len; i++) {
+                    if (polygonContain.contain(contours[i], coord[0], coord[1])) {
+                        return true;
+                    }
                 }
             }
             return false;
