@@ -13,8 +13,6 @@
  */
 define(function (require) {
 
-    require('zrender/vml/vml');
-
     var GlobalModel = require('./model/Global');
     var ExtensionAPI = require('./ExtensionAPI');
     var CoordinateSystemManager = require('./CoordinateSystem');
@@ -24,8 +22,6 @@ define(function (require) {
 
     var ComponentView = require('./view/Component');
     var ChartView = require('./view/Chart');
-
-    // var Scale = require('./scale/Scale');
 
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
@@ -910,13 +906,6 @@ define(function (require) {
         var funcs = visualCodingFuncs[stage] || (visualCodingFuncs[stage] = []);
         funcs.push(visualCodingFunc);
     };
-
-    /**
-     * @param {echarts/scale/*} scale
-     */
-    // echarts.extendScale = function (opts) {
-    //     return Scale.extend(opts);
-    // };
 
     /**
      * @param {Object} opts
