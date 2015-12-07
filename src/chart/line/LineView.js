@@ -241,7 +241,7 @@ define(function(require) {
                 // Stop symbol animation and sync with line points
                 // FIXME performance?
                 data.eachItemGraphicEl(function (el) {
-                    el.stopAnimation(true);
+                    el.stopSymbolAnimation(true);
                 });
 
                 // In the case data zoom triggerred refreshing frequently
@@ -328,8 +328,8 @@ define(function(require) {
                     symbol.__temp = true;
                     data.setItemGraphicEl(dataIndex, symbol);
 
-                    // Stop scale animation;
-                    symbol.childAt(0).stopAnimation(true);
+                    // Stop scale animation
+                    symbol.stopAnimation(true);
 
                     this.group.add(symbol);
                 }

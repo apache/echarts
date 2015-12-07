@@ -1,3 +1,6 @@
+/**
+ * @module echarts/chart/helper/Symbol
+ */
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
@@ -13,6 +16,9 @@ define(function (require) {
 
     /**
      * @constructor
+     * @alias {module:echarts/chart/helper/Symbol}
+     * @param {module:echarts/data/List} data
+     * @param {number} idx
      * @extends {module:zrender/graphic/Group}
      */
     function Symbol(data, idx) {
@@ -24,6 +30,7 @@ define(function (require) {
     var symbolProto = Symbol.prototype;
 
     symbolProto._createSymbol = function (symbolType, data, idx) {
+        // Remove paths created before
         this.removeAll();
 
         var seriesModel = data.hostModel;
@@ -32,12 +39,14 @@ define(function (require) {
         var symbolPath = symbolUtil.createSymbol(
             symbolType, -0.5, -0.5, 1, 1, color
         );
-        symbolPath.style.strokeNoScale = true;
 
         symbolPath.attr({
-            z2: 100
+            style: {
+                strokeNoScale: true
+            },
+            z2: 100,
+            scale: [0, 0]
         });
-        symbolPath.attr('scale', [0, 0]);
 
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
@@ -48,6 +57,23 @@ define(function (require) {
         this._symbolType = symbolType;
 
         this.add(symbolPath);
+    };
+
+    /**
+     * Stop animation
+     * @param {boolean} toLastFrame
+     */
+    symbolProto.stopSymbolAnimation = function (toLastFrame) {
+        this.childAt(0).stopAnimation(toLastFrame);
+    };
+
+    /**
+     * Get scale(aka, current symbol size).
+     * Including the change caused by animation
+     * @param {Array.<number>} toLastFrame
+     */
+    symbolProto.getScale = function () {
+        return this.childAt(0).scale;
     };
 
     /**
