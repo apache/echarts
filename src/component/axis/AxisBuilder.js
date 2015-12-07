@@ -2,6 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
+    var Model = require('../../model/Model');
 
     var EPSILON = 1e-4;
     var PI2 = Math.PI * 2;
@@ -14,14 +15,18 @@ define(function (require) {
      * A standard axis is and axis from [0, 0] to [0, axisExtent[1]],
      * for example: (0, 0) ------------> (0, 50)
      *
-     * tickDirection or labelDirection is 1 means tick or label is below
-     * the standard axis, whereas -1 means above the standard axis.
+     * nameDirection or tickDirection or labelDirection is 1 means tick
+     * or label is below the standard axis, whereas is -1 means above
+     * the standard axis. labelOffset means offset between label and axis,
+     * which is useful when 'onZero', where axisLabel is in the grid and
+     * label in outside grid.
      *
      * Tips: like always,
      * positive rotation represents anticlockwise, and negative rotation
      * represents clockwise.
      * The direction of position coordinate is the same as the direction
      * of screen coordinate.
+     *
      * Do not need to consider axis 'inverse', which is auto processed by
      * axis extent.
      *
@@ -30,15 +35,16 @@ define(function (require) {
      * @param {Object} opt Standard axis parameters.
      * @param {Array.<number>} opt.position [x, y]
      * @param {number} opt.rotation by radian
-     * @param {number} opt.tickDirection 1 or -1
-     * @param {number} opt.labelDirection 1 or -1
+     * @param {number} [opt.nameDirection=1] 1 or -1 Used when nameLocation is 'middle'.
+     * @param {number} [opt.tickDirection=1] 1 or -1
+     * @param {number} [opt.labelDirection=1] 1 or -1
+     * @param {number} [opt.labelOffset=0] Usefull when onZero.
      * @param {string} [opt.axisName] default get from axisModel.
      * @param {number} [opt.lableRotation] by degree, default get from axisModel.
      * @param {number} [opt.lableInterval] Default label interval when label
      *                                     interval from model is null or 'auto'.
      * @param {number} [opt.strokeContainThreshold] Default label interval when label
      * @param {number} [opt.silent=true]
-     * @param {number} [opt.isCartesian=false]
      */
     var AxisBuilder = function (axisModel, opt) {
 
@@ -51,6 +57,18 @@ define(function (require) {
          * @readOnly
          */
         this.axisModel = axisModel;
+
+        // Default value
+        zrUtil.defaults(
+            opt,
+            {
+                labelOffset: 0,
+                nameDirection: 1,
+                tickDirection: 1,
+                labelDirection: 1,
+                silent: true
+            }
+        );
 
         /**
          * @readOnly
@@ -75,32 +93,6 @@ define(function (require) {
 
         getGroup: function () {
             return this.group;
-        },
-
-        /**
-         * Extent is always form 'start' to 'end',
-         * when raw axis is 'inverse', the standard axis is like <----,
-         * and extent[0] > extent[1].
-         * when not 'inverse', the standard axis is like ---->,
-         * and extent[1] > extent[0].
-         * @inner
-         */
-        _getExtent: function () {
-            var opt = this.opt;
-            var extent = this.axisModel.axis.getExtent();
-
-            opt.offset = 0;
-
-            // FIXME
-            // 修正axisExtent不统一，并考虑inverse。
-            if (opt.isCartesian) {
-                // var min = Math.min(extent[0], extent[1]);
-                // var max = Math.max(extent[0], extent[1]);
-                // opt.offset = min;
-                // extent = [0, max - opt.offset];
-            }
-
-            return extent;
         }
 
     };
@@ -118,7 +110,7 @@ define(function (require) {
                 return;
             }
 
-            var extent = this._getExtent();
+            var extent = this.axisModel.axis.getExtent();
 
             this.group.add(new graphic.Line({
                 shape: {
@@ -153,18 +145,17 @@ define(function (require) {
 
             var lineStyleModel = tickModel.getModel('lineStyle');
             var tickLen = tickModel.get('length');
-            var tickInterval = getInterval(tickModel, opt);
+            var tickInterval = getInterval(tickModel, opt.labelInterval);
             var ticksCoords = axis.getTicksCoords();
             var tickLines = [];
 
             for (var i = 0; i < ticksCoords.length; i++) {
                 // Only ordinal scale support tick interval
                 if (ifIgnoreOnTick(axis, i, tickInterval)) {
-                // ??? 检查 计算正确？（因为offset）
                      continue;
                 }
 
-                var tickCoord = ticksCoords[i] - opt.offset;
+                var tickCoord = ticksCoords[i];
 
                 // Tick line
                 tickLines.push(new graphic.Line(graphic.subPixelOptimizeLine({
@@ -215,23 +206,34 @@ define(function (require) {
             // To radian.
             labelRotation = labelRotation * PI / 180;
 
-            var labelLayout = innerTextLayout(opt, labelRotation);
+            var labelLayout = innerTextLayout(opt, labelRotation, opt.labelDirection);
+            var categoryData = axisModel.get('data');
 
             for (var i = 0; i < ticks.length; i++) {
                 if (ifIgnoreOnTick(axis, i, opt.labelInterval)) {
                      continue;
                 }
 
-                var tickCoord = axis.dataToCoord(ticks[i]) - opt.offset;
-                var pos = [tickCoord, opt.labelDirection * labelMargin];
+                var itemTextStyleModel = textStyleModel;
+                if (categoryData && categoryData[i] && categoryData[i].textStyle) {
+                    itemTextStyleModel = new Model(
+                        categoryData[i].textStyle, textStyleModel
+                    );
+                }
+
+                var tickCoord = axis.dataToCoord(ticks[i]);
+                var pos = [
+                    tickCoord,
+                    opt.labelOffset + opt.labelDirection * labelMargin
+                ];
 
                 this.group.add(new graphic.Text({
                     style: {
                         text: labels[i],
                         textAlign: labelLayout.textAlign,
                         textBaseline: labelLayout.textBaseline,
-                        textFont: textStyleModel.getFont(),
-                        fill: textStyleModel.get('color')
+                        textFont: itemTextStyleModel.getFont(),
+                        fill: itemTextStyleModel.get('color')
                     },
                     position: pos,
                     rotation: labelLayout.rotation,
@@ -258,25 +260,29 @@ define(function (require) {
             }
 
             var nameLocation = axisModel.get('nameLocation');
+            var nameDirection = opt.nameDirection;
             var textStyleModel = axisModel.getModel('nameTextStyle');
             var gap = axisModel.get('nameGap') || 0;
 
-            var extent = this._getExtent();
+            var extent = this.axisModel.axis.getExtent();
             var gapSignal = extent[0] > extent[1] ? -1 : 1;
             var pos = [
-                nameLocation == 'start'
+                nameLocation === 'start'
                     ? extent[0] - gapSignal * gap
-                    : extent[1] + gapSignal * gap,
-                0
+                    : nameLocation === 'end'
+                    ? extent[1] + gapSignal * gap
+                    : (extent[0] + extent[1]) / 2, // 'middle'
+                // Reuse labelOffset.
+                nameLocation === 'middle' ? opt.labelOffset + nameDirection * gap : 0
             ];
 
             var labelLayout;
 
             if (nameLocation === 'middle') {
-                labelLayout = innerTextLayout(opt, opt.rotation);
+                labelLayout = innerTextLayout(opt, opt.rotation, nameDirection);
             }
             else {
-                labelLayout = endTextLayout(opt, nameLocation, this._getExtent());
+                labelLayout = endTextLayout(opt, nameLocation, extent);
             }
 
             this.group.add(new graphic.Text({
@@ -300,28 +306,27 @@ define(function (require) {
     /**
      * @inner
      */
-    function innerTextLayout(opt, textRotation) {
-        var labelDirection = opt.labelDirection;
+    function innerTextLayout(opt, textRotation, direction) {
         var rotationDiff = remRadian(textRotation - opt.rotation);
         var textAlign;
         var textBaseline;
 
         if (isAroundZero(rotationDiff)) { // Label is parallel with axis line.
-            textBaseline = labelDirection > 0 ? 'top' : 'bottom';
+            textBaseline = direction > 0 ? 'top' : 'bottom';
             textAlign = 'center';
         }
         else if (isAroundZero(rotationDiff - PI)) { // Label is inverse parallel with axis line.
-            textBaseline = labelDirection > 0 ? 'bottom' : 'top';
+            textBaseline = direction > 0 ? 'bottom' : 'top';
             textAlign = 'center';
         }
         else {
             textBaseline = 'middle';
 
             if (rotationDiff > 0 && rotationDiff < PI) {
-                textAlign = labelDirection > 0 ? 'right' : 'left';
+                textAlign = direction > 0 ? 'right' : 'left';
             }
             else {
-                textAlign = labelDirection > 0 ? 'left' : 'right';
+                textAlign = direction > 0 ? 'left' : 'right';
             }
         }
 
@@ -340,25 +345,24 @@ define(function (require) {
         var textAlign;
         var textBaseline;
         var inverse = extent[0] > extent[1];
-        var left = (textPosition === 'start' && !inverse)
+        var onLeft = (textPosition === 'start' && !inverse)
             || (textPosition !== 'start' && inverse);
 
         if (isAroundZero(rotationDiff - PI / 2)) {
-            textBaseline = left ? 'bottom' : 'top';
+            textBaseline = onLeft ? 'bottom' : 'top';
             textAlign = 'center';
         }
         else if (isAroundZero(rotationDiff - PI * 1.5)) {
-            textBaseline = left ? 'top' : 'bottom';
+            textBaseline = onLeft ? 'top' : 'bottom';
             textAlign = 'center';
         }
         else {
             textBaseline = 'middle';
-
             if (rotationDiff < PI * 1.5 && rotationDiff > PI / 2) {
-                textAlign = left ? 'right' : 'left';
+                textAlign = onLeft ? 'left' : 'right';
             }
             else {
-                textAlign = left ? 'left' : 'right';
+                textAlign = onLeft ? 'right' : 'left';
             }
         }
 
@@ -370,25 +374,25 @@ define(function (require) {
     }
 
     /**
-     * @inner
+     * @static
      */
-    function ifIgnoreOnTick(axis, i, interval) {
+    var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick = function (axis, i, interval) {
         return axis.scale.type === 'ordinal'
             && (typeof interval === 'function')
                 && !interval(i, axis.scale.getLabel(i))
                 || i % (interval + 1);
-    }
+    };
 
     /**
-     * @inner
+     * @static
      */
-    function getInterval(model, opt) {
+    var getInterval = AxisBuilder.getInterval = function (model, labelInterval) {
         var interval = model.get('interval');
         if (interval == null || interval == 'auto') {
-            interval = opt.labelInterval;
+            interval = labelInterval;
         }
         return interval;
-    }
+    };
 
     /**
      * @inner

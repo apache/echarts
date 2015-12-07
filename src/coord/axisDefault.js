@@ -45,6 +45,8 @@ define(function (require) {
         // 坐标轴文本标签，详见axis.axisLabel
         axisLabel: {
             show: true,
+            // 控制文本标签是否在grid里
+            inside: false,
             rotate: 0,
             margin: 8,
             // clickable: false,

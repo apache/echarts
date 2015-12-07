@@ -155,7 +155,9 @@ define(function(require) {
             var barMinHeight = seriesModel.get('barMinHeight') || 0;
 
             var valueAxisStart = baseAxis.onZero
-                ? valueAxis.dataToCoord(0) : valueAxis.getExtent()[0];
+                ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(0))
+                : valueAxis.getGlobalExtent()[0];
+
             var coords = cartesian.dataToPoints(data, true);
             lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 

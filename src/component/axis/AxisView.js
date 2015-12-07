@@ -2,74 +2,20 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
-    var Model = require('../../model/Model');
+    var AxisBuilder = require('./AxisBuilder');
+    var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick;
+    var getInterval = AxisBuilder.getInterval;
 
-    var elementList = ['axisLine', 'axisLabel', 'axisTick', 'splitLine', 'splitArea'];
-
-    /**
-     * @inner
-     */
-    function getAxisLinePosition(axisModel, gridModel) {
-        var axis = axisModel.axis;
-        var grid = gridModel.coordinateSystem;
-        var rect = grid.getRect();
-
-        // FIXME Other dimension has two axes
-        var otherAxis = grid.getAxis(axis.dim === 'x' ? 'y' : 'x');
-
-        var position = 0;
-        if (axis.onZero) {
-            position = otherAxis.dataToCoord(0);
-        }
-        else {
-            switch (axis.position) {
-                case 'left':
-                    position = rect.x;
-                    break;
-                case 'right':
-                    position = rect.x + rect.width;
-                    break;
-                case 'top':
-                    position = rect.y;
-                    break;
-                case 'bottom':
-                    position = rect.y + rect.height;
-            }
-        }
-
-        return position;
-    }
-
-    /**
-     * @inner
-     */
-    function ifIgnoreOnTick(axis, i, interval) {
-        return axis.scale.type === 'ordinal'
-            && (typeof interval === 'function')
-                && !interval(i, axis.scale.getLabel(i))
-                || i % (interval + 1);
-    }
-
-    /**
-     * @inner
-     */
-    function getInterval(model, labelInterval) {
-        var interval = model.get('interval');
-        if (interval == null || interval == 'auto') {
-            interval = labelInterval;
-        }
-        return interval;
-    }
+    var axisBuilderAttrs = [
+        'axisLine', 'axisLabel', 'axisTick', 'axisName'
+    ];
+    var selfBuilderAttrs = [
+        'splitLine', 'splitArea'
+    ];
 
     var AxisView = require('../../echarts').extendComponentView({
 
         type: 'axis',
-
-        /**
-         * Position of axis line
-         * @private
-         */
-        _axisLinePosition: 0,
 
         render: function (axisModel, ecModel) {
 
@@ -80,300 +26,20 @@ define(function (require) {
             }
 
             var gridModel = ecModel.getComponent('grid', axisModel.get('gridIndex'));
-            var labelInterval = axisModel.axis.getLabelInterval();
 
-            this._axisLinePosition = getAxisLinePosition(axisModel, gridModel);
+            var layout = layoutAxis(gridModel, axisModel);
 
-            zrUtil.each(elementList, function (name) {
+            var axisBuilder = new AxisBuilder(axisModel, layout);
+
+            zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
+
+            this.group.add(axisBuilder.getGroup());
+
+            zrUtil.each(selfBuilderAttrs, function (name) {
                 if (axisModel.get(name +'.show')) {
-                    this['_' + name](axisModel, gridModel, labelInterval);
+                    this['_' + name](axisModel, gridModel, layout.labelInterval);
                 }
             }, this);
-
-            this._renderName(axisModel, gridModel);
-        },
-
-        /**
-         * @param {module:echarts/coord/cartesian/AxisModel}
-         * @private
-         */
-        _renderName: function (axisModel, gridModel) {
-            var axis = axisModel.axis;
-
-            var name = axisModel.get('name');
-
-            if (name) {
-                var nameLocation = axisModel.get('nameLocation');
-                var textStyleModel = axisModel.getModel('nameTextStyle');
-
-                var isHorizontal = axis.isHorizontal();
-                var axisPosition = this._axisLinePosition;
-
-                var axisExtent = axis.getExtent();
-
-                var sign = axisExtent[1] - axisExtent[0] > 0 ? -1 : 1;
-
-                var textAlign;
-                var textBaseline;
-                var textX;
-                var textY;
-
-                var gap = axisModel.get('nameGap') || 0;
-
-                var axisInverse = axis.inverse;
-
-                switch (nameLocation) {
-                    case 'start':
-                        if (isHorizontal) {
-                            textX = axisExtent[0] + sign * gap;
-                            textY = axisPosition;
-                            textAlign = axisInverse ? 'left' : 'right';
-                            textBaseline = 'middle';
-                        }
-                        else {
-                            textX = axisPosition;
-                            textY = axisExtent[0] + sign * gap;
-                            textAlign = 'center';
-                            textBaseline = axisInverse ? 'bottom' : 'top';
-                        }
-                        break;
-                    case 'middle':
-                        // TODO
-                        break;
-                    case 'end':
-                        if (isHorizontal) {
-                            textX = axisExtent[1] - sign * gap;
-                            textY = axisPosition;
-                            textAlign = axisInverse ? 'right' : 'left';
-                            textBaseline = 'middle';
-                        }
-                        else {
-                            textX = axisPosition;
-                            textY = axisExtent[1] - sign * gap;
-                            textAlign = 'center';
-                            textBaseline = axisInverse ? 'top' : 'bottom';
-                        }
-                        break;
-                }
-
-                var text = new graphic.Text({
-                    style: {
-                        text: name,
-                        textFont: textStyleModel.getFont(),
-                        fill: textStyleModel.get('color')
-                            || axisModel.get('axisLine.lineStyle.color'),
-                        textAlign: textAlign,
-                        textBaseline: textBaseline
-                    },
-                    position: [textX, textY],
-                    silent: true,
-                    z2: 1
-                });
-
-                this.group.add(text);
-            }
-        },
-
-        /**
-         * @param {module:echarts/coord/cartesian/AxisModel} axisModel
-         * @param {module:echarts/coord/cartesian/GridModel} gridModel
-         * @private
-         */
-        _axisLabel: function (axisModel, gridModel, labelInterval) {
-            var axis = axisModel.axis;
-
-            var categoryData = axisModel.get('data');
-
-            var labelModel = axisModel.getModel('axisLabel');
-            var axisTextStyleModel = labelModel.getModel('textStyle');
-
-            var gridRect = gridModel.coordinateSystem.getRect();
-
-            var ticks = axis.scale.getTicks();
-            var labels = axisModel.getFormattedLabels();
-            var labelMargin = labelModel.get('margin');
-            var labelRotate = labelModel.get('rotate');
-
-            var isAxisTop = axis.position === 'top';
-
-            if (isAxisTop) {
-                labelRotate = -labelRotate;
-            }
-
-            for (var i = 0; i < ticks.length; i++) {
-                var tick = ticks[i];
-                if (ifIgnoreOnTick(axis, i, labelInterval)) {
-                     continue;
-                }
-                var textStyleModel = axisTextStyleModel;
-                if (categoryData && categoryData[i] && categoryData[i].textStyle) {
-                    textStyleModel = new Model(
-                        categoryData[i].textStyle, axisTextStyleModel
-                    );
-                }
-
-                var x;
-                var y;
-                var tickCoord = axis.dataToCoord(tick);
-                var labelTextAlign = 'center';
-                var labelTextBaseline = 'middle';
-
-                switch (axis.position) {
-                    case 'top':
-                        y = gridRect.y - labelMargin;
-                        x = tickCoord;
-                        labelTextBaseline = 'bottom';
-                        break;
-                    case 'bottom':
-                        x = tickCoord;
-                        y = gridRect.y + gridRect.height + labelMargin;
-                        labelTextBaseline = 'top';
-                        break;
-                    case 'left':
-                        x = gridRect.x - labelMargin;
-                        y = tickCoord;
-                        labelTextAlign = 'right';
-                        break;
-                    case 'right':
-                        x = gridRect.x + gridRect.width + labelMargin;
-                        y = tickCoord;
-                        labelTextAlign = 'left';
-                }
-                if (axis.isHorizontal() && labelRotate) {
-                    labelTextAlign = (!isAxisTop && labelRotate < 0) || (isAxisTop && labelRotate > 0)
-                         ? 'left' : 'right';
-                }
-
-                var textEl = new graphic.Text({
-                    style: {
-                        x: x,
-                        y: y,
-                        text: labels[i],
-                        textAlign: labelTextAlign,
-                        textBaseline: labelTextBaseline,
-                        textFont: textStyleModel.getFont(),
-                        fill: textStyleModel.get('color')
-                    },
-                    rotation: labelRotate * Math.PI / 180,
-                    origin: [x, y],
-                    silent: true
-                });
-
-                this.group.add(textEl);
-             }
-         },
-
-        /**
-         * @param {module:echarts/coord/cartesian/AxisModel} axisModel
-         * @param {module:echarts/coord/cartesian/GridModel} gridModel
-         * @private
-         */
-        _axisLine: function (axisModel, gridModel) {
-            var axis = axisModel.axis;
-            var p1 = [];
-            var p2 = [];
-
-            var lineStyleModel = axisModel.getModel('axisLine.lineStyle');
-
-            var coordExtent = axis.getExtent();
-            if (axis.isHorizontal()) {
-                p1[0] = coordExtent[0];
-                p2[0] = coordExtent[1];
-                p1[1] = p2[1] = this._axisLinePosition;
-            }
-            else {
-                p1[1] = coordExtent[0];
-                p2[1] = coordExtent[1];
-                p1[0] = p2[0] = this._axisLinePosition;
-            }
-
-            this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
-                shape: {
-                    x1: p1[0],
-                    y1: p1[1],
-                    x2: p2[0],
-                    y2: p2[1]
-                },
-                style: zrUtil.extend({
-                    lineCap: 'round'
-                }, lineStyleModel.getLineStyle()),
-                silent: true,
-                z2: 1
-            })));
-        },
-
-        /**
-         * @param {module:echarts/coord/cartesian/AxisModel} axisModel
-         * @param {module:echarts/coord/cartesian/GridModel} gridModel
-         * @param {number|Function} labelInterval
-         * @private
-         */
-        _axisTick: function (axisModel, gridModel, labelInterval) {
-            var axis = axisModel.axis;
-            var tickModel = axisModel.getModel('axisTick');
-
-            var lineStyleModel = tickModel.getModel('lineStyle');
-            var tickLen = tickModel.get('length');
-            var tickLineWidth = lineStyleModel.get('width');
-            var isTickInside = tickModel.get('inside');
-
-            var tickInterval = getInterval(tickModel, labelInterval);
-
-            var axisPosition = axis.position;
-            var ticksCoords = axis.getTicksCoords();
-
-            var tickLines = [];
-            for (var i = 0; i < ticksCoords.length; i++) {
-                // Only ordinal scale support tick interval
-                if (ifIgnoreOnTick(axis, i, tickInterval)) {
-                     continue;
-                }
-
-                var tickCoord = ticksCoords[i];
-
-                var x;
-                var y;
-                var offX = 0;
-                var offY = 0;
-
-                if (axis.isHorizontal()) {
-                    x = tickCoord;
-                    y = this._axisLinePosition;
-                    offY = axisPosition === 'top' ? -tickLen : tickLen;
-                }
-                else {
-                    x = this._axisLinePosition;
-                    y = tickCoord;
-                    offX = axisPosition === 'left' ? -tickLen : tickLen;
-                }
-
-                if (isTickInside) {
-                    offX = -offX;
-                    offY = -offY;
-                }
-
-                var p1 = [x, y];
-                var p2 = [x + offX, y + offY];
-
-                // Tick line
-                tickLines.push(new graphic.Line(graphic.subPixelOptimizeLine({
-                    shape: {
-                        x1: p1[0],
-                        y1: p1[1],
-                        x2: p2[0],
-                        y2: p2[1]
-                    },
-                    style: {
-                        lineWidth: tickLineWidth
-                    },
-                    silent: true
-                })));
-            }
-            var tickEl = graphic.mergePath(tickLines, {
-                style: lineStyleModel.getLineStyle(),
-                silent: true
-            });
-            this.group.add(tickEl);
         },
 
         /**
@@ -409,7 +75,7 @@ define(function (require) {
                     continue;
                 }
 
-                var tickCoord = ticksCoords[i];
+                var tickCoord = axis.toGlobalCoord(ticksCoords[i]);
 
                 if (isHorizontal) {
                     p1[0] = tickCoord;
@@ -484,7 +150,7 @@ define(function (require) {
                     continue;
                 }
 
-                var tickCoord = ticksCoords[i];
+                var tickCoord = axis.toGlobalCoord(ticksCoords[i]);
 
                 var x;
                 var y;
@@ -538,4 +204,70 @@ define(function (require) {
     AxisView.extend({
         type: 'yAxis'
     });
+
+    /**
+     * @inner
+     */
+    function layoutAxis(gridModel, axisModel) {
+        var grid = gridModel.coordinateSystem;
+        var axis = axisModel.axis;
+        var layout = {};
+
+        var rawAxisPosition = axis.position;
+        var axisPosition = axis.onZero ? 'onZero' : rawAxisPosition;
+        var axisDim = axis.dim;
+
+        // [left, right, top, bottom]
+        var rect = grid.getRect();
+        var rectBound = [rect.x, rect.x + rect.width, rect.y, rect.y + rect.height];
+
+        var posMap = {
+            x: {top: rectBound[2], bottom: rectBound[3]},
+            y: {left: rectBound[0], right: rectBound[1]}
+        };
+        posMap.x.onZero = Math.max(Math.min(getZero('y'), posMap.x.bottom), posMap.x.top);
+        posMap.y.onZero = Math.max(Math.min(getZero('x'), posMap.y.right), posMap.y.left);
+
+        function getZero(dim, val) {
+            var theAxis = grid.getAxis(dim);
+            return theAxis.toGlobalCoord(theAxis.dataToCoord(0));
+        }
+
+        // Axis position
+        layout.position = [
+            axisDim === 'y' ? posMap.y[axisPosition] : rectBound[0],
+            axisDim === 'x' ? posMap.x[axisPosition] : rectBound[3]
+        ];
+
+        // Axis rotation
+        var r = {x: 0, y: 1};
+        layout.rotation = Math.PI / 2 * r[axisDim];
+
+        // Tick and label direction, x y is axisDim
+        var dirMap = {top: -1, bottom: 1, left: -1, right: 1};
+
+        layout.labelDirection = layout.tickDirection = layout.nameDirection = dirMap[rawAxisPosition];
+        if (axis.onZero) {
+            layout.labelOffset = posMap[axisDim][rawAxisPosition] - posMap[axisDim].onZero;
+        }
+
+        if (axisModel.getModel('axisTick').get('inside')) {
+            layout.tickDirection = -layout.tickDirection;
+        }
+        if (axisModel.getModel('axisLabel').get('inside')) {
+            layout.labelDirection = -layout.labelDirection;
+        }
+
+        // Special label rotation
+        var lableRotation = axisModel.getModel('axisLabel').get('rotate');
+        layout.lableRotation = axisPosition === 'top' ? -lableRotation : lableRotation;
+
+        // label interval when auto mode.
+        layout.labelInterval = axis.getLabelInterval();
+
+        // Over splitLine and splitArea
+        layout.z2 = 1;
+
+        return layout;
+    }
 });

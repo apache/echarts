@@ -56,6 +56,14 @@ define(function (require) {
             var position = this.position;
             return position === 'top' || position === 'bottom';
         },
+
+        getGlobalExtent: function () {
+            var ret = this.getExtent();
+            ret[0] = this.toGlobalCoord(ret[0]);
+            ret[1] = this.toGlobalCoord(ret[1]);
+            return ret;
+        },
+
         /**
          * @return {number}
          */
@@ -80,7 +88,24 @@ define(function (require) {
                     && !labelInterval(idx, this.scale.getLabel(idx)))
                     || idx % (labelInterval + 1);
             }
-        }
+        },
+
+        /**
+         * Transform global coord to local coord,
+         * i.e. var localCoord = axis.toLocalCoord(80);
+         * designate by module:echarts/coord/cartesian/Grid.
+         * @type {Function}
+         */
+        toLocalCoord: null,
+
+        /**
+         * Transform global coord to local coord,
+         * i.e. var globalCoord = axis.toLocalCoord(40);
+         * designate by module:echarts/coord/cartesian/Grid.
+         * @type {Function}
+         */
+        toGlobalCoord: null
+
     };
     zrUtil.inherits(Axis2D, Axis);
 

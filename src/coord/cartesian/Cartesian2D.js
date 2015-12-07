@@ -10,7 +10,7 @@ define(function(require) {
         Cartesian.call(this, name);
 
         /**
-         * @param {Array.<string>}
+         * @type {Array.<string>}
          * @readOnly
          */
         this.dimensions = ['x', 'y'];
@@ -39,8 +39,10 @@ define(function(require) {
          * @return {boolean}
          */
         containPoint: function (point) {
-            return this.getAxis('x').contain(point[0])
-                && this.getAxis('y').contain(point[1]);
+            var axisX = this.getAxis('x');
+            var axisY = this.getAxis('y');
+            return axisX.contain(axisX.toLocalCoord(point[0]))
+                && axisY.contain(axisX.toLocalCoord(point[1]));
         },
 
         /**
@@ -73,9 +75,11 @@ define(function(require) {
          * @return {Array.<number>}
          */
         dataToPoint: function (data, clamp) {
+            var xAxis = this.getAxis('x');
+            var yAxis = this.getAxis('y');
             return [
-                this.getAxis('x').dataToCoord(data[0], clamp),
-                this.getAxis('y').dataToCoord(data[1], clamp)
+                xAxis.toGlobalCoord(xAxis.dataToCoord(data[0], clamp)),
+                yAxis.toGlobalCoord(yAxis.dataToCoord(data[1], clamp))
             ];
         },
 
@@ -85,9 +89,11 @@ define(function(require) {
          * @return {Array.<number>}
          */
         pointToData: function (point, clamp) {
+            var xAxis = this.getAxis('x');
+            var yAxis = this.getAxis('y');
             return [
-                this.getAxis('x').coordToData(point[0], clamp),
-                this.getAxis('y').coordToData(point[1], clamp)
+                xAxis.coordToData(xAxis.toLocalCoord(point[0]), clamp),
+                yAxis.coordToData(yAxis.toLocalCoord(point[1]), clamp)
             ];
         },
 

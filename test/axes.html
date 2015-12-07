@@ -76,7 +76,7 @@
 
 
 
-                renderTitle('catesian normal');
+                renderTitle('cartesian normal');
 
                 // inverse
                 makeCartesian('x: forward, y: forward', {
@@ -97,51 +97,65 @@
                 });
 
 
-                renderTitle('catesian min max and onZero');
+                renderTitle('cartesian min max and onZero');
 
-                makeCartesian('xAxis.onZero: false, yAxis.min: 0.4, yAxis.max: 0.8', {
-                    xAxis: {onZero: false},
+                makeCartesian('xAxis.axisLine.onZero: false, yAxis.min: 0.4, yAxis.max: 0.8', {
+                    xAxis: {axisLine: {onZero: false}},
                     yAxis: {min: 0.4, max: 0.8}
                 });
 
-                makeCartesian('xAxis.onZero: false, yAxis.min: -5, yAxis.max: 1.8', {
-                    xAxis: {onZero: false},
+                makeCartesian('xAxis.axisLine.onZero: false, yAxis.min: -5, yAxis.max: 1.8', {
+                    xAxis: {axisLine: {onZero: false}},
                     yAxis: {min: -5, max: 1.8}
                 });
 
-                makeCartesian('xAxis.onZero: false, yAxis.min: -5', {
-                    xAxis: {onZero: false},
+                makeCartesian('xAxis.axisLine.onZero: false, yAxis.min: -5', {
+                    xAxis: {axisLine: {onZero: false}},
                     yAxis: {min: -5}
                 });
 
-                makeCartesian('xAxis.onZero: false, yAxis.max: 0.8', {
-                    xAxis: {onZero: false},
+                makeCartesian('xAxis.axisLine.onZero: false, yAxis.max: 0.8', {
+                    xAxis: {axisLine: {onZero: false}},
                     yAxis: {max: 0.8}
                 });
 
-
-                makeCartesian('xAxis.onZero: true, yAxis.min: 0.4, yAxis.max: 0.8', {
-                    xAxis: {onZero: true},
+                makeCartesian('(zero outside) xAxis.axisLine.onZero: true, yAxis.min: 0.4, yAxis.max: 0.8', {
+                    xAxis: {axisLine: {onZero: true}},
                     yAxis: {min: 0.4, max: 0.8}
                 });
 
-                makeCartesian('xAxis.onZero: true, yAxis.min: -5, yAxis.max: 1.8', {
-                    xAxis: {onZero: true},
+                makeCartesian('(zero near top) xAxis.axisLine.onZero: true, yAxis.min: -5, yAxis.max: 1.8', {
+                    xAxis: {axisLine: {onZero: true}},
                     yAxis: {min: -5, max: 1.8}
                 });
 
-                makeCartesian('xAxis.onZero: true, yAxis.min: -5', {
-                    xAxis: {onZero: true},
-                    yAxis: {min: -5}
+                makeCartesian('(zero near bottom) xAxis.axisLine.onZero: true, yAxis.min: -1, yAxis.max: 10', {
+                    xAxis: {axisLine: {onZero: true}},
+                    yAxis: {min: -1, max: 10}
                 });
 
-                makeCartesian('xAxis.onZero: true, yAxis.max: 0.8', {
-                    xAxis: {onZero: true},
-                    yAxis: {max: 0.8}
+                makeCategoryOnY('(zero near left) yAxis.axisLine.onZero: true, xAxis.min: -1, xAxis.max: 10', {
+                    xAxis: {min: -1, max: 10},
+                    yAxis: {axisLine: {onZero: true}},
+                });
+
+                makeCategoryOnY('(zero near right) yAxis.axisLine.onZero: true, xAxis.min: -5, xAxis.max: 1.8', {
+                    xAxis: {min: -5, max: 1.8},
+                    yAxis: {axisLine: {onZero: true}},
+                });
+
+                makeCategoryOnY('(zero right) yAxis.axisLine.onZero: true, xAxis.min: -5, xAxis.max: 1.8, yAxis.position: right', {
+                    xAxis: {min: -5, max: 1.8},
+                    yAxis: {axisLine: {onZero: true}, position: 'right'},
+                });
+
+                makeCartesian('(zero top) xAxis.axisLine.onZero: true, yAxis.min: -1, yAxis.max: 1, xAxis.position: top', {
+                    xAxis: {axisLine: {onZero: true}, position: 'top'},
+                    yAxis: {min: -1, max: 1}
                 });
 
 
-                renderTitle('catesian category on y');
+                renderTitle('cartesian category on y');
 
                 makeCategoryOnY('x: forward, y: forward', {
                     xAxis: {},
@@ -161,7 +175,7 @@
                 });
 
 
-                renderTitle('catesian position setting');
+                renderTitle('cartesian position setting');
 
                 // position
                 makeCartesian('x: forward top, y: forward right', {
@@ -181,7 +195,36 @@
                     yAxis: {position: 'right'}
                 });
 
-                renderTitle('catesian name location');
+
+                renderTitle('cartesian tick or label inside');
+
+                makeCartesian('yAxis.axisTick: inside', {
+                    xAxis: {},
+                    yAxis: {axisTick: {inside: true}}
+                });
+
+                makeCartesian('yAxis.axisLabel: inside, yAxis.axisTick: inside', {
+                    xAxis: {},
+                    yAxis: {axisLabel: {inside: true}, axisTick: {inside: true}}
+                });
+
+                makeCartesian('xAxis.axisTick: inside', {
+                    xAxis: {axisTick: {inside: true}},
+                    yAxis: {}
+                });
+
+                makeCartesian('xAxis.axisLabel: inside', {
+                    xAxis: {axisLabel: {inside: true}},
+                    yAxis: {}
+                });
+
+                makeCartesian('xAxis.axisLabel: inside, top, xAxisLine.onZero: false', {
+                    xAxis: {axisLabel: {inside: true}, position: 'top', axisLine: {onZero: false}},
+                    yAxis: {}
+                });
+
+
+                renderTitle('cartesian name location');
 
                 // name location
                 makeCartesian('x: forward start, y: forward start', {
@@ -199,6 +242,22 @@
                 makeCartesian('x: inverse start, y: forward start', {
                     xAxis: {inverse: true, nameLocation: 'start'},
                     yAxis: {nameLocation: 'start'}
+                });
+                makeCartesian('x: forward middle, y: forward middle', {
+                    xAxis: {nameLocation: 'middle', nameGap: 30},
+                    yAxis: {nameLocation: 'middle', nameGap: 30}
+                });
+                makeCartesian('x: forward middle, y: forward middle right', {
+                    xAxis: {nameLocation: 'middle', nameGap: 30},
+                    yAxis: {nameLocation: 'middle', nameGap: 30, position: 'right'}
+                });
+                makeCartesian('x: inverse middle, y: inverse middle', {
+                    xAxis: {inverse: true, nameLocation: 'middle', nameGap: 30},
+                    yAxis: {inverse: true, nameLocation: 'middle', nameGap: 30}
+                });
+                makeCartesian('x: inverse middle top, y: inverse middle', {
+                    xAxis: {inverse: true, nameLocation: 'middle', nameGap: 30, position: 'top'},
+                    yAxis: {inverse: true, nameLocation: 'middle', nameGap: 30}
                 });
 
                 renderTitle('polar normal');
@@ -278,8 +337,20 @@
                 });
 
 
-                renderTitle('polar clockwise');
+                renderTitle('polar min max');
 
+                makePolar('radiusAxis.min: 1, radiusAxis.max: 3', {
+                    angleAxis: {},
+                    radiusAxis: {min: 1, max: 9}
+                });
+
+                makePolar('radiusAxis.min: -1', {
+                    angleAxis: {},
+                    radiusAxis: {min: -1}
+                });
+
+
+                renderTitle('polar clockwise');
 
                 makePolar('clockwise: true', {
                     angleAxis: {clockwise: true},
@@ -344,8 +415,8 @@
                 el.className = 'title';
                 var html = encodeHTML(label);
                 el.innerHTML = html;
-                el.href = '#' + html;
-                el.name = html;
+                el.href = '#' + html.replace(/\s/g, '_');
+                el.name = html.replace(/\s/g, '_');
                 containerEl.appendChild(el);
             }
 
@@ -480,7 +551,7 @@
                     },
                     polar: {radius: '65%'},
                     angleAxis: {data: xAxisData},
-                    radiusAxis: {splitNumber: 4},
+                    radiusAxis: {splitNumber: 4, name: 'radiusName'},
                     series: [{
                         coordinateSystem: 'polar',
                         name: 'line',

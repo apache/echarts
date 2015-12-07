@@ -470,7 +470,7 @@ define(function (require) {
             }
             else {
                 var otherAxis = cartesian.getAxis(axisType === 'x' ? 'y' : 'x');
-                var otherExtent = otherAxis.getExtent();
+                var otherExtent = otherAxis.getGlobalExtent();
 
                 if (cartesian.type === 'cartesian2d') {
                     (axisPointerType === 'line' ? moveGridLine : moveGridShadow)(

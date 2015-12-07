@@ -103,6 +103,7 @@ define(function(require, factory) {
         var axesList = this._axesList;
 
         adjustAxes();
+
         // Minus label size
         if (gridModel.get('containLabel')) {
             each(axesList, function (axis) {
@@ -123,15 +124,13 @@ define(function(require, factory) {
             adjustAxes();
         }
 
-
         function adjustAxes() {
             each(axesList, function (axis) {
                 var isHorizontal = axis.isHorizontal();
-                var extent = isHorizontal
-                    ? [gridRect.x, gridRect.x + gridRect.width]
-                    : [gridRect.y + gridRect.height, gridRect.y];
+                var extent = isHorizontal ? [0, gridRect.width] : [0, gridRect.height];
                 var idx = axis.inverse ? 1 : 0;
                 axis.setExtent(extent[idx], extent[1 - idx]);
+                updateAxisTransfrom(axis, isHorizontal ? gridRect.x : gridRect.y);
             });
         }
     };
@@ -333,6 +332,30 @@ define(function(require, factory) {
             }
         }, this);
     };
+
+    /**
+     * @inner
+     */
+    function updateAxisTransfrom(axis, coordBase) {
+        var axisExtent = axis.getExtent();
+        var axisExtentSum = axisExtent[0] + axisExtent[1];
+
+        // Fast transform
+        axis.toGlobalCoord = axis.dim === 'x'
+            ? function (coord) {
+                return coord + coordBase;
+            }
+            : function (coord) {
+                return axisExtentSum - coord + coordBase;
+            };
+        axis.toLocalCoord = axis.dim === 'x'
+            ? function (coord) {
+                return coord - coordBase;
+            }
+            : function (coord) {
+                return axisExtentSum - coord + coordBase;
+            };
+    }
 
     Grid.create = function (ecModel, api) {
         var grids = [];

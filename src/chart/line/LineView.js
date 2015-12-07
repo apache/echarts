@@ -31,7 +31,7 @@ define(function(require) {
     }
 
     function getAxisExtentWithGap(axis) {
-        var extent = axis.getExtent();
+        var extent = axis.getGlobalExtent();
         if (axis.onBand) {
             // Remove extra 1px to avoid line miter in clipped edge
             var halfBandWidth = axis.getBandWidth() / 2 - 1;
