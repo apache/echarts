@@ -29,13 +29,15 @@ define(function (require) {
         var seriesModel = data.hostModel;
         var oldData = this._data;
 
+        var SymbolCtor = this._symbolCtor;
+
         data.diff(oldData)
             .add(function (newIdx) {
                 if (
                     data.hasValue(newIdx) && !(isIgnore && isIgnore(newIdx))
                     && data.getItemVisual(newIdx, 'symbol') !== 'none'
                 ) {
-                    var symbolEl = new Symbol(data, newIdx);
+                    var symbolEl = new SymbolCtor(data, newIdx);
                     symbolEl.attr('position', data.getItemLayout(newIdx));
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
@@ -52,7 +54,7 @@ define(function (require) {
                 }
                 var point = data.getItemLayout(newIdx);
                 if (!symbolEl) {
-                    symbolEl = new Symbol(data, newIdx);
+                    symbolEl = new SymbolCtor(data, newIdx);
                     symbolEl.attr('position', point);
                 }
                 else {

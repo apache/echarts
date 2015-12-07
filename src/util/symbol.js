@@ -231,7 +231,7 @@ define(function(require) {
     };
 
     var symbolBuildProxies = {};
-    for (var name in  symbolCtors) {
+    for (var name in symbolCtors) {
         symbolBuildProxies[name] = new symbolCtors[name]();
     }
 

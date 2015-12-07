@@ -28,9 +28,7 @@
             ], function (echarts) {
 
                 require(['map/js/china'], function () {
-                    var chart = echarts.init(document.getElementById('main'), null, {
-                        renderer: 'canvas'
-                    });
+                    var chart = echarts.init(document.getElementById('main'));
 
                     var itemStyle = {
                         normal:{
@@ -70,7 +68,6 @@
                                 name: 'iphone3',
                                 type: 'map',
                                 map: 'china',
-                                roam: true,
                                 itemStyle: itemStyle,
                                 showLegendSymbol: true,
                                 label: {

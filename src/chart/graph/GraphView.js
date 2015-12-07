@@ -135,6 +135,7 @@ define(function (require) {
 
             data.graph.eachEdge(function (edge) {
                 var lineGroup = edge.getGraphicEl();
+                // FIXME
                 lineGroup.childOfName('line').setStyle(
                     'lineWidth',
                     edge.__lineWidth * edgeScale / groupScale
