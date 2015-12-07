@@ -56,11 +56,12 @@ define(function (require) {
                     return dataOpt;
                 });
                 // Convert map series which only has markPoint without data to scatter series
+                // FIXME
                 if (!(seriesOpt.data && seriesOpt.data.length)) {
-
                     if (!option.geo) {
                         option.geo = [];
                     }
+
                     // Use same geo if multiple map series has same map type
                     var geoOpt = newCreatedGeoOptMap[seriesOpt.map];
                     if (!geoOpt) {
@@ -69,7 +70,7 @@ define(function (require) {
                     }
 
                     var scatterSeries = seriesOpt.markPoint;
-                    scatterSeries.type = 'scatter';
+                    scatterSeries.type = option.effect && option.effect.show ? 'effectScatter' : 'scatter';
                     scatterSeries.coordinateSystem = 'geo';
                     scatterSeries.geoIndex = zrUtil.indexOf(option.geo, geoOpt);
                     scatterSeries.name = seriesOpt.name;
