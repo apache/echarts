@@ -44,13 +44,13 @@ define(function (require) {
         this.childAt(1).removeAll();
     };
 
-    effectSymbolProto.startEffectAnimation = function () {
+    effectSymbolProto.startEffectAnimation = function (period, brushType, rippleScale) {
         var symbolType = this._symbolType;
         var color = this._color;
 
         var rippleGroup = this.childAt(1);
 
-        var randomOffset = -Math.random() * 5000;
+        var randomOffset = -Math.random() * period;
 
         for (var i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
             var ripplePath = symbolUtil.createSymbol(
@@ -58,23 +58,24 @@ define(function (require) {
             );
             ripplePath.attr({
                 style: {
-                    stroke: null,
-                    fill: color
+                    stroke: brushType === 'stroke' ? color : null,
+                    fill: brushType === 'fill' ? color : null,
+                    strokeNoScale: true
                 },
                 z2: 99,
                 scale: [1, 1]
             });
 
-            var delay = -i / EFFECT_RIPPLE_NUMBER * 5000 + randomOffset;
+            var delay = -i / EFFECT_RIPPLE_NUMBER * period + randomOffset;
             // TODO Configurable period
             ripplePath.animate('', true)
-                .when(5000, {
-                    scale: [3, 3]
+                .when(period, {
+                    scale: [rippleScale, rippleScale]
                 })
                 .delay(delay)
                 .start();
             ripplePath.animateStyle(true)
-                .when(5000, {
+                .when(period, {
                     opacity: 0
                 })
                 .delay(delay)
@@ -109,6 +110,7 @@ define(function (require) {
         this.childAt(0).updateData(data, idx);
 
         var rippleGroup = this.childAt(1);
+        var itemModel = data.getItemModel(idx);
         var symbolType = data.getItemVisual(idx, 'symbol');
         var symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
         var color = data.getItemVisual(idx, 'color');
@@ -125,9 +127,13 @@ define(function (require) {
         this._color = color;
 
         var showEffectOn = seriesModel.get('showEffectOn');
+        var rippleScale = itemModel.get('rippleEffect.scale');
+        var brushType = itemModel.get('rippleEffect.brushType');
+        var effectPeriod = itemModel.get('effectPeriod');
+
         this.stopEffectAnimation();
         if (showEffectOn === 'render') {
-            this.startEffectAnimation();
+            this.startEffectAnimation(effectPeriod, brushType, rippleScale);
         }
         var symbol = this.childAt(0);
         function onEmphasis() {

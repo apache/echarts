@@ -491,10 +491,12 @@
                                 },
                                 label: {
                                     normal: {
+                                        formatter: '{b}',
+                                        position: 'right',
                                         show: false
                                     },
                                     emphasis: {
-                                        show: false
+                                        show: true
                                     }
                                 },
                                 itemStyle: {
@@ -514,6 +516,11 @@
                                     return val[2] / 10;
                                 },
                                 showEffectOn: 'render',
+                                rippleEffect: {
+                                    brushType: 'stroke'
+                                },
+
+                                hoverAnimation: true,
                                 label: {
                                     normal: {
                                         formatter: '{b}',

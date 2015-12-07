@@ -26,6 +26,16 @@ define(function (require) {
 
             // When to show the effect, option: 'render'|'emphasis'
             showEffectOn: 'render',
+            // Period of effect
+            effectPeriod: 4000,
+
+            // Ripple effect config
+            rippleEffect: {
+                // Scale of ripple
+                scale: 2.5,
+                // Brush type can be fill or stroke
+                brushType: 'fill'
+            },
 
             // Cartesian coordinate system
             xAxisIndex: 0,
