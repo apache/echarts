@@ -10,15 +10,23 @@
             #main {
                 position: relative;
                 min-width: 1080px; /* 4 columns */
+                text-align: center;
             }
             .title {
+                display: block;
+                cursor: pointer;
+                text-decoration: none;
                 clear: both;
                 text-align: center;
                 margin: 0;
                 background: #eef;
+                line-height: 22px;
             }
             .block {
-                float: left;
+                display: inline-block;
+                *display: inline;
+                *zoom: 1;
+                vertical-align: top;
                 margin: 30px 0 30px 50px;
             }
             .block .ec {
@@ -44,10 +52,12 @@
             var echarts;
             var zrUtil;
 
+
             require([
                 'echarts',
                 'zrender/core/util',
                 'echarts/chart/line',
+                'echarts/chart/bar',
                 'echarts/chart/parallel',
                 'echarts/component/legend',
                 'echarts/component/grid',
@@ -58,7 +68,13 @@
                 echarts = ec;
                 zrUtil = zu;
 
+
+
                 var makeCartesian = zrUtil.curry(makeChart, defaultCartesianOption);
+                var makeCategoryOnY = zrUtil.curry(makeChart, categoryOnYOption);
+                var makePolar = zrUtil.curry(makeChart, defaultPolarOption);
+
+
 
                 renderTitle('catesian normal');
 
@@ -79,6 +95,71 @@
                     xAxis: {inverse: true},
                     yAxis: {}
                 });
+
+
+                renderTitle('catesian min max and onZero');
+
+                makeCartesian('xAxis.onZero: false, yAxis.min: 0.4, yAxis.max: 0.8', {
+                    xAxis: {onZero: false},
+                    yAxis: {min: 0.4, max: 0.8}
+                });
+
+                makeCartesian('xAxis.onZero: false, yAxis.min: -5, yAxis.max: 1.8', {
+                    xAxis: {onZero: false},
+                    yAxis: {min: -5, max: 1.8}
+                });
+
+                makeCartesian('xAxis.onZero: false, yAxis.min: -5', {
+                    xAxis: {onZero: false},
+                    yAxis: {min: -5}
+                });
+
+                makeCartesian('xAxis.onZero: false, yAxis.max: 0.8', {
+                    xAxis: {onZero: false},
+                    yAxis: {max: 0.8}
+                });
+
+
+                makeCartesian('xAxis.onZero: true, yAxis.min: 0.4, yAxis.max: 0.8', {
+                    xAxis: {onZero: true},
+                    yAxis: {min: 0.4, max: 0.8}
+                });
+
+                makeCartesian('xAxis.onZero: true, yAxis.min: -5, yAxis.max: 1.8', {
+                    xAxis: {onZero: true},
+                    yAxis: {min: -5, max: 1.8}
+                });
+
+                makeCartesian('xAxis.onZero: true, yAxis.min: -5', {
+                    xAxis: {onZero: true},
+                    yAxis: {min: -5}
+                });
+
+                makeCartesian('xAxis.onZero: true, yAxis.max: 0.8', {
+                    xAxis: {onZero: true},
+                    yAxis: {max: 0.8}
+                });
+
+
+                renderTitle('catesian category on y');
+
+                makeCategoryOnY('x: forward, y: forward', {
+                    xAxis: {},
+                    yAxis: {}
+                });
+                makeCategoryOnY('x: inverse, y: inverse', {
+                    xAxis: {inverse: true},
+                    yAxis: {inverse: true}
+                });
+                makeCategoryOnY('x: forward, y: inverse', {
+                    xAxis: {},
+                    yAxis: {inverse: true}
+                });
+                makeCategoryOnY('x: inverse, y: forward', {
+                    xAxis: {inverse: true},
+                    yAxis: {}
+                });
+
 
                 renderTitle('catesian position setting');
 
@@ -121,8 +202,6 @@
                 });
 
                 renderTitle('polar normal');
-
-                var makePolar = zrUtil.curry(makeChart, defaultPolarOption);
 
                 // inverse
                 makePolar('angle: forward, radius: forward', {
@@ -198,6 +277,21 @@
                     radiusAxis: {}
                 });
 
+
+                renderTitle('polar clockwise');
+
+
+                makePolar('clockwise: true', {
+                    angleAxis: {clockwise: true},
+                    radiusAxis: {}
+                });
+
+                makePolar('clockwise: false', {
+                    angleAxis: {clockwise: false},
+                    radiusAxis: {}
+                });
+
+
                 renderTitle('polar inverse angle settting');
 
                 // startAngle
@@ -246,9 +340,12 @@
 
             function renderTitle(label) {
                 var containerEl = document.getElementById('main');
-                var el = document.createElement('div');
+                var el = document.createElement('a');
                 el.className = 'title';
-                el.innerHTML = encodeHTML(label);
+                var html = encodeHTML(label);
+                el.innerHTML = html;
+                el.href = '#' + html;
+                el.name = html;
                 containerEl.appendChild(el);
             }
 
@@ -293,6 +390,56 @@
                     },
                     yAxis: {
                         name: 'YName',
+                        splitArea: {show: true}
+                    },
+                    series: [{
+                        name: 'line',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        data: data1,
+                        itemStyle: {
+                            normal: {
+                                borderColor: 'white',
+                                borderWidth: 3,
+                                lineStyle: {width: 1}
+                            }
+                        }
+                    }]
+                };
+            }
+
+            function categoryOnYOption() {
+
+                var axisData = [];
+                var data1 = [];
+
+                for (var i = 0; i < 30; i++) {
+                    axisData.push('类目' + i);
+                    data1.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                return {
+                    legend: {
+                        data: ['line', 'line2', 'line3']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {type: 'line'}
+                    },
+                    grid: {x: 50, y: 50, x2: 50, y2: 50},
+                    yAxis: {
+                        data: axisData,
+                        type: 'category',
+                        name: 'YName',
+                        boundaryGap: false,
+                        splitArea: {show: false},
+                        splitLine: {show: false}
+                    },
+                    xAxis: {
+                        type: 'value',
+                        name: 'XName',
                         splitArea: {show: true}
                     },
                     series: [{
