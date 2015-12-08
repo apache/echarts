@@ -60,7 +60,19 @@ option = {
                 textStyle:{fontWeight:'bold', color:'green'}
             },
             '降水量','最高气温', '最低气温'
-        ]
+        ],
+        hover:{
+            in:function(canvasBox,data,coors){
+                console.log("-----------------------");
+                console.log("cursor in " + canvasBox);
+                console.log("the data in this legend is " + data);
+                console.log("the coors of this legend is " + coors);
+        },
+            out:function(canvasBox,data,coors){
+                console.log("-----------------------");
+                console.log("cursor out " + canvasBox);
+            }
+        }
     },
     xAxis :{
         data : ['周一','周二','周三','周四','周五','周六','周日']
