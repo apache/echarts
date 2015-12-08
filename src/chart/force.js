@@ -458,7 +458,7 @@ define(function (require) {
                 }
                 else if (typeof(gNode.data.initial) !== 'undefined') {
                     gNode.layout.position = vec2.create();
-                    vec2.copy(gNode.layout.position, gNode.data.initial);
+                    vec2.copy(gNode.layout.position, this.parseCenter(this.zr, gNode.data.initial));
                 }
                 else {
                     var center = this._layout.center;
