@@ -63,11 +63,12 @@ define(function (require) {
     }
 
     function updateSymbolBeforeLineUpdate () {
-        if (!this.__dirty) {
-            return;
-        }
         var lineGroup = this;
         var line = lineGroup.childOfName('line');
+        // If line not changed
+        if (!this.__dirty && !line.__dirty) {
+            return;
+        }
         var symbolFrom = lineGroup.childOfName('fromSymbol');
         var symbolTo = lineGroup.childOfName('toSymbol');
         var label = lineGroup.childOfName('label');

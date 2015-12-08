@@ -44,7 +44,9 @@ define(function (require) {
         this.childAt(1).removeAll();
     };
 
-    effectSymbolProto.startEffectAnimation = function (period, brushType, rippleScale, effectOffset) {
+    effectSymbolProto.startEffectAnimation = function (
+        period, brushType, rippleScale, effectOffset, z, zlevel
+    ) {
         var symbolType = this._symbolType;
         var color = this._color;
 
@@ -61,7 +63,10 @@ define(function (require) {
                     strokeNoScale: true
                 },
                 z2: 99,
-                scale: [1, 1]
+                silent: true,
+                scale: [1, 1],
+                z: z,
+                zlevel: zlevel
             });
 
             var delay = -i / EFFECT_RIPPLE_NUMBER * period + effectOffset;
@@ -127,13 +132,15 @@ define(function (require) {
         var showEffectOn = seriesModel.get('showEffectOn');
         var rippleScale = itemModel.get('rippleEffect.scale');
         var brushType = itemModel.get('rippleEffect.brushType');
-        var effectPeriod = itemModel.get('rippleEffect.period');
+        var effectPeriod = itemModel.get('rippleEffect.period') * 1000;
         var effectOffset = idx / data.count();
+        var z = itemModel.getShallow('z') || 0;
+        var zlevel = itemModel.getShallow('zlevel') || 0;
 
         this.stopEffectAnimation();
         if (showEffectOn === 'render') {
             this.startEffectAnimation(
-                effectPeriod * 1000, brushType, rippleScale, effectOffset
+                effectPeriod, brushType, rippleScale, effectOffset, z, zlevel
             );
         }
         var symbol = this.childAt(0);
@@ -141,7 +148,7 @@ define(function (require) {
             symbol.trigger('emphasis');
             if (showEffectOn !== 'render') {
                 this.startEffectAnimation(
-                    effectPeriod, brushType, rippleScale, effectOffset
+                    effectPeriod, brushType, rippleScale, effectOffset, z, zlevel
                 );
             }
         }
