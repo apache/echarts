@@ -148,8 +148,8 @@ define(function (require) {
         },
 
         remove: function (ecModel, api) {
-            this._symbolDraw.remove();
-            this._lineDraw.remove();
+            this._symbolDraw && this._symbolDraw.remove();
+            this._lineDraw && this._lineDraw.remove();
         }
     });
 });

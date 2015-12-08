@@ -8,10 +8,11 @@ define(function (require) {
     require('./bar/BarView');
 
     var barLayoutGrid = require('../layout/barGrid');
+    var echarts = require('../echarts');
 
-    require('../echarts').registerLayout(zrUtil.curry(barLayoutGrid, 'bar'));
+    echarts.registerLayout(zrUtil.curry(barLayoutGrid, 'bar'));
     // Visual coding for legend
-    require('../echarts').registerVisualCoding('chart', function (ecModel) {
+    echarts.registerVisualCoding('chart', function (ecModel) {
         ecModel.eachSeriesByType('bar', function (seriesModel) {
             var data = seriesModel.getData();
             data.setVisual('legendSymbol', 'roundRect');

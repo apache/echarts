@@ -56,9 +56,20 @@ define(function (require) {
             // Geo coordinate system
             geoIndex: 0,
 
-            // symbol: null,        // 图形类型
-            symbolSize: 10,          // 图形大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2
-            // symbolRotate: null,  // 图形旋转控制
+            // symbol: null,
+            symbolSize: 10,
+            // symbolRotate: null,
+
+            effect: {
+                show: false,
+                period: 4,
+                symbol: 'circle',
+                symbolSize: 3,
+                // Length of trail, 0 - 1
+                trailLength: 0.2
+                // Same with lineStyle.normal.color
+                // color
+            },
 
             large: false,
             // Available when large is true

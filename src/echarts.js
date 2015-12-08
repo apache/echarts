@@ -955,7 +955,9 @@ define(function (require) {
         zrUtil.createCanvas = creator;
     };
 
-    echarts.registerVisualCoding('echarts', require('./visual/seriesColor'));
+    echarts.registerVisualCoding('echarts', zrUtil.curry(
+        require('./visual/seriesColor'), '', 'itemStyle'
+    ));
     echarts.registerPreprocessor(require('./preprocessor/backwardCompat'));
 
     // Default action

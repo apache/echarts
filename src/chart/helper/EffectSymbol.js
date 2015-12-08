@@ -127,13 +127,13 @@ define(function (require) {
         var showEffectOn = seriesModel.get('showEffectOn');
         var rippleScale = itemModel.get('rippleEffect.scale');
         var brushType = itemModel.get('rippleEffect.brushType');
-        var effectPeriod = itemModel.get('effectPeriod');
+        var effectPeriod = itemModel.get('rippleEffect.period');
         var effectOffset = idx / data.count();
 
         this.stopEffectAnimation();
         if (showEffectOn === 'render') {
             this.startEffectAnimation(
-                effectPeriod, brushType, rippleScale, effectOffset
+                effectPeriod * 1000, brushType, rippleScale, effectOffset
             );
         }
         var symbol = this.childAt(0);

@@ -1,7 +1,7 @@
 define(function (require) {
     return function (ecModel) {
         ecModel.eachSeriesByType('map', function (seriesModel) {
-            var colorList = ecModel.get('color');
+            var colorList = seriesModel.get('color');
             var itemStyleModel = seriesModel.getModel('itemStyle.normal');
 
             var areaColor = itemStyleModel.get('areaColor');

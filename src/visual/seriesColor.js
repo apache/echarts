@@ -1,8 +1,8 @@
 define(function (require) {
     var Gradient = require('zrender/graphic/Gradient');
-    return function (ecModel) {
-        ecModel.eachRawSeries(function (seriesModel) {
-            var colorAccessPath = ['itemStyle', 'normal', 'color'];
+    return function (seriesType, styleType, ecModel) {
+        function encodeColor(seriesModel) {
+            var colorAccessPath = [styleType, 'normal', 'color'];
             var colorList = ecModel.get('color');
             var data = seriesModel.getData();
             var color = seriesModel.get(colorAccessPath) // Set in itemStyle
@@ -29,6 +29,8 @@ define(function (require) {
                     }
                 });
             }
-        });
+        }
+        seriesType ? ecModel.eachSeriesByType(seriesType, encodeColor)
+            : ecModel.eachSeries(encodeColor);
     };
 });
