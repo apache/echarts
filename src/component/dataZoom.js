@@ -299,7 +299,7 @@ define(function (require) {
                 serie = series[seriesIndex[i]];
                 this._originalData.series[seriesIndex[i]] = serie.data;
                 if (serie.data
-                    && this.getDataFromOption(serie.data[0]) instanceof Array
+                    && (serie.data.length === 0 || this.getDataFromOption(serie.data[0]) instanceof Array)
                     && (serie.type == ecConfig.CHART_TYPE_SCATTER
                         || serie.type == ecConfig.CHART_TYPE_LINE
                         || serie.type == ecConfig.CHART_TYPE_BAR)
