@@ -44,13 +44,11 @@ define(function (require) {
         this.childAt(1).removeAll();
     };
 
-    effectSymbolProto.startEffectAnimation = function (period, brushType, rippleScale) {
+    effectSymbolProto.startEffectAnimation = function (period, brushType, rippleScale, effectOffset) {
         var symbolType = this._symbolType;
         var color = this._color;
 
         var rippleGroup = this.childAt(1);
-
-        var randomOffset = -Math.random() * period;
 
         for (var i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
             var ripplePath = symbolUtil.createSymbol(
@@ -66,7 +64,7 @@ define(function (require) {
                 scale: [1, 1]
             });
 
-            var delay = -i / EFFECT_RIPPLE_NUMBER * period + randomOffset;
+            var delay = -i / EFFECT_RIPPLE_NUMBER * period + effectOffset;
             // TODO Configurable period
             ripplePath.animate('', true)
                 .when(period, {
@@ -130,16 +128,21 @@ define(function (require) {
         var rippleScale = itemModel.get('rippleEffect.scale');
         var brushType = itemModel.get('rippleEffect.brushType');
         var effectPeriod = itemModel.get('effectPeriod');
+        var effectOffset = idx / data.count();
 
         this.stopEffectAnimation();
         if (showEffectOn === 'render') {
-            this.startEffectAnimation(effectPeriod, brushType, rippleScale);
+            this.startEffectAnimation(
+                effectPeriod, brushType, rippleScale, effectOffset
+            );
         }
         var symbol = this.childAt(0);
         function onEmphasis() {
             symbol.trigger('emphasis');
             if (showEffectOn !== 'render') {
-                this.startEffectAnimation();
+                this.startEffectAnimation(
+                    effectPeriod, brushType, rippleScale, effectOffset
+                );
             }
         }
         function onNormal() {

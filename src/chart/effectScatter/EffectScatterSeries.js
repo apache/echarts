@@ -18,8 +18,8 @@ define(function (require) {
 
         defaultOption: {
             coordinateSystem: 'cartesian2d',
-            zlevel: 0,                  // 一级层叠
-            z: 2,                       // 二级层叠
+            zlevel: 0,
+            z: 2,
             legendHoverLink: true,
 
             effectType: 'ripple',

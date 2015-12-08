@@ -75,7 +75,7 @@ define(function (require) {
             });
 
             this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
-            this._edgeScaleRatio = seriesModel.get('edgeScaleRatio');
+            // this._edgeScaleRatio = seriesModel.get('edgeScaleRatio');
 
             this._updateNodeAndLinkScale();
 
@@ -117,13 +117,13 @@ define(function (require) {
 
             var group = this.group;
             var nodeScaleRatio = this._nodeScaleRatio;
-            var edgeScaleRatio = this._edgeScaleRatio;
+            // var edgeScaleRatio = this._edgeScaleRatio;
 
             // Assume scale aspect is 1
             var groupScale = group.scale[0];
 
             var nodeScale = (groupScale - 1) * nodeScaleRatio + 1;
-            var edgeScale = (groupScale - 1) * edgeScaleRatio + 1;
+            // var edgeScale = (groupScale - 1) * edgeScaleRatio + 1;
             var invScale = [
                 nodeScale / groupScale,
                 nodeScale / groupScale
@@ -132,15 +132,14 @@ define(function (require) {
             data.eachItemGraphicEl(function (el, idx) {
                 el.attr('scale', invScale);
             });
-
-            data.graph.eachEdge(function (edge) {
-                var lineGroup = edge.getGraphicEl();
-                // FIXME
-                lineGroup.childOfName('line').setStyle(
-                    'lineWidth',
-                    edge.__lineWidth * edgeScale / groupScale
-                );
-            });
+            // data.graph.eachEdge(function (edge) {
+            //     var lineGroup = edge.getGraphicEl();
+            //     // FIXME
+            //     lineGroup.childOfName('line').setStyle(
+            //         'lineWidth',
+            //         edge.__lineWidth * edgeScale / groupScale
+            //     );
+            // });
         },
 
         updateLayout: function (seriesModel, ecModel) {

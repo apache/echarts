@@ -3,11 +3,12 @@
  */
 define(function (require) {
 
-    var graphic = require('../../util/graphic');
     var numberUtil = require('../../util/number');
+    var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
     var symbolUtil = require('../../util/symbol');
     var vector = require('zrender/core/vector');
+    var LinePath = require('./LinePath');
 
     function tangentRotation(p1, p2) {
         return -Math.PI / 2 - Math.atan2(
@@ -39,22 +40,27 @@ define(function (require) {
     }
 
     function createLine(points) {
-        var line = new graphic[points[2] ? 'BezierCurve' : 'Line']({
-            name: 'line',
-            shape: {
-                x1: points[0][0],
-                y1: points[0][1],
-                x2: points[1][0],
-                y2: points[1][1]
-            }
+        var line = new LinePath({
+            name: 'line'
         });
-        if (points[2]) {
-            line.setShape({
-                cpx1: points[2][0],
-                cpy1: points[2][1]
-            });
-        }
+        setLinePoints(line.shape, points);
         return line;
+    }
+
+    function setLinePoints(targetShape, points) {
+        var p1 = points[0];
+        var p2 = points[1];
+        var cp1 = points[2];
+        targetShape.x1 = p1[0];
+        targetShape.y1 = p1[1];
+        targetShape.x2 = p2[0];
+        targetShape.y2 = p2[1];
+        targetShape.percent = 1;
+
+        if (cp1) {
+            targetShape.cpx1 = cp1[0];
+            targetShape.cpy1 = cp1[1];
+        }
     }
 
     function isSymbolArrow(symbol) {
@@ -182,22 +188,10 @@ define(function (require) {
                 var line = lineGroup.childOfName('line');
 
                 var linePoints = lineData.getItemLayout(newIdx);
-                var p1 = linePoints[0];
-                var p2 = linePoints[1];
-                var cp1 = linePoints[2];
                 var target = {
-                    shape: {
-                        x1: p1[0],
-                        y1: p1[1],
-                        x2: p2[0],
-                        y2: p2[1],
-                        percent: 1
-                    }
+                    shape: {}
                 };
-                if (cp1) {
-                    target.shape.cpx1 = cp1[0];
-                    target.shape.cpy1 = cp1[1];
-                }
+                setLinePoints(target.shape, linePoints);
 
                 graphic.updateProps(line, target, seriesModel);
 
@@ -239,7 +233,7 @@ define(function (require) {
             var textStyleHoverModel = labelHoverModel.getModel('textStyle');
 
             var defaultText = numberUtil.round(seriesModel.getData().getRawValue(idx));
-            line.setStyle(zrUtil.defaults(
+            line.setStyle(zrUtil.extend(
                 {
                     stroke: lineData.getItemVisual(idx, 'color')
                 },
@@ -277,7 +271,17 @@ define(function (require) {
     };
 
     lineDrawProto.updateLayout = function () {
-
+        var lineData = this._lineData;
+        var fromData = this._fromData;
+        var toData = this._toData;
+        lineData.eachItemGraphicEl(function (el, idx) {
+            var points = lineData.getItemLayout(idx);
+            var linePath = el.childOfName('line');
+            setLinePoints(linePath.shape, points);
+            linePath.dirty(true);
+            fromData && fromData.getItemGraphicEl(idx).attr('position', points[0]);
+            toData && toData.getItemGraphicEl(idx).attr('position', points[1]);
+        });
     };
 
     lineDrawProto.remove = function () {

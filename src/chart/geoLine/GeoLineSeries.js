@@ -2,22 +2,45 @@ define(function (require) {
 
     'use strict';
 
-    var createListFromArray = require('../helper/createListFromArray');
     var SeriesModel = require('../../model/Series');
+    var List = require('../../data/List');
+    var zrUtil = require('zrender/core/util');
 
     return SeriesModel.extend({
 
-        type: 'series.scatter',
+        type: 'series.geoLine',
 
         dependencies: ['grid', 'polar'],
 
         getInitialData: function (option, ecModel) {
-            var list = createListFromArray(option.data, this, ecModel);
-            return list;
+            var fromDataArr = [];
+            var toDataArr = [];
+            var lineDataArr = [];
+            zrUtil.each(option.data, function (opt) {
+                fromDataArr.push(opt[0]);
+                toDataArr.push(opt[1]);
+                lineDataArr.push(zrUtil.extend(
+                    zrUtil.extend({}, zrUtil.isArray(opt[0]) ? null : opt[0]),
+                    zrUtil.isArray(opt[1]) ? null : opt[1]
+                ));
+            });
+
+            var fromData = new List(['lng', 'lat'], this);
+            var toData = new List(['lng', 'lat'], this);
+            var lineData = new List(['value'], this);
+
+            fromData.initData(fromDataArr, null, 'geoCoord');
+            toData.initData(toDataArr, null, 'geoCoord');
+            lineData.initData(lineDataArr);
+
+            this.fromData = fromData;
+            this.toData = toData;
+
+            return lineData;
         },
 
         defaultOption: {
-            coordinateSystem: 'cartesian2d',
+            coordinateSystem: 'geo',
             zlevel: 0,
             z: 2,
             legendHoverLink: true,
@@ -51,10 +74,13 @@ define(function (require) {
                     // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
             //     }
             // },
-            itemStyle: {
+            // itemStyle: {
+            //     normal: {
+            //     }
+            // },
+            lineStyle: {
                 normal: {
-                    opacity: 0.8
-                    // color: 各异
+                    opacity: 0.5
                 }
             }
         }
