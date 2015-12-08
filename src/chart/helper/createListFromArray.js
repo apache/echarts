@@ -66,7 +66,7 @@ define(function(require) {
                 categoryAxisModel = yAxisModel;
             }
 
-            completeDimensions(dimensions, data, ['x', 'y']);
+            completeDimensions(dimensions, data, ['x', 'y', 'z']);
 
             return {dimensions: dimensions, categoryAxisModel: categoryAxisModel};
         },
@@ -113,7 +113,7 @@ define(function(require) {
                 categoryAxisModel = radiusAxisModel;
             }
 
-            completeDimensions(dimensions, data, ['radius', 'angle']);
+            completeDimensions(dimensions, data, ['radius', 'angle', 'value']);
 
             return {dimensions: dimensions, categoryAxisModel: categoryAxisModel};
         },
@@ -122,10 +122,10 @@ define(function(require) {
             // TODO Region
             // 多个散点图系列在同一个地区的时候
             return {
-                dimensions: [
+                dimensions: completeDimensions([
                     {name: 'lng'},
                     {name: 'lat'}
-                ]
+                ], data, ['lng', 'lat', 'value'])
             };
         }
     };
