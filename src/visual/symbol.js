@@ -31,15 +31,15 @@ define(function (require) {
                 }
                 data.each(function (idx) {
                     var itemModel = data.getItemModel(idx);
-                    var symbolType = itemModel.get('symbol', true);
-                    var symbolSize = itemModel.get('symbolSize', true);
-                    // If has symbol
-                    if (!isSymbolNone(defaultSymbolType) || !isSymbolNone(defaultSymbolType)) {
-                        data.setItemVisual(idx, 'symbol', symbolType);
-                        if (symbolSize != null) {
-                            // PENDING Transform symbolSize ?
-                            data.setItemVisual(idx, 'symbolSize', symbolSize);
-                        }
+                    var itemSymbolType = itemModel.get('symbol', true);
+                    var itemSymbolSize = itemModel.get('symbolSize', true);
+                    // If has item symbol
+                    if (itemSymbolType != null) {
+                        data.setItemVisual(idx, 'symbol', itemSymbolType);
+                    }
+                    if (itemSymbolSize != null) {
+                        // PENDING Transform symbolSize ?
+                        data.setItemVisual(idx, 'symbolSize', itemSymbolSize);
                     }
                 });
             }

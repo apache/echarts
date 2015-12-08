@@ -21,162 +21,10 @@
                 'echarts',
 
                 'echarts/chart/geoLine',
+                'echarts/chart/effectScatter',
                 'echarts/component/legend',
                 'echarts/component/geo'
             ], function (echarts) {
-                var data = [
-                    [{name:'北京'},{name:'包头'}],
-                    [{name:'北京'},{name:'北海'}],
-                    [{name:'北京'},{name:'广州'}],
-                    [{name:'北京'},{name:'郑州'}],
-                    [{name:'北京'},{name:'长春'}],
-                    [{name:'北京'},{name:'长治'}],
-                    [{name:'北京'},{name:'重庆'}],
-                    [{name:'北京'},{name:'长沙'}],
-                    [{name:'北京'},{name:'成都'}],
-                    [{name:'北京'},{name:'常州'}],
-                    [{name:'北京'},{name:'丹东'}],
-                    [{name:'北京'},{name:'大连'}],
-                    [{name:'北京'},{name:'东营'}],
-                    [{name:'北京'},{name:'延安'}],
-                    [{name:'北京'},{name:'福州'}],
-                    [{name:'北京'},{name:'海口'}],
-                    [{name:'北京'},{name:'呼和浩特'}],
-                    [{name:'北京'},{name:'合肥'}],
-                    [{name:'北京'},{name:'杭州'}],
-                    [{name:'北京'},{name:'哈尔滨'}],
-                    [{name:'北京'},{name:'舟山'}],
-                    [{name:'北京'},{name:'银川'}],
-                    [{name:'北京'},{name:'衢州'}],
-                    [{name:'北京'},{name:'南昌'}],
-                    [{name:'北京'},{name:'昆明'}],
-                    [{name:'北京'},{name:'贵阳'}],
-                    [{name:'北京'},{name:'兰州'}],
-                    [{name:'北京'},{name:'拉萨'}],
-                    [{name:'北京'},{name:'连云港'}],
-                    [{name:'北京'},{name:'临沂'}],
-                    [{name:'北京'},{name:'柳州'}],
-                    [{name:'北京'},{name:'宁波'}],
-                    [{name:'北京'},{name:'南京'}],
-                    [{name:'北京'},{name:'南宁'}],
-                    [{name:'北京'},{name:'南通'}],
-                    [{name:'北京'},{name:'上海'}],
-                    [{name:'北京'},{name:'沈阳'}],
-                    [{name:'北京'},{name:'西安'}],
-                    [{name:'北京'},{name:'汕头'}],
-                    [{name:'北京'},{name:'深圳'}],
-                    [{name:'北京'},{name:'青岛'}],
-                    [{name:'北京'},{name:'济南'}],
-                    [{name:'北京'},{name:'太原'}],
-                    [{name:'北京'},{name:'乌鲁木齐'}],
-                    [{name:'北京'},{name:'潍坊'}],
-                    [{name:'北京'},{name:'威海'}],
-                    [{name:'北京'},{name:'温州'}],
-                    [{name:'北京'},{name:'武汉'}],
-                    [{name:'北京'},{name:'无锡'}],
-                    [{name:'北京'},{name:'厦门'}],
-                    [{name:'北京'},{name:'西宁'}],
-                    [{name:'北京'},{name:'徐州'}],
-                    [{name:'北京'},{name:'烟台'}],
-                    [{name:'北京'},{name:'盐城'}],
-                    [{name:'北京'},{name:'珠海'}],
-                    [{name:'上海'},{name:'包头'}],
-                    [{name:'上海'},{name:'北海'}],
-                    [{name:'上海'},{name:'广州'}],
-                    [{name:'上海'},{name:'郑州'}],
-                    [{name:'上海'},{name:'长春'}],
-                    [{name:'上海'},{name:'重庆'}],
-                    [{name:'上海'},{name:'长沙'}],
-                    [{name:'上海'},{name:'成都'}],
-                    [{name:'上海'},{name:'丹东'}],
-                    [{name:'上海'},{name:'大连'}],
-                    [{name:'上海'},{name:'福州'}],
-                    [{name:'上海'},{name:'海口'}],
-                    [{name:'上海'},{name:'呼和浩特'}],
-                    [{name:'上海'},{name:'合肥'}],
-                    [{name:'上海'},{name:'哈尔滨'}],
-                    [{name:'上海'},{name:'舟山'}],
-                    [{name:'上海'},{name:'银川'}],
-                    [{name:'上海'},{name:'南昌'}],
-                    [{name:'上海'},{name:'昆明'}],
-                    [{name:'上海'},{name:'贵阳'}],
-                    [{name:'上海'},{name:'兰州'}],
-                    [{name:'上海'},{name:'拉萨'}],
-                    [{name:'上海'},{name:'连云港'}],
-                    [{name:'上海'},{name:'临沂'}],
-                    [{name:'上海'},{name:'柳州'}],
-                    [{name:'上海'},{name:'宁波'}],
-                    [{name:'上海'},{name:'南宁'}],
-                    [{name:'上海'},{name:'北京'}],
-                    [{name:'上海'},{name:'沈阳'}],
-                    [{name:'上海'},{name:'秦皇岛'}],
-                    [{name:'上海'},{name:'西安'}],
-                    [{name:'上海'},{name:'石家庄'}],
-                    [{name:'上海'},{name:'汕头'}],
-                    [{name:'上海'},{name:'深圳'}],
-                    [{name:'上海'},{name:'青岛'}],
-                    [{name:'上海'},{name:'济南'}],
-                    [{name:'上海'},{name:'天津'}],
-                    [{name:'上海'},{name:'太原'}],
-                    [{name:'上海'},{name:'乌鲁木齐'}],
-                    [{name:'上海'},{name:'潍坊'}],
-                    [{name:'上海'},{name:'威海'}],
-                    [{name:'上海'},{name:'温州'}],
-                    [{name:'上海'},{name:'武汉'}],
-                    [{name:'上海'},{name:'厦门'}],
-                    [{name:'上海'},{name:'西宁'}],
-                    [{name:'上海'},{name:'徐州'}],
-                    [{name:'上海'},{name:'烟台'}],
-                    [{name:'上海'},{name:'珠海'}],
-                    [{name:'广州'},{name:'北海'}],
-                    [{name:'广州'},{name:'郑州'}],
-                    [{name:'广州'},{name:'长春'}],
-                    [{name:'广州'},{name:'重庆'}],
-                    [{name:'广州'},{name:'长沙'}],
-                    [{name:'广州'},{name:'成都'}],
-                    [{name:'广州'},{name:'常州'}],
-                    [{name:'广州'},{name:'大连'}],
-                    [{name:'广州'},{name:'福州'}],
-                    [{name:'广州'},{name:'海口'}],
-                    [{name:'广州'},{name:'呼和浩特'}],
-                    [{name:'广州'},{name:'合肥'}],
-                    [{name:'广州'},{name:'杭州'}],
-                    [{name:'广州'},{name:'哈尔滨'}],
-                    [{name:'广州'},{name:'舟山'}],
-                    [{name:'广州'},{name:'银川'}],
-                    [{name:'广州'},{name:'南昌'}],
-                    [{name:'广州'},{name:'昆明'}],
-                    [{name:'广州'},{name:'贵阳'}],
-                    [{name:'广州'},{name:'兰州'}],
-                    [{name:'广州'},{name:'拉萨'}],
-                    [{name:'广州'},{name:'连云港'}],
-                    [{name:'广州'},{name:'临沂'}],
-                    [{name:'广州'},{name:'柳州'}],
-                    [{name:'广州'},{name:'宁波'}],
-                    [{name:'广州'},{name:'南京'}],
-                    [{name:'广州'},{name:'南宁'}],
-                    [{name:'广州'},{name:'南通'}],
-                    [{name:'广州'},{name:'北京'}],
-                    [{name:'广州'},{name:'上海'}],
-                    [{name:'广州'},{name:'沈阳'}],
-                    [{name:'广州'},{name:'西安'}],
-                    [{name:'广州'},{name:'石家庄'}],
-                    [{name:'广州'},{name:'汕头'}],
-                    [{name:'广州'},{name:'青岛'}],
-                    [{name:'广州'},{name:'济南'}],
-                    [{name:'广州'},{name:'天津'}],
-                    [{name:'广州'},{name:'太原'}],
-                    [{name:'广州'},{name:'乌鲁木齐'}],
-                    [{name:'广州'},{name:'温州'}],
-                    [{name:'广州'},{name:'武汉'}],
-                    [{name:'广州'},{name:'无锡'}],
-                    [{name:'广州'},{name:'厦门'}],
-                    [{name:'广州'},{name:'西宁'}],
-                    [{name:'广州'},{name:'徐州'}],
-                    [{name:'广州'},{name:'烟台'}],
-                    [{name:'广州'},{name:'盐城'}]
-                ];
-
                 var geoCoordMap = {
                     '上海': [121.4648,31.2891],
                     '东莞': [113.8953,22.901],
@@ -294,6 +142,47 @@
                     '韶关': [113.7964,24.7028]
                 };
 
+                var BJData = [
+                    [{name:'北京'}, {name:'上海',value:95}],
+                    [{name:'北京'}, {name:'广州',value:90}],
+                    [{name:'北京'}, {name:'大连',value:80}],
+                    [{name:'北京'}, {name:'南宁',value:70}],
+                    [{name:'北京'}, {name:'南昌',value:60}],
+                    [{name:'北京'}, {name:'拉萨',value:50}],
+                    [{name:'北京'}, {name:'长春',value:40}],
+                    [{name:'北京'}, {name:'包头',value:30}],
+                    [{name:'北京'}, {name:'重庆',value:20}],
+                    [{name:'北京'}, {name:'常州',value:10}]
+                ];
+
+                var SHData = [
+                    [{name:'上海'},{name:'包头',value:95}],
+                    [{name:'上海'},{name:'昆明',value:90}],
+                    [{name:'上海'},{name:'广州',value:80}],
+                    [{name:'上海'},{name:'郑州',value:70}],
+                    [{name:'上海'},{name:'长春',value:60}],
+                    [{name:'上海'},{name:'重庆',value:50}],
+                    [{name:'上海'},{name:'长沙',value:40}],
+                    [{name:'上海'},{name:'北京',value:30}],
+                    [{name:'上海'},{name:'丹东',value:20}],
+                    [{name:'上海'},{name:'大连',value:10}]
+                ];
+
+                var GZData = [
+                    [{name:'广州'},{name:'福州',value:95}],
+                    [{name:'广州'},{name:'太原',value:90}],
+                    [{name:'广州'},{name:'长春',value:80}],
+                    [{name:'广州'},{name:'重庆',value:70}],
+                    [{name:'广州'},{name:'西安',value:60}],
+                    [{name:'广州'},{name:'成都',value:50}],
+                    [{name:'广州'},{name:'常州',value:40}],
+                    [{name:'广州'},{name:'北京',value:30}],
+                    [{name:'广州'},{name:'北海',value:20}],
+                    [{name:'广州'},{name:'海口',value:10}]
+                ];
+
+                var planePath = 'path://M1705.06,1318.313v-89.254l-319.9-221.799l0.073-208.063c0.521-84.662-26.629-121.796-63.961-121.491c-37.332-0.305-64.482,36.829-63.961,121.491l0.073,208.063l-319.9,221.799v89.254l330.343-157.288l12.238,241.308l-134.449,92.931l0.531,42.034l175.125-42.917l175.125,42.917l0.531-42.034l-134.449-92.931l12.238-241.308L1705.06,1318.313z';
+
                 var convertData = function (data) {
                     var res = [];
                     for (var i = 0; i < data.length; i++) {
@@ -315,8 +204,83 @@
 
                     var myChart = echarts.init(document.getElementById('main'));
 
+                    var color = ['#a6c84c', '#ffa022', '#46bee9'];
+                    var series = [];
+                    [['北京', BJData], ['上海', SHData], ['广州', GZData]].forEach(function (item, i) {
+                        series.push({
+                            name: item[0] + ' Top10',
+                            type: 'geoLine',
+                            zlevel: 1,
+                            effect: {
+                                show: true,
+                                period: 6,
+                                trailLength: 0.7,
+                                color: '#fff',
+                                symbolSize: 2
+                            },
+                            lineStyle: {
+                                normal: {
+                                    color: color[i],
+                                    width: 0,
+                                    curveness: 0.2
+                                }
+                            },
+                            data: convertData(item[1])
+                        },
+                        {
+                            name: item[0] + ' Top10',
+                            type: 'geoLine',
+                            zlevel: 2,
+                            effect: {
+                                show: true,
+                                period: 6,
+                                trailLength: 0,
+                                symbol: planePath,
+                                symbolSize: 20
+                            },
+                            lineStyle: {
+                                normal: {
+                                    color: color[i],
+                                    width: 1,
+                                    opacity: 0.4,
+                                    curveness: 0.2
+                                }
+                            },
+                            data: convertData(item[1])
+                        },
+                        {
+                            name: item[0] + ' Top10',
+                            type: 'effectScatter',
+                            coordinateSystem: 'geo',
+                            zlevel: 2,
+                            rippleEffect: {
+                                brushType: 'stroke'
+                            },
+                            label: {
+                                normal: {
+                                    show: true,
+                                    position: 'right',
+                                    formatter: '{b}'
+                                }
+                            },
+                            symbolSize: function (val) {
+                                return val[2] / 8;
+                            },
+                            itemStyle: {
+                                normal: {
+                                    color: color[i]
+                                }
+                            },
+                            data: item[1].map(function (dataItem) {
+                                return {
+                                    name: dataItem[1].name,
+                                    value: geoCoordMap[dataItem[1].name].concat([dataItem[1].value])
+                                }
+                            })
+                        });
+                    });
+
                     myChart.setOption({
-                        color: ['#bcd3bb', '#e88f70', '#edc1a5', '#9dc5c8', '#e1e8c8', '#7b7c68', '#e5b5b5', '#f0b489', '#928ea8', '#bda29a'],
                         backgroundColor: '#404a59',
                         title: {
                             text: '全国主要城市空气质量',
@@ -358,124 +322,7 @@
                                 }
                             }
                         },
-                        series : [
-                            {
-                                name: '全国',
-                                type: 'geoLine',
-                                coordinateSystem: 'geo',
-                                data: convertData(data),
-                                lineStyle: {
-                                    normal: {
-                                        color: 'rgba(30,144,255,0.5)',
-                                        curveness: 0.2,
-                                        type: 'dashed'
-                                    }
-                                },
-                                animation: false
-                            },
-                            {
-                                name: '北京 Top10',
-                                type: 'geoLine',
-                                zlevel: 1,
-                                effect: {
-                                    show: true,
-                                    period: 3,
-                                    color: '#fff',
-                                    shadowBlur: 10
-                                },
-                                itemStyle: {
-                                    normal: {
-                                    }
-                                },
-                                lineStyle: {
-                                    normal: {
-                                        borderWidth: 1,
-                                        type: 'solid',
-                                        curveness: 0.2
-                                    }
-                                },
-                                data: convertData([
-                                    [{name:'北京'}, {name:'上海',value:95}],
-                                    [{name:'北京'}, {name:'广州',value:90}],
-                                    [{name:'北京'}, {name:'大连',value:80}],
-                                    [{name:'北京'}, {name:'南宁',value:70}],
-                                    [{name:'北京'}, {name:'南昌',value:60}],
-                                    [{name:'北京'}, {name:'拉萨',value:50}],
-                                    [{name:'北京'}, {name:'长春',value:40}],
-                                    [{name:'北京'}, {name:'包头',value:30}],
-                                    [{name:'北京'}, {name:'重庆',value:20}],
-                                    [{name:'北京'}, {name:'常州',value:10}]
-                                ])
-                            },
-                            {
-                                name: '上海 Top10',
-                                type: 'geoLine',
-                                zlevel: 1,
-                                effect: {
-                                    show: true,
-                                    period: 3,
-                                    color: '#fff',
-                                    shadowBlur: 10
-                                },
-                                itemStyle: {
-                                    normal: {
-                                    }
-                                },
-                                lineStyle: {
-                                    normal: {
-                                        borderWidth: 1,
-                                        type: 'solid',
-                                        curveness: 0.2
-                                    }
-                                },
-                                data: convertData([
-                                    [{name:'上海'},{name:'包头',value:95}],
-                                    [{name:'上海'},{name:'昆明',value:90}],
-                                    [{name:'上海'},{name:'广州',value:80}],
-                                    [{name:'上海'},{name:'郑州',value:70}],
-                                    [{name:'上海'},{name:'长春',value:60}],
-                                    [{name:'上海'},{name:'重庆',value:50}],
-                                    [{name:'上海'},{name:'长沙',value:40}],
-                                    [{name:'上海'},{name:'北京',value:30}],
-                                    [{name:'上海'},{name:'丹东',value:20}],
-                                    [{name:'上海'},{name:'大连',value:10}]
-                                ])
-                            },
-                            {
-                                name: '广州 Top10',
-                                type: 'geoLine',
-                                zlevel: 1,
-                                effect: {
-                                    show: true,
-                                    period: 3,
-                                    color: '#fff',
-                                    shadowBlur: 10
-                                },
-                                itemStyle: {
-                                    normal: {
-                                    }
-                                },
-                                lineStyle: {
-                                    normal: {
-                                        borderWidth: 1,
-                                        type: 'solid',
-                                        curveness: 0.2
-                                    }
-                                },
-                                data: convertData([
-                                    [{name:'广州'},{name:'福州',value:95}],
-                                    [{name:'广州'},{name:'太原',value:90}],
-                                    [{name:'广州'},{name:'长春',value:80}],
-                                    [{name:'广州'},{name:'重庆',value:70}],
-                                    [{name:'广州'},{name:'西安',value:60}],
-                                    [{name:'广州'},{name:'成都',value:50}],
-                                    [{name:'广州'},{name:'常州',value:40}],
-                                    [{name:'广州'},{name:'北京',value:30}],
-                                    [{name:'广州'},{name:'北海',value:20}],
-                                    [{name:'广州'},{name:'海口',value:10}]
-                                ])
-                            }
-                        ]
+                        series: series
                     });
                 });
             });

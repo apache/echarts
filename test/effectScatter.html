@@ -1,9 +1,10 @@
-<html></html><html>
+<html>
     <head>
         <meta charset='utf-8'>
         <script src='esl.js'></script>
         <script src='config.js'></script>
         <script src='lib/jquery.min.js'></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
         <style>
@@ -452,15 +453,6 @@
                                 color: '#fff'
                             }
                         },
-                        dataRange: {
-                            min : 0,
-                            max : 200,
-                            calculable : true,
-                            color: ['#d94e5d','#eac736','#50a3ba'],
-                            textStyle: {
-                                color: '#fff'
-                            }
-                        },
                         geo: {
                             map: 'china',
                             label: {
@@ -481,7 +473,6 @@
                         },
                         series : [
                             {
-
                                 name: 'pm2.5',
                                 type: 'scatter',
                                 coordinateSystem: 'geo',
@@ -511,7 +502,7 @@
                                 coordinateSystem: 'geo',
                                 data: convertData(data.sort(function (a, b) {
                                     return b.value - a.value;
-                                }).slice(0, 5)),
+                                }).slice(0, 6)),
                                 symbolSize: function (val) {
                                     return val[2] / 10;
                                 },
@@ -519,7 +510,6 @@
                                 rippleEffect: {
                                     brushType: 'stroke'
                                 },
-
                                 hoverAnimation: true,
                                 label: {
                                     normal: {

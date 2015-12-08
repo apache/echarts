@@ -157,6 +157,10 @@ define(function (require) {
             .on('normal', onNormal, this);
     };
 
+    effectSymbolProto.fadeOut = function (cb) {
+        cb && cb();
+    };
+
     zrUtil.inherits(EffectSymbol, Group);
 
     return EffectSymbol;

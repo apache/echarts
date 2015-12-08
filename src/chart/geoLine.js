@@ -3,6 +3,8 @@ define(function (require) {
     require('./geoLine/GeoLineSeries');
     require('./geoLine/GeoLineView');
 
+    require('../component/geo');
+
     var zrUtil = require('zrender/core/util');
     var echarts = require('../echarts');
     echarts.registerLayout(

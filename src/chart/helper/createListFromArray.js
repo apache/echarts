@@ -66,7 +66,7 @@ define(function(require) {
                 categoryAxisModel = yAxisModel;
             }
 
-            completeDimensions(dimensions, data, ['x', 'y', 'z']);
+            completeDimensions(dimensions, data, ['x', 'y']);
 
             return {dimensions: dimensions, categoryAxisModel: categoryAxisModel};
         },
@@ -113,7 +113,7 @@ define(function(require) {
                 categoryAxisModel = radiusAxisModel;
             }
 
-            completeDimensions(dimensions, data, ['radius', 'angle', 'value']);
+            completeDimensions(dimensions, data, ['radius', 'angle']);
 
             return {dimensions: dimensions, categoryAxisModel: categoryAxisModel};
         },
@@ -124,8 +124,7 @@ define(function(require) {
             return {
                 dimensions: [
                     {name: 'lng'},
-                    {name: 'lat'},
-                    {name: 'value'}
+                    {name: 'lat'}
                 ]
             };
         }

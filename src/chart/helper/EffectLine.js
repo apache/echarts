@@ -41,8 +41,16 @@ define(function (require) {
         var cp1 = this.__cp1;
         var t = this.__t;
         var pos = this.position;
-        pos[0] = curveUtil.quadraticAt(p1[0], cp1[0], p2[0], t);
-        pos[1] = curveUtil.quadraticAt(p1[1], cp1[1], p2[1], t);
+        var quadraticAt = curveUtil.quadraticAt;
+        var quadraticDerivativeAt = curveUtil.quadraticDerivativeAt;
+        pos[0] = quadraticAt(p1[0], cp1[0], p2[0], t);
+        pos[1] = quadraticAt(p1[1], cp1[1], p2[1], t);
+
+        // Tangent
+        var tx = quadraticDerivativeAt(p1[0], cp1[0], p2[0], t);
+        var ty = quadraticDerivativeAt(p1[1], cp1[1], p2[1], t);
+
+        this.rotation = -Math.atan2(ty, tx) - Math.PI / 2;
     }
 
     effectLineProto._updateEffectSymbol = function (lineData, idx) {
@@ -65,8 +73,6 @@ define(function (require) {
             this._period = period;
 
             this.add(symbol);
-
-            symbol.updateSymbolPosition = updateSymbolPosition;
 
             symbol.__t = 0;
             symbol.animate('', true)
