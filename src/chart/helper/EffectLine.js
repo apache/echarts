@@ -51,6 +51,8 @@ define(function (require) {
         var ty = quadraticDerivativeAt(p1[1], cp1[1], p2[1], t);
 
         this.rotation = -Math.atan2(ty, tx) - Math.PI / 2;
+
+        this.ignore = false;
     }
 
     effectLineProto._updateEffectSymbol = function (lineData, idx) {
@@ -68,6 +70,7 @@ define(function (require) {
             symbol = symbolUtil.createSymbol(
                 symbolType, -0.5, -0.5, 1, 1, color
             );
+            symbol.ignore = true;
             symbol.z2 = 100;
             this._symbolType = symbolType;
             this._period = period;

@@ -95,6 +95,15 @@ define(function(require) {
     };
 
     /**
+     * Get node by data index
+     * @param  {number} dataIndex
+     * @return {module:echarts/data/Graph~Node}
+     */
+    graphProto.getNodeByIndex = function (dataIndex) {
+        var rawIdx = this.data.getRawIndex(dataIndex);
+        return this.nodes[rawIdx];
+    };
+    /**
      * Get node by id
      * @param  {string} id
      * @return {module:echarts/data/Graph.Node}
@@ -148,7 +157,16 @@ define(function(require) {
     };
 
     /**
-     * Get edge by two nodes
+     * Get edge by data index
+     * @param  {number} dataIndex
+     * @return {module:echarts/data/Graph~Node}
+     */
+    graphProto.getEdgeByIndex = function (dataIndex) {
+        var rawIdx = this.edgeData.getRawIndex(dataIndex);
+        return this.edges[rawIdx];
+    };
+    /**
+     * Get edge by two linked nodes
      * @param  {module:echarts/data/Graph.Node|string} n1
      * @param  {module:echarts/data/Graph.Node|string} n2
      * @return {module:echarts/data/Graph.Edge}
@@ -254,11 +272,11 @@ define(function(require) {
     };
 
     // TODO
-    graphProto.depthFirstTraverse = function (
-        cb, startNode, direction, context
-    ) {
+    // graphProto.depthFirstTraverse = function (
+    //     cb, startNode, direction, context
+    // ) {
 
-    };
+    // };
 
     // Filter update
     graphProto.update = function () {

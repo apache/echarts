@@ -36,7 +36,10 @@ define(function (require) {
 
     function createLine(points) {
         var line = new LinePath({
-            name: 'line'
+            name: 'line',
+            style: {
+                strokeNoScale: true
+            }
         });
         setLinePoints(line.shape, points);
         return line;

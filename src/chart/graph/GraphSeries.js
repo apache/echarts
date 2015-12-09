@@ -112,6 +112,11 @@ define(function (require) {
 
             layout: null,
 
+            // Configuration of force
+            force: {
+                initLayout: null
+            },
+
             x: 'center',
             y: 'center',
             x2: null,

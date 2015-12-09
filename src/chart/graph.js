@@ -17,6 +17,7 @@ define(function (require) {
 
     echarts.registerLayout(require('./graph/simpleLayout'));
     echarts.registerLayout(require('./graph/circularLayout'));
+    echarts.registerLayout(require('./graph/forceLayout'));
 
     // Graph view coordinate system
     echarts.registerCoordinateSystem('graphView', {

@@ -62,7 +62,6 @@ define(function (require) {
                 });
             });
 
-
             // Save the original lineWidth
             data.graph.eachEdge(function (edge) {
                 edge.__lineWidth = edge.getModel('lineStyle.normal').get('width');
@@ -80,6 +79,20 @@ define(function (require) {
             this._updateNodeAndLinkScale();
 
             this._updateController(seriesModel, coordSys, api);
+
+            if (seriesModel.forceLayout) {
+                this._startForceLayoutIteration(seriesModel.forceLayout);
+            }
+        },
+
+        _startForceLayoutIteration: function (forceLayout) {
+            var self = this;
+            (function step() {
+                forceLayout.step(function (stopped) {
+                    self.updateLayout();
+                    !stopped && setTimeout(step, 16);
+                });
+            })();
         },
 
         _updateController: function (seriesModel, coordSys, api) {
