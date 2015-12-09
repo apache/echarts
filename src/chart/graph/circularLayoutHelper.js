@@ -11,7 +11,8 @@ define(function (require) {
         var graph = nodeData.graph;
 
         var angle = 0;
-        var unitAngle = Math.PI * 2 / nodeData.getSum('value');
+        var sum = nodeData.getSum('value');
+        var unitAngle = Math.PI * 2 / (sum || nodeData.count());
 
         var cx = rect.width / 2 + rect.x;
         var cy = rect.height / 2 + rect.y;
@@ -21,14 +22,14 @@ define(function (require) {
         graph.eachNode(function (node) {
             var value = node.getValue('value');
 
-            angle += unitAngle * value / 2;
+            angle += unitAngle * (sum ? value : 2) / 2;
 
             node.setLayout([
                 r * Math.cos(angle) + cx,
                 r * Math.sin(angle) + cy
             ]);
 
-            angle += unitAngle * value / 2;
+            angle += unitAngle * (sum ? value : 2) / 2;
         });
 
         graph.eachEdge(function (edge) {

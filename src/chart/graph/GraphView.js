@@ -80,6 +80,7 @@ define(function (require) {
 
             this._updateController(seriesModel, coordSys, api);
 
+            clearTimeout(this._layoutTimeout);
             if (seriesModel.forceLayout) {
                 this._startForceLayoutIteration(seriesModel.forceLayout);
             }
@@ -90,7 +91,7 @@ define(function (require) {
             (function step() {
                 forceLayout.step(function (stopped) {
                     self.updateLayout();
-                    !stopped && setTimeout(step, 16);
+                    !stopped && (self._layoutTimeout = setTimeout(step, 16));
                 });
             })();
         },

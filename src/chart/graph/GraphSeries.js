@@ -114,7 +114,10 @@ define(function (require) {
 
             // Configuration of force
             force: {
-                initLayout: null
+                initLayout: null,
+                repulsion: 50,
+                gravity: 0.1,
+                edgeLength: 30
             },
 
             x: 'center',

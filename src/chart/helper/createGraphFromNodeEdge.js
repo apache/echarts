@@ -4,17 +4,18 @@ define(function (require) {
     var Graph = require('../../data/Graph');
     var linkList = require('../../data/helper/linkList');
     var completeDimensions = require('../../data/helper/completeDimensions');
+    var zrUtil = require('zrender/core/util');
 
     return function (nodes, edges, hostModel, directed) {
         var graph = new Graph(directed);
         for (var i = 0; i < nodes.length; i++) {
-            graph.addNode(nodes[i].id || nodes[i].name, i);
+            graph.addNode(zrUtil.retrieve(nodes[i].id, nodes[i].name), i);
         }
 
         var linkNameList = [];
         for (var i = 0; i < edges.length; i++) {
             var link = edges[i];
-            linkNameList[i] = link.id || link.source + ' - ' + link.target;
+            linkNameList[i] = zrUtil.retrieve(link.id, link.source + ' - ' + link.target);
             graph.addEdge(link.source, link.target, i);
         }
 

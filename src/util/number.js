@@ -31,8 +31,7 @@ define(function (require) {
         var sub = domain[1] - domain[0];
 
         if (sub === 0) {
-            // FIXME
-            return range[0];
+            return (range[0] + range[1]) / 2;
         }
         var t = (val - domain[0]) / sub;
 

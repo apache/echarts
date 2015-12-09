@@ -123,10 +123,10 @@ define(function(require) {
         var nodesMap = this._nodesMap;
         var edgesMap = this._edgesMap;
 
-        if (typeof n1 == 'string') {
+        if (!(n1 instanceof Node)) {
             n1 = nodesMap[n1];
         }
-        if (typeof n2 == 'string') {
+        if (!(n2 instanceof Node)) {
             n2 = nodesMap[n2];
         }
         if (!n1 || !n2) {
@@ -172,10 +172,10 @@ define(function(require) {
      * @return {module:echarts/data/Graph.Edge}
      */
     graphProto.getEdge = function (n1, n2) {
-        if (typeof(n1) !== 'string') {
+        if (n1 instanceof Node) {
             n1 = n1.id;
         }
-        if (typeof(n2) !== 'string') {
+        if (n2 instanceof Node) {
             n2 = n2.id;
         }
 
@@ -232,7 +232,7 @@ define(function(require) {
     graphProto.breadthFirstTraverse = function (
         cb, startNode, direction, context
     ) {
-        if (typeof(startNode) === 'string') {
+        if (!startNode instanceof Node) {
             startNode = this._nodesMap[startNode];
         }
         if (!startNode) {
@@ -344,7 +344,7 @@ define(function(require) {
         /**
         * @type {string}
         */
-        this.id = id || '';
+        this.id = id == null ? '' : id;
 
         /**
         * @type {Array.<module:echarts/data/Graph.Edge>}
