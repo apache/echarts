@@ -33,8 +33,7 @@ define(function (require) {
 
         data.diff(oldData)
             .add(function (newIdx) {
-                if (
-                    data.hasValue(newIdx) && !(isIgnore && isIgnore(newIdx))
+                if (!(isIgnore && isIgnore(newIdx))
                     && data.getItemVisual(newIdx, 'symbol') !== 'none'
                 ) {
                     var symbolEl = new SymbolCtor(data, newIdx);
@@ -45,8 +44,7 @@ define(function (require) {
             })
             .update(function (newIdx, oldIdx) {
                 var symbolEl = oldData.getItemGraphicEl(oldIdx);
-                // Empty data
-                if (!data.hasValue(newIdx) || (isIgnore && isIgnore(newIdx))
+                if ((isIgnore && isIgnore(newIdx))
                     || data.getItemVisual(newIdx, 'symbol') === 'none'
                 ) {
                     group.remove(symbolEl);
