@@ -836,6 +836,7 @@ define(function (require) {
                 // 文字标签避免覆盖单独一个shape
                 textShape = {
                     zlevel : this.getZlevelBase(),
+                    _z : this.getZBase() + 1,
                     z : this.getZBase() + 1,
                     //hoverable: this._hoverable[mapType],
                     //clickable: this._clickable[mapType],
@@ -883,6 +884,7 @@ define(function (require) {
 
                 shape = {
                     zlevel : this.getZlevelBase(),
+                    _z : this.getZBase(),
                     z : this.getZBase(),
                     //hoverable: this._hoverable[mapType],
                     //clickable: this._clickable[mapType],
@@ -926,7 +928,9 @@ define(function (require) {
                      || data.selected === true
                 ) {
                     textShape.style = textShape.highlightStyle;
+                    textShape.z += 0.1;
                     shape.style = shape.highlightStyle;
+                    shape.z += 0.1;
                 }
 
                 textShape.clickable = shape.clickable =
@@ -1529,6 +1533,7 @@ define(function (require) {
                                 && this.shapeList[i]._mapType == mapType
                             ) {
                                 this.shapeList[i].style = this.shapeList[i]._style;
+                                this.shapeList[i].z = this.shapeList[i]._z;
                                 this.zr.modShape(this.shapeList[i].id);
                             }
                         }
@@ -1546,9 +1551,11 @@ define(function (require) {
                 ) {
                    if (this._selected[name]) {
                         this.shapeList[i].style = this.shapeList[i].highlightStyle;
+                        this.shapeList[i].z += 0.1;
                     }
                     else {
                         this.shapeList[i].style = this.shapeList[i]._style;
+                        this.shapeList[i].z = this.shapeList[i]._z;
                     }
                     this.zr.modShape(this.shapeList[i].id);
                 }
