@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>ECharts</title>
+    <script src="../doc/asset/js/esl/esl.js"></script>
+</head>
+
+<body>
+    <!--Step:1 Prepare a dom for ECharts which (must) has size (width & hight)-->
+    <!--Step:1 为ECharts准备一个具备大小（宽高）的Dom-->
+    <div id="main" style="height:500px;width:500px;border:1px solid #ccc;padding:10px;"></div>
+    
+    
+    <script type="text/javascript">
+    // Step:3 conifg ECharts's path, link to echarts.js from current page.
+    // Step:3 为模块加载器配置echarts的路径，从当前页面链接到echarts.js，定义所需图表路径
+    require.config({
+        packages: [{
+            name: 'echarts',
+            location: '../src',
+            main: 'echarts'
+        }, {
+            name: 'zrender',
+            location: '../../zrender/src',
+            main: 'zrender'
+        }]
+    });
+    
+    // Step:4 require echarts and use it in the callback.
+    // Step:4 动态加载echarts然后在回调函数中开始使用，注意保持按需加载结构定义图表路径
+    require(
+        [
+            'echarts',
+            'echarts/chart/waterbubble',
+            'echarts/chart/pie',
+        ],
+        function (ec) {
+            
+            //--- 折柱 ---
+            var myChart = ec.init(document.getElementById('main'));
+            myChart.setOption({
+                legend: {
+                    data:['含量']
+                },
+                toolbox: {
+                    show : true,
+                    feature : {
+                        mark : {show: true},
+                        dataView : {show: true, readOnly: true},
+                        restore : {show: true},
+                        saveAsImage : {show: true}
+                    }
+                },
+                calculable : true,
+                series : [
+                    {
+                        center: ['50%', '50%'],
+                        name:'含量',
+                        type:'waterbubble',
+                        data:[0.4],
+                        radius: 100,
+                        itemStyle: {
+                            normal: {
+                                borderWidth: 5,
+                                label: {
+                                    show: true,
+                                    position: 'outer'
+                                }
+                            }
+                        }
+                    }
+                ]
+            });
+        }
+    );
+    </script>
+</body>
+</html>

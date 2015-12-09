@@ -27,6 +27,7 @@ define(function() {
         CHART_TYPE_EVENTRIVER: 'eventRiver',
         CHART_TYPE_WORDCLOUD: 'wordCloud',
         CHART_TYPE_HEATMAP: 'heatmap',
+        CHART_TYPE_WATERBUBBLE: 'waterbubble',
 
         // 组件类型
         COMPONENT_TYPE_TITLE: 'title',
