@@ -292,6 +292,11 @@ define(function (require) {
         },
 
         _show: function (position, x, y, specialCssText) {
+            //当传入的字符串长度为0时，不显示。原来显示一个黑点
+            if(this._tDom.innerHTML.length==0){
+				this.showing = false;
+				return;
+			}
             var domHeight = this._tDom.offsetHeight;
             var domWidth = this._tDom.offsetWidth;
             if (position) {
