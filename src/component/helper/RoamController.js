@@ -6,6 +6,7 @@ define(function (require) {
 
     var Eventful = require('zrender/mixin/Eventful');
     var zrUtil = require('zrender/core/util');
+    var eventTool = require('zrender/core/event');
 
     function mousedown(e) {
         if (e.target && e.target.draggable) {
@@ -23,11 +24,13 @@ define(function (require) {
     }
 
     function mousemove(e) {
-        if (this._dragging && e.gestureEvent !== 'pinch') {
+        if (!this._dragging) {
+            return;
+        }
 
-            var rawE = e.event;
-            rawE.preventDefault && rawE.preventDefault();
+        eventTool.stop(e.event);
 
+        if (e.gestureEvent !== 'pinch') {
             var x = e.offsetX;
             var y = e.offsetY;
 
@@ -46,6 +49,7 @@ define(function (require) {
                 target.dirty();
             }
 
+            eventTool.stop(e.event);
             this.trigger('pan', dx, dy);
         }
     }
@@ -55,11 +59,13 @@ define(function (require) {
     }
 
     function mousewheel(e) {
+        eventTool.stop(e.event);
         var zoomDelta = e.wheelDelta < 0 ? 1.1 : 1 / 1.1;
         zoom.call(this, e, zoomDelta, e.offsetX, e.offsetY);
     }
 
     function pinch(e) {
+        eventTool.stop(e.event);
         var zoomDelta = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
         zoom.call(this, e, zoomDelta, e.pinchX, e.pinchY);
     }
