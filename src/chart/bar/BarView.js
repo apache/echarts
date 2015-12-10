@@ -39,7 +39,7 @@ define(function (require) {
             var baseAxis = cartesian.getBaseAxis();
             var isHorizontal = baseAxis.isHorizontal();
 
-            var enableAnimation = ecModel.get('animation');
+            var enableAnimation = seriesModel.get('animation');
 
             var barBorderWidthQuery = ['itemStyle', 'normal', 'barBorderWidth'];
 
