@@ -24,13 +24,13 @@ define(function (require) {
             var coordinateSystemType = seriesModel.get('coordinateSystem');
 
             if (coordinateSystemType === 'cartesian2d') {
-                this._renderCartesian(seriesModel, ecModel, api);
+                this._renderOnCartesian(seriesModel, ecModel, api);
             }
 
             return this.group;
         },
 
-        _renderCartesian: function (seriesModel, ecModel, api) {
+        _renderOnCartesian: function (seriesModel, ecModel, api) {
             var group = this.group;
             var data = seriesModel.getData();
             var oldData = this._data;
@@ -153,12 +153,12 @@ define(function (require) {
 
                 var labelModel = itemModel.getModel('label.normal');
                 var hoverLabelModel = itemModel.getModel('label.emphasis');
-                var labelText = seriesModel.getFormattedLabel(idx, 'normal')
-                            || data.getRawValue(idx);
                 var rectStyle = rect.style;
                 if (labelModel.get('show')) {
                     setLabel(
-                        rectStyle, labelModel, color, labelText, labelPositionOutside
+                        rectStyle, labelModel, color,
+                        seriesModel.getFormattedLabel(idx, 'normal') || data.getRawValue(idx),
+                        labelPositionOutside
                     );
                 }
                 else {
@@ -166,7 +166,9 @@ define(function (require) {
                 }
                 if (hoverLabelModel.get('show')) {
                     setLabel(
-                        hoverStyle, hoverLabelModel, color, labelText, labelPositionOutside
+                        hoverStyle, hoverLabelModel, color,
+                        seriesModel.getFormattedLabel(idx, 'emphasis') || data.getRawValue(idx),
+                        labelPositionOutside
                     );
                 }
                 else {
