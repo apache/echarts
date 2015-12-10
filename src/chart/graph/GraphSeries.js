@@ -130,8 +130,9 @@ define(function (require) {
             symbol: 'circle',
             symbolSize: 10,
 
-            // roam: false,
+            draggable: false,
 
+            roam: false,
             roamDetail: {
                 x: 0,
                 y: 0,

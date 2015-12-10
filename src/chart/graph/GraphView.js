@@ -81,9 +81,30 @@ define(function (require) {
             this._updateController(seriesModel, coordSys, api);
 
             clearTimeout(this._layoutTimeout);
-            if (seriesModel.forceLayout) {
-                this._startForceLayoutIteration(seriesModel.forceLayout);
+
+            var forceLayout = seriesModel.forceLayout;
+            if (forceLayout) {
+                this._startForceLayoutIteration(forceLayout);
             }
+
+            // Update draggable
+            data.eachItemGraphicEl(function (el, idx) {
+                var draggable = data.getItemModel(idx).get('draggable');
+                if (draggable && forceLayout) {
+                    el.on('drag', function () {
+                        forceLayout.warmUp();
+                        forceLayout.setFixed(idx);
+                        // Write position back to layout
+                        data.setItemLayout(idx, el.position);
+                    }).on('dragend', function () {
+                        forceLayout.setUnfixed(idx);
+                    });
+                }
+                else {
+                    el.off('drag');
+                }
+                el.setDraggable(draggable);
+            }, this);
         },
 
         _startForceLayoutIteration: function (forceLayout) {

@@ -29,6 +29,10 @@ define(function (require) {
 
     var symbolProto = Symbol.prototype;
 
+    function driftSymbol(dx, dy) {
+        this.parent.drift(dx, dy);
+    }
+
     symbolProto._createSymbol = function (symbolType, data, idx) {
         // Remove paths created before
         this.removeAll();
@@ -47,6 +51,8 @@ define(function (require) {
             z2: 100,
             scale: [0, 0]
         });
+        // Rewrite drift method
+        symbolPath.drift = driftSymbol;
 
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
@@ -98,6 +104,12 @@ define(function (require) {
         var symbolPath = this.childAt(0);
         symbolPath.zlevel = zlevel;
         symbolPath.z = z;
+    };
+
+    symbolProto.setDraggable = function (draggable) {
+        var symbolPath = this.childAt(0);
+        symbolPath.draggable = draggable;
+        symbolPath.cursor = draggable ? 'move' : 'pointer';
     };
     /**
      * Update symbol properties

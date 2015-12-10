@@ -55,15 +55,23 @@ define(function (require) {
 
         // Formula in 'Graph Drawing by Force-directed Placement'
         // var k = scale * Math.sqrt(width * height / nodes.length);
-
         // var k2 = k * k;
 
         var friction = 0.6;
 
         return {
             warmUp: function () {
-                friction = 0.7;
+                friction = 0.5;
             },
+
+            setFixed: function (idx) {
+                nodes[idx].fixed = true;
+            },
+
+            setUnfixed: function (idx) {
+                nodes[idx].fixed = false;
+            },
+
             step: function (cb) {
                 var v12 = [];
                 var nLen = nodes.length;
@@ -77,18 +85,20 @@ define(function (require) {
                     var w = n2.w / (n1.w + n2.w);
                     vec2.normalize(v12, v12);
 
-                    scaleAndAdd(n1.p, n1.p, v12, w * d * friction);
-                    scaleAndAdd(n2.p, n2.p, v12, -(1 - w) * d * friction);
+                    !n1.fixed && scaleAndAdd(n1.p, n1.p, v12, w * d * friction);
+                    !n2.fixed && scaleAndAdd(n2.p, n2.p, v12, -(1 - w) * d * friction);
                 }
                 // Gravity
-                // for (var i = 0; i < nLen; i++) {
-                //     var n = nodes[i];
-                //     vec2.sub(v12, center, n.p);
-                    // var d = vec2.len(v12);
-                    // vec2.scale(v12, v12, 1 / d);
-                    // var gravityFactor = gravity;
-                    // vec2.scaleAndAdd(n.p, n.p, v12, gravity * friction);
-                // }
+                for (var i = 0; i < nLen; i++) {
+                    var n = nodes[i];
+                    if (!n.fixed) {
+                        vec2.sub(v12, center, n.p);
+                        // var d = vec2.len(v12);
+                        // vec2.scale(v12, v12, 1 / d);
+                        // var gravityFactor = gravity;
+                        vec2.scaleAndAdd(n.p, n.p, v12, gravity * friction);
+                    }
+                }
 
                 // Repulsive
                 // PENDING
@@ -104,22 +114,23 @@ define(function (require) {
                             d = 1;
                         }
                         var repFact = (n1.rep + n2.rep) / d / d;
-                        scaleAndAdd(n1.pp, n1.pp, v12, repFact);
-                        scaleAndAdd(n2.pp, n2.pp, v12, -repFact);
+                        !n1.fixed && scaleAndAdd(n1.pp, n1.pp, v12, repFact);
+                        !n2.fixed && scaleAndAdd(n2.pp, n2.pp, v12, -repFact);
                     }
                 }
                 var v = [];
                 for (var i = 0; i < nLen; i++) {
                     var n = nodes[i];
-                    vec2.sub(v, n.p, n.pp);
-                    vec2.scaleAndAdd(n.p, n.p, v, friction);
-
-                    vec2.copy(n.pp, n.p);
+                    if (!n.fixed) {
+                        vec2.sub(v, n.p, n.pp);
+                        vec2.scaleAndAdd(n.p, n.p, v, friction);
+                        vec2.copy(n.pp, n.p);
+                    }
                 }
 
-                friction = friction * 0.99;
+                friction = friction * 0.995;
 
-                cb && cb(nodes, edges, friction < 0.002);
+                cb && cb(nodes, edges, friction < 0.01);
             }
         };
     };

@@ -13,10 +13,14 @@ define(function (require) {
         }
 
         var linkNameList = [];
+        var validEdges = [];
         for (var i = 0; i < edges.length; i++) {
             var link = edges[i];
-            linkNameList[i] = zrUtil.retrieve(link.id, link.source + ' - ' + link.target);
-            graph.addEdge(link.source, link.target, i);
+            // addEdge may fail when source or target not exists
+            if (graph.addEdge(link.source, link.target, i)) {
+                validEdges.push(link);
+                linkNameList.push(zrUtil.retrieve(link.id, link.source + ' - ' + link.target));
+            }
         }
 
         // FIXME
@@ -26,11 +30,13 @@ define(function (require) {
         var edgeData = new List(['value'], hostModel);
 
         nodeData.initData(nodes);
-        edgeData.initData(edges, linkNameList);
+        edgeData.initData(validEdges, linkNameList);
 
         graph.setEdgeData(edgeData);
 
         linkList.linkToGraph(nodeData, graph);
+        // Update dataIndex of nodes and edges because invalid edge may be removed
+        graph.update();
 
         return graph;
     };

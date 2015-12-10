@@ -4,6 +4,7 @@ define(function (require) {
     var numberUtil = require('../../util/number');
     var simpleLayoutHelper = require('./simpleLayoutHelper');
     var circularLayoutHelper = require('./circularLayoutHelper');
+    var vec2 = require('zrender/core/vector');
 
     return function (ecModel, api) {
         ecModel.eachSeriesByType('graph', function (graphSeries) {
@@ -60,10 +61,17 @@ define(function (require) {
                 });
                 var oldStep = forceInstance.step;
                 forceInstance.step = function (cb) {
+                    for (var i = 0, l = nodes.length; i < l; i++) {
+                        if (nodes[i].fixed) {
+                            // Write back to layout instance
+                            vec2.copy(nodes[i].p, graph.getNodeByIndex(i).getLayout());
+                        }
+                    }
                     oldStep(function (nodes, edges, stopped) {
                         for (var i = 0, l = nodes.length; i < l; i++) {
-                            var node = graph.getNodeByIndex(i);
-                            node.setLayout(nodes[i].p);
+                            if (!nodes[i].fixed) {
+                                graph.getNodeByIndex(i).setLayout(nodes[i].p);
+                            }
                             preservedPoints[nodeData.getId(i)] = nodes[i].p;
                         }
                         for (var i = 0, l = edges.length; i < l; i++) {
@@ -86,6 +94,9 @@ define(function (require) {
                 };
                 graphSeries.forceLayout = forceInstance;
                 graphSeries.preservedPoints = preservedPoints;
+
+                // Step to get the layout
+                forceInstance.step();
             }
             else {
                 // Remove prev injected forceLayout instance

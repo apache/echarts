@@ -81,8 +81,13 @@ define(function(require) {
     graphProto.addNode = function (id, dataIndex) {
         var nodesMap = this._nodesMap;
 
+        // Assign dataIndex as id if not exists
+        if (id == null) {
+            id = dataIndex;
+        }
+
         if (nodesMap[id]) {
-            return nodesMap[id];
+            return;
         }
 
         var node = new Node(id, dataIndex);
@@ -134,8 +139,9 @@ define(function(require) {
         }
 
         var key = n1.id + '-' + n2.id;
+        // PENDING
         if (edgesMap[key]) {
-            return edgesMap[key];
+            return;
         }
 
         var edge = new Edge(n1, n2, dataIndex);

@@ -52,7 +52,6 @@
                         node.x = node.y = null;
                     });
                     chart.setOption({
-                        tooltip: {},
                         legend: [{
                             // selectedMode: 'single',
                             data: categories.map(function (a) {
@@ -71,6 +70,7 @@
                                 categories: categories,
                                 animation: false,
                                 roam: true,
+                                draggable: true,
                                 force: {
                                     repulsion: 100
                                 },
