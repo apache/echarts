@@ -44,9 +44,9 @@ define(function (require) {
             mark: {
                 show: false,
                 title: {
-                    mark: '辅助线开关',
-                    markUndo: '删除辅助线',
-                    markClear: '清空辅助线'
+                    mark: trans('辅助线开关'),
+                    markUndo: trans('删除辅助线'),
+                    markClear: trans('清空辅助线')
                 },
                 lineStyle: {
                     width: 1,
@@ -57,27 +57,27 @@ define(function (require) {
             dataZoom: {
                 show: false,
                 title: {
-                    dataZoom: '区域缩放',
-                    dataZoomReset: '区域缩放后退'
+                    dataZoom: trans('区域缩放'),
+                    dataZoomReset: trans('区域缩放后退')
                 }
             },
             dataView: {
                 show: false,
-                title: '数据视图',
+                title: trans('数据视图'),
                 readOnly: false,
-                lang: ['数据视图', '关闭', '刷新']
+                lang: [trans('数据视图'), trans('关闭'), trans('刷新')]
             },
             magicType: {
                 show: false,
                 title: {
-                    line: '折线图切换',
-                    bar: '柱形图切换',
-                    stack: '堆积',
-                    tiled: '平铺',
-                    force: '力导向布局图切换',
-                    chord: '和弦图切换',
-                    pie: '饼图切换',
-                    funnel: '漏斗图切换'
+                    line: trans('折线图切换'),
+                    bar: trans('柱形图切换'),
+                    stack: trans('堆积'),
+                    tiled: trans('平铺'),
+                    force: trans('力导向布局图切换'),
+                    chord: trans('和弦图切换'),
+                    pie: trans('饼图切换'),
+                    funnel: trans('漏斗图切换')
                 },
                 /*
                 option: {
@@ -95,13 +95,13 @@ define(function (require) {
             },
             restore: {
                 show: false,
-                title: '还原'
+                title: trans('还原')
             },
             saveAsImage: {
                 show: false,
-                title: '保存为图片',
+                title: trans('保存为图片'),
                 type: 'png',
-                lang: ['点击保存'] 
+                lang: [trans('点击保存')] 
             }
         }
     };

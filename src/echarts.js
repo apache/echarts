@@ -8,6 +8,59 @@
  * https://github.com/ecomfe/echarts/blob/master/LICENSE.txt
  */
 
+var language = window.navigator.userLanguage || window.navigator.language;
+//console.log("Language is "+language+".");
+
+function trans(msg) {
+    if (language == 'en-US') {
+        switch (msg) {
+            case '辅助线开关':
+                return 'Aux Line Switch';
+            case '删除辅助线':
+                return 'Delete Guides';
+            case '清空辅助线':
+                return 'Empty GUides';
+            case '区域缩放':
+                return 'Area Zoom';
+            case '区域缩放后退': 
+                return 'Regional Scaled Back';
+            case '数据视图': 
+                return 'Data View';
+            case '数据视图': 
+                return 'Data View';
+            case '关闭': 
+                return 'Off';
+            case '刷新': 
+                return 'Refresh';
+            case '折线图切换':
+                return 'line map switching';
+            case '柱形图切换':
+                return 'column charts switch';
+            case '堆积':
+                return 'accumulate';
+            case '平铺':
+                return 'tile';
+            case '力导向布局图切换':
+                return 'force-oriented layout switching';
+            case '和弦图切换':
+                return 'chord map switching';
+            case '饼图切换':
+                return 'pie switch';
+            case '漏斗图切换':
+                return 'funnel plot handover';
+            case '还原':
+                return 'Restore';
+            case '保存为图片':
+                return 'Save As Image';
+            case '点击保存':
+                return 'Click Save'; 
+        }
+    } else {
+        return msg;
+    }
+}
+
+
 /**
  * echarts
  *
