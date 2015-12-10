@@ -101,9 +101,10 @@ define(function(require) {
 
             var textRect = textEl.getBoundingRect();
 
+            var subText = titleModel.get('subtext');
             var subTextEl = new graphic.Text({
                 style: {
-                    text: titleModel.get('subtext'),
+                    text: subText,
                     textFont: subtextStyleModel.getFont(),
                     fill: subtextStyleModel.get('color'),
                     y: textRect.height + titleModel.get('itemGap'),
@@ -129,7 +130,8 @@ define(function(require) {
             }
 
             group.add(textEl);
-            group.add(subTextEl);
+            subText && group.add(subTextEl);
+            // If no subText, but add subTextEl, there will be an empty line.
 
             var groupRect = group.getBoundingRect();
             var positionInfo = layout.parsePositionInfo(
@@ -171,8 +173,8 @@ define(function(require) {
             var padding = positionInfo.margin;
             var rect = new graphic.Rect({
                 shape: {
-                    x: positionInfo.x - padding[3],
-                    y: positionInfo.y - padding[0],
+                    x: -padding[3],
+                    y: -padding[0],
                     width: positionInfo.width + padding[1] + padding[3],
                     height: positionInfo.height + padding[0] + padding[2]
                 },
