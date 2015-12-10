@@ -218,6 +218,9 @@ define(function (require) {
         );
 
         function onEmphasis() {
+            // Sector may has animation of updating data. Force to move to the last frame
+            // Or it may stopped on the wrong shape
+            sector.stopAnimation(true);
             sector.animateTo({
                 shape: {
                     r: layout.r + 10
@@ -225,6 +228,7 @@ define(function (require) {
             }, 300, 'elasticOut');
         }
         function onNormal() {
+            sector.stopAnimation(true);
             sector.animateTo({
                 shape: {
                     r: layout.r
