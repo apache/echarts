@@ -73,7 +73,8 @@ define(function (require) {
          * @private
          */
         this._zr = zrender.init(dom, {
-            renderer: opts.renderer || 'canvas'
+            renderer: opts.renderer || 'canvas',
+            devicePixelRatio: opts.devicePixelRatio
         });
 
         /**
