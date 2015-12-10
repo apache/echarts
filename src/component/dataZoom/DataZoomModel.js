@@ -298,7 +298,7 @@ define(function(require) {
             this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
                 this.getAxisOperator(dimNames.name, axisIndex).backupCrossZero(
                     this,
-                    ecModel.getComponent(dimNames.axis, axisIndex).get('scale')
+                    !ecModel.getComponent(dimNames.axis, axisIndex).get('scale')
                 );
             }, this);
         },

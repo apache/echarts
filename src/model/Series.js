@@ -127,6 +127,15 @@ define(function(require) {
             return this.option.data;
         },
 
+        /**
+         * Get dimensions on the given axis.
+         * @param {string} axisDim
+         * @return {Array.<string>} dimensions on the axis.
+         */
+        getDimensionsOnAxis: function (axisDim) {
+            return [axisDim]; // Retunr axisDim default.
+        },
+
         // FIXME
         /**
          * Default tooltip formatter

@@ -5,6 +5,7 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
+    var each = zrUtil.each;
 
     /**
      * Operate single axis.
@@ -106,21 +107,21 @@ define(function(require) {
             }
 
             // Process axis data
-            var dimName = this._dimName;
-            var axisModel = this.ecModel.getComponent(this._dimName + 'Axis', this._axisIndex);
+            var axisDim = this._dimName;
+            var axisModel = this.ecModel.getComponent(axisDim + 'Axis', this._axisIndex);
             var isCategoryFilter = axisModel.get('type') === 'category';
             var seriesModels = this.getTargetSeriesModels();
             var dataZoomModel = this._model;
 
             var filterMode = dataZoomModel.get('filterMode');
-            var dataExtent = calculateDataExtent(dimName, seriesModels);
+            var dataExtent = calculateDataExtent(axisDim, seriesModels);
             var dataWindow = calculateDataWindow(dataZoomModel, dataExtent, isCategoryFilter);
 
             // Record data window.
             this._dataWindow = dataWindow.slice();
 
             // Process series data
-            zrUtil.each(seriesModels, function (seriesModel) {
+            each(seriesModels, function (seriesModel) {
                 // FIXME
                 // 这里仅仅处理了list类型
                 var seriesData = seriesModel.getData();
@@ -128,21 +129,18 @@ define(function(require) {
                     return;
                 }
 
-                if (filterMode === 'empty') {
-                    seriesModel.setData(
-                        seriesData.map(dimName, function (value) {
-                            return !isInWindow(value) ? NaN : value;
-                        })
-                    );
-                }
-                else {
-                    seriesData.filterSelf(dimName, isInWindow);
-                }
-
-                // FIXME
-                // 对于数值轴，还要考虑log等情况.
-                // FIXME
-                // 对于时间河流图，还要考虑是否须整块移除。
+                each(seriesModel.getDimensionsOnAxis(axisDim), function (dim) {
+                    if (filterMode === 'empty') {
+                        seriesModel.setData(
+                            seriesData.map(dim, function (value) {
+                                return !isInWindow(value) ? NaN : value;
+                            })
+                        );
+                    }
+                    else {
+                        seriesData.filterSelf(dim, isInWindow);
+                    }
+                });
             });
 
             function isInWindow(value) {
@@ -151,15 +149,17 @@ define(function(require) {
         }
     };
 
-    function calculateDataExtent(dimName, seriesModels) {
+    function calculateDataExtent(axisDim, seriesModels) {
         var dataExtent = [Number.MAX_VALUE, Number.MIN_VALUE];
 
-        zrUtil.each(seriesModels, function (seriesModel) {
+        each(seriesModels, function (seriesModel) {
             var seriesData = seriesModel.getData();
             if (seriesData) {
-                var seriesExtent = seriesData.getDataExtent(dimName);
-                seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
-                seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
+                each(seriesModel.getDimensionsOnAxis(axisDim), function (dim) {
+                    var seriesExtent = seriesData.getDataExtent(dim);
+                    seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
+                    seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
+                });
             }
         }, this);
 

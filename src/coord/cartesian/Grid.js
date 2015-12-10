@@ -320,17 +320,19 @@ define(function(require, factory) {
 
                 var data = seriesModel.getData();
                 if (data.type === 'list') {
-                    var xAxis = cartesian.getAxis('x');
-                    var yAxis = cartesian.getAxis('y');
-                    xAxis.scale.unionExtent(
-                        data.getDataExtent('x', xAxis.scale.type !== 'ordinal')
-                    );
-                    yAxis.scale.unionExtent(
-                        data.getDataExtent('y', yAxis.scale.type !== 'ordinal')
-                    );
+                    unionExtent(data, cartesian.getAxis('x'), 'x', seriesModel);
+                    unionExtent(data, cartesian.getAxis('y'), 'y', seriesModel);
                 }
             }
         }, this);
+
+        function unionExtent(data, axis, axisDim, seriesModel) {
+            each(seriesModel.getDimensionsOnAxis(axisDim), function (dim) {
+                axis.scale.unionExtent(data.getDataExtent(
+                    dim, axis.scale.type !== 'ordinal'
+                ));
+            });
+        }
     };
 
     /**
