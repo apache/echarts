@@ -2,6 +2,8 @@ define(function (require) {
 
     var OrdinalScale = require('../scale/Ordinal');
     var IntervalScale = require('../scale/Interval');
+    require('../scale/Time');
+    require('../scale/Log');
     var Scale = require('../scale/Scale');
 
     var numberUtil = require('../util/number');
