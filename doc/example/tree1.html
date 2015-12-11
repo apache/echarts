@@ -86,7 +86,7 @@ option = {
                 },
                 emphasis: {
                     label: {
-                        show: true
+                        show: false
                     }
                 }
             },
@@ -112,6 +112,10 @@ option = {
                                 normal: {
                                     label: {
                                         show: false
+                                    },
+                                    lineStyle: {
+                                        color: '#669966',
+                                        width: 2
                                     }
                                 }
                             },
@@ -129,7 +133,11 @@ option = {
                                                 show: true,
                                                 position: 'right'
                                             },
-                                            
+                                            lineStyle: {
+                                                color: '#996699',
+                                                width: 3
+                                            }
+
                                         },
                                         emphasis: {
                                             label: {
@@ -149,7 +157,7 @@ option = {
                                             label: {
                                                 show: true,
                                                 position: 'right',
-                                                formatter: "{b}"
+                                                formatter: "{b}:{c}"
                                             },
                                             color: '#fa6900',
                                             borderWidth: 2,
@@ -175,6 +183,10 @@ option = {
                                             brushType: 'stroke',
                                             borderWidth: 1,
                                             borderColor: '#999966',
+                                            lineStyle: {
+                                                color: '#999966',
+                                                width: 3
+                                            }
                                         },
                                         emphasis: {
                                             borderWidth: 0
@@ -192,7 +204,7 @@ option = {
                                     label: {
                                         show: false
                                     }
-                                    
+
                                 }
                             },
                             value: 4
@@ -206,7 +218,7 @@ option = {
                                     label: {
                                         show: false
                                     }
-                                    
+
                                 }
                             },
                             value: 2
@@ -220,7 +232,7 @@ option = {
                                     label: {
                                         show: false
                                     }
-                                    
+
                                 }
                             },
                             value: 2
@@ -245,7 +257,7 @@ option = {
                 </div>
             </div><!--/span-->
         </div><!--/row-->
-        
+
         </div><!--/.fluid-container-->
 
     <footer id="footer"></footer>
