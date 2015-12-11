@@ -45,43 +45,38 @@
                     }
                     graph.nodes.forEach(function (node) {
                         node.itemStyle = null;
+                        node.symbolSize = 10;
                         node.value = node.symbolSize;
                         node.label.normal.show = node.symbolSize > 30;
                         node.category = node.attributes['modularity_class'];
+                        node.x = node.y = null;
                     });
                     chart.setOption({
-                        tooltip: {},
                         legend: [{
                             // selectedMode: 'single',
                             data: categories.map(function (a) {
                                 return a.name;
                             })
                         }],
-                        dataRange: {
-                            max: 100,
-                            inRange: {
-                                colorSaturation: [1, 0.3]
-                            }
-                        },
                         animationDurationUpdate: 1500,
                         animationEasingUpdate: 'quinticInOut',
                         series : [
                             {
                                 name: 'Les Miserables',
                                 type: 'graph',
-                                layout: 'none',
+                                layout: 'force',
                                 data: graph.nodes,
                                 links: graph.links,
                                 categories: categories,
+                                animation: false,
                                 roam: true,
+                                draggable: true,
+                                force: {
+                                    repulsion: 100
+                                },
                                 label: {
                                     normal: {
                                         position: 'right'
-                                    }
-                                },
-                                lineStyle: {
-                                    normal: {
-                                        curveness: 0.3
                                     }
                                 }
                             }

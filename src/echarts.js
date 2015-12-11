@@ -73,7 +73,8 @@ define(function (require) {
          * @private
          */
         this._zr = zrender.init(dom, {
-            renderer: opts.renderer || 'canvas'
+            renderer: opts.renderer || 'canvas',
+            devicePixelRatio: opts.devicePixelRatio
         });
 
         /**
@@ -735,6 +736,9 @@ define(function (require) {
         var chart = new ECharts(dom, theme, opts);
         chart.id = idBase++;
         instances[chart.id] = chart;
+
+        dom.setAttribute &&
+            dom.setAttribute(DOM_ATTRIBUTE_KEY, chart.id);
 
         // Connecting
         zrUtil.each(eventActionMap, function (actionType, eventType) {

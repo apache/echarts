@@ -120,6 +120,10 @@ define(function (require) {
         var rectWidth = rect.width;
         var rectHeight = rect.height;
         switch (position) {
+            case 'inside':
+                x = rect.x + rectWidth / 2 - domWidth / 2;
+                y = rect.y + rectHeight / 2 - domHeight / 2;
+                break;
             case 'top':
                 x = rect.x + rectWidth / 2 - domWidth / 2;
                 y = rect.y - domHeight - gap;
@@ -463,8 +467,8 @@ define(function (require) {
             var moveAnimation = axisPointerType !== 'cross';
 
             if (axisPointerType === 'cross') {
-                moveGridLine('x', point, cartesian.getAxis('y').getExtent());
-                moveGridLine('y', point, cartesian.getAxis('x').getExtent());
+                moveGridLine('x', point, cartesian.getAxis('y').getGlobalExtent());
+                moveGridLine('y', point, cartesian.getAxis('x').getGlobalExtent());
 
                 this._updateCrossText(cartesian, point, axisPointerModel);
             }

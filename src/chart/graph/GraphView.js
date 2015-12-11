@@ -62,7 +62,6 @@ define(function (require) {
                 });
             });
 
-
             // Save the original lineWidth
             data.graph.eachEdge(function (edge) {
                 edge.__lineWidth = edge.getModel('lineStyle.normal').get('width');
@@ -80,6 +79,42 @@ define(function (require) {
             this._updateNodeAndLinkScale();
 
             this._updateController(seriesModel, coordSys, api);
+
+            clearTimeout(this._layoutTimeout);
+
+            var forceLayout = seriesModel.forceLayout;
+            if (forceLayout) {
+                this._startForceLayoutIteration(forceLayout);
+            }
+
+            // Update draggable
+            data.eachItemGraphicEl(function (el, idx) {
+                var draggable = data.getItemModel(idx).get('draggable');
+                if (draggable && forceLayout) {
+                    el.on('drag', function () {
+                        forceLayout.warmUp();
+                        forceLayout.setFixed(idx);
+                        // Write position back to layout
+                        data.setItemLayout(idx, el.position);
+                    }).on('dragend', function () {
+                        forceLayout.setUnfixed(idx);
+                    });
+                }
+                else {
+                    el.off('drag');
+                }
+                el.setDraggable(draggable);
+            }, this);
+        },
+
+        _startForceLayoutIteration: function (forceLayout) {
+            var self = this;
+            (function step() {
+                forceLayout.step(function (stopped) {
+                    self.updateLayout();
+                    !stopped && (self._layoutTimeout = setTimeout(step, 16));
+                });
+            })();
         },
 
         _updateController: function (seriesModel, coordSys, api) {

@@ -29,6 +29,8 @@ define(function (require) {
             var trailLength = seriesModel.get('effect.trailLength');
 
             var zr = api.getZr();
+            // Avoid the drag cause ghost shadow
+            // FIXME Better way ?
             zr.painter.getLayer(zlevel).clear(true);
             // Config layer with motion blur
             if (this._lastZlevel != null) {

@@ -112,6 +112,14 @@ define(function (require) {
 
             layout: null,
 
+            // Configuration of force
+            force: {
+                initLayout: null,
+                repulsion: 50,
+                gravity: 0.1,
+                edgeLength: 30
+            },
+
             x: 'center',
             y: 'center',
             x2: null,
@@ -122,8 +130,9 @@ define(function (require) {
             symbol: 'circle',
             symbolSize: 10,
 
-            // roam: false,
+            draggable: false,
 
+            roam: false,
             roamDetail: {
                 x: 0,
                 y: 0,

@@ -187,7 +187,7 @@ define(function(require) {
 
             var lineGroup = this._lineGroup;
 
-            var hasAnimation = ecModel.get('animation');
+            var hasAnimation = seriesModel.get('animation');
 
             var isAreaChart = !areaStyleModel.isEmpty();
             var stackedOnPoints = getStackedOnPoints(coordSys, data);
@@ -329,7 +329,7 @@ define(function(require) {
                     data.setItemGraphicEl(dataIndex, symbol);
 
                     // Stop scale animation
-                    symbol.stopAnimation(true);
+                    symbol.stopSymbolAnimation(true);
 
                     this.group.add(symbol);
                 }

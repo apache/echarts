@@ -96,6 +96,29 @@ define(function (require) {
 
             applyVisual: defaultApplyColor,
 
+            /**
+             * Create a mapper function
+             * @return {Function}
+             */
+            getColorMapper: function () {
+                var visual = isCategory(this)
+                    ? this.option.visual
+                    : zrUtil.map(this.option.visual, zrUtil.parse);
+                return isCategory(this)
+                    ? function (value) {
+                        return getVisualForCategory(this, visual, this._normalizeData(value));
+                    }
+                    : function (value, out) {
+                        // If output rgb array
+                        // which will be much faster and useful in pixel manipulation
+                        var returnRGBArray = !!out;
+                        out = zrColor.fastMapToColor(
+                            this._normalizeData(value), visual, out
+                        );
+                        return returnRGBArray ? out : zrUtil.stringify(out, 'rgba');
+                    };
+            },
+
             // value:
             // (1) {number}
             // (2) {Array.<number>} Represents a interval, for colorStops.
@@ -113,7 +136,7 @@ define(function (require) {
                         this._normalizeData(value[1])
                     ];
 
-                    // For creating graduate color list.
+                    // For creating gradient color list.
                     return zrColor.mapIntervalToColor(value, visual);
                 }
                 else {

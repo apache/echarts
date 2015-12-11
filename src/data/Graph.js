@@ -81,8 +81,13 @@ define(function(require) {
     graphProto.addNode = function (id, dataIndex) {
         var nodesMap = this._nodesMap;
 
+        // Assign dataIndex as id if not exists
+        if (id == null) {
+            id = dataIndex;
+        }
+
         if (nodesMap[id]) {
-            return nodesMap[id];
+            return;
         }
 
         var node = new Node(id, dataIndex);
@@ -94,6 +99,15 @@ define(function(require) {
         return node;
     };
 
+    /**
+     * Get node by data index
+     * @param  {number} dataIndex
+     * @return {module:echarts/data/Graph~Node}
+     */
+    graphProto.getNodeByIndex = function (dataIndex) {
+        var rawIdx = this.data.getRawIndex(dataIndex);
+        return this.nodes[rawIdx];
+    };
     /**
      * Get node by id
      * @param  {string} id
@@ -114,10 +128,10 @@ define(function(require) {
         var nodesMap = this._nodesMap;
         var edgesMap = this._edgesMap;
 
-        if (typeof n1 == 'string') {
+        if (!(n1 instanceof Node)) {
             n1 = nodesMap[n1];
         }
-        if (typeof n2 == 'string') {
+        if (!(n2 instanceof Node)) {
             n2 = nodesMap[n2];
         }
         if (!n1 || !n2) {
@@ -125,8 +139,9 @@ define(function(require) {
         }
 
         var key = n1.id + '-' + n2.id;
+        // PENDING
         if (edgesMap[key]) {
-            return edgesMap[key];
+            return;
         }
 
         var edge = new Edge(n1, n2, dataIndex);
@@ -148,16 +163,25 @@ define(function(require) {
     };
 
     /**
-     * Get edge by two nodes
+     * Get edge by data index
+     * @param  {number} dataIndex
+     * @return {module:echarts/data/Graph~Node}
+     */
+    graphProto.getEdgeByIndex = function (dataIndex) {
+        var rawIdx = this.edgeData.getRawIndex(dataIndex);
+        return this.edges[rawIdx];
+    };
+    /**
+     * Get edge by two linked nodes
      * @param  {module:echarts/data/Graph.Node|string} n1
      * @param  {module:echarts/data/Graph.Node|string} n2
      * @return {module:echarts/data/Graph.Edge}
      */
     graphProto.getEdge = function (n1, n2) {
-        if (typeof(n1) !== 'string') {
+        if (n1 instanceof Node) {
             n1 = n1.id;
         }
-        if (typeof(n2) !== 'string') {
+        if (n2 instanceof Node) {
             n2 = n2.id;
         }
 
@@ -214,7 +238,7 @@ define(function(require) {
     graphProto.breadthFirstTraverse = function (
         cb, startNode, direction, context
     ) {
-        if (typeof(startNode) === 'string') {
+        if (!startNode instanceof Node) {
             startNode = this._nodesMap[startNode];
         }
         if (!startNode) {
@@ -254,11 +278,11 @@ define(function(require) {
     };
 
     // TODO
-    graphProto.depthFirstTraverse = function (
-        cb, startNode, direction, context
-    ) {
+    // graphProto.depthFirstTraverse = function (
+    //     cb, startNode, direction, context
+    // ) {
 
-    };
+    // };
 
     // Filter update
     graphProto.update = function () {
@@ -326,7 +350,7 @@ define(function(require) {
         /**
         * @type {string}
         */
-        this.id = id || '';
+        this.id = id == null ? '' : id;
 
         /**
         * @type {Array.<module:echarts/data/Graph.Edge>}
