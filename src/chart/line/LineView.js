@@ -329,7 +329,7 @@ define(function(require) {
                     data.setItemGraphicEl(dataIndex, symbol);
 
                     // Stop scale animation
-                    symbol.stopAnimation(true);
+                    symbol.stopSymbolAnimation(true);
 
                     this.group.add(symbol);
                 }

@@ -214,7 +214,7 @@ define(function (require) {
             data.getItemLayout(idx),
             itemModel.get('selected'),
             seriesModel.get('selectedOffset'),
-            seriesModel.ecModel.get('animation')
+            seriesModel.get('animation')
         );
 
         function onEmphasis() {

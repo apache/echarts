@@ -19,6 +19,11 @@ define(function (require) {
 
     var symbolDrawProto = SymbolDraw.prototype;
 
+    function symbolNeedsDraw(data, idx, isIgnore) {
+        var point = data.getItemLayout(idx);
+        return point && !isNaN(point[0]) && !isNaN(point[1]) && !(isIgnore && isIgnore(idx))
+                    && data.getItemVisual(idx, 'symbol') !== 'none';
+    }
     /**
      * Update symbols draw by new data
      * @param {module:echarts/data/List} data
@@ -33,24 +38,21 @@ define(function (require) {
 
         data.diff(oldData)
             .add(function (newIdx) {
-                if (!(isIgnore && isIgnore(newIdx))
-                    && data.getItemVisual(newIdx, 'symbol') !== 'none'
-                ) {
+                var point = data.getItemLayout(newIdx);
+                if (symbolNeedsDraw(data, newIdx, isIgnore)) {
                     var symbolEl = new SymbolCtor(data, newIdx);
-                    symbolEl.attr('position', data.getItemLayout(newIdx));
+                    symbolEl.attr('position', point);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
                 }
             })
             .update(function (newIdx, oldIdx) {
                 var symbolEl = oldData.getItemGraphicEl(oldIdx);
-                if ((isIgnore && isIgnore(newIdx))
-                    || data.getItemVisual(newIdx, 'symbol') === 'none'
-                ) {
+                var point = data.getItemLayout(newIdx);
+                if (!symbolNeedsDraw(data, newIdx, isIgnore)) {
                     group.remove(symbolEl);
                     return;
                 }
-                var point = data.getItemLayout(newIdx);
                 if (!symbolEl) {
                     symbolEl = new SymbolCtor(data, newIdx);
                     symbolEl.attr('position', point);
