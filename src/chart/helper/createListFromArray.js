@@ -139,12 +139,13 @@ define(function(require) {
             if (categories) {
                 var dataLen = data.length;
                 // Ordered data is given explicitly like
-                // [[1, 0.2], [2, 0.3], [3, 0.15]]
-                // Pick the category
-                if (data[0] && data[0].length > 1 && categories.length > dataLen) {
+                // [[3, 0.2], [1, 0.3], [2, 0.15]]
+                // or given scatter data,
+                // pick the category
+                if (data[0] && data[0].length > 1) {
                     nameList = [];
                     for (var i = 0; i < dataLen; i++) {
-                        nameList[i] = categories[i];
+                        nameList[i] = categories[data[i][0]];
                     }
                 }
                 else {
