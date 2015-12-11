@@ -27,7 +27,7 @@ define(function(require) {
             // labelPrecision: 'auto',           // label小数精度
             labelFormatter: null,
             showDetail: true,
-            showDataShadow: null,
+            showDataShadow: 'auto',
             realtime: true,
             zoomLock: false,         // 是否锁定选择区域大小
             textStyle: {

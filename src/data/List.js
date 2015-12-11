@@ -199,8 +199,9 @@ define(function (require) {
      * @param {Array.<Object|number|Array>} data
      * @param {Array.<string>} [nameList]
      * @param {string} [valueProp='value']
+     * @param {boolean} [addOrdinal=false]
      */
-    listProto.initData = function (data, nameList, valueProp) {
+    listProto.initData = function (data, nameList, valueProp, addOrdinal) {
         data = data || [];
 
         valueProp = valueProp || 'value';
@@ -285,7 +286,9 @@ define(function (require) {
                 var dim = dimensions[k];
                 var dimInfo = dimensionInfoMap[dim];
                 var dimStorage = storage[dim];
-                var dimValue = value[k];
+                var dimValue = addOrdinal
+                    ? (!k ? idx : value[k - 1])
+                    : value[k];
                 // PENDING NULL is empty or zero
                 switch (dimInfo.type) {
                     case 'float':

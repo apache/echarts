@@ -22,7 +22,7 @@ define(function (require) {
     var HORIZONTAL = 'horizontal';
     var VERTICAL = 'vertical';
     var LABEL_GAP = 5;
-    var SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'k', 'scatter'];
+    var SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
 
     return DataZoomView.extend({
 
@@ -237,9 +237,13 @@ define(function (require) {
             }
 
             var size = this._size;
-            var data = info.series.getRawData();
+            var seriesModel = info.series;
+            var data = seriesModel.getRawData();
+            var otherDim = seriesModel.getShadowDim
+                ? seriesModel.getShadowDim() // @see candlestick
+                : info.otherDim;
 
-            var otherDataExtent = data.getDataExtent(info.otherDim);
+            var otherDataExtent = data.getDataExtent(otherDim);
             // Nice extent.
             var otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
             otherDataExtent = [
@@ -256,7 +260,7 @@ define(function (require) {
 
             // Optimize for large data shadow
             var stride = Math.round(data.count() / size[0]);
-            data.each([info.otherDim], function (value, index) {
+            data.each([otherDim], function (value, index) {
                 if (stride > 0 && (index % stride)) {
                     thisCoord += step;
                     return;
@@ -301,7 +305,7 @@ define(function (require) {
                         return;
                     }
 
-                    if (!showDataShadow && zrUtil.indexOf(
+                    if (showDataShadow !== true && zrUtil.indexOf(
                             SHOW_DATA_SHADOW_SERIES_TYPE, seriesModel.get('type')
                         ) < 0
                     ) {

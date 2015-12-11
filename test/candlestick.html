@@ -1,0 +1,131 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="info"></div>
+        <div id="main"></div>
+        <script>
+
+            /**
+             * @see <https://en.wikipedia.org/wiki/Michelson%E2%80%93Morley_experiment>
+             * @see <http://bl.ocks.org/mbostock/4061502>
+             */
+            var chart;
+            var data;
+
+            require([
+                'echarts',
+                'data/security-sh-2013.json',
+                'echarts/util/array/quantile',
+                'echarts/util/number',
+                'echarts/chart/candlestick',
+                'echarts/component/title',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom'
+            ], function (echarts, rawData, quantile, numberUtil) {
+
+                chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+                data = rawData;
+
+                formatDate();
+
+                update();
+            })
+
+            // FIXME
+            function formatDate() {
+                for (var i = 0; i < data.length; i++) {
+                    var item = data[i];
+                    var date = new Date(item[0].replace('-', '/'));
+                    item[0] = +date;
+                }
+            }
+
+            function update() {
+
+                chart.setOption({
+                    legend: {
+                        data: ['上证指数']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    grid: {
+                        x: '10%',
+                        x2: '10%',
+                        y2: '15%'
+                    },
+                    xAxis: {
+                        type : 'time',
+                        scale: true,
+                        boundaryGap : false,
+                        axisLine: {onZero: false},
+                        splitLine: {show: false},
+                        splitNumber: 20,
+                        min: 'dataMin',
+                        max: 'dataMax'
+                    },
+                    yAxis: {
+                        scale: true,
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    dataZoom: [
+                        {
+                            type: 'inside',
+                            start: 50,
+                            end: 100
+                        },
+                        {
+                            show: true,
+                            type: 'slider',
+                            y: '90%',
+                            start: 50,
+                            end: 100
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '上证指数',
+                            type: 'candlestick',
+                            data: data,
+                            tooltip: {
+                                // formatter: function (param) {
+                                //     return [
+                                //         'Experiment ' + param.name + ': ',
+                                //         'upper: ' + param.data[0],
+                                //         'Q1: ' + param.data[1],
+                                //         'median: ' + param.data[2],
+                                //         'Q3: ' + param.data[3],
+                                //         'lower: ' + param.data[4]
+                                //     ].join('<br/>')
+                                // }
+                            }
+                        }
+                    ]
+                });
+            }
+
+        </script>
+    </body>
+</html>
