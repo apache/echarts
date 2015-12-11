@@ -56,6 +56,12 @@ define(function (require) {
         this._createContent(data, idx, isInit);
 
         this.updateData(data, idx, isInit);
+
+        /**
+         * Last series model.
+         * @type {module:echarts/model/Series}
+         */
+        this._seriesModel;
     }
 
     var whiskerBoxProto = WhiskerBox.prototype;
@@ -65,32 +71,27 @@ define(function (require) {
         var constDim = itemLayout.chartLayout === 'horizontal' ? 1 : 0;
         var count = 0;
 
+        // Whisker element.
         this.add(new graphic.Polygon({
             shape: {
                 points: isInit
                     ? transInit(itemLayout.bodyEnds, constDim, itemLayout)
                     : itemLayout.bodyEnds
             },
-            style: {
-                strokeNoScale: true
-            },
+            style: {strokeNoScale: true},
             z2: 100
         }));
-
         this.bodyIndex = count++;
 
+        // Box element.
         var whiskerEnds = zrUtil.map(itemLayout.whiskerEnds, function (ends) {
             return isInit ? transInit(ends, constDim, itemLayout) : ends;
         });
-
         this.add(new WhiskerPath({
             shape: makeWhiskerEndsShape(whiskerEnds),
-            style: {
-                strokeNoScale: true
-            },
+            style: {strokeNoScale: true},
             z2: 100
         }));
-
         this.whiskerIndex = count++;
     };
 
@@ -117,12 +118,11 @@ define(function (require) {
      * @param  {number} idx
      */
     whiskerBoxProto.updateData = function (data, idx, isInit) {
-        var seriesModel = data.hostModel;
+        var seriesModel = this._seriesModel = data.hostModel;
         var itemLayout = data.getItemLayout(idx);
         var updateMethod = graphic[isInit ? 'initProps' : 'updateProps'];
-
-        this.childAt(this.bodyIndex).stopAnimation(true);
-        this.childAt(this.whiskerIndex).stopAnimation(true);
+        // this.childAt(this.bodyIndex).stopAnimation(true);
+        // this.childAt(this.whiskerIndex).stopAnimation(true);
         updateMethod(
             this.childAt(this.bodyIndex),
             {shape: {points: itemLayout.bodyEnds}},
@@ -135,14 +135,6 @@ define(function (require) {
         );
 
         this.styleUpdater.call(null, this, data, idx);
-    };
-
-    whiskerBoxProto.fadeOut = function (cb) {
-        graphic.updateProps(
-            this,
-            {scale: [0, 0]},
-            this._seriesModel, cb
-        );
     };
 
     zrUtil.inherits(WhiskerBox, graphic.Group);
@@ -200,9 +192,7 @@ define(function (require) {
             })
             .remove(function (oldIdx) {
                 var el = oldData.getItemGraphicEl(oldIdx);
-                el && el.fadeOut(function () {
-                    group.remove(el);
-                });
+                el && group.remove(el);
             })
             .execute();
 
@@ -218,9 +208,7 @@ define(function (require) {
         var data = this._data;
         this._data = null;
         data && data.eachItemGraphicEl(function (el) {
-            el.fadeOut(function () {
-                group.remove(el);
-            });
+            el && group.remove(el);
         });
     };
 

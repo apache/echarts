@@ -42,15 +42,15 @@ define(function(require) {
             itemStyle: {
                 normal: {
                     color: '#c23531', // 阳线 positive
-                    color0: '#1295f7', // 阴线 negative
+                    color0: '#314656', // 阴线 negative     '#c23531', '#314656'
                     borderWidth: 1,
                     // FIXME
                     // ec2中使用的是lineStyle.color 和 lineStyle.color0
-                    borderColor: '#333',
-                    borderColor0: '#333'
+                    borderColor: '#c23531',
+                    borderColor0: '#314656'
                 },
                 emphasis: {
-                    borderWidth: 2,
+                    borderWidth: 2
                     // color: 各异,
                 }
             },

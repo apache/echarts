@@ -56,7 +56,8 @@ define(function(require) {
                 }
             },
 
-            animationEasing: 'linear'
+            animationEasing: 'elasticOut',
+            animationDuration: 800
         }
     });
 
