@@ -737,6 +737,9 @@ define(function (require) {
         chart.id = idBase++;
         instances[chart.id] = chart;
 
+        dom.setAttribute &&
+            dom.setAttribute(DOM_ATTRIBUTE_KEY, chart.id);
+
         // Connecting
         zrUtil.each(eventActionMap, function (actionType, eventType) {
             // FIXME
