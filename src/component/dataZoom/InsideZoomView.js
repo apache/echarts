@@ -81,7 +81,7 @@ define(function (require) {
             );
 
             if (range) {
-                dispatch(this, range);
+                this.dispatchZoomAction(range);
             }
         },
 
@@ -96,19 +96,23 @@ define(function (require) {
                 controller, coordInfo, dataZoomModel
             );
 
-            dispatch(this, range);
+            this.dispatchZoomAction(range);
+        },
+
+        /**
+         * This action will be throttled.
+         * @override
+         */
+        dispatchZoomAction: function (range) {
+            this.api.dispatchAction({
+                type: 'dataZoom',
+                from: this.uid,
+                dataZoomId: this.dataZoomModel.id,
+                range: range
+            });
         }
 
     });
-
-    function dispatch(me, range) {
-        me.api.dispatchAction({
-            type: 'dataZoom',
-            from: me.uid,
-            dataZoomId: me.dataZoomModel.id,
-            range: range
-        });
-    }
 
     function panCartesian(pixelDeltas, range, controller, coordInfo) {
         range = range.slice();

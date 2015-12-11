@@ -43,21 +43,24 @@
                 var chart1 = createChart1(data, echarts);
                 var chart2 = createChart2(data, echarts);
 
-                chart1.on('dataZoom', function (payload) {
-                    chart2.dispatchAction({
-                        type: 'dataZoom',
-                        dataZoomIndex: 0,
-                        range: payload.range
-                    }, true);
-                });
 
-                chart2.on('dataZoom', function (payload) {
-                    chart1.dispatchAction({
-                        type: 'dataZoom',
-                        dataZoomIndex: 0,
-                        range: payload.range
-                    }, true);
-                });
+                echarts.connect([chart1, chart2]);
+
+                // chart1.on('dataZoom', function (payload) {
+                //     chart2.dispatchAction({
+                //         type: 'dataZoom',
+                //         dataZoomIndex: 0,
+                //         range: payload.range
+                //     }, true);
+                // });
+
+                // chart2.on('dataZoom', function (payload) {
+                //     chart1.dispatchAction({
+                //         type: 'dataZoom',
+                //         dataZoomIndex: 0,
+                //         range: payload.range
+                //     }, true);
+                // });
 
             });
 

@@ -579,17 +579,21 @@ define(function (require) {
             this._updateView();
 
             if (this.dataZoomModel.get('realtime')) {
-                this._dispatchAction();
+                this.dispatchZoomAction();
             }
         },
 
         _onDragEnd: function () {
             this._dragging = false;
             this._showDataInfo(false);
-            this._dispatchAction();
+            this.dispatchZoomAction();
         },
 
-        _dispatchAction: function () {
+        /**
+         * This action will be throttled.
+         * @override
+         */
+        dispatchZoomAction: function () {
             this.api.dispatchAction({
                 type: 'dataZoom',
                 from: this.uid,

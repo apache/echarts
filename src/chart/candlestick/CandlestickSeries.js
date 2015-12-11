@@ -55,7 +55,9 @@ define(function(require) {
                 }
             },
 
-            animationEasing: 'elasticOut'
+            animationUpdate: false,
+            animationEasing: 'linear',
+            animationDuration: 300
         },
 
         /**
