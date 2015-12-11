@@ -467,8 +467,8 @@ define(function (require) {
             var moveAnimation = axisPointerType !== 'cross';
 
             if (axisPointerType === 'cross') {
-                moveGridLine('x', point, cartesian.getAxis('y').getExtent());
-                moveGridLine('y', point, cartesian.getAxis('x').getExtent());
+                moveGridLine('x', point, cartesian.getAxis('y').getGlobalExtent());
+                moveGridLine('y', point, cartesian.getAxis('x').getGlobalExtent());
 
                 this._updateCrossText(cartesian, point, axisPointerModel);
             }
