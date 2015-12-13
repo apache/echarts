@@ -787,6 +787,7 @@ define(function (require) {
                     }
                     value = '-';
                 }
+                queryTarget.push(this.option);
                 this.ecTheme.map && queryTarget.push(this.ecTheme.map); // level 1
                 queryTarget.push(ecConfig.map);      // level 1
 
