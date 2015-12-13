@@ -15,6 +15,7 @@ define(function (require) {
     var RectangleShape = require('zrender/shape/Rectangle');
     var LineShape = require('zrender/shape/Line');
     var PolygonShape = require('zrender/shape/Polygon');
+    var PolylineShape = require('zrender/shape/Polyline');
     var EllipseShape = require('zrender/shape/Ellipse');
     var ZrImage = require('zrender/shape/Image');
     // 组件依赖
@@ -909,6 +910,9 @@ define(function (require) {
                         break;
                     case 'polygon' :
                         shape = new PolygonShape(shape);
+                        break;
+                    case 'polyline' :
+                        shape = new PolylineShape(shape);
                         break;
                     case 'ellipse':
                         shape = new EllipseShape(shape);
