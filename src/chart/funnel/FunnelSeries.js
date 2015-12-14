@@ -52,8 +52,10 @@ define(function(require) {
             y2: 60,
             // width: {totalWidth} - x - x2,
             // height: {totalHeight} - y - y2,
-            min: 0,
-            max: 100,
+
+            // 默认取数据最小最大值
+            // min: 0,
+            // max: 100,
             minSize: '0%',
             maxSize: '100%',
             sort: 'descending', // 'ascending', 'descending'

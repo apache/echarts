@@ -111,7 +111,14 @@ define(function (require) {
                 parsePercent(seriesModel.get('maxSize'), viewRect.width)
             ];
             var dataExtent = data.getDataExtent('value');
-            dataExtent[0] = 0;
+            var min = seriesModel.get('min');
+            var max = seriesModel.get('max');
+            if (min == null) {
+                min = Math.min(dataExtent[0], 0);
+            }
+            if (max == null) {
+                max = dataExtent[1];
+            }
 
             var funnelAlign = seriesModel.get('funnelAlign');
             var gap = seriesModel.get('gap');
@@ -122,7 +129,7 @@ define(function (require) {
             var getLinePoints = function (idx, offY) {
                 // End point index is data.count() and we assign it 0
                 var val = data.get('value', idx) || 0;
-                var itemWidth = number.linearMap(val, dataExtent, sizeExtent);
+                var itemWidth = number.linearMap(val, [min, max], sizeExtent, true);
                 var x0;
                 switch (funnelAlign) {
                     case 'left':
