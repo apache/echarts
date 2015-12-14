@@ -11,6 +11,9 @@ define(function (require) {
 
         type: 'dataZoom.inside',
 
+        // FIXME
+        __doNotThrottle: true,
+
         /**
          * @override
          */

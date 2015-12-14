@@ -18,7 +18,10 @@ define(function (require) {
              */
             this._lastThrottleRate;
 
-            this._throttleDispatch(dataZoomModel);
+            // FIXME
+            if (!this.__doNotThrottle) {
+                this._throttleDispatch(dataZoomModel);
+            }
         },
 
         /**
