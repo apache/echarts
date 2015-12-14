@@ -47,7 +47,8 @@ define(function (require) {
             mlFrom[valueAxisKey] = mlTo[valueAxisKey] = value;
 
             item = [mlFrom, mlTo, { // Extra option for tooltip and label
-                __rawValue: value
+                __rawValue: value,
+                type: mlType
             }];
         }
         item = [
@@ -228,13 +229,16 @@ define(function (require) {
      * @param {module:echarts/model/Model} mpModel
      */
     function createList(coordSys, seriesData, mlModel) {
-        var dataDimensions = seriesData.dimensions;
+        // var dataDimensions = seriesData.dimensions;
+        // var dimensionInfosMap = zrUtil.map(
+        //         dataDimensions, seriesData.getDimensionInfo, seriesData
+        //     );
 
-        var dimensionInfosMap = zrUtil.map(
-                dataDimensions, seriesData.getDimensionInfo, seriesData
-            );
-        var fromData = new List(dimensionInfosMap, mlModel);
-        var toData = new List(dimensionInfosMap, mlModel);
+        // Mark line get the dimensions from coordinate system
+        // Because user specify the data by xAxis, yAxis
+        var dimensions = coordSys.dimensions;
+        var fromData = new List(dimensions, mlModel);
+        var toData = new List(dimensions, mlModel);
         // No dimensions
         var lineData = new List([], mlModel);
 

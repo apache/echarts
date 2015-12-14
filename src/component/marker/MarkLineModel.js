@@ -80,6 +80,9 @@ define(function (require) {
                     position: 'end'
                     // 默认使用全局文本样式，详见TEXTSTYLE
                     // textStyle: null
+                },
+                emphasis: {
+                    show: true
                 }
             },
             lineStyle: {
