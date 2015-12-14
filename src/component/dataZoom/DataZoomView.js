@@ -1,9 +1,9 @@
 define(function (require) {
 
-    var echarts = require('../../echarts');
     var throttle = require('../../util/throttle');
+    var ComponentView = require('../../view/Component');
 
-    return echarts.extendComponentView({
+    return ComponentView.extend({
 
         type: 'dataZoom',
 
@@ -12,16 +12,26 @@ define(function (require) {
             this.ecModel = ecModel;
             this.api = api;
 
+            /**
+             * @private
+             * @type {number}
+             */
+            this._lastThrottleRate;
+
+            this._throttleDispatch(dataZoomModel);
         },
 
         /**
          * @private
          */
-        _throttleDispatch: function () {
+        _throttleDispatch: function (dataZoomModel) {
             var originDispatchZoomAction = this.constructor.prototype.dispatchZoomAction;
             if (originDispatchZoomAction) {
-                var rate = this.dataZoomModel.get('throttle');
-                this.dispatchZoomAction = throttle.fixRate(originDispatchZoomAction, rate);
+                var rate = dataZoomModel.get('throttle');
+                if (this._lastThrottleRate !== rate) {
+                    this.dispatchZoomAction = throttle.fixedRate(originDispatchZoomAction, rate);
+                    this._lastThrottleRate = rate;
+                }
             }
         },
 
