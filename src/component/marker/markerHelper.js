@@ -130,15 +130,12 @@ define(function (require) {
      * Filter data which is out of coordinateSystem range
      * [dataFilter description]
      * @param  {module:echarts/coord/*} [coordSys]
-     * @param  {Array.<number>} coordDataIdx
      * @param  {Object} item
      * @return {boolean}
      */
-    var dataFilter = function (coordSys, coordDataIdx, item) {
-        var value = item.value;
-        value = [value[coordDataIdx[0]], value[coordDataIdx[1]]];
+    var dataFilter = function (coordSys, item) {
         // Alwalys return true if there is no coordSys
-        return coordSys ? coordSys.containData(value) : true;
+        return coordSys ? coordSys.containData(item.value) : true;
     };
 
     return {

@@ -63,9 +63,9 @@ define(function (require) {
         return item;
     };
 
-    function markLineFilter(coordSys, dimensionInverse, item) {
-        return markerHelper.dataFilter(coordSys, dimensionInverse, item[0])
-            && markerHelper.dataFilter(coordSys, dimensionInverse, item[1]);
+    function markLineFilter(coordSys, item) {
+        return markerHelper.dataFilter(coordSys, item[0])
+            && markerHelper.dataFilter(coordSys, item[1]);
     }
 
     var markLineFormatMixin = {
@@ -241,22 +241,12 @@ define(function (require) {
         if (coordSys) {
             var baseAxis = coordSys.getBaseAxis();
             var valueAxis = coordSys.getOtherAxis(baseAxis);
-            var coordDimensions = coordSys.dimensions;
-
-            var indexOf = zrUtil.indexOf;
-            // FIXME 公用？
-            var coordDataIdx = [
-                indexOf(dataDimensions, coordDimensions[0]),
-                indexOf(dataDimensions, coordDimensions[1])
-            ];
 
             var optData = zrUtil.filter(
                 zrUtil.map(mlModel.get('data'), zrUtil.curry(
                     markLineTransform, seriesData, coordSys, baseAxis, valueAxis
                 )),
-                zrUtil.curry(
-                    markLineFilter, coordSys, coordDataIdx
-                )
+                zrUtil.curry(markLineFilter, coordSys)
             );
             fromData.initData(
                 zrUtil.map(optData, function (item) { return item[0]; })

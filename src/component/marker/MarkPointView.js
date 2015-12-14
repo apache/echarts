@@ -145,23 +145,12 @@ define(function (require) {
         ), mpModel);
 
         if (coordSys) {
-            var coordDimensions = coordSys.dimensions;
-
-            var indexOf = zrUtil.indexOf;
-            // FIXME 公用？
-            var coordDataIdx = [
-                indexOf(dataDimensions, coordDimensions[0]),
-                indexOf(dataDimensions, coordDimensions[1])
-            ];
-
             mpData.initData(
                 zrUtil.filter(
                     zrUtil.map(mpModel.get('data'), zrUtil.curry(
                         markerHelper.dataTransform, seriesData, coordSys
                     )),
-                    zrUtil.curry(
-                        markerHelper.dataFilter, coordSys, coordDataIdx
-                    )
+                    zrUtil.curry(markerHelper.dataFilter, coordSys)
                 )
             );
         }
