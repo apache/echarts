@@ -81,24 +81,25 @@ define(function (require) {
             this._updateController(seriesModel, coordSys, api);
 
             clearTimeout(this._layoutTimeout);
-
             var forceLayout = seriesModel.forceLayout;
+            var layoutAnimation = seriesModel.get('force.layoutAnimation');
             if (forceLayout) {
-                this._startForceLayoutIteration(forceLayout);
+                this._startForceLayoutIteration(forceLayout, layoutAnimation);
             }
-
             // Update draggable
             data.eachItemGraphicEl(function (el, idx) {
                 var draggable = data.getItemModel(idx).get('draggable');
                 if (draggable && forceLayout) {
                     el.on('drag', function () {
                         forceLayout.warmUp();
+                        !this._layouting
+                            && this._startForceLayoutIteration(forceLayout, layoutAnimation);
                         forceLayout.setFixed(idx);
                         // Write position back to layout
                         data.setItemLayout(idx, el.position);
-                    }).on('dragend', function () {
+                    }, this).on('dragend', function () {
                         forceLayout.setUnfixed(idx);
-                    });
+                    }, this);
                 }
                 else {
                     el.off('drag');
@@ -107,12 +108,16 @@ define(function (require) {
             }, this);
         },
 
-        _startForceLayoutIteration: function (forceLayout) {
+        _startForceLayoutIteration: function (forceLayout, layoutAnimation) {
             var self = this;
             (function step() {
                 forceLayout.step(function (stopped) {
                     self.updateLayout();
-                    !stopped && (self._layoutTimeout = setTimeout(step, 16));
+                    (this._layouting = !stopped) && (
+                        layoutAnimation
+                            ? (self._layoutTimeout = setTimeout(step, 16))
+                            : step()
+                    );
                 });
             })();
         },

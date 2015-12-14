@@ -24,7 +24,6 @@ define(function (require) {
             z: 2,
             // 默认全局居中
             center: ['50%', '50%'],
-            clickable: true,
             legendHoverLink: true,
             radius: '75%',
             startAngle: 225,

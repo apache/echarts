@@ -26,9 +26,6 @@ define(function(require) {
             xAxisIndex: 0,
             yAxisIndex: 0,
 
-            // Polar coordinate system
-            polarIndex: 0,
-
             // 最小高度改为0
             barMinHeight: 0,
             // 默认自适应

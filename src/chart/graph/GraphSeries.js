@@ -117,7 +117,9 @@ define(function (require) {
                 initLayout: null,
                 repulsion: 50,
                 gravity: 0.1,
-                edgeLength: 30
+                edgeLength: 30,
+
+                layoutAnimation: true
             },
 
             x: 'center',

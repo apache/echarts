@@ -128,7 +128,7 @@ define(function (require) {
                     }
                 }
 
-                friction = friction * 0.995;
+                friction = friction * 0.992;
 
                 cb && cb(nodes, edges, friction < 0.01);
             }
