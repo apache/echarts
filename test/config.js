@@ -3,7 +3,8 @@ require.config({
         'geoJson': '../geoData/geoJson',
         'theme': '../theme',
         'data': './data',
-        'map': '../map'
+        'map': '../map',
+        'extension': '../extension'
     },
     packages: [
         {

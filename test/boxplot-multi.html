@@ -23,7 +23,7 @@
 
             require([
                 'echarts',
-                'echarts/util/array/quantile',
+                'extension/statistic/prepareBoxplotData',
                 'echarts/chart/boxplot',
                 'echarts/chart/scatter',
                 'echarts/component/title',
@@ -31,7 +31,7 @@
                 'echarts/component/grid',
                 'echarts/component/tooltip',
                 'echarts/component/dataZoom'
-            ], function (echarts, quantile) {
+            ], function (echarts, prepareBoxplotData) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
@@ -48,7 +48,7 @@
                         }
                         seriesData.push(cate);
                     }
-                    data.push(quantile.prepareBoxplotData(seriesData));
+                    data.push(prepareBoxplotData(seriesData));
                 }
 
                 update('horizontal');

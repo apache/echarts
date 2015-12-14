@@ -29,7 +29,7 @@
             require([
                 'echarts',
                 'data/Michelson-Morley.json',
-                'echarts/util/array/quantile',
+                'extension/statistic/prepareBoxplotData',
                 'echarts/chart/boxplot',
                 'echarts/chart/scatter',
                 'echarts/component/title',
@@ -37,13 +37,13 @@
                 'echarts/component/markLine',
                 'echarts/component/grid',
                 'echarts/component/tooltip'
-            ], function (echarts, rawData, quantile) {
+            ], function (echarts, rawData, prepareBoxplotData) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
                 });
 
-                data = quantile.prepareBoxplotData(rawData);
+                data = prepareBoxplotData(rawData);
                 mean = calculateMean(rawData);
 
                 update('horizontal');

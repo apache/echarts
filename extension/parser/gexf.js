@@ -1,10 +1,21 @@
 // GEXF File Parser
 // http://gexf.net/1.2draft/gexf-12draft-primer.pdf
-define(function(require) {
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['exports', 'echarts'], factory);
+    } else if (typeof exports === 'object' && typeof exports.nodeName !== 'string') {
+        // CommonJS
+        factory(exports, require('echarts'));
+    } else {
+        // Browser globals
+        factory({}, root.echarts);
+    }
+}(this, function(exports, echarts) {
 
     'use strict';
 
-    var zrUtil = require('zrender/core/util');
+    var zrUtil = echarts.util;
 
     function parse(xml) {
         var doc;
@@ -15,7 +26,7 @@ define(function(require) {
         else {
             doc = xml;
         }
-        if (!doc || doc.getElementsByTagName("parsererror").length) {
+        if (!doc || doc.getElementsByTagName('parsererror').length) {
             return null;
         }
 
@@ -108,7 +119,7 @@ define(function(require) {
                         switch (attribute.type) {
                             case 'integer':
                             case 'long':
-                                attValue = parseInt(attValue);
+                                attValue = parseInt(attValue, 10);
                                 break;
                             case 'float':
                             case 'double':
@@ -204,13 +215,9 @@ define(function(require) {
         return children;
     }
 
-    var echarts = require('../echarts');
     echarts.parser = echarts.parser || {};
     echarts.parser.gexf = {
         parse: parse
     };
-
-    return {
-        parse: parse
-    };
-});
+    exports.parse = parse;
+}));

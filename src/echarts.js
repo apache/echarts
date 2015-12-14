@@ -976,5 +976,25 @@ define(function (require) {
         update: 'downplay'
     }, zrUtil.noop);
 
+
+    // --------
+    // Exports
+    // --------
+
+    echarts.graphic = require('echarts/util/graphic');
+    echarts.number = require('echarts/util/number');
+    echarts.format = require('echarts/util/format');
+
+    echarts.util = {};
+    each([
+            'map', 'each', 'filter', 'indexOf', 'inherits',
+            'reduce', 'filter', 'bind', 'curry', 'isArray',
+            'isString', 'isObject', 'isFunction', 'extend'
+        ],
+        function (name) {
+            echarts.util[name] = zrUtil[name];
+        }
+    );
+
     return echarts;
 });

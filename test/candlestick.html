@@ -39,20 +39,22 @@
                 chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
                 });
-                data = rawData;
-
-                formatDate();
+                data = splitData(rawData);
 
                 update();
             })
 
-            // FIXME
-            function formatDate() {
-                for (var i = 0; i < data.length; i++) {
-                    var item = data[i];
-                    var date = new Date(item[0].replace('-', '/'));
-                    item[0] = +date;
+            function splitData(rawData) {
+                var categoryData = [];
+                var values = []
+                for (var i = 0; i < rawData.length; i++) {
+                    categoryData.push(rawData[i].splice(0, 1)[0]);
+                    values.push(rawData[i])
                 }
+                return {
+                    categoryData: categoryData,
+                    values: values
+                };
             }
 
             function parseDate(timestamp) {
@@ -74,11 +76,11 @@
                         formatter: function (param) {
                             var param = param[0];
                             return [
-                                '日期：' + parseDate(param.data[0]) + '<hr size=1 style="margin: 3px 0">',
-                                '开盘：' + param.data[1] + '<br/>',
-                                '收盘：' + param.data[2] + '<br/>',
-                                '日最低：' + param.data[3] + '<br/>',
-                                '日最高：' + param.data[4] + '<br/>'
+                                '日期：' + param.name + '<hr size=1 style="margin: 3px 0">',
+                                '开盘：' + param.data[0] + '<br/>',
+                                '收盘：' + param.data[1] + '<br/>',
+                                '日最低：' + param.data[2] + '<br/>',
+                                '日最高：' + param.data[3] + '<br/>'
                             ].join('')
                         }
                     },
@@ -88,7 +90,8 @@
                         y2: '15%'
                     },
                     xAxis: {
-                        type : 'time',
+                        type: 'category',
+                        data: data.categoryData,
                         scale: true,
                         boundaryGap : false,
                         axisLine: {onZero: false},
@@ -121,7 +124,7 @@
                         {
                             name: '上证指数',
                             type: 'candlestick',
-                            data: data
+                            data: data.values
                         }
                     ]
                 });

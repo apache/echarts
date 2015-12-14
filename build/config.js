@@ -34,6 +34,8 @@
         'echarts/chart/funnel',
         'echarts/chart/parallel',
         'echarts/chart/sankey',
+        'echarts/chart/boxplot',
+        'echarts/chart/candlestick',
 
         'echarts/component/geo',
         'echarts/component/parallel',
@@ -46,7 +48,6 @@
         'echarts/component/markPoint',
         'echarts/component/markLine',
 
-        'echarts/parser/gexf',
         'echarts/scale/Time',
         'echarts/scale/Log',
         'zrender/vml/vml'
