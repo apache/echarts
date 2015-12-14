@@ -218,13 +218,11 @@ define(function(require, factory) {
                 // onZero can not be used in these two situations
                 // 1. When other axis is a category axis
                 // 2. When other axis not across 0 point
-                if (xAxis.type === 'category'
-                    || !ifAxisCrossZero(xAxis)
+                if (xAxis.type === 'category' || !ifAxisCrossZero(xAxis)
                 ) {
                     yAxis.onZero = false;
                 }
-                if (yAxis.type === 'category'
-                  || !ifAxisCrossZero(yAxis)
+                if (yAxis.type === 'category' || !ifAxisCrossZero(yAxis)
                 ) {
                     xAxis.onZero = false;
                 }

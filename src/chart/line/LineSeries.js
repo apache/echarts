@@ -26,6 +26,8 @@ define(function(require) {
             xAxisIndex: 0,
             yAxisIndex: 0,
 
+            polarIndex: 0,
+
             label: {
                 normal: {
                     // show: false,

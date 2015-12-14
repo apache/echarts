@@ -92,7 +92,7 @@ define(function (require) {
         }
     }, defaultOption);
 
-    var valueAxis = zrUtil.merge({
+    var valueAxis = zrUtil.defaults({
         // 数值起始和结束两端空白策略
         boundaryGap: [0, 0],
         // 最小值, 设置成 'dataMin' 则从数据中计算最小值
@@ -106,12 +106,12 @@ define(function (require) {
     }, defaultOption);
 
     // FIXME
-    var timeAxis = zrUtil.merge({
+    var timeAxis = zrUtil.defaults({
         scale: true,
         min: 'dataMin',
         max: 'dataMax'
     }, valueAxis);
-    var logAxis = zrUtil.merge({}, valueAxis);
+    var logAxis = zrUtil.defaults({}, valueAxis);
     logAxis.scale = true;
 
     return {
