@@ -103,30 +103,10 @@ define(function(require) {
             this._whiskerBoxDraw.updateData(seriesModel.getData());
         },
 
-        highlight: zrUtil.curry(highDown, 'highlight'),
-
-        downplay: zrUtil.curry(highDown, 'downplay'),
-
         remove: function (ecModel) {
             this._whiskerBoxDraw.remove();
         }
     };
-
-    function highDown(methodName, seriesModel, ecModel, api, payload) {
-        var data = seriesModel.getData();
-        var dataIndex = queryDataIndex(data, payload);
-
-        if (dataIndex != null && dataIndex >= 0) {
-            var el = data.getItemGraphicEl(dataIndex);
-            el && el[methodName]();
-        }
-        else {
-            // Downplay whole series
-            ChartView.prototype[methodName].call(
-                this, seriesModel, ecModel, api, payload
-            );
-        }
-    }
 
     function queryDataIndex(data, payload) {
         if (payload.dataIndex != null) {

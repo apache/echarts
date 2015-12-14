@@ -28,15 +28,13 @@
             require([
                 'echarts',
                 'data/security-sh-2013.json',
-                'echarts/util/array/quantile',
-                'echarts/util/number',
                 'echarts/chart/candlestick',
                 'echarts/component/title',
                 'echarts/component/legend',
                 'echarts/component/grid',
                 'echarts/component/tooltip',
                 'echarts/component/dataZoom'
-            ], function (echarts, rawData, quantile, numberUtil) {
+            ], function (echarts, rawData) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
@@ -57,6 +55,11 @@
                 }
             }
 
+            function parseDate(timestamp) {
+                var date = new Date(timestamp);
+                return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+            }
+
             function update() {
 
                 chart.setOption({
@@ -67,6 +70,16 @@
                         trigger: 'axis',
                         axisPointer: {
                             type: 'line'
+                        },
+                        formatter: function (param) {
+                            var param = param[0];
+                            return [
+                                '日期：' + parseDate(param.data[0]) + '<hr size=1 style="margin: 3px 0">',
+                                '开盘：' + param.data[1] + '<br/>',
+                                '收盘：' + param.data[2] + '<br/>',
+                                '日最低：' + param.data[3] + '<br/>',
+                                '日最高：' + param.data[4] + '<br/>'
+                            ].join('')
                         }
                     },
                     grid: {
@@ -108,19 +121,7 @@
                         {
                             name: '上证指数',
                             type: 'candlestick',
-                            data: data,
-                            tooltip: {
-                                // formatter: function (param) {
-                                //     return [
-                                //         'Experiment ' + param.name + ': ',
-                                //         'upper: ' + param.data[0],
-                                //         'Q1: ' + param.data[1],
-                                //         'median: ' + param.data[2],
-                                //         'Q3: ' + param.data[3],
-                                //         'lower: ' + param.data[4]
-                                //     ].join('<br/>')
-                                // }
-                            }
+                            data: data
                         }
                     ]
                 });
