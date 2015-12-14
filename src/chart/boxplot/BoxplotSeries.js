@@ -52,7 +52,11 @@ define(function(require) {
                     borderWidth: 1
                 },
                 emphasis: {
-                    borderWidth: 2
+                    borderWidth: 2,
+                    shadowBlur: 5,
+                    shadowOffsetX: 2,
+                    shadowOffsetY: 2,
+                    shadowColor: 'rgba(0,0,0,0.4)'
                 }
             },
 

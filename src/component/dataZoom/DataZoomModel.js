@@ -36,6 +36,8 @@ define(function(require) {
                                       // 'empty': data items which are out of window will be set to empty.
                                       //          This option is applicable when user should not neglect
                                       //          that there are some data items out of window.
+            throttle: 100,          // Dispatch action by the fixed rate, avoid frequency.
+                                    // default 100. Do not throttle when use null/undefined.
             start: 0,               // 默认为0
             end: 100,               // 默认为全部 100%
             start2: 0,               // 默认为0

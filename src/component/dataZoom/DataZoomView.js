@@ -1,6 +1,7 @@
 define(function (require) {
 
     var echarts = require('../../echarts');
+    var throttle = require('../../util/throttle');
 
     return echarts.extendComponentView({
 
@@ -10,6 +11,25 @@ define(function (require) {
             this.dataZoomModel = dataZoomModel;
             this.ecModel = ecModel;
             this.api = api;
+
+        },
+
+        /**
+         * @private
+         */
+        _throttleDispatch: function () {
+            var originDispatchZoomAction = this.constructor.prototype.dispatchZoomAction;
+            if (originDispatchZoomAction) {
+                var rate = this.dataZoomModel.get('throttle');
+                this.dispatchZoomAction = throttle.fixRate(originDispatchZoomAction, rate);
+            }
+        },
+
+        /**
+         * @protected
+         */
+        dispatchZoomAction: function () {
+            // Implement by Children Classes.
         },
 
         /**

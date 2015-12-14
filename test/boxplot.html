@@ -34,6 +34,7 @@
                 'echarts/chart/scatter',
                 'echarts/component/title',
                 'echarts/component/legend',
+                'echarts/component/markLine',
                 'echarts/component/grid',
                 'echarts/component/tooltip'
             ], function (echarts, rawData, quantile) {
@@ -142,12 +143,12 @@
                                     [
                                         {
                                             xAxis: 0,
-                                            yAxis: mean,
+                                            yAxis: 1000,
                                             symbol: 'none'
                                         },
                                         {
                                             xAxis: 4,
-                                            yAxis: mean,
+                                            yAxis: 1000,
                                             symbol: 'none'
                                         }
                                     ]

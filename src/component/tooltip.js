@@ -738,7 +738,10 @@ define(function (require) {
             var payloadBatch = zrUtil.map(seriesList, function (series) {
                 return {
                     seriesIndex: series.seriesIndex,
-                    dataIndex: series.getData().indexOfNearest(baseAxis.dim, val)
+                    dataIndex: series.getData().indexOfNearest(
+                        series.getDimensionsOnAxis(baseAxis.dim),
+                        val
+                    )
                 };
             });
 
