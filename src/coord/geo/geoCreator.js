@@ -164,7 +164,7 @@ define(function (require) {
             }
             if (typeof geoJson === 'string') {
                 geoJson = (typeof JSON !== 'undefined' && JSON.parse)
-                    ? JSON.parse(geoJson) : eval('(' + geoJson + ')');
+                    ? JSON.parse(geoJson) : (new Function('return (' + geoJson + ');'))();
             }
             mapDataStores[mapName] = {
                 geoJson: geoJson,

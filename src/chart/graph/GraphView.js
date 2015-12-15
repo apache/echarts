@@ -113,7 +113,7 @@ define(function (require) {
             (function step() {
                 forceLayout.step(function (stopped) {
                     self.updateLayout();
-                    (this._layouting = !stopped) && (
+                    (self._layouting = !stopped) && (
                         layoutAnimation
                             ? (self._layoutTimeout = setTimeout(step, 16))
                             : step()

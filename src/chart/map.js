@@ -8,6 +8,8 @@ define(function (require) {
 
     require('../action/geoRoam');
 
+    require('../coord/geo/geoCreator');
+
     echarts.registerLayout(require('./map/mapSymbolLayout'));
 
     echarts.registerVisualCoding('chart', require('./map/mapVisual'));
