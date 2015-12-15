@@ -102,6 +102,9 @@ define(function (require) {
                 return;
             }
 
+            // Notice: this._resetInterval() should not be executed when payload.type
+            // is 'dataZoom', origin this._range should be maintained, otherwise 'pan'
+            // or 'zoom' info will be missed because of 'throttle' of this.dispatchAction,
             if (!payload || payload.type !== 'dataZoom' || payload.from !== this.uid) {
                 this._buildView();
             }

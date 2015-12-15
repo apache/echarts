@@ -18,10 +18,7 @@ define(function (require) {
              */
             this._lastThrottleRate;
 
-            // FIXME
-            if (!this.__doNotThrottle) {
-                this._throttleDispatch(dataZoomModel);
-            }
+            this._throttleDispatch(dataZoomModel);
         },
 
         /**
@@ -31,7 +28,10 @@ define(function (require) {
             var originDispatchZoomAction = this.constructor.prototype.dispatchZoomAction;
             if (originDispatchZoomAction) {
                 var rate = dataZoomModel.get('throttle');
+
                 if (this._lastThrottleRate !== rate) {
+                    this._clearThrottle();
+
                     this.dispatchZoomAction = throttle.fixedRate(originDispatchZoomAction, rate);
                     this._lastThrottleRate = rate;
                 }
@@ -39,10 +39,33 @@ define(function (require) {
         },
 
         /**
+         * @private
+         */
+        _clearThrottle: function () {
+            // Dispose
+            var dispatchZoomAction = this.dispatchZoomAction;
+            dispatchZoomAction && dispatchZoomAction.clear && dispatchZoomAction.clear();
+        },
+
+        /**
          * @protected
          */
         dispatchZoomAction: function () {
             // Implement by Children Classes.
+        },
+
+        /**
+         * @override
+         */
+        remove: function () {
+            this._clearThrottle();
+        },
+
+        /**
+         * @override
+         */
+        dispose: function () {
+            this._clearThrottle();
         },
 
         /**

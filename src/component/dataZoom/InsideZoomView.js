@@ -11,18 +11,24 @@ define(function (require) {
 
         type: 'dataZoom.inside',
 
-        // FIXME
-        __doNotThrottle: true,
-
         /**
          * @override
          */
         init: function (ecModel, api) {
+
             /**
              * @private
              * @type {Object.<string, module:echarts/component/helper/RoamController>}
              */
             this._controllers = {};
+
+            /**
+             * 'throttle' is used in this.dispatchAction, so we save range
+             * to avoid missing some 'pan' info.
+             * @private
+             * @type {Array.<number>}
+             */
+            this._range;
         },
 
         /**
@@ -31,6 +37,13 @@ define(function (require) {
         render: function (dataZoomModel, ecModel, api, payload) {
             DataZoomView.prototype.render.apply(this, arguments);
 
+            // Notice: this._resetInterval() should not be executed when payload.type
+            // is 'dataZoom', origin this._range should be maintained, otherwise 'pan'
+            // or 'zoom' info will be missed because of 'throttle' of this.dispatchAction,
+            if (!payload || payload.type !== 'dataZoom' || payload.from !== this.uid) {
+                this._range = dataZoomModel.getRange();
+            }
+
             this._resetController(api);
         },
 
@@ -38,6 +51,8 @@ define(function (require) {
          * @override
          */
         remove: function () {
+            DataZoomView.prototype.remove.apply(this, arguments);
+
             var controllers = this._controllers;
             zrUtil.each(controllers, function (controller) {
                 controller.off('pan').off('zoom');
@@ -78,9 +93,8 @@ define(function (require) {
          * @private
          */
         _onPan: function (controller, coordInfo, dx, dy) {
-            var dataZoomModel = this.dataZoomModel;
-            var range = panCartesian(
-                [dx, dy], dataZoomModel.getRange(), controller, coordInfo
+            var range = this._range = panCartesian(
+                [dx, dy], this._range, controller, coordInfo
             );
 
             if (range) {
@@ -94,8 +108,8 @@ define(function (require) {
         _onZoom: function (controller, coordInfo, scale, mouseX, mouseY) {
             var dataZoomModel = this.dataZoomModel;
             scale = 1 / scale;
-            var range = scaleCartesian(
-                scale, [mouseX, mouseY], dataZoomModel.getRange(),
+            var range = this._range = scaleCartesian(
+                scale, [mouseX, mouseY], this._range,
                 controller, coordInfo, dataZoomModel
             );
 
@@ -111,7 +125,7 @@ define(function (require) {
                 type: 'dataZoom',
                 from: this.uid,
                 dataZoomId: this.dataZoomModel.id,
-                range: range
+                range: range.slice()
             });
         }
 

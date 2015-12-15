@@ -64,7 +64,7 @@ define(function () {
                 (isSingle ? fn : fn[index]).apply(scope, args || []);
             }
 
-            return function () {
+            var cb = function () {
                 currCall = (new Date()).getTime();
                 scope = this;
                 args = arguments;
@@ -91,6 +91,19 @@ define(function () {
 
                 lastCall = currCall;
             };
+
+            /**
+             * Clear throttle.
+             * @public
+             */
+            cb.clear = function () {
+                if (timer) {
+                    clearTimeout(timer);
+                    timer = null;
+                }
+            };
+
+            return cb;
         }
     };
 
