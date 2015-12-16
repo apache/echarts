@@ -1500,6 +1500,47 @@ define(function (require) {
 
         /**
          * 多图联动
+         */
+        group: function () {
+            if (typeof(this.groupId) === 'string' && this.groupId.length) {
+                this._groupOperation(this.groupId, /*connect=*/true);
+            }
+        },
+
+        /**
+         * 解除多图联动
+         */
+        ungroup: function (groupId) {
+            if (typeof(this.groupId) === 'string' && this.groupId.length) {
+                this._groupOperation(this.groupId, /*connect=*/false);
+            }
+        },
+
+        _groupOperation: function (groupId, connect) {
+            var charts = [];
+            Object.keys(_instances).forEach(function(key) {
+                var chart = _instances[key];
+                if (chart.groupId === groupId) {
+                    charts.push(chart);
+                }
+            });
+
+            charts.forEach(function(chart) {
+                var associates = charts.filter(function(another) {
+                    return chart !== another;
+                });
+                if (associates.length) {
+                    if (connect) {
+                        chart.connect(associates);
+                    } else {
+                        chart.disConnect(associates);
+                    }
+                }
+            });
+        },
+
+        /**
+         * 多图联动
          * @param connectTarget{ECharts | Array <ECharts>} connectTarget 联动目标
          */
         connect: function (connectTarget) {
