@@ -217,9 +217,13 @@ define(function (require) {
          * @private
          */
         update: function (payload) {
-            console.time && console.time('update');
+            // console.time && console.time('update');
 
             var ecModel = this._model;
+            // update before setOption
+            if (!ecModel) {
+                return;
+            }
 
             ecModel.restoreData();
 
@@ -258,7 +262,7 @@ define(function (require) {
                 backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
             }
 
-            console.time && console.timeEnd('update');
+            // console.time && console.timeEnd('update');
         },
 
         // PENDING
@@ -268,6 +272,11 @@ define(function (require) {
          */
         updateView: function (payload) {
             var ecModel = this._model;
+
+            // update before setOption
+            if (!ecModel) {
+                return;
+            }
 
             doLayout.call(this, ecModel, payload);
 
@@ -283,6 +292,11 @@ define(function (require) {
         updateVisual: function (payload) {
             var ecModel = this._model;
 
+            // update before setOption
+            if (!ecModel) {
+                return;
+            }
+
             doVisualCoding.call(this, ecModel, payload);
 
             invokeUpdateMethod.call(this, 'updateVisual', ecModel, payload);
@@ -294,6 +308,11 @@ define(function (require) {
          */
         updateLayout: function (payload) {
             var ecModel = this._model;
+
+            // update before setOption
+            if (!ecModel) {
+                return;
+            }
 
             doLayout.call(this, ecModel, payload);
 
@@ -324,6 +343,11 @@ define(function (require) {
      */
     function toggleHighlight(method, payload) {
         var ecModel = this._model;
+
+        // dispatchAction before setOption
+        if (!ecModel) {
+            return;
+        }
 
         ecModel.eachComponent(
             {mainType: 'series', query: payload},
