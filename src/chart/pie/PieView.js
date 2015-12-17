@@ -235,8 +235,10 @@ define(function (require) {
                 }
             }, 300, 'elasticOut');
         }
+        sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
         if (itemModel.get('hoverAnimation')) {
-            sector.on('mouseover', onEmphasis)
+            sector
+                .on('mouseover', onEmphasis)
                 .on('mouseout', onNormal)
                 .on('emphasis', onEmphasis)
                 .on('normal', onNormal);
@@ -298,9 +300,8 @@ define(function (require) {
 
                     piePiece.updateData(data, newIdx);
 
-                    selectedMode
-                        ? piePiece.on('click', onSectorClick)
-                        : piePiece.off('click');
+                    piePiece.off('click');
+                    selectedMode && piePiece.on('click', onSectorClick);
                     group.add(piePiece);
                     data.setItemGraphicEl(newIdx, piePiece);
                 })

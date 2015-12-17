@@ -40,8 +40,6 @@ define(function(require) {
                                     // default 100. Do not throttle when use null/undefined.
             start: 0,               // 默认为0
             end: 100,               // 默认为全部 100%
-            start2: 0,               // 默认为0
-            end2: 100               // 默认为全部 100%
         },
 
         /**
