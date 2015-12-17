@@ -1,0 +1,384 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="echarts数据观扩展">ECharts数据观扩展</h1>
+<p>http://shujuguan.cn</p>
+<p>数据观是一个在线商业数据分析平台。区别于传统BI产品，它采用模板形式，简单易用。 我们扩展主要在以下方面:<br />1. 支持数值展示(numeric)<br />2. 支持数值格式化。包括tooltip，坐标轴等<br />3. 多图形布局支持(dashboard)</p>
+<h2 id="数值展示numeric">数值展示(numeric)</h2>
+<p>使用场景</p>
+<div class="figure">
+<img src="asset/img/shujuguan.png" alt="numeric图形在数据观产品中的应用" /><p class="caption">numeric图形在数据观产品中的应用</p>
+</div>
+<p>其中红色方框指标渲染option如下:</p>
+<pre><code>option = {
+    &quot;series&quot; : [
+        {
+            &quot;numericStyle&quot; :
+            {
+                &quot;textStyle&quot; :
+                {
+                    &quot;fontFamily&quot; : &quot;abelregular,微软雅黑&quot;,
+                    &quot;fontWeight&quot; : 100,
+                    &quot;fontSize&quot; : 32,
+                    &quot;color&quot; : &quot;#29ceca&quot;
+                },
+                &quot;format&quot; : &quot;#,###.&quot;
+            },
+            &quot;layout&quot; :
+            {
+                &quot;type&quot; : &quot;form&quot;,
+                &quot;data&quot; :
+                {
+                    &quot;right&quot; :
+                    {
+                        &quot;numerator&quot; : 50
+                    },
+                    &quot;bottom&quot; :
+                    {
+                        &quot;numerator&quot; : 50
+                    }
+                }
+            },
+            &quot;type&quot; : &quot;numeric&quot;,
+            &quot;name&quot; : &quot;人数&quot;,
+            &quot;data&quot; : [158],
+            &quot;stack&quot; : &quot;人数&quot;
+        },
+        {
+            &quot;numericStyle&quot; :
+            {
+                &quot;textStyle&quot; :
+                {
+                    &quot;fontFamily&quot; : &quot;abelregular,微软雅黑&quot;,
+                    &quot;fontWeight&quot; : 100,
+                    &quot;fontSize&quot; : 20,
+                    &quot;color&quot; : &quot;#29ceca&quot;
+                },
+                &quot;format&quot; : &quot;+#.##%;-#.##%&quot;
+            },
+            &quot;layout&quot; :
+            {
+                &quot;type&quot; : &quot;form&quot;,
+                &quot;data&quot; :
+                {
+                    &quot;right&quot; :
+                    {
+                        &quot;numerator&quot; : 50
+                    },
+                    &quot;top&quot; :
+                    {
+                        &quot;numerator&quot; : 50
+                    }
+                }
+            },
+            &quot;type&quot; : &quot;numeric&quot;,
+            &quot;name&quot; : &quot;环比&quot;,
+            &quot;data&quot; : [-0.1319],
+            &quot;stack&quot; : &quot;环比&quot;
+        },
+        {
+            &quot;numericStyle&quot; :
+            {
+                &quot;textStyle&quot; :
+                {
+                    &quot;fontFamily&quot; : &quot;abelregular,微软雅黑&quot;,
+                    &quot;fontWeight&quot; : 100,
+                    &quot;fontSize&quot; : 24,
+                    &quot;color&quot; : &quot;#a0a0a0&quot;
+                },
+                &quot;format&quot; : &quot;#,###.&quot;
+            },
+            &quot;layout&quot; :
+            {
+                &quot;type&quot; : &quot;form&quot;,
+                &quot;data&quot; :
+                {
+                    &quot;left&quot; :
+                    {
+                        &quot;numerator&quot; : 50,
+                        &quot;offset&quot; : 20
+                    },
+                    &quot;bottom&quot; :
+                    {
+                        &quot;numerator&quot; : 50,
+                        &quot;offset&quot; : 5
+                    }
+                }
+            },
+            &quot;markText&quot; : [
+                {
+                    &quot;text&quot; : &quot;[&quot;,
+                    &quot;textStyle&quot; :
+                    {
+                        &quot;fontSize&quot; : 24,
+                        &quot;color&quot; : &quot;#a0a0a0&quot;
+                    },
+                    &quot;layout&quot; :
+                    {
+                        &quot;type&quot; : &quot;form&quot;,
+                        &quot;data&quot; :
+                        {
+                            &quot;right&quot; :
+                            {
+                                &quot;alignment&quot; : &quot;left&quot;
+                            },
+                            &quot;bottom&quot; :
+                            {
+                                &quot;offset&quot; : 3
+                            }
+                        }
+                    }
+                },
+                {
+                    &quot;text&quot; : &quot;]&quot;,
+                    &quot;textStyle&quot; :
+                    {
+                        &quot;fontSize&quot; : 24,
+                        &quot;color&quot; : &quot;#a0a0a0&quot;
+                    },
+                    &quot;layout&quot; :
+                    {
+                        &quot;type&quot; : &quot;form&quot;,
+                        &quot;data&quot; :
+                        {
+                            &quot;left&quot; :
+                            {
+                                &quot;alignment&quot; : &quot;right&quot;
+                            },
+                            &quot;bottom&quot; :
+                            {
+                                &quot;offset&quot; : 3
+                            }
+                        }
+                    }
+                }
+            ],
+            &quot;type&quot; : &quot;numeric&quot;,
+            &quot;name&quot; : &quot;人数参照&quot;,
+            &quot;data&quot; : [152.6667],
+            &quot;stack&quot; : &quot;人数参照&quot;
+        },
+        {
+            &quot;numericStyle&quot; :
+            {
+                &quot;textStyle&quot; :
+                {
+                    &quot;fontFamily&quot; : &quot;abelregular,微软雅黑&quot;,
+                    &quot;fontWeight&quot; : 100,
+                    &quot;fontSize&quot; : 20,
+                    &quot;color&quot; : &quot;#a0a0a0&quot;
+                },
+                &quot;format&quot; : &quot;+#.##%;-#.##%&quot;
+            },
+            &quot;layout&quot; :
+            {
+                &quot;type&quot; : &quot;form&quot;,
+                &quot;data&quot; :
+                {
+                    &quot;left&quot; :
+                    {
+                        &quot;numerator&quot; : 50,
+                        &quot;offset&quot; : 20
+                    },
+                    &quot;top&quot; :
+                    {
+                        &quot;numerator&quot; : 50
+                    }
+                }
+            },
+            &quot;markText&quot; : [
+                {
+                    &quot;text&quot; : &quot;[&quot;,
+                    &quot;textStyle&quot; :
+                    {
+                        &quot;fontSize&quot; : 20,
+                        &quot;color&quot; : &quot;#a0a0a0&quot;
+                    },
+                    &quot;layout&quot; :
+                    {
+                        &quot;type&quot; : &quot;form&quot;,
+                        &quot;data&quot; :
+                        {
+                            &quot;right&quot; :
+                            {
+                                &quot;alignment&quot; : &quot;left&quot;
+                            },
+                            &quot;bottom&quot; :
+                            {
+                                &quot;offset&quot; : 3
+                            }
+                        }
+                    }
+                },
+                {
+                    &quot;text&quot; : &quot;]&quot;,
+                    &quot;textStyle&quot; :
+                    {
+                        &quot;fontSize&quot; : 20,
+                        &quot;color&quot; : &quot;#a0a0a0&quot;
+                    },
+                    &quot;layout&quot; :
+                    {
+                        &quot;type&quot; : &quot;form&quot;,
+                        &quot;data&quot; :
+                        {
+                            &quot;left&quot; :
+                            {
+                                &quot;alignment&quot; : &quot;right&quot;
+                            },
+                            &quot;bottom&quot; :
+                            {
+                                &quot;offset&quot; : 3
+                            }
+                        }
+                    }
+                }
+            ],
+            &quot;type&quot; : &quot;numeric&quot;,
+            &quot;name&quot; : &quot;环比参照&quot;,
+            &quot;data&quot; : [-0.0561],
+            &quot;stack&quot; : &quot;环比参照&quot;
+        }
+    ]
+};</code></pre>
+<p>全部可用参数如下:</p>
+<pre><code>    var numericSeries =
+    {
+        type: &#39;numeric&#39;,                    // series 类型
+        data: [],                       // series 数据，只能为单个数值
+        layout: {
+            type: &#39;form&#39;,               // 布局类型，目前仅支持&#39;form&#39;, 参照SWT的FormLayout实现
+            data: {
+                /*
+                x: undefined,           // 被 left 设置覆盖, 或设置值
+                y: undefined,           // 被 top 设置覆盖, 或设置值
+                width: undefined,       // 被 top 和 bottom 设置覆盖, 设置值，或内容宽度
+                height: undefined       // 被 top 和 bottom 设置覆盖, 设置值，或内容高度
+                top: {
+                    series: undefined,  // undefined --&gt; canvas, -1 --&gt; last series, other --&gt; series index
+                    denominator: 100,   // 分母
+                    numerator: 0,       // 分子
+                    offset: 0,          // offset pixels
+                    alignment: &#39;top&#39;    // &#39;top&#39;, &#39;right&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;center&#39;
+                },
+                right: {
+                    series: undefined,  // undefined --&gt; canvas, -1 --&gt; last series, other --&gt; series index
+                    denominator: 100,   // 分母
+                    numerator: 100,     // 分子
+                    offset: 0,          // offset pixels
+                    alignment: &#39;right&#39;  // &#39;top&#39;, &#39;right&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;center&#39;
+                },
+                bottom: {
+                    series: undefined,  // undefined --&gt; canvas, -1 --&gt; last series, other --&gt; series index
+                    denominator: 100,   // 分母
+                    numerator: 100,     // 分子
+                    offset: 0,          // offset pixels
+                    alignment: &#39;bottom&#39; // &#39;top&#39;, &#39;right&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;center&#39;
+                },
+                left: {
+                    series: undefined,  // undefined --&gt; canvas, -1 --&gt; last series, other --&gt; series index
+                    denominator: 100,   // 分母
+                    numerator: 0,       // 分子
+                    offset: 0,          // offset pixels
+                    alignment: &#39;left&#39;   // &#39;top&#39;, &#39;right&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;center&#39;
+                }
+                */
+            }
+        },
+        numericStyle:
+        {
+            format : &#39;#,#&#39;,             // 格式设置，同Excel
+            link : null,                // 超链接跳转
+            target : null,              // 仅支持self | blank
+            x : &#39;center&#39;,               // 水平安放位置，默认为左对齐，可选为：
+                                        // &#39;center&#39; | &#39;left&#39; | &#39;right&#39;
+                                        // | {number}（x坐标，单位px）
+            y : &#39;center&#39;,               // 垂直安放位置，默认为全图顶端，可选为：
+                                        // &#39;top&#39; | &#39;bottom&#39; | &#39;center&#39;
+                                        // | {number}（y坐标，单位px）
+            textBaseline : &#39;bottom&#39;,    // 垂直对齐方式，默认根据y设置自动调整
+            backgroundColor : &#39;rgba(0,0,0,0)&#39;,
+            borderColor : &#39;#ccc&#39;,       // 标签边框颜色
+            borderWidth : 0,            // 标签边框线宽，单位px，默认为0（无边框）
+            padding : 5,                // 标签内边距，单位px，默认各方向内边距为5，
+                                        // 接受数组分别设定上右下左边距，同css
+            textStyle :
+            {
+                fontSize : 64,
+                color : &#39;#00cee6&#39;       // 主标签文字颜色
+            }
+        },
+        markText:                       // 标注文本数组，每一数组项为markTextItem对象
+        [
+        ]
+    };</code></pre>
+<pre><code>    var markTextItem =
+    {
+        link : null,                    // 超链接跳转
+        target : null,                  // 仅支持self | blank
+        x : &#39;center&#39;,                   // 文本在标注框(layout)中的显示位置
+        y : &#39;center&#39;,                   // 文本在标注框(layout)中的显示位置
+        textBaseline : &#39;bottom&#39;,        // 垂直对齐方式，默认根据y设置自动调整
+        backgroundColor : &#39;rgba(0,0,0,0)&#39;,
+        borderColor : &#39;#ccc&#39;,           // 标签边框颜色
+        borderWidth : 0,                // 标签边框线宽，单位px，默认为0（无边框）
+        padding : 5,                    // 标签内边距，单位px，默认各方向内边距为5，
+                                        // 接受数组分别设定上右下左边距，同css
+        textStyle :
+        {
+            fontSize : 64,
+            color : &#39;#00cee6&#39;               // 主标签文字颜色
+        },
+        layout: {
+            type: &#39;form&#39;,               // 布局类型，目前仅支持&#39;form&#39;, 参照SWT的FormLayout实现
+            data: {
+                /*
+                x: undefined,           // 被 left 设置覆盖, 或设置值
+                y: undefined,           // 被 top 设置覆盖, 或设置值
+                width: undefined,       // 被 top 和 bottom 设置覆盖, 设置值，或内容宽度
+                height: undefined       // 被 top 和 bottom 设置覆盖, 设置值，或内容高度
+                top: {
+                    series: undefined,  // undefined --&gt; this series, -1 --&gt; canvas, other --&gt; series index
+                    denominator: 100,   // 分母
+                    numerator: 0,       // 分子
+                    offset: 0,          // offset pixels
+                    alignment: &#39;top&#39;    // &#39;top&#39;, &#39;right&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;center&#39;
+                },
+                right: {
+                    series: undefined,  // undefined --&gt; this series, -1 --&gt; canvas, other --&gt; series index
+                    denominator: 100,   // 分母
+                    numerator: 100,     // 分子
+                    offset: 0,          // offset pixels
+                    alignment: &#39;right&#39;  // &#39;top&#39;, &#39;right&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;center&#39;
+                },
+                bottom: {
+                    series: undefined,  // undefined --&gt; this series, -1 --&gt; canvas, other --&gt; series index
+                    denominator: 100,   // 分母
+                    numerator: 100,     // 分子
+                    offset: 0,          // offset pixels
+                    alignment: &#39;bottom&#39; // &#39;top&#39;, &#39;right&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;center&#39;
+                },
+                left: {
+                    series: undefined,  // undefined --&gt; this series, -1 --&gt; canvas, other --&gt; series index
+                    denominator: 100,   // 分母
+                    numerator: 0,       // 分子
+                    offset: 0,          // offset pixels
+                    alignment: &#39;left&#39;   // &#39;top&#39;, &#39;right&#39;, &#39;bottom&#39;, &#39;left&#39;, &#39;center&#39;
+                }
+                */
+            }
+        }
+    };</code></pre>
+<h2 id="数值格式化支持">数值格式化支持</h2>
+<p>(未完成)</p>
+<h2 id="多图形布局支持dashboard">多图形布局支持(dashboard)</h2>
+<p>(未完成)</p>
+</body>
+</html>
