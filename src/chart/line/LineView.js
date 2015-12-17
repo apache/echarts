@@ -319,12 +319,14 @@ define(function(require) {
                 var symbol = data.getItemGraphicEl(dataIndex);
                 if (!symbol) {
                     // Create a temporary symbol if it is not exists
+                    var pt = data.getItemLayout(dataIndex);
                     symbol = new Symbol(data, dataIndex, api);
-                    symbol.position = data.getItemLayout(dataIndex);
+                    symbol.position = pt;
                     symbol.setZ(
                         seriesModel.get('zlevel'),
                         seriesModel.get('z')
                     );
+                    symbol.ignore = isNaN(pt[0]) || isNaN(pt[1]);
                     symbol.__temp = true;
                     data.setItemGraphicEl(dataIndex, symbol);
 

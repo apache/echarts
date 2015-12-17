@@ -42,7 +42,7 @@ define(function(require) {
             var axisX = this.getAxis('x');
             var axisY = this.getAxis('y');
             return axisX.contain(axisX.toLocalCoord(point[0]))
-                && axisY.contain(axisX.toLocalCoord(point[1]));
+                && axisY.contain(axisY.toLocalCoord(point[1]));
         },
 
         /**
