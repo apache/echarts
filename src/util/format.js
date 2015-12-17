@@ -1,5 +1,6 @@
 define(function (require) {
 
+    var zrUtil = require('zrender/core/util');
     /**
      * 每三位默认加,格式化
      * @type {string|number} x
@@ -56,6 +57,43 @@ define(function (require) {
             .replace(/'/g, '&#39;');
     }
 
+    var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+
+    function wrapVar(varName, seriesIdx) {
+        return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
+    }
+    /**
+     * Label string formatter
+     * @param  {string} tpl
+     * @param  {Array.<Object>|Object} paramsList
+     * @return {string}
+     */
+    function formatTpl(tpl, paramsList) {
+        if (!zrUtil.isArray(paramsList)) {
+            paramsList = [paramsList];
+        }
+        var seriesLen = paramsList.length;
+        if (!seriesLen) {
+            return '';
+        }
+
+        var $vars = paramsList[0].$vars;
+        for (var i = 0; i < $vars.length; i++) {
+            var alias = TPL_VAR_ALIAS[i];
+            tpl = tpl.replace(wrapVar(alias),  wrapVar(alias, 0));
+        }
+        for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
+            for (var k = 0; k < $vars.length; k++) {
+                tpl = tpl.replace(
+                    wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
+                    paramsList[seriesIdx][$vars[k]]
+                );
+            }
+        }
+
+        return tpl;
+    }
+
     return {
 
         normalizeCssArray: normalizeCssArray,
@@ -64,6 +102,8 @@ define(function (require) {
 
         toCamelCase: toCamelCase,
 
-        encodeHTML: encodeHTML
+        encodeHTML: encodeHTML,
+
+        formatTpl: formatTpl
     };
 });

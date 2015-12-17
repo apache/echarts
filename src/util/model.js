@@ -252,13 +252,7 @@ define(function(require) {
                 return formatter(params);
             }
             else if (typeof formatter === 'string') {
-                // TODO ETPL ?
-                return formatter.replace('{a}','{a0}')
-                                .replace('{b}','{b0}')
-                                .replace('{c}','{c0}')
-                                .replace('{a0}', params.seriesName)
-                                .replace('{b0}', params.name)
-                                .replace('{c0}', addCommas(params.value));
+                return formatUtil.formatTpl(formatter, params);
             }
         }
     };

@@ -57,40 +57,6 @@ define(function (require) {
         };
     }
 
-    var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e'];
-
-    function wrapVar(varName, seriesIdx) {
-        return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
-    }
-    /**
-     * @inner
-     */
-    function formatTpl(tpl, paramsList) {
-        if (!zrUtil.isArray(paramsList)) {
-            paramsList = [paramsList];
-        }
-        var seriesLen = paramsList.length;
-        if (!seriesLen) {
-            return '';
-        }
-
-        var $vars = paramsList[0].$vars;
-        for (var i = 0; i < $vars.length; i++) {
-            var alias = TPL_VAR_ALIAS[i];
-            tpl = tpl.replace(wrapVar(alias),  wrapVar(alias, 0));
-        }
-        for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
-            for (var k = 0; k < $vars.length; k++) {
-                tpl = tpl.replace(
-                    wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
-                    paramsList[seriesIdx][$vars[k]]
-                );
-            }
-        }
-
-        return tpl;
-    }
-
     function refixTooltipPosition(x, y, el, viewWidth, viewHeight) {
         var width = el.clientWidth;
         var height = el.clientHeight;
@@ -796,7 +762,7 @@ define(function (require) {
                     }
                     else {
                         if (typeof formatter === 'string') {
-                            html = formatTpl(formatter, paramsList);
+                            html = formatUtil.formatTpl(formatter, paramsList);
                         }
                         else if (typeof formatter === 'function') {
                             var self = this;
@@ -862,7 +828,7 @@ define(function (require) {
                 }
                 else {
                     if (typeof formatter === 'string') {
-                        html = formatTpl(formatter, params);
+                        html = formatUtil.formatTpl(formatter, params);
                     }
                     else if (typeof formatter === 'function') {
                         var self = this;
