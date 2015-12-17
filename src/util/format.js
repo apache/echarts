@@ -63,7 +63,7 @@ define(function (require) {
         return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
     }
     /**
-     * Label string formatter
+     * Template formatter
      * @param  {string} tpl
      * @param  {Array.<Object>|Object} paramsList
      * @return {string}

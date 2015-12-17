@@ -59,6 +59,9 @@ define(function (require) {
          */
         setInterval: function (interval) {
             this._interval = interval;
+            // Dropped auto calculated niceExtent and use user setted extent
+            // We assume user wan't to set both interval, min, max to get a better result
+            this._niceExtent = this._extent.slice();
         },
 
         /**
