@@ -139,7 +139,7 @@ define(function(require) {
                     textAlign: orient === 'horizontal' ? align : 'center',
                     text: text,
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.get('color')
+                    fill: textStyleModel.getTextColor()
                 }
             }));
         },
@@ -220,7 +220,7 @@ define(function(require) {
                     x: 0, y: 0, text: '',
                     textBaseline: 'middle',
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.get('color')
+                    fill: textStyleModel.getTextColor()
                 }
             });
 

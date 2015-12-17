@@ -636,7 +636,7 @@ define(function (require) {
             });
 
             text.setStyle({
-                fill: textStyleModel.get('color') || crossStyleModel.get('color'),
+                fill: textStyleModel.getTextColor() || crossStyleModel.get('color'),
                 textFont: textStyleModel.getFont(),
                 text: value.join(', '),
                 x: point[0] + 5,

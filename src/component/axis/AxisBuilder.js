@@ -233,7 +233,7 @@ define(function (require) {
                         textAlign: labelLayout.textAlign,
                         textBaseline: labelLayout.textBaseline,
                         textFont: itemTextStyleModel.getFont(),
-                        fill: itemTextStyleModel.get('color')
+                        fill: itemTextStyleModel.getTextColor()
                     },
                     position: pos,
                     rotation: labelLayout.rotation,
@@ -289,7 +289,7 @@ define(function (require) {
                 style: {
                     text: name,
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.get('color')
+                    fill: textStyleModel.getTextColor()
                         || axisModel.get('axisLine.lineStyle.color'),
                     textAlign: labelLayout.textAlign,
                     textBaseline: labelLayout.textBaseline

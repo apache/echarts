@@ -204,7 +204,7 @@ define(function (require) {
                             text: label,
                             x: unitX * (r - splitLineLen - 5) + cx,
                             y: unitY * (r - splitLineLen - 5) + cy,
-                            fill: textStyleModel.get('color'),
+                            fill: textStyleModel.getTextColor(),
                             textFont: textStyleModel.getFont(),
                             textBaseline: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
                             textAlign: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
@@ -348,7 +348,7 @@ define(function (require) {
                         y: y,
                         // FIXME First data name ?
                         text: seriesModel.getData().getName(0),
-                        fill: textStyleModel.get('color'),
+                        fill: textStyleModel.getTextColor(),
                         textFont: textStyleModel.getFont(),
                         textAlign: 'center',
                         textBaseline: 'middle'
@@ -385,7 +385,7 @@ define(function (require) {
                             value, detailModel.get('formatter')
                         ),
                         fill: detailModel.get('backgroundColor'),
-                        textFill: textStyleModel.get('color'),
+                        textFill: textStyleModel.getTextColor(),
                         textFont: textStyleModel.getFont()
                     }
                 });

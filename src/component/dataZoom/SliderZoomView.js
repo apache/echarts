@@ -396,7 +396,7 @@ define(function (require) {
                         x: 0, y: 0, text: '',
                         textBaseline: 'middle',
                         textAlign: 'center',
-                        fill: textStyleModel.get('color'),
+                        fill: textStyleModel.getTextColor(),
                         textFont: textStyleModel.getFont()
                     }
                 }));

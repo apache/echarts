@@ -236,7 +236,7 @@ define(function (require) {
                     text: name,
                     x: textX,
                     y: itemHeight / 2,
-                    fill: textStyleModel.get('color'),
+                    fill: textStyleModel.getTextColor(),
                     textFont: textStyleModel.getFont(),
                     textAlign: textAlign,
                     textBaseline: 'middle'

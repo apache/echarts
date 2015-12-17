@@ -178,7 +178,7 @@ define(function (require) {
                     || labelPosition === 'inner' || labelPosition === 'center';
                 labelText.setStyle({
                     // Default use item visual color
-                    fill: textStyleModel.get('color')
+                    fill: textStyleModel.getTextColor()
                         || isLabelInside ? '#fff' : visualColor,
                     text: seriesModel.getFormattedLabel(idx, 'normal')
                         || data.getName(idx),

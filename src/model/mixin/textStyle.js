@@ -7,6 +7,20 @@ define(function (require) {
     }
 
     return {
+        /**
+         * Get color property or get color from option.textStyle.color
+         * @return {string}
+         */
+        getTextColor: function () {
+            var ecModel = this.ecModel;
+            return this.getShallow('color')
+                || (ecModel && ecModel.get('textStyle.color'));
+        },
+
+        /**
+         * Create font string from fontStyle, fontWeight, fontSize, fontFamily
+         * @return {string}
+         */
         getFont: function () {
             var ecModel = this.ecModel;
             var gTextStyleModel = ecModel && ecModel.getModel('textStyle');

@@ -125,7 +125,7 @@ define(function (require) {
                     style: {
                         x: p[0],
                         y: p[1],
-                        fill: textStyleModel.get('color'),
+                        fill: textStyleModel.getTextColor(),
                         text: labels[i],
                         textAlign: labelTextAlign,
                         textBaseline: labelTextBaseline,

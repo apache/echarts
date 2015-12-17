@@ -323,7 +323,7 @@
                         fill: thisNode.getVisual('color', true),
                         text: text,
                         textPosition: labelModel.get('position'),
-                        textFill: textStyleModel.get('color'),
+                        textFill: textStyleModel.getTextColor(),
                         textAlign: textStyleModel.get('align'),
                         textBaseline: textStyleModel.get('baseline'),
                         textFont: textStyleModel.getFont()

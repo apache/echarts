@@ -314,7 +314,7 @@ define(function(require) {
             textDistance: labelModel.getShallow('distance') || 5,
             textFont: textStyleModel.getFont(),
             textPosition: labelPosition,
-            textFill: textStyleModel.get('color') || labelColor
+            textFill: textStyleModel.getTextColor() || labelColor
         });
     };
 

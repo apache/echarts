@@ -25,7 +25,7 @@ define(function(require) {
             var textGap = dataRangeModel.get('textGap');
             var textStyleModel = dataRangeModel.textStyleModel;
             var textFont = textStyleModel.getFont();
-            var textFill = textStyleModel.get('color');
+            var textFill = textStyleModel.getTextColor();
             var itemAlign = this.getItemAlignByOrient('horizontal', ecWidth);
             var itemSize = dataRangeModel.itemSize;
 
@@ -88,7 +88,7 @@ define(function(require) {
                     textAlign: 'center',
                     text: text,
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.get('color')
+                    fill: textStyleModel.getTextColor()
                 }
             }));
 

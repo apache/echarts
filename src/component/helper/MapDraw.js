@@ -179,14 +179,14 @@ define(function (require) {
                     var text = new graphic.Text({
                         style: {
                             text: showLabel ? (formattedStr || region.name) : '',
-                            fill: textStyleModel.get('color'),
+                            fill: textStyleModel.getTextColor(),
                             textFont: textStyleModel.getFont(),
                             textAlign: 'center',
                             textBaseline: 'middle'
                         },
                         hoverStyle: {
                             text: hoverShowLabel ? (hoverFormattedStr || region.name) : '',
-                            fill: hoverTextStyleModel.get('color'),
+                            fill: hoverTextStyleModel.getTextColor(),
                             textFont: hoverTextStyleModel.getFont()
                         },
                         position: region.center.slice(),

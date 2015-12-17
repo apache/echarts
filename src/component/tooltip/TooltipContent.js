@@ -37,7 +37,7 @@ define(function (require) {
         var cssText = [];
 
         var fontSize = textStyleModel.get('fontSize');
-        var color = textStyleModel.get('color');
+        var color = textStyleModel.getTextColor();
 
         color && cssText.push('color:' + color);
 

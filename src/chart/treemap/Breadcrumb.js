@@ -123,7 +123,7 @@
                         {
                             lineJoin: 'bevel',
                             text: text,
-                            textFill: textStyleModel.get('color'),
+                            textFill: textStyleModel.getTextColor(),
                             textAlign: 'left',
                             textFont: textStyleModel.getFont()
                         }

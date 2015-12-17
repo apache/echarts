@@ -94,7 +94,7 @@ define(function(require) {
                 style: {
                     text: titleModel.get('text'),
                     textFont: textStyleModel.getFont(),
-                    fill: textStyleModel.get('color'),
+                    fill: textStyleModel.getTextColor(),
                     textBaseline: 'top'
                 }
             });
@@ -106,7 +106,7 @@ define(function(require) {
                 style: {
                     text: subText,
                     textFont: subtextStyleModel.getFont(),
-                    fill: subtextStyleModel.get('color'),
+                    fill: subtextStyleModel.getTextColor(),
                     y: textRect.height + titleModel.get('itemGap'),
                     textBaseline: 'top'
                 }

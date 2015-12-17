@@ -92,7 +92,7 @@ define(function (require) {
                             // Use empty string to hide the label
                             : '',
                         textFont: textStyleModel.getFont(),
-                        textFill: textStyleModel.get('color'),
+                        textFill: textStyleModel.getTextColor(),
                         textPosition: labelModel.get('position')
                     }
                 });
@@ -111,7 +111,7 @@ define(function (require) {
                             ? seriesModel.getFormattedLabel(node.dataIndex, 'emphasis') || node.id
                             : '',
                         textFont: textStyleHoverModel.getFont(),
-                        textFill: textStyleHoverModel.get('color'),
+                        textFill: textStyleHoverModel.getTextColor(),
                         textPosition: labelHoverModel.get('position')
                     }
                 ));

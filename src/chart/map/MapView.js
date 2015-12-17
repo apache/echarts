@@ -71,7 +71,7 @@ define(function (require) {
                 var showLabel = labelModel.get('show');
 
                 var labelText = data.getName(idx);
-                var labelColor = textStyleModel.get('color');
+                var labelColor = textStyleModel.getTextColor();
                 var labelFont = textStyleModel.getFont();
 
                 var circle = new graphic.Circle({
