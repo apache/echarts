@@ -53,8 +53,8 @@ define(function(require) {
                 }
 
                 barMaxWidth && (stacks[stackId].maxWidth = barMaxWidth);
-                barGap && (columnsOnAxis.gap = barGap);
-                barCategoryGap && (columnsOnAxis.categoryGap = barCategoryGap);
+                (barGap != null) && (columnsOnAxis.gap = barGap);
+                (barCategoryGap != null) && (columnsOnAxis.categoryGap = barCategoryGap);
             }
         });
 
