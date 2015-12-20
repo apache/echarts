@@ -9,7 +9,7 @@
 1. 获取 ZRender 3
 
     ```
-    git pull https://github.com/ecomfe/zrender.git zrender
+    git clone https://github.com/ecomfe/zrender.git zrender
     # 切换到 3.0 分支
     git checkout dev-3.0.0
     ```
@@ -17,7 +17,7 @@
 2. 获取 ECharts 3
 
     ```
-    git pull https://github.com/ecomfe/echarts.git echarts
+    git clone https://github.com/ecomfe/echarts.git echarts
     # 切换到 3.0 分支
     git checkout dev-3.0.0
     ```
