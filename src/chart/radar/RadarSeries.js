@@ -36,8 +36,8 @@ define(function(require) {
                 });
 
                 // FIXME
-                var oldGetRawValue = data.getRawValue;
-                data.getRawValue = function (idx) {
+                var oldGetRawValue = this.getRawValue;
+                this.getRawValue = function (idx) {
                     var val = oldGetRawValue.call(this, idx);
                     var indicator = indicatorMap[data.getName(idx)];
                     if (indicator && indicator.max != null) {

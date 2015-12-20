@@ -212,31 +212,34 @@ define(function(require, factory) {
 
         this._updateCartesianFromSeries(ecModel, gridModel);
 
+        function ifAxisCanNotOnZero(otherAxisDim) {
+            var axes = axesMap[otherAxisDim];
+            return (axes[0] && (axes[0].type === 'category' || !ifAxisCrossZero(axes[0])))
+                || (axes[1] && (axes[1].type === 'category' || !ifAxisCrossZero(axes[1])));
+        }
+
         // Fix configuration
         each(axesMap.x, function (xAxis) {
-            each(axesMap.y, function (yAxis) {
-                // onZero can not be used in these two situations
-                // 1. When other axis is a category axis
-                // 2. When other axis not across 0 point
-                if (xAxis.type === 'category' || !ifAxisCrossZero(xAxis)
-                ) {
-                    yAxis.onZero = false;
-                }
-                if (yAxis.type === 'category' || !ifAxisCrossZero(yAxis)
-                ) {
-                    xAxis.onZero = false;
-                }
+            // onZero can not be enabled in these two situations
+            // 1. When any other axis is a category axis
+            // 2. When any other axis not across 0 point
+            if (ifAxisCanNotOnZero('y')) {
+                xAxis.onZero = false;
+            }
+            if (ifAxisNeedsCrossZero(xAxis)) {
+                xAxis.scale.unionExtent([0, 0]);
+            }
+            niceScaleExtent(xAxis, xAxis.model);
+        }, this);
 
-                if (ifAxisNeedsCrossZero(yAxis)) {
-                    yAxis.scale.unionExtent([0, 0]);
-                }
-                if (ifAxisNeedsCrossZero(xAxis)) {
-                    xAxis.scale.unionExtent([0, 0]);
-                }
-                niceScaleExtent(yAxis, yAxis.model);
-                niceScaleExtent(xAxis, xAxis.model);
-
-            }, this);
+        each(axesMap.y, function (yAxis) {
+            if (ifAxisCanNotOnZero('x')) {
+                yAxis.onZero = false;
+            }
+            if (ifAxisNeedsCrossZero(yAxis)) {
+                yAxis.scale.unionExtent([0, 0]);
+            }
+            niceScaleExtent(yAxis, yAxis.model);
         }, this);
 
         function createAxisCreator(axisType) {

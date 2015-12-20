@@ -9,7 +9,10 @@ define(function (require) {
     return function (nodes, edges, hostModel, directed) {
         var graph = new Graph(directed);
         for (var i = 0; i < nodes.length; i++) {
-            graph.addNode(zrUtil.retrieve(nodes[i].id, nodes[i].name), i);
+            graph.addNode(zrUtil.retrieve(
+                // Id, name, dataIndex
+                nodes[i].id, nodes[i].name, i
+            ), i);
         }
 
         var linkNameList = [];
@@ -22,6 +25,15 @@ define(function (require) {
                 linkNameList.push(zrUtil.retrieve(link.id, link.source + ' - ' + link.target));
             }
         }
+
+        // If edge has sourceValue and targetValue
+        // graph.eachEdge(function (edge, idx) {
+        //     var edgeRawData = edges[i];
+        //     if (edgeRawData.sourceValue != null && edgeRawData.targetValue != null) {
+
+        //     }
+        // });
+
 
         // FIXME
         var dimensionNames = completeDimensions(['value'], nodes);

@@ -111,14 +111,13 @@ define(function (require) {
          */
         formatTooltip: function (dataIndex) {
             var data = this._data;
-            var formattedValue = addCommas(data.getRawValue(dataIndex));
+            var formattedValue = addCommas(this.getRawValue(dataIndex));
             var name = data.getName(dataIndex);
 
             var seriesGroup = this.seriesGroup;
             var seriesNames = [];
             for (var i = 0; i < seriesGroup.length; i++) {
-                var subData = seriesGroup[i].getData();
-                if (!isNaN(subData.getRawValue(dataIndex))) {
+                if (!isNaN(seriesGroup[i].getRawValue(dataIndex))) {
                     seriesNames.push(
                         encodeHTML(seriesGroup[i].name)
                     );

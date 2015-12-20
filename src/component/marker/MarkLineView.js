@@ -72,12 +72,17 @@ define(function (require) {
     var markLineFormatMixin = {
         formatTooltip: function (dataIndex) {
             var data = this._data;
-            var value = data.getRawValue(dataIndex);
+            var value = this.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
             var name = data.getName(dataIndex);
             return this.name + '<br />'
                 + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
+        },
+
+        getRawValue: function (idx) {
+            var option = this._data.getItemModel(idx).option;
+            return zrUtil.retrieve(option && option.__rawValue, option && option.value, '');
         },
 
         getRawDataArray: function () {
@@ -93,7 +98,7 @@ define(function (require) {
         }
     };
 
-    zrUtil.extend(markLineFormatMixin, modelUtil.dataFormatMixin);
+    zrUtil.defaults(markLineFormatMixin, modelUtil.dataFormatMixin);
 
     require('../../echarts').extendComponentView({
 
@@ -146,11 +151,6 @@ define(function (require) {
             var lineData = mlData.line;
 
             // Line data for tooltip and formatter
-            var lineData = mlData.line;
-            lineData.getRawValue = function (idx) {
-                var option = this.getItemModel(idx).option;
-                return zrUtil.retrieve(option && option.__rawValue, option && option.value, '');
-            };
             zrUtil.extend(mlModel, markLineFormatMixin);
             mlModel.setData(lineData);
 

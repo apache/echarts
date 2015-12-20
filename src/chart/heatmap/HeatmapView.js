@@ -51,7 +51,7 @@ define(function (require) {
                 var labelModel = itemModel.getModel('label.normal');
                 var hoverLabelModel = itemModel.getModel('label.emphasis');
 
-                var rawValue = data.getRawValue(idx);
+                var rawValue = seriesModel.getRawValue(idx);
                 var defaultText = '-';
                 if (rawValue && rawValue[2] != null) {
                     defaultText = rawValue[2];

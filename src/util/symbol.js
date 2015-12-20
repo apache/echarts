@@ -134,6 +134,7 @@ define(function(require) {
             ctx.lineTo(x, y + height / 4 * 3);
             ctx.lineTo(x - dx, y + height);
             ctx.lineTo(x, y);
+            ctx.closePath();
         }
     });
 

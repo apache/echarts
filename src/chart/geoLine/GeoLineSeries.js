@@ -29,8 +29,12 @@ define(function (require) {
             var toData = new List(['lng', 'lat'], this);
             var lineData = new List(['value'], this);
 
-            fromData.initData(fromDataArr, null, 'geoCoord');
-            toData.initData(toDataArr, null, 'geoCoord');
+            function geoCoordGetter(item, dim, dataIndex, dimIndex) {
+                return item.geoCoord && item.geoCoord[dimIndex];
+            }
+
+            fromData.initData(fromDataArr, null, geoCoordGetter);
+            toData.initData(toDataArr, null, geoCoordGetter);
             lineData.initData(lineDataArr);
 
             this.fromData = fromData;

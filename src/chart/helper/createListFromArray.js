@@ -3,7 +3,23 @@ define(function(require) {
 
     var List = require('../../data/List');
     var completeDimensions = require('../../data/helper/completeDimensions');
+    var zrUtil = require('zrender/core/util');
 
+    function firstDataNotNull(data) {
+        var i = 0;
+        while (i < data.length && data[i] == null) {
+            i++;
+        }
+        return data[i];
+    }
+    function ifNeedCompleteOrdinalData(data) {
+        var sampleItem = firstDataNotNull(data);
+        return sampleItem != null
+            && !zrUtil.isArray(getItemValue(sampleItem));
+    }
+    function getItemValue(item) {
+        return item && (item.value == null ? item : item.value);
+    }
     /**
      * Helper function to create a list from option data
      */
@@ -14,12 +30,27 @@ define(function(require) {
         var result = creaters[seriesModel.get('coordinateSystem')](
             data, seriesModel, ecModel
         );
+        var dimensions = result.dimensions;
+        var categoryAxisModel = result.categoryAxisModel;
 
-        var list = new List(result.dimensions, seriesModel);
+        var categoryDimIndex = dimensions[0].type === 'ordinal' ? 0
+            : (dimensions[1].type === 'ordinal' ? 1 : -1);
+
+        var list = new List(dimensions, seriesModel);
 
         var nameList = createNameList(result, data);
 
-        list.initData(data, nameList);
+        var dimValueGetter = (categoryAxisModel && ifNeedCompleteOrdinalData(data))
+            ? function (itemOpt, dimName, dataIndex, dimIndex) {
+                // Use dataIndex as ordinal value in categoryAxis
+                return dimIndex === categoryDimIndex ?
+                    dataIndex : +getItemValue(itemOpt);
+            }
+            : function (itemOpt, dimName, dataIndex, dimIndex) {
+                var val = getItemValue(itemOpt);
+                return val && +val[dimIndex];
+            };
+        list.initData(data, nameList, dimValueGetter);
 
         return list;
     }
@@ -35,45 +66,35 @@ define(function(require) {
 
         cartesian2d: function (data, seriesModel, ecModel) {
             var dimensions = [];
-            var categoryAxisModel;
             var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
             var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
             var xAxisType = xAxisModel.get('type');
             var yAxisType = yAxisModel.get('type');
             var isYAxisCategory = yAxisType === 'category';
-            if (xAxisType === 'category') {
-                dimensions = [{
-                    name: 'x',
-                    type: 'ordinal'
-                }, {
-                    name: 'y',
-                    // If two category axes
-                    type: isYAxisCategory ? 'ordinal' : 'float',
-                    stackable: isStackable(yAxisType)
-                }];
+            var isXAxisCategory = xAxisType === 'category';
 
-                categoryAxisModel = xAxisModel;
-            }
-            else if (isYAxisCategory) {
-                dimensions = [{
-                    name: 'y',
-                    type: 'ordinal'
-                }, {
-                    name: 'x',
-                    stackable: isStackable(xAxisType)
-                }];
-
-                categoryAxisModel = yAxisModel;
-            }
+            dimensions = [{
+                name: 'x',
+                type: isXAxisCategory ? 'ordinal' : 'float',
+                stackable: isStackable(xAxisType)
+            }, {
+                name: 'y',
+                // If two category axes
+                type: isYAxisCategory ? 'ordinal' : 'float',
+                stackable: isStackable(yAxisType)
+            }];
 
             completeDimensions(dimensions, data, ['x', 'y', 'z']);
 
-            return {dimensions: dimensions, categoryAxisModel: categoryAxisModel};
+            return {
+                dimensions: dimensions,
+                categoryAxisModel: isXAxisCategory ? xAxisModel
+                    : (isYAxisCategory ? yAxisModel : null)
+            };
         },
 
         polar: function (data, seriesModel, ecModel) {
             var dimensions = [];
-            var categoryAxisModel;
             var polarIndex = seriesModel.get('polarIndex') || 0;
 
             var axisFinder = function (axisModel) {
@@ -88,34 +109,24 @@ define(function(require) {
             })[0];
 
             var isRadiusAxisCategory = radiusAxisModel.get('type') === 'category';
-            if (angleAxisModel.get('type') === 'category') {
-                dimensions = [{
-                    name: 'angle',
-                    type: 'ordinal'
-                }, {
-                    name: 'radius',
-                    // If two category axes
-                    type: isRadiusAxisCategory ? 'ordinal' : 'float',
-                    stackable: isStackable(radiusAxisModel.get('type'))
-                }];
-
-                categoryAxisModel = angleAxisModel;
-            }
-            else if (isRadiusAxisCategory) {
-                dimensions = [{
-                    name: 'radius',
-                    type: 'ordinal'
-                }, {
-                    name: 'angle',
-                    stackable: isStackable(angleAxisModel.get('type'))
-                }];
-
-                categoryAxisModel = radiusAxisModel;
-            }
+            var isAngleAxisCategory = angleAxisModel.get('type') === 'category';
+            var dimensions = [{
+                name: 'radius',
+                type: isRadiusAxisCategory ? 'ordinal' : 'float',
+                stackable: isStackable(radiusAxisModel.get('type'))
+            }, {
+                name: 'angle',
+                type: isAngleAxisCategory ? 'ordinal' : 'float',
+                stackable: isStackable(angleAxisModel.get('type'))
+            }];
 
             completeDimensions(dimensions, data, ['radius', 'angle', 'value']);
 
-            return {dimensions: dimensions, categoryAxisModel: categoryAxisModel};
+            return {
+                dimensions: dimensions,
+                categoryAxisModel: isAngleAxisCategory ? angleAxisModel
+                    : (isRadiusAxisCategory ? radiusAxisModel : null)
+            };
         },
 
         geo: function (data, seriesModel, ecModel) {

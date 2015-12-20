@@ -115,6 +115,7 @@ define(function (require) {
                 var dataIdx;
                 // Use the itemStyle in data if has data
                 if (data) {
+                    // FIXME If dataIdx < 0
                     dataIdx = data.indexOfName(region.name);
                     var itemModel = data.getItemModel(dataIdx);
 

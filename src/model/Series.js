@@ -145,7 +145,7 @@ define(function(require) {
          */
         formatTooltip: function (dataIndex, mutipleSeries) {
             var data = this._data;
-            var value = data.getRawValue(dataIndex);
+            var value = this.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
             var name = data.getName(dataIndex);

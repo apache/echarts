@@ -20,12 +20,17 @@ define(function (require) {
 
         formatTooltip: function (dataIndex) {
             var data = this.getData();
-            var value = data.getRawValue(dataIndex);
+            var value = this.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
             var name = data.getName(dataIndex);
             return this.name + '<br />'
                 + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
+        },
+
+        getRawValue: function (idx) {
+            var option = this._data.getItemModel(idx).option;
+            return zrUtil.retrieve(option.__rawValue, option.value, '');
         },
 
         getData: function () {
@@ -37,7 +42,7 @@ define(function (require) {
         }
     };
 
-    zrUtil.extend(markPointFormatMixin, modelUtil.dataFormatMixin);
+    zrUtil.defaults(markPointFormatMixin, modelUtil.dataFormatMixin);
 
     require('../../echarts').extendComponentView({
 
@@ -79,13 +84,6 @@ define(function (require) {
 
             var mpData = createList(coordSys, seriesData, mpModel);
             var dims = coordSys && coordSys.dimensions;
-
-            // Overwrite getRawValue
-            // FIXME
-            mpData.getRawValue = function (idx) {
-                var option = this.getItemModel(idx).option;
-                return zrUtil.retrieve(option.__rawValue, option.value, '');
-            };
 
             // FIXME
             zrUtil.mixin(mpModel, markPointFormatMixin);

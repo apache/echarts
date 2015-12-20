@@ -143,7 +143,7 @@ define(function(require) {
          */
         formatTooltip: function (dataIndex) {
             var data = this.getData();
-            var value = data.getRawValue(dataIndex);
+            var value = this.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
                 ? addCommas(value[0]) : addCommas(value);
             var name = data.getName(dataIndex);
@@ -170,7 +170,7 @@ define(function(require) {
                 treePathInfo.push({
                     name: node.name,
                     dataIndex: nodeDataIndex,
-                    value: data.getRawValue(nodeDataIndex)
+                    value: this.getRawValue(nodeDataIndex)
                 });
                 node = node.parentNode;
             }

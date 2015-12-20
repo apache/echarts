@@ -84,8 +84,16 @@ define(function (require) {
      */
     axisHelper.ifAxisCrossZero = function (axis) {
         var dataExtent = axis.scale.getExtent();
-        var min = Math.min(axis.model.get('min'), dataExtent[0], dataExtent[1]);
-        var max = Math.max(axis.model.get('max'), dataExtent[0], dataExtent[1]);
+        var min = dataExtent[0];
+        var max = dataExtent[1];
+        var optMin = axis.model.get('min');
+        var optMax = axis.model.get('max');
+        if (!isNaN(optMin)) {
+            min = Math.min(optMin, min);
+        }
+        if (!isNaN(optMax)) {
+            max = Math.max(optMax, max);
+        }
         return !((min > 0 && max > 0) || (min < 0 && max < 0))
             || axisHelper.ifAxisNeedsCrossZero(axis);
     };

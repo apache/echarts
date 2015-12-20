@@ -229,7 +229,7 @@ define(function (require) {
         var labelHoverModel = itemModel.getModel('label.emphasis');
         var textStyleHoverModel = labelHoverModel.getModel('textStyle');
 
-        var defaultText = numberUtil.round(seriesModel.getData().getRawValue(idx));
+        var defaultText = numberUtil.round(seriesModel.getRawValue(idx));
         line.setStyle(zrUtil.extend(
             {
                 stroke: lineData.getItemVisual(idx, 'color')

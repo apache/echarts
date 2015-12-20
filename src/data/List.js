@@ -26,11 +26,7 @@ define(function (require) {
     var isObject = zrUtil.isObject;
 
     var IMMUTABLE_PROPERTIES = [
-        'stackedOn', '_nameList', '_idList',
-        '_rawData', '_valueProp', '_optionModels',
-        // Get raw value may be wrapped by creator
-        // FIXME
-        'getRawValue'
+        'stackedOn', '_nameList', '_idList', '_rawData'
     ];
 
     var transferImmuProperties = function (a, b) {
@@ -157,15 +153,10 @@ define(function (require) {
         this._graphicEls = [];
 
         /**
-         * Raw data
+         * @type {Array.<Array|Object>}
          * @private
          */
-        this._rawData = [];
-
-        /**
-         * @private
-         */
-        this._valueProp;
+        this._rawData;
     };
 
     var listProto = List.prototype;
@@ -198,19 +189,14 @@ define(function (require) {
      * Initialize from data
      * @param {Array.<Object|number|Array>} data
      * @param {Array.<string>} [nameList]
-     * @param {string} [valueProp='value']
-     * @param {boolean} [addOrdinal=false]
+     * @param {Function} [dimValueGetter] (dataItem, dimName, dataIndex, dimIndex) => number
      */
-    listProto.initData = function (data, nameList, valueProp, addOrdinal) {
+    listProto.initData = function (data, nameList, dimValueGetter) {
         data = data || [];
 
-        valueProp = valueProp || 'value';
-
         this._rawData = data;
-        this._valueProp = valueProp;
 
         // Clear
-        var optionModels = this._optionModels = [];
         var storage = this._storage = {};
         var indices = this.indices = [];
 
@@ -230,92 +216,44 @@ define(function (require) {
             storage[dimensions[i]] = new DataCtor(size);
         }
 
-        // Special storage of indices of option model
-        // It is used for indexing the model in List#_optionModels
-        var optionModelIndices = storage.$optionModelIndices = new Int32Array(size);
-
-        var tempValue = [];
-        var rawValueTo1D = false;
-        var value1D = dimensions.length === 1;
-
-        // Use the first data to indicate data type;
-        var isValueArray = data[0] != null && zrUtil.isArray(
-            data[0][valueProp] == null ? data[0] : data[0][valueProp]
-        );
-        for (var idx = 0; idx < data.length; idx++) {
-            var value = data[idx];
-            // Each data item is an option contains value or other properties
-            // {
-            //  value:
-            //  itemStyle:
-            // }
-            if (data[idx] != null && (typeof data[idx] === 'object') && !zrUtil.isArray(data[idx])) {
-                value = data[idx][valueProp];
-                var model = new Model(data[idx], this.hostModel, this.hostModel.ecModel);
-
-                var modelIdx = optionModels.length;
-                optionModelIndices[idx] = modelIdx;
-                optionModels.push(model);
+        // Default dim value getter
+        dimValueGetter = dimValueGetter || function (dataItem, dimName, dataIndex, dimIndex) {
+            var value = (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem))
+                    ? dataItem.value : dataItem;
+            if (zrUtil.isArray(value)) {
+                return value[dimIndex];
             }
+            // If value is a single number or something else not array.
+            return value;
+        };
+
+        for (var idx = 0; idx < data.length; idx++) {
+            var dataItem = data[idx];
             // Each data item is value
             // [1, 2]
             // 2
-            else {
-                // Reference to the undefined
-                optionModelIndices[idx] = -1;
-            }
             // Bar chart, line chart which uses category axis
             // only gives the 'y' value. 'x' value is the indices of cateogry
             // Use a tempValue to normalize the value to be a (x, y) value
-            if (!isValueArray) {
-                if (!value1D) {
-                    tempValue[0] = idx;
-                    tempValue[1] = value;
-                    value = tempValue;
-                    rawValueTo1D = true;
-                }
-                // Pie chart is 1D
-                else {
-                    tempValue[0] = value;
-                    value = tempValue;
-                }
-            }
 
             // Store the data by dimensions
             for (var k = 0; k < dimensions.length; k++) {
                 var dim = dimensions[k];
-                var dimInfo = dimensionInfoMap[dim];
                 var dimStorage = storage[dim];
-                var dimValue = addOrdinal
-                    ? (!k ? idx : value[k - 1])
-                    : value[k];
                 // PENDING NULL is empty or zero
-                switch (dimInfo.type) {
-                    case 'float':
-                    case 'number':
-                        dimValue = +dimValue;
-                        break;
-                    case 'int':
-                        dimValue = dimValue | 0;
-                        break;
-                }
-                dimStorage[idx] = dimValue;
+                dimStorage[idx] = dimValueGetter(dataItem, dim, idx, k);
             }
 
             indices.push(idx);
         }
 
         // Use the name in option and create id
-        for (var i = 0; i < optionModelIndices.length; i++) {
+        for (var i = 0; i < data.length; i++) {
             var id = '';
             if (!nameList[i]) {
-                var modelIdx = optionModelIndices[i];
-                var model = optionModels[modelIdx];
-                if (model && model.option) {
-                    nameList[i] = model.option.name;
-                    // Try using the id in option
-                    id = model.option.id;
-                }
+                nameList[i] = data[i].name;
+                // Try using the id in option
+                id = data[i].id;
             }
             var name = nameList[i] || '';
             if (!id && name) {
@@ -469,24 +407,6 @@ define(function (require) {
             }
         }
         return sum;
-    };
-    /**
-     * Get raw value
-     * @param {number} idx
-     * @return {number}
-     */
-    listProto.getRawValue = function (idx) {
-        idx = this.getRawIndex(idx);
-        var itemOpt = this._rawData[idx];
-        var valueProp = this._valueProp;
-        // FIXME Value may not exist in data item object when data is links
-        // if (itemOpt && itemOpt.hasOwnProperty(valueProp)) {
-        //     return itemOpt[valueProp];
-        // }
-        if (zrUtil.isObject(itemOpt) && !zrUtil.isArray(itemOpt)) {
-            return itemOpt[valueProp];
-        }
-        return itemOpt;
     };
 
     /**
@@ -769,8 +689,6 @@ define(function (require) {
             }
         }
 
-        storage.$optionModelIndices = thisStorage.$optionModelIndices;
-
         var tmpRetValue = [];
         this.each(dimensions, function () {
             var idx = arguments[arguments.length - 1];
@@ -796,6 +714,11 @@ define(function (require) {
     };
 
     var temporaryModel = new Model(null);
+    // Since temporate model is shared by all data items. So we must make sure it can't be write.
+    // PENDING may cause any performance problem?
+    // if (Object.freeze) {
+    //     Object.freeze(temporaryModel);
+    // }
     /**
      * Get model of one data item.
      * It will create a temporary model if value on idx is not an option.
@@ -805,24 +728,20 @@ define(function (require) {
      */
     // FIXME Model proxy ?
     listProto.getItemModel = function (idx, createNew) {
-        var storage = this._storage;
-        var optionModelIndices = storage.$optionModelIndices;
-        var modelIndex = optionModelIndices && optionModelIndices[this.indices[idx]];
-
-        var model = this._optionModels[modelIndex];
-
+        var model;
         var hostModel = this.hostModel;
-        if (!model) {
-            // Use a temporary model proxy if value on idx is not an option.
-            // FIXME Create a new one may cause memory leak
-            if (createNew) {
-                model = new Model(null, hostModel);
-            }
-            else {
-                model = temporaryModel;
-                model.parentModel = hostModel;
-                model.ecModel = hostModel.ecModel;
-            }
+        idx = this.indices[idx];
+        // Use a temporary model proxy
+        // FIXME Create a new one may cause memory leak
+        if (createNew) {
+            model = new Model(null, hostModel);
+        }
+        else {
+            model = temporaryModel;
+            // FIXME If return null when idx not exists
+            model.option = this._rawData[idx];
+            model.parentModel = hostModel;
+            model.ecModel = hostModel.ecModel;
         }
         return model;
     };

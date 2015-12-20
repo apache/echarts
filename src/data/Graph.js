@@ -81,11 +81,6 @@ define(function(require) {
     graphProto.addNode = function (id, dataIndex) {
         var nodesMap = this._nodesMap;
 
-        // Assign dataIndex as id if not exists
-        if (id == null) {
-            id = dataIndex;
-        }
-
         if (nodesMap[id]) {
             return;
         }

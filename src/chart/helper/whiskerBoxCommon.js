@@ -2,11 +2,13 @@ define(function(require) {
 
     'use strict';
 
-    var zrUtil = require('zrender/core/util');
     var List = require('../../data/List');
     var completeDimensions = require('../../data/helper/completeDimensions');
     var WhiskerBoxDraw = require('../helper/WhiskerBoxDraw');
-    var ChartView = require('../../view/Chart');
+
+    function getItemValue(item) {
+        return item.value == null ? item : item.value;
+    }
 
     var seriesModelMixin = {
 
@@ -56,7 +58,10 @@ define(function(require) {
             completeDimensions(dimensions, data);
 
             var list = new List(dimensions, this);
-            list.initData(data, categories ? categories.slice() : null, null, addOrdinal);
+            list.initData(data, categories ? categories.slice() : null, function (dataItem, dimName, idx, dimIdx) {
+                var value = getItemValue(dataItem);
+                return addOrdinal ? (!dimIdx ? idx : value[dimIdx - 1]) : value[dimIdx];
+            });
 
             return list;
         },

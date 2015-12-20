@@ -23,7 +23,7 @@ define(function (require) {
             if (!ecModel.isSeriesFiltered(seriesModel)) {
                 if (typeof symbolSize === 'function') {
                     data.each(function (idx) {
-                        var rawValue = data.getRawValue(idx);
+                        var rawValue = seriesModel.getRawValue(idx);
                         // FIXME
                         var params = seriesModel.getDataParams(idx);
                         data.setItemVisual(idx, 'symbolSize', symbolSize(rawValue, params));

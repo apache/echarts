@@ -99,7 +99,7 @@ define(function (require) {
         var isLabelInside = position === 'inside' || position === 'inner';
         return {
             fill: textStyleModel.getTextColor()
-                || isLabelInside ? '#fff' : data.getItemVisual(idx, 'color'),
+                || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
             textFont: textStyleModel.getFont(),
             text: data.hostModel.getFormattedLabel(idx, state)
                 || data.getName(idx)

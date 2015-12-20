@@ -386,8 +386,11 @@ define(function (require) {
             name = 'default';
         }
         var el = defaultLoadingEffect(this._api, cfg);
+        var zr = this._zr;
         this._loadingFX = el;
-        this._zr.add(el);
+
+        zr.painter.clear();
+        zr.add(el);
     };
 
     /**
