@@ -59,7 +59,16 @@ define(function(require) {
      */
     graphic.makePath = function (pathData, opts, rect) {
         var path = pathTool.createFromString(pathData, opts);
+        var boundingRect = path.getBoundingRect();
         if (rect) {
+            var aspect = boundingRect.width / boundingRect.height;
+            // Keep width / height ratio
+            if (isNaN(rect.width)) {
+                rect.width = rect.height * aspect;
+            }
+            if (isNaN(rect.height)) {
+                rect.height = rect.width / aspect;
+            }
             this.resizePath(path, rect);
         }
         return path;
