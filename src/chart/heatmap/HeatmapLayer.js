@@ -60,16 +60,22 @@ define(function (require) {
             // colorize the canvas using alpha value and set with gradient
             var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             var pixels = imageData.data;
-            var len = pixels.length / 4;
-            while(len--) {
-                var id = len * 4 + 3;
-                var alpha = pixels[id] / 256;
-                var offset = Math.floor(alpha * (GRADIENT_LEVELS - 1));
-                var gradient = isInRange(alpha) ? gradientInRange : gradientOutOfRange;
-                pixels[id - 3] = gradient[offset * 4];
-                pixels[id - 2] = gradient[offset * 4 + 1];
-                pixels[id - 1] = gradient[offset * 4 + 2];
-                pixels[id] *= this.opacity * gradient[offset * 4 + 3];
+            var offset = 0;
+            var pixelLen = pixels.length;
+            while(offset < pixelLen) {
+                var alpha = pixels[offset + 3] / 256;
+                var gradientOffset = Math.floor(alpha * (GRADIENT_LEVELS - 1)) * 4;
+                // Simple optimize to ignore the empty data
+                if (alpha > 0) {
+                    var gradient = isInRange(alpha) ? gradientInRange : gradientOutOfRange;
+                    pixels[offset++] = gradient[gradientOffset];
+                    pixels[offset++] = gradient[gradientOffset + 1];
+                    pixels[offset++] = gradient[gradientOffset + 2];
+                    pixels[offset++] *= this.opacity * gradient[gradientOffset + 3];
+                }
+                else {
+                    offset += 4;
+                }
             }
             ctx.putImageData(imageData, 0, 0);
 
