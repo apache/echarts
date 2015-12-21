@@ -1,26 +1,92 @@
 define(function (require) {
 
     var graphic = require('../../util/graphic');
+    var HeatmapLayer = require('./HeatmapLayer');
+    var zrUtil = require('zrender/core/util');
+
+    function getIsInPiecewiseRange(dataExtent, pieceList, selected) {
+        var dataSpan = dataExtent[1] - dataExtent[0];
+        pieceList = zrUtil.map(pieceList, function (piece) {
+            return {
+                interval: [
+                    (piece.interval[0] - dataExtent[0]) / dataSpan,
+                    (piece.interval[1] - dataExtent[0]) / dataSpan
+                ]
+            };
+        });
+        var len = pieceList.length;
+        var lastIndex = 0;
+        return function (val) {
+            // Try to find in the location of the last found
+            for (var i = lastIndex; i < len; i++) {
+                var interval = pieceList[i].interval;
+                if (interval[0] <= val && val <= interval[1]) {
+                    lastIndex = i;
+                    break;
+                }
+            }
+            if (i === len) { // Not found, back interation
+                for (var i = lastIndex - 1; i >= 0; i--) {
+                    var interval = pieceList[i].interval;
+                    if (interval[0] <= val && val <= interval[1]) {
+                        lastIndex = i;
+                        break;
+                    }
+                }
+            }
+            return i >= 0 && i < len && selected[i];
+        };
+    }
+
+    function getIsInContinuousRange(dataExtent, range) {
+        var dataSpan = dataExtent[1] - dataExtent[0];
+        range = [
+            (range[0] - dataExtent[0]) / dataSpan,
+            (range[1] - dataExtent[0]) / dataSpan
+        ];
+        return function (val) {
+            return val >= range[0] && val <= range[1];
+        };
+    }
 
     return require('../../echarts').extendChartView({
 
         type: 'heatmap',
 
+        init: function () {
+            this._hmLayer = new HeatmapLayer();
+        },
+
         render: function (seriesModel, ecModel, api) {
+            var dataRangeOfThisSeries;
+            ecModel.eachComponent('dataRange', function (dataRange) {
+                dataRange.eachTargetSeries(function (targetSeries) {
+                    if (targetSeries === seriesModel) {
+                        dataRangeOfThisSeries = dataRange;
+                    }
+                });
+            });
+
+            if (!dataRangeOfThisSeries) {
+                throw new Error('Heatmap must use with dataRange');
+            }
+
+            this.group.removeAll();
             var coordSys = seriesModel.coordinateSystem;
             if (coordSys.type === 'cartesian2d') {
-                this._renderOnCartesian(coordSys, seriesModel, ecModel, api);
+                this._renderOnCartesian(coordSys, seriesModel, api);
             }
             else if (coordSys.type === 'geo') {
-                this._renderOnGeo(coordSys, seriesModel, ecModel, api);
+                this._renderOnGeo(
+                    coordSys, seriesModel, dataRangeOfThisSeries, api
+                );
             }
         },
 
-        _renderOnCartesian: function (cartesian, seriesModel, ecModel, api) {
+        _renderOnCartesian: function (cartesian, seriesModel, api) {
             var xAxis = cartesian.getAxis('x');
             var yAxis = cartesian.getAxis('y');
             var group = this.group;
-            group.removeAll();
 
             if (!(xAxis.type === 'category' && yAxis.type === 'category')) {
                 throw new Error('Heatmap on cartesian must have two category axes');
@@ -35,6 +101,10 @@ define(function (require) {
             data.each(['x', 'y', 'z'], function (x, y, z, idx) {
                 var itemModel = data.getItemModel(idx);
                 var point = cartesian.dataToPoint([x, y]);
+                // Ignore empty data
+                if (isNaN(z)) {
+                    return;
+                }
                 var rect = new graphic.Rect({
                     shape: {
                         x: point[0] - width / 2,
@@ -74,8 +144,64 @@ define(function (require) {
             });
         },
 
-        _renderOnGeo: function (geo, seriesModel, ecModel, api) {
+        _renderOnGeo: function (geo, seriesModel, dataRangeModel, api) {
+            var inRangeVisuals = dataRangeModel.targetVisuals.inRange;
+            var outOfRangeVisuals = dataRangeModel.targetVisuals.outOfRange;
+            // if (!visualMapping) {
+            //     throw new Error('Data range must have color visuals');
+            // }
 
+            var data = seriesModel.getData();
+            var hmLayer = this._hmLayer;
+            hmLayer.blurSize = seriesModel.get('blurSize');
+
+            var rect = geo.getViewRect().clone();
+            var roamTransform = geo.getRoamTransform();
+            roamTransform && rect.applyTransform(roamTransform);
+
+            // Clamp on viewport
+            var x = Math.max(rect.x, 0);
+            var y = Math.max(rect.y, 0);
+            var x2 = Math.min(rect.width + rect.x, api.getWidth());
+            var y2 = Math.min(rect.height + rect.y, api.getHeight());
+            var width = x2 - x;
+            var height = y2 - y;
+
+            var points = data.mapArray(['lng', 'lat', 'value'], function (lng, lat, value) {
+                var pt = geo.dataToPoint([lng, lat]);
+                pt[0] -= x;
+                pt[1] -= y;
+                pt.push(value);
+                return pt;
+            });
+
+            var dataExtent = dataRangeModel.getExtent();
+            var isInRange = dataRangeModel.type === 'dataRange.continuous'
+                ? getIsInContinuousRange(dataExtent, dataRangeModel.option.range)
+                : getIsInPiecewiseRange(
+                    dataExtent, dataRangeModel.getPieceList(), dataRangeModel.option.selected
+                );
+
+            hmLayer.update(
+                points, width, height,
+                inRangeVisuals.color.getNormalizer(),
+                {
+                    inRange: inRangeVisuals.color.getColorMapper(),
+                    outOfRange: outOfRangeVisuals.color.getColorMapper()
+                },
+                isInRange
+            );
+            var img = new graphic.Image({
+                style: {
+                    width: width,
+                    height: height,
+                    x: x,
+                    y: y,
+                    image: hmLayer.canvas
+                },
+                silent: true
+            });
+            this.group.add(img);
         }
     });
 });

@@ -119,6 +119,13 @@ define(function (require) {
         },
 
         /**
+         * @return {Array.<number}
+         */
+        getRoamTransform: function () {
+            return this._roamTransform.transform;
+        },
+
+        /**
          * Update transform from roam and mapLocation
          * @private
          */

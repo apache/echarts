@@ -16,25 +16,10 @@ define(function (require) {
     function processSingleDataRange(dataRangeModel, ecModel) {
         var visualMappings = dataRangeModel.targetVisuals;
         var visualTypesMap = {};
-        var colorFuncsMap = {};
         zrUtil.each(['inRange', 'outOfRange'], function (state) {
             var visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
-            var colorFunc = zrUtil.filter(zrUtil.map(visualTypes, function (visualType) {
-                return visualMappings[state][visualType].getColorMapper;
-            }), function (func) {
-                return !!func;
-            })[0];
             visualTypesMap[state] = visualTypes;
-            colorFuncsMap[state] = colorFunc;
         });
-
-        // Cache color func
-        function colorFunc(value, out) {
-            var valueState = dataRangeModel.getValueState(value);
-            var colorFunc = colorFuncsMap[valueState];
-            // PENDING
-            return colorFunc && colorFunc(value, out);
-        }
 
         dataRangeModel.eachTargetSeries(function (seriesModel) {
             var data = seriesModel.getData();
@@ -48,8 +33,6 @@ define(function (require) {
             function setVisual(key, value) {
                 data.setItemVisual(dataIndex, key, value);
             }
-
-            data.setVisual('colorFunc', colorFunc);
 
             data.each([dimension], function (value, index) {
                 // For performance consideration, do not use curry.

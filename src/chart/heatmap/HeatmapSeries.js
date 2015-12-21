@@ -28,7 +28,7 @@ define(function (require) {
 
             // No blur
             // Available when heatmap is on geo
-            blurSize: 0
+            blurSize: 20
         }
     });
 });

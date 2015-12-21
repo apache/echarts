@@ -87,7 +87,11 @@ define(function (require) {
 
         isValueActive: null,
 
-        mapValueToVisual: null
+        mapValueToVisual: null,
+
+        getNormalizer: function () {
+            return zrUtil.bind(this._normalizeData, this);
+        }
     };
 
     var visualHandlers = VisualMapping.visualHandlers = {
@@ -103,20 +107,21 @@ define(function (require) {
             getColorMapper: function () {
                 var visual = isCategory(this)
                     ? this.option.visual
-                    : zrUtil.map(this.option.visual, zrUtil.parse);
-                return isCategory(this)
-                    ? function (value) {
-                        return getVisualForCategory(this, visual, this._normalizeData(value));
+                    : zrUtil.map(this.option.visual, zrColor.parse);
+                return zrUtil.bind(
+                    isCategory(this)
+                    ? function (value, isNormalized) {
+                        !isNormalized && (value = this._normalizeData(value));
+                        return getVisualForCategory(this, visual, value);
                     }
-                    : function (value, out) {
+                    : function (value, isNormalized, out) {
                         // If output rgb array
                         // which will be much faster and useful in pixel manipulation
                         var returnRGBArray = !!out;
-                        out = zrColor.fastMapToColor(
-                            this._normalizeData(value), visual, out
-                        );
+                        !isNormalized && (value = this._normalizeData(value));
+                        out = zrColor.fastMapToColor(value, visual, out);
                         return returnRGBArray ? out : zrUtil.stringify(out, 'rgba');
-                    };
+                    }, this);
             },
 
             // value:
