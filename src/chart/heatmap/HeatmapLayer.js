@@ -9,6 +9,7 @@ define(function (require) {
 
     var BRUSH_SIZE = 20;
     var GRADIENT_LEVELS = 256;
+    var zrUtil = require('zrender/core/util');
 
     /**
      * Heatmap Chart
@@ -16,7 +17,7 @@ define(function (require) {
      * @class
      */
     function Heatmap() {
-        var canvas = document.createElement('canvas');
+        var canvas = zrUtil.createCanvas();
         this.canvas = canvas;
 
         this.blurSize = 30;
@@ -88,7 +89,7 @@ define(function (require) {
          * @returns {Object} circle brush canvas
          */
         _getBrush: function() {
-            var brushCanvas = this._brushCanvas || (this._brushCanvas = document.createElement('canvas'));
+            var brushCanvas = this._brushCanvas || (this._brushCanvas = zrUtil.createCanvas());
             // set brush size
             var r = BRUSH_SIZE + this.blurSize;
             var d = r * 2;
