@@ -26,15 +26,6 @@ define(function (require) {
             }
         }
 
-        // If edge has sourceValue and targetValue
-        // graph.eachEdge(function (edge, idx) {
-        //     var edgeRawData = edges[i];
-        //     if (edgeRawData.sourceValue != null && edgeRawData.targetValue != null) {
-
-        //     }
-        // });
-
-
         // FIXME
         var dimensionNames = completeDimensions(['value'], nodes);
 

@@ -1,7 +1,7 @@
 define(function(require) {
 
     var formatUtil = require('../util/format');
-    var addCommas = formatUtil.addCommas;
+    // var addCommas = formatUtil.addCommas;
     var Model = require('../model/Model');
 
     var zrUtil = require('zrender/core/util');
