@@ -158,13 +158,12 @@ define(function (require) {
     whiskerBoxDrawProto.updateData = function (data) {
         var group = this.group;
         var oldData = this._data;
-        var isInit = !oldData;
         var styleUpdater = this.styleUpdater;
 
         data.diff(oldData)
             .add(function (newIdx) {
                 if (data.hasValue(newIdx)) {
-                    var symbolEl = new WhiskerBox(data, newIdx, styleUpdater, isInit);
+                    var symbolEl = new WhiskerBox(data, newIdx, styleUpdater, true);
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
                 }
