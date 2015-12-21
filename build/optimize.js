@@ -18,8 +18,8 @@ endCode = etpl.compile(endCode)({
 });
 
 // FIXME
-// var sourceCode = [startCode, nutCode, require('./optimizeString')(mainCode), endCode].join('\n');
-var sourceCode = [startCode, nutCode, mainCode, endCode].join('\n');
+var sourceCode = [startCode, nutCode, require('./optimizeString')(mainCode), endCode].join('\n');
+// var sourceCode = [startCode, nutCode, mainCode, endCode].join('\n');
 
 var ast = UglifyJS.parse(sourceCode);
 /* jshint camelcase: false */

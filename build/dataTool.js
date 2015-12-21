@@ -5,20 +5,20 @@
     name: 'echarts',
     paths: {
         extension: '../extension',
-        echarts: '../extension/statistics/echarts'
+        echarts: '../extension/dataTool/echarts'
     },
     wrap: {
         startFile: [
-            'wrap/startExtension.js',
+            'wrap/startDataTool.js',
             'wrap/nut.js'
         ],
         endFile: [
-            'wrap/endExtension.js'
+            'wrap/endDataTool.js'
         ]
     },
     include:[
-        'extension/statistics/quantile',
-        'extension/statistics/prepareBoxplotData'
+        'extension/dataTool/prepareBoxplotData',
+        'extension/dataTool/gexf'
     ],
-    out: '../dist/extension/statistics.js'
+    out: '../dist/extension/dataTool.js'
 })

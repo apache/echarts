@@ -34,11 +34,11 @@ define(function (require) {
      * @param {Array.<number>} ascArr
      */
     return function(ascArr, p) {
-      var H = (ascArr.length - 1) * p + 1,
-          h = Math.floor(H),
-          v = +ascArr[h - 1],
-          e = H - h;
-      return e ? v + e * (ascArr[h] - v) : v;
+        var H = (ascArr.length - 1) * p + 1,
+            h = Math.floor(H),
+            v = +ascArr[h - 1],
+            e = H - h;
+        return e ? v + e * (ascArr[h] - v) : v;
     };
 
 });

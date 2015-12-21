@@ -36,6 +36,9 @@
         'echarts/chart/sankey',
         'echarts/chart/boxplot',
         'echarts/chart/candlestick',
+        'echarts/chart/effectScatter',
+        'echarts/chart/geoLine',
+        'echarts/chart/heatmap',
 
         'echarts/component/geo',
         'echarts/component/parallel',

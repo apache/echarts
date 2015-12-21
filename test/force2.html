@@ -20,7 +20,7 @@
             require([
                 'echarts',
 
-                'extension/parser/gexf',
+                'extension/dataTool/gexf',
 
                 'echarts/chart/graph',
 
@@ -82,21 +82,6 @@
                             }
                         ]
                     });
-
-                    var config = {
-                        layout: 'none'
-                    };
-
-                    var gui = new dat.GUI();
-                    gui.add(config, 'layout', ['none', 'circular'])
-                        .onChange(function (value) {
-                            chart.setOption({
-                                series: [{
-                                    name: 'Les Miserables',
-                                    layout: value
-                                }]
-                            });
-                        });
                 });
             });
         </script>

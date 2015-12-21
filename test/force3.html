@@ -20,7 +20,7 @@
             require([
                 'echarts',
 
-                'extension/parser/gexf',
+                'extension/dataTool/gexf',
 
                 'echarts/chart/graph',
 
@@ -67,6 +67,7 @@
                     }
                     chart.setOption({
                         series: [{
+                            roam: true,
                             data: data,
                             edges: edges
                         }]

@@ -1,21 +1,9 @@
 // GEXF File Parser
 // http://gexf.net/1.2draft/gexf-12draft-primer.pdf
-(function (root, factory) {
-    if (typeof define === 'function' && define.amd) {
-        // AMD. Register as an anonymous module.
-        define(['exports', 'echarts'], factory);
-    } else if (typeof exports === 'object' && typeof exports.nodeName !== 'string') {
-        // CommonJS
-        factory(exports, require('echarts'));
-    } else {
-        // Browser globals
-        factory({}, root.echarts);
-    }
-}(this, function(exports, echarts) {
+define(function (require) {
 
     'use strict';
-
-    var zrUtil = echarts.util;
+    var zrUtil = require('echarts').util;
 
     function parse(xml) {
         var doc;
@@ -215,9 +203,7 @@
         return children;
     }
 
-    echarts.parser = echarts.parser || {};
-    echarts.parser.gexf = {
+    return {
         parse: parse
     };
-    exports.parse = parse;
-}));
+});

@@ -29,7 +29,7 @@
             require([
                 'echarts',
                 'data/Michelson-Morley.json',
-                'extension/statistics/prepareBoxplotData',
+                'extension/dataTool/prepareBoxplotData',
                 'echarts/chart/boxplot',
                 'echarts/chart/scatter',
                 'echarts/component/title',
@@ -123,37 +123,7 @@
                                         'lower: ' + param.data[4]
                                     ].join('<br/>')
                                 }
-                            }//,
-                            // markLine: {
-                            //     animation: false,
-                            //     label: {
-                            //         normal: {
-                            //             formatter: 'average',
-                            //             textStyle: {
-                            //                 align: 'right'
-                            //             }
-                            //         }
-                            //     },
-                            //     lineStyle: {
-                            //         normal: {
-                            //             type: 'solid'
-                            //         }
-                            //     },
-                            //     data: [
-                            //         [
-                            //             {
-                            //                 xAxis: 0,
-                            //                 yAxis: 1000,
-                            //                 symbol: 'none'
-                            //             },
-                            //             {
-                            //                 xAxis: 4,
-                            //                 yAxis: 1000,
-                            //                 symbol: 'none'
-                            //             }
-                            //         ]
-                            //     ]
-                            // }
+                            }
                         },
                         {
                             name: 'outlier',
