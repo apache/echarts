@@ -136,7 +136,7 @@ define(function (require) {
             labelDirection: -1,
             tickDirection: -1,
             nameDirection: 1,
-            lableRotation: radiusAxisModel.getModel('axisLabel').get('rotate'),
+            labelRotation: radiusAxisModel.getModel('axisLabel').get('rotate'),
             // Over splitLine and splitArea
             z2: 1
         };

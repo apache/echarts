@@ -259,8 +259,8 @@ define(function (require) {
         }
 
         // Special label rotation
-        var lableRotation = axisModel.getModel('axisLabel').get('rotate');
-        layout.lableRotation = axisPosition === 'top' ? -lableRotation : lableRotation;
+        var labelRotation = axisModel.getModel('axisLabel').get('rotate');
+        layout.labelRotation = axisPosition === 'top' ? -labelRotation : labelRotation;
 
         // label interval when auto mode.
         layout.labelInterval = axis.getLabelInterval();

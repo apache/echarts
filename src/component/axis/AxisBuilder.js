@@ -40,8 +40,8 @@ define(function (require) {
      * @param {number} [opt.labelDirection=1] 1 or -1
      * @param {number} [opt.labelOffset=0] Usefull when onZero.
      * @param {string} [opt.axisName] default get from axisModel.
-     * @param {number} [opt.lableRotation] by degree, default get from axisModel.
-     * @param {number} [opt.lableInterval] Default label interval when label
+     * @param {number} [opt.labelRotation] by degree, default get from axisModel.
+     * @param {number} [opt.labelInterval] Default label interval when label
      *                                     interval from model is null or 'auto'.
      * @param {number} [opt.strokeContainThreshold] Default label interval when label
      * @param {number} [opt.silent=true]
