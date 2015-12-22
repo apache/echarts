@@ -33,16 +33,6 @@
 
                     $.getJSON('./data/energy.json')
                     .done(function(data) {
-                        var nodes = [];
-                        var edges = [];
-                        $.each(data.nodes, function (i, node) {
-                            nodes.push(node);
-
-                        });
-                        $.each(data.links, function (i, edge) {
-                            edges.push(edge);
-                        });
-                        
                         chart.setOption({
                             tooltip: {
                                 trigger: 'item',
@@ -53,9 +43,9 @@
                                 {
                                     type: 'sankey',
                                     layout:'none',
-                                    data: nodes,
-                                    links: edges,
-                                    linestyle: {
+                                    data: data.nodes,
+                                    links: data.links,
+                                    lineStyle: {
                                         normal: {
                                             curveness: 0.5
                                         }
@@ -63,7 +53,7 @@
                                 }
                             ]
                         });
-                    });       
+                    });
                 });
         </script>
     </body>
