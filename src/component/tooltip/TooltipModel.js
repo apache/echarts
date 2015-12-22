@@ -5,10 +5,8 @@ define(function (require) {
         type: 'tooltip',
 
         defaultOption: {
-            // 一级层叠，频繁变化的tooltip指示器在pc上独立一层
             zlevel: 0,
 
-            // 二级层叠
             z: 8,
 
             show: true,
@@ -23,7 +21,7 @@ define(function (require) {
             triggerOn: 'mousemove',
 
             // 是否永远显示 content
-            // alwaysShowContent: false,
+            alwaysShowContent: false,
 
             // 位置 {Array} | {Function}
             // position: null

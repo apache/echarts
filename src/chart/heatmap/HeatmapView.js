@@ -153,7 +153,7 @@ define(function (require) {
 
             var rect = geo.getViewRect().clone();
             var roamTransform = geo.getRoamTransform();
-            roamTransform && rect.applyTransform(roamTransform);
+            rect.applyTransform(roamTransform);
 
             // Clamp on viewport
             var x = Math.max(rect.x, 0);
