@@ -143,6 +143,8 @@ define(function (require) {
                 accumulatedLabelInterval = 0;
             }
         }
+
+        return autoLabelInterval;
     };
 
     /**
