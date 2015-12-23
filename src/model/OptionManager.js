@@ -70,12 +70,6 @@ define(function (require) {
 
         /**
          * @private
-         * @type {Object}
-         */
-        this._baseOption;
-
-        /**
-         * @private
          * @type {Array.<number>}
          */
         this._timelineOptions = [];
@@ -121,30 +115,6 @@ define(function (require) {
             // and then merge media query option?
 
             return option;
-        },
-
-        /**
-         * @public
-         * @return {Object} {option: {}, recreate: boolean}
-         */
-        getReBaseOption: function (ecModel) {
-            // this._baseOption exists only when timeline.notMerge is true.
-            if (!this._baseOption) {
-                return;
-            }
-
-            var reBaseOption = zrUtil.clone(this._baseOption, true);
-
-            // Some changed attr in timelineModel should not be reset,
-            // like autoPlay and currentIndex.
-            if (reBaseOption.timeline) {
-                var timelineModel = ecModel.getComponent('timeline');
-                if (timelineModel) {
-                    timelineModel.infectOption(reBaseOption.timeline);
-                }
-            }
-
-            return reBaseOption;
         }
     };
 
@@ -186,15 +156,14 @@ define(function (require) {
 
         this._timelineOptions = timelineOptions;
 
-        // 'baseOption' will be reused only when timeline in 'notMerge' mode.
-        // Otherwise we dont need to clone and save 'baseOption', for performance
-        // consideration.
-        // Notice: This case will not be supported:
-        //  Firstly: chart.setOption({timeline: {notMerge: false}, ...}, false);
-        //  Then: chart.setOption({timeline: {notMerge: true}, ...}, false);
-        if (timelineOpt && timelineOpt.notMerge) {
-            this._baseOption = zrUtil.clone(baseOption, true);
-        }
+        // timeline.notMerge is not supported in ec3. Firstly there is rearly
+        // case that notMerge is needed. Secondly supporting 'notMerge' requires
+        // rawOption cloned and backuped when timeline changed, which does no
+        // good to performance. What's more, that both timeline and setOption
+        // method supply 'notMerge' brings complex and some problems.
+        // Consider this case:
+        // (step1) chart.setOption({timeline: {notMerge: false}, ...}, false);
+        // (step2) chart.setOption({timeline: {notMerge: true}, ...}, false);
 
         return baseOption;
     }

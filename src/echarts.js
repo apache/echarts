@@ -465,11 +465,6 @@ define(function (require) {
             var ecModel = this._model;
             var optionManager = this._optionManager;
 
-            var reBaseOption = optionManager.getReBaseOption(ecModel);
-            if (reBaseOption) {
-                ecModelRecreate.call(this, reBaseOption);
-            }
-
             var partialOption = optionManager.getPartialOption(ecModel);
             if (partialOption) {
                 ecModelMerge.call(this, partialOption);

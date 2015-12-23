@@ -69,7 +69,8 @@ define(function (require) {
             var obj = this.option;
             var parentModel = this.parentModel;
             for (var i = 0; i < path.length; i++) {
-                obj = obj && obj[path[i]];
+                // obj could be number/string/... (like 0)
+                obj = (obj && typeof obj === 'object') ? obj[path[i]] : null;
                 if (obj == null) {
                     break;
                 }

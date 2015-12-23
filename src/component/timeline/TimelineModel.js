@@ -23,7 +23,6 @@ define(function(require) {
 
             axisType: 'time',  // 模式是时间类型，支持 value, category
 
-            notMerge: false,
             realtime: true,
 
             x: '20%',
@@ -154,9 +153,9 @@ define(function(require) {
             var names = [];
 
             if (axisType === 'category') {
-                dataArr = [];
+                var idxArr = [];
                 zrUtil.each(dataArr, function (item, index) {
-                    dataArr.push(index);
+                    idxArr.push(index);
 
                     var name = zrUtil.isObject(item) ? item.value : item;
                     if (!zrUtil.isString(name) && (name == null || isNaN(name))) {
@@ -165,6 +164,7 @@ define(function(require) {
 
                     names.push(name + '');
                 });
+                dataArr = idxArr;
             }
 
             var data = this._data = new List(['value'], this);
