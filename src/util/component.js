@@ -84,11 +84,15 @@ define(function(require) {
             while (stack.length) {
                 var currComponentType = stack.pop();
                 var currVertex = graph[currComponentType];
-                if (targetNameSet[currComponentType]) {
+                var isInTargetNameSet = !!targetNameSet[currComponentType];
+                if (isInTargetNameSet) {
                     callback.call(context, currComponentType, currVertex.originalDeps.slice());
                     delete targetNameSet[currComponentType];
                 }
-                zrUtil.each(currVertex.successor, removeEdge);
+                zrUtil.each(
+                    currVertex.successor,
+                    isInTargetNameSet ? removeEdgeAndAdd : removeEdge
+                );
             }
 
             zrUtil.each(targetNameSet, function () {
@@ -100,6 +104,17 @@ define(function(require) {
                 if (graph[succComponentType].entryCount === 0) {
                     stack.push(succComponentType);
                 }
+            }
+
+            // Consider this case: legend depends series, we call
+            // chart.setOption({series: [...]}), where only series is in option.
+            // If we do not have 'removeEdgeAndAdd', legendModel.mergeOption will
+            // not be called, but only sereis.mergeOption is called. Thus legend
+            // have no chance to update its local record about series (like which
+            // name of series is available in legend).
+            function removeEdgeAndAdd(succComponentType) {
+                targetNameSet[succComponentType] = true;
+                removeEdge(succComponentType);
             }
         };
 

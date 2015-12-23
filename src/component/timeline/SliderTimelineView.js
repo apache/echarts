@@ -635,6 +635,7 @@ define(function (require) {
             pointer.attr({position: [toCoord, 0]});
         }
         else {
+            pointer.stopAnimation(true);
             pointer.animateTo(
                 {position: [toCoord, 0]},
                 pointerModel.get('animationDuration', true),

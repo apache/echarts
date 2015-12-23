@@ -97,6 +97,15 @@ define(function (require) {
             function visitComponent(mainType, dependencies) {
                 var newCptOptionList = newOption[mainType];
 
+                if (!newCptOptionList) {
+                    // Possible when using removeEdgeAndAdd in topologicalTravel
+                    // and ComponentModel.getAllClassMainTypes
+                    each(componentsMap[mainType], function (cpt) {
+                        cpt.mergeOption({}, this);
+                    });
+                    return;
+                }
+
                 // Normalize
                 if (!(zrUtil.isArray(newCptOptionList))) {
                     newCptOptionList = [newCptOptionList];

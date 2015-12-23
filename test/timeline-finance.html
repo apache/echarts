@@ -38,8 +38,15 @@
 var option = {
     timeline:{
         // y: 0,
-        axisType: 'time',
+        axisType: 'category',
         // realtime: false,
+        // loop: false,
+        autoPlay : false,
+        // currentIndex: 2,
+        playInterval : 1000,
+        // controlStyle: {
+        //     position: 'left'
+        // },
         data:[
             '2002-01-01','2003-01-01','2004-01-01','2005-01-01','2006-01-01',
             '2007-01-01','2008-01-01','2009-01-01','2010-01-01','2011-01-01'
@@ -48,14 +55,7 @@ var option = {
             formatter : function(s) {
                 return (new Date(s)).getFullYear();
             }
-        },
-        controlStyle: {
-            position: 'right'
-        },
-        loop: false,
-        autoPlay : false,
-        currentIndex: 2,
-        playInterval : 1000
+        }
     },
     base: {
         title: {
@@ -64,13 +64,13 @@ var option = {
         tooltip: {'trigger':'axis'},
         legend: {
             x: 'right',
-            data: ['GDP','金融','房地产','第一产业','第二产业','第三产业'],
+            data: ['GDP','金融','房地产','第一产业','第二产业','第三产业']
             // selected: {
             //     'GDP':true,
-            //     '金融':false,
+            //     '金融':true,
             //     '房地产':true,
-            //     '第一产业':false,
-            //     '第二产业':false,
+            //     '第一产业':true,
+            //     '第二产业':true,
             //     '第三产业':false
             // }
         },
@@ -124,11 +124,11 @@ var option = {
                     'data':[{'type':'average','name':'平均值'}]
                 }
             },
-            {type: 'bar'},
-            {type: 'bar'},
-            {type: 'bar'},
-            {type: 'bar'},
-            {type: 'bar'}
+            // {type: 'bar'},
+            // {type: 'bar'},
+            // {type: 'bar'},
+            // {type: 'bar'},
+            // {type: 'bar'}
         ]
     },
     options: [
