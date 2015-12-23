@@ -117,6 +117,8 @@ define(function (require) {
                     componentsMap, dependencies
                 );
 
+                option[mainType] = [];
+
                 each(newCptOptionList, function (newCptOption, index) {
                     if (!isObject(newCptOption)) {
                         return;
@@ -145,6 +147,9 @@ define(function (require) {
                         );
                         componentsMap[mainType][index] = componentModel;
                     }
+
+                    // Keep option
+                    option[mainType][index] = componentModel.option;
                 }, this);
 
                 // Backup series for filtering.
