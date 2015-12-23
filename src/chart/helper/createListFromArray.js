@@ -44,14 +44,21 @@ define(function(require) {
             ? function (itemOpt, dimName, dataIndex, dimIndex) {
                 // Use dataIndex as ordinal value in categoryAxis
                 return dimIndex === categoryDimIndex ?
-                    dataIndex : +getItemValue(itemOpt);
+                    dataIndex : convertValue(dimIndex, getItemValue(itemOpt));
             }
             : function (itemOpt, dimName, dataIndex, dimIndex) {
                 var val = getItemValue(itemOpt);
-                return val && +val[dimIndex];
+                return convertValue(dimIndex, val && val[dimIndex]);
             };
         list.initData(data, nameList, dimValueGetter);
 
+        function convertValue(dimIndex, val) {
+            var dim = dimensions[dimIndex];
+            if (dim && dim.type !== 'ordinal') {
+                val = +val;
+            }
+            return val;
+        }
         return list;
     }
 

@@ -12,10 +12,7 @@ define(function(require) {
         var axisModel = axis.model;
         var labelModel = axisModel.getModel('axisLabel');
         var labelInterval = labelModel.get('interval');
-        if (
-            !(axis.type === 'category'
-            && labelInterval === 'auto'
-            && !labelModel.get('rotate'))
+        if (!(axis.type === 'category' && labelInterval === 'auto')
         ) {
             return labelInterval === 'auto' ? 0 : labelInterval;
         }

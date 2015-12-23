@@ -53,10 +53,6 @@ define(function (require) {
 
         type: 'heatmap',
 
-        init: function () {
-            this._hmLayer = new HeatmapLayer();
-        },
-
         render: function (seriesModel, ecModel, api) {
             var dataRangeOfThisSeries;
             ecModel.eachComponent('dataRange', function (dataRange) {
@@ -152,12 +148,12 @@ define(function (require) {
             // }
 
             var data = seriesModel.getData();
-            var hmLayer = this._hmLayer;
+            var hmLayer = this._hmLayer || (this._hmLayer || new HeatmapLayer());
             hmLayer.blurSize = seriesModel.get('blurSize');
 
             var rect = geo.getViewRect().clone();
             var roamTransform = geo.getRoamTransform();
-            roamTransform && rect.applyTransform(roamTransform);
+            rect.applyTransform(roamTransform);
 
             // Clamp on viewport
             var x = Math.max(rect.x, 0);

@@ -8,6 +8,7 @@ define(function (require) {
 
     var numberUtil = require('../util/number');
     var zrUtil = require('zrender/core/util');
+    var textContain = require('zrender/contain/text');
     var axisHelper = {};
 
     axisHelper.niceScaleExtent = function (axis, model) {
@@ -58,23 +59,24 @@ define(function (require) {
     };
 
     /**
-     * @param {module:echarts/coord/cartesian/AxisModel} axisModel
+     * @param {module:echarts/model/Model} model
+     * @param {string} [axisType] Default retrieve from model.type
      * @return {module:echarts/scale/*}
      */
-    axisHelper.createScaleByModel = function(axisModel) {
-        var axisType = axisModel.get('type');
+    axisHelper.createScaleByModel = function(model, axisType) {
+        axisType = axisType || model.get('type');
         if (axisType) {
             switch (axisType) {
                 // Buildin scale
                 case 'category':
                     return new OrdinalScale(
-                        axisModel.getCategories(), [Infinity, -Infinity]
+                        model.getCategories(), [Infinity, -Infinity]
                     );
                 case 'value':
                     return new IntervalScale();
                 // Extended scale, like time and log
                 default:
-                    return (Scale.getClass(axisType) || IntervalScale).create(axisModel);
+                    return (Scale.getClass(axisType) || IntervalScale).create(model);
             }
         }
     };
@@ -103,6 +105,74 @@ define(function (require) {
      */
     axisHelper.ifAxisNeedsCrossZero = function (axis) {
         return !axis.model.get('scale');
+    };
+
+    /**
+     * @param {Array.<number>} tickCoords In axis self coordinate.
+     * @param {Array.<string>} labels
+     * @param {string} font
+     * @param {boolean} isAxisHorizontal
+     * @return {number}
+     */
+    axisHelper.getAxisLabelInterval = function (tickCoords, labels, font, isAxisHorizontal) {
+        // FIXME
+        // 不同角的axis和label，不只是horizontal和vertical.
+
+        var textSpaceTakenRect;
+        var autoLabelInterval = 0;
+        var accumulatedLabelInterval = 0;
+
+        for (var i = 0; i < tickCoords.length; i++) {
+            var tickCoord = tickCoords[i];
+            var rect = textContain.getBoundingRect(
+                labels[i], font, 'center', 'top'
+            );
+            rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
+            rect[isAxisHorizontal ? 'width' : 'height'] *= 1.5;
+            if (!textSpaceTakenRect) {
+                textSpaceTakenRect = rect.clone();
+            }
+            // There is no space for current label;
+            else if (textSpaceTakenRect.intersect(rect)) {
+                accumulatedLabelInterval++;
+                autoLabelInterval = Math.max(autoLabelInterval, accumulatedLabelInterval);
+            }
+            else {
+                textSpaceTakenRect.union(rect);
+                // Reset
+                accumulatedLabelInterval = 0;
+            }
+        }
+    };
+
+    /**
+     * @param {Object} axis
+     * @param {Function} labelFormatter
+     * @return {Array.<string>}
+     */
+    axisHelper.getFormattedLabels = function (axis, labelFormatter) {
+        var scale = axis.scale;
+        var labels = scale.getTicksLabels();
+        var ticks = scale.getTicks();
+        if (typeof labelFormatter === 'string') {
+            labelFormatter = (function (tpl) {
+                return function (val) {
+                    return tpl.replace('{value}', val);
+                };
+            })(labelFormatter);
+            return zrUtil.map(labels, labelFormatter);
+        }
+        else if (typeof labelFormatter === 'function') {
+            return zrUtil.map(ticks, function (tick, idx) {
+                return labelFormatter(
+                    axis.type === 'category' ? scale.getLabel(tick) : tick,
+                    idx
+                );
+            }, this);
+        }
+        else {
+            return labels;
+        }
     };
 
     return axisHelper;

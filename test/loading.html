@@ -24,7 +24,9 @@
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
-                chart.showLoading();
+                chart.showLoading({
+                    text: '暂无数据'
+                });
                 window.onresize = chart.resize;
             });
         </script>

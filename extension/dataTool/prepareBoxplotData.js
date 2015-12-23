@@ -12,9 +12,12 @@ define(function (require) {
      *            ...
      *        ]
      * @param {Object} [opt]
+     *
      * @param {(number|string)} [opt.boundIQR=1.5] Data less than min bound is outlier.
      *                          default 1.5, means Q1 - 1.5 * (Q3 - Q1).
      *                          If pass 'none', min bound will not be used.
+     * @param {(number|string)} [opt.layout='horizontal']
+     *                          Box plot layout, can be 'horizontal' or 'vertical'
      */
     return function (rawData, opt) {
         opt = opt || [];
@@ -44,7 +47,9 @@ define(function (require) {
             for (var j = 0; j < ascList.length; j++) {
                 var dataItem = ascList[j];
                 if (dataItem < low || dataItem > high) {
-                    outliers.push([i, dataItem]);
+                    var outlier = [i, dataItem];
+                    opt.layout === 'vertical' && outlier.reverse();
+                    outliers.push(outlier);
                 }
             }
         }

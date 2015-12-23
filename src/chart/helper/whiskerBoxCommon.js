@@ -60,7 +60,7 @@ define(function(require) {
             var list = new List(dimensions, this);
             list.initData(data, categories ? categories.slice() : null, function (dataItem, dimName, idx, dimIdx) {
                 var value = getItemValue(dataItem);
-                return addOrdinal ? (!dimIdx ? idx : value[dimIdx - 1]) : value[dimIdx];
+                return addOrdinal ? (dimName === 'base' ? idx : value[dimIdx - 1]) : value[dimIdx];
             });
 
             return list;
