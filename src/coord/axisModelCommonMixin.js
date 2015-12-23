@@ -1,6 +1,7 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var axisHelper = require('./axisHelper');
 
     function getName(obj) {
         if (zrUtil.isObject(obj) && obj.value != null) {
@@ -22,31 +23,11 @@ define(function (require) {
      * Format labels
      * @return {Array.<string>}
      */
-    function getFormattedLabels () {
-        var labelFormatter = this.get('axisLabel.formatter');
-        var axis = this.axis;
-        var scale = axis.scale;
-        var labels = scale.getTicksLabels();
-        var ticks = scale.getTicks();
-        if (typeof labelFormatter === 'string') {
-            labelFormatter = (function (tpl) {
-                return function (val) {
-                    return tpl.replace('{value}', val);
-                };
-            })(labelFormatter);
-            return zrUtil.map(labels, labelFormatter);
-        }
-        else if (typeof labelFormatter === 'function') {
-            return zrUtil.map(ticks, function (tick, idx) {
-                return labelFormatter(
-                    axis.type === 'category' ? scale.getLabel(tick) : tick,
-                    idx
-                );
-            }, this);
-        }
-        else {
-            return labels;
-        }
+    function getFormattedLabels() {
+        return axisHelper.getFormattedLabels(
+            this.axis,
+            this.get('axisLabel.formatter')
+        );
     }
 
     return {

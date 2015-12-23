@@ -3,9 +3,10 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var Model = require('../../model/Model');
+    var numberUtil = require('../../util/number');
+    var remRadian = numberUtil.remRadian;
+    var isRadianAroundZero = numberUtil.isRadianAroundZero;
 
-    var EPSILON = 1e-4;
-    var PI2 = Math.PI * 2;
     var PI = Math.PI;
 
     /**
@@ -40,8 +41,8 @@ define(function (require) {
      * @param {number} [opt.labelDirection=1] 1 or -1
      * @param {number} [opt.labelOffset=0] Usefull when onZero.
      * @param {string} [opt.axisName] default get from axisModel.
-     * @param {number} [opt.lableRotation] by degree, default get from axisModel.
-     * @param {number} [opt.lableInterval] Default label interval when label
+     * @param {number} [opt.labelRotation] by degree, default get from axisModel.
+     * @param {number} [opt.labelInterval] Default label interval when label
      *                                     interval from model is null or 'auto'.
      * @param {number} [opt.strokeContainThreshold] Default label interval when label
      * @param {number} [opt.silent=true]
@@ -311,11 +312,11 @@ define(function (require) {
         var textAlign;
         var textBaseline;
 
-        if (isAroundZero(rotationDiff)) { // Label is parallel with axis line.
+        if (isRadianAroundZero(rotationDiff)) { // Label is parallel with axis line.
             textBaseline = direction > 0 ? 'top' : 'bottom';
             textAlign = 'center';
         }
-        else if (isAroundZero(rotationDiff - PI)) { // Label is inverse parallel with axis line.
+        else if (isRadianAroundZero(rotationDiff - PI)) { // Label is inverse parallel with axis line.
             textBaseline = direction > 0 ? 'bottom' : 'top';
             textAlign = 'center';
         }
@@ -348,11 +349,11 @@ define(function (require) {
         var onLeft = (textPosition === 'start' && !inverse)
             || (textPosition !== 'start' && inverse);
 
-        if (isAroundZero(rotationDiff - PI / 2)) {
+        if (isRadianAroundZero(rotationDiff - PI / 2)) {
             textBaseline = onLeft ? 'bottom' : 'top';
             textAlign = 'center';
         }
-        else if (isAroundZero(rotationDiff - PI * 1.5)) {
+        else if (isRadianAroundZero(rotationDiff - PI * 1.5)) {
             textBaseline = onLeft ? 'top' : 'bottom';
             textAlign = 'center';
         }
@@ -393,21 +394,6 @@ define(function (require) {
         }
         return interval;
     };
-
-    /**
-     * @inner
-     */
-    function isAroundZero(val) {
-        return val > -EPSILON && val < EPSILON;
-    }
-
-    /**
-     * @inner
-     */
-    function remRadian(radian) {
-        // To 0 - 2 * PI, considering negative radian.
-        return (radian % PI2 + PI2) % PI2;
-    }
 
     return AxisBuilder;
 

@@ -8,8 +8,11 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var number = {};
 
+    var RADIAN_EPSILON = 1e-4;
+
     function _trim(str) {
-        return str.replace(/^\s+/, '').replace(/\s+$/, ''); }
+        return str.replace(/^\s+/, '').replace(/\s+$/, '');
+    }
 
     /**
      * Linear mapping a value from domain to range
@@ -113,6 +116,34 @@ define(function (require) {
 
     // Number.MAX_SAFE_INTEGER, ie do not support.
     number.MAX_SAFE_INTEGER = 9007199254740991;
+
+    /**
+     * To 0 - 2 * PI, considering negative radian.
+     * @param {number} radian
+     * @return {number}
+     */
+    number.remRadian = function (radian) {
+        var pi2 = Math.PI * 2;
+        return (radian % pi2 + pi2) % pi2;
+    };
+
+    /**
+     * @param {type} radian
+     * @return {boolean}
+     */
+    number.isRadianAroundZero = function (val) {
+        return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
+    };
+
+    /**
+     * @param {string|Date|number} value
+     * @return {number} timestamp
+     */
+    number.parseDate = function (value) {
+        return value instanceof Date
+            ? value
+            : new Date(typeof value === 'string' ? value.replace(/-/g, '/') : value);
+    };
 
     return number;
 });

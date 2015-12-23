@@ -6,6 +6,7 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var numberUtil = require('../util/number');
 
     var IntervalScale = require('./Interval');
 
@@ -26,16 +27,6 @@ define(function (require) {
             }
         }
         return lo;
-    };
-
-    /**
-     * @param {string|Date|number} value
-     * @inner
-     */
-    var parseDate = function (value) {
-        return value instanceof Date
-               ? value
-               : new Date(typeof value == 'string' ? value.replace(/-/g, '/') : value);
     };
 
     /**
@@ -63,7 +54,7 @@ define(function (require) {
             tpl = 'MM-dd\nyyyy';
         }
 
-        var date = parseDate(value);
+        var date = numberUtil.parseDate(value);
         var y = date.getFullYear();
         var M = date.getMonth() + 1;
         var d = date.getDate();
@@ -129,7 +120,7 @@ define(function (require) {
 
     zrUtil.each(['contain', 'normalize'], function (methodName) {
         TimeScale.prototype[methodName] = function (val) {
-            val = +parseDate(val);
+            val = +numberUtil.parseDate(val);
             return intervalScaleProto[methodName].call(this, val);
         };
     });
