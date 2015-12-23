@@ -14,6 +14,7 @@
 define(function (require) {
 
     var GlobalModel = require('./model/Global');
+    var OptionManager = require('./model/OptionManager');
     var ExtensionAPI = require('./ExtensionAPI');
     var CoordinateSystemManager = require('./CoordinateSystem');
 
@@ -82,6 +83,11 @@ define(function (require) {
          * @private
          */
         this._theme = zrUtil.clone(theme, true);
+
+        /**
+         * @type {module:echarts/model/OptionManager}
+         */
+        this._optionManager = new OptionManager();
 
         /**
          * @type {Array.<module:echarts/view/Chart>}
@@ -153,34 +159,46 @@ define(function (require) {
     /**
      * @param {Object} option
      * @param {boolean} notMerge
-     * @param {boolean} [notRefreshImmediately=false]
+     * @param {boolean} [notRefreshImmediately=false] Useful when setOption frequently.
      */
     echartsProto.setOption = function (option, notMerge, notRefreshImmediately) {
-        // PENDING
-        option = zrUtil.clone(option, true);
+        var baseOption = this._optionManager.updateRawOption(
+            option, optionPreprocessorFuncs
+        );
 
-        each(optionPreprocessorFuncs, function (preProcess) {
-            preProcess(option);
-        });
+        (!this._model || notMerge)
+            ? ecModelRecreate.call(this, baseOption)
+            : ecModelMerge.call(this, baseOption);
 
+        var partialOption = this._optionManager.getPartialOption(this._model);
+        if (partialOption) {
+            ecModelMerge.call(this, partialOption);
+        }
+
+        prepareAndUpdate.call(this);
+
+        !notRefreshImmediately && this._zr.refreshImmediately();
+    };
+
+    function ecModelRecreate(option) {
+        this._model = new GlobalModel(option, null, this._theme);
+    }
+
+    function ecModelMerge(option) {
         var ecModel = this._model;
-        if (!ecModel || notMerge) {
-            ecModel = new GlobalModel(option, null, this._theme);
-            this._model = ecModel;
-        }
-        else {
-            ecModel.restoreData();
-            ecModel.mergeOption(option);
-        }
+        ecModel.restoreData();
+        ecModel.mergeOption(option);
+    }
+
+    function prepareAndUpdate(payload) {
+        var ecModel = this._model;
 
         prepareView.call(this, 'component', ecModel);
 
         prepareView.call(this, 'chart', ecModel);
 
-        updateMethods.update.call(this);
-
-        !notRefreshImmediately && this._zr.refreshImmediately();
-    };
+        updateMethods.update.call(this, payload);
+    }
 
     /**
      * @DEPRECATED
@@ -188,6 +206,7 @@ define(function (require) {
     echartsProto.setTheme = function () {
         console.log('ECharts#setTheme() is DEPRECATED in ECharts 3.0');
     };
+
     /**
      * @return {module:echarts/model/Global}
      */
@@ -333,8 +352,27 @@ define(function (require) {
          */
         downplay: function (payload) {
             toggleHighlight.call(this, 'downplay', payload);
-        }
+        },
 
+        /**
+         * @param {Object} payload
+         */
+        reoption: function (payload) {
+            var ecModel = this._model;
+            var optionManager = this._optionManager;
+
+            var reBaseOption = optionManager.getReBaseOption(ecModel);
+            if (reBaseOption) {
+                ecModelRecreate.call(this, reBaseOption);
+            }
+
+            var partialOption = optionManager.getPartialOption(ecModel);
+            if (partialOption) {
+                ecModelMerge.call(this, partialOption);
+            }
+
+            prepareAndUpdate.call(this, payload);
+        }
     };
 
     /**
