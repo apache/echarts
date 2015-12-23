@@ -2,20 +2,17 @@ define(function (require) {
 
     'use strict';
 
-    var SeriesModel = require('../../model/Series');
     var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
 
     var createGraphFromNodeEdge = require('../helper/createGraphFromNodeEdge');
 
-    var seriesModelProto = SeriesModel.prototype;
-
-    return SeriesModel.extend({
+    return require('../../echarts').extendSeriesModel({
 
         type: 'series.graph',
 
         init: function (option) {
-            seriesModelProto.init.apply(this, arguments);
+            this.$superApply('init', arguments);
 
             // Provide data for legend select
             this.legendDataProvider = function () {
@@ -26,7 +23,7 @@ define(function (require) {
         },
 
         mergeOption: function (option) {
-            seriesModelProto.mergeOption.apply(this, arguments);
+            this.$superApply('mergeOption', arguments);
 
             this._updateCategoriesData();
         },
@@ -41,7 +38,7 @@ define(function (require) {
         },
 
         restoreData: function () {
-            seriesModelProto.restoreData.apply(this, arguments);
+            this.$superApply('restoreData', arguments);
             this.getGraph().restoreData();
         },
 
