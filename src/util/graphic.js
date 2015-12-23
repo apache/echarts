@@ -56,19 +56,37 @@ define(function(require) {
 
     /**
      * Create a path element from path data string
+     * @param {string} pathData
+     * @param {Object} opts
+     * @param {module:zrender/core/BoundingRect} rect
+     * @param {string} [layout=cover] 'center' or 'cover'
      */
-    graphic.makePath = function (pathData, opts, rect) {
+    graphic.makePath = function (pathData, opts, rect, layout) {
         var path = pathTool.createFromString(pathData, opts);
         var boundingRect = path.getBoundingRect();
         if (rect) {
             var aspect = boundingRect.width / boundingRect.height;
-            // Keep width / height ratio
-            if (isNaN(rect.width)) {
-                rect.width = rect.height * aspect;
+
+            if (layout === 'center') {
+                // Set rect to center, keep width / height ratio.
+                var width = rect.height * aspect;
+                var height;
+                if (width <= rect.width) {
+                    height = rect.height;
+                }
+                else {
+                    width = rect.width;
+                    height = width / aspect;
+                }
+                var cx = rect.x + rect.width / 2;
+                var cy = rect.y + rect.height / 2;
+
+                rect.x = cx - width / 2;
+                rect.y = cy - height / 2;
+                rect.width = width;
+                rect.height = height;
             }
-            if (isNaN(rect.height)) {
-                rect.height = rect.width / aspect;
-            }
+
             this.resizePath(path, rect);
         }
         return path;
