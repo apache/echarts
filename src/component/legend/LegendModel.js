@@ -26,6 +26,28 @@ define(function(require) {
             }, this);
             this._data = legendData;
 
+            this._updateAvailableNames(ecModel);
+
+            // If has any selected in option.selected
+            var selectedMap = this.option.selected;
+            var hasSelected = false;
+            for (var name in selectedMap) {
+                if (selectedMap[name]) {
+                    legendData[0] && this.select(name);
+                    hasSelected = true;
+                }
+            }
+            // Try select the first if selectedMode is single
+            !hasSelected && legendData[0] && this.select(legendData[0].get('name'));
+        },
+
+        mergeOption: function (option) {
+            this.$superCall('mergeOption', option);
+
+            this._updateAvailableNames(this.ecModel);
+        },
+
+        _updateAvailableNames: function (ecModel) {
             var availableNames = zrUtil.map(ecModel.getSeries(), function (series) {
                 return series.name;
             });
@@ -41,17 +63,6 @@ define(function(require) {
              */
             this._availableNames = availableNames;
 
-            // If has any selected in option.selected
-            var selectedMap = this.option.selected;
-            var hasSelected = false;
-            for (var name in selectedMap) {
-                if (selectedMap[name]) {
-                    legendData[0] && this.select(name);
-                    hasSelected = true;
-                }
-            }
-            // Try select the first if selectedMode is single
-            !hasSelected && legendData[0] && this.select(legendData[0].get('name'));
         },
 
         /**

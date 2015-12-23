@@ -3,15 +3,14 @@ define(function(require) {
     'use strict';
 
     var List = require('../../data/List');
-    var SeriesModel = require('../../model/Series');
     var modelUtil = require('../../util/model');
 
-    var FunnelSeries = SeriesModel.extend({
+    require('../../echarts').extendSeriesModel({
 
         type: 'series.funnel',
 
         init: function (option) {
-            SeriesModel.prototype.init.apply(this, arguments);
+            this.$superApply('init', arguments);
 
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
@@ -96,6 +95,4 @@ define(function(require) {
             }
         }
     });
-
-    return FunnelSeries;
 });

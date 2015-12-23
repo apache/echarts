@@ -7,6 +7,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var symbolUtil = require('../../util/symbol');
     var graphic = require('../../util/graphic');
+    var numberUtil = require('../../util/number');
     var Symbol = require('./Symbol');
     var Group = graphic.Group;
 
@@ -125,6 +126,13 @@ define(function (require) {
                 fill: color
             });
         });
+
+        var symbolOffset = itemModel.getShallow('symbolOffset');
+        if (symbolOffset) {
+            var pos = rippleGroup.position;
+            pos[0] = numberUtil.parsePercent(symbolOffset[0], symbolSize[0]);
+            pos[1] = numberUtil.parsePercent(symbolOffset[1], symbolSize[1]);
+        }
 
         this._symbolType = symbolType;
         this._color = color;

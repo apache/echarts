@@ -28,7 +28,18 @@ define(function (require) {
                 RootClass.apply(this, arguments);
             };
 
-            zrUtil.extend(ExtendedClass.prototype, proto);
+            var superProto = this.prototype;
+
+            zrUtil.extend(ExtendedClass.prototype, zrUtil.extend({
+                $superCall: function (methodName) {
+                    var args = zrUtil.slice(arguments, 1);
+                    return superProto[methodName].apply(this, args);
+                },
+                $superApply: function (methodName, args) {
+                    return superProto[methodName].apply(this, args);
+                }
+            }, proto));
+
             ExtendedClass.extend = this.extend;
             zrUtil.inherits(ExtendedClass, this);
 

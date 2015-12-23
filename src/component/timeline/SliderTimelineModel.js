@@ -67,7 +67,7 @@ define(function(require) {
                 borderColor: 'rgba(194,53,49, 0.5)',
                 animation: true,
                 animationDuration: 300,
-                animationEasing: 'cubicOut'
+                animationEasing: 'quinticInOut'
             },
 
             controlStyle: {

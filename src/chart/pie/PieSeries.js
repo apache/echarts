@@ -3,21 +3,18 @@ define(function(require) {
     'use strict';
 
     var List = require('../../data/List');
-    var SeriesModel = require('../../model/Series');
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
 
     var dataSelectableMixin = require('../helper/dataSelectableMixin');
 
-    var seriesModelProto = SeriesModel.prototype;
-
-    var PieSeries = SeriesModel.extend({
+    var PieSeries = require('../../echarts').extendSeriesModel({
 
         type: 'series.pie',
 
         // Overwrite
         init: function (option) {
-            seriesModelProto.init.apply(this, arguments);
+            this.$superApply('init', arguments);
 
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
@@ -32,7 +29,7 @@ define(function(require) {
 
         // Overwrite
         mergeOption: function (newOption) {
-            seriesModelProto.mergeOption.call(this, newOption);
+            this.$superCall('mergeOption', newOption);
             this.updateSelectedMap();
         },
 
@@ -45,7 +42,7 @@ define(function(require) {
         // Overwrite
         getDataParams: function (dataIndex) {
             var data = this._data;
-            var params = seriesModelProto.getDataParams.call(this, dataIndex);
+            var params = this.$superCall('getDataParams', dataIndex);
             // FIXME toFixed?
             params.percent = +(data.get('value', dataIndex) / data.getSum('value') * 100).toFixed(2);
 

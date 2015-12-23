@@ -6,6 +6,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var symbolUtil = require('../../util/symbol');
     var graphic = require('../../util/graphic');
+    var numberUtil = require('../../util/number');
 
     function normalizeSymbolSize(symbolSize) {
         if (!zrUtil.isArray(symbolSize)) {
@@ -119,18 +120,17 @@ define(function (require) {
     symbolProto.updateData = function (data, idx) {
         var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
         var seriesModel = data.hostModel;
-
+        var symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
         if (symbolType !== this._symbolType) {
             this._createSymbol(symbolType, data, idx);
         }
         else {
             var symbolPath = this.childAt(0);
-            var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
             graphic.updateProps(symbolPath, {
-                scale: size
+                scale: symbolSize
             }, seriesModel);
         }
-        this._updateCommon(data, idx);
+        this._updateCommon(data, idx, symbolSize);
 
         this._seriesModel = seriesModel;
     };
@@ -141,7 +141,7 @@ define(function (require) {
     var normalLabelAccessPath = ['label', 'normal'];
     var emphasisLabelAccessPath = ['label', 'emphasis'];
 
-    symbolProto._updateCommon = function (data, idx) {
+    symbolProto._updateCommon = function (data, idx, symbolSize) {
         var symbolPath = this.childAt(0);
         var seriesModel = data.hostModel;
         var itemModel = data.getItemModel(idx);
@@ -151,6 +151,13 @@ define(function (require) {
         var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
         symbolPath.rotation = itemModel.getShallow('symbolRotate') * Math.PI / 180 || 0;
+
+        var symbolOffset = itemModel.getShallow('symbolOffset');
+        if (symbolOffset) {
+            var pos = symbolPath.position;
+            pos[0] = numberUtil.parsePercent(symbolOffset[0], symbolSize[0]);
+            pos[1] = numberUtil.parsePercent(symbolOffset[1], symbolSize[1]);
+        }
 
         symbolPath.setColor(color);
 
