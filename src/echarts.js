@@ -22,6 +22,7 @@ define(function (require) {
 
     var ComponentView = require('./view/Component');
     var ChartView = require('./view/Chart');
+    var graphic = require('./util/graphic');
 
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
@@ -209,6 +210,109 @@ define(function (require) {
         return this._zr.getHeight();
     };
 
+    /**
+     * Get canvas which has all thing rendered
+     * @param {Object} opts
+     * @param {string} [opts.backgroundColor]
+     */
+    echartsProto.getRenderedCanvas = function (opts) {
+        if (!env.canvasSupported) {
+            return;
+        }
+        opts = opts || {};
+        opts.devicePixelRatio = opts.devicePixelRatio || 1;
+        opts.backgroundColor = opts.backgroundColor
+            || this._model.option.backgroundColor;
+        var zr = this._zr;
+        var list = zr.storage.getDisplayList();
+        // Stop animations
+        zrUtil.each(list, function (el) {
+            el.stopAnimation(true);
+        });
+        return zr.painter.getRenderedCanvas(opts);
+    };
+    /**
+     * @return {string}
+     * @param {Object} opts
+     * @param {string} [opts.type='png']
+     * @param {string} [opts.devicePixelRatio=1]
+     * @param {string} [opts.backgroundColor]
+     */
+    echartsProto.getDataURL = function (opts) {
+        return this.getRenderedCanvas(opts).toDataURL(
+            'image/' + (opts && opts.type || 'png')
+        );
+    };
+
+
+    /**
+     * @return {string}
+     * @param {Object} opts
+     * @param {string} [opts.type='png']
+     * @param {string} [opts.devicePixelRatio=1]
+     * @param {string} [opts.backgroundColor]
+     */
+    echartsProto.getConnectedDataURL = function (opts) {
+        if (!env.canvasSupported) {
+            return;
+        }
+        var groupId = this.group;
+        var mathMin = Math.min;
+        var mathMax = Math.max;
+        var MAX_NUMBER = Infinity;
+        if (connectedGroups[groupId]) {
+            var left = MAX_NUMBER;
+            var top = MAX_NUMBER;
+            var right = -MAX_NUMBER;
+            var bottom = -MAX_NUMBER;
+            var canvasList = [];
+            var dpr = (opts && opts.devicePixelRatio) || 1;
+            for (var id in instances) {
+                var chart = instances[id];
+                if (chart.group === groupId) {
+                    var canvas = chart.getRenderedCanvas(opts);
+                    var boundingRect = chart.getDom().getBoundingClientRect();
+                    left = mathMin(boundingRect.left, left);
+                    top = mathMin(boundingRect.top, top);
+                    right = mathMax(boundingRect.right, right);
+                    bottom = mathMax(boundingRect.bottom, bottom);
+                    canvasList.push({
+                        dom: canvas,
+                        left: boundingRect.left,
+                        top: boundingRect.top
+                    });
+                }
+            }
+
+            left *= dpr;
+            top *= dpr;
+            right *= dpr;
+            bottom *= dpr;
+            var width = right - left;
+            var height = bottom - top;
+            var targetCanvas = zrUtil.createCanvas();
+            targetCanvas.width = width;
+            targetCanvas.height = height;
+            var zr = zrender.init(targetCanvas);
+
+            each(canvasList, function (item) {
+                var img = new graphic.Image({
+                    style: {
+                        x: item.left * dpr - left,
+                        y: item.top * dpr - top,
+                        image: item.dom
+                    }
+                });
+                zr.add(img);
+            });
+            zr.refreshImmediately();
+
+            return targetCanvas.toDataURL('image/' + (opts && opts.type || 'png'));
+        }
+        else {
+            return this.getDataURL(opts);
+        }
+    };
 
     var updateMethods = {
 
@@ -640,7 +744,7 @@ define(function (require) {
             }, this);
         }, this);
 
-        zrUtil.each(eventActionMap, function (actionType, eventType) {
+        each(eventActionMap, function (actionType, eventType) {
             this._messageCenter.on(eventType, function (event) {
                 this.trigger(eventType, event);
             }, this);
