@@ -51,6 +51,8 @@
         'echarts/component/markPoint',
         'echarts/component/markLine',
 
+        'echarts/component/timeline',
+
         'echarts/scale/Time',
         'echarts/scale/Log',
         'zrender/vml/vml'

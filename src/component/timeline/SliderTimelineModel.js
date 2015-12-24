@@ -22,18 +22,19 @@ define(function(require) {
             inverse: false,
 
             lineStyle: {
+                show: true,
                 width: 2,
                 color: '#304654'
             },
             label: {                            // 文本标签
+                position: 'auto',           // auto left right top bottom
+                                            // When using number, label position is not
+                                            // restricted by viewRect.
+                                            // positive: right/bottom, negative: left/top
                 normal: {
                     show: true,
                     interval: 'auto',
                     rotate: 0,
-                    offset: 'auto',             // auto or number (unit px)
-                                                // When using number, label position is not
-                                                // restricted by viewRect.
-                                                // positive: right/bottom, negative: left/top
                     // formatter: null,
                     textStyle: {                // 其余属性默认使用全局文本样式，详见TEXTSTYLE
                         color: '#304654'
@@ -72,6 +73,9 @@ define(function(require) {
 
             controlStyle: {
                 show: true,
+                showPlayBtn: true,
+                showPrevBtn: true,
+                showNextBtn: true,
                 itemSize: 22,
                 itemGap: 12,
                 position: 'left',  // 'left' 'right' 'top' 'bottom'

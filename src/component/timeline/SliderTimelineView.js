@@ -75,9 +75,7 @@ define(function (require) {
             var layoutInfo = this._layout(timelineModel, api);
 
             var mainGroup = this._createGroup('mainGroup');
-            mainGroup.rotation = layoutInfo.rotation;
             var labelGroup = this._createGroup('labelGroup');
-            labelGroup.rotation = layoutInfo.rotation;
 
             /**
              * @private
@@ -116,28 +114,34 @@ define(function (require) {
         },
 
         _layout: function (timelineModel, api) {
-            var labelOffset = timelineModel.get('label.normal.offset');
+            var labelPosOpt = timelineModel.get('label.normal.position');
             var orient = timelineModel.get('orient');
             var viewRect = getViewRect(timelineModel, api);
 
             // Auto label offset.
-            if (labelOffset == null || labelOffset === 'auto') {
-                labelOffset = orient === 'horizontal'
+            if (labelPosOpt == null || labelPosOpt === 'auto') {
+                labelPosOpt = orient === 'horizontal'
                     ? ((viewRect.y + viewRect.height / 2) < api.getHeight() / 2 ? '-' : '+')
-                    : ((viewRect.x + viewRect.width / 2) < api.getWidth() / 2 ? '-' : '+');
+                    : ((viewRect.x + viewRect.width / 2) < api.getWidth() / 2 ? '+' : '-');
+            }
+            else if (isNaN(labelPosOpt)) {
+                labelPosOpt = ({
+                    horizontal: {top: '-', bottom: '+'},
+                    vertical: {left: '-', right: '+'}
+                })[orient][labelPosOpt];
             }
 
             // FIXME
             // 暂没有实现用户传入
             // var labelAlign = timelineModel.get('label.normal.textStyle.align');
             // var labelBaseline = timelineModel.get('label.normal.textStyle.baseline');
-
             var labelAlignMap = {
                 horizontal: 'center',
-                vertical: (labelOffset >= 0 || labelOffset === '+') ? 'left' : 'right'
+                vertical: (labelPosOpt >= 0 || labelPosOpt === '+') ? 'left' : 'right'
             };
+
             var labelBaselineMap = {
-                horizontal: (labelOffset >= 0 || labelOffset === '+') ? 'top' : 'bottom',
+                horizontal: (labelPosOpt >= 0 || labelPosOpt === '+') ? 'top' : 'bottom',
                 vertical: 'middle'
             };
             var rotationMap = {
@@ -152,6 +156,7 @@ define(function (require) {
             var showControl = controlModel.get('show');
             var controlSize = showControl ? controlModel.get('itemSize') : 0;
             var controlGap = showControl ? controlModel.get('itemGap') : 0;
+            var sizePlusGap = controlSize + controlGap;
 
             // Special label rotate.
             var labelRotation = timelineModel.get('label.normal.rotate') || 0;
@@ -162,24 +167,28 @@ define(function (require) {
             var nextBtnPosition;
             var axisExtent;
             var controlPosition = controlModel.get('position', true);
+            var showControl = controlModel.get('show', true);
+            var showPlayBtn = showControl && controlModel.get('showPlayBtn', true);
+            var showPrevBtn = showControl && controlModel.get('showPrevBtn', true);
+            var showNextBtn = showControl && controlModel.get('showNextBtn', true);
+            var xLeft = 0;
+            var xRight = mainLength;
 
+            // position[0] means left, position[1] means middle.
             if (controlPosition === 'left' || controlPosition === 'bottom') {
-                playPosition = [0, 0];
-                prevBtnPosition = [controlSize + controlGap, 0];
-                nextBtnPosition = [mainLength - controlSize, 0];
-                axisExtent = [
-                    2 * (controlSize + controlGap),
-                    mainLength - (controlSize + controlGap)
-                ];
+                showPlayBtn && (playPosition = [0, 0], xLeft += sizePlusGap);
+                showPrevBtn && (prevBtnPosition = [xLeft, 0], xLeft += sizePlusGap);
+                showNextBtn && (nextBtnPosition = [xRight - controlSize, 0], xRight -= sizePlusGap);
             }
             else { // 'top' 'right'
-                playPosition = [mainLength - controlSize, 0];
-                prevBtnPosition = [0, 0];
-                nextBtnPosition = [mainLength - 2 * controlSize - controlGap, 0];
-                axisExtent = [
-                    controlSize + controlGap,
-                    mainLength - 2 * (controlSize + controlGap)
-                ];
+                showPlayBtn && (playPosition = [xRight - controlSize, 0], xRight -= sizePlusGap);
+                showPrevBtn && (prevBtnPosition = [0, 0], xLeft += sizePlusGap);
+                showNextBtn && (nextBtnPosition = [xRight - controlSize, 0], xRight -= sizePlusGap);
+            }
+            axisExtent = [xLeft, xRight];
+
+            if (timelineModel.get('inverse')) {
+                axisExtent.reverse();
             }
 
             return {
@@ -189,7 +198,7 @@ define(function (require) {
 
                 rotation: rotationMap[orient],
                 labelRotation: labelRotation,
-                labelOffset: labelOffset,
+                labelPosOpt: labelPosOpt,
                 labelAlign: labelAlignMap[orient],
                 labelBaseline: labelBaselineMap[orient],
 
@@ -219,8 +228,11 @@ define(function (require) {
             if (layoutInfo.orient === 'vertical') {
                 // transfrom to horizontal, inverse rotate by left-top point.
                 var m = matrix.create();
-                m = matrix.rotate(m, m, PI / 2);
-                m = matrix.invert(m, m);
+                var rotateOriginX = viewRect.x;
+                var rotateOriginY = viewRect.y + viewRect.height;
+                matrix.translate(m, m, [-rotateOriginX, -rotateOriginY]);
+                matrix.rotate(m, m, -PI / 2);
+                matrix.translate(m, m, [rotateOriginX, rotateOriginY]);
                 viewRect = viewRect.clone();
                 viewRect.applyTransform(m);
             }
@@ -234,21 +246,33 @@ define(function (require) {
 
             labelsPosition[0] = mainPosition[0] = viewBound[0][0];
 
-            var labelOffset = layoutInfo.labelOffset;
+            var labelPosOpt = layoutInfo.labelPosOpt;
 
-            if (isNaN(labelOffset)) { // '+' or '-'
-                var mainBoundIdx = labelOffset === '+' ? 0 : 1;
+            if (isNaN(labelPosOpt)) { // '+' or '-'
+                var mainBoundIdx = labelPosOpt === '+' ? 0 : 1;
                 toBound(mainPosition, mainBound, viewBound, 1, mainBoundIdx);
                 toBound(labelsPosition, labelBound, viewBound, 1, 1 - mainBoundIdx);
             }
             else {
-                labelsPosition[1] = mainPosition[1] + labelOffset;
+                var mainBoundIdx = labelPosOpt >= 0 ? 0 : 1;
+                toBound(mainPosition, mainBound, viewBound, 1, mainBoundIdx);
+                labelsPosition[1] = mainPosition[1] + labelPosOpt;
             }
 
             mainGroup.position = mainPosition;
             labelGroup.position = labelsPosition;
-            mainGroup.origin = [viewBound[0][0], viewBound[1][0]];
-            labelGroup.origin = mainGroup.origin.slice();
+            mainGroup.rotation = labelGroup.rotation = layoutInfo.rotation;
+
+            setOrigin(mainGroup);
+            setOrigin(labelGroup);
+
+            function setOrigin(targetGroup) {
+                var pos = targetGroup.position;
+                targetGroup.origin = [
+                    viewBound[0][0] - pos[0],
+                    viewBound[1][0] - pos[1]
+                ];
+            }
 
             function getBound(rect) {
                 // [[xmin, xmax], [ymin, ymax]]
@@ -299,6 +323,10 @@ define(function (require) {
 
         _renderAxisLine: function (layoutInfo, group, axis, timelineModel) {
             var axisExtent = axis.getExtent();
+
+            if (!timelineModel.get('lineStyle.show')) {
+                return;
+            }
 
             group.add(new graphic.Line({
                 shape: {
@@ -362,9 +390,9 @@ define(function (require) {
 
                 var itemModel = data.getItemModel(dataIndex);
                 var itemTextStyleModel = itemModel.getModel('label.normal.textStyle');
+                var hoverTextStyleModel = itemModel.getModel('label.emphasis.textStyle');
                 var tickCoord = axis.dataToCoord(tick);
-
-                group.add(new graphic.Text({
+                var textEl = new graphic.Text({
                     style: {
                         text: labels[dataIndex],
                         textAlign: layoutInfo.labelAlign,
@@ -376,7 +404,11 @@ define(function (require) {
                     rotation: layoutInfo.labelRotation - layoutInfo.rotation,
                     onclick: bind(this._changeTimeline, this, dataIndex),
                     silent: false
-                }));
+                });
+
+                group.add(textEl);
+                graphic.setHoverStyle(textEl, hoverTextStyleModel.getItemStyle());
+
             }, this);
         },
 
@@ -387,46 +419,45 @@ define(function (require) {
             var controlSize = layoutInfo.controlSize;
             var rotation = layoutInfo.rotation;
 
-            if (!timelineModel.get('controlStyle.show')) {
-                return;
-            }
-
             var itemStyle = timelineModel.getModel('controlStyle.normal').getItemStyle();
             var hoverStyle = timelineModel.getModel('controlStyle.emphasis').getItemStyle();
             var rect = [0, -controlSize / 2, controlSize, controlSize];
             var playState = timelineModel.getPlayState();
+            var inverse = timelineModel.get('inverse', true);
 
             makeBtn(
                 layoutInfo.nextBtnPosition,
                 'controlStyle.nextIcon',
-                bind(this._changeTimeline, this, '+')
+                bind(this._changeTimeline, this, inverse ? '-' : '+')
             );
             makeBtn(
                 layoutInfo.prevBtnPosition,
                 'controlStyle.prevIcon',
-                bind(this._changeTimeline, this, '-')
+                bind(this._changeTimeline, this, inverse ? '+' : '-')
             );
             makeBtn(
                 layoutInfo.playPosition,
                 'controlStyle.' + (playState ? 'stopIcon' : 'playIcon'),
-                bind(this._handlePlayClick, this, !playState)
+                bind(this._handlePlayClick, this, !playState),
+                true
             );
 
-            function makeBtn(position, iconPath, onclick) {
+            function makeBtn(position, iconPath, onclick, willRotate) {
+                if (!position) {
+                    return;
+                }
                 var opt = {
                     position: position,
-                    rotation: -rotation,
+                    origin: [controlSize / 2, 0],
+                    rotation: willRotate ? -rotation : 0,
                     rectHover: true,
                     style: itemStyle,
                     onclick: onclick
                 };
                 var btn = makeIcon(timelineModel, iconPath, rect, opt);
-
                 group.add(btn);
                 graphic.setHoverStyle(btn, hoverStyle);
-                return btn;
             }
-
         },
 
         _renderCurrentPointer: function (layoutInfo, group, axis, timelineModel) {
@@ -506,7 +537,11 @@ define(function (require) {
 
             function handleFrame() {
                 // Do not cache
-                this._changeTimeline(this.model.getCurrentIndex() + 1);
+                var timelineModel = this.model;
+                this._changeTimeline(
+                    timelineModel.getCurrentIndex()
+                    + (timelineModel.get('inverse', true) ? -1 : 1)
+                );
             }
         },
 
