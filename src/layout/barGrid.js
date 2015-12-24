@@ -17,45 +17,43 @@ define(function(require) {
         zrUtil.each(barSeries, function (seriesModel, idx) {
             var cartesian = seriesModel.coordinateSystem;
 
-            var categoryAxis = cartesian.getAxesByScale('ordinal')[0];
+            var baseAxis = cartesian.getBaseAxis();
 
-            if (categoryAxis) {
-                var columnsOnAxis = columnsMap[cartesian.name] || {
-                    remainedWidth: categoryAxis.getBandWidth(),
-                    autoWidthCount: 0,
-                    categoryGap: '20%',
-                    gap: '30%',
-                    axis: categoryAxis,
-                    stacks: {}
-                };
-                var stacks = columnsOnAxis.stacks;
-                columnsMap[cartesian.name] = columnsOnAxis;
+            var columnsOnAxis = columnsMap[baseAxis.index] || {
+                remainedWidth: baseAxis.getBandWidth(),
+                autoWidthCount: 0,
+                categoryGap: '20%',
+                gap: '30%',
+                axis: baseAxis,
+                stacks: {}
+            };
+            var stacks = columnsOnAxis.stacks;
+            columnsMap[baseAxis.index] = columnsOnAxis;
 
-                var stackId = getSeriesStackId(seriesModel);
+            var stackId = getSeriesStackId(seriesModel);
 
-                if (!stacks[stackId]) {
-                    columnsOnAxis.autoWidthCount++;
-                }
-                stacks[stackId] = stacks[stackId] || {
-                    width: 0,
-                    maxWidth: 0
-                };
-
-                var barWidth = seriesModel.get('barWidth');
-                var barMaxWidth = seriesModel.get('barMaxWidth');
-                var barGap = seriesModel.get('barGap');
-                var barCategoryGap = seriesModel.get('barCategoryGap');
-                // TODO
-                if (barWidth && ! stacks[stackId].width) {
-                    barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
-                    stacks[stackId].width = barWidth;
-                    columnsOnAxis.remainedWidth -= barWidth;
-                }
-
-                barMaxWidth && (stacks[stackId].maxWidth = barMaxWidth);
-                (barGap != null) && (columnsOnAxis.gap = barGap);
-                (barCategoryGap != null) && (columnsOnAxis.categoryGap = barCategoryGap);
+            if (!stacks[stackId]) {
+                columnsOnAxis.autoWidthCount++;
             }
+            stacks[stackId] = stacks[stackId] || {
+                width: 0,
+                maxWidth: 0
+            };
+
+            var barWidth = seriesModel.get('barWidth');
+            var barMaxWidth = seriesModel.get('barMaxWidth');
+            var barGap = seriesModel.get('barGap');
+            var barCategoryGap = seriesModel.get('barCategoryGap');
+            // TODO
+            if (barWidth && ! stacks[stackId].width) {
+                barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
+                stacks[stackId].width = barWidth;
+                columnsOnAxis.remainedWidth -= barWidth;
+            }
+
+            barMaxWidth && (stacks[stackId].maxWidth = barMaxWidth);
+            (barGap != null) && (columnsOnAxis.gap = barGap);
+            (barCategoryGap != null) && (columnsOnAxis.categoryGap = barCategoryGap);
         });
 
         var result = {};
@@ -65,8 +63,8 @@ define(function(require) {
             result[coordSysName] = {};
 
             var stacks = columnsOnAxis.stacks;
-            var categoryAxis = columnsOnAxis.axis;
-            var bandWidth = categoryAxis.getBandWidth();
+            var baseAxis = columnsOnAxis.axis;
+            var bandWidth = baseAxis.getBandWidth();
             var categoryGap = parsePercent(columnsOnAxis.categoryGap, bandWidth);
             var barGapPercent = parsePercent(columnsOnAxis.gap, 1);
 
@@ -109,8 +107,7 @@ define(function(require) {
             zrUtil.each(stacks, function (column, stackId) {
                 result[coordSysName][stackId] = result[coordSysName][stackId] || {
                     offset: offset,
-                    width: column.width,
-                    axis: columnsOnAxis.axis
+                    width: column.width
                 };
 
                 offset += column.width * (1 + barGapPercent);
@@ -144,12 +141,12 @@ define(function(require) {
 
             var data = seriesModel.getData();
             var cartesian = seriesModel.coordinateSystem;
+            var baseAxis = cartesian.getBaseAxis();
 
             var stackId = getSeriesStackId(seriesModel);
-            var columnLayoutInfo = barWidthAndOffset[cartesian.name][stackId];
+            var columnLayoutInfo = barWidthAndOffset[baseAxis.index][stackId];
             var columnOffset = columnLayoutInfo.offset;
             var columnWidth = columnLayoutInfo.width;
-            var baseAxis = columnLayoutInfo.axis;
             var valueAxis = cartesian.getOtherAxis(baseAxis);
 
             var barMinHeight = seriesModel.get('barMinHeight') || 0;

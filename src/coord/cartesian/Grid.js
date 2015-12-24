@@ -290,6 +290,9 @@ define(function(require, factory) {
                 // Inject axisModel into axis
                 axis.model = axisModel;
 
+                // Index of axis, can be used as key
+                axis.index = idx;
+
                 this._axesList.push(axis);
                 this._axesMap[axisType + idx] = axis;
 
