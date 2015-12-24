@@ -1,29 +1,32 @@
 define(function (require) {
 
-    function SaveAsImage (option) {
-        this.option = option;
+    function SaveAsImage (model) {
+        this.model = model;
     };
 
     SaveAsImage.defaultOption = {
-        icon: 'M57.2,23.2L55.8,21.8L46,31.6L46,9.4L44,9.4L44,31.3L34.3,21.5L32.8,23L45.1,35.3zM55.1,38.4L34.5,38.4L34.5,31.9L32.5,31.9L32.5,40.4L57.1,40.4L57.1,31.9L55.1,31.9z',
         show: true,
+        icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6\
+            M29.2,45.1L29.2,0',
         title: '保存为图片',
         type: 'png',
-        iconStyle: {
-            normal: {
-                borderColor: '#000',
-                color: 'none'
-            },
-            emphasis: {
-                borderColor: '#3E98C5'
-            }
-        }
+        backgroundColor: '#fff',
+        name: ''
     };
 
     var proto = SaveAsImage.prototype;
 
     proto.onclick = function (ecModel, api) {
-        window.open(api.getConnectedDataURL());
+        var title = ecModel.get('title.0.text') || 'echarts';
+        var $a = document.createElement('a');
+        var type = this.model.get('type', true) || 'png';
+        $a.download = title + '.' + type;
+        $a.target = '_blank';
+        $a.href = api.getConnectedDataURL({
+            type: type,
+            backgroundColor: this.model.get('backgroundColor')
+        });
+        $a.click();
     };
 
     require('../featureManager').register(

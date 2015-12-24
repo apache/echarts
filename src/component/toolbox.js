@@ -4,4 +4,5 @@ define(function (require) {
     require('./toolbox/ToolboxView');
 
     require('./toolbox/feature/SaveAsImage');
+    require('./toolbox/feature/MagicType');
 });

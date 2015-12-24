@@ -19,36 +19,51 @@ define(function (require) {
             }
 
             var itemSize = +toolboxModel.get('itemSize');
+
             zrUtil.each(toolboxModel.get('feature'), function (featureOpt, featureName) {
                 var Feature = featureManager.get(featureName);
+                if (!Feature) {
+                    return;
+                }
+
                 var featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel);
-                var feature = new Feature(featureOpt);
+                var feature = new Feature(featureModel);
                 if (!featureModel.get('show')) {
                     return;
                 }
+
                 var iconStyleModel = featureModel.getModel('iconStyle');
-                var normalStyle = iconStyleModel.getModel('normal');
-                var hoverStyle = iconStyleModel.getModel('emphasis');
+                var normalStyle = iconStyleModel.getModel('normal').getItemStyle();
+                var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
 
-                var path = graphic.makePath(
-                    featureOpt.icon, {
-                        style: normalStyle.getItemStyle(),
-                        hoverStyle: hoverStyle.getItemStyle(),
-                        rectHover: true
-                    }, {
-                        x: -itemSize / 2,
-                        y: -itemSize / 2,
-                        width: itemSize,
-                        height: itemSize
-                    }, 'center'
-                );
+                var icons = feature.getIcons ? feature.getIcons() : featureModel.get('icon');
+                if (typeof icons === 'string') {
+                    var icon = icons;
+                    icons = {};
+                    icons[featureName] = icon;
+                }
 
-                graphic.setHoverStyle(path);
+                zrUtil.each(icons, function (icon, iconName) {
+                    var path = graphic.makePath(
+                        icon, {
+                            style: normalStyle,
+                            hoverStyle: hoverStyle,
+                            rectHover: true
+                        }, {
+                            x: -itemSize / 2,
+                            y: -itemSize / 2,
+                            width: itemSize,
+                            height: itemSize
+                        }, 'center'
+                    );
 
-                group.add(path);
-                path.on('click', zrUtil.bind(
-                    feature.onclick, feature, ecModel, api
-                ));
+                    graphic.setHoverStyle(path);
+
+                    group.add(path);
+                    path.on('click', zrUtil.bind(
+                        feature.onclick, feature, ecModel, api, iconName
+                    ));
+                });
             });
 
             listComponentHelper.layout(group, toolboxModel, api);

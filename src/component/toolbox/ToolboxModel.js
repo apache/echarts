@@ -12,7 +12,7 @@ define(function (require) {
 
             zrUtil.each(this.option.feature, function (featureOpt, featureName) {
                 var Feature = featureManager.get(featureName);
-                zrUtil.merge(featureOpt, Feature.defaultOption);
+                Feature && zrUtil.merge(featureOpt, Feature.defaultOption);
             });
         },
 
@@ -43,10 +43,19 @@ define(function (require) {
 
             itemGap: 10,
 
-            itemSize: 15,
+            itemSize: 18,
 
-            showTitle: true
+            showTitle: true,
 
+            iconStyle: {
+                normal: {
+                    borderColor: '#000',
+                    color: 'none'
+                },
+                emphasis: {
+                    borderColor: '#3E98C5'
+                }
+            }
             // textStyle: {},
 
             // feature
