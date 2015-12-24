@@ -4,6 +4,9 @@ define(function(require) {
     var List = require('../../data/List');
     var completeDimensions = require('../../data/helper/completeDimensions');
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../../util/model');
+    var getDataItemValue = modelUtil.getDataItemValue;
+    var converDataValue = modelUtil.converDataValue;
 
     function firstDataNotNull(data) {
         var i = 0;
@@ -15,11 +18,9 @@ define(function(require) {
     function ifNeedCompleteOrdinalData(data) {
         var sampleItem = firstDataNotNull(data);
         return sampleItem != null
-            && !zrUtil.isArray(getItemValue(sampleItem));
+            && !zrUtil.isArray(getDataItemValue(sampleItem));
     }
-    function getItemValue(item) {
-        return item && (item.value == null ? item : item.value);
-    }
+
     /**
      * Helper function to create a list from option data
      */
@@ -43,22 +44,17 @@ define(function(require) {
         var dimValueGetter = (categoryAxisModel && ifNeedCompleteOrdinalData(data))
             ? function (itemOpt, dimName, dataIndex, dimIndex) {
                 // Use dataIndex as ordinal value in categoryAxis
-                return dimIndex === categoryDimIndex ?
-                    dataIndex : convertValue(dimIndex, getItemValue(itemOpt));
+                return dimIndex === categoryDimIndex
+                    ? dataIndex
+                    : converDataValue(getDataItemValue(itemOpt), dimensions[dimIndex]);
             }
             : function (itemOpt, dimName, dataIndex, dimIndex) {
-                var val = getItemValue(itemOpt);
-                return convertValue(dimIndex, val && val[dimIndex]);
+                var val = getDataItemValue(itemOpt);
+                return converDataValue(val && val[dimIndex], dimensions[dimIndex]);
             };
+
         list.initData(data, nameList, dimValueGetter);
 
-        function convertValue(dimIndex, val) {
-            var dim = dimensions[dimIndex];
-            if (dim && dim.type !== 'ordinal') {
-                val = +val;
-            }
-            return val;
-        }
         return list;
     }
 

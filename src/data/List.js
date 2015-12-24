@@ -23,6 +23,7 @@ define(function (require) {
     var DataDiffer = require('./DataDiffer');
 
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../util/model');
     var isObject = zrUtil.isObject;
 
     var IMMUTABLE_PROPERTIES = [
@@ -218,13 +219,14 @@ define(function (require) {
 
         // Default dim value getter
         dimValueGetter = dimValueGetter || function (dataItem, dimName, dataIndex, dimIndex) {
-            var value = (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem))
-                    ? dataItem.value : dataItem;
-            if (zrUtil.isArray(value)) {
-                return value[dimIndex];
-            }
-            // If value is a single number or something else not array.
-            return value;
+            var value = modelUtil.getDataItemValue(dataItem);
+            return modelUtil.converDataValue(
+                zrUtil.isArray(value)
+                    ? value[dimIndex]
+                    // If value is a single number or something else not array.
+                    : value,
+                dimensionInfoMap[dimName]
+            );
         };
 
         for (var idx = 0; idx < data.length; idx++) {
@@ -270,6 +272,10 @@ define(function (require) {
 
         this._nameList = nameList;
         this._idList = idList;
+    };
+
+    listProto.getDimValue = function () {
+
     };
 
     /**

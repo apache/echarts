@@ -1,10 +1,10 @@
 define(function(require) {
 
-    var formatUtil = require('../util/format');
-    // var addCommas = formatUtil.addCommas;
-    var Model = require('../model/Model');
-
+    var formatUtil = require('./format');
+    var nubmerUtil = require('./number');
     var zrUtil = require('zrender/core/util');
+
+    var Model = require('../model/Model');
 
     var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
 
@@ -195,6 +195,40 @@ define(function(require) {
             return rawData;
         };
         return model;
+    };
+
+    /**
+     * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
+     * This helper method retieves value from data.
+     * @param {string|number|Date|Array|Object} dataItem
+     * @return {number|string|Date|Array.<number|string|Date>}
+     */
+    modelUtil.getDataItemValue = function (dataItem) {
+        // Performance sensitive.
+        return dataItem && (dataItem.value == null ? dataItem : dataItem.value);
+    };
+
+    /**
+     * This helper method convert value in data.
+     * @param {string|number|Date} value
+     * @param {Object|string} [dimInfo] If string (like 'x'), dimType defaults 'number'.
+     */
+    modelUtil.converDataValue = function (value, dimInfo) {
+        // Performance sensitive.
+        var dimType = dimInfo && dimInfo.type;
+        if (dimType === 'ordinal') {
+            return value;
+        }
+
+        if (dimType === 'time' && !isFinite(value) && value != null && value !== '-') {
+            value = +nubmerUtil.parseDate(value);
+        }
+
+        // dimType defaults 'number'.
+        // If dimType is not ordinal and value is null or undefined or NaN or '-',
+        // parse to NaN.
+        return (value == null || value === '')
+            ? NaN : +value; // If string (like '-'), using '+' parse to NaN
     };
 
     modelUtil.dataFormatMixin = {
