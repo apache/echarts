@@ -221,10 +221,12 @@ define(function (require) {
             var value = (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem))
                     ? dataItem.value : dataItem;
             if (zrUtil.isArray(value)) {
-                return value[dimIndex];
+                value = value[dimIndex];
             }
+            var dimInfo = dimensionInfoMap[dimName];
+            var needsConvertToNumber = dimInfo && dimInfo.type !== 'ordinal';
             // If value is a single number or something else not array.
-            return value;
+            return needsConvertToNumber ? +value : value;
         };
 
         for (var idx = 0; idx < data.length; idx++) {
