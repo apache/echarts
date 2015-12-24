@@ -645,8 +645,8 @@ define(function (require) {
             
             for (var i = 0, l = shapeList.length; i < l; i++) {
                 var tarShape = shapeList[i];
-                tarShape.zlevel = this.getZlevelBase();
-                tarShape.z = this.getZBase() + 1;
+                tarShape.zlevel = serie.zlevel;
+                tarShape.z = serie.z + 1;
                 for (var key in attachStyle) {
                     tarShape[key] = zrUtil.clone(attachStyle[key]);
                 }
@@ -723,8 +723,8 @@ define(function (require) {
                     zrUtil.merge(shapeBundle.style, firstShape.style);
                     zrUtil.merge(shapeBundle.highlightStyle = {}, firstShape.highlightStyle);
                     shapeBundle.style.brushType = 'stroke';
-                    shapeBundle.zlevel = this.getZlevelBase();
-                    shapeBundle.z = this.getZBase() + 1;
+                    shapeBundle.zlevel = serie.zlevel;
+                    shapeBundle.z = serie.z + 1;
                     shapeBundle.hoverable = false;
                     for (var key in attachStyle) {
                         shapeBundle[key] = zrUtil.clone(attachStyle[key]);
@@ -742,8 +742,8 @@ define(function (require) {
             else {
                 for (var i = 0, l = shapeList.length; i < l; i++) {
                     var tarShape = shapeList[i];
-                    tarShape.zlevel = this.getZlevelBase();
-                    tarShape.z = this.getZBase() + 1;
+                    tarShape.zlevel = serie.zlevel;
+                    tarShape.z = serie.z + 1;
                     for (var key in attachStyle) {
                         tarShape[key] = zrUtil.clone(attachStyle[key]);
                     }
@@ -1039,6 +1039,9 @@ define(function (require) {
             symbolSize = typeof symbolSize === 'function'
                          ? symbolSize(value)
                          : symbolSize;
+            if (typeof symbolSize === 'number') {
+                symbolSize = [symbolSize, symbolSize];
+            }
             var symbolRotate = this.deepQuery(queryTarget, 'symbolRotate');
             
             var normal = this.deepMerge(
@@ -1065,13 +1068,15 @@ define(function (require) {
             var nColor = this.getItemStyleColor(normal.color, seriesIndex, dataIndex, data);
             var eColor = this.getItemStyleColor(emphasis.color, seriesIndex, dataIndex, data);
             
+            var width = symbolSize[0];
+            var height = symbolSize[1];
             var itemShape = new IconShape({
                 style: {
                     iconType: symbol.replace('empty', '').toLowerCase(),
-                    x: x - symbolSize,
-                    y: y - symbolSize,
-                    width: symbolSize * 2,
-                    height: symbolSize * 2,
+                    x: x - width,
+                    y: y - height,
+                    width: width * 2,
+                    height: height * 2,
                     brushType: 'both',
                     color: symbol.match('empty') 
                            ? emptyColor 
@@ -1472,7 +1477,11 @@ define(function (require) {
         },
         
         _getAnimationKey: function(shape) {
-            if (this.type != ecConfig.CHART_TYPE_MAP) {
+            if (this.type != ecConfig.CHART_TYPE_MAP
+                && this.type != ecConfig.CHART_TYPE_TREEMAP
+                && this.type != ecConfig.CHART_TYPE_VENN
+                && this.type != ecConfig.CHART_TYPE_TREE
+                ) {
                 return ecData.get(shape, 'seriesIndex') + '_'
                        + ecData.get(shape, 'dataIndex')
                        + (shape._mark ? shape._mark : '')
@@ -1593,7 +1602,8 @@ define(function (require) {
                     zlevel,
                     {
                         motionBlur: true,
-                        lastFrameAlpha: 0.95
+                        lastFrameAlpha: this.option.effectBlendAlpha
+                            || ecConfig.effectBlendAlpha
                     }
                 );
             }

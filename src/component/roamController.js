@@ -48,6 +48,8 @@ define(function (require) {
      * @param {Object} option 图表参数
      */
     function RoamController(ecTheme, messageCenter, zr, option, myChart) {
+        this.rcOption = {};
+
         if (!option.roamController || !option.roamController.show) {
             return;
         }

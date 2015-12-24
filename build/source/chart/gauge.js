@@ -125,8 +125,10 @@ define('echarts/chart/gauge', [
         _buildShape: function () {
             var series = this.series;
             this._paramsMap = {};
+            this.selectedMap = {};
             for (var i = 0, l = series.length; i < l; i++) {
                 if (series[i].type === ecConfig.CHART_TYPE_GAUGE) {
+                    this.selectedMap[series[i].name] = true;
                     series[i] = this.reformOption(series[i]);
                     this.legendHoverLink = series[i].legendHoverLink || this.legendHoverLink;
                     this._buildSingleGauge(i);
@@ -174,7 +176,7 @@ define('echarts/chart/gauge', [
             var newAngle;
             for (var i = 0, l = colorArray.length; i < l; i++) {
                 newAngle = startAngle - totalAngle * (colorArray[i][0] - min) / total;
-                sectorShape = this._getSector(center, r0, r, newAngle, lastAngle, colorArray[i][1], lineStyle);
+                sectorShape = this._getSector(center, r0, r, newAngle, lastAngle, colorArray[i][1], lineStyle, serie.zlevel, serie.z);
                 lastAngle = newAngle;
                 sectorShape._animationAdd = 'r';
                 ecData.set(sectorShape, 'seriesIndex', seriesIndex);
@@ -208,8 +210,8 @@ define('echarts/chart/gauge', [
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         xStart: center[0] + cosAngle * r,
@@ -257,8 +259,8 @@ define('echarts/chart/gauge', [
                 sinAngle = Math.sin(angle);
                 cosAngle = Math.cos(angle);
                 this.shapeList.push(new LineShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         xStart: center[0] + cosAngle * r,
@@ -303,8 +305,8 @@ define('echarts/chart/gauge', [
                 cosAngle = Math.cos(angle * Math.PI / 180);
                 angle = (angle + 360) % 360;
                 this.shapeList.push(new TextShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + 1,
+                    zlevel: serie.zlevel,
+                    z: serie.z + 1,
                     hoverable: false,
                     style: {
                         x: center[0] + cosAngle * r0,
@@ -338,8 +340,8 @@ define('echarts/chart/gauge', [
             var angle = (params.startAngle - params.totalAngle / total * (value - serie.min)) * Math.PI / 180;
             var color = pointer.color === 'auto' ? this._getColor(seriesIndex, value) : pointer.color;
             var pointShape = new GaugePointerShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + 1,
+                zlevel: serie.zlevel,
+                z: serie.z + 1,
                 clickable: this.query(serie, 'clickable'),
                 style: {
                     x: center[0],
@@ -363,8 +365,8 @@ define('echarts/chart/gauge', [
             ecData.pack(pointShape, this.series[seriesIndex], seriesIndex, this.series[seriesIndex].data[0], 0, this.series[seriesIndex].data[0].name, value);
             this.shapeList.push(pointShape);
             this.shapeList.push(new CircleShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + 2,
+                zlevel: serie.zlevel,
+                z: serie.z + 2,
                 hoverable: false,
                 style: {
                     x: center[0],
@@ -390,8 +392,8 @@ define('echarts/chart/gauge', [
                 var x = params.center[0] + this.parsePercent(offsetCenter[0], params.radius[1]);
                 var y = params.center[1] + this.parsePercent(offsetCenter[1], params.radius[1]);
                 this.shapeList.push(new TextShape({
-                    zlevel: this.getZlevelBase(),
-                    z: this.getZBase() + (Math.abs(x - params.center[0]) + Math.abs(y - params.center[1]) < textStyle.fontSize * 2 ? 2 : 1),
+                    zlevel: serie.zlevel,
+                    z: serie.z + (Math.abs(x - params.center[0]) + Math.abs(y - params.center[1]) < textStyle.fontSize * 2 ? 2 : 1),
                     hoverable: false,
                     style: {
                         x: x,
@@ -423,8 +425,8 @@ define('echarts/chart/gauge', [
             var x = params.center[0] - detail.width / 2 + this.parsePercent(offsetCenter[0], params.radius[1]);
             var y = params.center[1] + this.parsePercent(offsetCenter[1], params.radius[1]);
             this.shapeList.push(new RectangleShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase() + (Math.abs(x + detail.width / 2 - params.center[0]) + Math.abs(y + detail.height / 2 - params.center[1]) < textStyle.fontSize ? 2 : 1),
+                zlevel: serie.zlevel,
+                z: serie.z + (Math.abs(x + detail.width / 2 - params.center[0]) + Math.abs(y + detail.height / 2 - params.center[1]) < textStyle.fontSize ? 2 : 1),
                 hoverable: false,
                 style: {
                     x: x,
@@ -481,10 +483,10 @@ define('echarts/chart/gauge', [
             }
             return colorArray[colorArray.length - 1][1];
         },
-        _getSector: function (center, r0, r, startAngle, endAngle, color, lineStyle) {
+        _getSector: function (center, r0, r, startAngle, endAngle, color, lineStyle, zlevel, z) {
             return new SectorShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: zlevel,
+                z: z,
                 hoverable: false,
                 style: {
                     x: center[0],

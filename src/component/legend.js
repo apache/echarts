@@ -512,6 +512,7 @@ define(function (require) {
                     || series[i].type === ecConfig.CHART_TYPE_CHORD
                     || series[i].type === ecConfig.CHART_TYPE_FORCE
                     || series[i].type === ecConfig.CHART_TYPE_FUNNEL
+                    || series[i].type === ecConfig.CHART_TYPE_TREEMAP
                 ) {
                     data = series[i].categories || series[i].data || series[i].nodes;
 
@@ -576,6 +577,8 @@ define(function (require) {
                     break;
                 case 'radar':
                 case 'venn':
+                case 'tree':
+                case 'treemap':
                 case 'scatter':
                     itemShape.highlightStyle.lineWidth = 3;
                     break;

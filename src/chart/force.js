@@ -187,7 +187,7 @@ define(function (require) {
         type : ecConfig.CHART_TYPE_FORCE,
 
         _init: function() {
-            // var self = this;
+            this.selectedMap = {};
             var legend = this.component.legend;
             var series = this.series;
             var serieName;
@@ -246,12 +246,12 @@ define(function (require) {
         _initSerie: function(serie, serieIdx) {
             this._temperature = 1;
 
-            // data-matrix 表示数据
-            if (serie.data) {
+            // matrix 表示边
+            if (serie.matrix) {
                 this._graph = this._getSerieGraphFromDataMatrix(serie);
             }
-            // node-links 表示数据
-            else {
+            // links 表示边
+            else if (serie.links) {
                 this._graph = this._getSerieGraphFromNodeLinks(serie);
             }
 
@@ -270,7 +270,6 @@ define(function (require) {
                 this.query('markPoint.effect.show')
                 || this.query('markLine.effect.show')
             ) {
-                // 斗胆修改 EFFECT 层配置项
                 this.zr.modLayer(ecConfig.EFFECT_ZLEVEL, {
                     panable: panable,
                     zoomable: zoomable
@@ -414,18 +413,19 @@ define(function (require) {
 
             this._steps = serie.steps || 1;
 
-            this._layout.center = this.parseCenter(this.zr, serie.center);
-            this._layout.width = this.parsePercent(serie.size, this.zr.getWidth());
-            this._layout.height = this.parsePercent(serie.size, this.zr.getHeight());
+            var layout = this._layout;
+            layout.center = this.parseCenter(this.zr, serie.center);
+            layout.width = this.parsePercent(serie.size, this.zr.getWidth());
+            layout.height = this.parsePercent(serie.size, this.zr.getHeight());
 
-            this._layout.large = serie.large;
-            this._layout.scaling = serie.scaling;
-            this._layout.ratioScaling = serie.ratioScaling;
-            this._layout.gravity = serie.gravity;
-            this._layout.temperature = 1;
-            this._layout.coolDown = serie.coolDown;
-            this._layout.preventNodeEdgeOverlap = serie.preventOverlap;
-            this._layout.preventNodeOverlap = serie.preventOverlap;
+            layout.large = serie.large;
+            layout.scaling = serie.scaling;
+            layout.ratioScaling = serie.ratioScaling;
+            layout.gravity = serie.gravity;
+            layout.temperature = 1;
+            layout.coolDown = serie.coolDown;
+            layout.preventNodeEdgeOverlap = serie.preventOverlap;
+            layout.preventNodeOverlap = serie.preventOverlap;
 
             // 将值映射到minRadius-maxRadius的范围上
             var min = Infinity; var max = -Infinity;
@@ -537,9 +537,13 @@ define(function (require) {
                 }
 
                 shape.style.iconType = this.deepQuery(queryTarget, 'symbol');
+                var symbolSize = this.deepQuery(queryTarget, 'symbolSize') || 0;
+                if (typeof symbolSize === 'number') {
+                    symbolSize = [symbolSize, symbolSize];
+                }
                 // 强制设定节点大小，否则默认映射到 minRadius 到 maxRadius 后的值
-                shape.style.width = shape.style.height
-                    = (this.deepQuery(queryTarget, 'symbolSize') || 0) * 2;
+                shape.style.width = symbolSize[0] * 2;
+                shape.style.height = symbolSize[1] * 2;
 
                 if (shape.style.iconType.match('image')) {
                     shape.style.image = shape.style.iconType.replace(
@@ -730,7 +734,9 @@ define(function (require) {
                             brushType: 'fill'
                         },
                         position: [0, 0],
-                        rotation: 0
+                        rotation: 0,
+                        zlevel: this.getZlevelBase(),
+                        z: this.getZBase()
                     });
                     linkShape._symbolShape = symbolShape;
                     this.shapeList.push(symbolShape);

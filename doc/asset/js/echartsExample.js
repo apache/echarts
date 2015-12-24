@@ -210,6 +210,11 @@ function launchExample() {
             'echarts/chart/gauge',
             'echarts/chart/funnel',
             'echarts/chart/eventRiver',
+            'echarts/chart/venn',
+            'echarts/chart/treemap',
+            'echarts/chart/tree',
+            'echarts/chart/wordCloud',
+            'echarts/chart/heatmap',
             needMap() ? 'echarts/chart/map' : 'echarts'
         ],
         requireCallback

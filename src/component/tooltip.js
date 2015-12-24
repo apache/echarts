@@ -7,13 +7,13 @@
  */
 define(function (require) {
     var Base = require('./base');
-    
+
     // 图形依赖
     var CrossShape = require('../util/shape/Cross');
     var LineShape = require('zrender/shape/Line');
     var RectangleShape = require('zrender/shape/Rectangle');
     var rectangleInstance = new RectangleShape({});
-    
+
     var ecConfig = require('../config');
     // 提示框
     ecConfig.tooltip = {
@@ -76,9 +76,9 @@ define(function (require) {
      */
     function Tooltip(ecTheme, messageCenter, zr, option, myChart) {
         Base.call(this, ecTheme, messageCenter, zr, option, myChart);
-        
+
         this.dom = myChart.dom;
-        
+
         var self = this;
         self._onmousemove = function (param) {
             return self.__onmousemove(param);
@@ -86,7 +86,7 @@ define(function (require) {
         self._onglobalout = function (param) {
             return self.__onglobalout(param);
         };
-        
+
         this.zr.on(zrConfig.EVENT.MOUSEMOVE, self._onmousemove);
         this.zr.on(zrConfig.EVENT.GLOBALOUT, self._onglobalout);
 
@@ -99,11 +99,11 @@ define(function (require) {
         self._refixed = function(param) {
             return self.__refixed(param);
         };
-        
+
         self._setContent = function(ticket, res) {
             return self.__setContent(ticket, res);
         };
-        
+
         this._tDom = this._tDom || document.createElement('div');
         // 避免拖拽时页面选中的尴尬
         this._tDom.onselectstart = function() {
@@ -118,7 +118,7 @@ define(function (require) {
         this._tDom.className = 'echarts-tooltip';
         this._tDom.style.position = 'absolute';  // 不是多余的，别删！
         this.hasAppend = false;
-        
+
         this._axisLineShape && this.zr.delShape(this._axisLineShape.id);
         this._axisLineShape = new LineShape({
             zlevel: this.getZlevelBase(),
@@ -128,7 +128,7 @@ define(function (require) {
         });
         this.shapeList.push(this._axisLineShape);
         this.zr.addShape(this._axisLineShape);
-        
+
         this._axisShadowShape && this.zr.delShape(this._axisShadowShape.id);
         this._axisShadowShape = new LineShape({
             zlevel: this.getZlevelBase(),
@@ -138,7 +138,7 @@ define(function (require) {
         });
         this.shapeList.push(this._axisShadowShape);
         this.zr.addShape(this._axisShadowShape);
-        
+
         this._axisCrossShape && this.zr.delShape(this._axisCrossShape.id);
         this._axisCrossShape = new CrossShape({
             zlevel: this.getZlevelBase(),
@@ -148,11 +148,11 @@ define(function (require) {
         });
         this.shapeList.push(this._axisCrossShape);
         this.zr.addShape(this._axisCrossShape);
-        
+
         this.showing = false;
         this.refresh(option);
     }
-    
+
     Tooltip.prototype = {
         type: ecConfig.COMPONENT_TYPE_TOOLTIP,
         // 通用样式
@@ -258,7 +258,7 @@ define(function (require) {
 
             return cssText;
         },
-        
+
         __hide: function () {
             this._lastDataIndex = -1;
             this._lastSeriesIndex = -1;
@@ -290,7 +290,7 @@ define(function (require) {
             needRefresh && this.zr.refreshNextFrame();
             this.showing = false;
         },
-        
+
         _show: function (position, x, y, specialCssText) {
             var domHeight = this._tDom.offsetHeight;
             var domWidth = this._tDom.offsetWidth;
@@ -320,14 +320,14 @@ define(function (require) {
                                   + this._defaultCssText
                                   + (specialCssText ? specialCssText : '')
                                   + 'left:' + x + 'px;top:' + y + 'px;';
-            
+
             if (domHeight < 10 || domWidth < 10) {
                 // this._zrWidth - x < 100 || this._zrHeight - y < 100
                 setTimeout(this._refixed, 20);
             }
             this.showing = true;
         },
-        
+
         __refixed: function () {
             if (this._tDom) {
                 var cssText = '';
@@ -344,7 +344,7 @@ define(function (require) {
                 }
             }
         },
-        
+
         __tryShow: function () {
             var needShow;
             var trigger;
@@ -375,7 +375,7 @@ define(function (require) {
                         [data, serie, this.option],
                         'tooltip.trigger'
                     );
-                    
+
                     trigger === 'axis'
                                 ? this._showAxisTrigger(
                                       serie.xAxisIndex, serie.yAxisIndex,
@@ -387,7 +387,7 @@ define(function (require) {
         },
 
         /**
-         * 直角系 
+         * 直角系
          */
         _findAxisTrigger: function () {
             if (!this.component.xAxis || !this.component.yAxis) {
@@ -413,7 +413,7 @@ define(function (require) {
                             )
                         );
                         return;
-                    } 
+                    }
                     else if (this.component.yAxis.getAxis(yAxisIndex)
                              && this.component.yAxis.getAxis(yAxisIndex).type
                                 === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
@@ -437,9 +437,9 @@ define(function (require) {
                 this._showAxisTrigger(-1, -1, -1);
             }
         },
-        
+
         /**
-         * 极坐标 
+         * 极坐标
          */
         _findPolarTrigger: function () {
             if (!this.component.polar) {
@@ -456,14 +456,14 @@ define(function (require) {
             else {
                 polarIndex = -1;
             }
-            
+
             if (polarIndex != -1) {
                 return this._showPolarTrigger(polarIndex, valueIndex);
             }
-            
+
             return false;
         },
-        
+
         /**
          * 根据坐标轴事件带的属性获取最近的axisDataIndex
          */
@@ -536,7 +536,7 @@ define(function (require) {
         },
 
         /**
-         * 直角系 
+         * 直角系
          */
         _showAxisTrigger: function (xAxisIndex, yAxisIndex, dataIndex) {
             !this._event.connectTrigger && this.messageCenter.dispatch(
@@ -595,13 +595,13 @@ define(function (require) {
                     if (series[i][axisLayout + 'Index'] === axisIndex
                         && this.deepQuery([series[i], this.option], 'tooltip.trigger') === 'axis'
                     ) {
-                        showContent = this.query(series[i], 'tooltip.showContent') 
+                        showContent = this.query(series[i], 'tooltip.showContent')
                                       || showContent;
-                        formatter = this.query(series[i], 'tooltip.formatter') 
+                        formatter = this.query(series[i], 'tooltip.formatter')
                                     || formatter;
-                        position = this.query(series[i], 'tooltip.position') 
+                        position = this.query(series[i], 'tooltip.position')
                                    || position;
-                        
+
                         specialCssText += this._style(this.query(series[i], 'tooltip'));
                         if (series[i].stack != null && axisLayout == 'xAxis') {
                             seriesArray.unshift(series[i]);
@@ -613,7 +613,7 @@ define(function (require) {
                         }
                     }
                 }
-                
+
                 // 寻找高亮元素
                 this.messageCenter.dispatch(
                     ecConfig.EVENT.TOOLTIP_HOVER,
@@ -624,7 +624,7 @@ define(function (require) {
                     },
                     this.myChart
                 );
-                
+
                 var rect;
                 if (axisLayout == 'xAxis') {
                     x = this.subPixelOptimize(
@@ -633,7 +633,7 @@ define(function (require) {
                     );
                     y = zrEvent.getY(this._event);
                     rect = [
-                        x, this.component.grid.getY(), 
+                        x, this.component.grid.getY(),
                         x, this.component.grid.getYend()
                     ];
                 }
@@ -644,7 +644,7 @@ define(function (require) {
                         this._axisLineWidth
                     );
                     rect = [
-                        this.component.grid.getX(), y, 
+                        this.component.grid.getX(), y,
                         this.component.grid.getXend(), y
                     ];
                 }
@@ -660,7 +660,7 @@ define(function (require) {
                 y = zrEvent.getY(this._event);
                 this._styleAxisPointer(
                     series,
-                    this.component.grid.getX(), y, 
+                    this.component.grid.getX(), y,
                     this.component.grid.getXend(), y,
                     0, x, y
                 );
@@ -688,7 +688,7 @@ define(function (require) {
                         for (var i = 0, l = seriesArray.length; i < l; i++) {
                             data = seriesArray[i].data[dataIndex];
                             value = this.getDataFromOption(data, '-');
-                            
+
                             params.push({
                                 seriesIndex: seriesIndex[i],
                                 seriesName: seriesArray[i].name || '',
@@ -727,7 +727,7 @@ define(function (require) {
                             data = this.getDataFromOption(data, '-');
                             formatter = formatter.replace(
                                 '{c' + i + '}',
-                                data instanceof Array 
+                                data instanceof Array
                                 ? data : this.numAddCommas(data)
                             );
                         }
@@ -738,14 +738,14 @@ define(function (require) {
                         formatter = this._encodeHTML(
                             categoryAxis.getNameByIndex(dataIndex)
                         );
-    
+
                         for (var i = 0, l = seriesArray.length; i < l; i++) {
-                            formatter += '<br/>' 
+                            formatter += '<br/>'
                                          + this._encodeHTML(seriesArray[i].name || '')
                                          + ' : ';
                             data = seriesArray[i].data[dataIndex];
                             data = this.getDataFromOption(data, '-');
-                            formatter += data instanceof Array 
+                            formatter += data instanceof Array
                                          ? data : this.numAddCommas(data);
                         }
                         this._tDom.innerHTML = formatter;
@@ -757,7 +757,7 @@ define(function (require) {
                     // 只用tooltip的行为，不显示主体
                     return;
                 }
-                
+
                 if (!this.hasAppend) {
                     this._tDom.style.left = this._zrWidth / 2 + 'px';
                     this._tDom.style.top = this._zrHeight / 2 + 'px';
@@ -767,9 +767,9 @@ define(function (require) {
                 this._show(position, x + 10, y + 10, specialCssText);
             }
         },
-        
+
         /**
-         * 极坐标 
+         * 极坐标
          */
         _showPolarTrigger: function (polarIndex, dataIndex) {
             if (this.component.polar == null
@@ -804,11 +804,11 @@ define(function (require) {
                 if (series[i].polarIndex === polarIndex
                     && this.deepQuery([series[i], this.option], 'tooltip.trigger') === 'axis'
                 ) {
-                    showContent = this.query(series[i], 'tooltip.showContent') 
+                    showContent = this.query(series[i], 'tooltip.showContent')
                                   || showContent;
-                    formatter = this.query(series[i], 'tooltip.formatter') 
+                    formatter = this.query(series[i], 'tooltip.formatter')
                                 || formatter;
-                    position = this.query(series[i], 'tooltip.position') 
+                    position = this.query(series[i], 'tooltip.position')
                                || position;
                     specialCssText += this._style(this.query(series[i], 'tooltip'));
                     seriesArray.push(series[i]);
@@ -891,13 +891,13 @@ define(function (require) {
                         this._tDom.innerHTML = formatter;
                     }
                     else {
-                        formatter = this._encodeHTML(params[0].name) + '<br/>' 
-                                    + this._encodeHTML(params[0].indicator) + ' : ' 
+                        formatter = this._encodeHTML(params[0].name) + '<br/>'
+                                    + this._encodeHTML(params[0].indicator) + ' : '
                                     + this.numAddCommas(params[0].value);
                         for (var i = 1, l = params.length; i < l; i++) {
-                            formatter += '<br/>' + this._encodeHTML(params[i].name) 
+                            formatter += '<br/>' + this._encodeHTML(params[i].name)
                                          + '<br/>';
-                            formatter += this._encodeHTML(params[i].indicator) + ' : ' 
+                            formatter += this._encodeHTML(params[i].indicator) + ' : '
                                          + this.numAddCommas(params[i].value);
                         }
                         this._tDom.innerHTML = formatter;
@@ -909,7 +909,7 @@ define(function (require) {
                     // 只用tooltip的行为，不显示主体
                     return;
                 }
-                
+
                 if (!this.hasAppend) {
                     this._tDom.style.left = this._zrWidth / 2 + 'px';
                     this._tDom.style.top = this._zrHeight / 2 + 'px';
@@ -918,16 +918,16 @@ define(function (require) {
                 }
                 this._show(
                     position,
-                    zrEvent.getX(this._event), 
-                    zrEvent.getY(this._event), 
+                    zrEvent.getX(this._event),
+                    zrEvent.getY(this._event),
                     specialCssText
                 );
                 return true;
             }
         },
-        
+
         /**
-         * @parma {boolean} axisTrigger 
+         * @parma {boolean} axisTrigger
          */
         _showItemTrigger: function (axisTrigger) {
             if (!this._curTarget) {
@@ -1022,7 +1022,7 @@ define(function (require) {
                                              '{c0}',
                                              value instanceof Array ? value : this.numAddCommas(value)
                                          );
-    
+
                     formatter = formatter.replace('{d}', '{d0}')
                                          .replace('{d0}', special || '');
                     formatter = formatter.replace('{e}', '{e0}')
@@ -1030,7 +1030,7 @@ define(function (require) {
                                              '{e0}',
                                              ecData.get(this._curTarget, 'special2') || ''
                                          );
-    
+
                     this._tDom.innerHTML = formatter;
                 }
                 else {
@@ -1062,12 +1062,12 @@ define(function (require) {
 
             var x = zrEvent.getX(this._event);
             var y = zrEvent.getY(this._event);
-            if (this.deepQuery(queryTarget, 'tooltip.axisPointer.show') 
+            if (this.deepQuery(queryTarget, 'tooltip.axisPointer.show')
                 && this.component.grid
             ) {
                 this._styleAxisPointer(
                     [serie],
-                    this.component.grid.getX(), y, 
+                    this.component.grid.getX(), y,
                     this.component.grid.getXend(), y,
                     0, x, y
                 );
@@ -1075,20 +1075,20 @@ define(function (require) {
             else {
                 this._hide();
             }
-            
+
             // don't modify, just false, showContent == undefined == true
             if (showContent === false || !this.option.tooltip.showContent) {
                 // 只用tooltip的行为，不显示主体
                 return;
             }
-            
+
             if (!this.hasAppend) {
                 this._tDom.style.left = this._zrWidth / 2 + 'px';
                 this._tDom.style.top = this._zrHeight / 2 + 'px';
                 this.dom.firstChild.appendChild(this._tDom);
                 this.hasAppend = true;
             }
-            
+
             this._show(position, x + 20, y - 20, specialCssText);
         },
 
@@ -1098,7 +1098,7 @@ define(function (require) {
                 html += this._encodeHTML(name === '' ? (serie.name || '') : name);
                 html += html === '' ? '' : '<br />';
                 for (var i = 0 ; i < indicator.length; i ++) {
-                    html += this._encodeHTML(indicator[i].text) + ' : ' 
+                    html += this._encodeHTML(indicator[i].text) + ' : '
                             + this.numAddCommas(value[i]) + '<br />';
                 }
                 return html;
@@ -1114,7 +1114,7 @@ define(function (require) {
                     // 内部弦上
                     return ''
                         + (serie.name != null ? (this._encodeHTML(serie.name) + '<br/>') : '')
-                        + name1 + ' -> ' + name2 
+                        + name1 + ' -> ' + name2
                         + ' (' + this.numAddCommas(value) + ')'
                         + '<br />'
                         + name2 + ' -> ' + name1
@@ -1133,7 +1133,7 @@ define(function (require) {
                         continue;
                     }
                     if (data[i].detail.img) {
-                        html += '<img src="' + data[i].detail.img 
+                        html += '<img src="' + data[i].detail.img
                                 + '" style="float:left;width:40px;height:40px;">';
                     }
                     html += '<div style="margin-left:45px;">' + data[i].time + '<br/>';
@@ -1144,9 +1144,9 @@ define(function (require) {
                 return html;
             }
         },
-        
+
         /**
-         * 设置坐标轴指示器样式 
+         * 设置坐标轴指示器样式
          */
         _styleAxisPointer: function (seriesArray, xStart, yStart, xEnd, yEnd, gap, x, y) {
             if (seriesArray.length > 0) {
@@ -1168,7 +1168,7 @@ define(function (require) {
                     //if (this.deepQuery([seriesArray[i], this.option], 'tooltip.trigger') === 'axis') {
                         queryTarget = seriesArray[i];
                         curType = this.query(queryTarget, 'tooltip.axisPointer.type');
-                        pointType = curType || pointType; 
+                        pointType = curType || pointType;
                         if (curType) {
                             style[curType].color = this.query(
                                 queryTarget,
@@ -1185,7 +1185,7 @@ define(function (require) {
                         }
                     //}
                 }
-                
+
                 if (pointType === 'line') {
                     var lineWidth = style.line.width;
                     var isVertical = xStart == xEnd;
@@ -1208,10 +1208,10 @@ define(function (require) {
                         rect: this.component.grid.getArea(),
                         x: this.subPixelOptimize(x, crossWidth),
                         y: this.subPixelOptimize(y, crossWidth),
-                        text: ('( ' 
+                        text: ('( '
                                + this.component.xAxis.getAxis(0).getValueFromCoord(x)
                                + ' , '
-                               + this.component.yAxis.getAxis(0).getValueFromCoord(y) 
+                               + this.component.yAxis.getAxis(0).getValueFromCoord(y)
                                + ' )'
                               ).replace('  , ', ' ').replace(' ,  ', ' '),
                         textPosition: 'specific',
@@ -1239,7 +1239,7 @@ define(function (require) {
                     this.zr.modShape(this._axisCrossShape.id);
                 }
                 else if (pointType === 'shadow') {
-                    if (style.shadow.width == null 
+                    if (style.shadow.width == null
                         || style.shadow.width === 'auto'
                         || isNaN(style.shadow.width)
                     ) {
@@ -1302,14 +1302,14 @@ define(function (require) {
                 // this._event._target = this._event.target || this._event.toElement;
                 this._event.zrenderX = mx;
                 this._event.zrenderY = my;
-                if (this._needAxisTrigger 
-                    && this.component.grid 
+                if (this._needAxisTrigger
+                    && this.component.grid
                     && zrArea.isInside(rectangleInstance, this.component.grid.getArea(), mx, my)
                 ) {
                     this._showingTicket = setTimeout(this._tryShow, this._showDelay);
                 }
-                else if (this._needAxisTrigger 
-                        && this.component.polar 
+                else if (this._needAxisTrigger
+                        && this.component.polar
                         && this.component.polar.isInside([mx, my]) != -1
                 ) {
                     this._showingTicket = setTimeout(this._tryShow, this._showDelay);
@@ -1331,8 +1331,8 @@ define(function (require) {
                 this._event.zrenderX = mx;
                 this._event.zrenderY = my;
                 var polarIndex;
-                if (this._needAxisTrigger 
-                    && this.component.polar 
+                if (this._needAxisTrigger
+                    && this.component.polar
                     && (polarIndex = this.component.polar.isInside([mx, my])) != -1
                 ) {
                     // 看用这个polar的系列数据是否是axis触发，如果是设置_curTarget为nul
@@ -1347,7 +1347,7 @@ define(function (require) {
                             break;
                         }
                     }
-                   
+
                 }
                 this._showingTicket = setTimeout(this._tryShow, this._showDelay);
             }
@@ -1361,7 +1361,7 @@ define(function (require) {
             clearTimeout(this._showingTicket);
             this._hidingTicket = setTimeout(this._hide, this._hideDelay);
         },
-        
+
         /**
          * 异步回调填充内容
          */
@@ -1372,7 +1372,7 @@ define(function (require) {
             if (ticket === this._curTicket) {
                 this._tDom.innerHTML = content;
             }
-            
+
             setTimeout(this._refixed, 20);
         },
 
@@ -1387,7 +1387,7 @@ define(function (require) {
                 for (var i = 0, l = tipShape.length; i < l; i++) {
                     tipShape[i].zlevel = this.getZlevelBase();
                     tipShape[i].z = this.getZBase();
-                    
+
                     tipShape[i].style = zrShapeBase.prototype.getHighlightStyle(
                         tipShape[i].style,
                         tipShape[i].highlightStyle
@@ -1407,18 +1407,18 @@ define(function (require) {
                 };
             }
         },
-        
+
         ondragend: function () {
             this._hide();
         },
-        
+
         /**
          * 图例选择
          */
         onlegendSelected: function (param) {
             this._selectedMap = param.selected;
         },
-        
+
         _setSelectedMap: function () {
             if (this.component.legend) {
                 this._selectedMap = zrUtil.clone(this.component.legend.getSelectedMap());
@@ -1427,7 +1427,7 @@ define(function (require) {
                 this._selectedMap = {};
             }
         },
-        
+
         _isSelected: function (itemName) {
             if (this._selectedMap[itemName] != null) {
                 return this._selectedMap[itemName];
@@ -1447,7 +1447,7 @@ define(function (require) {
             if (!params) {
                 return;
             }
-            
+
             var seriesIndex;
             var series = this.option.series;
             if (params.seriesIndex != null) {
@@ -1462,7 +1462,7 @@ define(function (require) {
                     }
                 }
             }
-            
+
             var serie = series[seriesIndex];
             if (serie == null) {
                 return;
@@ -1471,58 +1471,50 @@ define(function (require) {
             var isAxisTrigger = this.deepQuery(
                                     [serie, this.option], 'tooltip.trigger'
                                 ) === 'axis';
-            
+
             if (!chart) {
                 return;
             }
-            
+
             if (isAxisTrigger) {
                 // axis trigger
                 var dataIndex = params.dataIndex;
                 switch (chart.type) {
-                    case ecConfig.CHART_TYPE_LINE :
-                    case ecConfig.CHART_TYPE_BAR :
-                    case ecConfig.CHART_TYPE_K :
-                        if (this.component.xAxis == null 
-                            || this.component.yAxis == null
+                    case ecConfig.CHART_TYPE_LINE:
+                    case ecConfig.CHART_TYPE_BAR:
+                    case ecConfig.CHART_TYPE_K:
+                        if (this.component.grid == null
                             || serie.data.length <= dataIndex
                         ) {
                             return;
                         }
-                        var xAxisIndex = serie.xAxisIndex || 0;
-                        var yAxisIndex = serie.yAxisIndex || 0;
-                        if (this.component.xAxis.getAxis(xAxisIndex).type 
-                            === ecConfig.COMPONENT_TYPE_AXIS_CATEGORY
-                        ) {
-                            // 横轴是类目
-                            this._event = {
-                                zrenderX: this.component.xAxis.getAxis(xAxisIndex)
-                                          .getCoordByIndex(dataIndex),
-                                zrenderY: this.component.grid.getY() 
-                                          + (this.component.grid.getYend() 
-                                             - this.component.grid.getY()
-                                            ) / 4
-                            };
+                        var xAxis = this.component.xAxis.getAxis(serie.xAxisIndex);
+                        var yAxis = this.component.yAxis.getAxis(serie.yAxisIndex);
+                        var x;
+                        var y;
+                        var val = serie.data[dataIndex].value == null ? serie.data[dataIndex] : serie.data[dataIndex].value;
+                        if (xAxis.type === 'categoryAxis') {
+                            x = xAxis.getCoordByIndex(dataIndex);
+                            y = yAxis.getCoord(val);
+                        }
+                        else if (yAxis.type === 'categoryAxis') {
+                            y = yAxis.getCoordByIndex(dataIndex);
+                            x = xAxis.getCoord(val);
                         }
                         else {
-                            // 纵轴是类目
-                            this._event = {
-                                zrenderX: this.component.grid.getX() 
-                                          + (this.component.grid.getXend() 
-                                              - this.component.grid.getX()
-                                            ) / 4,
-                                zrenderY: this.component.yAxis.getAxis(yAxisIndex)
-                                           .getCoordByIndex(dataIndex)
-                            };
+                            // Two value axes
+                            return;
                         }
+                        this._event = {
+                            zrenderX: x,
+                            zrenderY: y
+                        };
                         this._showAxisTrigger(
-                            xAxisIndex, 
-                            yAxisIndex,
-                            dataIndex
+                              serie.xAxisIndex, serie.yAxisIndex, dataIndex
                         );
                         break;
                     case ecConfig.CHART_TYPE_RADAR :
-                        if (this.component.polar == null 
+                        if (this.component.polar == null
                             || serie.data[0].value.length <= dataIndex
                         ) {
                             return;
@@ -1536,7 +1528,7 @@ define(function (require) {
                             zrenderY: vector[1]
                         };
                         this._showPolarTrigger(
-                            polarIndex, 
+                            polarIndex,
                             dataIndex
                         );
                         break;
@@ -1551,6 +1543,7 @@ define(function (require) {
                     case ecConfig.CHART_TYPE_LINE :
                     case ecConfig.CHART_TYPE_BAR :
                     case ecConfig.CHART_TYPE_K :
+                    case ecConfig.CHART_TYPE_TREEMAP :
                     case ecConfig.CHART_TYPE_SCATTER :
                         var dataIndex = params.dataIndex;
                         for (var i = 0, l = shapeList.length; i < l; i++) {
@@ -1560,7 +1553,7 @@ define(function (require) {
                             ) {
                                 this._curTarget = shapeList[i];
                                 x = shapeList[i].style.x;
-                                y = chart.type != ecConfig.CHART_TYPE_K 
+                                y = chart.type != ecConfig.CHART_TYPE_K
                                     ? shapeList[i].style.y : shapeList[i].style.y[0];
                                 break;
                             }
@@ -1592,7 +1585,7 @@ define(function (require) {
                             ) {
                                 this._curTarget = shapeList[i];
                                 var style = this._curTarget.style;
-                                var midAngle = (style.startAngle + style.endAngle) 
+                                var midAngle = (style.startAngle + style.endAngle)
                                                 / 2 * Math.PI / 180;
                                 x = this._curTarget.style.x + Math.cos(midAngle) * style.r / 1.5;
                                 y = this._curTarget.style.y - Math.sin(midAngle) * style.r / 1.5;
@@ -1623,7 +1616,7 @@ define(function (require) {
                             ) {
                                 this._curTarget = shapeList[i];
                                 var style = this._curTarget.style;
-                                var midAngle = (style.startAngle + style.endAngle) 
+                                var midAngle = (style.startAngle + style.endAngle)
                                                 / 2 * Math.PI / 180;
                                 x = this._curTarget.style.x + Math.cos(midAngle) * (style.r - 2);
                                 y = this._curTarget.style.y - Math.sin(midAngle) * (style.r - 2);
@@ -1651,6 +1644,35 @@ define(function (require) {
                             }
                         }
                         break;
+                    case ecConfig.CHART_TYPE_EVENTRIVER:
+                        var name = params.name;
+                        for (var i = 0, l = shapeList.length; i < l; i++) {
+                            if (shapeList[i].type === 'polygon'
+                                && ecData.get(shapeList[i], 'name') == name
+                            ) {
+                                this._curTarget = shapeList[i];
+                                var pointList = shapeList[i].style.pointList;
+                                var p = pointList[0];
+                                if (p) {
+                                    var left = p[0];
+                                    var right = p[0];
+                                    var top = p[1];
+                                    var bottom = p[1];
+                                    var i;
+
+                                    for (i = 1; i < pointList.length; i++) {
+                                        p = pointList[i];
+                                        left = Math.min(left, p[0]);
+                                        right = Math.max(right, p[0]);
+                                        top = Math.min(top, p[1]);
+                                        bottom = Math.max(bottom, p[1]);
+                                    }
+                                    x = (left + right) / 2;
+                                    y = (top + bottom) / 2;
+                                }
+                                break;
+                            }
+                        }
                 }
                 if (x != null && y != null) {
                     this._event = {
@@ -1663,14 +1685,14 @@ define(function (require) {
                 }
             }
         },
-        
+
         /**
-         * 关闭，公开接口 
+         * 关闭，公开接口
          */
         hideTip: function () {
             this._hide();
         },
-        
+
         /**
          * 刷新
          */
@@ -1681,25 +1703,25 @@ define(function (require) {
             // this._curTarget;
             // this._event;
             // this._curTicket;         // 异步回调标识，用来区分多个请求
-            
+
             // 缓存一些高宽数据
             this._zrHeight = this.zr.getHeight();
             this._zrWidth = this.zr.getWidth();
-            
+
             if (this._lastTipShape && this._lastTipShape.tipShape.length > 0) {
                 this.zr.delShape(this._lastTipShape.tipShape);
             }
             this._lastTipShape = false;
             this.shapeList.length = 2;
-            
+
             this._lastDataIndex = -1;
             this._lastSeriesIndex = -1;
             this._lastItemTriggerId = -1;
-            
+
             if (newOption) {
                 this.option = newOption;
                 this.option.tooltip = this.reformOption(this.option.tooltip);
-                
+
                 this.option.tooltip.textStyle = zrUtil.merge(
                     this.option.tooltip.textStyle,
                     this.ecTheme.textStyle
@@ -1708,7 +1730,7 @@ define(function (require) {
                 if (this.option.tooltip.trigger === 'axis') {
                     this._needAxisTrigger = true;
                 }
-    
+
                 var series = this.option.series;
                 for (var i = 0, l = series.length; i < l; i++) {
                     if (this.query(series[i], 'tooltip.trigger') === 'axis') {
@@ -1721,10 +1743,14 @@ define(function (require) {
                 this._showDelay = this.option.tooltip.showDelay; // 显示延迟
                 this._hideDelay = this.option.tooltip.hideDelay; // 隐藏延迟
                 this._defaultCssText = this._style(this.option.tooltip);
-                
+
                 this._setSelectedMap();
                 this._axisLineWidth = this.option.tooltip.axisPointer.lineStyle.width;
                 this._enterable = this.option.tooltip.enterable;
+
+                if (! this._enterable && this._tDom.className.indexOf(zrConfig.elementClassName) < 0) {
+                    this._tDom.className += ' ' + zrConfig.elementClassName;
+                }
             }
             if (this.showing) {
                 var self = this;
@@ -1745,13 +1771,13 @@ define(function (require) {
             clearTimeout(this._showingTicket);
             this.zr.un(zrConfig.EVENT.MOUSEMOVE, this._onmousemove);
             this.zr.un(zrConfig.EVENT.GLOBALOUT, this._onglobalout);
-            
+
             if (this.hasAppend && !!this.dom.firstChild) {
                 this.dom.firstChild.removeChild(this._tDom);
             }
             this._tDom = null;
         },
-        
+
         /**
          * html转码的方法
          */
@@ -1764,9 +1790,9 @@ define(function (require) {
                         .replace(/'/g, '&#39;');
         }
     };
-    
+
     zrUtil.inherits(Tooltip, Base);
-    
+
     require('../component').define('tooltip', Tooltip);
 
     return Tooltip;

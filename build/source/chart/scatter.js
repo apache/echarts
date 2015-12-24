@@ -262,7 +262,7 @@ define('echarts/chart/scatter', [
                 serie = series[seriesIndex];
                 seriesPL = pointList[seriesIndex];
                 if (serie.large && serie.data.length > serie.largeThreshold) {
-                    this.shapeList.push(this._getLargeSymbol(seriesPL, this.getItemStyleColor(this.query(serie, 'itemStyle.normal.color'), seriesIndex, -1) || this._sIndex2ColorMap[seriesIndex]));
+                    this.shapeList.push(this._getLargeSymbol(serie, seriesPL, this.getItemStyleColor(this.query(serie, 'itemStyle.normal.color'), seriesIndex, -1) || this._sIndex2ColorMap[seriesIndex]));
                     continue;
                 }
                 for (var i = 0, l = seriesPL.length; i < l; i++) {
@@ -287,15 +287,15 @@ define('echarts/chart/scatter', [
                 rangColor = this._sIndex2ColorMap[seriesIndex];
             }
             var itemShape = this.getSymbolShape(serie, seriesIndex, data, dataIndex, name, x, y, this._sIndex2ShapeMap[seriesIndex], rangColor, 'rgba(0,0,0,0)', 'vertical');
-            itemShape.zlevel = this.getZlevelBase();
-            itemShape.z = this.getZBase();
+            itemShape.zlevel = serie.zlevel;
+            itemShape.z = serie.z;
             itemShape._main = true;
             return itemShape;
         },
-        _getLargeSymbol: function (pointList, nColor) {
+        _getLargeSymbol: function (serie, pointList, nColor) {
             return new SymbolShape({
-                zlevel: this.getZlevelBase(),
-                z: this.getZBase(),
+                zlevel: serie.zlevel,
+                z: serie.z,
                 _main: true,
                 hoverable: false,
                 style: {
@@ -381,6 +381,7 @@ define('echarts/chart/scatter', [
         itemHeight: 14,
         precision: 0,
         splitNumber: 5,
+        splitList: null,
         calculable: false,
         selectedMode: true,
         hoverLink: true,
@@ -396,10 +397,6 @@ define('echarts/chart/scatter', [
     var zrArea = require('zrender/tool/area');
     var zrColor = require('zrender/tool/color');
     function DataRange(ecTheme, messageCenter, zr, option, myChart) {
-        if (typeof this.query(option, 'dataRange.min') == 'undefined' || typeof this.query(option, 'dataRange.max') == 'undefined') {
-            console.error('option.dataRange.min or option.dataRange.max has not been defined.');
-            return;
-        }
         Base.call(this, ecTheme, messageCenter, zr, option, myChart);
         var self = this;
         self._ondrift = function (dx, dy) {
@@ -428,7 +425,7 @@ define('echarts/chart/scatter', [
         _buildShape: function () {
             this._itemGroupLocation = this._getItemGroupLocation();
             this._buildBackground();
-            if (this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable) {
+            if (this._isContinuity()) {
                 this._buildGradient();
             } else {
                 this._buildItem();
@@ -1111,8 +1108,8 @@ define('echarts/chart/scatter', [
             var textHeight = zrArea.getTextHeight('国', font);
             var mSize = 10;
             if (this.dataRangeOption.orient == 'horizontal') {
-                if (this.dataRangeOption.text || this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable) {
-                    totalWidth = (this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable ? itemWidth * mSize + itemGap : dataLength * (itemWidth + itemGap)) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[0] != 'undefined' ? zrArea.getTextWidth(this.dataRangeOption.text[0], font) + this._textGap : 0) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[1] != 'undefined' ? zrArea.getTextWidth(this.dataRangeOption.text[1], font) + this._textGap : 0);
+                if (this.dataRangeOption.text || this._isContinuity()) {
+                    totalWidth = (this._isContinuity() ? itemWidth * mSize + itemGap : dataLength * (itemWidth + itemGap)) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[0] != 'undefined' ? zrArea.getTextWidth(this.dataRangeOption.text[0], font) + this._textGap : 0) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[1] != 'undefined' ? zrArea.getTextWidth(this.dataRangeOption.text[1], font) + this._textGap : 0);
                 } else {
                     itemWidth += 5;
                     for (var i = 0; i < dataLength; i++) {
@@ -1123,8 +1120,8 @@ define('echarts/chart/scatter', [
                 totalHeight = Math.max(textHeight, itemHeight);
             } else {
                 var maxWidth;
-                if (this.dataRangeOption.text || this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable) {
-                    totalHeight = (this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable ? itemHeight * mSize + itemGap : dataLength * (itemHeight + itemGap)) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[0] != 'undefined' ? this._textGap + textHeight : 0) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[1] != 'undefined' ? this._textGap + textHeight : 0);
+                if (this.dataRangeOption.text || this._isContinuity()) {
+                    totalHeight = (this._isContinuity() ? itemHeight * mSize + itemGap : dataLength * (itemHeight + itemGap)) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[0] != 'undefined' ? this._textGap + textHeight : 0) + (this.dataRangeOption.text && typeof this.dataRangeOption.text[1] != 'undefined' ? this._textGap + textHeight : 0);
                     maxWidth = Math.max(zrArea.getTextWidth(this.dataRangeOption.text && this.dataRangeOption.text[0] || '', font), zrArea.getTextWidth(this.dataRangeOption.text && this.dataRangeOption.text[1] || '', font));
                     totalWidth = Math.max(itemWidth, maxWidth);
                 } else {
@@ -1281,8 +1278,16 @@ define('echarts/chart/scatter', [
         },
         _syncShapeFromRange: function () {
             var range = this.dataRangeOption.range || {};
-            this._range.end = typeof this._range.end != 'undefined' ? this._range.end : typeof range.start != 'undefined' ? range.start : 0;
-            this._range.start = typeof this._range.start != 'undefined' ? this._range.start : typeof range.end != 'undefined' ? range.end : 100;
+            var optRangeStart = range.start;
+            var optRangeEnd = range.end;
+            if (optRangeEnd < optRangeStart) {
+                optRangeStart = [
+                    optRangeEnd,
+                    optRangeEnd = optRangeStart
+                ][0];
+            }
+            this._range.end = optRangeStart != null ? optRangeStart : this._range.end != null ? this._range.end : 0;
+            this._range.start = optRangeEnd != null ? optRangeEnd : this._range.start != null ? this._range.start : 100;
             if (this._range.start != 100 || this._range.end !== 0) {
                 if (this.dataRangeOption.orient == 'horizontal') {
                     var width = this._fillerShape.style.width;
@@ -1401,12 +1406,20 @@ define('echarts/chart/scatter', [
             }
             var idx = param.target._idx;
             this._selectedMap[idx] = !this._selectedMap[idx];
-            var valueMax = (this._colorList.length - idx) * this._gap + this.dataRangeOption.min;
+            var valueMax;
+            var valueMin;
+            if (this._useCustomizedSplit()) {
+                valueMax = this._splitList[idx].max;
+                valueMin = this._splitList[idx].min;
+            } else {
+                valueMax = (this._colorList.length - idx) * this._gap + this.dataRangeOption.min;
+                valueMin = valueMax - this._gap;
+            }
             this.messageCenter.dispatch(ecConfig.EVENT.DATA_RANGE_SELECTED, param.event, {
                 selected: this._selectedMap,
                 target: idx,
                 valueMax: valueMax,
-                valueMin: valueMax - this._gap
+                valueMin: valueMin
             }, this.myChart);
             this.messageCenter.dispatch(ecConfig.EVENT.REFRESH, null, null, this.myChart);
         },
@@ -1423,6 +1436,10 @@ define('echarts/chart/scatter', [
                 }
                 valueMin = curValue - totalValue * 0.05;
                 valueMax = curValue + totalValue * 0.05;
+            } else if (this._useCustomizedSplit()) {
+                var idx = param.target._idx;
+                valueMax = this._splitList[idx].max;
+                valueMin = this._splitList[idx].min;
             } else {
                 var idx = param.target._idx;
                 valueMax = (this._colorList.length - idx) * this._gap + this.dataRangeOption.min;
@@ -1432,7 +1449,6 @@ define('echarts/chart/scatter', [
                 valueMin: valueMin,
                 valueMax: valueMax
             }, this.myChart);
-            return;
         },
         __onhoverlink: function (param) {
             if (this.dataRangeOption.show && this.dataRangeOption.hoverLink && this._indicatorShape && param && param.seriesIndex != null && param.dataIndex != null) {
@@ -1462,40 +1478,63 @@ define('echarts/chart/scatter', [
             }
         },
         _textFormat: function (valueStart, valueEnd) {
-            valueStart = (+valueStart).toFixed(this.dataRangeOption.precision);
-            valueEnd = valueEnd != null ? (+valueEnd).toFixed(this.dataRangeOption.precision) : '';
-            if (this.dataRangeOption.formatter) {
-                if (typeof this.dataRangeOption.formatter == 'string') {
-                    return this.dataRangeOption.formatter.replace('{value}', valueStart).replace('{value2}', valueEnd);
-                } else if (typeof this.dataRangeOption.formatter == 'function') {
-                    return this.dataRangeOption.formatter.call(this.myChart, valueStart, valueEnd);
+            var dataRangeOption = this.dataRangeOption;
+            if (valueStart !== -Number.MAX_VALUE) {
+                valueStart = (+valueStart).toFixed(dataRangeOption.precision);
+            }
+            if (valueEnd != null && valueEnd !== Number.MAX_VALUE) {
+                valueEnd = (+valueEnd).toFixed(dataRangeOption.precision);
+            }
+            if (dataRangeOption.formatter) {
+                if (typeof dataRangeOption.formatter == 'string') {
+                    return dataRangeOption.formatter.replace('{value}', valueStart === -Number.MAX_VALUE ? 'min' : valueStart).replace('{value2}', valueEnd === Number.MAX_VALUE ? 'max' : valueEnd);
+                } else if (typeof dataRangeOption.formatter == 'function') {
+                    return dataRangeOption.formatter.call(this.myChart, valueStart, valueEnd);
                 }
             }
-            if (valueEnd !== '') {
-                return valueStart + ' - ' + valueEnd;
+            if (valueEnd == null) {
+                return valueStart;
+            } else {
+                if (valueStart === -Number.MAX_VALUE) {
+                    return '< ' + valueEnd;
+                } else if (valueEnd === Number.MAX_VALUE) {
+                    return '> ' + valueStart;
+                } else {
+                    return valueStart + ' - ' + valueEnd;
+                }
             }
-            return valueStart;
         },
-        refresh: function (newOption) {
-            if (newOption) {
-                this.option = newOption;
-                this.option.dataRange = this.reformOption(this.option.dataRange);
-                this.dataRangeOption = this.option.dataRange;
-                if (!this.myChart.canvasSupported) {
-                    this.dataRangeOption.realtime = false;
+        _isContinuity: function () {
+            var dataRangeOption = this.dataRangeOption;
+            return !(dataRangeOption.splitList ? dataRangeOption.splitList.length > 0 : dataRangeOption.splitNumber > 0) || dataRangeOption.calculable;
+        },
+        _useCustomizedSplit: function () {
+            var dataRangeOption = this.dataRangeOption;
+            return dataRangeOption.splitList && dataRangeOption.splitList.length > 0;
+        },
+        _buildColorList: function (splitNumber) {
+            this._colorList = zrColor.getGradientColors(this.dataRangeOption.color, Math.max((splitNumber - this.dataRangeOption.color.length) / (this.dataRangeOption.color.length - 1), 0) + 1);
+            if (this._colorList.length > splitNumber) {
+                var len = this._colorList.length;
+                var newColorList = [this._colorList[0]];
+                var step = len / (splitNumber - 1);
+                for (var i = 1; i < splitNumber - 1; i++) {
+                    newColorList.push(this._colorList[Math.floor(i * step)]);
                 }
-                var splitNumber = this.dataRangeOption.splitNumber <= 0 || this.dataRangeOption.calculable ? 100 : this.dataRangeOption.splitNumber;
-                this._colorList = zrColor.getGradientColors(this.dataRangeOption.color, Math.max((splitNumber - this.dataRangeOption.color.length) / (this.dataRangeOption.color.length - 1), 0) + 1);
-                if (this._colorList.length > splitNumber) {
-                    var len = this._colorList.length;
-                    var newColorList = [this._colorList[0]];
-                    var step = len / (splitNumber - 1);
-                    for (var i = 1; i < splitNumber - 1; i++) {
-                        newColorList.push(this._colorList[Math.floor(i * step)]);
+                newColorList.push(this._colorList[len - 1]);
+                this._colorList = newColorList;
+            }
+            if (this._useCustomizedSplit()) {
+                var splitList = this._splitList;
+                for (var i = 0, len = splitList.length; i < len; i++) {
+                    if (splitList[i].color) {
+                        this._colorList[i] = splitList[i].color;
                     }
-                    newColorList.push(this._colorList[len - 1]);
-                    this._colorList = newColorList;
                 }
+            }
+        },
+        _buildGap: function (splitNumber) {
+            if (!this._useCustomizedSplit()) {
                 var precision = this.dataRangeOption.precision;
                 this._gap = (this.dataRangeOption.max - this.dataRangeOption.min) / splitNumber;
                 while (this._gap.toFixed(precision) - 0 != this._gap && precision < 5) {
@@ -1503,11 +1542,81 @@ define('echarts/chart/scatter', [
                 }
                 this.dataRangeOption.precision = precision;
                 this._gap = ((this.dataRangeOption.max - this.dataRangeOption.min) / splitNumber).toFixed(precision) - 0;
-                this._valueTextList = [];
-                for (var i = 0; i < splitNumber; i++) {
-                    this._selectedMap[i] = true;
-                    this._valueTextList.unshift(this._textFormat(i * this._gap + this.dataRangeOption.min, (i + 1) * this._gap + this.dataRangeOption.min));
+            }
+        },
+        _buildDataList: function (splitNumber) {
+            var valueTextList = this._valueTextList = [];
+            var dataRangeOption = this.dataRangeOption;
+            var useCustomizedSplit = this._useCustomizedSplit();
+            for (var i = 0; i < splitNumber; i++) {
+                this._selectedMap[i] = true;
+                var text = '';
+                if (useCustomizedSplit) {
+                    var splitListItem = this._splitList[splitNumber - 1 - i];
+                    if (splitListItem.label != null) {
+                        text = splitListItem.label;
+                    } else if (splitListItem.single != null) {
+                        text = this._textFormat(splitListItem.single);
+                    } else {
+                        text = this._textFormat(splitListItem.min, splitListItem.max);
+                    }
+                } else {
+                    text = this._textFormat(i * this._gap + dataRangeOption.min, (i + 1) * this._gap + dataRangeOption.min);
                 }
+                valueTextList.unshift(text);
+            }
+        },
+        _buildSplitList: function () {
+            if (!this._useCustomizedSplit()) {
+                return;
+            }
+            var splitList = this.dataRangeOption.splitList;
+            var splitRangeList = this._splitList = [];
+            for (var i = 0, len = splitList.length; i < len; i++) {
+                var splitListItem = splitList[i];
+                if (!splitListItem || splitListItem.start == null && splitListItem.end == null) {
+                    throw new Error('Empty item exists in splitList!');
+                }
+                var reformedItem = {
+                    label: splitListItem.label,
+                    color: splitListItem.color
+                };
+                reformedItem.min = splitListItem.start;
+                reformedItem.max = splitListItem.end;
+                if (reformedItem.min > reformedItem.max) {
+                    reformedItem.min = [
+                        reformedItem.max,
+                        reformedItem.max = reformedItem.min
+                    ][0];
+                }
+                if (reformedItem.min === reformedItem.max) {
+                    reformedItem.single = reformedItem.max;
+                }
+                if (reformedItem.min == null) {
+                    reformedItem.min = -Number.MAX_VALUE;
+                }
+                if (reformedItem.max == null) {
+                    reformedItem.max = Number.MAX_VALUE;
+                }
+                splitRangeList.push(reformedItem);
+            }
+        },
+        refresh: function (newOption) {
+            if (newOption) {
+                this.option = newOption;
+                this.option.dataRange = this.reformOption(this.option.dataRange);
+                var dataRangeOption = this.dataRangeOption = this.option.dataRange;
+                if (!this._useCustomizedSplit() && (dataRangeOption.min == null || dataRangeOption.max == null)) {
+                    throw new Error('option.dataRange.min or option.dataRange.max has not been defined.');
+                }
+                if (!this.myChart.canvasSupported) {
+                    dataRangeOption.realtime = false;
+                }
+                var splitNumber = this._isContinuity() ? 100 : this._useCustomizedSplit() ? dataRangeOption.splitList.length : dataRangeOption.splitNumber;
+                this._buildSplitList();
+                this._buildColorList(splitNumber);
+                this._buildGap(splitNumber);
+                this._buildDataList(splitNumber);
             }
             this.clear();
             this._buildShape();
@@ -1516,22 +1625,33 @@ define('echarts/chart/scatter', [
             if (isNaN(value)) {
                 return null;
             }
-            if (this.dataRangeOption.min == this.dataRangeOption.max) {
-                return this._colorList[0];
-            }
-            if (value < this.dataRangeOption.min) {
-                value = this.dataRangeOption.min;
-            } else if (value > this.dataRangeOption.max) {
-                value = this.dataRangeOption.max;
-            }
-            if (this.dataRangeOption.calculable) {
-                if (value - (this._gap * this._range.start + this.dataRangeOption.min) > 0.00005 || value - (this._gap * this._range.end + this.dataRangeOption.min) < -0.00005) {
-                    return null;
+            var idx;
+            if (!this._useCustomizedSplit()) {
+                if (this.dataRangeOption.min == this.dataRangeOption.max) {
+                    return this._colorList[0];
                 }
-            }
-            var idx = this._colorList.length - Math.ceil((value - this.dataRangeOption.min) / (this.dataRangeOption.max - this.dataRangeOption.min) * this._colorList.length);
-            if (idx == this._colorList.length) {
-                idx--;
+                if (value < this.dataRangeOption.min) {
+                    value = this.dataRangeOption.min;
+                } else if (value > this.dataRangeOption.max) {
+                    value = this.dataRangeOption.max;
+                }
+                if (this.dataRangeOption.calculable) {
+                    if (value - (this._gap * this._range.start + this.dataRangeOption.min) > 0.00005 || value - (this._gap * this._range.end + this.dataRangeOption.min) < -0.00005) {
+                        return null;
+                    }
+                }
+                idx = this._colorList.length - Math.ceil((value - this.dataRangeOption.min) / (this.dataRangeOption.max - this.dataRangeOption.min) * this._colorList.length);
+                if (idx == this._colorList.length) {
+                    idx--;
+                }
+            } else {
+                var splitRangeList = this._splitList;
+                for (var i = 0, len = splitRangeList.length; i < len; i++) {
+                    if (splitRangeList[i].min <= value && splitRangeList[i].max >= value) {
+                        idx = i;
+                        break;
+                    }
+                }
             }
             if (this._selectedMap[idx]) {
                 return this._colorList[idx];

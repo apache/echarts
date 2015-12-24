@@ -162,8 +162,8 @@ option = {
                         label : {
                             show:true,
                             position:'top',
-                            formatter: function (a,b,v) {
-                                return Math.round(v/10000) + ' 万'
+                            formatter: function (param) {
+                                return Math.round(param.value/10000) + ' 万'
                             }
                         }
                     }
@@ -180,8 +180,8 @@ option = {
                         color:'#1e90ff',
                         label : {
                             show:true,
-                            formatter: function (a,b,v) {
-                                return Math.round(v/10000) + ' 万'
+                            formatter: function (param) {
+                                return Math.round(param.value/10000) + ' 万'
                             }
                         }
                     }

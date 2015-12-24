@@ -15,6 +15,8 @@ define(function() {
         CHART_TYPE_PIE: 'pie',
         CHART_TYPE_RADAR: 'radar',
         CHART_TYPE_VENN: 'venn',
+        CHART_TYPE_TREEMAP: 'treemap',
+        CHART_TYPE_TREE: 'tree',
         CHART_TYPE_MAP: 'map',
         CHART_TYPE_K: 'k',
         CHART_TYPE_ISLAND: 'island',
@@ -23,6 +25,8 @@ define(function() {
         CHART_TYPE_GAUGE: 'gauge',
         CHART_TYPE_FUNNEL: 'funnel',
         CHART_TYPE_EVENTRIVER: 'eventRiver',
+        CHART_TYPE_WORDCLOUD: 'wordCloud',
+        CHART_TYPE_HEATMAP: 'heatmap',
 
         // 组件类型
         COMPONENT_TYPE_TITLE: 'title',
@@ -200,6 +204,7 @@ define(function() {
         },
         DRAG_ENABLE_TIME: 120,   // 降低图表内元素拖拽敏感度，单位ms，不建议外部干预
         EFFECT_ZLEVEL : 10,       // 特效动画zlevel
+        effectBlendAlpha: 0.95,
         // 主题，默认标志图形类型列表
         symbolList: [
           'circle', 'rectangle', 'triangle', 'diamond',

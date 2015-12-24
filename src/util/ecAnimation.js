@@ -190,7 +190,7 @@ define(function (require) {
             })
             .start(easing);
     }
-    
+
     /**
      * 环型动画
      * 
@@ -228,7 +228,7 @@ define(function (require) {
                 .start(easing);
             zr.animate(newShape.id, '')
                 .when(
-                    Math.round(duration / 3 * 2),
+                    duration,
                     { rotation : [0, x, y] }
                 )
                 .start(easing);

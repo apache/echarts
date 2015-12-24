@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ECharts">
+    <meta name="author" content="kener.linfeng@gmail.com">
+    <title>ECharts · Example</title>
+
+    <link rel="shortcut icon" href="../asset/ico/favicon.png">
+
+    <link href="../asset/css/font-awesome.min.css" rel="stylesheet">
+    <link href="../asset/css/bootstrap.css" rel="stylesheet">
+    <link href="../asset/css/carousel.css" rel="stylesheet">
+    <link href="../asset/css/echartsHome.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="./www/js/echarts.js"></script>
+    <script src="../asset/js/codemirror.js"></script>
+    <script src="../asset/js/javascript.js"></script>
+
+    <link href="../asset/css/codemirror.css" rel="stylesheet">
+    <link href="../asset/css/monokai.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Fixed navbar -->
+    <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="head"></div>
+
+
+    <div class="container-fluid">
+        <div class="row-fluid example">
+            <div id="sidebar-code" class="col-md-4">
+                <div class="well sidebar-nav">
+                    <div class="nav-header"><a href="#" onclick="autoResize()" class="glyphicon glyphicon-resize-full" id ="icon-resize" ></a>option</div>
+                    <textarea id="code" name="code">
+
+function createRandomItemStyle() {
+    return {
+        normal: {
+            color: 'rgb(' + [
+                Math.round(Math.random() * 160),
+                Math.round(Math.random() * 160),
+                Math.round(Math.random() * 160)
+            ].join(',') + ')'
+        }
+    };
+}
+
+option = {
+    title: {
+        text: 'Google Trends',
+        link: 'http://www.google.com/trends/hottrends'
+    },
+    tooltip: {
+        show: true
+    },
+    series: [{
+        name: 'Google Trends',
+        type: 'wordCloud',
+        size: ['80%', '80%'],
+        textRotation : [0, 45, 90, -45],
+        textPadding: 0,
+        autoSize: {
+            enable: true,
+            minSize: 14
+        },
+        data: [
+            {
+                name: "Sam S Club",
+                value: 10000,
+                itemStyle: {
+                    normal: {
+                        color: 'black'
+                    }
+                }
+            },
+            {
+                name: "Macys",
+                value: 6181,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Amy Schumer",
+                value: 4386,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Jurassic World",
+                value: 4055,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Charter Communications",
+                value: 2467,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Chick Fil A",
+                value: 2244,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Planet Fitness",
+                value: 1898,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Pitch Perfect",
+                value: 1484,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Express",
+                value: 1112,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Home",
+                value: 965,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Johnny Depp",
+                value: 847,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Lena Dunham",
+                value: 582,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Lewis Hamilton",
+                value: 555,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "KXAN",
+                value: 550,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Mary Ellen Mark",
+                value: 462,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Farrah Abraham",
+                value: 366,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Rita Ora",
+                value: 360,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Serena Williams",
+                value: 282,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "NCAA baseball tournament",
+                value: 273,
+                itemStyle: createRandomItemStyle()
+            },
+            {
+                name: "Point Break",
+                value: 265,
+                itemStyle: createRandomItemStyle()
+            }
+        ]
+    }]
+};
+                    </textarea>
+              </div><!--/.well -->
+            </div><!--/span-->
+            <div id="graphic" class="col-md-8">
+                <div id="main" class="main"></div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-success" onclick="refresh(true)">刷 新</button>
+                    <span class="text-primary">切换主题</span>
+                    <select id="theme-select"></select>
+
+                    <span id='wrong-message' style="color:red"></span>
+                </div>
+            </div><!--/span-->
+        </div><!--/row-->
+        
+        </div><!--/.fluid-container-->
+
+    <footer id="footer"></footer>
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="../asset/js/jquery.min.js"></script>
+    <script type="text/javascript" src="../asset/js/echartsHome.js"></script>
+    <script src="../asset/js/bootstrap.min.js"></script>
+    <script src="../asset/js/echartsExample.js"></script>
+</body>
+</html>
