@@ -20,11 +20,15 @@ define(function(require) {
             maxHeight = Infinity;
         }
         var currentLineMaxSize = 0;
-        group.eachChild(function (child) {
+        group.eachChild(function (child, idx) {
             var position = child.position;
             var rect = child.getBoundingRect();
+            var nextChild = group.childAt(idx + 1);
+            var nextChildRect = nextChild && nextChild.getBoundingRect();
+            var nextX;
+            var nextY;
             if (orient === 'horizontal') {
-                var nextX = x + rect.width;
+                nextX = x + rect.width + (nextChildRect ? (-nextChildRect.x + rect.x) : 0);
                 // Wrap
                 if (nextX > maxWidth) {
                     x = 0;
@@ -36,7 +40,7 @@ define(function(require) {
                 }
             }
             else {
-                var nextY = y + rect.height;
+                nextY = y + rect.height + (nextChildRect ? (-nextChildRect.y + rect.y) : 0);
                 // Wrap
                 if (nextY > maxHeight) {
                     x += currentLineMaxSize + gap;
@@ -52,8 +56,8 @@ define(function(require) {
             position[1] = y;
 
             orient === 'horizontal'
-                ? x += rect.width + gap
-                : y += rect.height + gap;
+                ? (x = nextX + gap)
+                : (y = nextY + gap);
         });
     }
 
