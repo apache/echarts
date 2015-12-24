@@ -41,6 +41,10 @@ define(function (require) {
         constructor: Axis2D,
 
         /**
+         * Index of axis, can be used as key
+         */
+        index: 0,
+        /**
          * If axis is on the zero position of the other axis
          * @type {boolean}
          */
