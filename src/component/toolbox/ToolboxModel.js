@@ -41,9 +41,9 @@ define(function (require) {
 
             padding: 10,
 
-            itemGap: 10,
+            itemSize: 15,
 
-            itemSize: 18,
+            itemGap: 8,
 
             showTitle: true,
 
