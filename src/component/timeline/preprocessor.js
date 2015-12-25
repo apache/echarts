@@ -32,6 +32,34 @@ define(function(require) {
             delete opt.type;
         }
 
+        transferItem(opt);
+
+        if (has(opt, 'controlPosition')) {
+            var controlStyle = opt.controlStyle || (opt.controlStyle = {});
+            if (!has(controlStyle, 'position')) {
+                controlStyle.position = opt.controlPosition;
+            }
+            if (controlStyle.position === 'none' && !has(controlStyle, 'show')) {
+                controlStyle.show = false;
+                delete controlStyle.position;
+            }
+            delete opt.controlPosition;
+        }
+
+        var data = opt.data || (opt.data = []);
+
+        zrUtil.each(data, function (dataItem) {
+            if (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem)) {
+                if (!has(dataItem, 'value') && has(dataItem, 'name')) {
+                    // In ec2, using name as value.
+                    dataItem.value = dataItem.name;
+                }
+                transferItem(dataItem);
+            }
+        });
+    }
+
+    function transferItem(opt) {
         var itemStyle = opt.itemStyle || (opt.itemStyle = {});
 
         var itemStyleEmphasis = itemStyle.emphasis || (itemStyle.emphasis = {});
@@ -59,18 +87,6 @@ define(function(require) {
         if (itemStyleEmphasis.label && !has(label, 'emphasis')) {
             label.emphasis = itemStyleEmphasis.label;
             delete itemStyleEmphasis.label;
-        }
-
-        if (has(opt, 'controlPosition')) {
-            var controlStyle = opt.controlStyle || (opt.controlStyle = {});
-            if (!has(controlStyle, 'position')) {
-                controlStyle.position = opt.controlPosition;
-            }
-            if (controlStyle.position === 'none' && !has(controlStyle, 'show')) {
-                controlStyle.show = false;
-                delete controlStyle.position;
-            }
-            delete opt.controlPosition;
         }
     }
 

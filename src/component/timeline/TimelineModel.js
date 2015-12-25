@@ -6,7 +6,7 @@ define(function(require) {
     var ComponentModel = require('../../model/Component');
     var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
-    var numberUtil = require('../../util/number');
+    var modelUtil = require('../../util/model');
 
     var TimelineModel = ComponentModel.extend({
 
@@ -35,6 +35,7 @@ define(function(require) {
 
             controlPosition: 'left',           // 'right' | 'none'
             autoPlay: false,
+            rewind: false,                     // 反向播放
             loop: true,
             playInterval: 2000,                // 播放时间间隔，单位ms
 
@@ -66,6 +67,12 @@ define(function(require) {
              * @type {module:echarts/data/List}
              */
             this._data;
+
+            /**
+             * @private
+             * @type {Array.<string>}
+             */
+            this._names;
 
             this.mergeDefaultAndTheme(option, ecModel);
             this.mergeOption({}, true);
@@ -150,36 +157,38 @@ define(function(require) {
             var thisOption = this.option;
             var dataArr = thisOption.data || [];
             var axisType = thisOption.axisType;
-            var names = [];
+            var names = this._names = [];
 
             if (axisType === 'category') {
                 var idxArr = [];
                 zrUtil.each(dataArr, function (item, index) {
-                    idxArr.push(index);
+                    var value = modelUtil.getDataItemValue(item);
+                    var newItem;
 
-                    var name = zrUtil.isObject(item) ? item.value : item;
-                    if (!zrUtil.isString(name) && (name == null || isNaN(name))) {
-                        name = '';
+                    if (zrUtil.isObject(item)) {
+                        newItem = zrUtil.clone(item, true);
+                        newItem.value = index;
+                    }
+                    else {
+                        newItem = index;
                     }
 
-                    names.push(name + '');
+                    idxArr.push(newItem);
+
+                    if (!zrUtil.isString(value) && (value == null || isNaN(value))) {
+                        value = '';
+                    }
+
+                    names.push(value + '');
                 });
                 dataArr = idxArr;
             }
 
-            var data = this._data = new List(['value'], this);
-            data.initData(dataArr, names, function (dataItem) {
-                if (axisType === 'time') {
-                    if (zrUtil.isObject(dataItem)) {
-                        dataItem.value = +numberUtil.parseDate(dataItem.value);
-                        return dataItem;
-                    }
-                    else {
-                        return +numberUtil.parseDate(dataItem);
-                    }
-                }
-                return dataItem;
-            });
+            var dimType = ({category: 'ordinal', time: 'time'})[axisType] || 'number';
+
+            var data = this._data = new List([{name: 'value', type: dimType}], this);
+
+            data.initData(dataArr, names);
         },
 
         getData: function () {
@@ -192,7 +201,7 @@ define(function(require) {
          */
         getCategories: function () {
             if (this.get('axisType') === 'category') {
-                return this.get('data').slice();
+                return this._names.slice();
             }
         }
 

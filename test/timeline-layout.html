@@ -26,7 +26,7 @@
         </style>
         <div id="main"></div>
 
-        <script src="data/timelineOption.js"></script>
+        <script src="data/timelineGDP.js"></script>
 
         <script>
 
@@ -45,7 +45,7 @@
                 makeChart({timeline: {inverse: true, controlStyle: {position: 'right'}}});
 
                 makeChart({timeline: {orient: 'vertical', x: 0, y: 10, width: 55, height: '80%'}});
-                makeChart({timeline: {orient: 'vertical', inverse: true, x: 0, y: 10, width: 55, height: '80%'}});
+                makeChart({timeline: {orient: 'vertical', inverse: true, rewind: true, x: 0, y: 10, width: 55, height: '80%'}});
                 makeChart({timeline: {orient: 'vertical', inverse: true, x: null, x2: 0, y: 10, width: 55, height: '80%'}});
                 makeChart({timeline: {orient: 'vertical', inverse: true, x: null, x2: 0, y: 10, width: 55, height: '80%', controlStyle: {position: 'top'}}});
                 makeChart({timeline: {label: {position: 'top'}}});
@@ -64,6 +64,34 @@
                     controlStyle: {showPrevBtn: false, showNextBtn: false, normal: {color: 'rgba(194,53,49, 0.5)', borderColor: 'rgba(194,53,49, 0.5)'}},
                     orient: 'vertical', inverse: true, x: 0, y: 40, width: 55, height: '80%'
                 }});
+
+                makeChart({
+                    timeline: {
+                        height: 55,
+                        data: [
+                            '2002-01-01','2003-01-01','2004-01-01','2005-01-01',
+                            {
+                                value: '2006-01-01',
+                                itemStyle: {
+                                    normal: {
+                                        symbol: 'pin',
+                                        symbolSize: 30
+                                    }
+                                }
+                            },
+                            '2007-01-01','2008-01-01','2009-01-01','2010-01-01',
+                            {
+                                value: '2011-01-01',
+                                itemStyle: {
+                                    normal: {
+                                        symbol: 'pin',
+                                        symbolSize: 30
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                });
 
                 function makeChart(opt) {
                     opt = opt || {};
@@ -102,7 +130,7 @@
                             // controlStyle: {
                             //     position: 'left'
                             // },
-                            data:[
+                            data: [
                                 '2002-01-01','2003-01-01','2004-01-01','2005-01-01','2006-01-01',
                                 '2007-01-01','2008-01-01','2009-01-01','2010-01-01','2011-01-01'
                             ],

@@ -21,6 +21,9 @@ define(function(require) {
             orient: 'horizontal',              // 'vertical'
             inverse: false,
 
+            tooltip: false,                    // boolean or Object
+                                               // data item may also have tootip attr.
+
             lineStyle: {
                 show: true,
                 width: 2,

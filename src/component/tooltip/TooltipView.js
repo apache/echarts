@@ -699,7 +699,7 @@ define(function (require) {
             var dims = coordSys.dimensions;
             value = zrUtil.map(value, function (val, idx) {
                 var axis = coordSys.getAxis(dims[idx]);
-                if (axis.type === 'category') {
+                if (axis.type === 'category' || axis.type === 'time') {
                     val = axis.scale.getLabel(val);
                 }
                 else {

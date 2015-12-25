@@ -13,6 +13,9 @@ define(function (require) {
     var BoundingRect = require('zrender/core/BoundingRect');
     var matrix = require('zrender/core/matrix');
     var numberUtil = require('../../util/number');
+    var modelUtil = require('../../util/model');
+    var formatUtil = require('../../util/format');
+    var encodeHTML = formatUtil.encodeHTML;
 
     var bind = zrUtil.bind;
     var each = zrUtil.each;
@@ -304,6 +307,7 @@ define(function (require) {
         },
 
         _customizeScale: function (scale, data) {
+
             scale.getTicks = function () {
                 return data.mapArray(['value'], function (value) {
                     return value;
@@ -340,7 +344,6 @@ define(function (require) {
                 silent: true,
                 z2: 1
             }));
-
         },
 
         /**
@@ -349,13 +352,14 @@ define(function (require) {
         _renderAxisTick: function (layoutInfo, group, axis, timelineModel) {
             var data = timelineModel.getData();
             var ticks = axis.scale.getTicks();
+            var tooltipHostModel = this._prepareTooltipHostModel(data, timelineModel);
 
             each(ticks, function (value, dataIndex) {
 
                 var tickCoord = axis.dataToCoord(value);
-                var itemStyleModel = data.getItemModel(dataIndex).getModel('itemStyle.normal');
-                var hoverStyleModel = data.getItemModel(dataIndex).getModel('itemStyle.emphasis');
-
+                var itemModel = data.getItemModel(dataIndex);
+                var itemStyleModel = itemModel.getModel('itemStyle.normal');
+                var hoverStyleModel = itemModel.getModel('itemStyle.emphasis');
                 var symbolOpt = {
                     position: [tickCoord, 0],
                     onclick: bind(this._changeTimeline, this, dataIndex)
@@ -363,7 +367,31 @@ define(function (require) {
                 var el = giveSymbol(itemStyleModel, group, symbolOpt);
                 graphic.setHoverStyle(el, hoverStyleModel.getItemStyle());
 
+                if (itemModel.get('tooltip')) {
+                    el.dataIndex = dataIndex;
+                    el.hostModel = tooltipHostModel;
+                }
+                else {
+                    el.dataIndex = el.hostModel = null;
+                }
+
             }, this);
+        },
+
+        /**
+         * @private
+         */
+        _prepareTooltipHostModel: function (data, timelineModel) {
+            var tooltipHostModel = modelUtil.createDataFormatModel(
+                {}, data, timelineModel.get('data')
+            );
+            var me = this;
+
+            tooltipHostModel.formatTooltip = function (dataIndex) {
+                return encodeHTML(me._axis.scale.getLabel(dataIndex));
+            };
+
+            return tooltipHostModel;
         },
 
         /**
@@ -540,7 +568,7 @@ define(function (require) {
                 var timelineModel = this.model;
                 this._changeTimeline(
                     timelineModel.getCurrentIndex()
-                    + (timelineModel.get('inverse', true) ? -1 : 1)
+                    + (timelineModel.get('rewind', true) ? -1 : 1)
                 );
             }
         },

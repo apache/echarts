@@ -97,15 +97,25 @@ define(function (require) {
             function visitComponent(mainType, dependencies) {
                 var newCptOptionList = newOption[mainType];
 
-                if (!newCptOptionList) {
-                    // Possible when using removeEdgeAndAdd in topologicalTravel
-                    // and ComponentModel.getAllClassMainTypes
-                    each(componentsMap[mainType], function (cpt) {
-                        cpt.mergeOption({}, this);
-                    });
-                    return;
-                }
+                newCptOptionList
+                    ? handleNew.call(this, mainType, newCptOptionList, dependencies)
+                    : handleNoNew.call(this, mainType);
 
+                // Backup series for filtering.
+                if (mainType === 'series') {
+                    this._seriesIndices = createSeriesIndices(componentsMap.series);
+                }
+            }
+
+            function handleNoNew(mainType) {
+                // Possible when using removeEdgeAndAdd in topologicalTravel
+                // and ComponentModel.getAllClassMainTypes
+                each(componentsMap[mainType], function (cpt) {
+                    cpt.mergeOption({}, this);
+                });
+            }
+
+            function handleNew(mainType, newCptOptionList, dependencies) {
                 // Normalize
                 if (!(zrUtil.isArray(newCptOptionList))) {
                     newCptOptionList = [newCptOptionList];
@@ -160,11 +170,6 @@ define(function (require) {
                     // Keep option
                     option[mainType][index] = componentModel.option;
                 }, this);
-
-                // Backup series for filtering.
-                if (mainType === 'series') {
-                    this._seriesIndices = createSeriesIndices(componentsMap.series);
-                }
             }
         },
 
@@ -740,7 +745,7 @@ define(function (require) {
     function createSeriesIndices(seriesModels) {
         return map(seriesModels, function (series) {
             return series.componentIndex;
-        });
+        }) || [];
     }
 
     /**

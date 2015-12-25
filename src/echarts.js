@@ -168,7 +168,7 @@ define(function (require) {
         );
 
         (!this._model || notMerge)
-            ? ecModelRecreate.call(this, baseOption)
+            ? (this._model = new GlobalModel(baseOption, null, this._theme))
             : ecModelMerge.call(this, baseOption);
 
         var partialOption = this._optionManager.getPartialOption(this._model);
@@ -180,10 +180,6 @@ define(function (require) {
 
         !notRefreshImmediately && this._zr.refreshImmediately();
     };
-
-    function ecModelRecreate(option) {
-        this._model = new GlobalModel(option, null, this._theme);
-    }
 
     function ecModelMerge(option) {
         var ecModel = this._model;

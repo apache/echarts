@@ -16,7 +16,8 @@ define(function (require) {
         'int': Int32Array,
         // Ordinal data type can be string or int
         'ordinal': Array,
-        'number': Array
+        'number': Array,
+        'time': Array
     };
 
     var Model = require('../model/Model');
