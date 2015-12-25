@@ -19,7 +19,7 @@
 
             require([
                 'echarts',
-                'echarts/chart/line',
+                'echarts/chart/bar',
                 'echarts/component/legend',
                 'echarts/component/grid',
                 'echarts/component/axis',
@@ -54,7 +54,7 @@
 
                 chart.setOption({
                     legend: {
-                        data: ['line', 'line2', 'line3']
+                        data: ['bar', 'bar2', 'bar3']
                     },
                     tooltip: {
                         trigger: 'axis'
@@ -70,22 +70,22 @@
                     },
                     series: [
                         {
-                            name: 'line2',
-                            type: 'line',
+                            name: 'bar2',
+                            type: 'bar',
                             stack: 'all',
                             data: data2,
                             smooth: true
                         },
                         {
-                            name: 'line3',
-                            type: 'line',
+                            name: 'bar3',
+                            type: 'bar',
                             stack: 'all',
                             data: data3,
                             smooth: 0.1
                         },
                         {
-                            name: 'line',
-                            type: 'line',
+                            name: 'bar',
+                            type: 'bar',
                             data: data1,
                             smooth: true,
                             stack: 'all',

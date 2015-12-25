@@ -75,7 +75,7 @@
                 var makePolar = zrUtil.curry(makeChart, defaultPolarOption);
 
 
-
+                console.profile('render');
                 renderTitle('cartesian normal');
 
                 // inverse
@@ -398,6 +398,7 @@
                     parallelAxis: makeParallelAxisOption({inverse: true, nameLocation: 'start'})
                 });
 
+                console.profileEnd('render');
             });
 
             function makeParallelAxisOption(secondOpt) {

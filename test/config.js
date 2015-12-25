@@ -17,6 +17,6 @@ require.config({
             location: '../../zrender-dev3.0/src',
             name: 'zrender'
         }
-    ]//,
+    ]
     // urlArgs: '_v_=' + +new Date()
 });

@@ -6,6 +6,7 @@ define(function (require) {
     var RoamController = require('../../component/helper/RoamController');
 
     var modelUtil = require('../../util/model');
+    var graphic = require('../../util/graphic');
 
     require('../../echarts').extendChartView({
 
@@ -24,6 +25,8 @@ define(function (require) {
             this._symbolDraw = symbolDraw;
             this._lineDraw = lineDraw;
             this._controller = controller;
+
+            this._firstRender = true;
         },
 
         render: function (seriesModel, ecModel, api) {
@@ -68,10 +71,16 @@ define(function (require) {
             });
 
             var group = this.group;
-            group.attr({
+            var groupNewProp = {
                 position: coordSys.position,
                 scale: coordSys.scale
-            });
+            };
+            if (this._firstRender) {
+                group.attr(groupNewProp);
+            }
+            else {
+                graphic.updateProps(group, groupNewProp, seriesModel);
+            }
 
             this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
             // this._edgeScaleRatio = seriesModel.get('edgeScaleRatio');
@@ -106,6 +115,8 @@ define(function (require) {
                 }
                 el.setDraggable(draggable);
             }, this);
+
+            this._firstRender = false;
         },
 
         _startForceLayoutIteration: function (forceLayout, layoutAnimation) {

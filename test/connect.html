@@ -29,7 +29,8 @@
                 'echarts/chart/scatter',
                 'echarts/component/legend',
                 'echarts/component/grid',
-                'echarts/component/dataRange'
+                'echarts/component/dataRange',
+                'echarts/component/tooltip'
             ], function (echarts) {
 
                 var chart1 = echarts.init(document.getElementById('chart1'));
@@ -52,6 +53,9 @@
                     legend: {
                         y: 50,
                         data: ['scatter']
+                    },
+                    tooltip: {
+                        formatter: '{c}'
                     },
                     grid: {
                         y: '26%',
@@ -76,7 +80,7 @@
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
                             backgroundColor: '#eee',
-                            dimension: 'z',
+                            dimension: 2,
                             selected: [],
                             min: 0,
                             max: 24,
@@ -103,6 +107,9 @@
                         y: 50,
                         data: ['scatter']
                     },
+                    tooltip: {
+                        formatter: '{c}'
+                    },
                     grid: {
                         y: '26%',
                         y2: '26%'
@@ -125,7 +132,7 @@
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
                             backgroundColor: '#eee',
-                            dimension: 'z',
+                            dimension: 2,
                             selected: [],
                             min: 0,
                             max: 24,
@@ -148,6 +155,7 @@
                 });
 
                 echarts.connect([chart1, chart2]);
+
             });
 
         </script>

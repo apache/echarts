@@ -52,6 +52,7 @@
         'echarts/component/markLine',
 
         'echarts/component/timeline',
+        'echarts/component/toolbox',
 
         'echarts/scale/Time',
         'echarts/scale/Log',
