@@ -39,7 +39,7 @@ define(function (require) {
 
             borderWidth: 0,
 
-            padding: 10,
+            padding: 5,
 
             itemSize: 15,
 
