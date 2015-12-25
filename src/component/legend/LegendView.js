@@ -3,9 +3,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var symbolCreator = require('../../util/symbol');
     var graphic = require('../../util/graphic');
-
-    var layout = require('../../util/layout');
-    var formatUtil = require('../../util/format');
+    var listComponentHelper = require('../helper/listComponent');
 
     var curry = zrUtil.curry;
 
@@ -34,33 +32,6 @@ define(function (require) {
         });
     }
 
-    function positionGroup(group, legendModel, api) {
-        var x = legendModel.get('x');
-        var y = legendModel.get('y');
-        var x2 = legendModel.get('x2');
-        var y2 = legendModel.get('y2');
-
-        if (!x && !x2) {
-            x = 'center';
-        }
-        if (!y && !y2) {
-            y = 'top';
-        }
-        layout.positionGroup(
-            group, {
-                x: x,
-                y: y,
-                x2: x2,
-                y2: y2
-            },
-            {
-                width: api.getWidth(),
-                height: api.getHeight()
-            },
-            legendModel.get('padding')
-        );
-    }
-
     return require('../../echarts').extendComponentView({
 
         type: 'legend',
@@ -79,7 +50,9 @@ define(function (require) {
             group.removeAll();
 
             if (itemAlign === 'auto') {
-                itemAlign = legendModel.get('x') === 'right' ? 'right' : 'left';
+                itemAlign = (legendModel.get('x') === 'right'
+                    && legendModel.get('orient') === 'vertical')
+                    ? 'right' : 'left';
             }
 
             var legendDataMap = {};
@@ -162,45 +135,10 @@ define(function (require) {
                 }
             }, this);
 
-            layout.box(
-                legendModel.get('orient'),
-                group,
-                legendModel.get('itemGap'),
-                api.getWidth(),
-                api.getHeight()
-            );
-
-            positionGroup(group, legendModel, api);
-
-            // Render background after group is positioned
-            // Or will get rect of group with padding
+            listComponentHelper.layout(group, legendModel, api);
+            // Render background after group is layout
             // FIXME
-            this._renderBG(legendModel, group);
-        },
-
-        // FIXME 通用？
-        _renderBG: function (legendModel, group) {
-            var padding = formatUtil.normalizeCssArray(
-                legendModel.get('padding')
-            );
-            var boundingRect = group.getBoundingRect();
-            var rect = new graphic.Rect({
-                shape: {
-                    x: boundingRect.x - padding[3],
-                    y: boundingRect.y - padding[0],
-                    width: boundingRect.width + padding[1] + padding[3],
-                    height: boundingRect.height + padding[0] + padding[2]
-                },
-                style: {
-                    stroke: legendModel.get('borderColor'),
-                    fill: legendModel.get('backgroundColor'),
-                    lineWidth: legendModel.get('borderWidth')
-                },
-                silent: true
-            });
-            graphic.subPixelOptimizeRect(rect);
-
-            group.add(rect);
+            listComponentHelper.addBackground(group, legendModel);
         },
 
         _createItem: function (
