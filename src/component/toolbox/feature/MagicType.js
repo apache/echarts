@@ -110,7 +110,7 @@ define(function(require) {
                 }
             );
             api.dispatchAction({
-                type: 'magicType',
+                type: 'changeMagicType',
                 newOption: newOption
             });
         }
@@ -118,9 +118,9 @@ define(function(require) {
 
     var echarts = require('../../../echarts');
     echarts.registerAction({
-        type: 'magicType',
-        event: 'magicType',
-        update: 'reoption'
+        type: 'changeMagicType',
+        event: 'magicTypeChanged',
+        update: 'prepareAndUpdate'
     }, function (payload, ecModel) {
         ecModel.mergeOption(payload.newOption);
     });

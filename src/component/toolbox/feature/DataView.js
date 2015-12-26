@@ -1,18 +1,27 @@
+/**
+ * @module echarts/component/toolbox/feature/DataView
+ */
+
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var eventTool = require('zrender/core/event');
 
+
+    var BLOCK_SPLITER = new Array(60).join('-');
+    var ITEM_SPLITER = '\t';
     /**
      * Group series into two types
      *  1. on category axis, like line, bar
      *  2. others, like scatter, pie
      * @param {module:echarts/model/Global} ecModel
      * @return {Object}
+     * @inner
      */
     function groupSeries(ecModel) {
         var seriesGroupByCategoryAxis = {};
         var otherSeries = [];
+        var meta = [];
         ecModel.eachRawSeries(function (seriesModel) {
             var coordSys = seriesModel.coordinateSystem;
 
@@ -20,21 +29,32 @@ define(function (require) {
                 var baseAxis = coordSys.getBaseAxis();
                 if (baseAxis.type === 'category') {
                     var key = baseAxis.dim + '_' + baseAxis.index;
-                    seriesGroupByCategoryAxis[key] = seriesGroupByCategoryAxis[key] || {
-                        categoryAxis: baseAxis,
-                        valueAxis: coordSys.getOtherAxis(baseAxis),
-                        series: []
-                    };
+                    if (!seriesGroupByCategoryAxis[key]) {
+                        seriesGroupByCategoryAxis[key] = {
+                            categoryAxis: baseAxis,
+                            valueAxis: coordSys.getOtherAxis(baseAxis),
+                            series: []
+                        };
+                        meta.push({
+                            axisDim: baseAxis.dim,
+                            axisIndex: baseAxis.index
+                        });
+                    }
                     seriesGroupByCategoryAxis[key].series.push(seriesModel);
+                }
+                else {
+                    otherSeries.push(seriesModel);
                 }
             }
             else {
                 otherSeries.push(seriesModel);
             }
         });
+
         return {
             seriesGroupByCategoryAxis: seriesGroupByCategoryAxis,
-            other: otherSeries
+            other: otherSeries,
+            meta: meta
         };
     }
 
@@ -42,6 +62,7 @@ define(function (require) {
      * Assemble content of series on cateogory axis
      * @param {Array.<module:echarts/model/Series>} series
      * @return {string}
+     * @inner
      */
     function assembleSeriesWithCategoryAxis(series) {
         var tables = [];
@@ -50,7 +71,7 @@ define(function (require) {
             var valueAxis = group.valueAxis;
             var valueAxisDim = valueAxis.dim;
 
-            var headers = ['类目'].concat(zrUtil.map(group.series, function (series) {
+            var headers = [' '].concat(zrUtil.map(group.series, function (series) {
                 return series.name;
             }));
             var columns = [categoryAxis.model.getCategories()];
@@ -60,56 +81,171 @@ define(function (require) {
                 }));
             });
             // Assemble table content
-            var lines = [headers.join('\t')];
+            var lines = [headers.join(ITEM_SPLITER)];
             for (var i = 0; i < columns[0].length; i++) {
                 var items = [];
                 for (var j = 0; j < columns.length; j++) {
                     items.push(columns[j][i]);
                 }
-                lines.push(items.join('\t'));
+                lines.push(items.join(ITEM_SPLITER));
             }
             tables.push(lines.join('\n'));
         });
-        return tables.join('\n\n\n');
+        return tables.join('\n\n' +  BLOCK_SPLITER + '\n\n');
     }
 
     /**
      * Assemble content of other series
      * @param {Array.<module:echarts/model/Series>} series
      * @return {string}
+     * @inner
      */
     function assembleOtherSeries(series) {
         return zrUtil.map(series, function (series) {
             var data = series.getData();
             var lines = [series.name];
+            var vals = [];
             data.each(data.dimensions, function () {
                 var argLen = arguments.length;
                 var dataIndex = arguments[argLen - 1];
-                var vals = zrUtil.slice(arguments, 0, argLen - 1);
                 var name = data.getName(dataIndex);
-                if (name) {
-                    vals.unshift(name);
+                for (var i = 0; i < argLen - 1; i++) {
+                    vals[i] = arguments[i];
                 }
-                lines.push(vals.join('\t'));
+                lines.push((name ? (name + ITEM_SPLITER) : '') + vals.join(ITEM_SPLITER));
             });
             return lines.join('\n');
-        }).join('\n\n\n');
+        }).join('\n\n' + BLOCK_SPLITER + '\n\n');
     }
 
     /**
      * @param {module:echarts/model/Global}
      * @return {string}
+     * @inner
      */
     function getContentFromModel(ecModel) {
 
         var result = groupSeries(ecModel);
 
-        return [
-            assembleSeriesWithCategoryAxis(result.seriesGroupByCategoryAxis),
-            assembleOtherSeries(result.other)
-        ].join('\n\n\n');
+        return {
+            value: zrUtil.filter([
+                    assembleSeriesWithCategoryAxis(result.seriesGroupByCategoryAxis),
+                    assembleOtherSeries(result.other)
+                ], function (str) {
+                    return str.replace(/[\n\t\s]/g, '');
+                }).join('\n\n' + BLOCK_SPLITER + '\n\n'),
+
+            meta: result.meta
+        };
     }
 
+
+    function trim(str) {
+        return str.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+    }
+    /**
+     * If a block is tsv format
+     */
+    function isTSVFormat(block) {
+        // Simple method to find out if a block is tsv format
+        var firstLine = block.slice(0, block.indexOf('\n'));
+        if (firstLine.indexOf(ITEM_SPLITER) >= 0) {
+            return true;
+        }
+    }
+
+    var itemSplitRegex = new RegExp('[' + ITEM_SPLITER + '| ]+', 'g');
+    /**
+     * @param {string} tsv
+     * @return {Array.<Object>}
+     */
+    function parseTSVContents(tsv) {
+        var tsvLines = tsv.split(/\n+/g);
+        var headers = trim(tsvLines.shift()).split(itemSplitRegex);
+
+        var categories = [];
+        var series = zrUtil.map(headers, function (header) {
+            return {
+                name: header,
+                data: []
+            };
+        });
+        for (var i = 0; i < tsvLines.length; i++) {
+            var items = trim(tsvLines[i]).split(itemSplitRegex);
+            categories.push(items.shift());
+            for (var j = 0; j < items.length; j++) {
+                series[j] && (series[j].data[i] = items[j]);
+            }
+        }
+        return {
+            series: series,
+            categories: categories
+        };
+    }
+
+    /**
+     * @param {string} str
+     * @return {Array.<Object>}
+     * @inner
+     */
+    function parseListContents(str) {
+        var lines = str.split(/\n+/g);
+        var seriesName = trim(lines.shift());
+
+        var data = [];
+        for (var i = 0; i < lines.length; i++) {
+            var items = trim(lines[i]).split(itemSplitRegex);
+            data[i] = [];
+            for (var j = 0; j < items.length; j++) {
+                var item = items[j];
+                data[i].push(item);
+            }
+        }
+
+        return {
+            name: seriesName,
+            data: data
+        };
+    }
+
+    /**
+     * @param {string} str
+     * @param {Array.<Object>} blockMetaList
+     * @return {Object}
+     * @inner
+     */
+    function parseContents(str, blockMetaList) {
+        var blocks = str.split(new RegExp('\n*' + BLOCK_SPLITER + '\n*', 'g'));
+        var newOption = {
+            series: []
+        };
+        zrUtil.each(blocks, function (block, idx) {
+            if (isTSVFormat(block)) {
+                var result = parseTSVContents(block);
+                var blockMeta = blockMetaList[idx];
+                var axisKey = blockMeta.axisDim + 'Axis';
+
+                if (blockMeta) {
+                    newOption[axisKey] = newOption[axisKey] || [];
+                    newOption[axisKey][blockMeta.axisIndex] = {
+                        data: result.categories
+                    };
+                    newOption.series = newOption.series.concat(result.series);
+                }
+            }
+            else {
+                var result = parseListContents(block);
+                newOption.series.push(result);
+            }
+        });
+        return newOption;
+    }
+
+    /**
+     * @alias {module:echarts/component/toolbox/feature/DataView}
+     * @constructor
+     * @param {module:echarts/model/Model} model
+     */
     function DataView(model) {
 
         this._dom = null;
@@ -117,15 +253,15 @@ define(function (require) {
         this.model = model;
     }
 
-
     DataView.defaultOption = {
         show: true,
         readOnly: false,
         icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
         title: '数据视图',
-        lang: ['数据视图', '关闭', '刷新']
+        lang: ['数据视图', '关闭', '刷新'],
+        buttonColor: '#c23531',
+        buttonTextColor: '#fff'
     };
-
 
     DataView.prototype.onclick = function (ecModel, api) {
         var container = api.getDom();
@@ -134,7 +270,7 @@ define(function (require) {
             container.removeChild(this._dom);
         }
         var root = document.createElement('div');
-        root.style.cssText = 'position:absolute;left:5;top:5;bottom:5;right:5;'
+        root.style.cssText = 'position:absolute;left:5px;top:5px;bottom:5px;right:5px;'
             + 'background-color: white';
 
         // Create elements
@@ -144,20 +280,45 @@ define(function (require) {
         header.style.cssText = 'margin: 10px 20px;';
         var textarea = document.createElement('textarea');
         textarea.style.cssText = 'display:block;width:100%;font-size:14px;line-height:1.6rem;font-family:Monaco,Consolas,Courier New';
-        textarea.textContent = getContentFromModel(ecModel);
+
+        var result = getContentFromModel(ecModel);
+        textarea.value = result.value;
+        var blockMetaList = result.meta;
 
         var buttonContainer = document.createElement('div');
         buttonContainer.style.cssText = 'position:absolute;bottom:0;left:0;right:0;';
 
-        var buttonStyle = 'float:right;margin-right:20px;border:none;background:#c23531;'
-            + 'cursor:pointer;padding:4px 8px;color:#fff;font-size:12px;border-radius:3px;';
+        var buttonStyle = 'float:right;margin-right:20px;border:none;'
+            + 'cursor:pointer;padding:4px 8px;font-size:12px;border-radius:3px';
         var closeButton = document.createElement('div');
         var refreshButton = document.createElement('div');
 
+        buttonStyle += ';background-color:' + model.get('buttonColor');
+        buttonStyle += ';color:' + model.get('buttonTextColor');
+
         var self = this;
-        eventTool.addEventListener(closeButton, 'click', function () {
+
+        function close() {
             container.removeChild(root);
             self._dom = null;
+        }
+        eventTool.addEventListener(closeButton, 'click', close);
+
+        eventTool.addEventListener(refreshButton, 'click', function () {
+            var newOption;
+            try {
+                newOption = parseContents(textarea.value, blockMetaList);
+            }
+            catch (e) {
+                close();
+                throw new Error('Data view format error ' + e);
+            }
+            api.dispatchAction({
+                type: 'changeDataView',
+                newOption: newOption
+            });
+
+            close();
         });
 
         closeButton.innerHTML = lang[1];
@@ -177,7 +338,7 @@ define(function (require) {
                 var end = this.selectionEnd;
 
                 // set textarea value to: text before caret + tab + text after caret
-                this.value = val.substring(0, start) + '\t' + val.substring(end);
+                this.value = val.substring(0, start) + ITEM_SPLITER + val.substring(end);
 
                 // put caret at right position again
                 this.selectionStart = this.selectionEnd = start + 1;
@@ -191,7 +352,7 @@ define(function (require) {
         root.appendChild(textarea);
         root.appendChild(buttonContainer);
 
-        textarea.style.height = (container.clientHeight - 100) + 'px';
+        textarea.style.height = (container.clientHeight - 80) + 'px';
 
         container.appendChild(root);
         this._dom = root;
@@ -201,7 +362,54 @@ define(function (require) {
         this._dom && api.getDom().removeChild(this._dom);
     };
 
+    /**
+     * @inner
+     */
+    function tryMergeDataOption(newData, originalData) {
+        return zrUtil.map(newData, function (newVal, idx) {
+            var original = originalData && originalData[idx];
+            if (zrUtil.isObject(original) && !zrUtil.isArray(original)) {
+                return zrUtil.defaults({
+                    value: newVal
+                }, original);
+            }
+            else {
+                return newVal;
+            }
+        });
+    }
+
     require('../featureManager').register('dataView', DataView);
+
+    require('../../../echarts').registerAction({
+        type: 'changeDataView',
+        event: 'dataViewChanged',
+        update: 'prepareAndUpdate'
+    }, function (payload, ecModel) {
+        var newSeriesOptList = [];
+        zrUtil.each(payload.newOption.series, function (seriesOpt) {
+            var seriesModel = ecModel.getSeriesByName(seriesOpt.name)[0];
+            if (!seriesModel) {
+                // New created series
+                // Geuss the series type
+                newSeriesOptList.push(zrUtil.extend({
+                    // Default is scatter
+                    type: 'scatter'
+                }, seriesOpt));
+            }
+            else {
+                var originalData = seriesModel.get('data');
+                newSeriesOptList.push({
+                    name: seriesOpt.name,
+                    data: tryMergeDataOption(seriesOpt.data, originalData)
+                });
+            }
+        });
+
+        ecModel.mergeOption(zrUtil.defaults({
+            series: newSeriesOptList
+        }, payload.newOption));
+    });
 
     return DataView;
 });
