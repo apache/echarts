@@ -68,7 +68,6 @@ define(function(require) {
     var creaters = {
 
         cartesian2d: function (data, seriesModel, ecModel) {
-            var dimensions = [];
             var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
             var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
             var xAxisType = xAxisModel.get('type');
@@ -76,7 +75,7 @@ define(function(require) {
             var isYAxisCategory = yAxisType === 'category';
             var isXAxisCategory = xAxisType === 'category';
 
-            dimensions = [{
+            var dimensions = [{
                 name: 'x',
                 type: isXAxisCategory ? 'ordinal' : 'float',
                 stackable: isStackable(xAxisType)
@@ -97,7 +96,6 @@ define(function(require) {
         },
 
         polar: function (data, seriesModel, ecModel) {
-            var dimensions = [];
             var polarIndex = seriesModel.get('polarIndex') || 0;
 
             var axisFinder = function (axisModel) {
