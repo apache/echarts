@@ -59,6 +59,13 @@ define(function (require) {
             var legendDrawedMap = {};
             zrUtil.each(legendModel.getData(), function (itemModel) {
                 var seriesName = itemModel.get('name');
+                // Use empty string or \n as a newline string
+                if (seriesName === '' || seriesName === '\n') {
+                    group.add(new graphic.Group({
+                        newline: true
+                    }));
+                }
+
                 var seriesModel = ecModel.getSeriesByName(seriesName)[0];
 
                 legendDataMap[seriesName] = itemModel;

@@ -29,8 +29,8 @@ define(function(require) {
             var nextY;
             if (orient === 'horizontal') {
                 nextX = x + rect.width + (nextChildRect ? (-nextChildRect.x + rect.x) : 0);
-                // Wrap
-                if (nextX > maxWidth) {
+                // Wrap when width exceeds maxWidth or meet a `newline` group
+                if (nextX > maxWidth || child.newline) {
                     x = 0;
                     y += currentLineMaxSize + gap;
                     currentLineMaxSize = 0;
@@ -41,8 +41,8 @@ define(function(require) {
             }
             else {
                 nextY = y + rect.height + (nextChildRect ? (-nextChildRect.y + rect.y) : 0);
-                // Wrap
-                if (nextY > maxHeight) {
+                // Wrap when width exceeds maxHeight or meet a `newline` group
+                if (nextY > maxHeight || child.newline) {
                     x += currentLineMaxSize + gap;
                     y = 0;
                     currentLineMaxSize = 0;
@@ -50,6 +50,10 @@ define(function(require) {
                 else {
                     currentLineMaxSize = Math.max(currentLineMaxSize, rect.width);
                 }
+            }
+
+            if (child.newline) {
+                return;
             }
 
             position[0] = x;
