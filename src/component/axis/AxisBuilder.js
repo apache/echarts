@@ -210,6 +210,7 @@ define(function (require) {
             var labelLayout = innerTextLayout(opt, labelRotation, opt.labelDirection);
             var categoryData = axisModel.get('data');
 
+            var textEls = [];
             for (var i = 0; i < ticks.length; i++) {
                 if (ifIgnoreOnTick(axis, i, opt.labelInterval)) {
                      continue;
@@ -218,7 +219,7 @@ define(function (require) {
                 var itemTextStyleModel = textStyleModel;
                 if (categoryData && categoryData[i] && categoryData[i].textStyle) {
                     itemTextStyleModel = new Model(
-                        categoryData[i].textStyle, textStyleModel
+                        categoryData[i].textStyle, textStyleModel, axisModel.ecModel
                     );
                 }
 
@@ -228,7 +229,7 @@ define(function (require) {
                     opt.labelOffset + opt.labelDirection * labelMargin
                 ];
 
-                this.group.add(new graphic.Text({
+                var textEl = new graphic.Text({
                     style: {
                         text: labels[i],
                         textAlign: labelLayout.textAlign,
@@ -239,7 +240,38 @@ define(function (require) {
                     position: pos,
                     rotation: labelLayout.rotation,
                     silent: true
-                }));
+                });
+                textEls.push(textEl);
+                this.group.add(textEl);
+            }
+
+            function isTwoLabelOverlapped(current, next) {
+                var firstRect = current && current.getBoundingRect().clone();
+                var nextRect = next && next.getBoundingRect().clone();
+                if (firstRect && nextRect) {
+                    firstRect.applyTransform(current.getLocalTransform());
+                    nextRect.applyTransform(next.getLocalTransform());
+                    return firstRect.intersect(nextRect);
+                }
+            }
+            if (axis.type !== 'category') {
+                // If min or max are user set, we need to check
+                // If the tick on min(max) are overlap on their neighbour tick
+                // If they are overlapped, we need to hide the min(max) tick label
+                if (axisModel.get('min')) {
+                    var firstLabel = textEls[0];
+                    var nextLabel = textEls[1];
+                    if (isTwoLabelOverlapped(firstLabel, nextLabel)) {
+                        firstLabel.ignore = true;
+                    }
+                }
+                if (axisModel.get('max')) {
+                    var lastLabel = textEls[textEls.length - 1];
+                    var prevLabel = textEls[textEls.length - 2];
+                    if (isTwoLabelOverlapped(prevLabel, lastLabel)) {
+                        lastLabel.ignore = true;
+                    }
+                }
             }
         },
 
