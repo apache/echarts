@@ -20,7 +20,7 @@ define(function(require) {
                 }
             }
 
-            ecModel.updateTimelineOption();
+            ecModel.resetOption('timeline');
         }
     );
 

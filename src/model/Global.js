@@ -9,7 +9,6 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Model = require('./Model');
-    var OptionManager = require('./OptionManager');
     var each = zrUtil.each;
     var filter = zrUtil.filter;
     var map = zrUtil.map;
@@ -32,7 +31,7 @@ define(function (require) {
 
         constructor: GlobalModel,
 
-        init: function (option, parentModel, theme) {
+        init: function (option, parentModel, theme, optionManager) {
             theme = theme || {};
 
             this.option = null; // Mark as not initialized.
@@ -46,37 +45,53 @@ define(function (require) {
             /**
              * @type {module:echarts/model/OptionManager}
              */
-            this._optionManager = new OptionManager();
+            this._optionManager = optionManager;
         },
 
         setOption: function (option, optionPreprocessorFuncs) {
+            this._optionManager.setOption(option, optionPreprocessorFuncs);
+
+            this.resetOption();
+        },
+
+        /**
+         * @param {string} type null/undefined: reset all.
+         *                      'timeline': only reset timeline option
+         *                      'media': only reset media query option
+         * @return {boolean} Whether option changed.
+         */
+        resetOption: function (type) {
+            var optionChanged = false;
             var optionManager = this._optionManager;
 
-            var baseOption = optionManager.setOption(option);
+            if (!type) {
+                var baseOption = optionManager.mountOption();
 
-            if (!this.option) {
-                initBase.call(this, baseOption);
+                if (!this.option) {
+                    initBase.call(this, baseOption);
+                }
+                else {
+                    this.restoreData();
+                    this.mergeOption(baseOption);
+                }
+                optionChanged = true;
             }
-            else {
+
+            if (type === 'timeline' || type === 'media') {
                 this.restoreData();
-                this.mergeOption(baseOption);
             }
 
-            this.updateTimelineOption();
-        },
-
-        resetOption: function () {
-            initBase.call(this, this._optionManager.resetOption());
-
-            this.updateTimelineOption();
-        },
-
-        updateTimelineOption: function () {
-            var partialOption = this._optionManager.getTimelineOption(this);
-            if (partialOption) {
-                this.restoreData();
-                this.mergeOption(partialOption);
+            if (!type || type === 'timeline') {
+                var partialOption = optionManager.getTimelineOption(this);
+                partialOption && (this.mergeOption(partialOption), optionChanged = true);
             }
+
+            if (!type || type === 'media') {
+                var partialOption = optionManager.getMediaOption(this, this._api);
+                partialOption && (this.mergeOption(partialOption), optionChanged = true);
+            }
+
+            return optionChanged;
         },
 
         /**

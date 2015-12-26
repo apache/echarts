@@ -9,6 +9,9 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var each = zrUtil.each;
     var clone = zrUtil.clone;
+    var map = zrUtil.map;
+
+    var QUERY_REG = /^(min|max)?(.+)$/;
 
     /**
      * TERM EXPLANATIONS:
@@ -63,8 +66,15 @@ define(function (require) {
      *     };
      *
      * @alias module:echarts/model/OptionManager
+     * @param {module:echarts/ExtensionAPI} api
      */
-    function OptionManager() {
+    function OptionManager(api) {
+
+        /**
+         * @private
+         * @type {module:echarts/ExtensionAPI}
+         */
+        this._api = api;
 
         /**
          * @private
@@ -83,6 +93,13 @@ define(function (require) {
          * @type {Object}
          */
         this._mediaDefault;
+
+        /**
+         * -1, means default.
+         * null means no media.
+         * @private
+         */
+        this._currentMediaIndex = null;
 
         /**
          * @private
@@ -120,8 +137,23 @@ define(function (require) {
             this._optionBackup = parseRawOption.call(
                 this, rawOption, optionPreprocessorFuncs
             );
+        },
 
-            return this.resetOption();
+        /**
+         * @return {Object}
+         */
+        mountOption: function () {
+            var optionBackup = this._optionBackup;
+
+            // FIXME
+            // 如果没有reset功能则不clone。
+
+            this._timelineOptions = map(optionBackup.timelineOptions, clone);
+            this._mediaList = map(optionBackup.mediaList, clone);
+            this._mediaDefault = clone(optionBackup.mediaDefault);
+            this._currentMediaIndex = null;
+
+            return clone(optionBackup.baseOption);
         },
 
         /**
@@ -148,23 +180,44 @@ define(function (require) {
         },
 
         /**
+         * @param {module:echarts/model/Global} ecModel
          * @return {Object}
          */
-        resetOption: function () {
-            var optionBackup = this._optionBackup;
+        getMediaOption: function (ecModel) {
+            var ecWidth = this._api.getWidth();
+            var ecHeight = this._api.getHeight();
+            var mediaList = this._mediaList;
+            var index;
 
-            // FIXME
-            // 如果没有reset功能则不clone。
+            for (var i = 0, len = mediaList.length; i < len; i++) {
+                var query = mediaList[i].query;
+                if (applyMediaQuery(query, ecWidth, ecHeight)) {
+                    index = i;
+                    break;
+                }
+            }
 
-            this._timelineOptions = zrUtil.map(optionBackup.timelineOptions, clone);
+            if (this._mediaDefault) {
+                index = -1;
+            }
 
-            return clone(optionBackup.baseOption);
+            if (index != null && index !== this._currentMediaIndex) {
+                this._currentMediaIndex = index;
+                return clone(
+                    index === -1
+                        ? this._mediaDefault.option
+                        : mediaList[index].option,
+                    true
+                );
+            }
+            // Otherwise return nothing.
         }
     };
 
     function parseRawOption(rawOption, optionPreprocessorFuncs) {
         var timelineOptions = [];
         var mediaList = [];
+        var mediaDefault;
         var timelineOpt = rawOption.timeline;
         var baseOption;
 
@@ -179,9 +232,14 @@ define(function (require) {
             var media = rawOption.media;
             each(media, function (singleMedia) {
                 if (singleMedia && singleMedia.option) {
-                    mediaList.push(singleMedia);
+                    if (singleMedia.query) {
+                        mediaList.push(singleMedia);
+                    }
+                    else if (!mediaDefault) {
+                        // Use the first media default.
+                        mediaDefault = singleMedia;
+                    }
                 }
-                // else if (singleMedia && !singleMedia
             });
         }
         // For normal option
@@ -199,17 +257,56 @@ define(function (require) {
             });
         });
 
-        return {baseOption: baseOption, timelineOptions: timelineOptions};
+        return {
+            baseOption: baseOption,
+            timelineOptions: timelineOptions,
+            mediaDefault: mediaDefault,
+            mediaList: mediaList
+        };
     }
 
-    function applyMedia(ecModel, api) {
-        var result;
+    /**
+     * @see <http://www.w3.org/TR/css3-mediaqueries/#media1>
+     * Support: width, height, aspectRatio
+     * Can use max or min as prefix.
+     */
+    function applyMediaQuery(query, ecWidth, ecHeight) {
+        var realMap = {
+            width: ecWidth,
+            height: ecHeight,
+            aspectratio: ecWidth / ecHeight // lowser case for convenientce.
+        };
 
-        each(this._mediaList, function (singleMedia) {
+        var applicatable = true;
 
+        zrUtil.each(query, function (value, attr) {
+            var matched = attr.match(QUERY_REG);
+
+            if (!matched || !matched[1] || !matched[2]) {
+                return;
+            }
+
+            var operator = matched[1];
+            var realAttr = matched[2].toLowerCase();
+
+            if (!compare(realMap[realAttr], value, operator)) {
+                applicatable = false;
+            }
         });
 
-        return result;
+        return applicatable;
+    }
+
+    function compare(real, expect, operator) {
+        if (operator === 'min') {
+            return real <= expect;
+        }
+        else if (operator === 'max') {
+            return real >= expect;
+        }
+        else { // Equals
+            return real === expect;
+        }
     }
 
     return OptionManager;

@@ -16,6 +16,7 @@ define(function (require) {
     var GlobalModel = require('./model/Global');
     var ExtensionAPI = require('./ExtensionAPI');
     var CoordinateSystemManager = require('./CoordinateSystem');
+    var OptionManager = require('./model/OptionManager');
 
     var ComponentModel = require('./model/Component');
     var SeriesModel = require('./model/Series');
@@ -159,7 +160,9 @@ define(function (require) {
     echartsProto.setOption = function (option, notMerge, notRefreshImmediately) {
 
         if (!this._model || notMerge) {
-            this._model = new GlobalModel(null, null, this._theme);
+            this._model = new GlobalModel(
+                null, null, this._theme, new OptionManager(this._api)
+            );
         }
 
         this._model.setOption(option, optionPreprocessorFuncs);
@@ -472,7 +475,9 @@ define(function (require) {
      */
     echartsProto.resize = function () {
         this._zr.resize();
-        updateMethods.update.call(this);
+
+        var optionChanged = this._model && this._model.resetOption('media');
+        updateMethods[optionChanged ? 'prepareAndUpdate' : 'update'].call(this);
 
         // Resize loading effect
         this._loadingFX && this._loadingFX.resize();
