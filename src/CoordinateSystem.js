@@ -31,7 +31,7 @@ define(function(require) {
                 return list[idx || 0];
             }
         }
-    }
+    };
 
     CoordinateSystemManager.register = function (type, coordinateSystemCreator) {
         coordinateSystemCreators[type] = coordinateSystemCreator;

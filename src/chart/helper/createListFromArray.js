@@ -156,7 +156,7 @@ define(function(require) {
                 // [[3, 0.2], [1, 0.3], [2, 0.15]]
                 // or given scatter data,
                 // pick the category
-                if (data[0] && data[0].length > 1) {
+                if (zrUtil.isArray(data[0]) && data[0].length > 1) {
                     nameList = [];
                     for (var i = 0; i < dataLen; i++) {
                         nameList[i] = categories[data[i][0]];
