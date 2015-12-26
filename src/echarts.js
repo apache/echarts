@@ -88,7 +88,7 @@ define(function (require) {
          * @type {Array.<module:echarts/view/Chart>}
          * @private
          */
-        this._chartsList = [];
+        this._chartsViews = [];
 
         /**
          * @type {Object.<string, module:echarts/view/Chart>}
@@ -100,7 +100,7 @@ define(function (require) {
          * @type {Array.<module:echarts/view/Component>}
          * @private
          */
-        this._componentsList = [];
+        this._componentsViews = [];
 
         /**
          * @type {Object.<string, module:echarts/view/Component>}
@@ -456,7 +456,7 @@ define(function (require) {
         ecModel.eachComponent(
             {mainType: 'series', query: payload},
             function (seriesModel, index, payloadInfo) {
-                var chartView = this._chartsMap[seriesModel.id];
+                var chartView = this._chartsMap[seriesModel.__viewId];
                 if (chartView) {
                     chartView[method](
                         seriesModel, ecModel, this._api, payloadInfo
@@ -548,7 +548,7 @@ define(function (require) {
         var api = this._api;
 
         // Update all components
-        each(this._componentsList, function (component) {
+        each(this._componentsViews, function (component) {
             var componentModel = component.__model;
             component[methodName](componentModel, ecModel, api, payload);
 
@@ -557,7 +557,7 @@ define(function (require) {
 
         // Upate all charts
         ecModel.eachSeries(function (seriesModel, idx) {
-            var chart = this._chartsMap[seriesModel.id];
+            var chart = this._chartsMap[seriesModel.__viewId];
             chart[methodName](seriesModel, ecModel, api, payload);
 
             updateZ(seriesModel, chart);
@@ -572,7 +572,7 @@ define(function (require) {
      */
     function prepareView(type, ecModel) {
         var isComponent = type === 'component';
-        var viewList = isComponent ? this._componentsList : this._chartsList;
+        var viewList = isComponent ? this._componentsViews : this._chartsViews;
         var viewMap = isComponent ? this._componentsMap : this._chartsMap;
         var zr = this._zr;
 
@@ -590,7 +590,8 @@ define(function (require) {
                 model = componentType;
             }
 
-            var view = viewMap[model.id];
+            var viewId = model.id + '_' + model.type;
+            var view = viewMap[viewId];
             if (!view) {
                 var classType = ComponentModel.parseClassType(model.type);
                 var Clazz = isComponent
@@ -599,7 +600,7 @@ define(function (require) {
                 if (Clazz) {
                     view = new Clazz();
                     view.init(ecModel, this._api);
-                    viewMap[model.id] = view;
+                    viewMap[viewId] = view;
                     viewList.push(view);
                     zr.add(view.group);
                 }
@@ -609,8 +610,9 @@ define(function (require) {
                 }
             }
 
+            model.__viewId = viewId;
             view.__keepAlive = true;
-            view.__id = model.id;
+            view.__id = viewId;
             view.__model = model;
         }, this);
 
@@ -694,28 +696,28 @@ define(function (require) {
     function doRender(ecModel, payload) {
         var api = this._api;
         // Render all components
-        each(this._componentsList, function (component) {
-            var componentModel = component.__model;
-            component.render(componentModel, ecModel, api, payload);
+        each(this._componentsViews, function (componentView) {
+            var componentModel = componentView.__model;
+            componentView.render(componentModel, ecModel, api, payload);
 
-            updateZ(componentModel, component);
+            updateZ(componentModel, componentView);
         }, this);
 
-        each(this._chartsList, function (chart) {
+        each(this._chartsViews, function (chart) {
             chart.__keepAlive = false;
         }, this);
 
         // Render all charts
         ecModel.eachSeries(function (seriesModel, idx) {
-            var chart = this._chartsMap[seriesModel.id];
-            chart.__keepAlive = true;
-            chart.render(seriesModel, ecModel, api, payload);
+            var chartView = this._chartsMap[seriesModel.__viewId];
+            chartView.__keepAlive = true;
+            chartView.render(seriesModel, ecModel, api, payload);
 
-            updateZ(seriesModel, chart);
+            updateZ(seriesModel, chartView);
         }, this);
 
         // Remove groups of unrendered charts
-        each(this._chartsList, function (chart) {
+        each(this._chartsViews, function (chart) {
             if (!chart.__keepAlive) {
                 chart.remove(ecModel, api);
             }

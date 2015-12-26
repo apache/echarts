@@ -2,14 +2,10 @@ define(function() {
 
 var theme = {
     // 全图默认背景
-    backgroundColor: '#1b1b1b',
+    backgroundColor: '#3e4957',
 
     // 默认色板
-    color: [
-        '#FE8463','#9BCA63','#FAD860','#60C0DD','#0084C6',
-        '#D7504B','#C6E579','#26C0C0','#F0805A','#F4E001',
-        '#B5C334'
-    ],
+    color:  ['#d96666', '#8bced3', '#f0df95', '#b9dcae', '#76b8d1', '#ebe4af', '#bf9fc9', '#ea8092'],
 
     // 图表标题
     title: {

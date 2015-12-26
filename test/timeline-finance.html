@@ -108,8 +108,14 @@ var option = {
         title: {
             subtext: '数据来自国家统计局'
         },
-        tooltip: {},
+        tooltip: {
+            trigger:'axis',
+            axisPointer: {
+                type: 'shadow'
+            }
+        },
         legend: {
+            align: 'right',
             x: 'right',
             data: ['第一产业', '第二产业', '第三产业', 'GDP', '金融', '房地产'],
             selected: {
@@ -118,19 +124,17 @@ var option = {
         },
         calculable : true,
         grid: {y:80, y2: 100},
-        xAxis: [
-            {
-                'type':'category',
-                'axisLabel':{'interval':0},
-                'data':[
-                    '北京','\n天津','河北','\n山西','内蒙古','\n辽宁','吉林','\n黑龙江',
-                    '上海','\n江苏','浙江','\n安徽','福建','\n江西','山东','\n河南',
-                    '湖北','\n湖南','广东','\n广西','海南','\n重庆','四川','\n贵州',
-                    '云南','\n西藏','陕西','\n甘肃','青海','\n宁夏','新疆'
-                ],
-                splitLine: {show: false}
-            }
-        ],
+        xAxis: {
+            'type':'category',
+            'axisLabel':{'interval':0},
+            'data':[
+                '北京','\n天津','河北','\n山西','内蒙古','\n辽宁','吉林','\n黑龙江',
+                '上海','\n江苏','浙江','\n安徽','福建','\n江西','山东','\n河南',
+                '湖北','\n湖南','广东','\n广西','海南','\n重庆','四川','\n贵州',
+                '云南','\n西藏','陕西','\n甘肃','青海','\n宁夏','新疆'
+            ],
+            splitLine: {show: false}
+        },
         yAxis: [
             {
                 type: 'value',

@@ -39,11 +39,11 @@ define(function (require) {
 
             borderWidth: 0,
 
-            padding: 10,
+            padding: 5,
 
-            itemGap: 10,
+            itemSize: 15,
 
-            itemSize: 18,
+            itemGap: 8,
 
             showTitle: true,
 

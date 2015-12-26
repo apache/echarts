@@ -22,14 +22,15 @@
             require([
                 'echarts',
                 'echarts/chart/bar',
+                'echarts/chart/line',
                 'echarts/component/legend',
                 'echarts/component/grid',
-                'echarts/component/tooltip'
+                'echarts/component/tooltip',
+                'echarts/component/toolbox',
+                'zrender/vml/vml'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
-                });
+                var chart = echarts.init(document.getElementById('main'));
 
                 var xAxisData = [];
                 var data1 = [];
@@ -65,16 +66,27 @@
 
                 chart.setOption({
                     legend: {
+                        borderWidth: 1,
                         data: [{
                             name: 'bar'
                         }, 'bar2', 'bar3', 'bar4'],
                         selected: {
                             // 'bar': false
                         },
-                        orient: 'vertical',
-                        x: 'right',
-                        y: 'bottom',
-                        align: 'right'
+                        // orient: 'vertical',
+                        // x: 'right',
+                        // y: 'bottom',
+                        align: 'left'
+                    },
+                    toolbox: {
+                        // y: 'bottom',
+                        feature: {
+                            magicType: {
+                                type: ['line', 'bar', 'stack', 'tiled']
+                            },
+                            dataView: {},
+                            saveAsImage: {}
+                        }
                     },
                     tooltip: {},
                     xAxis: {

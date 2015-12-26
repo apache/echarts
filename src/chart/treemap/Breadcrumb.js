@@ -124,7 +124,6 @@
                             lineJoin: 'bevel',
                             text: text,
                             textFill: textStyleModel.getTextColor(),
-                            textAlign: 'left',
                             textFont: textStyleModel.getFont()
                         }
                     ),

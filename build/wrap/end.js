@@ -4,6 +4,9 @@ var echarts = require('echarts');
 require("${mod}");
 /** /for */
 
-return echarts;
+/** if: ${vml} */
+require('zrender/vml/vml');
+/** /if */
 
+return echarts;
 }));

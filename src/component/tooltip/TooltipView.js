@@ -318,10 +318,7 @@ define(function (require) {
                     if (coordSys.type === 'cartesian2d') {
                         // FIXME `axisPointer.axis` is not baseAxis
                         baseAxis = coordSys.getBaseAxis();
-                        var baseDim = baseAxis.dim;
-                        var axisIndex = seriesModel.get(baseDim + 'AxisIndex');
-
-                        key = baseDim + axisIndex;
+                        key = baseAxis.dim + baseAxis.index;
                     }
                     else {
                         baseAxis = coordSys.getBaseAxis();
