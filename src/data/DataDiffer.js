@@ -5,11 +5,12 @@ define(function(require) {
         return item;
     }
 
-    function DataDiffer(oldArr, newArr, keyGetter) {
+    function DataDiffer(oldArr, newArr, oldKeyGetter, newKeyGetter) {
         this._old = oldArr;
         this._new = newArr;
 
-        this._keyGetter = keyGetter || defaultKeyGetter;
+        this._oldKeyGetter = oldKeyGetter || defaultKeyGetter;
+        this._newKeyGetter = newKeyGetter || defaultKeyGetter;
     }
 
     DataDiffer.prototype = {
@@ -43,20 +44,21 @@ define(function(require) {
         execute: function () {
             var oldArr = this._old;
             var newArr = this._new;
-            var keyGetter = this._keyGetter;
+            var oldKeyGetter = this._oldKeyGetter;
+            var newKeyGetter = this._newKeyGetter;
 
             var oldDataIndexMap = {};
             var newDataIndexMap = {};
             var i;
 
-            initIndexMap(oldArr, oldDataIndexMap, keyGetter);
-            initIndexMap(newArr, newDataIndexMap, keyGetter);
+            initIndexMap(oldArr, oldDataIndexMap, oldKeyGetter);
+            initIndexMap(newArr, newDataIndexMap, newKeyGetter);
 
             // Travel by inverted order to make sure order consistency
             // when duplicate keys exists (consider newDataIndex.pop() below).
             // For performance consideration, these code below do not look neat.
             for (i = 0; i < oldArr.length; i++) {
-                var key = keyGetter(oldArr[i]);
+                var key = oldKeyGetter(oldArr[i]);
                 var idx = newDataIndexMap[key];
 
                 // idx can never be empty array here. see 'set null' logic below.

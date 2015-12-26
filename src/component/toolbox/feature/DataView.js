@@ -76,7 +76,7 @@ define(function (require) {
             }));
             var columns = [categoryAxis.model.getCategories()];
             zrUtil.each(group.series, function (series) {
-                columns.push(series.getData().mapArray(valueAxisDim, function (val) {
+                columns.push(series.getRawData().mapArray(valueAxisDim, function (val) {
                     return val;
                 }));
             });
@@ -102,7 +102,7 @@ define(function (require) {
      */
     function assembleOtherSeries(series) {
         return zrUtil.map(series, function (series) {
-            var data = series.getData();
+            var data = series.getRawData();
             var lines = [series.name];
             var vals = [];
             data.each(data.dimensions, function () {
@@ -280,6 +280,7 @@ define(function (require) {
         header.style.cssText = 'margin: 10px 20px;';
         var textarea = document.createElement('textarea');
         textarea.style.cssText = 'display:block;width:100%;font-size:14px;line-height:1.6rem;font-family:Monaco,Consolas,Courier New';
+        textarea.readOnly = model.get('readOnly');
 
         var result = getContentFromModel(ecModel);
         textarea.value = result.value;

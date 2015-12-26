@@ -760,8 +760,11 @@ define(function (require) {
      */
     listProto.diff = function (otherList) {
         var idList = this._idList;
+        var otherIdList = otherList && otherList._idList;
         return new DataDiffer(
             otherList ? otherList.indices : [], this.indices, function (idx) {
+                return otherIdList[idx] || (idx + '');
+            }, function (idx) {
                 return idList[idx] || (idx + '');
             }
         );
