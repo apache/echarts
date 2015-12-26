@@ -7,7 +7,7 @@ define(function(require) {
 
     echarts.registerAction(
 
-        {type: 'timelineChange', event: 'timelineChanged', update: 'reoption'},
+        {type: 'timelineChange', event: 'timelineChanged', update: 'prepareAndUpdate'},
 
         function (payload, ecModel) {
 
@@ -19,6 +19,8 @@ define(function(require) {
                     timelineModel.setPlayState(false);
                 }
             }
+
+            ecModel.updateTimelineOption();
         }
     );
 

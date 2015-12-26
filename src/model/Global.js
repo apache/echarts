@@ -9,6 +9,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var Model = require('./Model');
+    var OptionManager = require('./OptionManager');
     var each = zrUtil.each;
     var filter = zrUtil.filter;
     var map = zrUtil.map;
@@ -31,25 +32,10 @@ define(function (require) {
 
         constructor: GlobalModel,
 
-        init: function (option, parentModel, theme) {
-
+        init: function (option, parentModel, theme, optionPreprocessorFuncs) {
             theme = theme || {};
 
-            this.option = {};
-
-            /**
-             * @type {Object.<string, Array.<module:echarts/model/Model>>}
-             * @private
-             */
-            this._componentsMap = {};
-
-            /**
-             * Mapping between filtered series list and raw series list.
-             * key: filtered series indices, value: raw series indices.
-             * @type {Array.<nubmer>}
-             * @private
-             */
-            this._seriesIndices;
+            this.option = null; // Mark as not initialized.
 
             /**
              * @type {module:echarts/model/Model}
@@ -57,12 +43,40 @@ define(function (require) {
              */
             this._theme = new Model(theme);
 
-            mergeTheme(option, theme);
+            /**
+             * @type {module:echarts/model/OptionManager}
+             */
+            this._optionManager = new OptionManager(optionPreprocessorFuncs);
+        },
 
-            // TODO Needs clone when merging to the unexisted property
-            zrUtil.merge(option, globalDefault, false);
+        setOption: function (option) {
+            var optionManager = this._optionManager;
 
-            this.mergeOption(option);
+            var baseOption = optionManager.setOption(option);
+
+            if (!this.option) {
+                initBase.call(this, baseOption);
+            }
+            else {
+                this.restoreData();
+                this.mergeOption(baseOption);
+            }
+
+            this.updateTimelineOption();
+        },
+
+        resetOption: function () {
+            initBase.call(this, this._optionManager.resetOption());
+
+            this.updateTimelineOption();
+        },
+
+        updateTimelineOption: function () {
+            var partialOption = this._optionManager.getTimelineOption(this);
+            if (partialOption) {
+                this.restoreData();
+                this.mergeOption(partialOption);
+            }
         },
 
         /**
@@ -549,7 +563,6 @@ define(function (require) {
 
     });
 
-
     /**
      * @inner
      */
@@ -567,6 +580,33 @@ define(function (require) {
                 }
             }
         }
+    }
+
+    function initBase(baseOption) {
+        baseOption = baseOption;
+
+        this.option = {};
+
+        /**
+         * @type {Object.<string, Array.<module:echarts/model/Model>>}
+         * @private
+         */
+        this._componentsMap = {};
+
+        /**
+         * Mapping between filtered series list and raw series list.
+         * key: filtered series indices, value: raw series indices.
+         * @type {Array.<nubmer>}
+         * @private
+         */
+        this._seriesIndices = null;
+
+        mergeTheme(baseOption, this._theme.option);
+
+        // TODO Needs clone when merging to the unexisted property
+        zrUtil.merge(baseOption, globalDefault, false);
+
+        this.mergeOption(baseOption);
     }
 
     /**

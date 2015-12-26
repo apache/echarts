@@ -14,7 +14,6 @@
 define(function (require) {
 
     var GlobalModel = require('./model/Global');
-    var OptionManager = require('./model/OptionManager');
     var ExtensionAPI = require('./ExtensionAPI');
     var CoordinateSystemManager = require('./CoordinateSystem');
 
@@ -84,11 +83,6 @@ define(function (require) {
          * @private
          */
         this._theme = zrUtil.clone(theme, true);
-
-        /**
-         * @type {module:echarts/model/OptionManager}
-         */
-        this._optionManager = new OptionManager();
 
         /**
          * @type {Array.<module:echarts/view/Chart>}
@@ -163,39 +157,17 @@ define(function (require) {
      * @param {boolean} [notRefreshImmediately=false] Useful when setOption frequently.
      */
     echartsProto.setOption = function (option, notMerge, notRefreshImmediately) {
-        var baseOption = this._optionManager.updateRawOption(
-            option, optionPreprocessorFuncs
-        );
 
-        (!this._model || notMerge)
-            ? (this._model = new GlobalModel(baseOption, null, this._theme))
-            : ecModelMerge.call(this, baseOption);
-
-        var partialOption = this._optionManager.getPartialOption(this._model);
-        if (partialOption) {
-            ecModelMerge.call(this, partialOption);
+        if (!this._model || notMerge) {
+            this._model = new GlobalModel(null, null, this._theme, optionPreprocessorFuncs);
         }
 
-        prepareAndUpdate.call(this);
+        this._model.setOption(option);
+
+        updateMethods.prepareAndUpdate.call(this);
 
         !notRefreshImmediately && this._zr.refreshImmediately();
     };
-
-    function ecModelMerge(option) {
-        var ecModel = this._model;
-        ecModel.restoreData();
-        ecModel.mergeOption(option);
-    }
-
-    function prepareAndUpdate(payload) {
-        var ecModel = this._model;
-
-        prepareView.call(this, 'component', ecModel);
-
-        prepareView.call(this, 'chart', ecModel);
-
-        updateMethods.update.call(this, payload);
-    }
 
     /**
      * @DEPRECATED
@@ -456,17 +428,16 @@ define(function (require) {
 
         /**
          * @param {Object} payload
+         * @private
          */
-        reoption: function (payload) {
+        prepareAndUpdate: function (payload) {
             var ecModel = this._model;
-            var optionManager = this._optionManager;
 
-            var partialOption = optionManager.getPartialOption(ecModel);
-            if (partialOption) {
-                ecModelMerge.call(this, partialOption);
-            }
+            prepareView.call(this, 'component', ecModel);
 
-            prepareAndUpdate.call(this, payload);
+            prepareView.call(this, 'chart', ecModel);
+
+            updateMethods.update.call(this, payload);
         }
     };
 

@@ -46,9 +46,6 @@ define(function (require) {
      *             {title: {...}, series: {data: [...]}},
      *             ...
      *         ],
-     *         defaults: {
-     *             {series: {x: 20}, dataRange: {show: false}}
-     *         },
      *         media: [
      *             {
      *                 query: {maxWidth: 320},
@@ -65,14 +62,40 @@ define(function (require) {
      *     };
      *
      * @alias module:echarts/model/OptionManager
+     *
+     * @param {Array.<Function>} optionPreprocessorFuncs
      */
-    function OptionManager() {
+    function OptionManager(optionPreprocessorFuncs) {
 
         /**
          * @private
          * @type {Array.<number>}
          */
-        this._timelineOptions = [];
+        this._timelineOptions;
+
+        /**
+         * @private
+         * @type {Array.<Object>}
+         */
+        this._mediaList;
+
+        /**
+         * @private
+         * @type {Object}
+         */
+        this._mediaDefault;
+
+        /**
+         * @private
+         * @type {Object}
+         */
+        this._rawOptionBackup;
+
+        /**
+         * @private
+         * @type {Array.<Function>}
+         */
+        this._optionPreprocessorFuncs = optionPreprocessorFuncs;
     }
 
     OptionManager.prototype = {
@@ -82,25 +105,30 @@ define(function (require) {
         /**
          * @public
          * @param {Object} rawOption Raw option.
-         * @param {Array.<Function>} optionPreprocessorFuncs
          * @param {module:echarts/model/Global} ecModel
          * @return {Object} Init option
          */
-        updateRawOption: function (rawOption, optionPreprocessorFuncs) {
+        setOption: function (rawOption) {
             rawOption = zrUtil.clone(rawOption, true);
+
+            this._rawOptionBackup = shadowClone(rawOption);
 
             // FIXME
             // 如果 timeline options 或者 media 中设置了某个属性，而base中没有设置，则进行警告。
 
-            return settleRawOption.call(this, rawOption, optionPreprocessorFuncs);
+            return settleRawOption.call(this, rawOption, this._optionPreprocessorFuncs);
         },
 
-        getPartialOption: function (ecModel) {
+        /**
+         * @param {module:echarts/model/Global} ecModel
+         * @return {Object}
+         */
+        getTimelineOption: function (ecModel) {
             var option;
             var timelineOptions = this._timelineOptions;
 
             if (timelineOptions.length) {
-                // getPartialOption can only be called after ecModel inited,
+                // getTimelineOption can only be called after ecModel inited,
                 // so we can get currentIndex from timelineModel.
                 var timelineModel = ecModel.getComponent('timeline');
                 if (timelineModel) {
@@ -111,15 +139,22 @@ define(function (require) {
                 }
             }
 
-            // FIXME
-            // and then merge media query option?
-
             return option;
+        },
+
+        /**
+         * @param {module:echarts/model/Global} ecModel
+         * @return {Object}
+         */
+        resetOption: function (optionPreprocessorFuncs) {
+            var rawOption = shadowClone(this._rawOptionBackup);
+            return settleRawOption.call(this, rawOption, this._optionPreprocessorFuncs);
         }
     };
 
     function settleRawOption(rawOption, optionPreprocessorFuncs) {
         var timelineOptions = [];
+        var mediaList = [];
         var timelineOpt = rawOption.timeline;
         var baseOption;
 
@@ -129,19 +164,19 @@ define(function (require) {
             timelineOptions = (rawOption.options || []).slice();
         }
         // For media query
-        else if (rawOption.media) {
+        if (rawOption.media) {
             baseOption = rawOption.base || {};
             var media = rawOption.media;
             each(media, function (singleMedia) {
-                singleMedia
-                    && singleMedia.option
-                    && timelineOptions.push(singleMedia.option);
+                if (singleMedia && singleMedia.option) {
+                    mediaList.push(singleMedia);
+                }
+                // else if (singleMedia && !singleMedia
             });
         }
         // For normal option
-        else {
+        if (!baseOption) {
             baseOption = rawOption;
-            timelineOptions.push(rawOption);
         }
 
         // Set timelineOpt to baseOption for convenience.
@@ -166,6 +201,21 @@ define(function (require) {
         // (step2) chart.setOption({timeline: {notMerge: true}, ...}, false);
 
         return baseOption;
+    }
+
+    function applyMedia(ecModel, api) {
+        var result;
+
+        each(this._mediaList, function (singleMedia) {
+
+        });
+
+        return result;
+    }
+
+    function shadowClone(rawOption) {
+        // FIXME
+        return zrUtil.clone(rawOption, true);
     }
 
     return OptionManager;
