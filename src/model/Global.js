@@ -32,7 +32,7 @@ define(function (require) {
 
         constructor: GlobalModel,
 
-        init: function (option, parentModel, theme, optionPreprocessorFuncs) {
+        init: function (option, parentModel, theme) {
             theme = theme || {};
 
             this.option = null; // Mark as not initialized.
@@ -46,10 +46,10 @@ define(function (require) {
             /**
              * @type {module:echarts/model/OptionManager}
              */
-            this._optionManager = new OptionManager(optionPreprocessorFuncs);
+            this._optionManager = new OptionManager();
         },
 
-        setOption: function (option) {
+        setOption: function (option, optionPreprocessorFuncs) {
             var optionManager = this._optionManager;
 
             var baseOption = optionManager.setOption(option);

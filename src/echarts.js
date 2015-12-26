@@ -159,10 +159,10 @@ define(function (require) {
     echartsProto.setOption = function (option, notMerge, notRefreshImmediately) {
 
         if (!this._model || notMerge) {
-            this._model = new GlobalModel(null, null, this._theme, optionPreprocessorFuncs);
+            this._model = new GlobalModel(null, null, this._theme);
         }
 
-        this._model.setOption(option);
+        this._model.setOption(option, optionPreprocessorFuncs);
 
         updateMethods.prepareAndUpdate.call(this);
 

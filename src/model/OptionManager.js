@@ -8,6 +8,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var each = zrUtil.each;
+    var clone = zrUtil.clone;
 
     /**
      * TERM EXPLANATIONS:
@@ -62,10 +63,8 @@ define(function (require) {
      *     };
      *
      * @alias module:echarts/model/OptionManager
-     *
-     * @param {Array.<Function>} optionPreprocessorFuncs
      */
-    function OptionManager(optionPreprocessorFuncs) {
+    function OptionManager() {
 
         /**
          * @private
@@ -89,14 +88,17 @@ define(function (require) {
          * @private
          * @type {Object}
          */
-        this._rawOptionBackup;
-
-        /**
-         * @private
-         * @type {Array.<Function>}
-         */
-        this._optionPreprocessorFuncs = optionPreprocessorFuncs;
+        this._optionBackup;
     }
+
+    // timeline.notMerge is not supported in ec3. Firstly there is rearly
+    // case that notMerge is needed. Secondly supporting 'notMerge' requires
+    // rawOption cloned and backuped when timeline changed, which does no
+    // good to performance. What's more, that both timeline and setOption
+    // method supply 'notMerge' brings complex and some problems.
+    // Consider this case:
+    // (step1) chart.setOption({timeline: {notMerge: false}, ...}, false);
+    // (step2) chart.setOption({timeline: {notMerge: true}, ...}, false);
 
     OptionManager.prototype = {
 
@@ -106,17 +108,20 @@ define(function (require) {
          * @public
          * @param {Object} rawOption Raw option.
          * @param {module:echarts/model/Global} ecModel
+         * @param {Array.<Function>} optionPreprocessorFuncs
          * @return {Object} Init option
          */
-        setOption: function (rawOption) {
-            rawOption = zrUtil.clone(rawOption, true);
-
-            this._rawOptionBackup = shadowClone(rawOption);
+        setOption: function (rawOption, optionPreprocessorFuncs) {
+            rawOption = clone(rawOption, true);
 
             // FIXME
             // 如果 timeline options 或者 media 中设置了某个属性，而base中没有设置，则进行警告。
 
-            return settleRawOption.call(this, rawOption, this._optionPreprocessorFuncs);
+            this._optionBackup = parseRawOption.call(
+                this, rawOption, optionPreprocessorFuncs
+            );
+
+            return this.resetOption();
         },
 
         /**
@@ -132,7 +137,7 @@ define(function (require) {
                 // so we can get currentIndex from timelineModel.
                 var timelineModel = ecModel.getComponent('timeline');
                 if (timelineModel) {
-                    option = zrUtil.clone(
+                    option = clone(
                         timelineOptions[timelineModel.getCurrentIndex()],
                         true
                     );
@@ -143,16 +148,21 @@ define(function (require) {
         },
 
         /**
-         * @param {module:echarts/model/Global} ecModel
          * @return {Object}
          */
-        resetOption: function (optionPreprocessorFuncs) {
-            var rawOption = shadowClone(this._rawOptionBackup);
-            return settleRawOption.call(this, rawOption, this._optionPreprocessorFuncs);
+        resetOption: function () {
+            var optionBackup = this._optionBackup;
+
+            // FIXME
+            // 如果没有reset功能则不clone。
+
+            this._timelineOptions = zrUtil.map(optionBackup.timelineOptions, clone);
+
+            return clone(optionBackup.baseOption);
         }
     };
 
-    function settleRawOption(rawOption, optionPreprocessorFuncs) {
+    function parseRawOption(rawOption, optionPreprocessorFuncs) {
         var timelineOptions = [];
         var mediaList = [];
         var timelineOpt = rawOption.timeline;
@@ -189,18 +199,7 @@ define(function (require) {
             });
         });
 
-        this._timelineOptions = timelineOptions;
-
-        // timeline.notMerge is not supported in ec3. Firstly there is rearly
-        // case that notMerge is needed. Secondly supporting 'notMerge' requires
-        // rawOption cloned and backuped when timeline changed, which does no
-        // good to performance. What's more, that both timeline and setOption
-        // method supply 'notMerge' brings complex and some problems.
-        // Consider this case:
-        // (step1) chart.setOption({timeline: {notMerge: false}, ...}, false);
-        // (step2) chart.setOption({timeline: {notMerge: true}, ...}, false);
-
-        return baseOption;
+        return {baseOption: baseOption, timelineOptions: timelineOptions};
     }
 
     function applyMedia(ecModel, api) {
@@ -211,11 +210,6 @@ define(function (require) {
         });
 
         return result;
-    }
-
-    function shadowClone(rawOption) {
-        // FIXME
-        return zrUtil.clone(rawOption, true);
     }
 
     return OptionManager;
