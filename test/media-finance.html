@@ -3,16 +3,19 @@
         <meta charset="utf-8">
         <script src="esl.js"></script>
         <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/draggable.js"></script>
+        <link rel="stylesheet" href="reset.css">
         <meta name="viewport" content="width=device-width, initial-scale=1" />
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-                margin: 0;
-            }
             #main {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                width: 900px;
+                height: 500px;
                 background: #fff;
             }
         </style>
@@ -52,9 +55,43 @@
                 'echarts/component/timeline'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
+                chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
                 });
+
+                draggable.init(document.getElementById('main'), chart);
+
+var categoryData = [
+    '北京','天津','河北','山西','内蒙古','辽宁','吉林','黑龙江',
+    '上海','江苏','浙江','安徽','福建','江西','山东','河南',
+    '湖北','湖南','广东','广西','海南','重庆','四川','贵州',
+    '云南','西藏','陕西','甘肃','青海','宁夏','新疆'
+];
+var categoryDataWithReturn = [];
+for (var i = 0; i < categoryData.length; i++) {
+    var word = categoryData[i];
+    if (i % 2 === 0) {
+        word = '\n' + word;
+    }
+    categoryDataWithReturn.push(word);
+}
+
+
+var categoryAxis = {
+    id: 'categoryAxis',
+    type: 'category',
+    axisLabel: {interval: 0},
+    data: categoryDataWithReturn,
+    splitLine: {show: false}
+};
+
+var valueAxis = {
+    id: 'valueAxis',
+    type: 'value',
+    name: 'GDP（亿元）',
+    // max: 53500
+    max: 30000
+}
 
 var option = {
     baseOption: {
@@ -114,35 +151,15 @@ var option = {
                 type: 'shadow'
             }
         },
+        xAxis: categoryAxis,
+        yAxis: valueAxis,
         legend: {
-            align: 'right',
-            x: 'right',
             data: ['第一产业', '第二产业', '第三产业', 'GDP', '金融', '房地产'],
             selected: {
                 'GDP': false, '金融': false, '房地产': false
             }
         },
-        calculable: true,
-        grid: {y:80, y2: 100},
-        xAxis: {
-            'type':'category',
-            'axisLabel':{'interval':0},
-            'data':[
-                '北京','\n天津','河北','\n山西','内蒙古','\n辽宁','吉林','\n黑龙江',
-                '上海','\n江苏','浙江','\n安徽','福建','\n江西','山东','\n河南',
-                '湖北','\n湖南','广东','\n广西','海南','\n重庆','四川','\n贵州',
-                '云南','\n西藏','陕西','\n甘肃','青海','\n宁夏','新疆'
-            ],
-            splitLine: {show: false}
-        },
-        yAxis: [
-            {
-                type: 'value',
-                name: 'GDP（亿元）',
-                // max: 53500
-                max: 30000
-            }
-        ],
+        calculable : true,
         series: [
             {name: 'GDP', type: 'bar'},
             {name: '金融', type: 'bar'},
@@ -150,14 +167,114 @@ var option = {
             {name: '第一产业', type: 'bar'},
             {name: '第二产业', type: 'bar'},
             {name: '第三产业', type: 'bar'},
-            {
-                name: 'GDP占比',
-                type: 'pie',
-                center: ['75%', '35%'],
-                radius: '28%'
-            }
+            {name: 'GDP占比', type: 'pie'}
         ]
     },
+    media: [
+        {
+            option: {
+                legend: {
+                    orient: 'horizontal',
+                    // align: 'right',
+                    x: 'right',
+                    width: null,
+                    itemGap: 10
+                },
+                grid: {
+                    x: '10%',
+                    y:80,
+                    x2: 50,
+                    y2: 100
+                },
+                xAxis: {
+                    axisLabel: {interval: 0},
+                    data: categoryDataWithReturn
+                },
+                // yAxis: valueAxis,
+                timeline: {
+                    orient: 'horizontal',
+                    inverse: false,
+                    x: '20%',
+                    x2: '20%',
+                    y: null,
+                    y2: 10,
+                    width: null,
+                    height: 40
+                },
+                series: [
+                    {name: 'GDP占比', center: ['75%', '35%'], radius: '28%'}
+                ]
+            }
+        },
+        {
+            query: {maxWidth: 700, minWidth: 550},
+            option: {
+                legend: {
+                    orient: 'horizontal',
+                    align: 'right',
+                    x: 200,
+                    itemGap: 5
+                },
+                grid: {
+                    x: '10%',
+                    y:80,
+                    x2: 50,
+                    y2: 100
+                },
+                xAxis: {
+                    axisLabel: {interval: 0},
+                    data: categoryDataWithReturn
+                },
+                timeline: {
+                    orient: 'horizontal',
+                    inverse: false,
+                    x: '20%',
+                    x2: '20%',
+                    y: null,
+                    y2: 10,
+                    width: null,
+                    height: 40
+                },
+                series: [
+                    {name: 'GDP占比', center: ['75%', '35%'], radius: '28%'}
+                ]
+            }
+        },
+        {
+            query: {maxWidth: 550},
+            option: {
+                legend: {
+                    orient: 'vertical',
+                    align: 'right',
+                    x: 'right',
+                    itemGap: 5
+                },
+                grid: {
+                    x: 55,
+                    y: '50%',
+                    x2: 100,
+                    y2: 50
+                },
+                xAxis: {
+                    axisLabel: {interval: 'auto'},
+                    data: categoryData
+                },
+                timeline: {
+                    orient: 'vertical',
+                    inverse: true,
+                    x: null,
+                    x2: 10,
+                    y: 150,
+                    y2: 10,
+                    width: 55,
+                    height: null
+                },
+                series: [
+                    {name: 'GDP占比', center: ['45%', '30%'], radius: '28%'}
+                ]
+            }
+        }
+    ],
     options: [
         {
             title: {text: '2002全国宏观经济指标'},

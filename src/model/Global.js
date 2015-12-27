@@ -141,7 +141,7 @@ define(function (require) {
                 // and ComponentModel.getAllClassMainTypes
                 each(componentsMap[mainType], function (cpt) {
                     cpt.mergeOption({}, this);
-                });
+                }, this);
             }
 
             function handleNew(mainType, newCptOptionList, dependencies) {
