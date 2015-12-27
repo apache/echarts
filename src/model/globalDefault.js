@@ -18,6 +18,9 @@ define(function () {
 
         // 默认需要 Grid 配置项
         grid: {},
+        // Grid 依赖 xAxis 和 yAxis
+        xAxis: {},
+        yAxis: {},
 
         // 主题，主题
         textStyle: {

@@ -82,24 +82,9 @@ define(function(require) {
          * @override
          */
         mergeOption: function (newOption) {
-            newOption && zrUtil.merge(this.option, newOption);
+            newOption && zrUtil.merge(this.option, newOption, true);
 
             this._initData();
-        },
-
-        /**
-         * @public
-         */
-        infectOption: function (timelineOption) {
-            var thisOption = this.option;
-
-            if (zrUtil.isArray(timelineOption)) {
-                timelineOption = timelineOption[0];
-            }
-            if (timelineOption) {
-                timelineOption.currentIndex = thisOption.currentIndex;
-                timelineOption.autoPlay = thisOption.autoPlay;
-            }
         },
 
         /**

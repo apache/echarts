@@ -35,7 +35,7 @@ define(function (require) {
      *     An object input to echarts.setOption. 'rawOption' may be an
      *     'option', or may be an object contains multi-options. For example:
      *     var option = {
-     *         base: {
+     *         baseOption: {
      *             title: {...},
      *             legend: {...},
      *             series: [
@@ -132,7 +132,7 @@ define(function (require) {
             rawOption = clone(rawOption, true);
 
             // FIXME
-            // 如果 timeline options 或者 media 中设置了某个属性，而base中没有设置，则进行警告。
+            // 如果 timeline options 或者 media 中设置了某个属性，而baseOption中没有设置，则进行警告。
 
             this._optionBackup = parseRawOption.call(
                 this, rawOption, optionPreprocessorFuncs
@@ -188,22 +188,23 @@ define(function (require) {
             var ecHeight = this._api.getHeight();
             var mediaList = this._mediaList;
             var index;
+            var result;
 
             for (var i = 0, len = mediaList.length; i < len; i++) {
-                var query = mediaList[i].query;
-                if (applyMediaQuery(query, ecWidth, ecHeight)) {
+                if (applyMediaQuery(mediaList[i].query, ecWidth, ecHeight)) {
                     index = i;
                     break;
                 }
             }
 
-            if (this._mediaDefault) {
+            // FIXME
+            // 是否mediaDefault应该强制用户设置，否则可能修改不能回归。
+            if (index == null && this._mediaDefault) {
                 index = -1;
             }
 
             if (index != null && index !== this._currentMediaIndex) {
-                this._currentMediaIndex = index;
-                return clone(
+                result = clone(
                     index === -1
                         ? this._mediaDefault.option
                         : mediaList[index].option,
@@ -211,6 +212,10 @@ define(function (require) {
                 );
             }
             // Otherwise return nothing.
+
+            this._currentMediaIndex = index;
+
+            return result;
         }
     };
 
@@ -218,17 +223,19 @@ define(function (require) {
         var timelineOptions = [];
         var mediaList = [];
         var mediaDefault;
-        var timelineOpt = rawOption.timeline;
         var baseOption;
+
+        // Compatible with ec2.
+        var timelineOpt = rawOption.timeline;
 
         // For timeline
         if (timelineOpt || rawOption.options) {
-            baseOption = rawOption.base || {};
+            baseOption = rawOption.baseOption || {};
             timelineOptions = (rawOption.options || []).slice();
         }
         // For media query
         if (rawOption.media) {
-            baseOption = rawOption.base || {};
+            baseOption = rawOption.baseOption || {};
             var media = rawOption.media;
             each(media, function (singleMedia) {
                 if (singleMedia && singleMedia.option) {
@@ -247,8 +254,11 @@ define(function (require) {
             baseOption = rawOption;
         }
 
-        // Set timelineOpt to baseOption for convenience.
-        baseOption.timeline = timelineOpt;
+        // Set timelineOpt to baseOption in ec3,
+        // which is convenient for merge option.
+        if (!baseOption.timeline) {
+            baseOption.timeline = timelineOpt;
+        }
 
         // Preprocess.
         each([baseOption].concat(timelineOptions), function (option) {
@@ -299,10 +309,10 @@ define(function (require) {
 
     function compare(real, expect, operator) {
         if (operator === 'min') {
-            return real <= expect;
+            return real >= expect;
         }
         else if (operator === 'max') {
-            return real >= expect;
+            return real <= expect;
         }
         else { // Equals
             return real === expect;
