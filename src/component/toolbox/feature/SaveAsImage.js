@@ -2,7 +2,7 @@ define(function (require) {
 
     function SaveAsImage (model) {
         this.model = model;
-    };
+    }
 
     SaveAsImage.defaultOption = {
         show: true,
@@ -11,20 +11,25 @@ define(function (require) {
         title: '保存为图片',
         type: 'png',
         backgroundColor: '#fff',
-        name: ''
+        name: '',
+        excludeComponents: ['toolbox'],
+        pixelRatio: 1
     };
 
     var proto = SaveAsImage.prototype;
 
     proto.onclick = function (ecModel, api) {
+        var model = this.model;
         var title = ecModel.get('title.0.text') || 'echarts';
         var $a = document.createElement('a');
-        var type = this.model.get('type', true) || 'png';
+        var type = model.get('type', true) || 'png';
         $a.download = title + '.' + type;
         $a.target = '_blank';
         $a.href = api.getConnectedDataURL({
             type: type,
-            backgroundColor: this.model.get('backgroundColor')
+            backgroundColor: model.get('backgroundColor'),
+            excludeComponents: model.get('excludeComponents'),
+            pixelRatio: model.get('pixelRatio')
         });
         $a.click();
     };

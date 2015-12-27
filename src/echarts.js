@@ -210,7 +210,7 @@ define(function (require) {
             return;
         }
         opts = opts || {};
-        opts.devicePixelRatio = opts.devicePixelRatio || 1;
+        opts.pixelRatio = opts.pixelRatio || 1;
         opts.backgroundColor = opts.backgroundColor
             || this._model.option.backgroundColor;
         var zr = this._zr;
@@ -225,13 +225,34 @@ define(function (require) {
      * @return {string}
      * @param {Object} opts
      * @param {string} [opts.type='png']
-     * @param {string} [opts.devicePixelRatio=1]
+     * @param {string} [opts.pixelRatio=1]
      * @param {string} [opts.backgroundColor]
      */
     echartsProto.getDataURL = function (opts) {
-        return this.getRenderedCanvas(opts).toDataURL(
+        var excludeComponents = opts;
+        var ecModel = this._model;
+        var excludesComponentViews = [];
+        var self = this;
+        excludeComponents = each(excludeComponents, function (componentType) {
+            ecModel.eachComponent({
+                mainType: componentType
+            }, function (component) {
+                var view = self._componentsMap[component.__viewId];
+                if (!view.group.ignore) {
+                    excludesComponentViews.push(view);
+                    view.group.ignore = true;
+                }
+            });
+        });
+
+        var url = this.getRenderedCanvas(opts).toDataURL(
             'image/' + (opts && opts.type || 'png')
         );
+
+        each(excludesComponentViews, function (view) {
+            view.group.ignore = false;
+        });
+        return url;
     };
 
 
@@ -239,7 +260,7 @@ define(function (require) {
      * @return {string}
      * @param {Object} opts
      * @param {string} [opts.type='png']
-     * @param {string} [opts.devicePixelRatio=1]
+     * @param {string} [opts.pixelRatio=1]
      * @param {string} [opts.backgroundColor]
      */
     echartsProto.getConnectedDataURL = function (opts) {
@@ -256,7 +277,7 @@ define(function (require) {
             var right = -MAX_NUMBER;
             var bottom = -MAX_NUMBER;
             var canvasList = [];
-            var dpr = (opts && opts.devicePixelRatio) || 1;
+            var dpr = (opts && opts.pixelRatio) || 1;
             for (var id in instances) {
                 var chart = instances[id];
                 if (chart.group === groupId) {

@@ -12,7 +12,6 @@ define(function(require, factory) {
     var Cartesian2D = require('./Cartesian2D');
     var Axis2D = require('./Axis2D');
 
-
     var each = zrUtil.each;
 
     var ifAxisCrossZero = axisHelper.ifAxisCrossZero;
@@ -37,6 +36,7 @@ define(function(require, factory) {
         for (var i = 0; i < labels.length; i++) {
             if (!axis.isLabelIgnored(i)) {
                 var singleRect = axisModel.getTextRect(labels[i]);
+                // FIXME consider label rotate
                 rect ? rect.union(singleRect) : (rect = singleRect);
             }
         }
