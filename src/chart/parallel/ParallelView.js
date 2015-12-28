@@ -33,18 +33,26 @@ define(function (require) {
             var coordSys = seriesModel.coordinateSystem;
             var dimensions = coordSys.dimensions;
 
-            // var hasAnimation = ecModel.get('animation');
-            var lineStyleModel = seriesModel.getModel('lineStyle.normal');
-            var lineStyle = zrUtil.extend(
-                lineStyleModel.getLineStyle(),
-                {stroke: data.getVisual('color')}
-            );
-
             data.diff(oldData)
                 .add(add)
                 .update(update)
                 .remove(remove)
                 .execute();
+
+            // Update style
+            data.eachItemGraphicEl(function (elGroup, idx) {
+                var itemModel = data.getItemModel(idx);
+                var lineStyleModel = itemModel.getModel('lineStyle.normal');
+                elGroup.eachChild(function (child) {
+                    child.setStyle(zrUtil.extend(
+                        lineStyleModel.getLineStyle(),
+                        {
+                            stroke: data.getItemVisual(idx, 'color'),
+                            opacity: data.getItemVisual(idx, 'opacity')
+                        }
+                    ));
+                });
+            });
 
             // First create
             if (!this._data) {
@@ -73,7 +81,6 @@ define(function (require) {
                     }
                 );
 
-                setStyle(elGroup, data, newDataIndex, lineStyle);
                 data.setItemGraphicEl(newDataIndex, elGroup);
             }
 
@@ -111,7 +118,6 @@ define(function (require) {
                     elGroup.add(newEls[i]);
                 }
 
-                setStyle(elGroup, data, newDataIndex, lineStyle);
                 data.setItemGraphicEl(newDataIndex, elGroup);
             }
 
@@ -180,13 +186,6 @@ define(function (require) {
         });
     }
 
-    function setStyle(elGroup, data, dataIndex, lineStyle) {
-        elGroup.eachChild(function (el) {
-            el.setStyle(lineStyle);
-            var opacity = data.getItemVisual(dataIndex, 'opacity', true);
-            el.setStyle('opacity', opacity);
-        });
-    }
 
     // FIXME
     // 公用方法?
