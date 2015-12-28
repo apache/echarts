@@ -790,12 +790,13 @@ define(function (require) {
      */
     echartsProto.dispose = function () {
         this._disposed = true;
+        var api = this._api;
 
-        each(this._components, function (component) {
-            component.dispose();
+        each(this._componentsViews, function (component) {
+            component.dispose(api);
         });
-        each(this._charts, function (chart) {
-            chart.dispose();
+        each(this._chartsViews, function (chart) {
+            chart.dispose(api);
         });
 
         this._zr.dispose();
