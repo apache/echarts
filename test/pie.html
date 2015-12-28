@@ -20,12 +20,11 @@
                 'echarts/chart/pie',
                 'echarts/component/legend',
                 'echarts/component/grid',
-                'echarts/component/tooltip'
+                'echarts/component/tooltip',
+                'echarts/component/toolbox'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
-                });
+                var chart = echarts.init(document.getElementById('main'));
 
                 var itemStyle = {
                     normal: {
@@ -40,9 +39,14 @@
                     legend: {
                         data:['直接访问','邮件营销','联盟广告','视频广告','搜索引擎']
                     },
-                    tooltip: {
-
+                    toolbox: {
+                        x: 'left',
+                        feature: {
+                            dataView: {},
+                            saveAsImage: {}
+                        }
                     },
+                    tooltip: {},
                     series: [{
                         name: 'pie',
                         type: 'pie',

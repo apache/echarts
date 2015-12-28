@@ -69,7 +69,7 @@
                         borderWidth: 1,
                         data: [{
                             name: 'bar'
-                        }, 'bar2', 'bar3', 'bar4'],
+                        }, 'bar2', '\n', 'bar3', 'bar4'],
                         selected: {
                             // 'bar': false
                         },
@@ -85,7 +85,9 @@
                                 type: ['line', 'bar', 'stack', 'tiled']
                             },
                             dataView: {},
-                            saveAsImage: {}
+                            saveAsImage: {
+                                pixelRatio: 2
+                            }
                         }
                     },
                     tooltip: {},

@@ -54,17 +54,17 @@ define(function (require) {
         type: 'heatmap',
 
         render: function (seriesModel, ecModel, api) {
-            var dataRangeOfThisSeries;
-            ecModel.eachComponent('dataRange', function (dataRange) {
-                dataRange.eachTargetSeries(function (targetSeries) {
+            var visualMapOfThisSeries;
+            ecModel.eachComponent('visualMap', function (visualMap) {
+                visualMap.eachTargetSeries(function (targetSeries) {
                     if (targetSeries === seriesModel) {
-                        dataRangeOfThisSeries = dataRange;
+                        visualMapOfThisSeries = visualMap;
                     }
                 });
             });
 
-            if (!dataRangeOfThisSeries) {
-                throw new Error('Heatmap must use with dataRange');
+            if (!visualMapOfThisSeries) {
+                throw new Error('Heatmap must use with visualMap');
             }
 
             this.group.removeAll();
@@ -74,7 +74,7 @@ define(function (require) {
             }
             else if (coordSys.type === 'geo') {
                 this._renderOnGeo(
-                    coordSys, seriesModel, dataRangeOfThisSeries, api
+                    coordSys, seriesModel, visualMapOfThisSeries, api
                 );
             }
         },
@@ -140,9 +140,9 @@ define(function (require) {
             });
         },
 
-        _renderOnGeo: function (geo, seriesModel, dataRangeModel, api) {
-            var inRangeVisuals = dataRangeModel.targetVisuals.inRange;
-            var outOfRangeVisuals = dataRangeModel.targetVisuals.outOfRange;
+        _renderOnGeo: function (geo, seriesModel, visualMapModel, api) {
+            var inRangeVisuals = visualMapModel.targetVisuals.inRange;
+            var outOfRangeVisuals = visualMapModel.targetVisuals.outOfRange;
             // if (!visualMapping) {
             //     throw new Error('Data range must have color visuals');
             // }
@@ -171,11 +171,11 @@ define(function (require) {
                 return pt;
             });
 
-            var dataExtent = dataRangeModel.getExtent();
-            var isInRange = dataRangeModel.type === 'dataRange.continuous'
-                ? getIsInContinuousRange(dataExtent, dataRangeModel.option.range)
+            var dataExtent = visualMapModel.getExtent();
+            var isInRange = visualMapModel.type === 'visualMap.continuous'
+                ? getIsInContinuousRange(dataExtent, visualMapModel.option.range)
                 : getIsInPiecewiseRange(
-                    dataExtent, dataRangeModel.getPieceList(), dataRangeModel.option.selected
+                    dataExtent, visualMapModel.getPieceList(), visualMapModel.option.selected
                 );
 
             hmLayer.update(

@@ -19,7 +19,7 @@ define(function(require) {
 
     return echarts.extendComponentModel({
 
-        type: 'dataRange',
+        type: 'visualMap',
 
         dependencies: ['series'],
 

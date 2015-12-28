@@ -1,15 +1,12 @@
-/**
- * @file DataRange model
- */
 define(function(require) {
 
-    var DataRangeModel = require('./DataRangeModel');
+    var VisualMapModel = require('./VisualMapModel');
     var zrUtil = require('zrender/core/util');
     var VisualMapping = require('../../visual/VisualMapping');
 
-    return DataRangeModel.extend({
+    return VisualMapModel.extend({
 
-        type: 'dataRange.piecewise',
+        type: 'visualMap.piecewise',
 
         /**
          * @protected

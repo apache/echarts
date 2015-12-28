@@ -9,7 +9,7 @@ define(function (require) {
 
     return echarts.extendComponentView({
 
-        type: 'dataRange',
+        type: 'visualMap',
 
         /**
          * @readOnly
@@ -32,9 +32,9 @@ define(function (require) {
 
             /**
              * @readOnly
-             * @type {module:echarts/component/dataRange/DataRangeModel}
+             * @type {module:echarts/component/visualMap/visualMapModel}
              */
-            this.dataRangeModel;
+            this.visualMapModel;
 
             /**
              * @private
@@ -46,10 +46,10 @@ define(function (require) {
         /**
          * @protected
          */
-        render: function (dataRangeModel, ecModel, api, payload) {
-            this.dataRangeModel = dataRangeModel;
+        render: function (visualMapModel, ecModel, api, payload) {
+            this.visualMapModel = visualMapModel;
 
-            if (dataRangeModel.get('show') === false) {
+            if (visualMapModel.get('show') === false) {
                 this.group.removeAll();
                 return;
             }
@@ -61,8 +61,8 @@ define(function (require) {
          * @protected
          */
         renderBackground: function (group) {
-            var dataRangeModel = this.dataRangeModel;
-            var padding = formatUtil.normalizeCssArray(dataRangeModel.get('padding') || 0);
+            var visualMapModel = this.visualMapModel;
+            var padding = formatUtil.normalizeCssArray(visualMapModel.get('padding') || 0);
             var rect = group.getBoundingRect();
 
             group.add(new graphic.Rect({
@@ -75,9 +75,9 @@ define(function (require) {
                     height: rect.height + padding[0] + padding[2]
                 },
                 style: {
-                    fill: dataRangeModel.get('backgroundColor'),
-                    stroke: dataRangeModel.get('borderColor'),
-                    lineWidth: dataRangeModel.get('borderWidth')
+                    fill: visualMapModel.get('backgroundColor'),
+                    stroke: visualMapModel.get('borderColor'),
+                    lineWidth: visualMapModel.get('borderWidth')
                 }
             }));
         },
@@ -89,7 +89,7 @@ define(function (require) {
          * @param {string=} visualCluster Specify visual type, defualt all available visualClusters.
          */
         getControllerVisual: function (targetValue, forceState, visualCluster) {
-            var dataRangeModel = this.dataRangeModel;
+            var visualMapModel = this.visualMapModel;
             var targetIsArray = zrUtil.isArray(targetValue);
 
             // targetValue is array when caculate gradient color,
@@ -98,12 +98,12 @@ define(function (require) {
                 throw new Error(targetValue);
             }
 
-            var mappings = dataRangeModel.controllerVisuals[
-                forceState || dataRangeModel.getValueState(targetValue)
+            var mappings = visualMapModel.controllerVisuals[
+                forceState || visualMapModel.getValueState(targetValue)
             ];
-            var defaultColor = dataRangeModel.get('contentColor');
+            var defaultColor = visualMapModel.get('contentColor');
             var visualObj = {
-                symbol: dataRangeModel.get('itemSymbol'),
+                symbol: visualMapModel.get('itemSymbol'),
                 color: targetIsArray
                     ? [{color: defaultColor, offset: 0}, {color: defaultColor, offset: 1}]
                     : defaultColor
@@ -133,7 +133,7 @@ define(function (require) {
          * @protected
          */
         getItemAlignByOrient: function (itemOrient, ecSize) {
-            var modelOption = this.dataRangeModel.option;
+            var modelOption = this.visualMapModel.option;
             var itemAlign = modelOption.align;
             var orient = modelOption.orient;
 
@@ -166,7 +166,7 @@ define(function (require) {
          * @protected
          */
         positionGroup: function (group) {
-            var model = this.dataRangeModel;
+            var model = this.visualMapModel;
             var x = model.get('x');
             var y = model.get('y');
             var x2 = model.get('x2');

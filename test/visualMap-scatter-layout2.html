@@ -20,7 +20,7 @@
                 'echarts/chart/scatter',
                 'echarts/component/legend',
                 'echarts/component/grid',
-                'echarts/component/dataRangeContinuous'
+                'echarts/component/visualMapContinuous'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -83,13 +83,12 @@
                             show: false
                         }
                     },
-                    dataRange: [
+                    visualMap: [
                         {
                             show: true,
-                            splitNumber: 7,
+                            splitNumber: 0,
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
-                            text: ['高', '低'],
                             backgroundColor: '#eee',
                             padding: [10, 30, 5, 40],
                             calculable: true,
@@ -108,7 +107,6 @@
                                 {min: 55}
                             ],
                             inverse: true,
-                            text: ['高', '低'],
                             calculable: true,
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
@@ -120,7 +118,6 @@
                         {
                             x: 'right',
                             splitNumber: 5,
-                            text: ['高', '低'],
                             calculable: true,
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
@@ -134,7 +131,6 @@
                             x: 'left',
                             y: 'top',
                             orient: 'horizontal',
-                            text: ['高', '低'],
                             splitNumber: 6,
                             calculable: true,
                             // selectedMode: 'single',
@@ -148,7 +144,6 @@
                             x: 'right',
                             y: 20,
                             orient: 'horizontal',
-                            text: ['高', '低'],
                             splitNumber: 5,
                             calculable: true,
                             // selectedMode: 'single',
@@ -161,7 +156,6 @@
                             y: 40,
                             splitNumber: 6,
                             orient: 'horizontal',
-                            text: ['高', '低'],
                             calculable: true,
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
@@ -174,7 +168,6 @@
                             y: 'bottom',
                             orient: 'horizontal',
                             splitNumber: 6,
-                            text: ['高', '低'],
                             calculable: true,
                             // selectedMode: 'single',
                             selectedMode: 'multiple',

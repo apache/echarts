@@ -28,7 +28,7 @@
                 'echarts/component/legend',
                 'echarts/component/geo',
                 'echarts/component/tooltip',
-                'echarts/component/dataRange'
+                'echarts/component/visualMap'
             ], function (echarts, gexf) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -57,7 +57,7 @@
                                 return a.name;
                             })
                         }],
-                        dataRange: {
+                        visualMap: {
                             max: 100,
                             inRange: {
                                 colorSaturation: [1, 0.3]

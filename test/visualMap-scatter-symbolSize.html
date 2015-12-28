@@ -20,12 +20,10 @@
                 'echarts/chart/scatter',
                 'echarts/component/legend',
                 'echarts/component/grid',
-                'echarts/component/dataRangePiecewise'
+                'echarts/component/visualMapContinuous'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
-                });
+                var chart = echarts.init(document.getElementById('main'));
 
                 var data1 = [];
                 var data2 = [];
@@ -49,8 +47,7 @@
                 // }
                 for (var i = 0; i < 5; i++) {
                     data1.push([
-                        i * 5, i * 4, i * 20,
-                        i * 123
+                        i * 5, i * 4, i * 20
                     ]);
                     // data2.push([
                     //     i * 10, Math.random() * 5, Math.random() * 20,
@@ -83,83 +80,17 @@
                             show: false
                         }
                     },
-                    dataRange: [
+                    visualMap: [
                         {
+                            min: 0,
+                            max: 200,
                             show: true,
-                            splitNumber: 7,
-                            // selectedMode: 'single',
-                            selectedMode: 'multiple',
-                            backgroundColor: '#eee',
-                            padding: [10, 30, 5, 40],
-                            visualSelected: {
-                                data: ['red', 'pink']
-                            }
-                        },
-                        {
-                            show: true,
-                            splitList: [
-                                {min: 10, max: 15, color: 'green'},
-                                {min: 15, max: 25, visualValue: 'blue'},
-                                {min: 25, max: 35},
-                                {min: 35, max: 55},
-                                {min: 55}
-                            ],
-                            x: 200,
-                            // selectedMode: 'single',
-                            selectedMode: 'multiple',
-                            backgroundColor: '#eee',
-                            visualSelected: {
-                                data: ['red', 'pink']
-                            }
-                        },
-                        {
-                            splitNumber: 5,
-                            x: 'right',
-                            // selectedMode: 'single',
-                            selectedMode: 'multiple',
-                            dimension: 3,
-                            backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'symbol',
-                                data: ['roundRect', 'rect', 'diamond', 'line', 'circle']
-                            }
-                        },
-                        {
-                            splitNumber: 6,
-                            y: 'top',
-                            x: 'left',
-                            orient: 'horizontal',
-                            // selectedMode: 'single',
-                            selectedMode: 'multiple',
-                            dimension: 3,
-                            backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'colorSaturation'
-                            }
-                        },
-                        {
-                            splitNumber: 5,
-                            y: 20,
-                            x: 'right',
-                            orient: 'horizontal',
-                            // selectedMode: 'single',
-                            selectedMode: 'multiple',
-                            dimension: 3,
-                            backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'colorLightness'
-                            }
-                        },
-                        {
-                            splitNumber: 6,
-                            y: 40,
-                            orient: 'horizontal',
-                            // selectedMode: 'single',
-                            selectedMode: 'multiple',
-                            dimension: 3,
-                            backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'colorAlpha'
+                            itemWidth: 30,
+                            calculable: true,
+                            inverse: true,
+                            dimension: 'z',
+                            inRange: {
+                                symbolSize: [10, 180]
                             }
                         }
                     ],
@@ -176,9 +107,6 @@
                                     shadowColor: 'rgba(0, 0, 0, 0.5)'
                                 }
                             },
-                            symbolSize: function (val) {
-                                return val[2] * 2;
-                            },
                             data: data1
                         },
                         {
@@ -193,9 +121,6 @@
                                     shadowColor: 'rgba(0, 0, 0, 0.5)'
                                 }
                             },
-                            symbolSize: function (val) {
-                                return val[2] * 2;
-                            },
                             data: data2
                         },
                         {
@@ -209,9 +134,6 @@
                                     shadowOffsetY: 0,
                                     shadowColor: 'rgba(0, 0, 0, 0.5)'
                                 }
-                            },
-                            symbolSize: function (val) {
-                                return val[2] * 2;
                             },
                             data: data3
                         }

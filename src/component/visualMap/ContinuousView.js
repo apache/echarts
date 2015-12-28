@@ -1,6 +1,6 @@
 define(function(require) {
 
-    var DataRangeView = require('./DataRangeView');
+    var VisualMapView = require('./VisualMapView');
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
@@ -17,16 +17,16 @@ define(function(require) {
     // high data value: this._dataInterval[1] and has high coord.
     // The logic of transform is implemented in this._createBarGroup.
 
-    var PiecewiseDataRangeView = DataRangeView.extend({
+    var PiecewiseVisualMapView = VisualMapView.extend({
 
-        type: 'dataRange.continuous',
+        type: 'visualMap.continuous',
 
         /**
          * @override
          */
         init: function () {
 
-            DataRangeView.prototype.init.apply(this, arguments);
+            VisualMapView.prototype.init.apply(this, arguments);
 
             /**
              * @private
@@ -58,7 +58,7 @@ define(function(require) {
          * @protected
          * @override
          */
-        doRender: function (dataRangeModel, ecModel, api, payload) {
+        doRender: function (visualMapModel, ecModel, api, payload) {
             if (!payload || payload.type !== 'selectDataRange' || payload.from !== this.uid) {
                 this._buildView();
             }
@@ -73,17 +73,17 @@ define(function(require) {
         _buildView: function () {
             this.group.removeAll();
 
-            var dataRangeModel = this.dataRangeModel;
+            var visualMapModel = this.visualMapModel;
             var thisGroup = this.group;
 
-            this._orient = dataRangeModel.get('orient');
-            this._useHandle = dataRangeModel.get('calculable');
+            this._orient = visualMapModel.get('orient');
+            this._useHandle = visualMapModel.get('calculable');
 
             this._resetInterval();
 
             this._renderBar(thisGroup);
 
-            var dataRangeText = dataRangeModel.get('text');
+            var dataRangeText = visualMapModel.get('text');
             this._renderEndsText(thisGroup, dataRangeText, 0);
             this._renderEndsText(thisGroup, dataRangeText, 1);
 
@@ -112,9 +112,9 @@ define(function(require) {
             var text = dataRangeText[1 - endsIndex];
             text = text != null ? text + '' : '';
 
-            var dataRangeModel = this.dataRangeModel;
-            var textGap = dataRangeModel.get('textGap');
-            var itemSize = dataRangeModel.itemSize;
+            var visualMapModel = this.visualMapModel;
+            var textGap = visualMapModel.get('textGap');
+            var itemSize = visualMapModel.itemSize;
 
             var barGroup = this._shapes.barGroup;
             var position = this._applyTransform(
@@ -129,7 +129,7 @@ define(function(require) {
                 barGroup
             );
             var orient = this._orient;
-            var textStyleModel = this.dataRangeModel.textStyleModel;
+            var textStyleModel = this.visualMapModel.textStyleModel;
 
             this.group.add(new graphic.Text({
                 style: {
@@ -148,9 +148,9 @@ define(function(require) {
          * @private
          */
         _renderBar: function (targetGroup) {
-            var dataRangeModel = this.dataRangeModel;
+            var visualMapModel = this.visualMapModel;
             var shapes = this._shapes;
-            var itemSize = dataRangeModel.itemSize;
+            var itemSize = visualMapModel.itemSize;
             var api = this.api;
             var orient = this._orient;
             var useHandle = this._useHandle;
@@ -170,7 +170,7 @@ define(function(require) {
                 useHandle ? 'move' : null
             ));
 
-            var textRect = dataRangeModel.textStyleModel.getTextRect('国');
+            var textRect = visualMapModel.textStyleModel.getTextRect('国');
             var textSize = Math.max(textRect.width, textRect.height);
 
             // Handle
@@ -213,7 +213,7 @@ define(function(require) {
                     : (handleIndex === 0 ? -textSize / 2 : textSize / 2)
             };
 
-            var textStyleModel = this.dataRangeModel.textStyleModel;
+            var textStyleModel = this.visualMapModel.textStyleModel;
             var handleLabel = new graphic.Text({
                 silent: true,
                 style: {
@@ -250,7 +250,7 @@ define(function(require) {
             this.api.dispatchAction({
                 type: 'selectDataRange',
                 from: this.uid,
-                dataRangeId: this.dataRangeModel.id,
+                visualMapId: this.visualMapModel.id,
                 selected: this._dataInterval.slice()
             });
         },
@@ -259,14 +259,14 @@ define(function(require) {
          * @private
          */
         _resetInterval: function () {
-            var dataRangeModel = this.dataRangeModel;
+            var visualMapModel = this.visualMapModel;
 
-            var dataInterval = this._dataInterval = dataRangeModel.getSelected();
+            var dataInterval = this._dataInterval = visualMapModel.getSelected();
 
             this._handleEnds = linearMap(
                 dataInterval,
-                dataRangeModel.getExtent(),
-                [0, dataRangeModel.itemSize[1]],
+                visualMapModel.getExtent(),
+                [0, visualMapModel.itemSize[1]],
                 true
             );
         },
@@ -279,13 +279,13 @@ define(function(require) {
          */
         _updateInterval: function (handleIndex, delta) {
             delta = delta || 0;
-            var dataRangeModel = this.dataRangeModel;
+            var visualMapModel = this.visualMapModel;
             var handleEnds = this._handleEnds;
 
             sliderMove(
                 delta,
                 handleEnds,
-                [0, dataRangeModel.itemSize[1]],
+                [0, visualMapModel.itemSize[1]],
                 handleIndex === 'all' ? 'rigid' : 'push',
                 handleIndex
             );
@@ -293,8 +293,8 @@ define(function(require) {
             // Update data interval.
             this._dataInterval = linearMap(
                 handleEnds,
-                [0, dataRangeModel.itemSize[1]],
-                dataRangeModel.getExtent(),
+                [0, visualMapModel.itemSize[1]],
+                visualMapModel.getExtent(),
                 true
             );
         },
@@ -303,12 +303,12 @@ define(function(require) {
          * @private
          */
         _updateView: function (forSketch) {
-            var dataRangeModel = this.dataRangeModel;
-            var dataExtent = dataRangeModel.getExtent();
+            var visualMapModel = this.visualMapModel;
+            var dataExtent = visualMapModel.getExtent();
             var shapes = this._shapes;
             var dataInterval = this._dataInterval;
 
-            var outOfRangeHandleEnds = [0, dataRangeModel.itemSize[1]];
+            var outOfRangeHandleEnds = [0, visualMapModel.itemSize[1]];
             var inRangeHandleEnds = forSketch ? outOfRangeHandleEnds : this._handleEnds;
 
             var visualInRange = this._createBarVisual(
@@ -332,7 +332,7 @@ define(function(require) {
                 );
 
                 shapes.handleLabels[handleIndex].setStyle({
-                    text: dataRangeModel.formatValueText(dataInterval[handleIndex]),
+                    text: visualMapModel.formatValueText(dataInterval[handleIndex]),
                     textAlign: this._applyTransform(
                         this._orient === 'horizontal'
                             ? (handleIndex === 0 ? 'bottom' : 'top')
@@ -372,7 +372,7 @@ define(function(require) {
          * @private
          */
         _createBarPoints: function (handleEnds, symbolSizes) {
-            var itemSize = this.dataRangeModel.itemSize;
+            var itemSize = this.visualMapModel.itemSize;
 
             return [
                 [itemSize[0] - symbolSizes[0], handleEnds[0]],
@@ -387,7 +387,7 @@ define(function(require) {
          */
         _createBarGroup: function (itemAlign) {
             var orient = this._orient;
-            var inverse = this.dataRangeModel.get('inverse');
+            var inverse = this.visualMapModel.get('inverse');
 
             return new graphic.Group(
                 (orient === 'horizontal' && !inverse)
@@ -456,5 +456,5 @@ define(function(require) {
             : [[0, 0], [textSize, 0], [textSize, textSize]];
     }
 
-    return PiecewiseDataRangeView;
+    return PiecewiseVisualMapView;
 });

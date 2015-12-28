@@ -4,16 +4,16 @@
  */
 define(function(require) {
 
-    var DataRangeModel = require('./DataRangeModel');
+    var VisualMapModel = require('./VisualMapModel');
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
 
     // Constant
     var DEFAULT_BAR_BOUND = [20, 140];
 
-    return DataRangeModel.extend({
+    return VisualMapModel.extend({
 
-        type: 'dataRange.continuous',
+        type: 'visualMap.continuous',
 
         /**
          * @protected
@@ -49,7 +49,7 @@ define(function(require) {
          * @override
          */
         resetItemSize: function () {
-            DataRangeModel.prototype.resetItemSize.apply(this, arguments);
+            VisualMapModel.prototype.resetItemSize.apply(this, arguments);
 
             var itemSize = this.itemSize;
 
@@ -77,7 +77,7 @@ define(function(require) {
          * @override
          */
         completeVisualOption: function () {
-            DataRangeModel.prototype.completeVisualOption.apply(this, arguments);
+            VisualMapModel.prototype.completeVisualOption.apply(this, arguments);
 
             zrUtil.each(this.stateList, function (state) {
                 var symbolSize = this.option.controller[state].symbolSize;

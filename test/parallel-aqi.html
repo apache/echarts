@@ -36,7 +36,7 @@
                 'echarts',
                 'echarts/chart/parallel',
                 'echarts/component/legend',
-                // 'echarts/component/dataZoom',
+                'echarts/component/visualMap',
                 'echarts/component/parallel',
             ], function (dataBJ, dataGZ, dataSH, zrUtil, echarts) {
 
@@ -44,6 +44,7 @@
 
                 var lineStyle = {
                     normal: {
+                        width: 1
                         // opacity: 0.5,
                         // shadowBlur: 10,
                         // shadowOffsetX: 0,
@@ -79,6 +80,16 @@
                                 + schema[4].text + '：' + value[4] + '<br>'
                                 + schema[5].text + '：' + value[5] + '<br>'
                                 + schema[6].text + '：' + value[6] + '<br>';
+                        }
+                    },
+                    visualMap: {
+                        show: true,
+                        min: 0,
+                        max: 150,
+                        dimension: 2,
+                        inRange: {
+                            color: ['#d94e5d','#eac736','#50a3ba'].reverse(),
+                            // colorAlpha: [0, 1]
                         }
                     },
                     // dataZoom: {

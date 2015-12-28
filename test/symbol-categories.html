@@ -36,7 +36,7 @@
                 'echarts/component/legend',
                 'echarts/component/tooltip',
                 'echarts/component/grid',
-                'echarts/component/dataRangePiecewise'
+                'echarts/component/visualMapPiecewise'
             ], function (dataBJ, dataGZ, dataSH, echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -138,7 +138,7 @@
                             }
                         }
                     },
-                    dataRange: [
+                    visualMap: [
                         {
                             x: 'right',
                             y: 'top',

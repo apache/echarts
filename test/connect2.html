@@ -47,7 +47,7 @@
                 'echarts/component/legend',
                 'echarts/component/tooltip',
                 'echarts/component/grid',
-                'echarts/component/dataRangeContinuous'
+                'echarts/component/visualMapContinuous'
             ], function (dataBJ, dataGZ, dataSH, echarts) {
 
                 var chart1 = echarts.init(document.getElementById('chart1'));
@@ -55,24 +55,24 @@
 
                 var option1 = makeChartOption();
                 var option2 = makeChartOption();
-                option1.dataRange.inRange = {
+                option1.visualMap.inRange = {
                     symbolSize: [10, 70]
                 };
-                option1.dataRange.outOfRange = {
+                option1.visualMap.outOfRange = {
                     symbolSize: [10, 70],
                     color: ['rgba(255,255,255,.2)']
                 };
-                option1.dataRange.dimension = 'z';
-                option1.dataRange.max = 250;
+                option1.visualMap.dimension = 'z';
+                option1.visualMap.max = 250;
 
-                option2.dataRange.inRange = {
+                option2.visualMap.inRange = {
                     colorLightness: [1, 0.5]
                 };
-                option2.dataRange.outOfRange = {
+                option2.visualMap.outOfRange = {
                     color: ['rgba(255,255,255,.2)']
                 };
-                option2.dataRange.dimension = 'z';
-                option2.dataRange.max = 250;
+                option2.visualMap.dimension = 'z';
+                option2.visualMap.max = 250;
 
                 chart1.setOption(option1);
                 chart2.setOption(option2);
@@ -174,7 +174,7 @@
                                 }
                             }
                         },
-                        dataRange: {
+                        visualMap: {
                             x: 'right',
                             y: 'top',
                             min: 0,

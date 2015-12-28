@@ -78,19 +78,18 @@ for (var i = 0; i < categoryData.length; i++) {
 
 
 var categoryAxis = {
-    id: 'categoryAxis',
     type: 'category',
-    axisLabel: {interval: 0},
+    // axisLabel: {interval: 0},
     data: categoryDataWithReturn,
     splitLine: {show: false}
 };
 
 var valueAxis = {
-    id: 'valueAxis',
     type: 'value',
     name: 'GDP（亿元）',
     // max: 53500
-    max: 30000
+    max: 30000,
+    data: null
 }
 
 var option = {
@@ -255,10 +254,8 @@ var option = {
                     x2: 100,
                     y2: 50
                 },
-                xAxis: {
-                    axisLabel: {interval: 'auto'},
-                    data: categoryData
-                },
+                xAxis: valueAxis,
+                yAxis: categoryAxis,
                 timeline: {
                     orient: 'vertical',
                     inverse: true,

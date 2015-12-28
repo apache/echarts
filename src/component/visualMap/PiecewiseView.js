@@ -1,14 +1,14 @@
 define(function(require) {
 
-    var DataRangeView = require('./DataRangeView');
+    var VisualMapView = require('./VisualMapView');
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var symbolCreators = require('../../util/symbol');
     var layout = require('../../util/layout');
 
-    var PiecewiseDataRangeView = DataRangeView.extend({
+    var PiecewiseVisualMapView = VisualMapView.extend({
 
-        type: 'dataRange.piecewise',
+        type: 'visualMap.piecewise',
 
         /**
          * @protected
@@ -19,15 +19,15 @@ define(function(require) {
 
             thisGroup.removeAll();
 
-            var dataRangeModel = this.dataRangeModel;
+            var visualMapModel = this.visualMapModel;
             var api = this.api;
             var ecWidth = api.getWidth();
-            var textGap = dataRangeModel.get('textGap');
-            var textStyleModel = dataRangeModel.textStyleModel;
+            var textGap = visualMapModel.get('textGap');
+            var textStyleModel = visualMapModel.textStyleModel;
             var textFont = textStyleModel.getFont();
             var textFill = textStyleModel.getTextColor();
             var itemAlign = this.getItemAlignByOrient('horizontal', ecWidth);
-            var itemSize = dataRangeModel.itemSize;
+            var itemSize = visualMapModel.itemSize;
 
             var viewData = this._getViewData();
             var showLabel = !viewData.endsText;
@@ -40,7 +40,7 @@ define(function(require) {
             showEndsText && this._renderEndsText(thisGroup, viewData.endsText[0], itemSize);
 
             layout.box(
-                dataRangeModel.get('orient'), thisGroup, dataRangeModel.get('itemGap')
+                visualMapModel.get('orient'), thisGroup, visualMapModel.get('itemGap')
             );
 
             this.renderBackground(thisGroup);
@@ -79,7 +79,7 @@ define(function(require) {
                 return;
             }
             var itemGroup = new graphic.Group();
-            var textStyleModel = this.dataRangeModel.textStyleModel;
+            var textStyleModel = this.visualMapModel.textStyleModel;
             itemGroup.add(new graphic.Text({
                 style: {
                     x: itemSize[0] / 2,
@@ -100,16 +100,16 @@ define(function(require) {
          * @return {Object} {peiceList, endsText} value order is [low, ..., high]
          */
         _getViewData: function () {
-            var dataRangeModel = this.dataRangeModel;
+            var visualMapModel = this.visualMapModel;
 
-            var pieceList = zrUtil.map(dataRangeModel.getPieceList(), function (piece, index) {
+            var pieceList = zrUtil.map(visualMapModel.getPieceList(), function (piece, index) {
                 return {piece: piece, index: index};
             });
-            var endsText = dataRangeModel.get('text');
+            var endsText = visualMapModel.get('text');
 
             // Consider orient and inverse.
-            var orient = dataRangeModel.get('orient');
-            var inverse = dataRangeModel.get('inverse');
+            var orient = visualMapModel.get('orient');
+            var inverse = visualMapModel.get('inverse');
 
             if (orient === 'horizontal' ? inverse : !inverse) {
                 // Value order of pieceList is [high, ..., low]
@@ -128,7 +128,7 @@ define(function(require) {
          */
         _createItemSymbol: function (group, piece, shapeParam) {
             var representValue;
-            if (this.dataRangeModel.isCategory()) {
+            if (this.visualMapModel.isCategory()) {
                 representValue = piece.value;
             }
             else {
@@ -149,10 +149,10 @@ define(function(require) {
          * @private
          */
         _onItemClick: function (index) {
-            var dataRangeModel = this.dataRangeModel;
-            var selected = zrUtil.clone(dataRangeModel.get('selected'), true);
+            var visualMapModel = this.visualMapModel;
+            var selected = zrUtil.clone(visualMapModel.get('selected'), true);
 
-            if (dataRangeModel.get('selectedMode') === 'single') {
+            if (visualMapModel.get('selectedMode') === 'single') {
                 zrUtil.each(selected, function (item, index) {
                     selected[index] = false;
                 });
@@ -162,11 +162,11 @@ define(function(require) {
             this.api.dispatchAction({
                 type: 'selectDataRange',
                 from: this.uid,
-                dataRangeId: this.dataRangeModel.id,
+                visualMapId: this.visualMapModel.id,
                 selected: selected
             });
         }
     });
 
-    return PiecewiseDataRangeView;
+    return PiecewiseVisualMapView;
 });

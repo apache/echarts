@@ -20,7 +20,7 @@
                 'echarts/chart/scatter',
                 'echarts/component/legend',
                 'echarts/component/grid',
-                'echarts/component/dataRangePiecewise'
+                'echarts/component/visualMapContinuous'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), null, {
@@ -83,7 +83,7 @@
                             show: false
                         }
                     },
-                    dataRange: [
+                    visualMap: [
                         {
                             show: true,
                             splitNumber: 7,
@@ -92,11 +92,13 @@
                             text: ['高', '低'],
                             backgroundColor: '#eee',
                             padding: [10, 30, 5, 40],
-                            visualSelected: {
-                                data: ['red', 'pink']
+                            calculable: true,
+                            inRange: {
+                                color: ['red', 'pink']
                             }
                         },
                         {
+                            x: 200,
                             show: true,
                             splitList: [
                                 {min: 10, max: 15, color: 'green'},
@@ -105,68 +107,80 @@
                                 {min: 35, max: 55},
                                 {min: 55}
                             ],
-                            x: 200,
+                            inverse: true,
+                            text: ['高', '低'],
+                            calculable: true,
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
-                            text: ['高', '低'],
                             backgroundColor: '#eee',
-                            visualSelected: {
-                                data: ['red', 'pink']
+                            inRange: {
+                                color: ['red', 'pink']
                             }
                         },
                         {
-                            splitNumber: 5,
                             x: 'right',
+                            splitNumber: 5,
+                            text: ['高', '低'],
+                            calculable: true,
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
                             dimension: 3,
-                            text: ['高', '低'],
                             backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'symbol',
-                                data: ['roundRect', 'rect', 'diamond', 'line', 'circle']
+                            inRange: {
+                                color: ['red', 'pink']
                             }
                         },
                         {
-                            splitNumber: 6,
-                            y: 'top',
                             x: 'left',
+                            y: 'top',
                             orient: 'horizontal',
-                            // selectedMode: 'single',
-                            selectedMode: 'multiple',
-                            dimension: 3,
                             text: ['高', '低'],
-                            backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'colorSaturation'
-                            }
-                        },
-                        {
-                            splitNumber: 5,
-                            y: 20,
-                            x: 'right',
-                            orient: 'horizontal',
-                            // selectedMode: 'single',
-                            selectedMode: 'multiple',
-                            dimension: 3,
-                            text: ['高', '低'],
-                            backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'colorLightness'
-                            }
-                        },
-                        {
                             splitNumber: 6,
-                            y: 40,
+                            calculable: true,
+                            // selectedMode: 'single',
+                            selectedMode: 'multiple',
+                            inverse: true,
+                            dimension: 3,
+                            backgroundColor: '#eee',
+                            inRange: 'colorSaturation'
+                        },
+                        {
+                            x: 'right',
+                            y: 20,
                             orient: 'horizontal',
+                            text: ['高', '低'],
+                            splitNumber: 5,
+                            calculable: true,
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
                             dimension: 3,
-                            text: ['高', '低'],
                             backgroundColor: '#eee',
-                            visualSelected: {
-                                type: 'colorAlpha'
-                            }
+                            inRange: 'colorLightness'
+                        },
+                        {
+                            y: 40,
+                            splitNumber: 6,
+                            orient: 'horizontal',
+                            text: ['高', '低'],
+                            calculable: true,
+                            // selectedMode: 'single',
+                            selectedMode: 'multiple',
+                            dimension: 3,
+                            backgroundColor: '#eee',
+                            inRange: 'colorAlpha'
+                        },
+                        {
+                            x: 'center',
+                            y: 'bottom',
+                            orient: 'horizontal',
+                            splitNumber: 6,
+                            text: ['高', '低'],
+                            calculable: true,
+                            // selectedMode: 'single',
+                            selectedMode: 'multiple',
+                            dimension: 3,
+                            backgroundColor: '#eee',
+                            inRange: 'colorAlpha'
                         }
                     ],
                     series: [

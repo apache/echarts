@@ -22,7 +22,7 @@ define(function (require) {
      *     var option = {
      *         title: {...},
      *         legend: {...},
-     *         dataRange: {...},
+     *         visualMap: {...},
      *         series: [
      *             {data: [...]},
      *             {data: [...]},
@@ -53,14 +53,14 @@ define(function (require) {
      *         media: [
      *             {
      *                 query: {maxWidth: 320},
-     *                 option: {series: {x: 20}, dataRange: {show: false}}
+     *                 option: {series: {x: 20}, visualMap: {show: false}}
      *             },
      *             {
      *                 query: {minWidth: 320, maxWidth: 720},
-     *                 option: {series: {x: 500}, dataRange: {show: true}}
+     *                 option: {series: {x: 500}, visualMap: {show: true}}
      *             },
      *             {
-     *                 option: {series: {x: 1200}, dataRange: {show: true}}
+     *                 option: {series: {x: 1200}, visualMap: {show: true}}
      *             }
      *         ]
      *     };

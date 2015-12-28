@@ -19,12 +19,11 @@
                 'echarts/chart/scatter',
                 'echarts/component/legend',
                 'echarts/component/grid',
-                'echarts/component/tooltip'
+                'echarts/component/tooltip',
+                'echarts/component/toolbox'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
-                });
+                var chart = echarts.init(document.getElementById('main'));
 
                 var data1 = [];
                 var data2 = [];
@@ -43,6 +42,13 @@
                 chart.setOption({
                     legend: {
                         data: ['scatter', 'scatter2', 'scatter3']
+                    },
+                    toolbox: {
+                        x: 'left',
+                        feature: {
+                            dataView: {},
+                            saveAsImage: {}
+                        }
                     },
                     tooltip: {
                         trigger: 'axis',
