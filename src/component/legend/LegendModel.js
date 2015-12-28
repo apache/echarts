@@ -16,7 +16,7 @@ define(function(require) {
 
             option.selected = option.selected || {};
 
-            var legendData = zrUtil.map(option.data, function (dataItem) {
+            var legendData = zrUtil.map(option.data || [], function (dataItem) {
                 if (typeof dataItem === 'string') {
                     dataItem = {
                         name: dataItem
