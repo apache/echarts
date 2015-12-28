@@ -2,6 +2,7 @@ define(function(require) {
     'use strict';
 
     var graphic = require('../util/graphic');
+    var zrUtil = require('zrender/core/util');
 
     require('../coord/cartesian/Grid');
 
@@ -17,11 +18,9 @@ define(function(require) {
             if (gridModel.get('show')) {
                 this.group.add(new graphic.Rect({
                     shape:gridModel.coordinateSystem.getRect(),
-                    style: {
-                        stroke: gridModel.get('borderColor'),
-                        lineWidth: gridModel.get('borderWidth'),
+                    style: zrUtil.defaults({
                         fill: gridModel.get('backgroundColor')
-                    },
+                    }, gridModel.getItemStyle()),
                     silent: true
                 }));
             }
