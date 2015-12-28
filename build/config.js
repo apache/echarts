@@ -46,7 +46,7 @@
         'echarts/component/title',
 
         'echarts/component/dataZoom',
-        'echarts/component/dataRange',
+        'echarts/component/visualMap',
 
         'echarts/component/markPoint',
         'echarts/component/markLine',
