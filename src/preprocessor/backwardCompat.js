@@ -53,5 +53,10 @@ define(function (require) {
                     && set(seriesOpt, 'itemStyle.normal.color', pointerColor);
             }
         });
+
+        // dataRange has changed to visualMap
+        if (option.dataRange) {
+            option.visualMap = option.dataRange;
+        }
     };
 });
