@@ -64,12 +64,12 @@
 
                 chart.setOption({
                     legend: {
-                        y: 50,
+                        top: 50,
                         data: ['scatter', 'scatter2', 'scatter3']
                     },
                     grid: {
-                        y: '26%',
-                        y2: '26%'
+                        top: '26%',
+                        bottom: '26%'
                     },
                     xAxis: {
                         type: 'value',
@@ -105,7 +105,7 @@
                                 {min: 35, max: 55},
                                 {min: 55}
                             ],
-                            x: 200,
+                            left: 200,
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
                             text: ['高', '低'],
@@ -116,7 +116,7 @@
                         },
                         {
                             splitNumber: 5,
-                            x: 'right',
+                            left: 'right',
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
                             dimension: 3,
@@ -129,8 +129,8 @@
                         },
                         {
                             splitNumber: 6,
-                            y: 'top',
-                            x: 'left',
+                            top: 'top',
+                            left: 'left',
                             orient: 'horizontal',
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
@@ -143,8 +143,8 @@
                         },
                         {
                             splitNumber: 5,
-                            y: 20,
-                            x: 'right',
+                            top: 20,
+                            left: 'right',
                             orient: 'horizontal',
                             // selectedMode: 'single',
                             selectedMode: 'multiple',
@@ -157,7 +157,7 @@
                         },
                         {
                             splitNumber: 6,
-                            y: 40,
+                            top: 40,
                             orient: 'horizontal',
                             // selectedMode: 'single',
                             selectedMode: 'multiple',

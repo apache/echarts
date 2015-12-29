@@ -79,7 +79,7 @@
                         title: [
                             {
                                 text: 'Michelson-Morley Experiment',
-                                x: 'center',
+                                left: 'center',
                             },
                             {
                                 text: 'upper: Q3 + 1.5 * IRQ \nlower: Q1 - 1.5 * IRQ',
@@ -88,8 +88,8 @@
                                 textStyle: {
                                     fontSize: 14
                                 },
-                                x: '10%',
-                                y: '90%'
+                                left: '10%',
+                                top: '90%'
                             }
                         ],
                         legend: {
@@ -102,9 +102,9 @@
                             }
                         },
                         grid: {
-                            x: '10%',
-                            x2: '10%',
-                            y2: '15%'
+                            left: '10%',
+                            right: '10%',
+                            bottom: '15%'
                         },
                         xAxis: layout === 'horizontal' ? categoryAxis : valueAxis,
                         yAxis: layout === 'vertical' ? categoryAxis : valueAxis,

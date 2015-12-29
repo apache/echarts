@@ -64,12 +64,12 @@
 
                 chart.setOption({
                     legend: {
-                        y: 50,
+                        top: 50,
                         data: ['scatter', 'scatter2', 'scatter3']
                     },
                     grid: {
-                        y: '26%',
-                        y2: '26%'
+                        top: '26%',
+                        bottom: '26%'
                     },
                     xAxis: {
                         type: 'value',
@@ -98,7 +98,7 @@
                             }
                         },
                         {
-                            x: 200,
+                            left: 200,
                             show: true,
                             splitList: [
                                 {min: 10, max: 15, color: 'green'},
@@ -118,7 +118,7 @@
                             }
                         },
                         {
-                            x: 'right',
+                            left: 'right',
                             splitNumber: 5,
                             text: ['高', '低'],
                             calculable: true,
@@ -145,8 +145,8 @@
                             inRange: 'colorSaturation'
                         },
                         {
-                            x: 'right',
-                            y: 20,
+                            left: 'right',
+                            top: 20,
                             orient: 'horizontal',
                             text: ['高', '低'],
                             splitNumber: 5,
@@ -158,7 +158,7 @@
                             inRange: 'colorLightness'
                         },
                         {
-                            y: 40,
+                            top: 40,
                             splitNumber: 6,
                             orient: 'horizontal',
                             text: ['高', '低'],
@@ -170,8 +170,8 @@
                             inRange: 'colorAlpha'
                         },
                         {
-                            x: 'center',
-                            y: 'bottom',
+                            left: 'center',
+                            top: 'bottom',
                             orient: 'horizontal',
                             splitNumber: 6,
                             text: ['高', '低'],

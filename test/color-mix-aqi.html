@@ -56,7 +56,7 @@
 
                 chart.setOption({
                     legend: {
-                        y: 'top',
+                        top: 'top',
                         data: ['北京', '上海', '广州'],
                         textStyle: {
                             color: '#fff',
@@ -64,10 +64,10 @@
                         }
                     },
                     grid: {
-                        x: '10%',
-                        x2: 200,
-                        y: '15%',
-                        y2: '10%'
+                        left: '10%',
+                        right: 200,
+                        top: '15%',
+                        bottom: '10%'
                     },
                     tooltip: {
                         padding: 10,
@@ -137,8 +137,8 @@
                     },
                     visualMap: [
                         {
-                            x: 'right',
-                            y: 'top',
+                            left: 'right',
+                            top: 'top',
                             dimension: 'z',
                             min: 0,
                             max: 250,
@@ -165,8 +165,8 @@
                             }
                         },
                         {
-                            x: 'right',
-                            y: 'bottom',
+                            left: 'right',
+                            top: 'bottom',
                             dimension: 6,
                             min: 0,
                             max: 50,

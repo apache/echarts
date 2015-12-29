@@ -68,14 +68,14 @@
                 var radius = [40, 55];
                 chart.setOption({
                     legend: {
-                        x : 'center',
-                        y : 'center',
+                        left: 'center',
+                        top: 'center',
                         data:[
                             'GoogleMaps','Facebook','Youtube','Google+','Weixin',
                             'Twitter', 'Skype', 'Messenger', 'Whatsapp', 'Instagram'
                         ]
                     },
-                    title : {
+                    title: {
                         text: 'The App World',
                         subtext: 'from global web index',
                         x: 'center'
@@ -115,7 +115,6 @@
                             type : 'pie',
                             center : ['10%', '30%'],
                             radius : radius,
-                            x: '0%', // for funnel
                             itemStyle : labelFromatter,
                             data : [
                                 {name:'other', value:46, itemStyle : labelBottom},
@@ -126,7 +125,6 @@
                             type : 'pie',
                             center : ['30%', '30%'],
                             radius : radius,
-                            x:'20%', // for funnel
                             itemStyle : labelFromatter,
                             data : [
                                 {name:'other', value:56, itemStyle : labelBottom},
@@ -137,7 +135,6 @@
                             type : 'pie',
                             center : ['50%', '30%'],
                             radius : radius,
-                            x:'40%', // for funnel
                             itemStyle : labelFromatter,
                             data : [
                                 {name:'other', value:65, itemStyle : labelBottom},
@@ -148,7 +145,6 @@
                             type : 'pie',
                             center : ['70%', '30%'],
                             radius : radius,
-                            x:'60%', // for funnel
                             itemStyle : labelFromatter,
                             data : [
                                 {name:'other', value:70, itemStyle : labelBottom},
@@ -159,7 +155,6 @@
                             type : 'pie',
                             center : ['90%', '30%'],
                             radius : radius,
-                            x:'80%', // for funnel
                             itemStyle : labelFromatter,
                             data : [
                                 {name:'other', value:73, itemStyle : labelBottom},
@@ -170,8 +165,6 @@
                             type : 'pie',
                             center : ['10%', '70%'],
                             radius : radius,
-                            y: '55%',   // for funnel
-                            x: '0%',    // for funnel
                             itemStyle : labelFromatter,
                             data : [
                                 {name:'other', value:78, itemStyle : labelBottom},
@@ -182,8 +175,6 @@
                             type : 'pie',
                             center : ['30%', '70%'],
                             radius : radius,
-                            y: '55%',   // for funnel
-                            x:'20%',    // for funnel
                             itemStyle : labelFromatter,
                             data : [
                                 {name:'other', value:78, itemStyle : labelBottom},
@@ -194,8 +185,6 @@
                             type : 'pie',
                             center : ['50%', '70%'],
                             radius : radius,
-                            y: '55%',   // for funnel
-                            x:'40%', // for funnel
                             itemStyle : labelFromatter,
                             data : [
                                 {name:'other', value:78, itemStyle : labelBottom},
@@ -206,8 +195,6 @@
                             type : 'pie',
                             center : ['70%', '70%'],
                             radius : radius,
-                            y: '55%',   // for funnel
-                            x:'60%', // for funnel
                             itemStyle : labelFromatter,
                             data : [
                                 {name:'other', value:83, itemStyle : labelBottom},
@@ -218,8 +205,6 @@
                             type : 'pie',
                             center : ['90%', '70%'],
                             radius : radius,
-                            y: '55%',   // for funnel
-                            x:'80%', // for funnel
                             itemStyle : labelFromatter,
                             data : [
                                 {name:'other', value:89, itemStyle : labelBottom},

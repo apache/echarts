@@ -59,12 +59,12 @@
                     tooltip: {
                         trigger: 'axis'
                     },
-                    xAxis: {
+                    yAxis: {
                         // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
                         data: xAxisData,
                         boundaryGap: false
                     },
-                    yAxis: {
+                    xAxis: {
                         // inverse: true,
                         // scale: true
                     },
@@ -114,7 +114,8 @@
                         show: true,
                         end: 30,
                         borderColor: 'rgba(0,0,0,0.15)',
-                        backgroundColor: 'rgba(200,200,200,0)'
+                        backgroundColor: 'rgba(200,200,200,0)',
+                        yAxisIndex: 0
                     }
                 });
             })
