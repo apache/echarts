@@ -28,6 +28,8 @@ define(function(require) {
 
             // 最小高度改为0
             barMinHeight: 0,
+
+            // barMaxWidth: null,
             // 默认自适应
             // barWidth: null,
             // 柱间距离，默认为柱形宽度的30%，可设固定值
@@ -52,8 +54,6 @@ define(function(require) {
                     // color: '各异',
                     // 柱条边线
                     barBorderColor: '#fff',
-                    // 柱条边线圆角，单位px，默认为0
-                    barBorderRadius: 0,
                     // 柱条边线线宽，单位px，默认为1
                     barBorderWidth: 0
                 },
@@ -61,8 +61,6 @@ define(function(require) {
                     // color: '各异',
                     // 柱条边线
                     barBorderColor: '#fff',
-                    // 柱条边线圆角，单位px，默认为0
-                    barBorderRadius: 0,
                     // 柱条边线线宽，单位px，默认为1
                     barBorderWidth: 0
                 }

@@ -790,14 +790,14 @@ define(function (require) {
             if (lastHover.payloadBatch && !contentNotChange) {
                 this._api.dispatchAction({
                     type: 'downplay',
-                    batch: zrUtil.clone(lastHover.payloadBatch, true)
+                    batch: zrUtil.clone(lastHover.payloadBatch)
                 });
             }
             // Dispatch highlight action
             if (!contentNotChange) {
                 this._api.dispatchAction({
                     type: 'highlight',
-                    batch: zrUtil.clone(payloadBatch, true)
+                    batch: zrUtil.clone(payloadBatch)
                 });
                 lastHover.payloadBatch = payloadBatch;
             }

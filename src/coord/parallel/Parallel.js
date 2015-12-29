@@ -280,7 +280,7 @@ define(function(require) {
          * Get axis layout.
          */
         getAxisLayout: function (dim) {
-            return zrUtil.clone(this._axesLayout[dim], true);
+            return zrUtil.clone(this._axesLayout[dim]);
         }
 
     };

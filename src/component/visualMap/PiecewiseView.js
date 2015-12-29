@@ -150,7 +150,7 @@ define(function(require) {
          */
         _onItemClick: function (index) {
             var visualMapModel = this.visualMapModel;
-            var selected = zrUtil.clone(visualMapModel.get('selected'), true);
+            var selected = zrUtil.clone(visualMapModel.get('selected'));
 
             if (visualMapModel.get('selectedMode') === 'single') {
                 zrUtil.each(selected, function (item, index) {

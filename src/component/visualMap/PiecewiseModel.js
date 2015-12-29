@@ -56,7 +56,7 @@ define(function(require) {
 
             this.resetVisual(function (mappingOption, state) {
                 mappingOption.mappingMethod = mappingMethod;
-                mappingOption.categories = categories && zrUtil.clone(categories, true);
+                mappingOption.categories = categories && zrUtil.clone(categories);
 
                 var intervals = mappingOption.intervals = [];
                 var specifiedVisuals = mappingOption.specifiedVisuals = [];

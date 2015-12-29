@@ -12,8 +12,7 @@ define(function (require) {
          */
         get: function (visualType, key, isCategory) {
             var value = zrUtil.clone(
-                (defaultOption[visualType] || {})[key],
-                true
+                (defaultOption[visualType] || {})[key]
             );
 
             return isCategory

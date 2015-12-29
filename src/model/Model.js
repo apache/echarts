@@ -123,7 +123,7 @@ define(function (require) {
         // Pending
         clone: function () {
             var Ctor = this.constructor;
-            return new Ctor(zrUtil.clone(this.option, true));
+            return new Ctor(zrUtil.clone(this.option));
         },
 
         setReadOnly: function (properties) {

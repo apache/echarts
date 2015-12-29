@@ -47,7 +47,7 @@ define(function(require) {
          * @public
          */
         setActiveIntervals: function (intervals) {
-            var activeIntervals = this.activeIntervals = zrUtil.clone(intervals, true);
+            var activeIntervals = this.activeIntervals = zrUtil.clone(intervals);
 
             // Normalize
             if (activeIntervals) {

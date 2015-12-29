@@ -151,7 +151,7 @@ define(function(require) {
                     var newItem;
 
                     if (zrUtil.isObject(item)) {
-                        newItem = zrUtil.clone(item, true);
+                        newItem = zrUtil.clone(item);
                         newItem.value = index;
                     }
                     else {

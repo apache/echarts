@@ -83,7 +83,7 @@ define(function (require) {
          * @type {Object}
          * @private
          */
-        this._theme = zrUtil.clone(theme, true);
+        this._theme = zrUtil.clone(theme);
 
         /**
          * @type {Array.<module:echarts/view/Chart>}

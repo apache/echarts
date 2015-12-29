@@ -50,7 +50,7 @@ define(function (require) {
          * @type {Object}
          * @readOnly
          */
-        this.opt = zrUtil.clone(opt, true);
+        this.opt = zrUtil.clone(opt);
 
         /**
          * @type {module:zrender/container/Group}
@@ -131,7 +131,7 @@ define(function (require) {
             // TODO
             // Only support one interval yet.
             if (ranges) {
-                renderCover.call(this, zrUtil.clone(ranges, true));
+                renderCover.call(this, zrUtil.clone(ranges));
             }
         },
 
@@ -218,7 +218,7 @@ define(function (require) {
 
             renderCover.call(this, ranges);
 
-            this.trigger('selected', zrUtil.clone(ranges, true));
+            this.trigger('selected', zrUtil.clone(ranges));
         }
     }
 

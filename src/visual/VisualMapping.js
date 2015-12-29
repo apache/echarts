@@ -56,7 +56,7 @@ define(function (require) {
          * @readOnly
          * @type {Object}
          */
-        var thisOption = this.option = zrUtil.clone(option, true);
+        var thisOption = this.option = zrUtil.clone(option);
 
         /**
          * @private

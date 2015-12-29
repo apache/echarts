@@ -149,7 +149,7 @@ define(function (require) {
                             seriesOpt.name = dataOpt.name;
                             for (var i = 1; i < dataList.length; i++) {
                                 var dataOpt = dataList[i];
-                                var newSeriesOpt = zrUtil.clone(seriesOpt, true);
+                                var newSeriesOpt = zrUtil.clone(seriesOpt);
                                 option.series.push(zrUtil.extend(newSeriesOpt, {
                                     name: dataOpt.name,
                                     data: dataOpt.value,

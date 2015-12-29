@@ -110,7 +110,7 @@ define(function (require) {
 
                 if (!ComponentModel.hasClass(mainType)) {
                     option[mainType] = option[mainType] == null
-                        ? zrUtil.clone(componentOption, true)
+                        ? zrUtil.clone(componentOption)
                         : zrUtil.merge(option[mainType], componentOption, true);
                 }
                 else {

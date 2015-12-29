@@ -389,12 +389,12 @@ define(function(require) {
                     // Consistent symbol and symbolSize if not specified.
                     if (!visuals.symbol) {
                         visuals.symbol = symbolExists
-                            && zrUtil.clone(symbolExists, true)
+                            && zrUtil.clone(symbolExists)
                             || (isCategory ? 'roundRect' : ['roundRect']);
                     }
                     if (!visuals.symbolSize) {
                         visuals.symbolSize = symbolSizeExists
-                            && zrUtil.clone(symbolSizeExists, true)
+                            && zrUtil.clone(symbolSizeExists)
                             || (isCategory ? itemSize[0] : [itemSize[0], itemSize[0]]);
                     }
 
