@@ -212,7 +212,7 @@ define(function (require) {
 
             var tooltipContent = this._tooltipContent;
             tooltipContent.update();
-            tooltipContent.enterable = tooltipModel.get('enterbale');
+            tooltipContent.enterable = tooltipModel.get('enterable');
 
             this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
