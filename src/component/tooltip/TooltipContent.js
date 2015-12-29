@@ -128,7 +128,7 @@ define(function (require) {
         this._hideTimeout;
 
         var self = this;
-        el.onmouseover = function () {
+        el.onmouseenter = function () {
             // clear the timeout in hideLater and keep showing tooltip
             if (self.enterable) {
                 clearTimeout(self._hideTimeout);
@@ -145,7 +145,7 @@ define(function (require) {
                 handler.dispatch('mousemove', e);
             }
         };
-        el.onmouseout = function () {
+        el.onmouseleave = function () {
             if (self.enterable) {
                 if (self._show) {
                     self.hideLater(self._hideDelay);
