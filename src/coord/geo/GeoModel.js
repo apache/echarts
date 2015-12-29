@@ -30,15 +30,15 @@ define(function (require) {
 
             show: true,
 
-            x: 'center',
+            left: 'center',
 
-            y: 'center',
+            top: 'center',
 
             // 自适应
             // width:,
             // height:,
-            // x2
-            // y2
+            // right
+            // bottom
 
             // Map type
             map: '',

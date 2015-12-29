@@ -116,15 +116,8 @@ define(function(require) {
          * @param {module:echarts/ExtensionAPI} api
          */
         resize: function (parallelModel, api) {
-            this._rect = layout.parsePositionInfo(
-                {
-                    x: parallelModel.get('x'),
-                    y: parallelModel.get('y'),
-                    x2: parallelModel.get('x2'),
-                    y2: parallelModel.get('y2'),
-                    width: parallelModel.get('width'),
-                    height: parallelModel.get('height')
-                },
+            this._rect = layout.getLayoutRect(
+                parallelModel.getBoxLayoutOption(),
                 {
                     width: api.getWidth(),
                     height: api.getHeight()

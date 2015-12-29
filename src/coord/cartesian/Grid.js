@@ -86,17 +86,11 @@ define(function(require, factory) {
      */
     gridProto.resize = function (gridModel, api) {
 
-        var gridRect = layout.parsePositionInfo({
-            x: gridModel.get('x'),
-            y: gridModel.get('y'),
-            x2: gridModel.get('x2'),
-            y2: gridModel.get('y2'),
-            width: gridModel.get('width'),
-            height: gridModel.get('height')
-        }, {
-            width: api.getWidth(),
-            height: api.getHeight()
-        });
+        var gridRect = layout.getLayoutRect(
+            gridModel.getBoxLayoutOption(), {
+                width: api.getWidth(),
+                height: api.getHeight()
+            });
 
         this._rect = gridRect;
 

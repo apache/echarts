@@ -39,8 +39,6 @@ define(function (require) {
         defaultOption: {
             center: ['50%', '50%'],
             radius: ['65%', '75%'],
-            // x2: null,
-            // y2: null
             //
             // layout: 'circular',
 

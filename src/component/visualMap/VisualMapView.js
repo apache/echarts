@@ -167,22 +167,11 @@ define(function (require) {
          */
         positionGroup: function (group) {
             var model = this.visualMapModel;
-            var x = model.get('x');
-            var y = model.get('y');
-            var x2 = model.get('x2');
-            var y2 = model.get('y2');
             var api = this.api;
-
-            if (!x && !x2) {
-                x = 'center';
-            }
-            if (!y && !y2) {
-                y = 'bottom';
-            }
 
             layout.positionGroup(
                 group,
-                {x: x, y: y, x2: x2, y2: y2},
+                model.getBoxLayoutOption(),
                 {width: api.getWidth(), height: api.getHeight()}
             );
         },

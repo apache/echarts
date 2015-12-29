@@ -26,12 +26,12 @@ define(function (require) {
 
             orient: 'horizontal',
 
-            x: 'right',
+            left: 'right',
 
-            y: 'top',
+            top: 'top',
 
-            // x2
-            // y2
+            // right
+            // bottom
 
             backgroundColor: 'transparent',
 

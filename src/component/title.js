@@ -30,14 +30,12 @@ define(function(require) {
             // 仅支持self | blank
             // subtarget: null,
 
-            // 水平安放位置，默认为左对齐，可选为：
             // 'center' ¦ 'left' ¦ 'right'
             // ¦ {number}（x坐标，单位px）
-            x: 'left',
-            // 垂直安放位置，默认为全图顶端，可选为：
+            left: 'left',
             // 'top' ¦ 'bottom' ¦ 'center'
             // ¦ {number}（y坐标，单位px）
-            y: 'top',
+            top: 'top',
 
             // 水平对齐
             // 'auto' | 'left' | 'right'
@@ -134,49 +132,45 @@ define(function(require) {
             // If no subText, but add subTextEl, there will be an empty line.
 
             var groupRect = group.getBoundingRect();
-            var positionInfo = layout.parsePositionInfo(
-                {
-                    x: titleModel.get('x'),
-                    y: titleModel.get('y'),
-                    x2: titleModel.get('x2'),
-                    y2: titleModel.get('y2'),
-                    width: groupRect.width,
-                    height: groupRect.height
-                }, {
+            var layoutOption = titleModel.getBoxLayoutOption();
+            layoutOption.width = groupRect.width;
+            layoutOption.height = groupRect.height;
+            var layoutRect = layout.getLayoutRect(
+                layoutOption, {
                     width: api.getWidth(),
                     height: api.getHeight()
                 }, titleModel.get('padding')
             );
             // Adjust text align based on position
             if (!textAlign) {
-                var p = positionInfo.x / api.getWidth();
-                var p2 = (positionInfo.x + positionInfo.width) / api.getWidth();
+                var p = layoutRect.x / api.getWidth();
+                var p2 = (layoutRect.x + layoutRect.width) / api.getWidth();
 
                 if (p < 0.2) {
                     textAlign = 'left';
                 }
                 else if (p2 > 0.8) {
-                    positionInfo.x += positionInfo.width;
+                    layoutRect.x += layoutRect.width;
                     textAlign = 'right';
                 }
                 else {
-                    positionInfo.x += positionInfo.width / 2;
+                    layoutRect.x += layoutRect.width / 2;
                     textAlign = 'center';
                 }
             }
-            group.position = [positionInfo.x, positionInfo.y];
+            group.position = [layoutRect.x, layoutRect.y];
             textEl.style.textAlign = subTextEl.style.textAlign = textAlign;
             textEl.dirty();
             subTextEl.dirty();
 
             // Render background
-            var padding = positionInfo.margin;
+            var padding = layoutRect.margin;
             var rect = new graphic.Rect({
                 shape: {
                     x: -padding[3],
                     y: -padding[0],
-                    width: positionInfo.width + padding[1] + padding[3],
-                    height: positionInfo.height + padding[0] + padding[2]
+                    width: layoutRect.width + padding[1] + padding[3],
+                    height: layoutRect.height + padding[0] + padding[2]
                 },
                 style: {
                     stroke: titleModel.get('borderColor'),

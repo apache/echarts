@@ -13,9 +13,9 @@ define(function(require) {
          * @protected
          */
         defaultOption: {
-            // x: {number},            // 水平安放位置，默认为根据grid参数适配，可选为：
+            // left: {number},         // 水平安放位置，默认为根据grid参数适配，可选为：
                                        // {number}（x坐标，单位px）
-            // y: {number},            // 垂直安放位置，默认为根据grid参数适配，可选为：
+            // top: {number},          // 垂直安放位置，默认为根据grid参数适配，可选为：
                                        // {number}（y坐标，单位px）
             // width: {number},        // 指定宽度，横向布局时默认为根据grid参数适配
             // height: {number},       // 指定高度，纵向布局时默认为根据grid参数适配

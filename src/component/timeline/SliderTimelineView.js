@@ -73,7 +73,7 @@ define(function (require) {
 
             this.group.removeAll();
 
-            var mainGroup = new graphic.Group();
+            // var mainGroup = new graphic.Group();
 
             var layoutInfo = this._layout(timelineModel, api);
 
@@ -623,15 +623,8 @@ define(function (require) {
     });
 
     function getViewRect(model, api) {
-        return layout.parsePositionInfo(
-            {
-                x: model.get('x'),
-                y: model.get('y'),
-                x2: model.get('x2'),
-                y2: model.get('y2'),
-                width: model.get('width'),
-                height: model.get('height')
-            },
+        return layout.getLayoutRect(
+            model.getBoxLayoutOption(),
             {
                 width: api.getWidth(),
                 height: api.getHeight()

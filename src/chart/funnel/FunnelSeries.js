@@ -45,12 +45,12 @@ define(function(require) {
             z: 2,                       // 二级层叠
             clickable: true,
             legendHoverLink: true,
-            x: 80,
-            y: 60,
-            x2: 80,
-            y2: 60,
-            // width: {totalWidth} - x - x2,
-            // height: {totalHeight} - y - y2,
+            left: 80,
+            top: 60,
+            right: 80,
+            bottom: 60,
+            // width: {totalWidth} - left - right,
+            // height: {totalHeight} - top - bottom,
 
             // 默认取数据最小最大值
             // min: 0,

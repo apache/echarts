@@ -25,10 +25,10 @@ define(function(require) {
 
             realtime: true,
 
-            x: '20%',
-            y: null,
-            x2: '20%',
-            y2: 0,
+            left: '20%',
+            top: null,
+            right: '20%',
+            bottom: 0,
             width: null,
             height: 40,
             padding: 5,

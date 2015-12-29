@@ -20,10 +20,10 @@ define(function(require) {
             clickable: true,
             // center: ['50%', '50%'],             // not supported in ec3.
             // size: ['80%', '80%'],               // deprecated, compatible with ec2.
-            x: 'center',
-            y: 'middle',
-            x2: null,
-            y2: null,
+            left: 'center',
+            top: 'middle',
+            right: null,
+            bottom: null,
             width: '80%',
             height: '80%',
             sort: true,                         // Can be null or false or true

@@ -132,15 +132,12 @@ define(function(require) {
 
     /**
      * Parse position info.
-     *  position info is specified by either
-     *  {x, y}, {x2, y2}
-     *  If all properties exists, x2 and y2 will be igonred.
      *
      * @param {Object} positionInfo
-     * @param {number|string} [positionInfo.x]
-     * @param {number|string} [positionInfo.y]
-     * @param {number|string} [positionInfo.x2]
-     * @param {number|string} [positionInfo.y2]
+     * @param {number|string} [positionInfo.left]
+     * @param {number|string} [positionInfo.top]
+     * @param {number|string} [positionInfo.right]
+     * @param {number|string} [positionInfo.bottom]
      * @param {number|string} [positionInfo.width]
      * @param {number|string} [positionInfo.height]
      * @param {number|string} [positionInfo.aspect] Aspect is width / height
@@ -149,7 +146,7 @@ define(function(require) {
      *
      * @return {module:zrender/core/BoundingRect}
      */
-    layout.parsePositionInfo = function (
+    layout.getLayoutRect = function (
         positionInfo, containerRect, margin
     ) {
         margin = formatUtil.normalizeCssArray(margin || 0);
@@ -157,10 +154,10 @@ define(function(require) {
         var containerWidth = containerRect.width;
         var containerHeight = containerRect.height;
 
-        var x = parsePercent(positionInfo.x, containerWidth);
-        var y = parsePercent(positionInfo.y, containerHeight);
-        var x2 = parsePercent(positionInfo.x2, containerWidth);
-        var y2 = parsePercent(positionInfo.y2, containerHeight);
+        var left = parsePercent(positionInfo.left, containerWidth);
+        var top = parsePercent(positionInfo.top, containerHeight);
+        var right = parsePercent(positionInfo.right, containerWidth);
+        var bottom = parsePercent(positionInfo.bottom, containerHeight);
         var width = parsePercent(positionInfo.width, containerWidth);
         var height = parsePercent(positionInfo.height, containerHeight);
 
@@ -168,14 +165,18 @@ define(function(require) {
         var horizontalMargin = margin[1] + margin[3];
         var aspect = positionInfo.aspect;
 
-        // If width is not specified, calculate width from x and x2
+        // If width is not specified, calculate width from left and right
         if (isNaN(width)) {
-            width = containerWidth - x2 - horizontalMargin - x;
+            width = containerWidth - right - horizontalMargin - left;
         }
         if (isNaN(height)) {
-            height = containerHeight - y2 - verticalMargin - y;
+            height = containerHeight - bottom - verticalMargin - top;
         }
 
+        // If width and height are not given
+        // 1. Graph should not exceeds the container
+        // 2. Aspect must be keeped
+        // 3. Graph should take the space as more as possible
         if (isNaN(width) && isNaN(height)) {
             if (aspect  > containerWidth / containerHeight) {
                 width = containerWidth * 0.8;
@@ -195,34 +196,34 @@ define(function(require) {
             }
         }
 
-        // If x is not specified, calculate x from x2 and width
-        if (isNaN(x)) {
-            x = containerWidth - x2 - width - horizontalMargin;
+        // If left is not specified, calculate left from right and width
+        if (isNaN(left)) {
+            left = containerWidth - right - width - horizontalMargin;
         }
-        if (isNaN(y)) {
-            y = containerHeight - y2 - height - verticalMargin;
+        if (isNaN(top)) {
+            top = containerHeight - bottom - height - verticalMargin;
         }
 
-        // Align x and y
-        switch (positionInfo.x || positionInfo.x2) {
+        // Align left and top
+        switch (positionInfo.left || positionInfo.right) {
             case 'center':
-                x = containerWidth / 2 - width / 2 - margin[3];
+                left = containerWidth / 2 - width / 2 - margin[3];
                 break;
             case 'right':
-                x = containerWidth - width - horizontalMargin;
+                left = containerWidth - width - horizontalMargin;
                 break;
         }
-        switch (positionInfo.y || positionInfo.y2) {
+        switch (positionInfo.top || positionInfo.bottom) {
             case 'middle':
             case 'center':
-                y = containerHeight / 2 - height / 2 - margin[0];
+                top = containerHeight / 2 - height / 2 - margin[0];
                 break;
             case 'bottom':
-                y = containerHeight - height - verticalMargin;
+                top = containerHeight - height - verticalMargin;
                 break;
         }
 
-        var rect = new BoundingRect(x + margin[3], y + margin[0], width, height);
+        var rect = new BoundingRect(left + margin[3], top + margin[0], width, height);
         rect.margin = margin;
         return rect;
     };
@@ -230,15 +231,15 @@ define(function(require) {
     /**
      * Position group of component in viewport
      *  Group position is specified by either
-     *  {x, y}, {x2, y2}
-     *  If all properties exists, x2 and y2 will be igonred.
+     *  {left, top}, {right, bottom}
+     *  If all properties exists, right and bottom will be igonred.
      *
      * @param {module:zrender/container/Group} group
      * @param {Object} positionInfo
-     * @param {number|string} [positionInfo.x]
-     * @param {number|string} [positionInfo.y]
-     * @param {number|string} [positionInfo.x2]
-     * @param {number|string} [positionInfo.y2]
+     * @param {number|string} [positionInfo.left]
+     * @param {number|string} [positionInfo.top]
+     * @param {number|string} [positionInfo.right]
+     * @param {number|string} [positionInfo.bottom]
      * @param {Object} containerRect
      * @param {string|number} margin
      */
@@ -247,12 +248,12 @@ define(function(require) {
     ) {
         var groupRect = group.getBoundingRect();
 
-        positionInfo = zrUtil.extend({
+        positionInfo = zrUtil.extend(zrUtil.clone(positionInfo), {
             width: groupRect.width,
             height: groupRect.height
-        }, positionInfo);
+        });
 
-        positionInfo = layout.parsePositionInfo(
+        positionInfo = layout.getLayoutRect(
             positionInfo, containerRect, margin
         );
 

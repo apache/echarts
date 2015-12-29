@@ -222,7 +222,7 @@ define(function (require) {
         }
     }
 
-    function shouldShowCover(p1, p2) {
+    function shouldShowCover() {
         var track = this._track;
 
         if (!track.length) {

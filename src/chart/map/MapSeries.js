@@ -138,12 +138,12 @@ define(function (require) {
             map: 'china',
 
             // 'center' | 'left' | 'right' | 'x%' | {number}
-            x: 'center',
+            left: 'center',
             // 'center' | 'top' | 'bottom' | 'x%' | {number}
-            y: 'center',
-            // x2
-            // y2
-            // width: '60%'
+            top: 'center',
+            // right
+            // bottom
+            // width:
             // height   // 自适应
 
             // 数值合并方式，默认加和，可选为：

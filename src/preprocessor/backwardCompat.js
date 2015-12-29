@@ -32,8 +32,32 @@ define(function (require) {
         }
     }
 
+    function compatLayoutProperties(option) {
+        each(LAYOUT_PROPERTIES, function (prop) {
+            if (prop[0] in option && !(prop[1] in option)) {
+                option[prop[1]] = option[prop[0]];
+            }
+        });
+    }
+
+    var LAYOUT_PROPERTIES = [
+        ['x', 'left'], ['y', 'top'], ['x2', 'right'], ['y2', 'bottom']
+    ];
+
+    var COMPATITABLE_COMPONENTS = [
+        'grid', 'geo', 'parallel', 'legend', 'toolbox', 'title', 'visualMap', 'dataZoom'
+    ];
+
+    var COMPATITABLE_SERIES = [
+        'bar', 'boxplot', 'candlestick', 'chord', 'effectScatter',
+        'funnel', 'gauge', 'geoLine', 'graph', 'heatmap', 'line', 'map', 'parallel',
+        'pie', 'radar', 'sankey', 'scatter', 'treemap'
+    ];
+
+    var each = zrUtil.each;
+
     return function (option) {
-        zrUtil.each(option.series, function (seriesOpt) {
+        each(option.series, function (seriesOpt) {
             if (!zrUtil.isObject(seriesOpt)) {
                 return;
             }
@@ -52,11 +76,30 @@ define(function (require) {
                 pointerColor != null
                     && set(seriesOpt, 'itemStyle.normal.color', pointerColor);
             }
+
+            for (var i = 0; i < COMPATITABLE_SERIES.length; i++) {
+                if (COMPATITABLE_SERIES[i] === seriesOpt.type) {
+                    compatLayoutProperties(seriesOpt);
+                    break;
+                }
+            }
         });
 
         // dataRange has changed to visualMap
         if (option.dataRange) {
             option.visualMap = option.dataRange;
         }
+
+        each(COMPATITABLE_COMPONENTS, function (componentName) {
+            var options = option[componentName];
+            if (options) {
+                if (!zrUtil.isArray(options)) {
+                    options = [options];
+                }
+                each(options, function (option) {
+                    compatLayoutProperties(option);
+                });
+            }
+        });
     };
 });

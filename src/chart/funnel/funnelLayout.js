@@ -6,17 +6,12 @@ define(function (require) {
     var parsePercent = number.parsePercent;
 
     function getViewRect(seriesModel, api) {
-        return layout.parsePositionInfo({
-            x: seriesModel.get('x'),
-            y: seriesModel.get('y'),
-            x2: seriesModel.get('x2'),
-            y2: seriesModel.get('y2'),
-            width: seriesModel.get('width'),
-            height: seriesModel.get('height')
-        }, {
-            width: api.getWidth(),
-            height: api.getHeight()
-        });
+        return layout.getLayoutRect(
+            seriesModel.getBoxLayoutOption(), {
+                width: api.getWidth(),
+                height: api.getHeight()
+            }
+        );
     }
 
     function getSortedIndices(data, sort) {

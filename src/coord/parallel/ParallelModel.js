@@ -35,12 +35,12 @@ define(function(require) {
 
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
-            x: 80,
-            y: 60,
-            x2: 80,
-            y2: 60,
-            // width: {totalWidth} - x - x2,
-            // height: {totalHeight} - y - y2,
+            left: 80,
+            top: 60,
+            right: 80,
+            bottom: 60,
+            // width: {totalWidth} - left - right,
+            // height: {totalHeight} - top - bottom,
 
             layout: 'horizontal',      // 'horizontal' or 'vertical'
 

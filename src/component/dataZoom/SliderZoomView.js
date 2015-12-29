@@ -145,8 +145,8 @@ define(function (require) {
             var ecWidth = api.getWidth();
             var ecHeight = api.getHeight();
 
-            var x = dataZoomModel.get('x');
-            var y = dataZoomModel.get('y');
+            var x = dataZoomModel.get('left');
+            var y = dataZoomModel.get('top');
             var width = dataZoomModel.get('width');
             var height = dataZoomModel.get('height');
 

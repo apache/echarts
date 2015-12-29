@@ -32,15 +32,8 @@ define(function (require) {
                 ecHeight
             );
 
-            var layoutInfo = layout.parsePositionInfo(
-                {
-                    x: seriesModel.get('x'),
-                    y: seriesModel.get('y'),
-                    x2: seriesModel.get('x2'),
-                    y2: seriesModel.get('y2'),
-                    width: containerWidth,
-                    height: containerHeight
-                },
+            var layoutInfo = layout.getLayoutRect(
+                seriesModel.getBoxLayoutOption(),
                 {
                     width: api.getWidth(),
                     height: api.getHeight()

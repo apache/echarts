@@ -43,10 +43,10 @@ define(function (require) {
             layout : null,
 
             // the position of the whole view
-            x: '5%',
-            y: '5%',
-            x2: '20%',
-            y2: '5%',
+            left: '5%',
+            top: '5%',
+            right: '20%',
+            bottom: '5%',
 
             // the dx of the node
             nodeWidth: 20,

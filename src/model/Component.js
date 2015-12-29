@@ -144,5 +144,7 @@ define(function(require) {
         });
     }
 
+    zrUtil.mixin(ComponentModel, require('./mixin/boxLayout'));
+
     return ComponentModel;
 });

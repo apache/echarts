@@ -119,10 +119,10 @@ define(function (require) {
                 layoutAnimation: true
             },
 
-            x: 'center',
-            y: 'center',
-            x2: null,
-            y2: null,
+            left: 'center',
+            top: 'center',
+            // right: null,
+            // bottom: null,
             // width: '80%',
             // height: '80%',
 

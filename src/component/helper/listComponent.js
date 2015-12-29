@@ -5,24 +5,8 @@ define(function (require) {
     var graphic = require('../../util/graphic');
 
     function positionGroup(group, model, api) {
-        var x = model.get('x');
-        var y = model.get('y');
-        var x2 = model.get('x2');
-        var y2 = model.get('y2');
-
-        if (!x && !x2) {
-            x = 'center';
-        }
-        if (!y && !y2) {
-            y = 'top';
-        }
         layout.positionGroup(
-            group, {
-                x: x,
-                y: y,
-                x2: x2,
-                y2: y2
-            },
+            group, model.getBoxLayoutOption(),
             {
                 width: api.getWidth(),
                 height: api.getHeight()
@@ -74,5 +58,5 @@ define(function (require) {
 
             group.add(rect);
         }
-    }
+    };
 });

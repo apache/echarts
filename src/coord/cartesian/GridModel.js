@@ -14,15 +14,15 @@ define(function(require) {
         dependencies: ['xAxis', 'yAxis'],
 
         mergeDefaultAndTheme: function (option, ecModel) {
-            // Not specify layout with x2, width, y2, height
+            // Not specify layout with right, width, bottom, height
             // FIXME 通用？
-            if (option.x2 == null || option.width == null || option.x != null) {
-                option.x = option.x != null ? option.x : '10%';
-                option.x2 = option.x2 != null ? option.x2 : '10%';
+            if (option.right == null || option.width == null || option.left != null) {
+                option.left = option.left != null ? option.left : '10%';
+                option.right = option.right != null ? option.right : '10%';
             }
-            if (option.y2 == null || option.height == null || option.y != null) {
-                option.y = option.y != null ? option.y : 60;
-                option.y2 = option.y2 != null ? option.y2 : 60;
+            if (option.bottom == null || option.height == null || option.top != null) {
+                option.top = option.top != null ? option.top : 60;
+                option.bottom = option.bottom != null ? option.bottom : 60;
             }
             ComponentModel.prototype.mergeDefaultAndTheme.call(
                 this, option, ecModel
@@ -36,16 +36,16 @@ define(function(require) {
 
         defaultOption: {
             show: false,
-            zlevel: 0,                  // 一级层叠
-            z: 0,                       // 二级层叠
-            // x: '10%',
-            // y: 60,
-            // x2: '10%',
-            // y2: 60,
+            zlevel: 0,
+            z: 0,
+            // left: '10%',
+            // top: 60,
+            // right: '10%',
+            // bottom: 60,
             // If grid size contain label
             containLabel: false,
-            // width: {totalWidth} - x - x2,
-            // height: {totalHeight} - y - y2,
+            // width: {totalWidth} - left - right,
+            // height: {totalHeight} - top - bottom,
             backgroundColor: 'rgba(0,0,0,0)',
             borderWidth: 1,
             borderColor: '#ccc'

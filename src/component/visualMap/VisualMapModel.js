@@ -58,12 +58,14 @@ define(function(require) {
 
             orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
                                        // 'horizontal' ¦ 'vertical'
-            x: 'left',                 // 水平安放位置，默认为全图左对齐，可选为：
+            left: 'left',              // 水平安放位置，默认为全图左对齐，可选为：
                                        // 'center' ¦ 'left' ¦ 'right'
                                        // ¦ {number}（x坐标，单位px）
-            y: 'bottom',               // 垂直安放位置，默认为全图底部，可选为：
+            top: 'bottom',             // 垂直安放位置，默认为全图底部，可选为：
                                        // 'top' ¦ 'bottom' ¦ 'center'
                                        // ¦ {number}（y坐标，单位px）
+            // right
+            // bottom
             inverse: false,
 
             seriesIndex: null,          // 所控制的series indices，默认所有有value的series.

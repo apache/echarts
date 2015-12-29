@@ -17,29 +17,16 @@ define(function (require) {
     function resizeGeo (geoModel, api) {
         var rect = this.getBoundingRect();
 
-        var width = geoModel.get('width');
-        var height = geoModel.get('height');
+        var boxLayoutOption = geoModel.getBoxLayoutOption();
+        // 0.75 rate
+        boxLayoutOption.aspect = rect.width / rect.height * 0.75;
 
-        var viewRect = layout.parsePositionInfo({
-            x: geoModel.get('x'),
-            y: geoModel.get('y'),
-            x2: geoModel.get('x2'),
-            y2: geoModel.get('y2'),
-            width: width,
-            height: height,
-            // 0.75 rate
-            aspect: rect.width / rect.height * 0.75
-        }, {
+        var viewRect = layout.getLayoutRect(boxLayoutOption, {
             width: api.getWidth(),
             height: api.getHeight()
         });
 
-        var width = viewRect.width;
-        var height = viewRect.height;
-
-        var x = viewRect.x + (width - viewRect.width) / 2;
-        var y = viewRect.y + (height - viewRect.height) / 2;
-        this.setViewRect(x, y, width, height);
+        this.setViewRect(viewRect.x, viewRect.y, viewRect.width, viewRect.height);
 
         var roamDetailModel = geoModel.getModel('roamDetail');
 
