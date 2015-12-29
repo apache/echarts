@@ -87,7 +87,7 @@ define(function(require, factory) {
     gridProto.resize = function (gridModel, api) {
 
         var gridRect = layout.getLayoutRect(
-            gridModel.getBoxLayoutOption(), {
+            gridModel.getBoxLayoutParams(), {
                 width: api.getWidth(),
                 height: api.getHeight()
             });

@@ -40,8 +40,10 @@ define(function(require) {
             breadcrumb: {
                 show: true,
                 height: 22,
-                x: 'center',
-                y: 'bottom',
+                left: 'center',
+                top: 'bottom',
+                // right
+                // bottom
                 emptyItemWidth: 25,                    // 空节点宽度
                 itemStyle: {
                     normal: {

@@ -1,7 +1,7 @@
 define(function (require) {
 
     return {
-        getBoxLayoutOption: function () {
+        getBoxLayoutParams: function () {
             return {
                 left: this.get('left'),
                 top: this.get('top'),

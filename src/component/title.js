@@ -132,7 +132,7 @@ define(function(require) {
             // If no subText, but add subTextEl, there will be an empty line.
 
             var groupRect = group.getBoundingRect();
-            var layoutOption = titleModel.getBoxLayoutOption();
+            var layoutOption = titleModel.getBoxLayoutParams();
             layoutOption.width = groupRect.width;
             layoutOption.height = groupRect.height;
             var layoutRect = layout.getLayoutRect(

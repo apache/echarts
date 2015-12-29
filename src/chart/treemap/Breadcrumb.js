@@ -44,10 +44,10 @@
 
             var layoutParam = {
                 pos: {
-                    x: model.get('x'),
-                    x2: model.get('x2'),
-                    y: model.get('y'),
-                    y2: model.get('y2')
+                    left: model.get('left'),
+                    right: model.get('right'),
+                    top: model.get('top'),
+                    bottom: model.get('bottom')
                 },
                 box: {
                     width: api.getWidth(),

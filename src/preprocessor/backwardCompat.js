@@ -45,7 +45,7 @@ define(function (require) {
     ];
 
     var COMPATITABLE_COMPONENTS = [
-        'grid', 'geo', 'parallel', 'legend', 'toolbox', 'title', 'visualMap', 'dataZoom'
+        'grid', 'geo', 'parallel', 'legend', 'toolbox', 'title', 'visualMap', 'dataZoom', 'timeline'
     ];
 
     var COMPATITABLE_SERIES = [

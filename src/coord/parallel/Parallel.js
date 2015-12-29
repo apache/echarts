@@ -117,7 +117,7 @@ define(function(require) {
          */
         resize: function (parallelModel, api) {
             this._rect = layout.getLayoutRect(
-                parallelModel.getBoxLayoutOption(),
+                parallelModel.getBoxLayoutParams(),
                 {
                     width: api.getWidth(),
                     height: api.getHeight()

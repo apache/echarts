@@ -17,7 +17,7 @@ define(function (require) {
     function resizeGeo (geoModel, api) {
         var rect = this.getBoundingRect();
 
-        var boxLayoutOption = geoModel.getBoxLayoutOption();
+        var boxLayoutOption = geoModel.getBoxLayoutParams();
         // 0.75 rate
         boxLayoutOption.aspect = rect.width / rect.height * 0.75;
 

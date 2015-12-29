@@ -6,7 +6,7 @@ define(function (require) {
 
     function positionGroup(group, model, api) {
         layout.positionGroup(
-            group, model.getBoxLayoutOption(),
+            group, model.getBoxLayoutParams(),
             {
                 width: api.getWidth(),
                 height: api.getHeight()

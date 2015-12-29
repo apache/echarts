@@ -171,7 +171,7 @@ define(function (require) {
 
             layout.positionGroup(
                 group,
-                model.getBoxLayoutOption(),
+                model.getBoxLayoutParams(),
                 {width: api.getWidth(), height: api.getHeight()}
             );
         },

@@ -7,7 +7,7 @@ define(function (require) {
 
     function getViewRect(seriesModel, api) {
         return layout.getLayoutRect(
-            seriesModel.getBoxLayoutOption(), {
+            seriesModel.getBoxLayoutParams(), {
                 width: api.getWidth(),
                 height: api.getHeight()
             }

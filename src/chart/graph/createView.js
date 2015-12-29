@@ -5,7 +5,7 @@ define(function (require) {
     var bbox = require('zrender/core/bbox');
 
     function getViewRect(seriesModel, api, aspect) {
-        var option = seriesModel.getBoxLayoutOption();
+        var option = seriesModel.getBoxLayoutParams();
         option.aspect = aspect;
         return layout.getLayoutRect(option, {
             width: api.getWidth(),

@@ -624,7 +624,7 @@ define(function (require) {
 
     function getViewRect(model, api) {
         return layout.getLayoutRect(
-            model.getBoxLayoutOption(),
+            model.getBoxLayoutParams(),
             {
                 width: api.getWidth(),
                 height: api.getHeight()

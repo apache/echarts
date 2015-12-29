@@ -33,7 +33,7 @@ define(function (require) {
             );
 
             var layoutInfo = layout.getLayoutRect(
-                seriesModel.getBoxLayoutOption(),
+                seriesModel.getBoxLayoutParams(),
                 {
                     width: api.getWidth(),
                     height: api.getHeight()
