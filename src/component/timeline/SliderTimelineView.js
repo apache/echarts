@@ -120,7 +120,6 @@ define(function (require) {
             var labelPosOpt = timelineModel.get('label.normal.position');
             var orient = timelineModel.get('orient');
             var viewRect = getViewRect(timelineModel, api);
-
             // Auto label offset.
             if (labelPosOpt == null || labelPosOpt === 'auto') {
                 labelPosOpt = orient === 'horizontal'

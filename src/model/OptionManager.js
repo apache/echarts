@@ -261,11 +261,16 @@ define(function (require) {
         }
 
         // Preprocess.
-        each([baseOption].concat(timelineOptions), function (option) {
-            each(optionPreprocessorFuncs, function (preProcess) {
-                preProcess(option);
-            });
-        });
+        each([baseOption].concat(timelineOptions)
+            .concat(zrUtil.map(mediaList, function (media) {
+                return media.option;
+            })),
+            function (option) {
+                each(optionPreprocessorFuncs, function (preProcess) {
+                    preProcess(option);
+                });
+            }
+        );
 
         return {
             baseOption: baseOption,

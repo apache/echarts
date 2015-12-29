@@ -6,7 +6,7 @@ define(function () {
     }
     return {
         // 全图默认背景
-        backgroundColor: 'rgba(0,0,0,0)',
+        // backgroundColor: 'rgba(0,0,0,0)',
 
         // https://dribbble.com/shots/1065960-Infographic-Pie-chart-visualization
         // color: ['#5793f3', '#d14a61', '#fd9c35', '#675bba', '#fec42c', '#dd4444', '#d4df5a', '#cd4870'],

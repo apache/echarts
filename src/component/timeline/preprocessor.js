@@ -46,9 +46,7 @@ define(function(require) {
             delete opt.controlPosition;
         }
 
-        var data = opt.data || (opt.data = []);
-
-        zrUtil.each(data, function (dataItem) {
+        zrUtil.each(opt.data || [], function (dataItem) {
             if (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem)) {
                 if (!has(dataItem, 'value') && has(dataItem, 'name')) {
                     // In ec2, using name as value.
