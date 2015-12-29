@@ -373,8 +373,9 @@ define(function (require) {
                 }
             }
 
+            var painter = this._zr.painter;
             // TODO all use clearColor ?
-            if (env.node) {
+            if (painter.isSingleCanvas && painter.isSingleCanvas()) {
                 this._zr.configLayer(0, {
                     clearColor: backgroundColor
                 });
