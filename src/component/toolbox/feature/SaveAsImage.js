@@ -10,7 +10,8 @@ define(function (require) {
             M29.2,45.1L29.2,0',
         title: '保存为图片',
         type: 'png',
-        backgroundColor: '#fff',
+        // Default use option.backgroundColor
+        // backgroundColor: '#fff',
         name: '',
         excludeComponents: ['toolbox'],
         pixelRatio: 1
@@ -27,7 +28,8 @@ define(function (require) {
         $a.target = '_blank';
         $a.href = api.getConnectedDataURL({
             type: type,
-            backgroundColor: model.get('backgroundColor'),
+            backgroundColor: model.get('backgroundColor', true)
+                || ecModel.get('backgroundColor') || '#fff',
             excludeComponents: model.get('excludeComponents'),
             pixelRatio: model.get('pixelRatio')
         });

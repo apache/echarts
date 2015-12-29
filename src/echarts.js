@@ -212,7 +212,7 @@ define(function (require) {
         opts = opts || {};
         opts.pixelRatio = opts.pixelRatio || 1;
         opts.backgroundColor = opts.backgroundColor
-            || this._model.option.backgroundColor;
+            || this._model.get('backgroundColor');
         var zr = this._zr;
         var list = zr.storage.getDisplayList();
         // Stop animations
@@ -229,11 +229,13 @@ define(function (require) {
      * @param {string} [opts.backgroundColor]
      */
     echartsProto.getDataURL = function (opts) {
-        var excludeComponents = opts;
+        opts = opts || {};
+        var excludeComponents = opts.excludeComponents;
         var ecModel = this._model;
         var excludesComponentViews = [];
         var self = this;
-        excludeComponents = each(excludeComponents, function (componentType) {
+
+        each(excludeComponents, function (componentType) {
             ecModel.eachComponent({
                 mainType: componentType
             }, function (component) {
@@ -281,7 +283,9 @@ define(function (require) {
             for (var id in instances) {
                 var chart = instances[id];
                 if (chart.group === groupId) {
-                    var canvas = chart.getRenderedCanvas(opts);
+                    var canvas = chart.getRenderedCanvas(
+                        zrUtil.clone(opts)
+                    );
                     var boundingRect = chart.getDom().getBoundingClientRect();
                     left = mathMin(boundingRect.left, left);
                     top = mathMin(boundingRect.top, top);
@@ -368,13 +372,16 @@ define(function (require) {
                     backgroundColor = 'transparent';
                 }
             }
+
+            // TODO all use clearColor ?
             if (env.node) {
                 this._zr.configLayer(0, {
                     clearColor: backgroundColor
                 });
             }
             else {
-                backgroundColor && (this._dom.style.backgroundColor = backgroundColor);
+                backgroundColor = backgroundColor || 'transparent';
+                this._dom.style.backgroundColor = backgroundColor;
             }
 
             // console.time && console.timeEnd('update');
