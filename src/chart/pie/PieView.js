@@ -77,6 +77,7 @@ define(function (require) {
 
         this.updateData(data, idx, true);
 
+        // Hover to change label and labelLine
         function onEmphasis() {
             polyline.ignore = polyline.hoverIgnore;
             text.ignore = text.hoverIgnore;
@@ -85,10 +86,10 @@ define(function (require) {
             polyline.ignore = polyline.normalIgnore;
             text.ignore = text.normalIgnore;
         }
-        this.on('emphasis', onEmphasis);
-        this.on('normal', onNormal);
-        this.on('mouseover', onEmphasis);
-        this.on('mouseout', onNormal);
+        this.on('emphasis', onEmphasis)
+            .on('normal', onNormal)
+            .on('mouseover', onEmphasis)
+            .on('mouseout', onNormal);
     }
 
     var piePieceProto = PiePiece.prototype;
