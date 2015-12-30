@@ -4,12 +4,23 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var Model = require('../../model/Model');
+    var DataDiffer = require('../../data/DataDiffer');
     var listComponentHelper = require('../helper/listComponent');
     var textContain = require('zrender/contain/text');
 
     return require('../../echarts').extendComponentView({
 
         type: 'toolbox',
+
+        /**
+         * @type {Object.<string, Object>}
+         */
+        _features: {},
+
+        /**
+         * @type {Array.<string>}
+         */
+        _featureNames: [],
 
         render: function (toolboxModel, ecModel, api) {
             var group = this.group;
@@ -20,19 +31,55 @@ define(function (require) {
             }
 
             var itemSize = +toolboxModel.get('itemSize');
+            var featureOpts = toolboxModel.get('feature') || {};
+            var features = this._features;
 
-            zrUtil.each(toolboxModel.get('feature'), function (featureOpt, featureName) {
-                var Feature = featureManager.get(featureName);
-                if (!Feature) {
-                    return;
-                }
+            var featureNames = [];
+            zrUtil.each(featureOpts, function (opt, name) {
+                featureNames.push(name);
+            });
 
+            (new DataDiffer(this._featureNames, featureNames))
+                .add(process)
+                .update(process)
+                .remove(zrUtil.curry(process, null))
+                .execute();
+
+            // Keep for diff.
+            this._featureNames = featureNames;
+
+            function process(newIndex, oldIndex) {
+                var featureName = featureNames[newIndex];
+                var oldName = featureNames[oldIndex];
+                var featureOpt = featureOpts[featureName];
                 var featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel);
-                var feature = new Feature(featureModel);
-                if (!featureModel.get('show')) {
+                var feature;
+
+                if (featureName && !oldName) { // Create
+                    var Feature = featureManager.get(featureName);
+                    if (!Feature) {
+                        return;
+                    }
+                    features[featureName] = feature = new Feature(featureModel);
+                }
+                else {
+                    feature = features[oldName];
+                }
+
+                if (!featureName && oldName) {
+                    feature.dispose && feature.dispose(ecModel, api);
                     return;
                 }
 
+                if (!featureModel.get('show')) {
+                    feature.remove && feature.remove(ecModel, api);
+                    return;
+                }
+
+                updateStyle(featureModel, feature, featureName);
+            }
+
+            function updateStyle(featureModel, feature, featureName) {
                 var iconStyleModel = featureModel.getModel('iconStyle');
                 var normalStyle = iconStyleModel.getModel('normal').getItemStyle();
                 var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
@@ -85,7 +132,7 @@ define(function (require) {
                         feature.onclick, feature, ecModel, api, iconName
                     ));
                 });
-            });
+            }
 
             listComponentHelper.layout(group, toolboxModel, api);
             // Render background after group is layout
@@ -118,6 +165,19 @@ define(function (require) {
                         hoverStyle.textAlign = 'left';
                     }
                 }
+            });
+        },
+
+        remove: function (ecModel, api) {
+            zrUtil.each(this._features, function (feature) {
+                feature.remove && feature.remove(ecModel, api);
+            });
+            this.group.removeAll();
+        },
+
+        dispose: function (ecModel, api) {
+            zrUtil.each(this._features, function (feature) {
+                feature.dispose && feature.dispose(ecModel, api);
             });
         }
     });

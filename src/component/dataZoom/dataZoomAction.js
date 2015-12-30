@@ -10,7 +10,6 @@ define(function(require) {
 
     echarts.registerAction('dataZoom', function (payload, ecModel) {
 
-
         var linkedNodesFinder = modelUtil.createLinkedNodesFinder(
             zrUtil.bind(ecModel.eachComponent, ecModel, 'dataZoom'),
             modelUtil.eachAxisDim,
@@ -20,34 +19,41 @@ define(function(require) {
         );
 
         var effectedModels = [];
+        var payloadInfoList = []; // For batch.
 
-        ecModel.eachComponent({mainType: 'dataZoom', query: payload}, function (model) {
-            distinctPush(effectedModels, linkedNodesFinder(model).nodes);
+        ecModel.eachComponent(
+            {mainType: 'dataZoom', query: payload},
+            function (model, index, payloadInfo) {
+                distinctPush(
+                    effectedModels, linkedNodesFinder(model).nodes, payloadInfo
+                );
+            }
+        );
+
+        zrUtil.each(effectedModels, function (dataZoomModel, index) {
+            dataZoomModel.setRange(payloadInfoList[index].range);
         });
 
-        zrUtil.each(effectedModels, function (dataZoomModel) {
-            dataZoomModel.setRange(payload.range);
-        });
+        function distinctPush(effectedModels, source, payloadInfo) {
+            var targetLen = effectedModels.length;
 
-    });
+            for (var i = 0, len = source.length; i < len; i++) {
+                var src = source[i];
 
-    function distinctPush(target, source) {
-        var targetLen = target.length;
+                var has = false;
+                for (var j = 0; j < targetLen; j++) {
+                    if (src === effectedModels[j]) {
+                        has = true;
+                    }
+                }
 
-        for (var i = 0, len = source.length; i < len; i++) {
-            var src = source[i];
-
-            var has = false;
-            for (var j = 0; j < targetLen; j++) {
-                if (src === target[j]) {
-                    has = true;
+                if (!has) {
+                    effectedModels.push(src);
+                    payloadInfoList.push(payloadInfo);
                 }
             }
-
-            if (!has) {
-                target.push(src);
-            }
         }
-    }
+
+    });
 
 });

@@ -177,7 +177,7 @@
                 // Diff hierarchically (diff only in each subtree, but not whole).
                 // because, consistency of view is important.
                 else {
-                    (new DataDiffer(oldViewChildren, thisViewChildren, getKey))
+                    (new DataDiffer(oldViewChildren, thisViewChildren, getKey, getKey))
                         .add(processNode)
                         .update(processNode)
                         .remove(zrUtil.curry(processNode, null))

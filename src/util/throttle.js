@@ -2,13 +2,16 @@ define(function () {
 
     var lib = {};
 
+    var ORIGIN_METHOD = '\0__throttleOriginMethod';
+    var RATE = '\0__throttleRate';
+
     /**
      * 频率控制 返回函数连续调用时，fn 执行频率限定为每多少时间执行一次
      * 例如常见效果：
      * notifyWhenChangesStop
      *      频繁调用时，只保证最后一次执行
      *      配成：trailing：true；debounce：true 即可
-     * notifyAtFixedRate
+     * notifyAtFixRate
      *      频繁调用时，按规律心跳执行
      *      配成：trailing：true；debounce：false 即可
      * 注意：
@@ -112,7 +115,7 @@ define(function () {
      *
      * @public
      */
-    lib.fixedRate = function (fn, delay) {
+    lib.fixRate = function (fn, delay) {
         return delay != null
             ? lib.throttle(fn, delay, true, false)
             : fn;
@@ -127,6 +130,64 @@ define(function () {
         return delay != null
              ? lib.throttle(fn, delay, true, true)
              : fn;
+    };
+
+
+    /**
+     * Create throttle method or update throttle rate.
+     *
+     * @example
+     * ComponentView.prototype.render = function () {
+     *     ...
+     *     throttle.createOrUpdate(
+     *         this,
+     *         '_dispatchAction',
+     *         this.model.get('throttle'),
+     *         'fixRate'
+     *     );
+     * };
+     * ComponentView.prototype.remove = function () {
+     *     throttle.clear(this, '_dispatchAction');
+     * };
+     * ComponentView.prototype.dispose = function () {
+     *     throttle.clear(this, '_dispatchAction');
+     * };
+     *
+     * @public
+     * @param {Object} obj
+     * @param {string} fnAttr
+     * @param {number} rate
+     * @param {string} throttleType 'fixRate' or 'debounce'
+     */
+    lib.createOrUpdate = function (obj, fnAttr, rate, throttleType) {
+        var fn = obj[fnAttr];
+
+        if (!fn || rate == null || !throttleType) {
+            return;
+        }
+
+        var originFn = fn[ORIGIN_METHOD] || fn;
+        var lastRate = fn[RATE];
+
+        if (lastRate !== rate) {
+            fn = obj[fnAttr] = lib[throttleType](originFn, rate);
+            fn[ORIGIN_METHOD] = originFn;
+            fn[RATE] = rate;
+        }
+    };
+
+    /**
+     * Clear throttle. Example see throttle.createOrUpdate.
+     *
+     * @public
+     * @param {Object} obj
+     * @param {string} fnAttr
+     */
+    lib.clear = function (obj, fnAttr) {
+        var fn = obj[fnAttr];
+        if (fn && fn[ORIGIN_METHOD]) {
+            obj[fnAttr] = fn[ORIGIN_METHOD];
+        }
     };
 
     return lib;

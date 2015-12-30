@@ -107,8 +107,11 @@ define(function (require) {
 
         /**
          * @param {module:zrender/mixin/Transformable} container
+         * @param {module:zrender/core/BoundingRect|boolean} [rect] If not specified,
+         *                                                  use container.getBoundingRect().
+         *                                                  If false, do not use containerRect.
          */
-        enable: function (container) {
+        enable: function (container, rect) {
 
             this._disabled = false;
 
@@ -117,7 +120,8 @@ define(function (require) {
 
             // boundingRect will change when dragging, so we have
             // to keep initial boundingRect.
-            this._containerRect = container.getBoundingRect();
+            this._containerRect = rect !== false
+            ? (rect || container.getBoundingRect()) : null;
 
             // Add to new container.
             container.add(this.group);
@@ -125,14 +129,12 @@ define(function (require) {
 
         /**
          * Update cover location.
-         * @param {Array.<number>|Object} ranges
+         * @param {Array.<number>|Object} ranges If null/undefined, remove cover.
          */
         update: function (ranges) {
             // TODO
             // Only support one interval yet.
-            if (ranges) {
-                renderCover.call(this, zrUtil.clone(ranges));
-            }
+            renderCover.call(this, ranges && zrUtil.clone(ranges));
         },
 
         disable: function () {
@@ -156,7 +158,8 @@ define(function (require) {
 
     function isInContainer(x, y) {
         var localPos = this.group.transformCoordToLocal(x, y);
-        return this._containerRect.contain(localPos[0], localPos[1]);
+        return !this._containerRect
+            || this._containerRect.contain(localPos[0], localPos[1]);
     }
 
     function preventDefault(e) {
@@ -197,13 +200,13 @@ define(function (require) {
 
         preventDefault(e);
 
-        updateViewByCursor.call(this, e);
+        updateViewByCursor.call(this, e, true);
 
         this._dragging = false;
         this._track = [];
     }
 
-    function updateViewByCursor(e) {
+    function updateViewByCursor(e, isEnd) {
         var x = e.offsetX;
         var y = e.offsetY;
 
@@ -219,6 +222,10 @@ define(function (require) {
             renderCover.call(this, ranges);
 
             this.trigger('selected', zrUtil.clone(ranges));
+
+            if (isEnd) {
+                this.trigger('selectEnd', zrUtil.clone(ranges));
+            }
         }
     }
 
@@ -241,7 +248,7 @@ define(function (require) {
     function renderCover(ranges) {
         var coverRenderer = coverRenderers[this.type];
 
-        if (ranges.length) {
+        if (ranges && ranges.length) {
             if (!this._cover) {
                 this._cover = coverRenderer.create.call(this);
                 this.group.add(this._cover);
@@ -336,16 +343,20 @@ define(function (require) {
                     mathMax(ends[1][1], ends[0][1])
                 ];
 
-                return [{
-                    x: min[0],
-                    y: min[1],
-                    width: max[0] - min[0],
-                    height: max[1] - min[1]
-                }];
+                return [[
+                    [min[0], max[0]], // x range
+                    [min[1], max[1]] // y range
+                ]];
             },
 
             update: function (ranges) {
-                this._cover.setShape(ranges[0]);
+                var range = ranges[0];
+                this._cover.setShape({
+                    x: range[0][0],
+                    y: range[1][0],
+                    width: range[0][1] - range[0][0],
+                    height: range[1][1] - range[1][0]
+                });
             }
         }
     };

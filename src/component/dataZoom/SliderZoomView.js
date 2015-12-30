@@ -2,6 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
+    var throttle = require('../../util/throttle');
     var DataZoomView = require('./DataZoomView');
     var Rect = graphic.Rect;
     var numberUtil = require('../../util/number');
@@ -89,11 +90,15 @@ define(function (require) {
          * @override
          */
         render: function (dataZoomModel, ecModel, api, payload) {
-            // Call super.
-            DataZoomView.prototype.render.apply(this, arguments);
+            this.$superApply('render', arguments);
 
-            this.dataZoomModel = dataZoomModel;
-            this.ecModel = ecModel;
+            throttle.createOrUpdate(
+                this,
+                '_dispatchZoomAction',
+                this.dataZoomModel.get('throttle'),
+                'fixRate'
+            );
+
             this._orient = dataZoomModel.get('orient');
             this._halfHandleSize = mathRound(dataZoomModel.get('handleSize') / 2);
 
@@ -110,6 +115,22 @@ define(function (require) {
             }
 
             this._updateView();
+        },
+
+        /**
+         * @override
+         */
+        remove: function () {
+            this.$superApply('remove', arguments);
+            throttle.clear(this, '_dispatchZoomAction');
+        },
+
+        /**
+         * @override
+         */
+        dispose: function () {
+            this.$superApply('dispose', arguments);
+            throttle.clear(this, '_dispatchZoomAction');
         },
 
         _buildView: function () {
@@ -582,21 +603,21 @@ define(function (require) {
             this._updateView();
 
             if (this.dataZoomModel.get('realtime')) {
-                this.dispatchZoomAction();
+                this._dispatchZoomAction();
             }
         },
 
         _onDragEnd: function () {
             this._dragging = false;
             this._showDataInfo(false);
-            this.dispatchZoomAction();
+            this._dispatchZoomAction();
         },
 
         /**
          * This action will be throttled.
-         * @override
+         * @private
          */
-        dispatchZoomAction: function () {
+        _dispatchZoomAction: function () {
             this.api.dispatchAction({
                 type: 'dataZoom',
                 from: this.uid,

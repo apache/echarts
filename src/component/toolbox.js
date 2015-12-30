@@ -6,4 +6,5 @@ define(function (require) {
     require('./toolbox/feature/SaveAsImage');
     require('./toolbox/feature/MagicType');
     require('./toolbox/feature/DataView');
+    require('./toolbox/feature/DataZoom');
 });

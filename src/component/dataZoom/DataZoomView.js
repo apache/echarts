@@ -1,6 +1,5 @@
 define(function (require) {
 
-    var throttle = require('../../util/throttle');
     var ComponentView = require('../../view/Component');
 
     return ComponentView.extend({
@@ -11,61 +10,6 @@ define(function (require) {
             this.dataZoomModel = dataZoomModel;
             this.ecModel = ecModel;
             this.api = api;
-
-            /**
-             * @private
-             * @type {number}
-             */
-            this._lastThrottleRate;
-
-            this._throttleDispatch(dataZoomModel);
-        },
-
-        /**
-         * @private
-         */
-        _throttleDispatch: function (dataZoomModel) {
-            var originDispatchZoomAction = this.constructor.prototype.dispatchZoomAction;
-            if (originDispatchZoomAction) {
-                var rate = dataZoomModel.get('throttle');
-
-                if (this._lastThrottleRate !== rate) {
-                    this._clearThrottle();
-
-                    this.dispatchZoomAction = throttle.fixedRate(originDispatchZoomAction, rate);
-                    this._lastThrottleRate = rate;
-                }
-            }
-        },
-
-        /**
-         * @private
-         */
-        _clearThrottle: function () {
-            // Dispose
-            var dispatchZoomAction = this.dispatchZoomAction;
-            dispatchZoomAction && dispatchZoomAction.clear && dispatchZoomAction.clear();
-        },
-
-        /**
-         * @protected
-         */
-        dispatchZoomAction: function () {
-            // Implement by Children Classes.
-        },
-
-        /**
-         * @override
-         */
-        remove: function () {
-            this._clearThrottle();
-        },
-
-        /**
-         * @override
-         */
-        dispose: function () {
-            this._clearThrottle();
         },
 
         /**

@@ -1,9 +1,9 @@
 define(function (require) {
 
     var DataZoomView = require('./DataZoomView');
+    var throttle = require('../../util/throttle');
     var zrUtil = require('zrender/core/util');
     var sliderMove = require('../helper/sliderMove');
-    var BoundingRect = require('zrender/core/BoundingRect');
     var RoamController = require('../../component/helper/RoamController');
     var bind = zrUtil.bind;
 
@@ -35,7 +35,14 @@ define(function (require) {
          * @override
          */
         render: function (dataZoomModel, ecModel, api, payload) {
-            DataZoomView.prototype.render.apply(this, arguments);
+            this.$superApply('render', arguments);
+
+            throttle.createOrUpdate(
+                this,
+                '_dispatchZoomAction',
+                this.dataZoomModel.get('throttle'),
+                'fixRate'
+            );
 
             // Notice: this._resetInterval() should not be executed when payload.type
             // is 'dataZoom', origin this._range should be maintained, otherwise 'pan'
@@ -51,13 +58,23 @@ define(function (require) {
          * @override
          */
         remove: function () {
-            DataZoomView.prototype.remove.apply(this, arguments);
+            this.$superApply('remove', arguments);
 
             var controllers = this._controllers;
             zrUtil.each(controllers, function (controller) {
                 controller.off('pan').off('zoom');
             });
             controllers.length = 0;
+
+            throttle.clear(this, '_dispatchZoomAction');
+        },
+
+        /**
+         * @override
+         */
+        dispose: function () {
+            this.$superApply('dispose', arguments);
+            throttle.clear(this, '_dispatchZoomAction');
         },
 
         /**
@@ -78,11 +95,8 @@ define(function (require) {
                     controller.on('zoom', bind(this._onZoom, this, controller, item));
                 }
 
-                var rect = item.model.coordinateSystem.getRect();
+                controller.rect = item.model.coordinateSystem.getRect().clone();
 
-                controller.rect = rect
-                    ? new BoundingRect(rect.x, rect.y, rect.width, rect.height)
-                    : new BoundingRect(0, 0, 0, 0);
             }, this);
 
             // TODO
@@ -98,7 +112,7 @@ define(function (require) {
             );
 
             if (range) {
-                this.dispatchZoomAction(range);
+                this._dispatchZoomAction(range);
             }
         },
 
@@ -113,14 +127,14 @@ define(function (require) {
                 controller, coordInfo, dataZoomModel
             );
 
-            this.dispatchZoomAction(range);
+            this._dispatchZoomAction(range);
         },
 
         /**
          * This action will be throttled.
-         * @override
+         * @private
          */
-        dispatchZoomAction: function (range) {
+        _dispatchZoomAction: function (range) {
             this.api.dispatchAction({
                 type: 'dataZoom',
                 from: this.uid,

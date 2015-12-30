@@ -408,7 +408,7 @@ define(function (require) {
          *     {mainType: 'series', subType: 'pie', query: {batch: [ ... ]}},
          *     function (model, index, queryInfo) {...}
          * );
-         * where query info is always an object but not null.
+         * where queryInfo is always an object but not null.
          *
          * @param {string|Object=} mainType When mainType is object, the definition
          *                                  is the same as the method 'findComponents'.
@@ -664,7 +664,10 @@ define(function (require) {
 
         // Mapping by name if specified.
         each(newComponentOptionList, function (componentOption, index) {
-            if (!isObject(componentOption) || !componentOption.name) {
+            if (!isObject(componentOption)
+                || !componentOption.name
+                || hasInnerId(componentOption)
+            ) {
                 return;
             }
             for (var i = 0, len = existComponents.length; i < len; i++) {
@@ -677,7 +680,10 @@ define(function (require) {
 
         // Otherwise mapping by index.
         each(newComponentOptionList, function (componentOption, index) {
-            if (!result[index] && existComponents[index]) {
+            if (!result[index]
+                && existComponents[index]
+                && !hasInnerId(componentOption)
+            ) {
                 result[index] = existComponents[index];
             }
         });
@@ -814,6 +820,16 @@ define(function (require) {
                 return cpt.subType === condition.subType;
             })
             : components;
+    }
+
+    /**
+     * @inner
+     */
+    function hasInnerId(componentOption) {
+        return componentOption.id
+            // FIXME
+            // Where to put this constant.
+            && (componentOption.id + '').indexOf('\0_ec_\0') === 0
     }
 
     /**

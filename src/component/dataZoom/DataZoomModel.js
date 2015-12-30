@@ -318,15 +318,16 @@ define(function(require) {
             // dataZoomModel.getRange before aciton ever dispatched.
             // (We encounter this problem in toolbox data zoom.)
             var notHostAnyAxis = true;
-            for (var i = 0, len = axisProxies.length; i < len; i++) {
-                if (axisProxies[i].hostedBy(this)) {
+            var firstAxisProxy;
+            zrUtil.each(axisProxies, function (proxy) {
+                firstAxisProxy = proxy;
+                if (proxy.hostedBy(this)) {
                     notHostAnyAxis = false;
-                    break;
                 }
-            }
+            }, this);
 
-            if (notHostAnyAxis && axisProxies[0]) {
-                var range = axisProxies[0].getRange();
+            if (notHostAnyAxis && firstAxisProxy) {
+                var range = firstAxisProxy.getRange();
                 thisOption.start = range[0];
                 thisOption.end = range[1];
             }
@@ -427,15 +428,18 @@ define(function(require) {
         /**
          * @protected
          */
-        fixRange: function (range) {
+        fixRange: function (range, bound) {
+            bound = bound || [0, 100];
             // Make sure range[0] <= range[1]
             var range = asc(range);
 
-            // Clamp
-            range[0] > 100 && (range[0] = 100);
-            range[1] > 100 && (range[1] = 100);
-            range[0] < 0 && (range[0] = 0);
-            range[1] < 0 && (range[1] = 0);
+            // Clamp, using !(<= or >=) to handle NaN.
+            // jshint ignore:start
+            !(range[0] <= bound[1]) && (range[0] = bound[1]);
+            !(range[1] <= bound[1]) && (range[1] = bound[1]);
+            !(range[0] >= bound[0]) && (range[0] = bound[0]);
+            !(range[1] >= bound[0]) && (range[1] = bound[0]);
+            // jshint ignore:end
 
             return range;
         }
