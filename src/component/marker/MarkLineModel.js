@@ -2,6 +2,9 @@ define(function (require) {
 
     // Default enable markLine
     var globalDefault = require('../../model/globalDefault');
+    var modelUtil = require('../../util/model');
+
+    // Force to load markLine component
     globalDefault.markLine = {};
 
     var MarkLineModel = require('../../echarts').extendComponentModel({
@@ -14,34 +17,40 @@ define(function (require) {
          */
         init: function (option, parentModel, ecModel, extraOpt, createdBySelf) {
             this.mergeDefaultAndTheme(option, ecModel);
-            this.mergeOption(option, createdBySelf);
+            this.mergeOption(option, createdBySelf, true);
         },
 
-        mergeOption: function (newOpt, createdBySelf) {
+        mergeOption: function (newOpt, createdBySelf, isInit) {
             if (!createdBySelf) {
                 var ecModel = this.ecModel;
                 ecModel.eachSeries(function (seriesModel) {
                     var markLineOpt = seriesModel.get('markLine');
-                    if (markLineOpt && markLineOpt.data) {
-                        var mlModel = seriesModel.markLineModel;
-                        if (!mlModel) {
-                            var opt = {
-                                // Use the same series index and name
-                                seriesIndex: seriesModel.seriesIndex,
-                                name: seriesModel.name
-                            };
-                            mlModel = new MarkLineModel(
-                                markLineOpt, this, ecModel, opt, true
+                    var mlModel = seriesModel.markLineModel;
+                    if (!markLineOpt || !markLineOpt.data) {
+                        seriesModel.markLineModel = null;
+                        return;
+                    }
+                    if (!mlModel) {
+                        if (isInit) {
+                            // Default label emphasis `position` and `show`
+                            modelUtil.defaultEmphasis(
+                                markLineOpt.label,
+                                ['position', 'show', 'textStyle', 'distance', 'formatter']
                             );
                         }
-                        else {
-                            mlModel.mergeOption(markLineOpt, true);
-                        }
-                        seriesModel.markLineModel = mlModel;
+                        var opt = {
+                            // Use the same series index and name
+                            seriesIndex: seriesModel.seriesIndex,
+                            name: seriesModel.name
+                        };
+                        mlModel = new MarkLineModel(
+                            markLineOpt, this, ecModel, opt, true
+                        );
                     }
                     else {
-                        seriesModel.markLineModel = null;
+                        mlModel.mergeOption(markLineOpt, true);
                     }
+                    seriesModel.markLineModel = mlModel;
                 }, this);
             }
         },

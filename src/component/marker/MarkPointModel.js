@@ -1,6 +1,9 @@
 define(function (require) {
     // Default enable markPoint
     var globalDefault = require('../../model/globalDefault');
+    var modelUtil = require('../../util/model');
+
+    // Force to load markPoint component
     globalDefault.markPoint = {};
 
     var MarkPointModel = require('../../echarts').extendComponentModel({
@@ -13,34 +16,40 @@ define(function (require) {
          */
         init: function (option, parentModel, ecModel, extraOpt, createdBySelf) {
             this.mergeDefaultAndTheme(option, ecModel);
-            this.mergeOption(option, createdBySelf);
+            this.mergeOption(option, createdBySelf, true);
         },
 
-        mergeOption: function (newOpt, createdBySelf) {
+        mergeOption: function (newOpt, createdBySelf, isInit) {
             if (!createdBySelf) {
                 var ecModel = this.ecModel;
                 ecModel.eachSeries(function (seriesModel) {
                     var markPointOpt = seriesModel.get('markPoint');
-                    if (markPointOpt && markPointOpt.data) {
-                        var mpModel = seriesModel.markPointModel;
-                        if (!mpModel) {
-                            var opt = {
-                                // Use the same series index and name
-                                seriesIndex: seriesModel.seriesIndex,
-                                name: seriesModel.name
-                            };
-                            mpModel = new MarkPointModel(
-                                markPointOpt, this, ecModel, opt, true
+                    var mpModel = seriesModel.markPointModel;
+                    if (!markPointOpt || !markPointOpt.data) {
+                        seriesModel.markPointModel = null;
+                        return;
+                    }
+                    if (!mpModel) {
+                        if (isInit) {
+                            // Default label emphasis `position` and `show`
+                            modelUtil.defaultEmphasis(
+                                markPointOpt.label,
+                                ['position', 'show', 'textStyle', 'distance', 'formatter']
                             );
                         }
-                        else {
-                            mpModel.mergeOption(markPointOpt, true);
-                        }
-                        seriesModel.markPointModel = mpModel;
+                        var opt = {
+                            // Use the same series index and name
+                            seriesIndex: seriesModel.seriesIndex,
+                            name: seriesModel.name
+                        };
+                        mpModel = new MarkPointModel(
+                            markPointOpt, this, ecModel, opt, true
+                        );
                     }
                     else {
-                        seriesModel.markPointModel = null;
+                        mpModel.mergeOption(markPointOpt, true);
                     }
+                    seriesModel.markPointModel = mpModel;
                 }, this);
             }
         },

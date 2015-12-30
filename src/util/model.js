@@ -148,14 +148,14 @@ define(function(require) {
      * In case some one will write code like
      *     label: {
      *         normal: {
-     *             show: false
-     *         },
-     *         emphasis: {
-     *             show: true,
+     *             show: false,
      *             position: 'outside',
      *             textStyle: {
      *                 fontSize: 18
      *             }
+     *         },
+     *         emphasis: {
+     *             show: true
      *         }
      *     }
      * @param {Object} opt
@@ -280,7 +280,7 @@ define(function(require) {
 
             var params = this.getDataParams(dataIndex);
             if (!formatter) {
-                formatter = itemModel.get('label.' + status + '.formatter');
+                formatter = itemModel.get(['label', status, 'formatter']);
             }
 
             if (typeof formatter === 'function') {
