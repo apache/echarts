@@ -56,6 +56,7 @@ define(function (require) {
 
         /**
          * @param {string} type null/undefined: reset all.
+         *                      'recreate': force recreate all.
          *                      'timeline': only reset timeline option
          *                      'media': only reset media query option
          * @return {boolean} Whether option changed.
@@ -64,10 +65,10 @@ define(function (require) {
             var optionChanged = false;
             var optionManager = this._optionManager;
 
-            if (!type) {
+            if (!type || type === 'recreate') {
                 var baseOption = optionManager.mountOption();
 
-                if (!this.option) {
+                if (!this.option || type === 'recreate') {
                     initBase.call(this, baseOption);
                 }
                 else {
@@ -81,12 +82,12 @@ define(function (require) {
                 this.restoreData();
             }
 
-            if (!type || type === 'timeline') {
+            if (!type || type === 'recreate' || type === 'timeline') {
                 var partialOption = optionManager.getTimelineOption(this);
                 partialOption && (this.mergeOption(partialOption), optionChanged = true);
             }
 
-            if (!type || type === 'media') {
+            if (!type || type === 'recreate' || type === 'media') {
                 var partialOption = optionManager.getMediaOption(this, this._api);
                 partialOption && (this.mergeOption(partialOption), optionChanged = true);
             }
@@ -829,7 +830,7 @@ define(function (require) {
         return componentOption.id
             // FIXME
             // Where to put this constant.
-            && (componentOption.id + '').indexOf('\0_ec_\0') === 0
+            && (componentOption.id + '').indexOf('\0_ec_\0') === 0;
     }
 
     /**

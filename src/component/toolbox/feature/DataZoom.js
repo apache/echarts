@@ -33,7 +33,7 @@ define(function(require) {
          * @private
          * @type {Object}
          */
-        this._activeMap = {zoom: false, back: false};
+        this._selectedMap = {zoom: false, back: false};
 
         /**
          * [{key: dataZoomId, value: {dataZoomId, range}}, ...]
@@ -46,7 +46,7 @@ define(function(require) {
     }
 
     DataZoom.defaultOption = {
-        show: true,
+        show: false,
         type: [],
         // Icon group
         icon: {
@@ -89,7 +89,7 @@ define(function(require) {
     var handlers = {
 
         zoom: function (controllerGroup, ecModel, api) {
-            var isZoomActive = this._activeMap.zoom = !this._activeMap.zoom;
+            var isZoomActive = this._selectedMap.zoom = !this._selectedMap.zoom;
             var zr = api.getZr();
 
             if (isZoomActive) {
@@ -117,6 +117,10 @@ define(function(require) {
         }
     };
 
+    proto.getSelectedMap = function () {
+        return zrUtil.clone(this._selectedMap);
+    };
+
     /**
      * @private
      */
@@ -140,8 +144,10 @@ define(function(require) {
 
     proto._disposeController = function () {
         var controller = this._controller;
-        controller.off('selected');
-        controller.dispose();
+        if (controller) {
+            controller.off('selected');
+            controller.dispose();
+        }
     };
 
     function prepareCoordInfo(grid, ecModel) {
@@ -272,7 +278,7 @@ define(function(require) {
         history.push(newSnapshot);
 
         // Update state of back button.
-        this._activeMap.back = history.length <= 1;
+        this._selectedMap.back = history.length <= 1;
     };
 
     /**
@@ -284,7 +290,7 @@ define(function(require) {
         history.length > 1 && history.pop();
 
         // Update state of back button.
-        this._activeMap.back = history.length <= 1;
+        this._selectedMap.back = history.length <= 1;
 
         // Find top for all dataZoom.
         var snapshot = {};
