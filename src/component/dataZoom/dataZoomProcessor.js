@@ -15,7 +15,7 @@ define(function (require) {
     // undo redo
 
     function processSingleAxis(dimNames, axisIndex, dataZoomModel, ecModel) {
-        dataZoomModel.getAxisOperator(dimNames.name, axisIndex).filterData(dataZoomModel);
+        dataZoomModel.getAxisProxy(dimNames.name, axisIndex).filterData(dataZoomModel);
     }
 
 });

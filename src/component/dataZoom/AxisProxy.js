@@ -12,11 +12,11 @@ define(function(require) {
      * One axis can only operated by one axis operator.
      * Different dataZoomModels may be defined to operate the same axis.
      * (i.e. 'inside' data zoom and 'slider' data zoom components)
-     * So dataZoomModels share one axisOperator in that case.
+     * So dataZoomModels share one axisProxy in that case.
      *
      * @class
      */
-    var AxisOperator = function (dimName, axisIndex, dataZoomModel, ecModel) {
+    var AxisProxy = function (dimName, axisIndex, dataZoomModel, ecModel) {
 
         /**
          * @private
@@ -54,9 +54,18 @@ define(function(require) {
         this._model = dataZoomModel;
     };
 
-    AxisOperator.prototype = {
+    AxisProxy.prototype = {
 
-        constructor: AxisOperator,
+        constructor: AxisProxy,
+
+        /**
+         * Whether the axisProxy is hosted by model.
+         * @public
+         * @return {boolean}
+         */
+        hostedBy: function (model) {
+            return this._model === model;
+        },
 
         /**
          * @param {boolean} crossZero
@@ -96,6 +105,16 @@ define(function(require) {
             }, this);
 
             return seriesModels;
+        },
+
+        /**
+         * Return range in its host model.
+         *
+         * @public
+         * @return {Array.<number>} [min, max]
+         */
+        getRange: function () {
+            return this._model.getRange();
         },
 
         /**
@@ -176,6 +195,6 @@ define(function(require) {
         return result;
     }
 
-    return AxisOperator;
+    return AxisProxy;
 
 });

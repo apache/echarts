@@ -300,7 +300,7 @@ define(function (require) {
 
             dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
                 var seriesModels = dataZoomModel
-                    .getAxisOperator(dimNames.name, axisIndex)
+                    .getAxisProxy(dimNames.name, axisIndex)
                     .getTargetSeriesModels();
 
                 zrUtil.each(seriesModels, function (seriesModel) {
@@ -489,7 +489,7 @@ define(function (require) {
                     // Using dataInterval of the first axis.
                     if (!dataInterval) {
                         dataInterval = dataZoomModel
-                            .getAxisOperator(dimNames.name, axisIndex)
+                            .getAxisProxy(dimNames.name, axisIndex)
                             .getDataWindow();
                         axis = this.ecModel.getComponent(dimNames.axis, axisIndex).axis;
                     }

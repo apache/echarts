@@ -8,7 +8,7 @@ define(function(require) {
     var echarts = require('../../echarts');
     var modelUtil = require('../../util/model');
     var numberUtil = require('../../util/number');
-    var AxisOperator = require('./AxisOperator');
+    var AxisProxy = require('./AxisProxy');
     var asc = numberUtil.asc;
     var eachAxisDim = modelUtil.eachAxisDim;
 
@@ -39,7 +39,7 @@ define(function(require) {
             throttle: 100,          // Dispatch action by the fixed rate, avoid frequency.
                                     // default 100. Do not throttle when use null/undefined.
             start: 0,               // 默认为0
-            end: 100,               // 默认为全部 100%
+            end: 100                // 默认为全部 100%
         },
 
         /**
@@ -71,7 +71,7 @@ define(function(require) {
              * key like x_0, y_1
              * @private
              */
-            this._axisOperators = {};
+            this._axisProxies = {};
 
             /**
              * @readOnly
@@ -99,33 +99,35 @@ define(function(require) {
 
             this._resetTarget(newOption, isInit);
 
-            this._giveAxisOperators();
+            this._giveAxisProxies();
 
             this._backup();
 
             this._resetRange();
+
+            this._setToAxisModel();
         },
 
         /**
          * @private
          */
-        _giveAxisOperators: function () {
-            var axisOperators = this._axisOperators;
+        _giveAxisProxies: function () {
+            var axisProxies = this._axisProxies;
 
             this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
                 var axisModel = this.dependentModels[dimNames.axis][axisIndex];
 
-                // If exists, share axisOperator with other dataZoomModels.
-                var axisOperator = axisModel.__dzAxisOperator || (
-                    // Use the first dataZoomModel as the main model of axisOperator.
-                    axisModel.__dzAxisOperator = new AxisOperator(
+                // If exists, share axisProxy with other dataZoomModels.
+                var axisProxy = axisModel.__dzAxisProxy || (
+                    // Use the first dataZoomModel as the main model of axisProxy.
+                    axisModel.__dzAxisProxy = new AxisProxy(
                         dimNames.name, axisIndex, this, ecModel
                     )
                 );
                 // FIXME
-                // dispose __dzAxisOperator
+                // dispose __dzAxisProxy
 
-                axisOperators[dimNames.name + '_' + axisIndex] = axisOperator;
+                axisProxies[dimNames.name + '_' + axisIndex] = axisProxy;
             }, this);
         },
 
@@ -296,7 +298,7 @@ define(function(require) {
          */
         _backup: function () {
             this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
-                this.getAxisOperator(dimNames.name, axisIndex).backupCrossZero(
+                this.getAxisProxy(dimNames.name, axisIndex).backupCrossZero(
                     this,
                     !ecModel.getComponent(dimNames.axis, axisIndex).get('scale')
                 );
@@ -308,48 +310,52 @@ define(function(require) {
          */
         _resetRange: function () {
             var thisOption = this.option;
+            var axisProxies = this._axisProxies;
 
-            // TODO
-            // 对于一个轴受多个dataZoom控制的情况（如toolbox）：
-            // datazoom改变时，不直接改变，而是发全局事件，监听：
-            // 如果轴是自己包含的轴，则自己改变start和end。
-            // 所有都改完后，重新走process流程。
-
-            // Determin which axes dataZoom.start/end and dataZoom.start2/end2 control.
-            // When only xAxisIndex or only yAxisIndex is specified, start/end controls them.
-            // targetDim === false means that both xAxisIndex and yAxisIndex are specified.
-            var targetDim;
-            eachAxisDim(function (dimNames) {
-                if (thisOption[dimNames.axisIndex].length) {
-                    targetDim = targetDim != null ? false : dimNames.name;
+            // Sync range with other dataZoomModel.
+            // Consider this case: dataZoomModel1 and dataZoomModel2 control the same axis,
+            // and the range settings are different. That will bring some problem when using
+            // dataZoomModel.getRange before aciton ever dispatched.
+            // (We encounter this problem in toolbox data zoom.)
+            var notHostAnyAxis = true;
+            for (var i = 0, len = axisProxies.length; i < len; i++) {
+                if (axisProxies[i].hostedBy(this)) {
+                    notHostAnyAxis = false;
+                    break;
                 }
-            });
+            }
 
-            // Otherwise, determine it by dataZoom.orient (compatibale with the logic in ec2.)
-            // targetDim === 'y' means start/end control 'y' and start2/end2 control 'x'.
-
-            var optAttrs = {};
-            optAttrs[targetDim] = {start: 'start', end: 'end'};
-
-            zrUtil.each(optAttrs, function (dimItem, targetDim) {
-                var startValue = thisOption[dimItem.start];
-                var endValue = thisOption[dimItem.end];
+            if (notHostAnyAxis && axisProxies[0]) {
+                var range = axisProxies[0].getRange();
+                thisOption.start = range[0];
+                thisOption.end = range[1];
+            }
+            else {
+                var startValue = thisOption.start;
+                var endValue = thisOption.end;
 
                 // Auto reverse when start > end
                 if (startValue > endValue) {
                     startValue = [endValue, endValue = startValue][0];
                 }
 
-                thisOption[dimItem.start] = startValue;
-                thisOption[dimItem.end] = endValue;
-            }, this);
+                thisOption.start = startValue;
+                thisOption.end = endValue;
+            }
+        },
+
+        /**
+         * @private
+         */
+        _setToAxisModel: function () {
+            var range = this.getRange();
 
             // Set "needsCrossZero" to axes
             this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
                 var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
                 axisModel.setNeedsCrossZero && axisModel.setNeedsCrossZero(
-                    thisOption.start === 0 && thisOption.end === 100
-                        ? this.getAxisOperator(dimNames.name, axisIndex).getCrossZero()
+                    (range[0] === 0 && range[1] === 100)
+                        ? this.getAxisProxy(dimNames.name, axisIndex).getCrossZero()
                         : false
                 );
             }, this);
@@ -389,8 +395,8 @@ define(function(require) {
             }, this);
         },
 
-        getAxisOperator: function (dimName, axisIndex) {
-            return this._axisOperators[dimName + '_' + axisIndex];
+        getAxisProxy: function (dimName, axisIndex) {
+            return this._axisProxies[dimName + '_' + axisIndex];
         },
 
         /**
