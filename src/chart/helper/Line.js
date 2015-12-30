@@ -230,6 +230,10 @@ define(function (require) {
         var textStyleHoverModel = labelHoverModel.getModel('textStyle');
 
         var defaultText = numberUtil.round(seriesModel.getRawValue(idx));
+        if (isNaN(defaultText)) {
+            // Use name
+            defaultText = lineData.getName(idx);
+        }
         line.setStyle(zrUtil.extend(
             {
                 stroke: lineData.getItemVisual(idx, 'color')

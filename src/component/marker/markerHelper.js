@@ -135,7 +135,8 @@ define(function (require) {
      */
     var dataFilter = function (coordSys, item) {
         // Alwalys return true if there is no coordSys
-        return coordSys ? coordSys.containData(item.value) : true;
+        return (coordSys && item.value && (item.x == null || item.y == null))
+            ? coordSys.containData(item.value) : true;
     };
 
     return {

@@ -4,6 +4,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var formatUtil = require('../../util/format');
     var modelUtil = require('../../util/model');
+    var numberUtil = require('../../util/number');
 
     var addCommas = formatUtil.addCommas;
     var encodeHTML = formatUtil.encodeHTML;
@@ -95,7 +96,10 @@ define(function (require) {
                 var xPx = itemModel.getShallow('x');
                 var yPx = itemModel.getShallow('y');
                 if (xPx != null && yPx != null) {
-                    point = [xPx, yPx];
+                    point = [
+                        numberUtil.parsePercent(xPx, api.getWidth()),
+                        numberUtil.parsePercent(yPx, api.getHeight())
+                    ];
                 }
                 else if (coordSys) {
                     var x = mpData.get(dims[0], idx);

@@ -4,6 +4,7 @@ define(function (require) {
     var List = require('../../data/List');
     var formatUtil = require('../../util/format');
     var modelUtil = require('../../util/model');
+    var numberUtil = require('../../util/number');
 
     var addCommas = formatUtil.addCommas;
     var encodeHTML = formatUtil.encodeHTML;
@@ -198,7 +199,10 @@ define(function (require) {
                 var xPx = itemModel.get('x');
                 var yPx = itemModel.get('y');
                 if (xPx != null && yPx != null) {
-                    point = [xPx, yPx];
+                    point = [
+                        numberUtil.parsePercent(xPx, api.getWidth()),
+                        numberUtil.parsePercent(yPx, api.getHeight())
+                    ];
                 }
                 else {
                     var x = data.get(dims[0], idx);
