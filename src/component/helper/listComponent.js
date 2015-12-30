@@ -40,6 +40,8 @@ define(function (require) {
                 componentModel.get('padding')
             );
             var boundingRect = group.getBoundingRect();
+            var style = componentModel.getItemStyle(['color', 'opacity']);
+            style.fill = componentModel.get('backgroundColor');
             var rect = new graphic.Rect({
                 shape: {
                     x: boundingRect.x - padding[3],
@@ -47,11 +49,7 @@ define(function (require) {
                     width: boundingRect.width + padding[1] + padding[3],
                     height: boundingRect.height + padding[0] + padding[2]
                 },
-                style: {
-                    stroke: componentModel.get('borderColor'),
-                    fill: componentModel.get('backgroundColor'),
-                    lineWidth: componentModel.get('borderWidth')
-                },
+                style: style,
                 silent: true
             });
             graphic.subPixelOptimizeRect(rect);

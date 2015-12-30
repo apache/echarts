@@ -22,13 +22,13 @@ define(function(require) {
             // 超链接跳转
             // link: null,
             // 仅支持self | blank
-            // target: null,
+            target: 'blank',
             subtext: '',
 
             // 超链接跳转
             // sublink: null,
             // 仅支持self | blank
-            // subtarget: null,
+            subtarget: 'blank',
 
             // 'center' ¦ 'left' ¦ 'right'
             // ¦ {number}（x坐标，单位px）
@@ -94,7 +94,8 @@ define(function(require) {
                     textFont: textStyleModel.getFont(),
                     fill: textStyleModel.getTextColor(),
                     textBaseline: 'top'
-                }
+                },
+                z2: 10
             });
 
             var textRect = textEl.getBoundingRect();
@@ -107,7 +108,8 @@ define(function(require) {
                     fill: subtextStyleModel.getTextColor(),
                     y: textRect.height + titleModel.get('itemGap'),
                     textBaseline: 'top'
-                }
+                },
+                z2: 10
             });
 
             var link = titleModel.get('link');
@@ -159,24 +161,23 @@ define(function(require) {
                 }
             }
             group.position = [layoutRect.x, layoutRect.y];
-            textEl.style.textAlign = subTextEl.style.textAlign = textAlign;
-            textEl.dirty();
-            subTextEl.dirty();
+            textEl.setStyle('textAlign', textAlign);
+            subTextEl.setStyle('textAlign', textAlign);
 
             // Render background
+            // Get groupRect again because textAlign has been changed
+            groupRect = group.getBoundingRect();
             var padding = layoutRect.margin;
+            var style = titleModel.getItemStyle(['color', 'opacity']);
+            style.fill = titleModel.get('backgroundColor');
             var rect = new graphic.Rect({
                 shape: {
-                    x: -padding[3],
-                    y: -padding[0],
-                    width: layoutRect.width + padding[1] + padding[3],
-                    height: layoutRect.height + padding[0] + padding[2]
+                    x: groupRect.x - padding[3],
+                    y: groupRect.y - padding[0],
+                    width: groupRect.width + padding[1] + padding[3],
+                    height: groupRect.height + padding[0] + padding[2]
                 },
-                style: {
-                    stroke: titleModel.get('borderColor'),
-                    fill: titleModel.get('backgroundColor'),
-                    lineWidth: titleModel.get('borderWidth')
-                },
+                style: style,
                 silent: true
             });
             graphic.subPixelOptimizeRect(rect);

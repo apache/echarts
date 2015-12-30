@@ -194,6 +194,10 @@ define(function (require) {
 
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
+        symbolPath.off('mouseover')
+            .off('mouseout')
+            .off('emphasis')
+            .off('normal');
         if (itemModel.getShallow('hoverAnimation')) {
             var onEmphasis = function() {
                 var ratio = size[1] / size[0];
