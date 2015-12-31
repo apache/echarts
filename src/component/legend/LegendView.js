@@ -55,7 +55,7 @@ define(function (require) {
                     ? 'right' : 'left';
             }
 
-            var legendDataMap = {};
+            var legendItemMap = {};
             var legendDrawedMap = {};
             zrUtil.each(legendModel.getData(), function (itemModel) {
                 var seriesName = itemModel.get('name');
@@ -68,7 +68,7 @@ define(function (require) {
 
                 var seriesModel = ecModel.getSeriesByName(seriesName)[0];
 
-                legendDataMap[seriesName] = itemModel;
+                legendItemMap[seriesName] = itemModel;
 
                 if (!seriesModel || legendDrawedMap[seriesName]) {
                     // Series not exists
@@ -93,7 +93,7 @@ define(function (require) {
                 var symbolType = data.getVisual('symbol');
 
                 var itemGroup = this._createItem(
-                    seriesName, itemModel,
+                    seriesName, itemModel, legendModel,
                     legendSymbolType, symbolType,
                     itemWidth, itemHeight, itemAlign, color,
                     selectMode
@@ -113,7 +113,7 @@ define(function (require) {
                         var name = data.getName(idx);
 
                         // Avoid mutiple series use the same data name
-                        if (!legendDataMap[name] || legendDrawedMap[name]) {
+                        if (!legendItemMap[name] || legendDrawedMap[name]) {
                             return;
                         }
 
@@ -126,7 +126,7 @@ define(function (require) {
                         var legendSymbolType = 'roundRect';
 
                         var itemGroup = this._createItem(
-                            name, legendDataMap[name],
+                            name, legendItemMap[name], legendModel,
                             legendSymbolType, null,
                             itemWidth, itemHeight, itemAlign, color,
                             selectMode
@@ -149,7 +149,7 @@ define(function (require) {
         },
 
         _createItem: function (
-            name, itemModel,
+            name, itemModel, legendModel,
             legendSymbolType, symbolType,
             itemWidth, itemHeight, itemAlign, color,
             selectMode
@@ -175,6 +175,14 @@ define(function (require) {
             // Text
             var textX = itemAlign === 'left' ? itemWidth + 5 : -5;
             var textAlign = itemAlign;
+
+            var formatter = legendModel.get('formatter');
+            if (typeof formatter === 'string' && formatter) {
+                name = formatter.replace('{name}', name);
+            }
+            else if (typeof formatter === 'function') {
+                name = formatter(name);
+            }
 
             var text = new graphic.Text({
                 style: {
