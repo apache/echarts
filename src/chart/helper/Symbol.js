@@ -203,8 +203,8 @@ define(function (require) {
                 var ratio = size[1] / size[0];
                 this.animateTo({
                     scale: [
-                        Math.max(size[0] * 1.1, size[0] + 6),
-                        Math.max(size[1] * 1.1, size[1] + 6 * ratio)
+                        Math.max(size[0] * 1.1, size[0] + 3),
+                        Math.max(size[1] * 1.1, size[1] + 3 * ratio)
                     ]
                 }, 400, 'elasticOut');
             };
