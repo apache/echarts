@@ -93,6 +93,7 @@ define(function(require) {
             var zr = api.getZr();
 
             featureModel.setIconStatus('zoom', isZoomActive ? 'emphasis' : 'normal');
+
             if (isZoomActive) {
                 zr.setDefaultCursorStyle('crosshair');
 
@@ -232,7 +233,6 @@ define(function(require) {
      * @private
      */
     proto._dispatchAction = function (snapshot, api) {
-        console.log(JSON.stringify(this._history, null, 4));
         var batch = [];
 
         each(snapshot, function (batchItem) {

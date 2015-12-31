@@ -49,7 +49,6 @@ define(function (require) {
             inside: false,
             rotate: 0,
             margin: 8,
-            // clickable: false,
             // formatter: null,
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
             textStyle: {
