@@ -158,6 +158,7 @@ define(function(require) {
                 // 图例文字颜色
                 color: '#333'
             },
+            // formatter: '',
             // 选择模式，默认开启图例开关
             selectedMode: true
             // 配置默认选中状态，可配合LEGEND.SELECTED事件做动态数据载入

@@ -12,16 +12,6 @@ define(function (require) {
 
         type: 'toolbox',
 
-        /**
-         * @type {Object.<string, Object>}
-         */
-        _features: {},
-
-        /**
-         * @type {Array.<string>}
-         */
-        _featureNames: [],
-
         render: function (toolboxModel, ecModel, api) {
             var group = this.group;
             group.removeAll();
@@ -32,14 +22,14 @@ define(function (require) {
 
             var itemSize = +toolboxModel.get('itemSize');
             var featureOpts = toolboxModel.get('feature') || {};
-            var features = this._features;
+            var features = this._features || (this._features = {});
 
             var featureNames = [];
             zrUtil.each(featureOpts, function (opt, name) {
                 featureNames.push(name);
             });
 
-            (new DataDiffer(this._featureNames, featureNames))
+            (new DataDiffer(this._featureNames || [], featureNames))
                 .add(process)
                 .update(process)
                 .remove(zrUtil.curry(process, null))
@@ -54,6 +44,15 @@ define(function (require) {
                 var featureOpt = featureOpts[featureName];
                 var featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel);
                 var feature;
+
+                featureModel.setIconStatus = function (iconName, status) {
+                    var option = this.option;
+                    var iconPaths = this.iconPaths;
+                    option.iconStatus = option.iconStatus || {};
+                    option.iconStatus[iconName] = status;
+                    // FIXME
+                    iconPaths[iconName] && iconPaths[iconName].trigger(status);
+                };
 
                 if (featureName && !oldName) { // Create
                     var Feature = featureManager.get(featureName);
@@ -76,10 +75,10 @@ define(function (require) {
                     return;
                 }
 
-                updateStyle(featureModel, feature, featureName);
+                createIconPaths(featureModel, feature, featureName);
             }
 
-            function updateStyle(featureModel, feature, featureName) {
+            function createIconPaths(featureModel, feature, featureName) {
                 var iconStyleModel = featureModel.getModel('iconStyle');
                 var normalStyle = iconStyleModel.getModel('normal').getItemStyle();
                 var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
@@ -103,16 +102,15 @@ define(function (require) {
                     icons = {};
                     titles = {};
                     icons[featureName] = icon;
-
                     titles[featureName] = title;
                 }
 
+                var iconPaths = featureModel.iconPaths = {};
                 zrUtil.each(icons, function (icon, iconName) {
                     var path = graphic.makePath(
                         icon, {
                             style: normalStyle,
                             hoverStyle: zrUtil.extend({
-                                text: titles[iconName],
                                 textPosition: 'bottom',
                                 textFill: hoverStyle.fill || hoverStyle.stroke || '#000'
                             }, hoverStyle),
@@ -127,10 +125,22 @@ define(function (require) {
 
                     graphic.setHoverStyle(path);
 
+                    if (toolboxModel.get('showTitle')) {
+                        path.on('mouseover', function () {
+                                path.setStyle('text', titles[iconName]);
+                            })
+                            .on('mouseout', function () {
+                                path.setStyle('text', '');
+                            });
+                    }
+                    path.trigger(featureModel.get('iconStatus.' + iconName) || 'normal');
+
                     group.add(path);
                     path.on('click', zrUtil.bind(
                         feature.onclick, feature, ecModel, api, iconName
                     ));
+
+                    iconPaths[iconName] = path;
                 });
             }
 

@@ -359,8 +359,12 @@ define(function (require) {
         this._dom = root;
     };
 
-    DataView.prototype.dispose = function (ecModel, api) {
+    DataView.prototype.remove = function (ecModel, api) {
         this._dom && api.getDom().removeChild(this._dom);
+    };
+
+    DataView.prototype.dispose = function (ecModel, api) {
+        this.remove(ecModel, api);
     };
 
     /**
