@@ -6,6 +6,7 @@ define(function(require) {
     var SelectController = require('../../helper/SelectController');
     var BoundingRect = require('zrender/core/BoundingRect');
     var Group = require('zrender/container/Group');
+    var HistoryManager = require('../../dataZoom/HistoryManager');
 
     var each = zrUtil.each;
     var asc = numberUtil.asc;
@@ -37,15 +38,6 @@ define(function(require) {
          * @type {Object}
          */
         this._selectedMap = {zoom: false, back: false};
-
-        /**
-         * [{key: dataZoomId, value: {dataZoomId, range}}, ...]
-         * History length of each dataZoom may be different.
-         * this._history[0] is used to store origin range.
-         * @private
-         * @type {Array.<Object>}
-         */
-        this._history = [{}];
     }
 
     DataZoom.defaultOption = {
@@ -77,12 +69,10 @@ define(function(require) {
 
     proto.remove = function () {
         this._disposeController();
-        this._history = {};
     };
 
     proto.dispose = function (ecModel, api) {
         this._disposeController();
-        this._history = {};
         this._controllerGroup && api.getZr().remove(this._controllerGroup);
     };
 
@@ -96,6 +86,7 @@ define(function(require) {
             var zr = api.getZr();
 
             featureModel.setIconStatus('zoom', isZoomActive ? 'emphasis' : 'normal');
+
             if (isZoomActive) {
                 zr.setDefaultCursorStyle('crosshair');
 
@@ -117,7 +108,13 @@ define(function(require) {
         },
 
         back: function (controllerGroup, featureModel, ecModel, api) {
-            this._dispatchAction(this._popHistory(), api);
+            var histMgr = HistoryManager.getInstance(ecModel);
+            var snapshot = histMgr.pop();
+
+            // Update state of back button.
+            this._selectedMap.back = histMgr.count() <= 1;
+
+            this._dispatchAction(snapshot, api);
         }
     };
 
@@ -209,7 +206,12 @@ define(function(require) {
             }
         });
 
-        this._pushHistory(snapshot, ecModel);
+        var histMgr = HistoryManager.getInstance(ecModel);
+        histMgr.push(snapshot);
+
+        // Update state of back button.
+        this._selectedMap.back = histMgr.count() <= 1;
+
         this._dispatchAction(snapshot, api);
     };
 
@@ -262,70 +264,6 @@ define(function(require) {
             from: this.uid,
             batch: zrUtil.clone(batch, true)
         });
-    };
-
-    /**
-     * @private
-     */
-    proto._pushHistory = function (newSnapshot, ecModel) {
-        var history = this._history;
-
-        // If previous dataZoom can not be found,
-        // complete an range with current range.
-        each(newSnapshot, function (batchItem, dataZoomId) {
-            var i = history.length - 1;
-            for (; i >= 0; i--) {
-                var snapshot = history[i];
-                if (snapshot[dataZoomId]) {
-                    break;
-                }
-            }
-            if (i < 0) {
-                // No origin range set, create one by current range.
-                var dataZoomModel = ecModel.queryComponents(
-                    {mainType: 'dataZoom', subType: 'select', id: dataZoomId}
-                )[0];
-                if (dataZoomModel) {
-                    var percentRange = dataZoomModel.getPercentRange();
-                    history[0][dataZoomId] = {
-                        dataZoomId: dataZoomId,
-                        start: percentRange[0],
-                        end: percentRange[1]
-                    };
-                }
-            }
-        });
-
-        history.push(newSnapshot);
-
-        // Update state of back button.
-        this._selectedMap.back = history.length <= 1;
-    };
-
-    /**
-     * @private
-     */
-    proto._popHistory = function () {
-        var history = this._history;
-        var head = history[history.length - 1];
-        history.length > 1 && history.pop();
-
-        // Update state of back button.
-        this._selectedMap.back = history.length <= 1;
-
-        // Find top for all dataZoom.
-        var snapshot = {};
-        each(head, function (batchItem, dataZoomId) {
-            for (var i = history.length - 1; i >= 0; i--) {
-                var batchItem = history[i][dataZoomId];
-                if (batchItem) {
-                    snapshot[dataZoomId] = batchItem;
-                    break;
-                }
-            }
-        });
-
-        return snapshot;
     };
 
 

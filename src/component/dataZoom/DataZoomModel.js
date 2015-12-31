@@ -7,9 +7,7 @@ define(function(require) {
     var env = require('zrender/core/env');
     var echarts = require('../../echarts');
     var modelUtil = require('../../util/model');
-    var numberUtil = require('../../util/number');
     var AxisProxy = require('./AxisProxy');
-    var asc = numberUtil.asc;
     var each = zrUtil.each;
     var eachAxisDim = modelUtil.eachAxisDim;
 

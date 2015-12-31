@@ -1,6 +1,8 @@
 define(function(require) {
     'use strict';
 
+    var HistoryManager = require('../../dataZoom/HistoryManager');
+
     function Restore(model) {
         this.model = model;
     }
@@ -15,6 +17,8 @@ define(function(require) {
     var proto = Restore.prototype;
 
     proto.onclick = function (ecModel, api, type) {
+        HistoryManager.getInstance(ecModel).clear();
+
         api.dispatchAction({
             type: 'restore',
             from: this.uid
