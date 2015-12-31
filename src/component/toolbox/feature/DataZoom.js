@@ -69,7 +69,7 @@ define(function(require) {
             api.getZr().add(controllerGroup);
         }
 
-        handlers[type].call(this, controllerGroup, ecModel, api);
+        handlers[type].call(this, controllerGroup, this.model, ecModel, api);
     };
 
     proto.remove = function () {
@@ -88,10 +88,11 @@ define(function(require) {
      */
     var handlers = {
 
-        zoom: function (controllerGroup, ecModel, api) {
+        zoom: function (controllerGroup, featureModel, ecModel, api) {
             var isZoomActive = this._selectedMap.zoom = !this._selectedMap.zoom;
             var zr = api.getZr();
 
+            featureModel.setIconStatus('zoom', isZoomActive ? 'emphasis' : 'normal');
             if (isZoomActive) {
                 zr.setDefaultCursorStyle('crosshair');
 
@@ -112,7 +113,7 @@ define(function(require) {
             }
         },
 
-        back: function (controllerGroup, ecModel, api) {
+        back: function (controllerGroup, featureModel, ecModel, api) {
             this._dispatchAction(this._popHistory(), api);
         }
     };

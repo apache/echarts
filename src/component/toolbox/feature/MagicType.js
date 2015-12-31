@@ -82,38 +82,54 @@ define(function(require) {
         }
     };
 
+    var radioTypes = [
+        ['line', 'bar'],
+        ['stack', 'tiled']
+    ];
+
     proto.onclick = function (ecModel, api, type) {
         var model = this.model;
         var seriesIndex = model.get('seriesIndex.' + type);
-        if (
-            type === 'stack' || type === 'tiled'
-            || type === 'bar' || type === 'line'
-        ) {
-            var newOption = {
-                series: []
-            };
-            ecModel.eachComponent(
-                {
-                    mainType: 'series',
-                    seriesIndex: seriesIndex
-                }, function (seriesModel) {
-                    var seriesType = seriesModel.subType;
-                    var seriesId = seriesModel.id;
-                    var newSeriesOpt = seriesOptGenreator[type](
-                        seriesType, seriesId, seriesModel, model
-                    );
-                    if (newSeriesOpt) {
-                        // PENDING If merge original option?
-                        zrUtil.defaults(newSeriesOpt, seriesModel.option);
-                        newOption.series.push(newSeriesOpt);
-                    }
-                }
-            );
-            api.dispatchAction({
-                type: 'changeMagicType',
-                newOption: newOption
-            });
+        // Not supported magicType
+        if (!seriesOptGenreator[type]) {
+            return;
         }
+        var newOption = {
+            series: []
+        };
+        var generateNewSeriesTypes = function (seriesModel) {
+            var seriesType = seriesModel.subType;
+            var seriesId = seriesModel.id;
+            var newSeriesOpt = seriesOptGenreator[type](
+                seriesType, seriesId, seriesModel, model
+            );
+            if (newSeriesOpt) {
+                // PENDING If merge original option?
+                zrUtil.defaults(newSeriesOpt, seriesModel.option);
+                newOption.series.push(newSeriesOpt);
+            }
+        };
+
+        zrUtil.each(radioTypes, function (radio) {
+            if (zrUtil.indexOf(radio, type) >= 0) {
+                zrUtil.each(radio, function (item) {
+                    model.setIconStatus(item, 'normal');
+                });
+            }
+        });
+
+        model.setIconStatus(type, 'emphasis');
+
+        ecModel.eachComponent(
+            {
+                mainType: 'series',
+                seriesIndex: seriesIndex
+            }, generateNewSeriesTypes
+        );
+        api.dispatchAction({
+            type: 'changeMagicType',
+            newOption: newOption
+        });
     };
 
     var echarts = require('../../../echarts');
