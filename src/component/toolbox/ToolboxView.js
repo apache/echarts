@@ -45,15 +45,6 @@ define(function (require) {
                 var featureModel = new Model(featureOpt, toolboxModel, toolboxModel.ecModel);
                 var feature;
 
-                featureModel.setIconStatus = function (iconName, status) {
-                    var option = this.option;
-                    var iconPaths = this.iconPaths;
-                    option.iconStatus = option.iconStatus || {};
-                    option.iconStatus[iconName] = status;
-                    // FIXME
-                    iconPaths[iconName] && iconPaths[iconName].trigger(status);
-                };
-
                 if (featureName && !oldName) { // Create
                     var Feature = featureManager.get(featureName);
                     if (!Feature) {
@@ -63,6 +54,7 @@ define(function (require) {
                 }
                 else {
                     feature = features[oldName];
+                    feature.model = featureModel;
                 }
 
                 if (!featureName && oldName) {
@@ -76,6 +68,16 @@ define(function (require) {
                 }
 
                 createIconPaths(featureModel, feature, featureName);
+
+                featureModel.setIconStatus = function (iconName, status) {
+                    var option = this.option;
+                    var iconPaths = this.iconPaths;
+                    option.iconStatus = option.iconStatus || {};
+                    option.iconStatus[iconName] = status;
+                    // FIXME
+                    iconPaths[iconName] && iconPaths[iconName].trigger(status);
+                };
+
             }
 
             function createIconPaths(featureModel, feature, featureName) {
@@ -110,10 +112,7 @@ define(function (require) {
                     var path = graphic.makePath(
                         icon, {
                             style: normalStyle,
-                            hoverStyle: zrUtil.extend({
-                                textPosition: 'bottom',
-                                textFill: hoverStyle.fill || hoverStyle.stroke || '#000'
-                            }, hoverStyle),
+                            hoverStyle: hoverStyle,
                             rectHover: true
                         }, {
                             x: -itemSize / 2,
@@ -127,10 +126,16 @@ define(function (require) {
 
                     if (toolboxModel.get('showTitle')) {
                         path.on('mouseover', function () {
-                                path.setStyle('text', titles[iconName]);
+                                path.setStyle({
+                                    textPosition: 'bottom',
+                                    text: titles[iconName],
+                                    textFill: hoverStyle.fill || hoverStyle.stroke || '#000'
+                                });
                             })
                             .on('mouseout', function () {
-                                path.setStyle('text', '');
+                                path.setStyle({
+                                    textFill: null
+                                });
                             });
                     }
                     path.trigger(featureModel.get('iconStatus.' + iconName) || 'normal');
