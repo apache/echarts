@@ -31,7 +31,14 @@ define(function(require) {
         );
 
         zrUtil.each(effectedModels, function (dataZoomModel, index) {
-            dataZoomModel.setRange(payloadInfoList[index].range);
+            var payloadInfo = payloadInfoList[index];
+
+            dataZoomModel.setRawRange({
+                start: payloadInfo.start,
+                end: payloadInfo.end,
+                startValue: payloadInfo.startValue,
+                endValue: payloadInfo.endValue
+            });
         });
 
         function distinctPush(effectedModels, source, payloadInfo) {

@@ -48,7 +48,7 @@ define(function (require) {
             // is 'dataZoom', origin this._range should be maintained, otherwise 'pan'
             // or 'zoom' info will be missed because of 'throttle' of this.dispatchAction,
             if (!payload || payload.type !== 'dataZoom' || payload.from !== this.uid) {
-                this._range = dataZoomModel.getRange();
+                this._range = dataZoomModel.getPercentRange();
             }
 
             this._resetController(api);
@@ -139,7 +139,8 @@ define(function (require) {
                 type: 'dataZoom',
                 from: this.uid,
                 dataZoomId: this.dataZoomModel.id,
-                range: range.slice()
+                start: range[0],
+                end: range[1]
             });
         }
 
@@ -188,7 +189,10 @@ define(function (require) {
         range[0] = (range[0] - percentPoint) * scale + percentPoint;
         range[1] = (range[1] - percentPoint) * scale + percentPoint;
 
-        return dataZoomModel.fixRange(range);
+        // FIXME
+        // 改为基于绝对值的方式？
+
+        return fixRange(range);
     }
 
     function getDirectionInfo(xy, axisModel, controller) {
@@ -212,4 +216,16 @@ define(function (require) {
         return ret;
     }
 
+    function fixRange(range) {
+        // Clamp, using !(<= or >=) to handle NaN.
+        // jshint ignore:start
+        var bound = [0, 100];
+        !(range[0] <= bound[1]) && (range[0] = bound[1]);
+        !(range[1] <= bound[1]) && (range[1] = bound[1]);
+        !(range[0] >= bound[0]) && (range[0] = bound[0]);
+        !(range[1] >= bound[0]) && (range[1] = bound[0]);
+        // jshint ignore:end
+
+        return range;
+    }
 });

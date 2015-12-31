@@ -6,6 +6,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
     var each = zrUtil.each;
+    var asc = numberUtil.asc;
 
     /**
      * Operate single axis.
@@ -39,7 +40,19 @@ define(function(require) {
          * @private
          * @type {Array.<number>}
          */
-        this._dataWindow;
+        this._valueWindow;
+
+        /**
+         * @private
+         * @type {Array.<number>}
+         */
+        this._percentWindow;
+
+        /**
+         * @private
+         * @type {Array.<number>}
+         */
+        this._dataExtent;
 
         /**
          * @readOnly
@@ -84,10 +97,24 @@ define(function(require) {
         },
 
         /**
-         * @param {boolean} crossZero
+         * @return {Array.<number>}
          */
-        getDataWindow: function () {
-            return this._dataWindow;
+        getDataExtent: function () {
+            return this._dataExtent.slice();
+        },
+
+        /**
+         * @return {Array.<number>}
+         */
+        getDataValueWindow: function () {
+            return this._valueWindow.slice();
+        },
+
+        /**
+         * @return {Array.<number>}
+         */
+        getDataPercentWindow: function () {
+            return this._percentWindow.slice();
         },
 
         /**
@@ -108,13 +135,26 @@ define(function(require) {
         },
 
         /**
-         * Return range in its host model.
-         *
-         * @public
-         * @return {Array.<number>} [min, max]
+         * @param {module: echarts/component/dataZoom/DataZoomModel} model
          */
-        getRange: function () {
-            return this._model.getRange();
+        reset: function (model) {
+            if (model !== this._model) {
+                return;
+            }
+
+            // Process axis data
+            var axisDim = this._dimName;
+            var axisModel = this.ecModel.getComponent(axisDim + 'Axis', this._axisIndex);
+            var isCategoryFilter = axisModel.get('type') === 'category';
+            var seriesModels = this.getTargetSeriesModels();
+
+            var dataExtent = calculateDataExtent(axisDim, seriesModels);
+            var dataWindow = calculateDataWindow(model, dataExtent, isCategoryFilter);
+
+            // Record data window and data extent.
+            this._dataExtent = dataExtent.slice();
+            this._valueWindow = dataWindow.valueWindow.slice();
+            this._percentWindow = dataWindow.percentWindow.slice();
         },
 
         /**
@@ -125,24 +165,13 @@ define(function(require) {
                 return;
             }
 
-            // Process axis data
             var axisDim = this._dimName;
-            var axisModel = this.ecModel.getComponent(axisDim + 'Axis', this._axisIndex);
-            var isCategoryFilter = axisModel.get('type') === 'category';
             var seriesModels = this.getTargetSeriesModels();
-            var dataZoomModel = this._model;
-
-            var filterMode = dataZoomModel.get('filterMode');
-            var dataExtent = calculateDataExtent(axisDim, seriesModels);
-            var dataWindow = calculateDataWindow(dataZoomModel, dataExtent, isCategoryFilter);
-
-            // Record data window.
-            this._dataWindow = dataWindow.slice();
+            var filterMode = model.get('filterMode');
+            var valueWindow = this._valueWindow;
 
             // Process series data
             each(seriesModels, function (seriesModel) {
-                // FIXME
-                // 这里仅仅处理了list类型
                 var seriesData = seriesModel.getData();
                 if (!seriesData) {
                     return;
@@ -163,7 +192,7 @@ define(function(require) {
             });
 
             function isInWindow(value) {
-                return value >= dataWindow[0] && value <= dataWindow[1];
+                return value >= valueWindow[0] && value <= valueWindow[1];
             }
         }
     };
@@ -186,13 +215,54 @@ define(function(require) {
     }
 
     function calculateDataWindow(dataZoomModel, dataExtent, isCategoryFilter) {
-        var result = numberUtil.linearMap(dataZoomModel.getRange(), [0, 100], dataExtent, true);
+        var percentExtent = [0, 100];
+        var modelOption = dataZoomModel.option;
+        var percentWindow = [
+            modelOption.start,
+            modelOption.end
+        ];
+        var valueWindow = [
+            modelOption.startValue,
+            modelOption.endValue
+        ];
+        var mathFn = ['floor', 'ceil'];
 
-        if (isCategoryFilter) {
-            result = [Math.floor(result[0]), Math.ceil(result[1])];
-        }
+        // Normalize bound.
+        each([0, 1], function (idx) {
+            var boundValue = valueWindow[idx];
+            var boundPercent;
+            var calcuPercent = true;
 
-        return result;
+            if (isInvalidNumber(boundValue)) {
+                boundPercent = percentWindow[idx];
+                if (isInvalidNumber(boundPercent)) {
+                    boundPercent = percentExtent[idx];
+                }
+                boundValue = numberUtil.linearMap(
+                    boundPercent, percentExtent, dataExtent, true
+                );
+                calcuPercent = false;
+            }
+            if (isCategoryFilter) {
+                boundValue = Math[mathFn[idx]](boundValue);
+            }
+            if (calcuPercent) {
+                boundPercent = numberUtil.linearMap(
+                    boundValue, dataExtent, percentExtent, true
+                );
+            }
+            valueWindow[idx] = boundValue;
+            percentWindow[idx] = boundPercent;
+        });
+
+        return {
+            valueWindow: asc(valueWindow),
+            percentWindow: asc(percentWindow)
+        };
+    }
+
+    function isInvalidNumber(val) {
+        return isNaN(val) || val == null;
     }
 
     return AxisProxy;

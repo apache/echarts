@@ -429,7 +429,7 @@ define(function (require) {
          * @private
          */
         _resetInterval: function () {
-            var range = this._range = this.dataZoomModel.getRange();
+            var range = this._range = this.dataZoomModel.getPercentRange();
 
             this._handleEnds = linearMap(range, [0, 100], this._getViewExtent(), true);
         },
@@ -511,7 +511,7 @@ define(function (require) {
                     if (!dataInterval) {
                         dataInterval = dataZoomModel
                             .getAxisProxy(dimNames.name, axisIndex)
-                            .getDataWindow();
+                            .getDataValueWindow();
                         axis = this.ecModel.getComponent(dimNames.axis, axisIndex).axis;
                     }
                 }, this);
@@ -618,11 +618,14 @@ define(function (require) {
          * @private
          */
         _dispatchZoomAction: function () {
+            var range = this._range;
+
             this.api.dispatchAction({
                 type: 'dataZoom',
                 from: this.uid,
                 dataZoomId: this.dataZoomModel.id,
-                range: this._range.slice()
+                start: range[0],
+                end: range[1]
             });
         },
 

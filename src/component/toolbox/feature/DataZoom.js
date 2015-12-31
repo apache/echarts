@@ -2,10 +2,13 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var numberUtil = require('../../../util/number');
     var SelectController = require('../../helper/SelectController');
+    var BoundingRect = require('zrender/core/BoundingRect');
     var Group = require('zrender/container/Group');
 
     var each = zrUtil.each;
+    var asc = numberUtil.asc;
 
     // Use dataZoomSelect
     require('../../dataZoomSelect');
@@ -154,8 +157,8 @@ define(function(require) {
         // Default use the first axis.
         // FIXME
         var coordInfo = [
-            {axisModel: grid.getAxis('x').model}, // x
-            {axisModel: grid.getAxis('y').model}  // y
+            {axisModel: grid.getAxis('x').model, axisIndex: 0}, // x
+            {axisModel: grid.getAxis('y').model, axisIndex: 0}  // y
         ];
         coordInfo.grid = grid;
 
@@ -187,51 +190,66 @@ define(function(require) {
         if (!selRanges.length) {
             return;
         }
-        selRanges = selRanges[0];
+        var selRange = selRanges[0];
 
         controller.update(); // remove cover
 
         var snapshot = {};
 
         each(coordInfoList, function (coordInfo) {
-            var rect = coordInfo.grid.getRect();
-            rect = [[rect.x, rect.x + rect.width], [rect.y, rect.y + rect.height]];
+            var selDataRange = pointToDataInCartesian(selRange, coordInfo);
 
-            var xBatchItem = scaleCartesianAxis(rect, selRanges, coordInfo, 0); // x
-            var yBatchItem = scaleCartesianAxis(rect, selRanges, coordInfo, 1); // y
+            if (selDataRange) {
+                var xBatchItem = scaleCartesianAxis(selDataRange, coordInfo, 0, 'x');
+                var yBatchItem = scaleCartesianAxis(selDataRange, coordInfo, 1, 'y');
 
-            xBatchItem && (snapshot[xBatchItem.dataZoomId] = xBatchItem);
-            yBatchItem && (snapshot[yBatchItem.dataZoomId] = yBatchItem);
+                xBatchItem && (snapshot[xBatchItem.dataZoomId] = xBatchItem);
+                yBatchItem && (snapshot[yBatchItem.dataZoomId] = yBatchItem);
+            }
         });
 
         this._pushHistory(snapshot, ecModel);
         this._dispatchAction(snapshot, api);
     };
 
-    function scaleCartesianAxis(rect, selRanges, coordInfo, dimIdx) {
+    function pointToDataInCartesian(selRange, coordInfo) {
+        var grid = coordInfo.grid;
+
+        var selRect = new BoundingRect(
+            selRange[0][0],
+            selRange[1][0],
+            selRange[0][1] - selRange[0][0],
+            selRange[1][1] - selRange[1][0]
+        );
+        if (!selRect.intersect(grid.getRect())) {
+            return;
+        }
+
+        var cartesian = grid.getCartesian(coordInfo[0].axisIndex, coordInfo[1].axisIndex);
+        var dataLeftTop = cartesian.pointToData([selRange[0][0], selRange[1][0]], true);
+        var dataRightBottom = cartesian.pointToData([selRange[0][1], selRange[1][1]], true);
+
+        return [
+            asc([dataLeftTop[0], dataRightBottom[0]]), // x, using asc to handle inverse
+            asc([dataLeftTop[1], dataRightBottom[1]]) // y, using asc to handle inverse
+        ];
+    }
+
+    function scaleCartesianAxis(selDataRange, coordInfo, dimIdx, dimName) {
         var dimCoordInfo = coordInfo[dimIdx];
         var dataZoomModel = dimCoordInfo.dataZoomModel;
-        var dataRange = dataZoomModel.getRange();
 
-        var rectInterval = rect[dimIdx][1] - rect[dimIdx][0];
-        var dataRangeInterval = dataRange[1] - dataRange[0];
-        var selRange = [
-            dataRange[0] + (selRanges[dimIdx][0] - rect[dimIdx][0]) / rectInterval * dataRangeInterval,
-            dataRange[0] + (selRanges[dimIdx][1] - rect[dimIdx][0]) / rectInterval * dataRangeInterval
-        ];
-
-        selRange = dataZoomModel.fixRange(selRange, dataRange);
-
-        return (isFinite(selRange[0]) && isFinite(selRange[1]))
-            ? {dataZoomId: dataZoomModel.id, range: selRange}
-            : null;
+        return {
+            dataZoomId: dataZoomModel.id,
+            startValue: selDataRange[dimIdx][0],
+            endValue: selDataRange[dimIdx][1]
+        };
     }
 
     /**
      * @private
      */
     proto._dispatchAction = function (snapshot, api) {
-        console.log(JSON.stringify(this._history, null, 4));
         var batch = [];
 
         each(snapshot, function (batchItem) {
@@ -267,9 +285,11 @@ define(function(require) {
                     {mainType: 'dataZoom', subType: 'select', id: dataZoomId}
                 )[0];
                 if (dataZoomModel) {
+                    var percentRange = dataZoomModel.getPercentRange();
                     history[0][dataZoomId] = {
                         dataZoomId: dataZoomId,
-                        range: dataZoomModel.getRange()
+                        start: percentRange[0],
+                        end: percentRange[1]
                     };
                 }
             }

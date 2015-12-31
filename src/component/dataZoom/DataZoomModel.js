@@ -10,6 +10,7 @@ define(function(require) {
     var numberUtil = require('../../util/number');
     var AxisProxy = require('./AxisProxy');
     var asc = numberUtil.asc;
+    var each = zrUtil.each;
     var eachAxisDim = modelUtil.eachAxisDim;
 
     return echarts.extendComponentModel({
@@ -38,8 +39,10 @@ define(function(require) {
                                       //          that there are some data items out of window.
             throttle: 100,          // Dispatch action by the fixed rate, avoid frequency.
                                     // default 100. Do not throttle when use null/undefined.
-            start: 0,               // 默认为0
-            end: 100                // 默认为全部 100%
+            start: 0,               // Start percent. 0 ~ 100
+            end: 100,               // End percent. 0 ~ 100
+            startValue: null,       // Start value. If startValue specified, start is ignored.
+            endValue: null          // End value. If endValue specified, end is ignored.
         },
 
         /**
@@ -102,10 +105,6 @@ define(function(require) {
             this._giveAxisProxies();
 
             this._backup();
-
-            this._resetRange();
-
-            this._setToAxisModel();
         },
 
         /**
@@ -306,63 +305,6 @@ define(function(require) {
         },
 
         /**
-         * @private
-         */
-        _resetRange: function () {
-            var thisOption = this.option;
-            var axisProxies = this._axisProxies;
-
-            // Sync range with other dataZoomModel.
-            // Consider this case: dataZoomModel1 and dataZoomModel2 control the same axis,
-            // and the range settings are different. That will bring some problem when using
-            // dataZoomModel.getRange before aciton ever dispatched.
-            // (We encounter this problem in toolbox data zoom.)
-            var notHostAnyAxis = true;
-            var firstAxisProxy;
-            zrUtil.each(axisProxies, function (proxy) {
-                firstAxisProxy = proxy;
-                if (proxy.hostedBy(this)) {
-                    notHostAnyAxis = false;
-                }
-            }, this);
-
-            if (notHostAnyAxis && firstAxisProxy) {
-                var range = firstAxisProxy.getRange();
-                thisOption.start = range[0];
-                thisOption.end = range[1];
-            }
-            else {
-                var startValue = thisOption.start;
-                var endValue = thisOption.end;
-
-                // Auto reverse when start > end
-                if (startValue > endValue) {
-                    startValue = [endValue, endValue = startValue][0];
-                }
-
-                thisOption.start = startValue;
-                thisOption.end = endValue;
-            }
-        },
-
-        /**
-         * @private
-         */
-        _setToAxisModel: function () {
-            var range = this.getRange();
-
-            // Set "needsCrossZero" to axes
-            this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
-                var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
-                axisModel.setNeedsCrossZero && axisModel.setNeedsCrossZero(
-                    (range[0] === 0 && range[1] === 100)
-                        ? this.getAxisProxy(dimNames.name, axisIndex).getCrossZero()
-                        : false
-                );
-            }, this);
-        },
-
-        /**
          * @public
          */
         getFirstTargetAxisModel: function () {
@@ -386,7 +328,7 @@ define(function(require) {
         eachTargetAxis: function (callback, context) {
             var ecModel = this.ecModel;
             eachAxisDim(function (dimNames) {
-                zrUtil.each(
+                each(
                     this.get(dimNames.axisIndex),
                     function (axisIndex) {
                         callback.call(context, dimNames, axisIndex, this, ecModel);
@@ -401,47 +343,44 @@ define(function(require) {
         },
 
         /**
+         * If not specified, set to undefined.
+         *
          * @public
-         * @param {Array} param [start, end]
+         * @param {Object} opt
+         * @param {number} [opt.start]
+         * @param {number} [opt.end]
+         * @param {number} [opt.startValue]
+         * @param {number} [opt.endValue]
          */
-        setRange: function (param) {
-            // FIXME
-            // 接口改变
-            var thisOption = this.option;
-
-            param[0] != null && (thisOption.start = param[0]);
-            param[1] != null && (thisOption.end = param[1]);
-
-            this._resetRange();
+        setRawRange: function (opt) {
+            each(['start', 'end', 'startValue', 'endValue'], function (name) {
+                this.option[name] = opt[name];
+            }, this);
         },
 
         /**
          * @public
+         * @return {Array.<number>}
          */
-        getRange: function () {
-            var thisOption = this.option;
-            var range = [thisOption.start, thisOption.end];
+        getPercentRange: function () {
+            // Find the first hosted axisProxy
+            var axisProxies = this._axisProxies;
+            for (var key in axisProxies) {
+                if (axisProxies.hasOwnProperty(key) && axisProxies[key].hostedBy(this)) {
+                    return axisProxies[key].getDataPercentWindow();
+                }
+            }
 
-            return this.fixRange(range);
-        },
-
-        /**
-         * @protected
-         */
-        fixRange: function (range, bound) {
-            bound = bound || [0, 100];
-            // Make sure range[0] <= range[1]
-            var range = asc(range);
-
-            // Clamp, using !(<= or >=) to handle NaN.
-            // jshint ignore:start
-            !(range[0] <= bound[1]) && (range[0] = bound[1]);
-            !(range[1] <= bound[1]) && (range[1] = bound[1]);
-            !(range[0] >= bound[0]) && (range[0] = bound[0]);
-            !(range[1] >= bound[0]) && (range[1] = bound[0]);
-            // jshint ignore:end
-
-            return range;
+            // If no hosted axis find not hosted axisProxy.
+            // Consider this case: dataZoomModel1 and dataZoomModel2 control the same axis,
+            // and the option.start or option.end settings are different. The percentRange
+            // show follow axisProxy.
+            // (We encounter this problem in toolbox data zoom.)
+            for (var key in axisProxies) {
+                if (axisProxies.hasOwnProperty(key) && !axisProxies[key].hostedBy(this)) {
+                    return axisProxies[key].getDataPercentWindow();
+                }
+            }
         }
 
     });
