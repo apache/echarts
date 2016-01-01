@@ -3,7 +3,7 @@ define(function () {
         var legendModels = ecModel.findComponents({
             mainType: 'legend'
         });
-        if (legendModels.length) {
+        if (legendModels && legendModels.length) {
             ecModel.filterSeries(function (series) {
                 // If in any legend component the status is not selected.
                 // Because in legend series

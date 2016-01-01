@@ -1,8 +1,10 @@
 define(function (require) {
 
     return function (ecModel) {
-        var legendModel = ecModel.getComponent('legend');
-        if (!legendModel) {
+        var legendModels = ecModel.findComponents({
+            mainType: 'legend'
+        });
+        if (!legendModels || !legendModels.length) {
             return;
         }
         ecModel.eachSeriesByType('graph', function (graphSeries) {
@@ -19,7 +21,12 @@ define(function (require) {
                     if (typeof category === 'number') {
                         category = categoryNames[category];
                     }
-                    return legendModel.isSelected(category);
+                    // If in any legend component the status is not selected.
+                    for (var i = 0; i < legendModels.length; i++) {
+                        if (!legendModels[i].isSelected(category)) {
+                            return false;
+                        }
+                    }
                 }
                 return true;
             });

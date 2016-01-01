@@ -3,7 +3,7 @@ define(function () {
         var legendModels = ecModel.findComponents({
             mainType: 'legend'
         });
-        if (!legendModels.length) {
+        if (!legendModels || !legendModels.length) {
             return;
         }
         ecModel.eachSeriesByType(seriesType, function (series) {
@@ -12,7 +12,7 @@ define(function () {
                 var name = data.getname(idx);
                 // If in any legend component the status is not selected.
                 for (var i = 0; i < legendModels.length; i++) {
-                    if (legendModels[i].isSelected(name)) {
+                    if (!legendModels[i].isSelected(name)) {
                         return false;
                     }
                 }
