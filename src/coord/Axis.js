@@ -87,16 +87,9 @@ define(function (require) {
          * @return {number}
          */
         getFormatPrecision: function (dataExtent) {
-            dataExtent = dataExtent || this.scale.getExtent();
-
-            var log = Math.log;
-            var LN10 = Math.LN10;
-            var extent = this._extent;
-            var dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
-            var sizeQuantity = Math.round(log(Math.abs(extent[1] - extent[0])) / LN10);
-            return Math.max(
-                -dataQuantity + sizeQuantity,
-                0
+            return numberUtil.getFormatPrecision(
+                dataExtent || this.scale.getExtent(),
+                this._extent
             );
         },
 

@@ -32,9 +32,9 @@ define(function(require) {
 
         /**
          * @private
-         * @type {boolean}
+         * @type {Object}
          */
-        this._crossZero;
+        this._backup;
 
         /**
          * @private
@@ -81,19 +81,19 @@ define(function(require) {
         },
 
         /**
-         * @param {boolean} crossZero
+         * @param {Object} option
          */
-        backupCrossZero: function (model, crossZero) {
+        backup: function (model, option) {
             if (model === this._model) {
-                this._crossZero = crossZero;
+                this._backup = option;
             }
         },
 
         /**
-         * @return {boolean} crossZero
+         * @return {Object}
          */
-        getCrossZero: function () {
-            return this._crossZero;
+        getBackup: function () {
+            return zrUtil.clone(this._backup);
         },
 
         /**

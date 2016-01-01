@@ -295,9 +295,14 @@ define(function(require) {
          */
         _backup: function () {
             this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
-                this.getAxisProxy(dimNames.name, axisIndex).backupCrossZero(
+                var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
+                this.getAxisProxy(dimNames.name, axisIndex).backup(
                     this,
-                    !ecModel.getComponent(dimNames.axis, axisIndex).get('scale')
+                    {
+                        scale: axisModel.get('scale', true),
+                        min: axisModel.get('min', true),
+                        max: axisModel.get('max', true)
+                    }
                 );
             }, this);
         },

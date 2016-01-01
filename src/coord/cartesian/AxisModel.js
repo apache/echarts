@@ -21,6 +21,22 @@ define(function(require) {
          */
         setNeedsCrossZero: function (needs) {
             this.option.scale = !needs;
+        },
+
+        /**
+         * @public
+         * @param {number} min
+         */
+        setMin: function (min) {
+            this.option.min = min;
+        },
+
+        /**
+         * @public
+         * @param {number} max
+         */
+        setMax: function (max) {
+            this.option.max = max;
         }
     });
 

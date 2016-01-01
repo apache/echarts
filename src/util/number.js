@@ -114,6 +114,22 @@ define(function (require) {
         return count;
     };
 
+    /**
+     * @param {Array.<number>} dataExtent
+     * @param {Array.<number>} axisExtent
+     * @return {number}  precision
+     */
+    number.getFormatPrecision = function (dataExtent, axisExtent) {
+        var log = Math.log;
+        var LN10 = Math.LN10;
+        var dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
+        var sizeQuantity = Math.round(log(Math.abs(axisExtent[1] - axisExtent[0])) / LN10);
+        return Math.max(
+            -dataQuantity + sizeQuantity,
+            0
+        );
+    };
+
     // Number.MAX_SAFE_INTEGER, ie do not support.
     number.MAX_SAFE_INTEGER = 9007199254740991;
 

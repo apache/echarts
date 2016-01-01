@@ -75,6 +75,9 @@ define(function (require) {
             var extent = this._extent;
             var ticks = [];
 
+            // Consider this case: using dataZoom toolbox, zoom and zoom.
+            var safeLimit = 10000;
+
             if (interval) {
                 var niceExtent = this._niceExtent;
                 if (extent[0] < niceExtent[0]) {
@@ -85,6 +88,9 @@ define(function (require) {
                     ticks.push(tick);
                     // Avoid rounding error
                     tick = numberUtil.round(tick + interval);
+                    if (ticks.length > safeLimit) {
+                        return [];
+                    }
                 }
                 if (extent[1] > niceExtent[1]) {
                     ticks.push(extent[1]);

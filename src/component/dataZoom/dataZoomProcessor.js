@@ -4,8 +4,9 @@
 define(function (require) {
 
     var echarts = require('../../echarts');
+    var numberUtil = require('../../util/number');
 
-    echarts.registerProcessor('filter', function (ecModel) {
+    echarts.registerProcessor('filter', function (ecModel, api) {
 
         ecModel.eachComponent('dataZoom', function (dataZoomModel) {
             dataZoomModel.eachTargetAxis(resetSingleAxis);
@@ -23,12 +24,22 @@ define(function (require) {
         axisProxy.reset(dataZoomModel);
 
         var percentRange = axisProxy.getDataPercentWindow();
+        var valueRange = axisProxy.getDataValueWindow();
         var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
+        var isFull = (percentRange[0] === 0 && percentRange[1] === 100);
+        var backup = axisProxy.getBackup();
+
+        // [0, 500]: guess axis extent.
+        var precision = numberUtil.getFormatPrecision(valueRange, [0, 500]);
 
         axisModel.setNeedsCrossZero && axisModel.setNeedsCrossZero(
-            (percentRange[0] === 0 && percentRange[1] === 100)
-                ? axisProxy.getCrossZero()
-                : false
+            isFull ? !backup.scale : false
+        );
+        axisModel.setMin && axisModel.setMin(
+            isFull ? backup.min : +valueRange[0].toFixed(precision)
+        );
+        axisModel.setMax && axisModel.setMax(
+            isFull ? backup.max : +valueRange[1].toFixed(precision)
         );
     }
 
