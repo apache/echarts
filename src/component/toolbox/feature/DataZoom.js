@@ -94,17 +94,8 @@ define(function(require) {
             if (isZoomActive) {
                 zr.setDefaultCursorStyle('crosshair');
 
-                // FIXME
-                // polar
-
-                var coordInfoList = [];
-                ecModel.eachComponent('grid', function (gridModel, gridIndex) {
-                    var grid = gridModel.coordinateSystem;
-                    coordInfoList.push(prepareCoordInfo(grid, ecModel));
-                }, this);
-
                 this._createController(
-                    controllerGroup, coordInfoList, featureModel, ecModel, api
+                    controllerGroup, featureModel, ecModel, api
                 );
             }
             else {
@@ -122,7 +113,7 @@ define(function(require) {
      * @private
      */
     proto._createController = function (
-        controllerGroup, coordInfoList, featureModel, ecModel, api
+        controllerGroup, featureModel, ecModel, api
     ) {
         var controller = this._controller = new SelectController(
             'rect',
@@ -137,7 +128,7 @@ define(function(require) {
         controller.on(
             'selectEnd',
             zrUtil.bind(
-                this._onSelected, this, controller, coordInfoList,
+                this._onSelected, this, controller,
                 featureModel, ecModel, api
             )
         );
@@ -185,7 +176,7 @@ define(function(require) {
     /**
      * @private
      */
-    proto._onSelected = function (controller, coordInfoList, featureModel, ecModel, api, selRanges) {
+    proto._onSelected = function (controller, featureModel, ecModel, api, selRanges) {
         if (!selRanges.length) {
             return;
         }
@@ -195,7 +186,12 @@ define(function(require) {
 
         var snapshot = {};
 
-        each(coordInfoList, function (coordInfo) {
+        // FIXME
+        // polar
+
+        ecModel.eachComponent('grid', function (gridModel, gridIndex) {
+            var grid = gridModel.coordinateSystem;
+            var coordInfo = prepareCoordInfo(grid, ecModel);
             var selDataRange = pointToDataInCartesian(selRange, coordInfo);
 
             if (selDataRange) {
@@ -205,7 +201,7 @@ define(function(require) {
                 xBatchItem && (snapshot[xBatchItem.dataZoomId] = xBatchItem);
                 yBatchItem && (snapshot[yBatchItem.dataZoomId] = yBatchItem);
             }
-        });
+        }, this);
 
         history.push(ecModel, snapshot);
 
@@ -224,7 +220,6 @@ define(function(require) {
         if (!selRect.intersect(grid.getRect())) {
             return;
         }
-
         var cartesian = grid.getCartesian(coordInfo[0].axisIndex, coordInfo[1].axisIndex);
         var dataLeftTop = cartesian.pointToData([selRange[0][0], selRange[1][0]], true);
         var dataRightBottom = cartesian.pointToData([selRange[0][1], selRange[1][1]], true);
