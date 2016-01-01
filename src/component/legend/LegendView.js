@@ -50,7 +50,7 @@ define(function (require) {
             group.removeAll();
 
             if (itemAlign === 'auto') {
-                itemAlign = (legendModel.get('x') === 'right'
+                itemAlign = (legendModel.get('left') === 'right'
                     && legendModel.get('orient') === 'vertical')
                     ? 'right' : 'left';
             }

@@ -1,9 +1,18 @@
 define(function () {
    return function (ecModel) {
-        var legendModel = ecModel.getComponent('legend');
-        if (legendModel) {
+        var legendModels = ecModel.findComponents({
+            mainType: 'legend'
+        });
+        if (legendModels.length) {
             ecModel.filterSeries(function (series) {
-                return legendModel.isSelected(series.name);
+                // If in any legend component the status is not selected.
+                // Because in legend series
+                for (var i = 0; i < legendModels.length; i++) {
+                    if (!legendModels[i].isSelected(series.name)) {
+                        return false;
+                    }
+                }
+                return true;
             });
         }
     };

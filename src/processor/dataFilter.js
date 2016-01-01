@@ -1,13 +1,22 @@
 define(function () {
     return function (seriesType, ecModel) {
-        var legendModel = ecModel.getComponent('legend');
-        if (!legendModel) {
+        var legendModels = ecModel.findComponents({
+            mainType: 'legend'
+        });
+        if (!legendModels.length) {
             return;
         }
         ecModel.eachSeriesByType(seriesType, function (series) {
             var data = series.getData();
             data.filterSelf(function (idx) {
-                return legendModel.isSelected(data.getName(idx));
+                var name = data.getname(idx);
+                // If in any legend component the status is not selected.
+                for (var i = 0; i < legendModels.length; i++) {
+                    if (legendModels[i].isSelected(name)) {
+                        return false;
+                    }
+                }
+                return true;
             }, this);
         }, this);
     };
