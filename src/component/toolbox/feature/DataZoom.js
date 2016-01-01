@@ -6,7 +6,7 @@ define(function(require) {
     var SelectController = require('../../helper/SelectController');
     var BoundingRect = require('zrender/core/BoundingRect');
     var Group = require('zrender/container/Group');
-    var HistoryManager = require('../../dataZoom/HistoryManager');
+    var history = require('../../dataZoom/history');
 
     var each = zrUtil.each;
     var asc = numberUtil.asc;
@@ -33,11 +33,11 @@ define(function(require) {
         this._controller;
 
         /**
-         * Is button active.
+         * Is zoom active.
          * @private
          * @type {Object}
          */
-        this._selectedMap = {zoom: false, back: false};
+        this._isZoomActive;
     }
 
     DataZoom.defaultOption = {
@@ -56,6 +56,10 @@ define(function(require) {
     };
 
     var proto = DataZoom.prototype;
+
+    proto.render = function (featureModel, ecModel, api) {
+        updateBackBtnStatus(featureModel, ecModel);
+    };
 
     proto.onclick = function (ecModel, api, type) {
         var controllerGroup = this._controllerGroup;
@@ -82,7 +86,7 @@ define(function(require) {
     var handlers = {
 
         zoom: function (controllerGroup, featureModel, ecModel, api) {
-            var isZoomActive = this._selectedMap.zoom = !this._selectedMap.zoom;
+            var isZoomActive = this._isZoomActive = !this._isZoomActive;
             var zr = api.getZr();
 
             featureModel.setIconStatus('zoom', isZoomActive ? 'emphasis' : 'normal');
@@ -99,7 +103,9 @@ define(function(require) {
                     coordInfoList.push(prepareCoordInfo(grid, ecModel));
                 }, this);
 
-                this._createController(controllerGroup, coordInfoList, ecModel, api);
+                this._createController(
+                    controllerGroup, coordInfoList, featureModel, ecModel, api
+                );
             }
             else {
                 zr.setDefaultCursorStyle('default');
@@ -108,24 +114,16 @@ define(function(require) {
         },
 
         back: function (controllerGroup, featureModel, ecModel, api) {
-            var histMgr = HistoryManager.getInstance(ecModel);
-            var snapshot = histMgr.pop();
-
-            // Update state of back button.
-            this._selectedMap.back = histMgr.count() <= 1;
-
-            this._dispatchAction(snapshot, api);
+            this._dispatchAction(history.pop(ecModel), api);
         }
-    };
-
-    proto.getSelectedMap = function () {
-        return zrUtil.clone(this._selectedMap);
     };
 
     /**
      * @private
      */
-    proto._createController = function (controllerGroup, coordInfoList, ecModel, api) {
+    proto._createController = function (
+        controllerGroup, coordInfoList, featureModel, ecModel, api
+    ) {
         var controller = this._controller = new SelectController(
             'rect',
             api.getZr(),
@@ -133,12 +131,15 @@ define(function(require) {
                 // FIXME
                 lineWidth: 3,
                 stroke: '#333',
-                fill: 'rgba(0,0,0,0.5)'
+                fill: 'rgba(0,0,0,0.2)'
             }
         );
         controller.on(
             'selectEnd',
-            zrUtil.bind(this._onSelected, this, controller, coordInfoList, ecModel, api)
+            zrUtil.bind(
+                this._onSelected, this, controller, coordInfoList,
+                featureModel, ecModel, api
+            )
         );
         controller.enable(controllerGroup, false);
     };
@@ -184,7 +185,7 @@ define(function(require) {
     /**
      * @private
      */
-    proto._onSelected = function (controller, coordInfoList, ecModel, api, selRanges) {
+    proto._onSelected = function (controller, coordInfoList, featureModel, ecModel, api, selRanges) {
         if (!selRanges.length) {
             return;
         }
@@ -206,11 +207,7 @@ define(function(require) {
             }
         });
 
-        var histMgr = HistoryManager.getInstance(ecModel);
-        histMgr.push(snapshot);
-
-        // Update state of back button.
-        this._selectedMap.back = histMgr.count() <= 1;
+        history.push(ecModel, snapshot);
 
         this._dispatchAction(snapshot, api);
     };
@@ -266,10 +263,15 @@ define(function(require) {
         });
     };
 
+    function updateBackBtnStatus(featureModel, ecModel) {
+        featureModel.setIconStatus(
+            'back',
+            history.count(ecModel) > 1 ? 'emphasis' : 'normal'
+        );
+    }
 
 
     require('../featureManager').register('dataZoom', DataZoom);
-
 
 
     // Create special dataZoom option for select

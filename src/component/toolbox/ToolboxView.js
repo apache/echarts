@@ -78,6 +78,9 @@ define(function (require) {
                     iconPaths[iconName] && iconPaths[iconName].trigger(status);
                 };
 
+                if (feature.render) {
+                    feature.render(featureModel, ecModel, api);
+                }
             }
 
             function createIconPaths(featureModel, feature, featureName) {

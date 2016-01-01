@@ -6,48 +6,24 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var each = zrUtil.each;
 
-    var ATTR = '\0_ec_hist_mgr';
+    var ATTR = '\0_ec_hist_store';
 
-    /**
-     * Only one instance exists in one chart instance.
-     *
-     * @class
-     */
-    var HistoryManager = function (ecModel) {
-        /**
-         * @readOnly
-         * @type {module: echarts/model/Global}
-         */
-        this.ecModel = ecModel;
-
-        /**
-         * [{key: dataZoomId, value: {dataZoomId, range}}, ...]
-         * History length of each dataZoom may be different.
-         * this._history[0] is used to store origin range.
-         * @private
-         * @type {Array.<Object>}
-         */
-        this._history = [{}];
-    };
-
-    HistoryManager.prototype = {
-
-        constructor: HistoryManager,
+    var history = {
 
         /**
          * @public
+         * @param {module:echarts/model/Global} ecModel
          * @param {Object} newSnapshot {dataZoomId, batch: [payloadInfo, ...]}
          */
-        push: function (newSnapshot) {
-            var history = this._history;
-            var ecModel = this.ecModel;
+        push: function (ecModel, newSnapshot) {
+            var store = giveStore(ecModel);
 
             // If previous dataZoom can not be found,
             // complete an range with current range.
             each(newSnapshot, function (batchItem, dataZoomId) {
-                var i = history.length - 1;
+                var i = store.length - 1;
                 for (; i >= 0; i--) {
-                    var snapshot = history[i];
+                    var snapshot = store[i];
                     if (snapshot[dataZoomId]) {
                         break;
                     }
@@ -59,7 +35,7 @@ define(function(require) {
                     )[0];
                     if (dataZoomModel) {
                         var percentRange = dataZoomModel.getPercentRange();
-                        history[0][dataZoomId] = {
+                        store[0][dataZoomId] = {
                             dataZoomId: dataZoomId,
                             start: percentRange[0],
                             end: percentRange[1]
@@ -68,23 +44,24 @@ define(function(require) {
                 }
             });
 
-            history.push(newSnapshot);
+            store.push(newSnapshot);
         },
 
         /**
          * @public
+         * @param {module:echarts/model/Global} ecModel
          * @return {Object} snapshot
          */
-        pop: function () {
-            var history = this._history;
-            var head = history[history.length - 1];
-            history.length > 1 && history.pop();
+        pop: function (ecModel) {
+            var store = giveStore(ecModel);
+            var head = store[store.length - 1];
+            store.length > 1 && store.pop();
 
             // Find top for all dataZoom.
             var snapshot = {};
             each(head, function (batchItem, dataZoomId) {
-                for (var i = history.length - 1; i >= 0; i--) {
-                    var batchItem = history[i][dataZoomId];
+                for (var i = store.length - 1; i >= 0; i--) {
+                    var batchItem = store[i][dataZoomId];
                     if (batchItem) {
                         snapshot[dataZoomId] = batchItem;
                         break;
@@ -98,31 +75,35 @@ define(function(require) {
         /**
          * @public
          */
-        clear: function () {
-            this._history = [{}];
+        clear: function (ecModel) {
+            ecModel[ATTR] = null;
         },
 
         /**
          * @public
+         * @param {module:echarts/model/Global} ecModel
          * @return {number} records. always >= 1.
          */
-        count: function () {
-            return this._history.length;
+        count: function (ecModel) {
+            return giveStore(ecModel).length;
         }
 
     };
 
     /**
-     * @return {module:echarts/component/dataZoom/HistoryManager}
+     * [{key: dataZoomId, value: {dataZoomId, range}}, ...]
+     * History length of each dataZoom may be different.
+     * this._history[0] is used to store origin range.
+     * @type {Array.<Object>}
      */
-    HistoryManager.getInstance = function (ecModel) {
-        var instance = ecModel[ATTR];
-        if (!instance) {
-            instance = ecModel[ATTR] = new HistoryManager(ecModel);
+    function giveStore(ecModel) {
+        var store = ecModel[ATTR];
+        if (!store) {
+            store = ecModel[ATTR] = [{}];
         }
-        return instance;
-    };
+        return store;
+    }
 
-    return HistoryManager;
+    return history;
 
 });
