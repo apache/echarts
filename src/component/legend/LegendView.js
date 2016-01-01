@@ -50,7 +50,7 @@ define(function (require) {
             group.removeAll();
 
             if (itemAlign === 'auto') {
-                itemAlign = (legendModel.get('x') === 'right'
+                itemAlign = (legendModel.get('left') === 'right'
                     && legendModel.get('orient') === 'vertical')
                     ? 'right' : 'left';
             }
@@ -158,13 +158,19 @@ define(function (require) {
 
             var textStyleModel = itemModel.getModel('textStyle');
 
-            legendSymbolType = legendSymbolType;
+            var itemIcon = itemModel.get('icon');
+            // Use user given icon first
+            legendSymbolType = itemIcon || legendSymbolType;
             itemGroup.add(symbolCreator.createSymbol(
                 legendSymbolType, 0, 0, itemWidth, itemHeight, color
             ));
 
             // Compose symbols
-            if (symbolType && symbolType !== legendSymbolType && symbolType != 'none') {
+            // PENDING
+            if (!itemIcon && symbolType
+                && symbolType !== legendSymbolType
+                && symbolType != 'none'
+            ) {
                 var size = itemHeight * 0.8;
                 // Put symbol in the center
                 itemGroup.add(symbolCreator.createSymbol(
