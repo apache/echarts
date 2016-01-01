@@ -28,8 +28,6 @@ define(function (require) {
 
             // 内容格式器：{string}（Template） ¦ {Function}
             // formatter: null
-            // 数据孤岛内容格式器
-            islandFormatter: '{a} <br/>{b} : {c}',
 
             // 隐藏延迟，单位ms
             hideDelay: 100,
