@@ -9,7 +9,7 @@ define(function () {
         ecModel.eachSeriesByType(seriesType, function (series) {
             var data = series.getData();
             data.filterSelf(function (idx) {
-                var name = data.getname(idx);
+                var name = data.getName(idx);
                 // If in any legend component the status is not selected.
                 for (var i = 0; i < legendModels.length; i++) {
                     if (!legendModels[i].isSelected(name)) {
