@@ -29,12 +29,6 @@ define(function (require) {
             if (!isNaN(end)) {
                 thisExtent[1] = end;
             }
-            if (thisExtent[0] === thisExtent[1]) {
-                // Expand extent
-                var expandSize = thisExtent[0] / 2 || 1;
-                thisExtent[0] -= expandSize;
-                thisExtent[1] += expandSize;
-            }
         },
 
         unionExtent: function (other) {
@@ -42,6 +36,7 @@ define(function (require) {
             other[0] < extent[0] && (extent[0] = other[0]);
             other[1] > extent[1] && (extent[1] = other[1]);
 
+            // unionExtent may called by it's sub classes
             IntervalScale.prototype.setExtent.call(this, extent[0], extent[1]);
         },
         /**
@@ -177,6 +172,21 @@ define(function (require) {
             }
             if (!fixMax) {
                 extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
+            }
+
+            // If extent start and end are same, expand them
+            if (extent[0] === extent[1]) {
+                // Expand extent
+                var expandSize = extent[0] / 2 || 1;
+                extent[0] -= expandSize;
+                extent[1] += expandSize;
+            }
+            // If there are no data and extent are [Infinity, -Infinity]
+            if (extent[1] === -Infinity && extent[0] === Infinity) {
+                extent[1] = 1;
+                extent[0] = -1;
+                this._niceExtent = [-1, 1];
+                this._interval = 0.5;
             }
         }
     });
