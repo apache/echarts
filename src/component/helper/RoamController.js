@@ -142,12 +142,12 @@ define(function (require) {
             if (controlType == null) {
                 controlType = true;
             }
-            if (controlType && controlType !== 'zoom') {
+            if (controlType && controlType !== 'scale') {
                 zr.on('mousedown', mousedownHandler);
                 zr.on('mousemove', mousemoveHandler);
                 zr.on('mouseup', mouseupHandler);
             }
-            if (controlType && controlType !== 'pan') {
+            if (controlType && controlType !== 'move') {
                 zr.on('mousewheel', mousewheelHandler);
                 zr.on('pinch', pinchHandler);
             }
