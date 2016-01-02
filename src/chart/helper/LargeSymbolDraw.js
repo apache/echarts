@@ -55,6 +55,8 @@ define(function (require) {
      * @param {module:echarts/data/List} data
      */
     largeSymbolProto.updateData = function (data) {
+        this.group.removeAll();
+
         var symbolEl = this._symbolEl;
 
         var seriesModel = data.hostModel;
