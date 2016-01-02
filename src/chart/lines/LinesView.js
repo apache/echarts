@@ -6,7 +6,7 @@ define(function (require) {
 
     require('../../echarts').extendChartView({
 
-        type: 'geoLine',
+        type: 'lines',
 
         init: function () {},
 

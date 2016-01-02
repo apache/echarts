@@ -8,7 +8,7 @@ define(function (require) {
 
     return SeriesModel.extend({
 
-        type: 'series.geoLine',
+        type: 'series.lines',
 
         dependencies: ['grid', 'polar'],
 
@@ -25,8 +25,15 @@ define(function (require) {
                 ));
             });
 
-            var fromData = new List(['lng', 'lat'], this);
-            var toData = new List(['lng', 'lat'], this);
+            var coordSys = option.coordinateSystem;
+            if (coordSys !== 'cartesian2d' && coordSys !== 'geo') {
+                throw new Error('Coordinate system can only be cartesian2d or geo in lines');
+            }
+
+            var dimensions = coordSys === 'geo' ? ['lng', 'lat'] : ['x', 'y'];
+
+            var fromData = new List(dimensions, this);
+            var toData = new List(dimensions, this);
             var lineData = new List(['value'], this);
 
             function geoCoordGetter(item, dim, dataIndex, dimIndex) {
@@ -53,9 +60,6 @@ define(function (require) {
             // Cartesian coordinate system
             xAxisIndex: 0,
             yAxisIndex: 0,
-
-            // Polar coordinate system
-            polarIndex: 0,
 
             // Geo coordinate system
             geoIndex: 0,

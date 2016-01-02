@@ -37,7 +37,7 @@
         'echarts/chart/boxplot',
         'echarts/chart/candlestick',
         'echarts/chart/effectScatter',
-        'echarts/chart/geoLine',
+        'echarts/chart/lines',
         'echarts/chart/heatmap',
 
         'echarts/component/geo',

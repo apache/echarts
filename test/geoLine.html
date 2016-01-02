@@ -20,7 +20,7 @@
             require([
                 'echarts',
 
-                'echarts/chart/geoLine',
+                'echarts/chart/lines',
                 'echarts/chart/effectScatter',
                 'echarts/component/legend',
                 'echarts/component/geo'
@@ -209,7 +209,7 @@
                     [['北京', BJData], ['上海', SHData], ['广州', GZData]].forEach(function (item, i) {
                         series.push({
                             name: item[0] + ' Top10',
-                            type: 'geoLine',
+                            type: 'lines',
                             zlevel: 1,
                             effect: {
                                 show: true,
@@ -229,7 +229,7 @@
                         },
                         {
                             name: item[0] + ' Top10',
-                            type: 'geoLine',
+                            type: 'lines',
                             zlevel: 2,
                             effect: {
                                 show: true,
@@ -275,7 +275,7 @@
                                 return {
                                     name: dataItem[1].name,
                                     value: geoCoordMap[dataItem[1].name].concat([dataItem[1].value])
-                                }
+                                };
                             })
                         });
                     });

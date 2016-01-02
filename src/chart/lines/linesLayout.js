@@ -1,17 +1,18 @@
 define(function (require) {
 
     return function (ecModel) {
-        ecModel.eachSeriesByType('geoLine', function (seriesModel) {
+        ecModel.eachSeriesByType('lines', function (seriesModel) {
             var coordSys = seriesModel.coordinateSystem;
             var fromData = seriesModel.fromData;
             var toData = seriesModel.toData;
             var lineData = seriesModel.getData();
 
-            fromData.each(['lng', 'lat'], function (lng, lat, idx) {
-                fromData.setItemLayout(idx, coordSys.dataToPoint([lng, lat]));
+            var dims = coordSys.dimensions;
+            fromData.each(dims, function (x, y, idx) {
+                fromData.setItemLayout(idx, coordSys.dataToPoint([x, y]));
             });
-            toData.each(['lng', 'lat'], function (lng, lat, idx) {
-                toData.setItemLayout(idx, coordSys.dataToPoint([lng, lat]));
+            toData.each(dims, function (x, y, idx) {
+                toData.setItemLayout(idx, coordSys.dataToPoint([x, y]));
             });
             lineData.each(function (idx) {
                 var p1 = fromData.getItemLayout(idx);

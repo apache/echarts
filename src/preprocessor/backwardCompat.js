@@ -50,7 +50,7 @@ define(function (require) {
 
     var COMPATITABLE_SERIES = [
         'bar', 'boxplot', 'candlestick', 'chord', 'effectScatter',
-        'funnel', 'gauge', 'geoLine', 'graph', 'heatmap', 'line', 'map', 'parallel',
+        'funnel', 'gauge', 'lines', 'graph', 'heatmap', 'line', 'map', 'parallel',
         'pie', 'radar', 'sankey', 'scatter', 'treemap'
     ];
 
