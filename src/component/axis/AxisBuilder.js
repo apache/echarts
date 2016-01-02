@@ -239,7 +239,8 @@ define(function (require) {
                     },
                     position: pos,
                     rotation: labelLayout.rotation,
-                    silent: true
+                    silent: true,
+                    z2: 10
                 });
                 textEls.push(textEl);
                 this.group.add(textEl);
