@@ -568,7 +568,7 @@ define(function (require) {
 
             var labelPrecision = dataZoomModel.get('labelPrecision');
             if (labelPrecision == null) {
-                labelPrecision = axis.getFormatPrecision();
+                labelPrecision = axis.getPixelPrecision();
             }
 
             return (value == null && isNaN(value))

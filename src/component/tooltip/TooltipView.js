@@ -701,7 +701,7 @@ define(function (require) {
                 }
                 else {
                     val = formatUtil.addCommas(
-                        val.toFixed(axis.getFormatPrecision())
+                        val.toFixed(axis.getPixelPrecision())
                     );
                 }
                 return val;
@@ -785,7 +785,6 @@ define(function (require) {
 
             var api = this._api;
 
-            // FIXME Not here
             var lastHover = this._lastHover;
             if (lastHover.payloadBatch && !contentNotChange) {
                 this._api.dispatchAction({

@@ -87,9 +87,7 @@ define(function (require) {
 
                 // 阴影指示器样式设置
                 shadowStyle: {
-                    color: 'rgba(150,150,150,0.3)',
-                    width: 'auto',
-                    type: 'default'
+                    color: 'rgba(150,150,150,0.3)'
                 }
             },
             textStyle: {

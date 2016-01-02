@@ -30,7 +30,7 @@ define(function (require) {
         var backup = axisProxy.getBackup();
 
         // [0, 500]: guess axis extent.
-        var precision = numberUtil.getFormatPrecision(valueRange, [0, 500]);
+        var precision = numberUtil.getPixelPrecision(valueRange, [0, 500]);
 
         axisModel.setNeedsCrossZero && axisModel.setNeedsCrossZero(
             isFull ? !backup.scale : false

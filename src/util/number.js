@@ -116,14 +116,14 @@ define(function (require) {
 
     /**
      * @param {Array.<number>} dataExtent
-     * @param {Array.<number>} axisExtent
+     * @param {Array.<number>} pixelExtent
      * @return {number}  precision
      */
-    number.getFormatPrecision = function (dataExtent, axisExtent) {
+    number.getPixelPrecision = function (dataExtent, pixelExtent) {
         var log = Math.log;
         var LN10 = Math.LN10;
         var dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
-        var sizeQuantity = Math.round(log(Math.abs(axisExtent[1] - axisExtent[0])) / LN10);
+        var sizeQuantity = Math.round(log(Math.abs(pixelExtent[1] - pixelExtent[0])) / LN10);
         return Math.max(
             -dataQuantity + sizeQuantity,
             0

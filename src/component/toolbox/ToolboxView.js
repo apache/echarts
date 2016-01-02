@@ -54,6 +54,10 @@ define(function (require) {
                 }
                 else {
                     feature = features[oldName];
+                    // If not exsits feature
+                    if (!feature) {
+                        return;
+                    }
                     feature.model = featureModel;
                 }
 

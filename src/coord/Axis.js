@@ -86,8 +86,8 @@ define(function (require) {
          * @param {Array.<number>} [dataExtent]
          * @return {number}
          */
-        getFormatPrecision: function (dataExtent) {
-            return numberUtil.getFormatPrecision(
+        getPixelPrecision: function (dataExtent) {
+            return numberUtil.getPixelPrecision(
                 dataExtent || this.scale.getExtent(),
                 this._extent
             );
