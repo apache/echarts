@@ -132,11 +132,14 @@ define(function (require) {
                     graphic.setHoverStyle(path);
 
                     if (toolboxModel.get('showTitle')) {
+                        path.__title = titles[iconName];
                         path.on('mouseover', function () {
                                 path.setStyle({
-                                    textPosition: 'bottom',
                                     text: titles[iconName],
-                                    textFill: hoverStyle.fill || hoverStyle.stroke || '#000'
+                                    textPosition: hoverStyle.textPosition,
+                                    textFill: hoverStyle.fill || hoverStyle.stroke || '#000',
+                                    textAlign: hoverStyle.textAlign,
+                                    textBaseline: hoverStyle.textBaseline
                                 });
                             })
                             .on('mouseout', function () {
@@ -163,11 +166,12 @@ define(function (require) {
 
             // Adjust icon title positions to avoid them out of screen
             group.eachChild(function (icon) {
+                var titleText = icon.__title;
                 var hoverStyle = icon.hoverStyle;
                 // May be background element
-                if (hoverStyle && hoverStyle.text) {
+                if (hoverStyle && titleText) {
                     var rect = textContain.getBoundingRect(
-                        hoverStyle.text, hoverStyle.font
+                        titleText, hoverStyle.font
                     );
                     var offsetX = icon.position[0] + group.position[0];
                     var offsetY = icon.position[1] + group.position[1] + itemSize;

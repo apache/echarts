@@ -13,7 +13,7 @@ define(function (require) {
         var angleAxisOptList = option.angleAxis;
         var radarSeries = filter(option.series, function (seriesOpt) {
             return seriesOpt.type === 'radar';
-        });
+        }) || [];
         if (polarOptList && radarSeries.length) {
             if (!isArray(polarOptList)) {
                 polarOptList = [polarOptList];

@@ -49,7 +49,7 @@ define(function (require) {
 
             iconStyle: {
                 normal: {
-                    borderColor: '#000',
+                    borderColor: '#666',
                     color: 'none'
                 },
                 emphasis: {
