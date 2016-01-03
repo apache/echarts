@@ -89,8 +89,6 @@ define(function (require) {
 
             function createIconPaths(featureModel, feature, featureName) {
                 var iconStyleModel = featureModel.getModel('iconStyle');
-                var normalStyle = iconStyleModel.getModel('normal').getItemStyle();
-                var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
 
                 // If one feature has mutiple icon. they are orginaized as
                 // {
@@ -116,6 +114,8 @@ define(function (require) {
 
                 var iconPaths = featureModel.iconPaths = {};
                 zrUtil.each(icons, function (icon, iconName) {
+                    var normalStyle = iconStyleModel.getModel('normal').getItemStyle();
+                    var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
                     var path = graphic.makePath(
                         icon, {
                             style: normalStyle,
@@ -136,10 +136,9 @@ define(function (require) {
                         path.on('mouseover', function () {
                                 path.setStyle({
                                     text: titles[iconName],
-                                    textPosition: hoverStyle.textPosition,
+                                    textPosition: hoverStyle.textPosition || 'bottom',
                                     textFill: hoverStyle.fill || hoverStyle.stroke || '#000',
-                                    textAlign: hoverStyle.textAlign,
-                                    textBaseline: hoverStyle.textBaseline
+                                    textAlign: hoverStyle.textAlign || 'center'
                                 });
                             })
                             .on('mouseout', function () {

@@ -41,7 +41,7 @@ define(function(require) {
     }
 
     DataZoom.defaultOption = {
-        show: false,
+        show: true,
         type: [],
         // Icon group
         icon: {
