@@ -259,6 +259,10 @@ define(function (require) {
         icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
         title: '数据视图',
         lang: ['数据视图', '关闭', '刷新'],
+        backgroundColor: '#fff',
+        textColor: '#000',
+        textareaColor: '#fff',
+        textareaBorderColor: '#333',
         buttonColor: '#c23531',
         buttonTextColor: '#fff'
     };
@@ -270,17 +274,22 @@ define(function (require) {
             container.removeChild(this._dom);
         }
         var root = document.createElement('div');
-        root.style.cssText = 'position:absolute;left:5px;top:5px;bottom:5px;right:5px;'
-            + 'background-color: white';
+        root.style.cssText = 'position:absolute;left:5px;top:5px;bottom:5px;right:5px;';
+        root.style.backgroundColor = model.get('backgroundColor') || '#fff';
 
         // Create elements
         var header = document.createElement('h4');
         var lang = model.get('lang') || [];
         header.innerHTML = lang[0] || model.get('title');
         header.style.cssText = 'margin: 10px 20px;';
+
         var textarea = document.createElement('textarea');
+        // Textarea style
         textarea.style.cssText = 'display:block;width:100%;font-size:14px;line-height:1.6rem;font-family:Monaco,Consolas,Courier New';
         textarea.readOnly = model.get('readOnly');
+        textarea.style.color = model.get('textColor');
+        textarea.style.borderColor = model.get('textareaBorderColor');
+        textarea.style.backgroundColor = model.get('textareaColor');
 
         var result = getContentFromModel(ecModel);
         textarea.value = result.value;
@@ -290,7 +299,7 @@ define(function (require) {
         buttonContainer.style.cssText = 'position:absolute;bottom:0;left:0;right:0;';
 
         var buttonStyle = 'float:right;margin-right:20px;border:none;'
-            + 'cursor:pointer;padding:4px 8px;font-size:12px;border-radius:3px';
+            + 'cursor:pointer;padding:2px 5px;font-size:12px;border-radius:3px';
         var closeButton = document.createElement('div');
         var refreshButton = document.createElement('div');
 
