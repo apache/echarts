@@ -207,6 +207,14 @@ define(function (require) {
         labelText.hoverStyle = getLabelStyle(data, idx, 'emphasis', labelHoverModel);
         labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
 
+        var smooth = labelLineModel.get('smooth');
+        if (smooth && smooth === true) {
+            smooth = 0.4;
+        }
+        labelLine.setShape({
+            smooth: smooth
+        });
+
         graphic.setHoverStyle(this);
 
         // Toggle selected

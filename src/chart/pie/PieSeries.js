@@ -108,6 +108,7 @@ define(function(require) {
                     length: 20,
                     // 引导线两段中的第二段长度
                     length2: 5,
+                    smooth: false,
                     lineStyle: {
                         // color: 各异,
                         width: 1,
