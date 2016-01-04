@@ -3,33 +3,174 @@ define(function (require) {
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
 
-    function createLabel(labelLayout) {
-        return new graphic.Text({
-            style: {
-                x: labelLayout.x,
-                y: labelLayout.y,
-                textAlign: labelLayout.textAlign,
-                textBaseline: labelLayout.textBaseline
-            },
-            z2: 10,
-            silent: true
-        });
+    /**
+     * Piece of pie including Sector, Label, LabelLine
+     * @constructor
+     * @extends {module:zrender/graphic/Group}
+     */
+    function FunnelPiece(data, idx) {
+
+        graphic.Group.call(this);
+
+        var polygon = new graphic.Polygon();
+        var labelLine = new graphic.Polyline();
+        var text = new graphic.Text();
+        this.add(polygon);
+        this.add(labelLine);
+        this.add(text);
+
+        this.updateData(data, idx, true);
+
+        // Hover to change label and labelLine
+        function onEmphasis() {
+            labelLine.ignore = labelLine.hoverIgnore;
+            text.ignore = text.hoverIgnore;
+        }
+        function onNormal() {
+            labelLine.ignore = labelLine.normalIgnore;
+            text.ignore = text.normalIgnore;
+        }
+        this.on('emphasis', onEmphasis)
+            .on('normal', onNormal)
+            .on('mouseover', onEmphasis)
+            .on('mouseout', onNormal);
     }
 
-    function fadeOut(el, group, enableAnimation) {
-        if (enableAnimation) {
-            el.animateTo({
-                style: {
-                    opacity: 0
-                }
-            }, 300, function () {
-                group.remove(el);
+    var funnelPieceProto = FunnelPiece.prototype;
+
+    function getLabelStyle(data, idx, state, labelModel) {
+        var textStyleModel = labelModel.getModel('textStyle');
+        var position = labelModel.get('position');
+        var isLabelInside = position === 'inside' || position === 'inner';
+        return {
+            fill: textStyleModel.getTextColor()
+                || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
+            textFont: textStyleModel.getFont(),
+            text: data.hostModel.getFormattedLabel(idx, state)
+                || data.getName(idx)
+        };
+    }
+
+    var opacityAccessPath = ['itemStyle', 'normal', 'opacity'];
+    funnelPieceProto.updateData = function (data, idx, firstCreate) {
+
+        var polygon = this.childAt(0);
+
+        var seriesModel = data.hostModel;
+        var itemModel = data.getItemModel(idx);
+        var layout = data.getItemLayout(idx);
+        var opacity = data.getItemModel(idx).get(opacityAccessPath);
+        opacity = opacity == null ? 1 : opacity;
+        if (firstCreate) {
+            polygon.setShape({
+                points: layout.points
             });
+            polygon.setStyle({ opacity : 0 });
+            graphic.updateProps(polygon, {
+                style: {
+                    opacity: opacity
+                }
+            }, seriesModel);
         }
         else {
-            group.remove(el);
+            graphic.initProps(polygon, {
+                shape: {
+                    points: layout.points
+                }
+            }, seriesModel);
         }
-    }
+
+        // Update common style
+        var itemStyleModel = itemModel.getModel('itemStyle');
+        var visualColor = data.getItemVisual(idx, 'color');
+
+        polygon.setStyle(
+            zrUtil.extend(
+                {
+                    fill: visualColor
+                },
+                itemStyleModel.getModel('normal').getItemStyle()
+            )
+        );
+        graphic.setHoverStyle(
+            polygon,
+            itemStyleModel.getModel('emphasis').getItemStyle()
+        );
+
+        polygon.setStyle(
+            zrUtil.extend(
+                {
+                    fill: visualColor
+                },
+                itemStyleModel.getModel('normal').getItemStyle()
+            )
+        );
+        polygon.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
+
+        this._updateLabel(data, idx);
+
+        graphic.setHoverStyle(this);
+    };
+
+    funnelPieceProto._updateLabel = function (data, idx) {
+
+        var labelLine = this.childAt(1);
+        var labelText = this.childAt(2);
+
+        var seriesModel = data.hostModel;
+        var itemModel = data.getItemModel(idx);
+        var layout = data.getItemLayout(idx);
+        var labelLayout = layout.label;
+        var visualColor = data.getItemVisual(idx, 'color');
+
+        graphic.updateProps(labelLine, {
+            shape: {
+                points: labelLayout.linePoints || labelLayout.linePoints
+            }
+        }, seriesModel);
+
+        graphic.updateProps(labelText, {
+            style: {
+                x: labelLayout.x,
+                y: labelLayout.y
+            }
+        }, seriesModel);
+        labelText.attr({
+            style: {
+                textAlign: labelLayout.textAlign,
+                textBaseline: labelLayout.textBaseline,
+                textFont: labelLayout.font
+            },
+            rotation: labelLayout.rotation,
+            origin: [labelLayout.x, labelLayout.y],
+            z2: 10
+        });
+
+        var labelModel = itemModel.getModel('label.normal');
+        var labelHoverModel = itemModel.getModel('label.emphasis');
+        var labelLineModel = itemModel.getModel('labelLine.normal');
+        var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
+
+        labelText.setStyle(getLabelStyle(data, idx, 'normal', labelModel));
+
+        labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
+        labelText.hoverIgnore = !labelHoverModel.get('show');
+
+        labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show');
+        labelLine.hoverIgnore = !labelLineHoverModel.get('show');
+
+        // Default use item visual color
+        labelLine.setStyle({
+            stroke: visualColor
+        });
+        labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
+
+        labelText.hoverStyle = getLabelStyle(data, idx, 'emphasis', labelHoverModel);
+        labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
+    };
+
+    zrUtil.inherits(FunnelPiece, graphic.Group);
+
 
     var Funnel = require('../../view/Chart').extend({
 
@@ -41,158 +182,34 @@ define(function (require) {
 
             var group = this.group;
 
-            var enableAnimation = ecModel.get('animation');
-
-            var opacityAccessPath = ['itemStyle', 'normal', 'opacity'];
             data.diff(oldData)
                 .add(function (idx) {
-                    var layout = data.getItemLayout(idx);
-                    var labelLayout = layout.label;
+                    var funnelPiece = new FunnelPiece(data, idx);
 
-                    var poly = new graphic.Polygon({
-                        shape: {
-                            points: layout.points
-                        }
-                    });
+                    data.setItemGraphicEl(idx, funnelPiece);
 
-                    var opacity = data.getItemModel(idx).get(opacityAccessPath);
-                    opacity = opacity == null ? 1 : opacity;
-                    if (enableAnimation) {
-                        poly.setStyle({ opacity : 0 });
-                        poly.animateTo({
-                            style: {
-                                opacity: opacity
-                            }
-                        }, 300, 'cubicIn');
-                    }
-                    else {
-                        poly.setStyle({ opacity: opacity });
-                    }
-
-                    var labelText = createLabel(labelLayout);
-
-                    var labelLine = new graphic.Polyline({
-                        shape: {
-                            points: labelLayout.linePoints
-                        },
-                        silent: true
-                    });
-                    poly.__labelLine = labelLine;
-                    poly.__labelText = labelText;
-
-                    group.add(poly);
-                    group.add(labelText);
-                    group.add(labelLine);
-
-                    data.setItemGraphicEl(idx, poly);
+                    group.add(funnelPiece);
                 })
                 .update(function (newIdx, oldIdx) {
-                    var poly = oldData.getItemGraphicEl(oldIdx);
+                    var piePiece = oldData.getItemGraphicEl(oldIdx);
 
-                    var layout = data.getItemLayout(newIdx);
-                    var labelLayout = layout.label;
+                    piePiece.updateData(data, newIdx);
 
-                    graphic.updateProps(poly, {
-                        shape: {
-                            points: layout.points
-                        }
-                    }, seriesModel);
-
-                    var labelLine = poly.__labelLine;
-                    var labelText = poly.__labelText;
-
-                    graphic.updateProps(labelLine, {
-                        shape: {
-                            points: labelLayout.linePoints
-                        }
-                    }, seriesModel);
-                    graphic.updateProps(labelText, {
-                        style: {
-                            x: labelLayout.x,
-                            y: labelLayout.y
-                        }
-                    }, seriesModel);
-                    // Set none animating style
-                    labelText.setStyle({
-                        textAlign: labelLayout.textAlign,
-                        textBaseline: labelLayout.textBaseline
-                    });
-                    var opacity = data.getItemModel(newIdx).get(opacityAccessPath);
-                    if (opacity == null) {
-                        opacity = 1;
-                    }
-                    poly.setStyle('opacity', opacity);
-
-                    group.add(poly);
-                    group.add(labelLine);
-                    group.add(labelText);
-
-                    data.setItemGraphicEl(newIdx, poly);
+                    group.add(piePiece);
+                    data.setItemGraphicEl(newIdx, piePiece);
                 })
                 .remove(function (idx) {
-                    var poly = oldData.getItemGraphicEl(idx);
-
-                    fadeOut(poly, group, enableAnimation);
-                    group.remove(poly.__labelLine);
-                    group.remove(poly.__labelText);
+                    var piePiece = oldData.getItemGraphicEl(idx);
+                    group.remove(piePiece);
                 })
                 .execute();
 
             this._data = data;
-
-            this._updateAll(data, seriesModel);
         },
 
         remove: function () {
             this.group.removeAll();
             this._data = null;
-        },
-
-        _updateAll: function (data, seriesModel) {
-            data.eachItemGraphicEl(function (poly, idx) {
-                var itemModel = data.getItemModel(idx);
-                var itemStyleModel = itemModel.getModel('itemStyle');
-
-                var visualColor = data.getItemVisual(idx, 'color');
-
-                poly.setStyle(
-                    zrUtil.extend(
-                        {
-                            fill: data.getItemVisual(idx, 'color')
-                        },
-                        itemStyleModel.getModel('normal').getItemStyle(['opacity'])
-                    )
-                );
-                graphic.setHoverStyle(
-                    poly,
-                    itemStyleModel.getModel('emphasis').getItemStyle()
-                );
-
-                // Set label style
-                var labelText = poly.__labelText;
-                var labelLine = poly.__labelLine;
-                var labelModel = itemModel.getModel('label.normal');
-                var textStyleModel = labelModel.getModel('textStyle');
-                var labelPosition = labelModel.get('position');
-                var isLabelInside = labelPosition === 'inside'
-                    || labelPosition === 'inner' || labelPosition === 'center';
-                labelText.setStyle({
-                    // Default use item visual color
-                    fill: textStyleModel.getTextColor()
-                        || isLabelInside ? '#fff' : visualColor,
-                    text: seriesModel.getFormattedLabel(idx, 'normal')
-                        || data.getName(idx),
-                    textFont: textStyleModel.getFont()
-                });
-                // Default use item visual color
-                labelLine.attr('ignore', !itemModel.get('labelLine.normal.show'));
-                labelLine.setStyle({
-                    stroke: visualColor
-                });
-                labelLine.setStyle(
-                    itemModel.getModel('labelLine.lineStyle').getLineStyle()
-                );
-            });
         }
     });
 

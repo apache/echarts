@@ -110,8 +110,6 @@ define(function (require) {
     piePieceProto.updateData = function (data, idx, firstCreate) {
 
         var sector = this.childAt(0);
-        var labelLine = this.childAt(1);
-        var labelText = this.childAt(2);
 
         var seriesModel = data.hostModel;
         var itemModel = data.getItemModel(idx);
@@ -133,32 +131,6 @@ define(function (require) {
             }, seriesModel);
         }
 
-        var labelLayout = layout.label;
-
-        graphic.updateProps(labelLine, {
-            shape: {
-                points: labelLayout.linePoints || [
-                    [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
-                ]
-            }
-        }, seriesModel);
-        graphic.updateProps(labelText, {
-            style: {
-                x: labelLayout.x,
-                y: labelLayout.y
-            }
-        }, seriesModel);
-        labelText.attr({
-            style: {
-                textAlign: labelLayout.textAlign,
-                textBaseline: labelLayout.textBaseline,
-                textFont: labelLayout.font
-            },
-            rotation: labelLayout.rotation,
-            origin: [labelLayout.x, labelLayout.y],
-            z2: 10
-        });
-
         // Update common style
         var itemStyleModel = itemModel.getModel('itemStyle');
         var visualColor = data.getItemVisual(idx, 'color');
@@ -176,25 +148,6 @@ define(function (require) {
             itemStyleModel.getModel('emphasis').getItemStyle()
         );
 
-        var labelModel = itemModel.getModel('label.normal');
-        var labelHoverModel = itemModel.getModel('label.emphasis');
-        var labelLineModel = itemModel.getModel('labelLine.normal');
-        var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
-
-        labelText.setStyle(getLabelStyle(data, idx, 'normal', labelModel));
-
-        labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
-        labelText.hoverIgnore = !labelHoverModel.get('show');
-
-        labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show');
-        labelLine.hoverIgnore = !labelLineHoverModel.get('show');
-
-        // Default use item visual color
-        labelLine.setStyle({
-            stroke: visualColor
-        });
-        labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
-
         sector.setStyle(
             zrUtil.extend(
                 {
@@ -204,18 +157,6 @@ define(function (require) {
             )
         );
         sector.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
-        labelText.hoverStyle = getLabelStyle(data, idx, 'emphasis', labelHoverModel);
-        labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
-
-        var smooth = labelLineModel.get('smooth');
-        if (smooth && smooth === true) {
-            smooth = 0.4;
-        }
-        labelLine.setShape({
-            smooth: smooth
-        });
-
-        graphic.setHoverStyle(this);
 
         // Toggle selected
         toggleItemSelected(
@@ -252,6 +193,77 @@ define(function (require) {
                 .on('emphasis', onEmphasis)
                 .on('normal', onNormal);
         }
+
+        this._updateLabel(data, idx);
+
+        graphic.setHoverStyle(this);
+    };
+
+    piePieceProto._updateLabel = function (data, idx) {
+
+        var labelLine = this.childAt(1);
+        var labelText = this.childAt(2);
+
+        var seriesModel = data.hostModel;
+        var itemModel = data.getItemModel(idx);
+        var layout = data.getItemLayout(idx);
+        var labelLayout = layout.label;
+        var visualColor = data.getItemVisual(idx, 'color');
+
+        graphic.updateProps(labelLine, {
+            shape: {
+                points: labelLayout.linePoints || [
+                    [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
+                ]
+            }
+        }, seriesModel);
+
+        graphic.updateProps(labelText, {
+            style: {
+                x: labelLayout.x,
+                y: labelLayout.y
+            }
+        }, seriesModel);
+        labelText.attr({
+            style: {
+                textAlign: labelLayout.textAlign,
+                textBaseline: labelLayout.textBaseline,
+                textFont: labelLayout.font
+            },
+            rotation: labelLayout.rotation,
+            origin: [labelLayout.x, labelLayout.y],
+            z2: 10
+        });
+
+        var labelModel = itemModel.getModel('label.normal');
+        var labelHoverModel = itemModel.getModel('label.emphasis');
+        var labelLineModel = itemModel.getModel('labelLine.normal');
+        var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
+
+        labelText.setStyle(getLabelStyle(data, idx, 'normal', labelModel));
+
+        labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
+        labelText.hoverIgnore = !labelHoverModel.get('show');
+
+        labelLine.ignore = labelLine.normalIgnore = !labelLineModel.get('show');
+        labelLine.hoverIgnore = !labelLineHoverModel.get('show');
+
+        // Default use item visual color
+        labelLine.setStyle({
+            stroke: visualColor
+        });
+        labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
+
+        labelText.hoverStyle = getLabelStyle(data, idx, 'emphasis', labelHoverModel);
+        labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
+
+        var smooth = labelLineModel.get('smooth');
+        if (smooth && smooth === true) {
+            smooth = 0.4;
+        }
+        labelLine.setShape({
+            smooth: smooth
+        });
     };
 
     zrUtil.inherits(PiePiece, graphic.Group);
