@@ -82,9 +82,8 @@ define(function(require) {
             itemHeight: null,             // 值域图形高度
             precision: 0,              // 小数精度，默认为0，无小数点
             color: ['#bf444c', '#d88273', '#f6efa6'],//颜色（deprecated，兼容ec2，对应数值由高到低）
-            // color: ['#006edd', '#e0ffff'],//颜色（deprecated，兼容ec2，对应数值由高到低）
 
-            // formatter: null,
+            formatter: null,
             text: null,                // 文本，如['高', '低']，兼容ec2，text[0]对应高值，text[1]对应低值
             textStyle: {
                 color: '#333'          // 值域文字颜色
@@ -160,60 +159,69 @@ define(function(require) {
         },
 
         /**
-         * @param {number} valueStart Can be dataBound[0 or 1].
-         * @param {number} valueEnd Can be null or dataBound[0 or 1].
+         * @example
+         * this.formatValueText(someVal); // format single numeric value to text.
+         * this.formatValueText(someVal, true); // format single category value to text.
+         * this.formatValueText([min, max]); // format numeric min-max to text.
+         * this.formatValueText([this.dataBound[0], max]); // using data lower bound.
+         * this.formatValueText([min, this.dataBound[1]]); // using data upper bound.
+         *
+         * @param {number|Array.<number>} value Real value, or this.dataBound[0 or 1].
+         * @param {boolean} [isCategory=false] Only available when value is number.
+         * @return {string}
          * @protected
          */
-        formatValueText: function(valueStart, valueEnd, isCategory) {
+        formatValueText: function(value, isCategory) {
             var option = this.option;
             var precision = option.precision;
             var dataBound = this.dataBound;
-            if (!isCategory) {
-                if (valueStart !== dataBound[0]) {
-                    valueStart = (+valueStart).toFixed(precision);
-                }
-                if (valueEnd != null && valueEnd !== dataBound[1]) {
-                    valueEnd = (+valueEnd).toFixed(precision);
-                }
-            }
-
             var formatter = option.formatter;
-            if (formatter) {
-                if (zrUtil.isString(formatter)) {
-                    return formatter
-                        .replace(
-                            '{value}',
-                            isCategory
-                                ? valueStart
-                                : (valueStart === dataBound[0] ? 'min' : valueStart)
-                        )
-                        .replace(
-                            '{value2}',
-                            isCategory
-                                ? valueEnd
-                                : (valueEnd === dataBound[1] ? 'max' : valueEnd)
-                        );
-                }
-                else if (zrUtil.isFunction(formatter)) {
-                    // FIXME
-                    // this? echarts instance?
-                    return formatter.call(null, valueStart, valueEnd);
-                }
+            var isMinMax;
+            var textValue;
+
+            if (zrUtil.isArray(value)) {
+                value = value.slice();
+                isMinMax = true;
             }
 
-            if (valueEnd == null) {
-                return valueStart;
+            if (!isCategory) {
+                textValue = isMinMax
+                    ? [toFixed(value[0]), toFixed(value[1])]
+                    : toFixed(value);
             }
-            else if (!isCategory) {
-                if (valueStart === dataBound[0]) {
-                    return '< ' + valueEnd;
+
+            if (zrUtil.isString(formatter)) {
+                return formatter
+                    .replace('{value}', isMinMax ? textValue[0] : textValue)
+                    .replace('{value2}', isMinMax ? textValue[1] : textValue);
+            }
+            else if (zrUtil.isFunction(formatter)) {
+                return isMinMax
+                    ? formatter(value[0], value[1])
+                    : formatter(value);
+            }
+
+            if (isMinMax) {
+                if (value[0] === dataBound[0]) {
+                    return '< ' + textValue[1];
                 }
-                else if (valueEnd === dataBound[1]) {
-                    return '> ' + valueStart;
+                else if (value[1] === dataBound[1]) {
+                    return '> ' + textValue[0];
                 }
                 else {
-                    return valueStart + ' - ' + valueEnd;
+                    return textValue[0] + ' - ' + textValue[1];
                 }
+            }
+            else { // Format single value (includes category case).
+                return textValue;
+            }
+
+            function toFixed(val) {
+                return val === dataBound[0]
+                    ? 'min'
+                    : val === dataBound[1]
+                    ? 'max'
+                    : (+val).toFixed(precision);
             }
         },
 

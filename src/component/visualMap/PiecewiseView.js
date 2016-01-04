@@ -33,11 +33,11 @@ define(function(require) {
             var showLabel = !viewData.endsText;
             var showEndsText = !showLabel;
 
-            showEndsText && this._renderEndsText(thisGroup, viewData.endsText[1], itemSize);
+            showEndsText && this._renderEndsText(thisGroup, viewData.endsText[0], itemSize);
 
             zrUtil.each(viewData.pieceList, renderItem, this);
 
-            showEndsText && this._renderEndsText(thisGroup, viewData.endsText[0], itemSize);
+            showEndsText && this._renderEndsText(thisGroup, viewData.endsText[1], itemSize);
 
             layout.box(
                 visualMapModel.get('orient'), thisGroup, visualMapModel.get('itemGap')
@@ -97,7 +97,7 @@ define(function(require) {
 
         /**
          * @private
-         * @return {Object} {peiceList, endsText} value order is [low, ..., high]
+         * @return {Object} {peiceList, endsText} The order is the same as screen pixel order.
          */
         _getViewData: function () {
             var visualMapModel = this.visualMapModel;
@@ -111,13 +111,13 @@ define(function(require) {
             var orient = visualMapModel.get('orient');
             var inverse = visualMapModel.get('inverse');
 
+            // Order of pieceList is always [low, ..., high]
             if (orient === 'horizontal' ? inverse : !inverse) {
-                // Value order of pieceList is [high, ..., low]
                 pieceList.reverse();
-                // Value order of endsText is [high, low]
-                if (endsText) {
-                    endsText = endsText.slice().reverse();
-                }
+            }
+            // Origin order of endsText is [high, low]
+            else if (endsText) {
+                endsText = endsText.slice().reverse();
             }
 
             return {pieceList: pieceList, endsText: endsText};
@@ -132,8 +132,13 @@ define(function(require) {
                 representValue = piece.value;
             }
             else {
-                var pieceInterval = piece.interval || [];
-                representValue = (pieceInterval[0] + pieceInterval[1]) / 2;
+                if (piece.value != null) {
+                    representValue = piece.value;
+                }
+                else {
+                    var pieceInterval = piece.interval || [];
+                    representValue = (pieceInterval[0] + pieceInterval[1]) / 2;
+                }
             }
 
             var visualObj = this.getControllerVisual(representValue);

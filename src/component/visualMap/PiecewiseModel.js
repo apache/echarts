@@ -9,6 +9,26 @@ define(function(require) {
         type: 'visualMap.piecewise',
 
         /**
+         * Order Rule:
+         *
+         * option.category / option.splitList / option.text:
+         *     If !option.inverse,
+         *     Order when vertical: ['top', ..., 'bottom'].
+         *     Order when horizontal: ['left', ..., 'right'].
+         *     If option.inverse, the meaning of
+         *     the order should be reversed.
+         *
+         * this._pieceList:
+         *     The order is always [low, ..., high].
+         *
+         * Mapping from location to low-high:
+         *     If !option.inverse
+         *     When vertical, top is high.
+         *     When horizontal, right is high.
+         *     If option.inverse, reverse.
+         */
+
+        /**
          * @protected
          */
         defaultOption: {
@@ -31,9 +51,8 @@ define(function(require) {
             this.baseMergeOption(newOption);
 
             /**
-             * Compatible with ec2, value order is [high, ..., low]
+             * The order is always [low, ..., high].
              * [{text: string, interval: Array.<number>}, ...]
-             *
              * @private
              * @type {Array.<Object>}
              */
@@ -58,16 +77,12 @@ define(function(require) {
                 mappingOption.mappingMethod = mappingMethod;
                 mappingOption.categories = categories && zrUtil.clone(categories);
 
-                var intervals = mappingOption.intervals = [];
-                var specifiedVisuals = mappingOption.specifiedVisuals = [];
-
-                zrUtil.each(this._pieceList, function (piece, index) {
-                    if (piece.interval) {
-                        intervals[index] = piece.interval;
+                mappingOption.pieceList = zrUtil.map(this._pieceList, function (piece) {
+                    var piece = zrUtil.clone(piece);
+                    if (state !== 'inRange') {
+                        piece.visual = null;
                     }
-                    if (state === 'inRange') {
-                        specifiedVisuals[index] = piece.visuals;
-                    }
+                    return piece;
                 });
             });
         },
@@ -128,28 +143,33 @@ define(function(require) {
                 var max = i === splitNumber - 1 ? dataExtent[1] : (curr + splitStep);
 
                 this._pieceList.push({
-                    text: this.formatValueText(curr, max),
+                    text: this.formatValueText([curr, max]),
                     interval: [curr, max]
                 });
             }
         },
 
         _resetForCategory: function () {
-            zrUtil.each(this.option.categories, function (cate) {
+            var thisOption = this.option;
+            zrUtil.each(thisOption.categories, function (cate) {
+                // FIXME category模式也使用pieceList，但在visualMapping中不是使用pieceList。
+                // 是否改一致。
                 this._pieceList.push({
-                    text: this.formatValueText(cate, null, true),
+                    text: this.formatValueText(cate, true),
                     value: cate
                 });
             }, this);
+
+            // See "Order Rule".
+            var inverse = thisOption.inverse;
+            if (thisOption.orient === 'vertical' ? !inverse : inverse) {
+                 this._pieceList.reverse();
+            }
         },
 
         _resetForCustomizedSplit: function () {
-            var option = this.option;
-            var splitList = option.splitList;
-            var splitNumber = splitList.length;
-
-            for (var i = 0; i < splitNumber; i++) {
-                var splitListItem = splitList[splitNumber - 1 - i];
+            var thisOption = this.option;
+            zrUtil.each(thisOption.splitList, function (splitListItem, index) {
 
                 if (!zrUtil.isObject(splitListItem)) {
                     splitListItem = {value: splitListItem};
@@ -175,16 +195,28 @@ define(function(require) {
                     var max = splitListItem.max;
                     min == null && (min = -Infinity);
                     max == null && (max = Infinity);
+                    if (min === max) {
+                        // Consider: [{min: 5, max: 5, visual: {...}}, {min: 0, max: 5}],
+                        // we use value to lift the priority when min === max
+                        item.value = min;
+                    }
                     item.interval = [min, max];
 
                     if (!hasLabel) {
-                        item.text = this.formatValueText(min, max);
+                        item.text = this.formatValueText([min, max]);
                     }
                 }
 
-                item.visuals = VisualMapping.retrieveVisuals(splitListItem);
+                item.visual = VisualMapping.retrieveVisuals(splitListItem);
 
-                this._pieceList.unshift(item);
+                this._pieceList.push(item);
+
+            }, this);
+
+            // See "Order Rule".
+            var inverse = thisOption.inverse;
+            if (thisOption.orient === 'vertical' ? !inverse : inverse) {
+                 this._pieceList.reverse();
             }
         },
 
@@ -217,21 +249,8 @@ define(function(require) {
          * @override
          */
         getValueState: function (value) {
-            var pieceList = this._pieceList;
-            var targetIndex;
-            for (var i = 0, len = pieceList.length; i < len; i++) {
-                var targetPiece = pieceList[i];
-                if (targetPiece.hasOwnProperty('value')) {
-                    if (targetPiece.value === value) {
-                        targetIndex = i;
-                        break;
-                    }
-                }
-                else if (targetPiece.interval[0] <= value && value <= targetPiece.interval[1]) {
-                    targetIndex = i;
-                    break;
-                }
-            }
+            var targetIndex = VisualMapping.findPieceIndex(value, this._pieceList);
+
             return targetIndex != null
                 ? (this.option.selected[targetIndex] ? 'inRange' : 'outOfRange')
                 : 'outOfRange';

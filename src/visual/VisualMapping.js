@@ -17,16 +17,23 @@ define(function (require) {
      * @param {string} [option.mappingMethod] 'linear' or 'piecewise' or 'category'
      * @param {Array.<number>=} [option.dataExtent] [minExtent, maxExtent],
      *                                              required when mappingMethod is 'linear'
-     * @param {Array.<Array>=} [option.intervals] [[min1, max1], [min2, max2], ...],
-     *                                            required when mappingMethod is 'piecewise'
-     * @param {Array.<string>=} [option.categories] ['cate1', 'cate2', 'cate3', ...],
+     * @param {Array.<Object>=} [option.pieceList] [
+     *                                             {value: someValue},
+     *                                             {interval: [min1, max1], visual: {...}},
+     *                                             {interval: [min2, max2]}
+     *                                             ],
+     *                                            required when mappingMethod is 'piecewise'.
+     *                                            Visual for only each piece can be specified.
+     * @param {Array.<string|Object>=} [option.categories] [
+     *                                            'cate1', 'cate2',
+     *                                            {name: 'cate4', visual: {...}},
+     *                                            ...
+     *                                            ],
      *                                            required when mappingMethod is 'category'.
      *                                            If no option.categories, it represents
      *                                            categories is [0, 1, 2, ...].
+     *                                            Visual for only each piece can be specified.
      * @param {boolean} [option.loop=false] Whether loop mapping when mappingMethod is 'category'.
-     * @param {Array.<Object>=} [option.specifiedVisuals] [visuals1, visuals2, ...],
-     *                                            specific visual of some interval, available
-     *                                            when mappingMethod is 'piecewise' or 'category'
      * @param {(Array|Object|*)} [option.visual]  Visual data.
      *                                            when mappingMethod is 'category',
      *                                            visual data can be array or object
@@ -74,6 +81,9 @@ define(function (require) {
 
         zrUtil.extend(this, visualHandlers[visualType]);
 
+        if (mappingMethod === 'piecewise') {
+            preprocessForPiecewise(thisOption);
+        }
         if (mappingMethod === 'category') {
             preprocessForCategory(thisOption);
         }
@@ -146,7 +156,7 @@ define(function (require) {
                 }
                 else {
                     var normalized = this._normalizeData(value);
-                    var result = this._getSpecifiedVisual(normalized);
+                    var result = this._getSpecifiedVisual(value);
 
                     if (result == null) {
                         result = isCategory(this)
@@ -192,7 +202,7 @@ define(function (require) {
 
             mapValueToVisual: function (value) {
                 var normalized = this._normalizeData(value);
-                var result = this._getSpecifiedVisual(normalized);
+                var result = this._getSpecifiedVisual(value);
                 var visual = this.option.visual;
 
                 if (result == null) {
@@ -212,7 +222,7 @@ define(function (require) {
 
             mapValueToVisual: function (value) {
                 var normalized = this._normalizeData(value);
-                var result = this._getSpecifiedVisual(normalized);
+                var result = this._getSpecifiedVisual(value);
                 var visual = this.option.visual;
 
                 if (result == null) {
@@ -224,6 +234,18 @@ define(function (require) {
             }
         }
     };
+
+    function preprocessForPiecewise(thisOption) {
+        var pieceList = thisOption.pieceList;
+        thisOption.hasSpecialVisual = false;
+
+        zrUtil.each(pieceList, function (piece, index) {
+            piece.originIndex = index;
+            if (piece.visual) {
+                thisOption.hasSpecialVisual = true;
+            }
+        });
+    }
 
     function preprocessForCategory(thisOption) {
         // Hash categories.
@@ -241,9 +263,16 @@ define(function (require) {
             }
         }
 
+        thisOption.hasSpecialVisual = false;
         var categoryMap = thisOption.categoryMap = {};
         each(categories, function (cate, index) {
-            categoryMap[cate] = index;
+            if (!zrUtil.isObject(cate)) {
+                cate = categories[index] = {name: cate};
+            }
+            if (cate.visual) {
+                thisOption.hasSpecialVisual = true;
+            }
+            categoryMap[cate.name] = index;
         });
 
         // Process visual map input.
@@ -267,7 +296,7 @@ define(function (require) {
         // then we can mapping them to CATEGORY_DEFAULT_VISUAL_INDEX.
         for (var i = categories.length - 1; i >= 0; i--) {
             if (visual[i] == null) {
-                delete categoryMap[categories[i]];
+                delete categoryMap[categories[i].name];
                 categories.pop();
             }
         }
@@ -299,7 +328,7 @@ define(function (require) {
 
             mapValueToVisual: function (value) {
                 var normalized = this._normalizeData(value);
-                var result = this._getSpecifiedVisual(normalized);
+                var result = this._getSpecifiedVisual(value);
                 var visual = this.option.visual;
 
                 if (result == null) {
@@ -342,16 +371,10 @@ define(function (require) {
         },
 
         piecewise: function (value) {
-            var intervals = this.option.intervals;
-            var len = intervals.length;
-
-            for (var i = 0, interval; i < len; i++) {
-                if ((interval = intervals[i])
-                    && interval[0] <= value
-                    && value <= interval[1]
-                ) {
-                    return linearMap(i, [0, len - 1], [0, 1], true);
-                }
+            var pieceList = this.option.pieceList;
+            var pieceIndex = VisualMapping.findPieceIndex(value, pieceList);
+            if (pieceIndex != null) {
+                return linearMap(pieceIndex, [0, pieceList.length - 1], [0, 1], true);
             }
         },
 
@@ -368,21 +391,25 @@ define(function (require) {
 
         linear: zrUtil.noop, // Linear do not support this feature.
 
-        piecewise: function (visualType, normalized) {
-            var specifiedVisuals = this.option.specifiedVisuals;
-            if (specifiedVisuals && specifiedVisuals.length) {
-                var visual = arrayGetByNormalizedValue(specifiedVisuals, normalized);
-                if (visual) {
-                    return visual[visualType];
+        piecewise: function (visualType, value) {
+            var thisOption = this.option;
+            var pieceList = thisOption.pieceList;
+            if (thisOption.hasSpecialVisual) {
+                var pieceIndex = VisualMapping.findPieceIndex(value, pieceList);
+                var piece = pieceList[pieceIndex];
+                if (piece && piece.visual) {
+                    return piece.visual[visualType];
                 }
             }
         },
 
         category: function (visualType, categoryIndex) {
-            var specifiedVisuals = this.option.specifiedVisuals;
+            var thisOption = this.option;
+            var categories = thisOption.categories;
             var visual;
-            if (specifiedVisuals && (visual = specifiedVisuals[categoryIndex])) {
-                return visual[visualType];
+            if (thisOption.hasSpecialVisual && categories) {
+                var visual = categories[categoryIndex].visual;
+                return visual ? visual[visualType] : null;
             }
         }
     };
@@ -450,17 +477,20 @@ define(function (require) {
      * @public
      * @param {Object} obj
      * @return {Oject} new object containers visual values.
+     *                 If no visuals, return null.
      */
     VisualMapping.retrieveVisuals = function (obj) {
         var ret = {};
+        var hasVisual;
 
         obj && each(visualHandlers, function (h, visualType) {
             if (obj.hasOwnProperty(visualType)) {
-                ret = obj[visualType];
+                ret[visualType] = obj[visualType];
+                hasVisual = true;
             }
         });
 
-        return ret;
+        return hasVisual ? ret : null;
     };
 
     /**
@@ -494,6 +524,43 @@ define(function (require) {
         });
 
         return visualTypes;
+    };
+
+    /**
+     * @public {Array.<Object>} [{value: ..., interval: [min, max]}, ...]
+     * @return {number} index
+     */
+    VisualMapping.findPieceIndex = function (value, pieceList) {
+        // value has high priority.
+        for (var i = 0, len = pieceList.length; i < len; i++) {
+            var piece = pieceList[i];
+            if (piece.value != null && piece.value === value) {
+                return i;
+            }
+        }
+
+        for (var i = 0, len = pieceList.length; i < len; i++) {
+            var piece = pieceList[i];
+            var interval = piece.interval;
+            if (interval) {
+                if (interval[0] === -Infinity) {
+                    if (value < interval[1]) {
+                        return i;
+                    }
+                }
+                else if (interval[1] === Infinity) {
+                    if (interval[0] < value) {
+                        return i;
+                    }
+                }
+                else if (
+                    piece.interval[0] <= value
+                    && value <= piece.interval[1]
+                ) {
+                    return i;
+                }
+            }
+        }
     };
 
     return VisualMapping;

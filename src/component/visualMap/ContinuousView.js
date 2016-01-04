@@ -17,7 +17,7 @@ define(function(require) {
     // high data value: this._dataInterval[1] and has high coord.
     // The logic of transform is implemented in this._createBarGroup.
 
-    var PiecewiseVisualMapView = VisualMapView.extend({
+    var ContinuousVisualMapView = VisualMapView.extend({
 
         type: 'visualMap.continuous',
 
@@ -456,5 +456,5 @@ define(function(require) {
             : [[0, 0], [textSize, 0], [textSize, textSize]];
     }
 
-    return PiecewiseVisualMapView;
+    return ContinuousVisualMapView;
 });
