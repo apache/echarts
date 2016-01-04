@@ -282,6 +282,7 @@ define(function (require) {
         var lang = model.get('lang') || [];
         header.innerHTML = lang[0] || model.get('title');
         header.style.cssText = 'margin: 10px 20px;';
+        header.style.color = model.get('textColor');
 
         var textarea = document.createElement('textarea');
         // Textarea style
