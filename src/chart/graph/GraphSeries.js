@@ -142,7 +142,7 @@ define(function (require) {
             nodeScaleRatio: 0.6,
 
             // Line width scale ratio in roam
-            edgeScaleRatio: 0.1,
+            // edgeScaleRatio: 0.1,
 
             // categories: [],
 

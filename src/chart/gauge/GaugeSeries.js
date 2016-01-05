@@ -40,7 +40,7 @@ define(function (require) {
                 // 默认显示，属性show控制显示与否
                 show: true,
                 lineStyle: {       // 属性lineStyle控制线条样式
-                    color: [[0.2, '#91c7ae'],[0.8, '#63869e'],[1, '#c23531']],
+                    color: [[0.2, '#91c7ae'], [0.8, '#63869e'], [1, '#c23531']],
                     width: 30
                 }
             },
@@ -72,7 +72,7 @@ define(function (require) {
                     type: 'solid'
                 }
             },
-            axisLabel: {           // 坐标轴文本标签，详见axis.axisLabel
+            axisLabel: {
                 show: true,
                 // formatter: null,
                 textStyle: {       // 其余属性默认使用全局文本样式，详见TEXTSTYLE

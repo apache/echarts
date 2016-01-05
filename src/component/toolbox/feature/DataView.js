@@ -195,10 +195,27 @@ define(function (require) {
         var data = [];
         for (var i = 0; i < lines.length; i++) {
             var items = trim(lines[i]).split(itemSplitRegex);
-            data[i] = [];
+            var name = '';
+            var value;
+            var hasName = false;
+            if (isNaN(items[0])) { // First item is name
+                hasName = true;
+                name = items[0];
+                items = items.slice(1);
+                data[i] = {
+                    name: name,
+                    value: []
+                };
+                value = data[i].value;
+            }
+            else {
+                value = data[i] = [];
+            }
             for (var j = 0; j < items.length; j++) {
-                var item = items[j];
-                data[i].push(item);
+                value.push(+items[j]);
+            }
+            if (value.length === 1) {
+                hasName ? (data[i].value = value[0]) : (data[i] = value[0]);
             }
         }
 
@@ -384,6 +401,10 @@ define(function (require) {
         return zrUtil.map(newData, function (newVal, idx) {
             var original = originalData && originalData[idx];
             if (zrUtil.isObject(original) && !zrUtil.isArray(original)) {
+                if (zrUtil.isObject(newVal) && !zrUtil.isArray(newVal)) {
+                    newVal = newVal.value;
+                }
+                // Original data has option
                 return zrUtil.defaults({
                     value: newVal
                 }, original);
