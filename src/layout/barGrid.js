@@ -193,7 +193,8 @@ define(function(require) {
                     height = coord[1] - lastCoord;
 
                     if (Math.abs(height) < barMinHeight) {
-                        height = (height < 0 ? -1 : 1) * barMinHeight;
+                        // Include zero to has a positive bar
+                        height = (height <= 0 ? -1 : 1) * barMinHeight;
                     }
                     lastStackCoords[stackId][idx][sign] += height;
                 }

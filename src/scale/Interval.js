@@ -162,18 +162,7 @@ define(function (require) {
          * @param {boolean} [fixMax=false]
          */
         niceExtent: function (approxTickNum, fixMin, fixMax) {
-            this.niceTicks(approxTickNum, fixMin, fixMax);
-
             var extent = this._extent;
-            var interval = this._interval;
-
-            if (!fixMin) {
-                extent[0] = numberUtil.round(mathFloor(extent[0] / interval) * interval);
-            }
-            if (!fixMax) {
-                extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
-            }
-
             // If extent start and end are same, expand them
             if (extent[0] === extent[1]) {
                 // Expand extent
@@ -187,6 +176,19 @@ define(function (require) {
                 extent[0] = -1;
                 this._niceExtent = [-1, 1];
                 this._interval = 0.5;
+                return;
+            }
+
+            this.niceTicks(approxTickNum, fixMin, fixMax);
+
+            // var extent = this._extent;
+            var interval = this._interval;
+
+            if (!fixMin) {
+                extent[0] = numberUtil.round(mathFloor(extent[0] / interval) * interval);
+            }
+            if (!fixMax) {
+                extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
             }
         }
     });
