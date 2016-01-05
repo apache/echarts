@@ -31,8 +31,8 @@ define(function (require) {
         'stackedOn', '_nameList', '_idList', '_rawData'
     ];
 
-    var transferImmuProperties = function (a, b) {
-        zrUtil.each(IMMUTABLE_PROPERTIES, function (propName) {
+    var transferImmuProperties = function (a, b, wrappedMethod) {
+        zrUtil.each(IMMUTABLE_PROPERTIES.concat(wrappedMethod || []), function (propName) {
             if (b.hasOwnProperty(propName)) {
                 a[propName] = b[propName];
             }
@@ -273,10 +273,6 @@ define(function (require) {
 
         this._nameList = nameList;
         this._idList = idList;
-    };
-
-    listProto.getDimValue = function () {
-
     };
 
     /**
@@ -676,7 +672,7 @@ define(function (require) {
         var indices = list.indices = this.indices;
 
         // FIXME If needs stackedOn, value may already been stacked
-        transferImmuProperties(list, this);
+        transferImmuProperties(list, this, this._wrappedMethods);
 
         var storage = list._storage = {};
         var thisStorage = this._storage;
@@ -745,11 +741,11 @@ define(function (require) {
         }
         else {
             model = temporaryModel;
-            // FIXME If return null when idx not exists
-            model.option = this._rawData[idx];
-            model.parentModel = hostModel;
-            model.ecModel = hostModel.ecModel;
         }
+        // FIXME If return null when idx not exists
+        model.option = this._rawData[idx];
+        model.parentModel = hostModel;
+        model.ecModel = hostModel.ecModel;
         return model;
     };
 
@@ -922,11 +918,29 @@ define(function (require) {
         // FIXME
         list._storage = this._storage;
 
-        transferImmuProperties(list, this);
+        transferImmuProperties(list, this, this._wrappedMethods);
 
         list.indices = this.indices.slice();
 
         return list;
+    };
+
+    /**
+     * Wrap some method to add more feature
+     * @param {string} methodName
+     * @param {Function} injectFunction
+     */
+    listProto.wrapMethod = function (methodName, injectFunction) {
+        var originalMethod = this[methodName];
+        if (typeof originalMethod !== 'function') {
+            return;
+        }
+        this._wrappedMethods = this._wrappedMethods || [];
+        this._wrappedMethods.push(methodName);
+        this[methodName] = function () {
+            var res = originalMethod.apply(this, arguments);
+            return injectFunction.call(this, res);
+        };
     };
 
     return List;
