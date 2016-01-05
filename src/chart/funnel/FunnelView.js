@@ -41,7 +41,7 @@ define(function (require) {
     function getLabelStyle(data, idx, state, labelModel) {
         var textStyleModel = labelModel.getModel('textStyle');
         var position = labelModel.get('position');
-        var isLabelInside = position === 'inside' || position === 'inner';
+        var isLabelInside = position === 'inside' || position === 'inner' || position === 'center';
         return {
             fill: textStyleModel.getTextColor()
                 || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
