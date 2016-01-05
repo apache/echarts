@@ -4,6 +4,7 @@ define(function(require) {
 
     var List = require('../../data/List');
     var modelUtil = require('../../util/model');
+    var completeDimensions = require('../../data/helper/completeDimensions');
 
     require('../../echarts').extendSeriesModel({
 
@@ -22,7 +23,8 @@ define(function(require) {
         },
 
         getInitialData: function (option, ecModel) {
-            var list = new List(['value'], this);
+            var dimensions = completeDimensions(['value'], option.data);
+            var list = new List(dimensions, this);
             list.initData(option.data);
             return list;
         },
