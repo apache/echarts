@@ -50,6 +50,12 @@ define(function (require) {
             return lineData;
         },
 
+        formatTooltip: function (dataIndex) {
+            var fromName = this.fromData.getName(dataIndex);
+            var toName = this.toData.getName(dataIndex);
+            return fromName + ' > ' + toName;
+        },
+
         defaultOption: {
             coordinateSystem: 'geo',
             zlevel: 0,
