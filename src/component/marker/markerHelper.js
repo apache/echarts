@@ -20,20 +20,20 @@ define(function (require) {
 
     function markerTypeCalculatorWithExtent(percent, data, baseAxisDim, valueAxisDim, valueIndex) {
         var extent = data.getDataExtent(valueAxisDim);
-        var valueArr = [];
+        var coordArr = [];
         var min = extent[0];
         var max = extent[1];
         var val = (max - min) * percent + min;
         var dataIndex = data.indexOfNearest(valueAxisDim, val);
-        valueArr[1 - valueIndex] = data.get(baseAxisDim, dataIndex);
-        valueArr[valueIndex] = data.get(valueAxisDim, dataIndex, true);
+        coordArr[1 - valueIndex] = data.get(baseAxisDim, dataIndex);
+        coordArr[valueIndex] = data.get(valueAxisDim, dataIndex, true);
 
         var precision = getPrecision(data, valueAxisDim, dataIndex);
         if (precision >= 0) {
-            valueArr[valueIndex] = +valueArr[valueIndex].toFixed(precision);
+            coordArr[valueIndex] = +coordArr[valueIndex].toFixed(precision);
         }
 
-        return valueArr;
+        return coordArr;
     }
 
     var curry = zrUtil.curry;
@@ -65,7 +65,7 @@ define(function (require) {
     /**
      * Transform markPoint data item to format used in List by do the following
      * 1. Calculate statistic like `max`, `min`, `average`
-     * 2. Convert `item.xAxis`, `item.yAxis` to `item.value` array
+     * 2. Convert `item.xAxis`, `item.yAxis` to `item.coord` array
      * @param  {module:echarts/data/List} data
      * @param  {module:echarts/coord/*} [coordSys]
      * @param  {Object} item
@@ -73,9 +73,9 @@ define(function (require) {
      */
     var dataTransform = function (data, coordSys, item) {
         // 1. If not specify the position with pixel directly
-        // 2. If value is not a data array. Which uses xAxis, yAxis to specify the value on each dimension
+        // 2. If `coord` is not a data array. Which uses `xAxis`, `yAxis` to specify the coord on each dimension
         if ((isNaN(item.x) || isNaN(item.y))
-            && !zrUtil.isArray(item.value)
+            && !zrUtil.isArray(item.coord)
             && coordSys
         ) {
             var valueAxisDim;
@@ -101,26 +101,17 @@ define(function (require) {
             // Transform the properties xAxis, yAxis, radiusAxis, angleAxis, geoCoord to value
             item = zrUtil.extend({}, item);
             if (item.type && markerTypeCalculator[item.type] && baseAxis && valueAxis) {
-                var value = markerTypeCalculator[item.type](
+                item.coord = markerTypeCalculator[item.type](
                     data, baseAxis.dim, valueAxisDim, valueIndex
                 );
-                if (item.value != null) {
-                    value.push(+item.value);
-                }
-                item.value = value;
             }
             else {
-                var originalValue = item.value;
                 // FIXME Only has one of xAxis and yAxis.
-                item.value = [
+                item.coord = [
                     item.xAxis != null ? item.xAxis : item.radiusAxis,
                     item.yAxis != null ? item.yAxis : item.angleAxis
                 ];
-                if (originalValue != null) {
-                    item.value.push(+originalValue);
-                }
             }
-            item.__rawValue = item.value[valueIndex];
         }
         return item;
     };
@@ -135,12 +126,23 @@ define(function (require) {
      */
     var dataFilter = function (coordSys, item) {
         // Alwalys return true if there is no coordSys
-        return (coordSys && item.value && (item.x == null || item.y == null))
-            ? coordSys.containData(item.value) : true;
+        return (coordSys && item.coord && (item.x == null || item.y == null))
+            ? coordSys.containData(item.coord) : true;
+    };
+
+    var dimValueGetter = function (item, dimName, dataIndex, dimIndex) {
+        // x, y, radius, angle
+        if (dimIndex < 2) {
+            return item.coord && item.coord[dimIndex];
+        }
+        else {
+            item.value;
+        }
     };
 
     return {
         dataTransform: dataTransform,
-        dataFilter: dataFilter
+        dataFilter: dataFilter,
+        dimValueGetter: dimValueGetter
     };
 });

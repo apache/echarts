@@ -18,7 +18,7 @@ define(function (require) {
         var mlType = item.type;
         if (!zrUtil.isArray(item)
             && mlType === 'min' || mlType === 'max' || mlType === 'average'
-            ) {
+        ) {
             if (item.valueIndex != null) {
                 baseAxis = coordSys.getAxis(coordSys.dimensions[1 - item.valueIndex]);
                 valueAxis = coordSys.getAxis(coordSys.dimensions[item.valueIndex]);
@@ -48,7 +48,6 @@ define(function (require) {
             mlFrom[valueAxisKey] = mlTo[valueAxisKey] = value;
 
             item = [mlFrom, mlTo, { // Extra option for tooltip and label
-                __rawValue: value,
                 type: mlType
             }];
         }
@@ -79,11 +78,6 @@ define(function (require) {
             var name = data.getName(dataIndex);
             return this.name + '<br />'
                 + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
-        },
-
-        getRawValue: function (idx) {
-            var option = this._data.getItemModel(idx).option;
-            return zrUtil.retrieve(option && option.__rawValue, option && option.value, '');
         },
 
         getRawDataArray: function () {
@@ -257,10 +251,14 @@ define(function (require) {
                 zrUtil.curry(markLineFilter, coordSys)
             );
             fromData.initData(
-                zrUtil.map(optData, function (item) { return item[0]; })
+                zrUtil.map(optData, function (item) { return item[0]; }),
+                null,
+                markerHelper.dimValueGetter
             );
             toData.initData(
-                zrUtil.map(optData, function (item) { return item[1]; })
+                zrUtil.map(optData, function (item) { return item[1]; }),
+                null,
+                markerHelper.dimValueGetter
             );
             lineData.initData(
                 zrUtil.map(optData, function (item) { return item[2]; })

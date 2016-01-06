@@ -37,7 +37,7 @@ define(function (require) {
             var lineData = new List(['value'], this);
 
             function geoCoordGetter(item, dim, dataIndex, dimIndex) {
-                return item.geoCoord && item.geoCoord[dimIndex];
+                return item.coord && item.coord[dimIndex];
             }
 
             fromData.initData(fromDataArr, null, geoCoordGetter);
