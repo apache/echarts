@@ -157,8 +157,6 @@ define(function (require) {
             // 选择模式，默认关闭，可选single，multiple
             // selectedMode: false,
             dataRangeHoverLink: true,
-            hoverable: true,
-            clickable: true,
             // 是否开启缩放及漫游模式
             // roam: false,
 
