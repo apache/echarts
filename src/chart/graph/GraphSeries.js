@@ -33,7 +33,20 @@ define(function (require) {
             var nodes = option.data || option.nodes;
             if (nodes && edges) {
                 var graph = createGraphFromNodeEdge(nodes, edges, this, true);
-                return graph.data;
+                var list = graph.data;
+                var self = this;
+                // Overwrite list.getItemModel to
+                list.wrapMethod('getItemModel', function (model) {
+                    var categoriesModels = self._categoriesModels;
+                    var categoryIdx = model.getShallow('category');
+                    var categoryModel = categoriesModels[categoryIdx];
+                    if (categoryModel) {
+                        categoryModel.parentModel = model.parentModel;
+                        model.parentModel = categoryModel;
+                    }
+                    return model;
+                });
+                return list;
             }
         },
 
@@ -66,12 +79,18 @@ define(function (require) {
         _updateCategoriesData: function () {
             var categories = zrUtil.map(this.option.categories || [], function (category) {
                 // Data must has value
-                return category.value != null ? category : zrUtil.extend({value : 0}, category);
+                return category.value != null ? category : zrUtil.extend({
+                    value: 0
+                }, category);
             });
             var categoriesData = new List(['value'], this);
             categoriesData.initData(categories);
 
             this._categoriesData = categoriesData;
+
+            this._categoriesModels = categoriesData.mapArray(function (idx) {
+                return categoriesData.getItemModel(idx, true);
+            });
         },
 
         /**
@@ -142,7 +161,7 @@ define(function (require) {
             nodeScaleRatio: 0.6,
 
             // Line width scale ratio in roam
-            edgeScaleRatio: 0.1,
+            // edgeScaleRatio: 0.1,
 
             // categories: [],
 

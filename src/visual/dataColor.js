@@ -2,9 +2,8 @@
 define(function (require) {
 
     return function (seriesType, ecModel) {
-        var colorList = ecModel.get('color');
-
         ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+            var colorList = seriesModel.get('color');
             var dataAll = seriesModel.getRawData();
             if (!ecModel.isSeriesFiltered(seriesModel)) {
                 var data = seriesModel.getData();

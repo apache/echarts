@@ -5,6 +5,7 @@ define(function(require) {
     var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
+    var completeDimensions = require('../../data/helper/completeDimensions');
 
     var dataSelectableMixin = require('../helper/dataSelectableMixin');
 
@@ -34,7 +35,8 @@ define(function(require) {
         },
 
         getInitialData: function (option, ecModel) {
-            var list = new List(['value'], this);
+            var dimensions = completeDimensions(['value'], option.data);
+            var list = new List(dimensions, this);
             list.initData(option.data);
             return list;
         },

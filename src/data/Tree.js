@@ -307,7 +307,7 @@ define(function(require) {
         /**
          * @private
          * @readOnly
-         * @type {Array.<module:echarts/model/Model}
+         * @type {module:echarts/model/Model}
          */
         this.hostModel = hostModel;
 
