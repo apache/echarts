@@ -74,7 +74,7 @@ define(function (require) {
     var dataTransform = function (data, coordSys, item) {
         // 1. If not specify the position with pixel directly
         // 2. If value is not a data array. Which uses xAxis, yAxis to specify the value on each dimension
-        if (isNaN(item.x) || isNaN(item.y)
+        if ((isNaN(item.x) || isNaN(item.y))
             && !zrUtil.isArray(item.value)
             && coordSys
         ) {
