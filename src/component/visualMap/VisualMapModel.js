@@ -77,7 +77,7 @@ define(function(require) {
                                        // 接受数组分别设定上右下左边距，同css
             textGap: 10,               //
             precision: 0,              // 小数精度，默认为0，无小数点
-            color: ['#bf444c', '#d88273', '#f6efa6'],//颜色（deprecated，兼容ec2，对应数值由高到低）
+            color: ['#bf444c', '#d88273', '#f6efa6'], //颜色（deprecated，兼容ec2，顺序同pieces，不同于inRange/outOfRange）
 
             formatter: null,
             text: null,                // 文本，如['高', '低']，兼容ec2，text[0]对应高值，text[1]对应低值
@@ -331,6 +331,7 @@ define(function(require) {
                 // Compatible with ec2 dataRange.color.
                 // The mapping order of dataRange.color is: [high value, ..., low value]
                 // whereas inRange.color and outOfRange.color is [low value, ..., high value]
+                // Notice: ec2 has no inverse.
                 if (isArray(thisOption.color)
                     // If there has been inRange: {symbol: ...}, adding color is a mistake.
                     // So adding color only when no inRange defined.
