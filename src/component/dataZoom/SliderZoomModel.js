@@ -13,6 +13,7 @@ define(function(require) {
          * @protected
          */
         defaultOption: {
+            show: true,
             // left: {number},         // 水平安放位置，默认为根据grid参数适配，可选为：
                                        // {number}（x坐标，单位px）
             // top: {number},          // 垂直安放位置，默认为根据grid参数适配，可选为：

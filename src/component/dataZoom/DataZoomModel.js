@@ -25,7 +25,6 @@ define(function(require) {
         defaultOption: {
             zlevel: 0,                 // 一级层叠
             z: 4,                      // 二级层叠
-            show: true,
             orient: null,             // 布局方式，默认根据axisIndex自适应。可选值为：'horizontal' ¦ 'vertical'
             xAxisIndex: null,         // 默认控制所有横向类目
             yAxisIndex: null,         // 默认控制所有横向类目
