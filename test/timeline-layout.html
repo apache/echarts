@@ -60,7 +60,8 @@
 
                 makeChart({
                     timeline: {lineStyle: {show: false},
-                    itemStyle: {normal: {symbol: 'circle', color: 'rgba(194,53,49, 0.5)'}},
+                    symbol: 'circle',
+                    itemStyle: {normal: {color: 'rgba(194,53,49, 0.5)'}},
                     controlStyle: {showPrevBtn: false, showNextBtn: false, normal: {color: 'rgba(194,53,49, 0.5)', borderColor: 'rgba(194,53,49, 0.5)'}},
                     orient: 'vertical', inverse: true, x: 0, y: 40, width: 55, height: '80%'
                 }});
@@ -72,22 +73,14 @@
                             '2002-01-01','2003-01-01','2004-01-01','2005-01-01',
                             {
                                 value: '2006-01-01',
-                                itemStyle: {
-                                    normal: {
-                                        symbol: 'pin',
-                                        symbolSize: 30
-                                    }
-                                }
+                                symbol: 'pin',
+                                symbolSize: 30
                             },
                             '2007-01-01','2008-01-01','2009-01-01','2010-01-01',
                             {
                                 value: '2011-01-01',
-                                itemStyle: {
-                                    normal: {
-                                        symbol: 'pin',
-                                        symbolSize: 30
-                                    }
-                                }
+                                symbol: 'pin',
+                                symbolSize: 30
                             }
                         ]
                     }

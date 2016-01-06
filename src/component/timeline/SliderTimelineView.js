@@ -363,7 +363,7 @@ define(function (require) {
                     position: [tickCoord, 0],
                     onclick: bind(this._changeTimeline, this, dataIndex)
                 };
-                var el = giveSymbol(itemStyleModel, group, symbolOpt);
+                var el = giveSymbol(itemModel, itemStyleModel, group, symbolOpt);
                 graphic.setHoverStyle(el, hoverStyleModel.getItemStyle());
 
                 if (itemModel.get('tooltip')) {
@@ -507,7 +507,7 @@ define(function (require) {
 
             // Reuse when exists, for animation and drag.
             this._currentPointer = giveSymbol(
-                pointerModel, this._mainGroup, {}, this._currentPointer, callback
+                pointerModel, pointerModel, this._mainGroup, {}, this._currentPointer, callback
             );
         },
 
@@ -646,10 +646,10 @@ define(function (require) {
     /**
      * Create symbol or update symbol
      */
-    function giveSymbol(itemStyleModel, group, opt, symbol, callback) {
-        var symbolType = itemStyleModel.get('symbol');
+    function giveSymbol(hostModel, itemStyleModel, group, opt, symbol, callback) {
+        var symbolType = hostModel.get('symbol');
         var color = itemStyleModel.get('color');
-        var symbolSize = itemStyleModel.get('symbolSize');
+        var symbolSize = hostModel.get('symbolSize');
         var halfSymbolSize = symbolSize / 2;
         var itemStyle = itemStyleModel.getItemStyle(['color', 'symbol', 'symbolSize']);
 

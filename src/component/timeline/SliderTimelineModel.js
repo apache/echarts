@@ -24,6 +24,9 @@ define(function(require) {
             tooltip: false,                    // boolean or Object
                                                // data item may also have tootip attr.
 
+            symbol: 'emptyCircle',
+            symbolSize: 10,
+
             lineStyle: {
                 show: true,
                 width: 2,
@@ -52,13 +55,10 @@ define(function(require) {
             },
             itemStyle: {
                 normal: {
-                    symbol: 'emptyCircle',
-                    symbolSize: 10,
                     color: '#304654',
                     borderWidth: 1
                 },
                 emphasis: {
-                    symbolSize: 10,
                     color: '#c23531'
                 }
             },

@@ -33,7 +33,7 @@ define(function(require) {
             height: 40,
             padding: 5,
 
-            controlPosition: 'left',           // 'right' | 'none'
+            controlPosition: 'left',           // 'left' 'right' 'top' 'bottom' 'none'
             autoPlay: false,
             rewind: false,                     // 反向播放
             loop: true,
