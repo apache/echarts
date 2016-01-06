@@ -49,7 +49,7 @@ define(function(require) {
 
             function renderItem(item) {
                 var itemGroup = new graphic.Group();
-                itemGroup.onclick = zrUtil.bind(this._onItemClick, this, item.index);
+                itemGroup.onclick = zrUtil.bind(this._onItemClick, this, item.piece);
 
                 this._createItemSymbol(itemGroup, item.piece, [0, 0, itemSize[0], itemSize[1]]);
 
@@ -153,16 +153,21 @@ define(function(require) {
         /**
          * @private
          */
-        _onItemClick: function (index) {
+        _onItemClick: function (piece) {
             var visualMapModel = this.visualMapModel;
-            var selected = zrUtil.clone(visualMapModel.get('selected'));
+            var option = visualMapModel.option;
+            var selected = zrUtil.clone(option.selected);
+            var newKey = visualMapModel.getSelectedMapKey(piece);
 
-            if (visualMapModel.get('selectedMode') === 'single') {
-                zrUtil.each(selected, function (item, index) {
-                    selected[index] = false;
+            if (option.selectedMode === 'single') {
+                selected[newKey] = true;
+                zrUtil.each(selected, function (o, key) {
+                    selected[key] = key === newKey;
                 });
             }
-            selected[index] = !selected[index];
+            else {
+                selected[newKey] = !selected[newKey];
+            }
 
             this.api.dispatchAction({
                 type: 'selectDataRange',

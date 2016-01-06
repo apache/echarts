@@ -18,15 +18,21 @@ define(function(require) {
                 return;
             }
 
-            var splitList = opt.splitList;
-            if (splitList && zrUtil.isArray(splitList)) {
-                each(splitList, function (splitListItem) {
-                    if (zrUtil.isObject(splitListItem)) {
-                        if (has(splitListItem, 'start') && !has(splitListItem, 'min')) {
-                            splitListItem.min = splitListItem.start;
+            // rename splitList to pieces
+            if (has(opt, 'splitList') && !has(opt, 'pieces')) {
+                opt.pieces = opt.splitList;
+                delete opt.splitList;
+            }
+
+            var pieces = opt.pieces;
+            if (pieces && zrUtil.isArray(pieces)) {
+                each(pieces, function (piece) {
+                    if (zrUtil.isObject(piece)) {
+                        if (has(piece, 'start') && !has(piece, 'min')) {
+                            piece.min = piece.start;
                         }
-                        if (has(splitListItem, 'end') && !has(splitListItem, 'max')) {
-                            splitListItem.max = splitListItem.end;
+                        if (has(piece, 'end') && !has(piece, 'max')) {
+                            piece.max = piece.end;
                         }
                     }
                 });

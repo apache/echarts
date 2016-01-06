@@ -140,15 +140,16 @@
                     },
                     visualMap: [
                         {
-                            left: 'right',
-                            top: 'top',
+                            left: null,
+                            right: 0,
                             dimension: 7,
-                            categories: ['优', '良', '轻度污染', '中度污染', '重度污染', '严重污染'],
+                            selected: {
+                                '轻度污染': false,
+                                '良': false
+                            },
+                            categories: ['严重污染', '重度污染', '中度污染', '轻度污染', '良', '优'],
                             calculable: true,
                             precision: 0.1,
-                            textStyle: {
-                                color: '#fff'
-                            },
                             inRange: {
                                 symbolSize: 30,
                                 symbol: {
@@ -157,18 +158,19 @@
                                 }
                             },
                             outOfRange: {
-                                color: '#000',
-                                symbolSize: 30,
+                                color: '#777',
+                                symbolSize: {
+                                    '优': 50,
+                                    '': 30
+                                },
                                 symbol: {
                                     '优': 'diamond',
                                     '': 'circle'
                                 }
                             },
-                            // controller: {
-                                // inRange: {
-                                    // color: {'': 'red'}
-                                // }
-                            // }
+                            textStyle: {
+                                color: '#fff'
+                            }
                         }
                     ],
                     series: [

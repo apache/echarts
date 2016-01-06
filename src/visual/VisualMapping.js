@@ -24,15 +24,10 @@ define(function (require) {
      *                                             ],
      *                                            required when mappingMethod is 'piecewise'.
      *                                            Visual for only each piece can be specified.
-     * @param {Array.<string|Object>=} [option.categories] [
-     *                                            'cate1', 'cate2',
-     *                                            {name: 'cate4', visual: {...}},
-     *                                            ...
-     *                                            ],
+     * @param {Array.<string|Object>=} [option.categories] ['cate1', 'cate2']
      *                                            required when mappingMethod is 'category'.
      *                                            If no option.categories, it represents
      *                                            categories is [0, 1, 2, ...].
-     *                                            Visual for only each piece can be specified.
      * @param {boolean} [option.loop=false] Whether loop mapping when mappingMethod is 'category'.
      * @param {(Array|Object|*)} [option.visual]  Visual data.
      *                                            when mappingMethod is 'category',
@@ -263,16 +258,9 @@ define(function (require) {
             }
         }
 
-        thisOption.hasSpecialVisual = false;
         var categoryMap = thisOption.categoryMap = {};
         each(categories, function (cate, index) {
-            if (!zrUtil.isObject(cate)) {
-                cate = categories[index] = {name: cate};
-            }
-            if (cate.visual) {
-                thisOption.hasSpecialVisual = true;
-            }
-            categoryMap[cate.name] = index;
+            categoryMap[cate] = index;
         });
 
         // Process visual map input.
@@ -296,7 +284,7 @@ define(function (require) {
         // then we can mapping them to CATEGORY_DEFAULT_VISUAL_INDEX.
         for (var i = categories.length - 1; i >= 0; i--) {
             if (visual[i] == null) {
-                delete categoryMap[categories[i].name];
+                delete categoryMap[categories[i]];
                 categories.pop();
             }
         }
@@ -387,9 +375,12 @@ define(function (require) {
     };
 
 
+    // FIXME
+    // refactor
     var specifiedVisualGetters = {
 
-        linear: zrUtil.noop, // Linear do not support this feature.
+        // Linear do not support this feature.
+        linear: zrUtil.noop,
 
         piecewise: function (visualType, value) {
             var thisOption = this.option;
@@ -403,15 +394,10 @@ define(function (require) {
             }
         },
 
-        category: function (visualType, categoryIndex) {
-            var thisOption = this.option;
-            var categories = thisOption.categories;
-            var visual;
-            if (thisOption.hasSpecialVisual && categories) {
-                var visual = categories[categoryIndex].visual;
-                return visual ? visual[visualType] : null;
-            }
-        }
+        // Category do not need to support this feature.
+        // Visual can be set in visualMap.inRange or
+        // visualMap.outOfRange directly.
+        category: zrUtil.noop
     };
 
     /**

@@ -4,14 +4,14 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var VisualMapping = require('../../visual/VisualMapping');
 
-    return VisualMapModel.extend({
+    var PiecewiseModel = VisualMapModel.extend({
 
         type: 'visualMap.piecewise',
 
         /**
          * Order Rule:
          *
-         * option.category / option.splitList / option.text:
+         * option.categories / option.pieces / option.text / option.selected:
          *     If !option.inverse,
          *     Order when vertical: ['top', ..., 'bottom'].
          *     Order when horizontal: ['left', ..., 'right'].
@@ -32,16 +32,20 @@ define(function(require) {
          * @protected
          */
         defaultOption: {
-            selected: null,
-            align: 'auto',             // 'auto', 'left', 'right'
-            itemWidth: 20,             // 值域图形宽度，线性渐变水平布局宽度为该值 * 10
-            itemHeight: 14,            // 值域图形高度，线性渐变垂直布局高度为该值 * 10
+            selected: null,             // Object. If not specified, means selected.
+                                        // When pieces and splitNumber: {'0': true, '5': true}
+                                        // When categories: {'cate1': false, 'cate3': true}
+            align: 'auto',              // 'auto', 'left', 'right'
+            itemWidth: 20,              // 值域图形宽度
+            itemHeight: 14,             // 值域图形高度
             itemSymbol: 'roundRect',
-            splitList: null,           // 值顺序：由高到低, item can be:
-                                    // {min, max, value, color, colorSaturation, colorAlpha, symbol, symbolSize}
+            pieceList: null,            // 值顺序：由高到低, item can be:
+                                        // {min, max, value, color, colorSaturation, colorAlpha, symbol, symbolSize}
+            categories: null,           // 描述 category 数据。如：['some1', 'some2', 'some3']，设置后，min max失效。
+            splitNumber: 5,             // 分割段数，默认为5，为0时为线性渐变 (continous)
             selectedMode: 'multiple',
-            itemGap: 10                // 各个item之间的间隔，单位px，默认为10，
-                                       // 横向布局时为水平间隔，纵向布局时为纵向间隔
+            itemGap: 10                 // 各个item之间的间隔，单位px，默认为10，
+                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
         },
 
         /**
@@ -61,69 +65,129 @@ define(function(require) {
             this.resetTargetSeries(newOption, isInit);
             this.resetExtent();
 
+            /**
+             * 'pieces', 'categories', 'splitNumber'
+             * @type {string}
+             */
+            var mode = this._mode = this._decideMode();
+
+            resetMethods[this._mode].call(this);
+
+            this._resetSelected(newOption, isInit);
+
             var categories = this.option.categories;
-
-            this.useCustomizedSplit()
-                ? this._resetForCustomizedSplit()
-                : categories
-                ? this._resetForCategory()
-                : this._resetForAutoSplit();
-
-            this._resetSelected();
-
-            var mappingMethod = categories ? 'category' : 'piecewise';
-
             this.resetVisual(function (mappingOption, state) {
-                mappingOption.mappingMethod = mappingMethod;
-                mappingOption.categories = categories && zrUtil.clone(categories);
-
-                mappingOption.pieceList = zrUtil.map(this._pieceList, function (piece) {
-                    var piece = zrUtil.clone(piece);
-                    if (state !== 'inRange') {
-                        piece.visual = null;
-                    }
-                    return piece;
-                });
+                if (mode === 'categories') {
+                    mappingOption.mappingMethod = 'category';
+                    mappingOption.categories = zrUtil.clone(categories);
+                }
+                else {
+                    mappingOption.mappingMethod = 'piecewise';
+                    mappingOption.pieceList = zrUtil.map(this._pieceList, function (piece) {
+                        var piece = zrUtil.clone(piece);
+                        if (state !== 'inRange') {
+                            piece.visual = null;
+                        }
+                        return piece;
+                    });
+                }
             });
         },
 
-        _resetSelected: function () {
+        _resetSelected: function (newOption, isInit) {
             var thisOption = this.option;
-            var selected = thisOption.selected;
             var pieceList = this._pieceList;
 
-            if (thisOption.selectedMode === 'single') {
-                if (!selected) {
-                    selected = thisOption.selected = [];
-                }
+            // Selected do not merge but all override.
+            var selected = (isInit ? thisOption : newOption).selected || {};
+            thisOption.selected = selected;
 
+            // Consider 'not specified' means true.
+            zrUtil.each(pieceList, function (piece, index) {
+                var key = this.getSelectedMapKey(piece);
+                if (!(key in selected)) {
+                    selected[key] = true;
+                }
+            }, this);
+
+            if (thisOption.selectedMode === 'single') {
                 // Ensure there is only one selected.
                 var hasSel = false;
+
                 zrUtil.each(pieceList, function (piece, index) {
-                    if (selected[index]) {
+                    var key = this.getSelectedMapKey(piece);
+                    if (selected[key]) {
                         hasSel
-                            ? (selected[index] = false)
+                            ? (selected[key] = false)
                             : (hasSel = true);
                     }
-                });
-
-                // Ensure there is at least one selected.
-                if (!hasSel) {
-                    selected[0] = true;
-                }
+                }, this);
             }
-            else { // thisOption.selectedMode === 'multiple'
-                if (!selected) {
-                    // Default: all selected.
-                    selected = thisOption.selected = [];
-                    zrUtil.each(pieceList, function () {
-                        selected.push(true);
-                    });
-                }
-            }
+            // thisOption.selectedMode === 'multiple', default: all selected.
         },
 
-        _resetForAutoSplit: function () {
+        /**
+         * @public
+         */
+        getSelectedMapKey: function (piece) {
+            return this._mode === 'categories'
+                ? piece.value + '' : piece.index + '';
+        },
+
+        /**
+         * @public
+         */
+        getPieceList: function () {
+            return this._pieceList;
+        },
+
+        /**
+         * @private
+         * @return {string}
+         */
+        _decideMode: function () {
+            var option = this.option;
+
+            return option.pieces && option.pieces.length > 0
+                ? 'pieces'
+                : this.option.categories
+                ? 'categories'
+                : 'splitNumber';
+        },
+
+        /**
+         * @public
+         * @override
+         */
+        setSelected: function (selected) {
+            this.option.selected = zrUtil.clone(selected);
+        },
+
+        /**
+         * @public
+         * @override
+         */
+        getValueState: function (value) {
+            var pieceList = this._pieceList;
+            var index = VisualMapping.findPieceIndex(value, pieceList);
+
+            return index != null
+                ? (this.option.selected[this.getSelectedMapKey(pieceList[index])]
+                    ? 'inRange' : 'outOfRange'
+                )
+                : 'outOfRange';
+        }
+
+    });
+
+    /**
+     * Key is this._mode
+     * @type {Object}
+     * @this {module:echarts/component/viusalMap/PiecewiseMode}
+     */
+    var resetMethods = {
+
+        splitNumber: function () {
             var thisOption = this.option;
             var precision = thisOption.precision;
             var dataExtent = this.getExtent();
@@ -144,12 +208,13 @@ define(function(require) {
 
                 this._pieceList.push({
                     text: this.formatValueText([curr, max]),
+                    index: i,
                     interval: [curr, max]
                 });
             }
         },
 
-        _resetForCategory: function () {
+        categories: function () {
             var thisOption = this.option;
             zrUtil.each(thisOption.categories, function (cate) {
                 // FIXME category模式也使用pieceList，但在visualMapping中不是使用pieceList。
@@ -161,38 +226,35 @@ define(function(require) {
             }, this);
 
             // See "Order Rule".
-            var inverse = thisOption.inverse;
-            if (thisOption.orient === 'vertical' ? !inverse : inverse) {
-                 this._pieceList.reverse();
-            }
+            normalizeReverse(thisOption, this._pieceList);
         },
 
-        _resetForCustomizedSplit: function () {
+        pieces: function () {
             var thisOption = this.option;
-            zrUtil.each(thisOption.splitList, function (splitListItem, index) {
+            zrUtil.each(thisOption.pieces, function (pieceListItem, index) {
 
-                if (!zrUtil.isObject(splitListItem)) {
-                    splitListItem = {value: splitListItem};
+                if (!zrUtil.isObject(pieceListItem)) {
+                    pieceListItem = {value: pieceListItem};
                 }
 
-                var item = {text: ''};
+                var item = {text: '', index: index};
                 var hasLabel;
 
-                if (splitListItem.label != null) {
-                    item.text = splitListItem.label;
+                if (pieceListItem.label != null) {
+                    item.text = pieceListItem.label;
                     hasLabel = true;
                 }
 
-                if (splitListItem.hasOwnProperty('value')) {
-                    item.value = splitListItem.value;
+                if (pieceListItem.hasOwnProperty('value')) {
+                    item.value = pieceListItem.value;
 
                     if (!hasLabel) {
                         item.text = this.formatValueText(item.value);
                     }
                 }
                 else {
-                    var min = splitListItem.min;
-                    var max = splitListItem.max;
+                    var min = pieceListItem.min;
+                    var max = pieceListItem.max;
                     min == null && (min = -Infinity);
                     max == null && (max = Infinity);
                     if (min === max) {
@@ -207,55 +269,23 @@ define(function(require) {
                     }
                 }
 
-                item.visual = VisualMapping.retrieveVisuals(splitListItem);
+                item.visual = VisualMapping.retrieveVisuals(pieceListItem);
 
                 this._pieceList.push(item);
 
             }, this);
 
             // See "Order Rule".
-            var inverse = thisOption.inverse;
-            if (thisOption.orient === 'vertical' ? !inverse : inverse) {
-                 this._pieceList.reverse();
-            }
-        },
-
-        /**
-         * @public
-         */
-        getPieceList: function () {
-            return this._pieceList;
-        },
-
-        /**
-         * @protected
-         * @return {boolean}
-         */
-        useCustomizedSplit: function () {
-            var option = this.option;
-            return option.splitList && option.splitList.length > 0;
-        },
-
-        /**
-         * @public
-         * @override
-         */
-        setSelected: function (selected) {
-            this.option.selected = selected.slice();
-        },
-
-        /**
-         * @public
-         * @override
-         */
-        getValueState: function (value) {
-            var targetIndex = VisualMapping.findPieceIndex(value, this._pieceList);
-
-            return targetIndex != null
-                ? (this.option.selected[targetIndex] ? 'inRange' : 'outOfRange')
-                : 'outOfRange';
+            normalizeReverse(thisOption, this._pieceList);
         }
+    };
 
-    });
+    function normalizeReverse(thisOption, arr) {
+        var inverse = thisOption.inverse;
+        if (thisOption.orient === 'vertical' ? !inverse : inverse) {
+             arr.reverse();
+        }
+    }
 
+    return PiecewiseModel;
 });

@@ -40,18 +40,17 @@ option = {
         x:'left',
         data:['订单量']
     },
-    dataRange: {
-        x: 'left',
-        y: 'bottom',
-        splitList: [
-            {start: 1500},
-            {start: 900, end: 1500},
-            {start: 310, end: 1000},
-            {start: 200, end: 300},
-            {start: 10, end: 200, label: '10 到 200（自定义label）'},
+    visualMap: {
+        // selectedMode: 'single',
+        pieces: [
+            {min: 1500},
+            {min: 900, max: 1500},
+            {min: 310, max: 1000},
+            {min: 200, max: 300},
+            {min: 10, max: 200, label: '10 到 200（自定义label）'},
             {value: 123, label: '123（自定义特殊颜色）', color: 'grey'},
-            {start: 5, end: 5, label: '5（自定义特殊颜色）', color: 'black'},
-            {end: 5}
+            {min: 5, max: 5, label: '5（自定义特殊颜色）', color: 'black'},
+            {max: 5}
         ],
         color: ['#E0022B', '#E09107', '#A3E00B']
     },

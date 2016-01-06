@@ -41,35 +41,33 @@ define(function(require) {
          * @protected
          */
         defaultOption: {
-            zlevel: 0,                  // 一级层叠
-            z: 4,                       // 二级层叠
             show: true,
 
-            min: 0,                     // 最小值，
-            max: 200,                   // 最大值，
-            categories: null,          // 描述 category 数据。如：['some1', 'some2', 'some3']，设置后，min max失效。
+            zlevel: 0,
+            z: 4,
+
+                                    // set min: 0, max: 200, only for campatible with ec2.
+                                    // In fact min max should not have default value.
+            min: 0,                 // min value, must specified if pieces is not specified.
+            max: 200,               // max value, must specified if pieces is not specified.
+
             dimension: null,
+            inRange: null,          // 'color', 'colorHue', 'colorSaturation', 'colorLightness', 'colorAlpha',
+                                    // 'symbol', 'symbolSize'
+            outOfRange: null,       // 'color', 'colorHue', 'colorSaturation',
+                                    // 'colorLightness', 'colorAlpha',
+                                    // 'symbol', 'symbolSize'
 
-            inRange: null,             // 'color', 'colorHue', 'colorSaturation', 'colorLightness', 'colorAlpha',
-                                       // 'symbol', 'symbolSize'
-
-            outOfRange: null,          // 'color', 'colorHue', 'colorSaturation', 'colorLightness', 'colorAlpha',
-                                       // 'symbol', 'symbolSize'
-
-            orient: 'vertical',        // 布局方式，默认为垂直布局，可选为：
-                                       // 'horizontal' ¦ 'vertical'
-            left: 'left',              // 水平安放位置，默认为全图左对齐，可选为：
-                                       // 'center' ¦ 'left' ¦ 'right'
-                                       // ¦ {number}（x坐标，单位px）
-            top: 'bottom',             // 垂直安放位置，默认为全图底部，可选为：
-                                       // 'top' ¦ 'bottom' ¦ 'center'
-                                       // ¦ {number}（y坐标，单位px）
-            // right
-            // bottom
+            left: 0,                // 'center' ¦ 'left' ¦ 'right' ¦ {number} (px)
+            right: null,            // The same as left.
+            top: null,              // 'top' ¦ 'bottom' ¦ 'center' ¦ {number} (px)
+            bottom: 0,              // The same as top.
+            itemWidth: null,
+            itemHeight: null,
             inverse: false,
+            orient: 'vertical',        // 'horizontal' ¦ 'vertical'
 
             seriesIndex: null,          // 所控制的series indices，默认所有有value的series.
-            splitNumber: 5,            // 分割段数，默认为5，为0时为线性渐变 (continous)
             backgroundColor: 'rgba(0,0,0,0)',
             borderColor: '#ccc',       // 值域边框颜色
             contentColor: '#5793f3',
@@ -78,8 +76,6 @@ define(function(require) {
             padding: 5,                // 值域内边距，单位px，默认各方向内边距为5，
                                        // 接受数组分别设定上右下左边距，同css
             textGap: 10,               //
-            itemWidth: null,              // 值域图形宽度
-            itemHeight: null,             // 值域图形高度
             precision: 0,              // 小数精度，默认为0，无小数点
             color: ['#bf444c', '#d88273', '#f6efa6'],//颜色（deprecated，兼容ec2，对应数值由高到低）
 
@@ -184,11 +180,12 @@ define(function(require) {
                 isMinMax = true;
             }
 
-            if (!isCategory) {
-                textValue = isMinMax
+            textValue = isCategory
+                ? value
+                : (isMinMax
                     ? [toFixed(value[0]), toFixed(value[1])]
-                    : toFixed(value);
-            }
+                    : toFixed(value)
+                );
 
             if (zrUtil.isString(formatter)) {
                 return formatter

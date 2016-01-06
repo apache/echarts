@@ -6,8 +6,8 @@ define(function (require) {
                 !option.categories
                 && (
                     !(
-                        option.splitList
-                            ? option.splitList.length > 0
+                        option.pieces
+                            ? option.pieces.length > 0
                             : option.splitNumber > 0
                     )
                     || option.calculable
