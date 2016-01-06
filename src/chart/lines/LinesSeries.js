@@ -65,7 +65,7 @@ define(function (require) {
             geoIndex: 0,
 
             // symbol: null,
-            symbolSize: 10,
+            // symbolSize: 10,
             // symbolRotate: null,
 
             effect: {

@@ -4,6 +4,7 @@ define(function (require) {
     var echarts = require('../../echarts');
     var SeriesModel = require('../../model/Series');
     var zrUtil = require('zrender/core/util');
+    var completeDimensions = require('../../data/helper/completeDimensions');
 
     var formatUtil = require('../../util/format');
     var encodeHTML = formatUtil.encodeHTML;
@@ -51,15 +52,15 @@ define(function (require) {
             option = this._fillOption(option);
             this.option = option;
 
-            SeriesModel.prototype.init.apply(this, arguments);
+            this.$superApply('init', arguments);
 
             this.updateSelectedMap();
         },
 
         getInitialData: function (option) {
-            var list = new List([{
-                name: 'value'
-            }], this);
+            var dimensions = completeDimensions(['value'], option.data);
+
+            var list = new List(dimensions, this);
 
             list.initData(option.data);
 
