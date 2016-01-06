@@ -131,7 +131,9 @@ define(function(require) {
                 }
             },
 
-            animationEasing: 'cubicOut'
+            animationEasing: 'cubicOut',
+
+            data: []
         }
     });
 
