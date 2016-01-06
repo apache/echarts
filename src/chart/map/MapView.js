@@ -54,9 +54,6 @@ define(function (require) {
                 if (isNaN(value)) {
                     return;
                 }
-                var itemModel = data.getItemModel(idx);
-                var labelModel = itemModel.getModel('label.normal');
-                var textStyleModel = labelModel.getModel('textStyle');
 
                 var layout = data.getItemLayout(idx);
 
@@ -67,12 +64,6 @@ define(function (require) {
 
                 var point = layout.point;
                 var offset = layout.offset;
-
-                var showLabel = labelModel.get('show');
-
-                var labelText = data.getName(idx);
-                var labelColor = textStyleModel.getTextColor();
-                var labelFont = textStyleModel.getFont();
 
                 var circle = new graphic.Circle({
                     style: {
@@ -87,13 +78,44 @@ define(function (require) {
                     z2: 10
                 });
 
-                if (showLabel && !offset) {
+                // First data on the same region
+                if (!offset) {
+                    var labelText = data.getName(idx);
+
+                    var itemModel = data.getItemModel(idx);
+                    var labelModel = itemModel.getModel('label.normal');
+                    var hoverLabelModel = itemModel.getModel('label.emphasis');
+
+                    var textStyleModel = labelModel.getModel('textStyle');
+                    var hoverTextStyleModel = hoverLabelModel.getModel('textStyle');
+
+                    var polygonGroups = data.getItemGraphicEl(idx);
                     circle.setStyle({
-                        text: labelText,
-                        textFill: labelColor,
-                        textPosition: 'bottom',
-                        textFont: labelFont
+                        textPosition: 'bottom'
                     });
+
+                    var onEmphasis = function () {
+                        circle.setStyle({
+                            text: hoverLabelModel.get('show') ? labelText : '',
+                            textFill: hoverTextStyleModel.getTextColor(),
+                            textFont: hoverTextStyleModel.getFont()
+                        });
+                    };
+
+                    var onNormal = function () {
+                        circle.setStyle({
+                            text: labelModel.get('show') ? labelText : '',
+                            textFill: textStyleModel.getTextColor(),
+                            textFont: textStyleModel.getFont()
+                        });
+                    };
+
+                    polygonGroups.on('mouseover', onEmphasis)
+                        .on('mouseout', onNormal)
+                        .on('emphasis', onEmphasis)
+                        .on('normal', onNormal);
+
+                    onNormal();
                 }
 
                 group.add(circle);

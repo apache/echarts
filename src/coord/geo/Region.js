@@ -113,7 +113,13 @@ define(function (require) {
                     vec2.applyTransform(contours[i][p], contours[i][p], transform);
                 }
             }
-            this._rect.copy(target);
+            rect = this._rect;
+            rect.copy(target);
+            // Update center
+            this.center = [
+                rect.x + rect.width / 2,
+                rect.y + rect.height / 2
+            ];
         }
     };
 

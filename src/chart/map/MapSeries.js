@@ -4,6 +4,7 @@ define(function (require) {
     var echarts = require('../../echarts');
     var SeriesModel = require('../../model/Series');
     var zrUtil = require('zrender/core/util');
+    var completeDimensions = require('../../data/helper/completeDimensions');
 
     var formatUtil = require('../../util/format');
     var encodeHTML = formatUtil.encodeHTML;
@@ -51,15 +52,15 @@ define(function (require) {
             option = this._fillOption(option);
             this.option = option;
 
-            SeriesModel.prototype.init.apply(this, arguments);
+            this.$superApply('init', arguments);
 
             this.updateSelectedMap();
         },
 
         getInitialData: function (option) {
-            var list = new List([{
-                name: 'value'
-            }], this);
+            var dimensions = completeDimensions(['value'], option.data);
+
+            var list = new List(dimensions, this);
 
             list.initData(option.data);
 
@@ -156,8 +157,6 @@ define(function (require) {
             // 选择模式，默认关闭，可选single，multiple
             // selectedMode: false,
             dataRangeHoverLink: true,
-            hoverable: true,
-            clickable: true,
             // 是否开启缩放及漫游模式
             // roam: false,
 
@@ -192,7 +191,7 @@ define(function (require) {
                 },
                 // 也是选中样式
                 emphasis: {
-                    areaColor: 'rgba(255,215,0,0.8)'
+                    areaColor: 'rgba(255,215, 0, 0.8)'
                 }
             }
         }

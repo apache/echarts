@@ -125,7 +125,7 @@ define(function(require) {
             }
             if (sublink) {
                 subTextEl.on('click', function () {
-                    window.open(link, titleModel.get('subtarget'));
+                    window.open(sublink, titleModel.get('subtarget'));
                 });
             }
 

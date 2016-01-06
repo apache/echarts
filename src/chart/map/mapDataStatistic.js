@@ -25,14 +25,28 @@ define(function (require) {
         return datas[0].map(dims, function (value, idx) {
             var name = datas[0].getName(idx);
             var sum = 0;
+            var min = Infinity;
+            var max = -Infinity;
             var len = dataNameMap[name].length;
             for (var i = 0; i < len; i++) {
+                min = Math.min(min, dataNameMap[name][i]);
+                max = Math.max(max, dataNameMap[name][i]);
                 sum += dataNameMap[name][i];
             }
-            if (statisticsType === 'average') {
-                sum /= len;
+            var result;
+            if (statisticsType === 'min') {
+                result = min;
             }
-            return len === 0 ? NaN : sum;
+            else if (statisticsType === 'max') {
+                result = max;
+            }
+            else if (statisticsType === 'average') {
+                result = sum / len;
+            }
+            else {
+                result = sum;
+            }
+            return len === 0 ? NaN : result;
         });
     }
 

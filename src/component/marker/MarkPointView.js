@@ -29,11 +29,6 @@ define(function (require) {
                 + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
         },
 
-        getRawValue: function (idx) {
-            var option = this._data.getItemModel(idx).option;
-            return zrUtil.retrieve(option.__rawValue, option.value, '');
-        },
-
         getData: function () {
             return this._data;
         },
@@ -153,7 +148,9 @@ define(function (require) {
                         markerHelper.dataTransform, seriesData, coordSys
                     )),
                     zrUtil.curry(markerHelper.dataFilter, coordSys)
-                )
+                ),
+                null,
+                markerHelper.dimValueGetter
             );
         }
 

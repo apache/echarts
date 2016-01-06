@@ -24,9 +24,7 @@ define(function(require) {
                 option.top = option.top != null ? option.top : 60;
                 option.bottom = option.bottom != null ? option.bottom : 60;
             }
-            ComponentModel.prototype.mergeDefaultAndTheme.call(
-                this, option, ecModel
-            );
+            this.$superCall('mergeDefaultAndTheme', option, ecModel);
         },
 
         /**
