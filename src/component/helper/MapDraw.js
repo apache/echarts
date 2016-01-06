@@ -167,11 +167,9 @@ define(function (require) {
                 // In the following cases label will be drawn
                 // 1. In map series and data value is NaN
                 // 2. In geo component
-                // 3. Data value is not NaN and label only shows on hover
                 // 4. Region has no series legendSymbol, which will be add a showLabel flag in mapSymbolLayout
                 if (
                     (!data || isDataNaN && (showLabel || hoverShowLabel))
-                 || (data && !isDataNaN && (!showLabel && hoverShowLabel))
                  || (itemLayout && itemLayout.showLabel)
                  ) {
                     var query = data ? dataIdx : region.name;
