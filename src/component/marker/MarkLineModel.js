@@ -66,19 +66,9 @@ define(function (require) {
             // 标线起始和结束的symbol旋转控制
             //symbolRotate: null,
             //smooth: false,
-            smoothness: 0.2,    // 平滑度
             precision: 2,
             tooltip: {
                 trigger: 'item'
-            },
-            effect: {
-                show: false,
-                loop: true,
-                period: 15,                     // 运动周期，无单位，值越大越慢
-                scaleSize: 2                    // 放大倍数，以markLine线lineWidth为基准
-                // color: 'gold',
-                // shadowColor: 'rgba(255,215,0,0.8)',
-                // shadowBlur: lineWidth * 2    // 炫光模糊，默认等于scaleSize计算所得
             },
             label: {
                 normal: {
@@ -96,12 +86,9 @@ define(function (require) {
             },
             lineStyle: {
                 normal: {
-                    // 主色，线色，优先级高于borderColor和color
-                    // color: 随borderColor,
-                    // 优先于borderWidth
-                    // width: 随borderWidth,
+                    // color
+                    // width
                     type: 'dashed'
-                    //默认透明
                     // shadowColor: 'rgba(0,0,0,0)',
                     // shadowBlur: 0,
                     // shadowOffsetX: 0,
@@ -110,17 +97,6 @@ define(function (require) {
                 emphasis: {
                     width: 3
                 }
-            },
-            itemStyle: {
-                normal: {
-                    // 标线主色，线色，symbol主色
-                    // color: 各异,
-                    // 标线symbol边框颜色，优先于color
-                    // borderColor: 随color,
-                    // 标线symbol边框线宽，单位px，默认为2
-                    borderWidth: 2
-                }
-                // emphasis: {}
             },
             animationEasing: 'linear'
         }

@@ -61,25 +61,8 @@ define(function (require) {
             symbol: 'pin',         // 标注类型
             symbolSize: 50,  // 标注大小
             // symbolRotate: null, // 标注旋转控制
-            large: false,
             tooltip: {
                 trigger: 'item'
-            },
-            effect: {
-                show: false,
-                loop: true,
-                // 运动周期，无单位，值越大越慢
-                period: 15,
-                // 可用为 scale | bounce
-                type: 'scale',
-                // 放大倍数，以markPoint点size为基准
-                scaleSize: 2,
-                // 跳动距离，单位px
-                bounceDistance: 10
-                // color: 'gold',
-                // shadowColor: 'rgba(255,215,0,0.8)',
-                // 炫光模糊
-                // shadowBlur: 0
             },
             label: {
                 normal: {
