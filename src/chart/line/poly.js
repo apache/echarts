@@ -56,16 +56,17 @@ define(function (require) {
 
                     scaleAndAdd(cp1, p, v, -smooth / 2);
 
+                    // Smooth constraint
+                    vec2Min(cp0, cp0, smoothMax);
+                    vec2Max(cp0, cp0, smoothMin);
+                    vec2Min(cp1, cp1, smoothMax);
+                    vec2Max(cp1, cp1, smoothMin);
+
                     ctx.bezierCurveTo(
                         cp0[0], cp0[1],
                         cp1[0], cp1[1],
                         p[0], p[1]
                     );
-                    // Smooth constraint
-                    vec2Min(cp0, cp0, smoothMin);
-                    vec2Max(cp0, cp0, smoothMax);
-                    vec2Min(cp1, cp1, smoothMin);
-                    vec2Max(cp1, cp1, smoothMax);
                     // cp0 of next segment
                     scaleAndAdd(cp0, p, v, smooth / 2);
                 }
