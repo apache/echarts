@@ -3,7 +3,6 @@ define(function (require) {
 
     var Path = require('zrender/graphic/Path');
     var vec2 = require('zrender/core/vector');
-    var bbox = require('zrender/core/bbox');
 
     var mathMin = Math.min;
     var mathMax = Math.max;
@@ -56,16 +55,17 @@ define(function (require) {
 
                     scaleAndAdd(cp1, p, v, -smooth / 2);
 
+                    // Smooth constraint
+                    vec2Min(cp0, cp0, smoothMax);
+                    vec2Max(cp0, cp0, smoothMin);
+                    vec2Min(cp1, cp1, smoothMax);
+                    vec2Max(cp1, cp1, smoothMin);
+
                     ctx.bezierCurveTo(
                         cp0[0], cp0[1],
                         cp1[0], cp1[1],
                         p[0], p[1]
                     );
-                    // Smooth constraint
-                    vec2Min(cp0, cp0, smoothMin);
-                    vec2Max(cp0, cp0, smoothMax);
-                    vec2Min(cp1, cp1, smoothMin);
-                    vec2Max(cp1, cp1, smoothMax);
                     // cp0 of next segment
                     scaleAndAdd(cp0, p, v, smooth / 2);
                 }
@@ -78,6 +78,22 @@ define(function (require) {
         }
 
         return k;
+    }
+
+    function getBoundingBox(points) {
+        var ptMin = [Infinity, Infinity];
+        var ptMax = [-Infinity, -Infinity];
+        for (var i = 0; i < points.length; i++) {
+            var pt = points[i];
+            if (pt[0] < ptMin[0]) { ptMin[0] = pt[0]; }
+            if (pt[1] < ptMin[1]) { ptMin[1] = pt[1]; }
+            if (pt[0] > ptMax[0]) { ptMax[0] = pt[0]; }
+            if (pt[1] > ptMax[1]) { ptMax[1] = pt[1]; }
+        }
+        return {
+            min: ptMin,
+            max: ptMax
+        };
     }
 
     return {
@@ -106,14 +122,12 @@ define(function (require) {
                 var i = 0;
                 var len = points.length;
 
-                var ptMin = [];
-                var ptMax = [];
-                bbox.fromPoints(points, ptMin, ptMax);
+                var result = getBoundingBox(points);
 
                 while (i < len) {
                     i += drawSegment(
                         ctx, points, i, len, len,
-                        1, ptMin, ptMax, shape.smooth
+                        1, result.min, result.max, shape.smooth
                     ) + 1;
                 }
             }
@@ -137,19 +151,16 @@ define(function (require) {
 
                 var i = 0;
                 var len = points.length;
-
-                var ptMin = [];
-                var ptMax = [];
-                bbox.fromPoints(points, ptMin, ptMax);
-
+                var bbox = getBoundingBox(points);
+                var stackedOnBBox = getBoundingBox(stackedOnPoints);
                 while (i < len) {
                     var k = drawSegment(
                         ctx, points, i, len, len,
-                        1, ptMin, ptMax, shape.smooth
+                        1, bbox.min, bbox.max, shape.smooth
                     );
                     drawSegment(
                         ctx, stackedOnPoints, i + k - 1, len, k,
-                        -1, ptMin, ptMax, shape.stackedOnSmooth
+                        -1, stackedOnBBox.min, stackedOnBBox.max, shape.stackedOnSmooth
                     );
                     i += k + 1;
 

@@ -92,22 +92,37 @@ define(function(require) {
     function createGridClipShape(cartesian, hasAnimation, seriesModel) {
         var xExtent = getAxisExtentWithGap(cartesian.getAxis('x'));
         var yExtent = getAxisExtentWithGap(cartesian.getAxis('y'));
+        var isHorizontal = cartesian.getBaseAxis().isHorizontal();
 
+        var x = xExtent[0];
+        var y = yExtent[0];
+        var width = xExtent[1] - x;
+        var height = yExtent[1] - y;
+        // Expand clip shape to avoid line value exceeds axis
+        if (isHorizontal) {
+            height *= 10;
+            y -= height / 2;
+        }
+        else {
+            width *= 10;
+            x -= width / 2;
+        }
+        isHorizontal ? (height *= 10) : (width *= 10);
         var clipPath = new graphic.Rect({
             shape: {
-                x: xExtent[0],
-                y: yExtent[0],
-                width: xExtent[1] - xExtent[0],
-                height: yExtent[1] - yExtent[0]
+                x: x,
+                y: y,
+                width: width,
+                height: height
             }
         });
 
         if (hasAnimation) {
-            clipPath.shape[cartesian.getBaseAxis().isHorizontal() ? 'width' : 'height'] = 0;
+            clipPath.shape[isHorizontal ? 'width' : 'height'] = 0;
             graphic.initProps(clipPath, {
                 shape: {
-                    width: xExtent[1] - xExtent[0],
-                    height: yExtent[1] - yExtent[0]
+                    width: width,
+                    height: height
                 }
             }, seriesModel);
         }
@@ -241,7 +256,7 @@ define(function(require) {
                 // Stop symbol animation and sync with line points
                 // FIXME performance?
                 data.eachItemGraphicEl(function (el) {
-                    el.stopSymbolAnimation(true);
+                    el.stopAnimation(true);
                 });
 
                 // In the case data zoom triggerred refreshing frequently
