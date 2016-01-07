@@ -256,7 +256,7 @@ define(function(require) {
                 // Stop symbol animation and sync with line points
                 // FIXME performance?
                 data.eachItemGraphicEl(function (el) {
-                    el.stopSymbolAnimation(true);
+                    el.stopAnimation(true);
                 });
 
                 // In the case data zoom triggerred refreshing frequently
