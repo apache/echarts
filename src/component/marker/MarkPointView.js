@@ -104,8 +104,15 @@ define(function (require) {
 
                 mpData.setItemLayout(idx, point);
 
+                var symbolSize = itemModel.getShallow('symbolSize');
+                if (typeof symbolSize === 'function') {
+                    // FIXME 这里不兼容 ECharts 2.x，2.x 貌似参数是整个数据？
+                    symbolSize = symbolSize(
+                        mpModel.getRawValue(idx), mpModel.getDataParams(idx)
+                    );
+                }
                 mpData.setItemVisual(idx, {
-                    symbolSize: itemModel.getShallow('symbolSize'),
+                    symbolSize: symbolSize,
                     color: itemModel.get('itemStyle.normal.color')
                         || seriesData.getVisual('color'),
                     symbol: itemModel.getShallow('symbol')
