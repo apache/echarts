@@ -58,7 +58,6 @@ define(function (require) {
         defaultOption: {
             zlevel: 0,
             z: 5,
-            clickable: true,
             // 标线起始和结束的symbol介绍类型，如果都一样，可以直接传string
             symbol: ['circle', 'arrow'],
             // 标线起始和结束的symbol大小，半宽（半径）参数，当图形为方向或菱形则总宽度为symbolSize * 2

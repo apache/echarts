@@ -17,7 +17,6 @@ define(function(require) {
 
         defaultOption: {
             calculable: false,
-            clickable: true,
             // center: ['50%', '50%'],             // not supported in ec3.
             // size: ['80%', '80%'],               // deprecated, compatible with ec2.
             left: 'center',

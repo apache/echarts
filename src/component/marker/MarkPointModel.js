@@ -57,7 +57,6 @@ define(function (require) {
         defaultOption: {
             zlevel: 0,
             z: 5,
-            clickable: true,
             symbol: 'pin',         // 标注类型
             symbolSize: 50,  // 标注大小
             // symbolRotate: null, // 标注旋转控制
