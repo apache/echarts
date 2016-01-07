@@ -45,6 +45,7 @@ define(function(require) {
             coordinateSystem: 'parallel',
             parallelIndex: 0,
 
+            // FIXME 尚无用
             label: {
                 normal: {
                     show: false

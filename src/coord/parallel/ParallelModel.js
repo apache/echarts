@@ -31,8 +31,6 @@ define(function(require) {
         parallelAxisIndex: null,
 
         defaultOption: {
-            show: false,
-
             zlevel: 0,                  // 一级层叠
             z: 0,                       // 二级层叠
             left: 80,
@@ -44,11 +42,7 @@ define(function(require) {
 
             layout: 'horizontal',      // 'horizontal' or 'vertical'
 
-            axisDefault: null,
-
-            backgroundColor: 'rgba(0,0,0,0)',
-            borderWidth: 0,
-            borderColor: '#ccc'
+            parallelAxisDefault: null
         },
 
         /**
