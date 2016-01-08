@@ -303,7 +303,7 @@ define(function (require) {
 
         var textarea = document.createElement('textarea');
         // Textarea style
-        textarea.style.cssText = 'display:block;width:100%;font-size:14px;line-height:1.6rem;font-family:Monaco,Consolas,Courier New';
+        textarea.style.cssText = 'display:block;width:100%;font-size:14px;line-height:1.6rem;font-family:Monaco,Consolas,Courier new,monospace';
         textarea.readOnly = model.get('readOnly');
         textarea.style.color = model.get('textColor');
         textarea.style.borderColor = model.get('textareaBorderColor');
