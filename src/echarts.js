@@ -38,12 +38,18 @@ define(function (require) {
     // TODO Transform first or filter first
     var PROCESSOR_STAGES = ['transform', 'filter', 'statistic'];
 
+    function registerEventWithLowercaseName(eventName, handler, context) {
+        // Event name is all lowercase
+        eventName = eventName && eventName.toLowerCase();
+        Eventful.prototype.on.call(this, eventName, handler, context);
+    }
     /**
      * @module echarts~MessageCenter
      */
     function MessageCenter() {
         Eventful.call(this);
     }
+    MessageCenter.prototype.on = registerEventWithLowercaseName;
     zrUtil.mixin(MessageCenter, Eventful);
     /**
      * @module echarts~ECharts
@@ -575,6 +581,12 @@ define(function (require) {
     };
 
     /**
+     * Register event
+     * @method
+     */
+    echartsProto.on = registerEventWithLowercaseName;
+
+    /**
      * @param {string} methodName
      * @private
      */
@@ -1040,7 +1052,8 @@ define(function (require) {
                 event: eventName
             }][0]);
 
-        actionInfo.event = actionInfo.event || actionType;
+        // Event name is all lowercase
+        actionInfo.event = (actionInfo.event || actionType).toLowerCase();
         eventName = actionInfo.event;
 
         if (!actions[actionType]) {
