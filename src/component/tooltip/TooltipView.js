@@ -170,6 +170,7 @@ define(function (require) {
             this._tooltipContent = tooltipContent;
 
             api.on('showTip', this._manuallyShowTip, this);
+            api.on('hideTip', this._hide, this);
         },
 
         render: function (tooltipModel, ecModel, api) {
