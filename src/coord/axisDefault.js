@@ -101,7 +101,7 @@ define(function (require) {
         // 脱离0值比例，放大聚焦到最终_min，_max区间
         // scale: false,
         // 分割段数，默认为5
-        splitNumber: 6
+        splitNumber: 5
     }, defaultOption);
 
     // FIXME
