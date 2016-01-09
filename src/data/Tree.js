@@ -196,7 +196,7 @@ define(function(require) {
         },
 
         /**
-         * @param {string=} [dimension='value'] Default 'value'. can be 0, 1, 2, 3
+         * @param {string|Array=} [dimension='value'] Default 'value'. can be 0, 1, 2, 3
          * @return {number} Value.
          */
         getValue: function (dimension) {

@@ -16,7 +16,6 @@ define(function(require) {
         dependencies: ['grid', 'polar'],
 
         defaultOption: {
-            calculable: false,
             // center: ['50%', '50%'],             // not supported in ec3.
             // size: ['80%', '80%'],               // deprecated, compatible with ec2.
             left: 'center',
@@ -27,11 +26,11 @@ define(function(require) {
             height: '80%',
             sort: true,                         // Can be null or false or true
                                                 // (order by desc default, asc not supported yet (strange effect))
-            clipWindow: 'origin',                      // 缩放时窗口大小。'origin' or 'fullscreen'
+            clipWindow: 'origin',               // 缩放时窗口大小。'origin' or 'fullscreen'
             squareRatio: 0.5 * (1 + Math.sqrt(5)), // golden ratio
-            root: null,                             // default: tree root. This feature doesnt work unless node have id.
-            visualDimension: 'value',                    // 默认第一个维度。
-            zoomToNodeRatio: 0.32 * 0.32,                 // zoom to node时 node占可视区域的面积比例。
+            root: null,                         // default: tree root. This feature doesnt work unless node have id.
+            visualDimension: 0,                 // Can be 0, 1, 2, 3.
+            zoomToNodeRatio: 0.32 * 0.32,       // zoom to node时 node占可视区域的面积比例。
             roam: true,
             animation: true,
             animationDurationUpdate: 1500,
