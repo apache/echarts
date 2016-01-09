@@ -16,18 +16,18 @@ define(function (require) {
         });
     }
 
-    function dispatchHighlightAction(seriesName, dataName, api) {
-        api.dispatchAction({
+    function dispatchHighlightAction(seriesModel, dataName, api) {
+        seriesModel.get('legendHoverLink') && api.dispatchAction({
             type: 'highlight',
-            seriesName: seriesName,
+            seriesName: seriesModel.name,
             name: dataName
         });
     }
 
-    function dispatchDownplayAction(seriesName, dataName, api) {
-        api.dispatchAction({
+    function dispatchDownplayAction(seriesModel, dataName, api) {
+        seriesModel.get('legendHoverLink') &&api.dispatchAction({
             type: 'downplay',
-            seriesName: seriesName,
+            seriesName: seriesModel.name,
             name: dataName
         });
     }
@@ -100,8 +100,8 @@ define(function (require) {
                 );
 
                 itemGroup.on('click', curry(dispatchSelectAction, seriesName, api))
-                    .on('mouseover', curry(dispatchHighlightAction, seriesName, '', api))
-                    .on('mouseout', curry(dispatchDownplayAction, seriesName, '', api));
+                    .on('mouseover', curry(dispatchHighlightAction, seriesModel, '', api))
+                    .on('mouseout', curry(dispatchDownplayAction, seriesModel, '', api));
 
                 legendDrawedMap[seriesName] = true;
             }, this);
@@ -134,8 +134,8 @@ define(function (require) {
 
                         itemGroup.on('click', curry(dispatchSelectAction, name, api))
                             // FIXME Should not specify the series name
-                            .on('mouseover', curry(dispatchHighlightAction, seriesModel.name, name, api))
-                            .on('mouseout', curry(dispatchDownplayAction, seriesModel.name, name, api));
+                            .on('mouseover', curry(dispatchHighlightAction, seriesModel, name, api))
+                            .on('mouseout', curry(dispatchDownplayAction, seriesModel, name, api));
 
                         legendDrawedMap[name] = true;
                     }, false, this);
