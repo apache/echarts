@@ -10,6 +10,13 @@ define(function (require) {
         type: 'map',
 
         render: function (mapModel, ecModel, api, payload) {
+            // Not render if it is an select action from self
+            if (payload && payload.type === 'mapToggleSelect'
+                && payload.from === this.uid
+            ) {
+                return;
+            }
+
             var group = this.group;
             group.removeAll();
             // No update map if it is an roam action from self
@@ -21,7 +28,7 @@ define(function (require) {
                     var mapDraw = this._mapDraw || new MapDraw(api, true);
                     group.add(mapDraw.group);
 
-                    mapDraw.draw(mapModel, ecModel, api);
+                    mapDraw.draw(mapModel, ecModel, api, this);
 
                     this._mapDraw = mapDraw;
                 }

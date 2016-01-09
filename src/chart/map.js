@@ -17,4 +17,18 @@ define(function (require) {
     echarts.registerProcessor('statistic', require('./map/mapDataStatistic'));
 
     echarts.registerPreprocessor(require('./map/backwardCompat'));
+
+    require('../action/createDataSelectAction')('map', [{
+        type: 'mapToggleSelect',
+        event: 'mapselectchanged',
+        method: 'toggleSelected'
+    }, {
+        type: 'mapSelect',
+        event: 'mapselected',
+        method: 'select'
+    }, {
+        type: 'mapUnSelect',
+        event: 'mapunselected',
+        method: 'unSelect'
+    }]);
 });

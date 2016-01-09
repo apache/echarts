@@ -280,11 +280,7 @@ define(function (require) {
         },
 
         render: function (seriesModel, ecModel, api, payload) {
-            if (
-                payload && (payload.from === this.uid
-                || (payload.type === 'pieToggleSelect'
-                    && payload.seriesName !== seriesModel.name))
-            ) {
+            if (payload && (payload.from === this.uid)) {
                 return;
             }
 

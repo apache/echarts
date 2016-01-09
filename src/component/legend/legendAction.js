@@ -42,7 +42,7 @@ define(function(require) {
      * @property {string} name Series name or data item name
      */
     echarts.registerAction(
-        'legendToggleSelect', 'legendSelectChanged',
+        'legendToggleSelect', 'legendselectchanged',
         zrUtil.curry(legendSelectActionHandler, 'toggleSelected')
     );
 
@@ -53,7 +53,7 @@ define(function(require) {
      * @property {string} name Series name or data item name
      */
     echarts.registerAction(
-        'legendSelect', 'legendSelected',
+        'legendSelect', 'legendselected',
         zrUtil.curry(legendSelectActionHandler, 'select')
     );
 
@@ -64,7 +64,7 @@ define(function(require) {
      * @property {string} name Series name or data item name
      */
     echarts.registerAction(
-        'legendUnSelect', 'legendUnSelected',
+        'legendUnSelect', 'legendunselected',
         zrUtil.curry(legendSelectActionHandler, 'unSelect')
     );
 });

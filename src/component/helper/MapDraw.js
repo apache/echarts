@@ -17,16 +17,22 @@ define(function (require) {
         return itemStyle;
     }
 
-    function updateMapSelectHandler(mapOrGeoModel, data, group) {
+    function updateMapSelectHandler(mapOrGeoModel, data, group, api, fromView) {
         group.off('click');
         mapOrGeoModel.get('selectedMode')
             && group.on('click', function (e) {
                 var dataIndex = e.target.dataIndex;
                 if (dataIndex != null) {
                     var name = data.getName(dataIndex);
-                    mapOrGeoModel.toggleSelected(name);
 
-                    updateMapSelected(mapOrGeoModel, data);
+                    api.dispatchAction({
+                        type: 'mapToggleSelect',
+                        seriesIndex: mapOrGeoModel.seriesIndex,
+                        name: name,
+                        from: fromView.uid
+                    });
+
+                    updateMapSelected(mapOrGeoModel, data, api);
                 }
             });
     }
@@ -72,7 +78,7 @@ define(function (require) {
 
         constructor: MapDraw,
 
-        draw: function (mapOrGeoModel, ecModel, api) {
+        draw: function (mapOrGeoModel, ecModel, api, fromView) {
 
             // geoModel has no data
             var data = mapOrGeoModel.getData && mapOrGeoModel.getData();
@@ -208,7 +214,7 @@ define(function (require) {
 
             this._updateController(mapOrGeoModel, ecModel, api);
 
-            data && updateMapSelectHandler(mapOrGeoModel, data, group);
+            data && updateMapSelectHandler(mapOrGeoModel, data, group, api, fromView);
 
             data && updateMapSelected(mapOrGeoModel, data);
         },
