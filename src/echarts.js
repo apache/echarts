@@ -85,6 +85,10 @@ define(function (require) {
             devicePixelRatio: opts.devicePixelRatio
         });
 
+        // Get theme by name
+        if (typeof theme === 'string') {
+            theme = themeStorage[theme];
+        }
         /**
          * @type {Object}
          * @private
@@ -877,6 +881,12 @@ define(function (require) {
      * @inner
      */
     var visualCodingFuncs = {};
+    /**
+     * Theme storage
+     * @type {Object.<key, Object>}
+     */
+    var themeStorage = {};
+
 
     var instances = {};
     var connectedGroups = {};
@@ -1003,6 +1013,13 @@ define(function (require) {
      */
     echarts.getInstanceById = function (key) {
         return instances[key];
+    };
+
+    /**
+     * Register theme
+     */
+    echarts.registerTheme = function (name, theme) {
+        themeStorage[name] = theme;
     };
 
     /**

@@ -29,7 +29,9 @@
                 'echarts/component/tooltip'
             ], function (echarts, theme) {
 
-                var chart = echarts.init(document.getElementById('main'), theme);
+                echarts.registerTheme('dark', theme);
+
+                var chart = echarts.init(document.getElementById('main'), 'dark');
 
                 var xAxisData = [];
                 var data1 = [];
