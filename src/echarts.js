@@ -594,7 +594,7 @@ define(function (require) {
                 eventObj.type = actionInfo.event || eventObj.type;
                 eventObjBatch.push(eventObj);
 
-                // Highlight and downplay is special.
+                // Highlight and downplay are special.
                 isHighlightOrDownplay && updateMethods[updateMethod].call(this, batchItem);
             }
 
