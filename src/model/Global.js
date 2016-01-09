@@ -298,26 +298,6 @@ define(function (require) {
          * );
          * // result like [component0, componnet1, ...]
          *
-         * var result = findComponents(
-         *     {mainType: 'series', query: {
-         *         type: 'someAction'
-         *         batch: [
-         *             {seriesId: 'asdf', dataIndex: 6},
-         *             {seriesId: 'qwer', dataIndex: 4},
-         *             ...
-         *         ]
-         *     }}
-         * )
-         * result like [component0, component1, component2]
-         * result.batchQueries like [
-         *     {type: 'someAction', seriesId: 'qwer', dataIndex: 4},
-         *     {type: 'someAction', seriesId: 'qwer', dataIndex: 4},
-         *     {type: 'someAction', seriesId: 'asdf', dataIndex: 6},
-         *     ...
-         * ]
-         * where each item of batchQueryies is coresponding to each item of result.
-         *
-         *
          * @param {Object} condition
          * @param {string} condition.mainType Mandatory.
          * @param {string} [condition.subType] Optional.
@@ -327,40 +307,18 @@ define(function (require) {
          *        do not filtering by query conditions, which is convenient for
          *        no-payload situations or when target of action is global.
          * @param {Function} [condition.filter] parameter: component, return boolean.
-         * @return {Array.<module:echarts/model/Component>} If condition.query.batch
-         *        exist, result by batch is stored on 'batch' prop of returned array,
-         *        see example above;
+         * @return {Array.<module:echarts/model/Component>}
          */
         findComponents: function (condition) {
             var query = condition.query;
             var mainType = condition.mainType;
 
-            if (query && query.batch) {
-                var result = [];
-                var batchQueries = result.batchQueries = [];
-                each(query.batch, function (batchItem) {
-                    batchItem = zrUtil.defaults(zrUtil.extend({}, batchItem), query);
-                    batchItem.batch = null;
-                    var res = doQuery.call(this, batchItem);
-                    each(res, function (re) {
-                        result.push(re);
-                        batchQueries.push(batchItem);
-                    });
-                }, this);
-                return result;
-            }
-            else {
-                return doQuery.call(this, query);
-            }
+            var queryCond = getQueryCond(query);
+            var result = queryCond
+                ? this.queryComponents(queryCond)
+                : this._componentsMap[mainType];
 
-            function doQuery(q) {
-                var queryCond = getQueryCond(q);
-                var result = queryCond
-                    ? this.queryComponents(queryCond)
-                    : this._componentsMap[mainType];
-
-                return doFilter(filterBySubType(result, condition));
-            }
+            return doFilter(filterBySubType(result, condition));
 
             function getQueryCond(q) {
                 var indexAttr = mainType + 'Index';
@@ -405,10 +363,6 @@ define(function (require) {
          *     {mainType: 'series', subType: 'pie', query: {seriesName: 'uio'}},
          *     function (model, index, queryInfo) {...}
          * );
-         * eachComponent(
-         *     {mainType: 'series', subType: 'pie', query: {batch: [ ... ]}},
-         *     function (model, index, queryInfo) {...}
-         * );
          * where queryInfo is always an object but not null.
          *
          * @param {string|Object=} mainType When mainType is object, the definition
@@ -436,11 +390,7 @@ define(function (require) {
             else if (isObject(mainType)) {
                 var queryResult = this.findComponents(mainType);
                 each(queryResult, function (cpt, index) {
-                    var batchQueries = queryResult.batchQueries;
-                    cb.call(
-                        context, cpt, index,
-                        batchQueries ? batchQueries[index] : mainType.query
-                    );
+                    cb.call(context, cpt, index);
                 });
             }
         },

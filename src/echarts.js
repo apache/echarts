@@ -497,11 +497,11 @@ define(function (require) {
 
         ecModel.eachComponent(
             {mainType: 'series', query: payload},
-            function (seriesModel, index, payloadInfo) {
+            function (seriesModel, index) {
                 var chartView = this._chartsMap[seriesModel.__viewId];
                 if (chartView) {
                     chartView[method](
-                        seriesModel, ecModel, this._api, payloadInfo
+                        seriesModel, ecModel, this._api, payload
                     );
                 }
             },
@@ -564,22 +564,53 @@ define(function (require) {
      * @param {Object} payload
      * @param {string} [payload.type] Action type
      * @param {boolean} [silent=false] Whether trigger event.
-     * @param {number} [payload.from] From uid
      */
     echartsProto.dispatchAction = function (payload, silent) {
         var actionWrap = actions[payload.type];
         if (actionWrap) {
             var actionInfo = actionWrap.actionInfo;
             var updateMethod = actionInfo.update || 'update';
-            // Action can specify the event by return it.
-            var eventObj = actionWrap.action(payload, this._model);
-            updateMethod !== 'none' && updateMethods[updateMethod].call(this, payload);
 
-            if (!silent) {
+            var payloads = [payload];
+            // Batch action
+            if (payload.batch) {
+                payloads = zrUtil.map(payload.batch, function (item) {
+                    item = zrUtil.defaults(zrUtil.extend({}, item), payload);
+                    item.batch = null;
+                    return item;
+                });
+            }
+
+            var eventObjBatch = [];
+            var eventObj;
+            var isHighlightOrDownplay = payload.type === 'highlight' || payload.type === 'downplay';
+            for (var i = 0; i < payloads.length; i++) {
+                var batchItem = payloads[i];
+                // Action can specify the event by return it.
+                eventObj = actionWrap.action(batchItem, this._model);
                 // Emit event outside
-                eventObj = eventObj || zrUtil.extend({}, payload);
+                eventObj = eventObj || zrUtil.extend({}, batchItem);
                 // Convert type to eventType
                 eventObj.type = actionInfo.event || eventObj.type;
+                eventObjBatch.push(eventObj);
+
+                // Highlight and downplay is special.
+                isHighlightOrDownplay && updateMethods[updateMethod].call(this, batchItem);
+            }
+
+            (updateMethod !== 'none' && !isHighlightOrDownplay)
+                && updateMethods[updateMethod].call(this, payload);
+
+            if (!silent) {
+                if (eventObjBatch.length > 1) {
+                    eventObj = {
+                        type: eventObjBatch[0].type,
+                        batch: eventObjBatch
+                    };
+                }
+                else {
+                    eventObj = eventObjBatch[0];
+                }
                 this._messageCenter.trigger(eventObj.type, eventObj);
             }
         }

@@ -19,29 +19,26 @@ define(function(require) {
         );
 
         var effectedModels = [];
-        var payloadInfoList = []; // For batch.
 
         ecModel.eachComponent(
             {mainType: 'dataZoom', query: payload},
-            function (model, index, payloadInfo) {
+            function (model, index) {
                 distinctPush(
-                    effectedModels, linkedNodesFinder(model).nodes, payloadInfo
+                    effectedModels, linkedNodesFinder(model).nodes, payload
                 );
             }
         );
 
         zrUtil.each(effectedModels, function (dataZoomModel, index) {
-            var payloadInfo = payloadInfoList[index];
-
             dataZoomModel.setRawRange({
-                start: payloadInfo.start,
-                end: payloadInfo.end,
-                startValue: payloadInfo.startValue,
-                endValue: payloadInfo.endValue
+                start: payload.start,
+                end: payload.end,
+                startValue: payload.startValue,
+                endValue: payload.endValue
             });
         });
 
-        function distinctPush(effectedModels, source, payloadInfo) {
+        function distinctPush(effectedModels, source) {
             var targetLen = effectedModels.length;
 
             for (var i = 0, len = source.length; i < len; i++) {
@@ -56,7 +53,6 @@ define(function(require) {
 
                 if (!has) {
                     effectedModels.push(src);
-                    payloadInfoList.push(payloadInfo);
                 }
             }
         }
