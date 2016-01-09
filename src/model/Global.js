@@ -357,13 +357,12 @@ define(function (require) {
          * });
          * eachComponent(
          *     {mainType: 'dataZoom', query: {dataZoomId: 'abc'}},
-         *     function (model, index, queryInfo) {...}
+         *     function (model, index) {...}
          * );
          * eachComponent(
          *     {mainType: 'series', subType: 'pie', query: {seriesName: 'uio'}},
-         *     function (model, index, queryInfo) {...}
+         *     function (model, index) {...}
          * );
-         * where queryInfo is always an object but not null.
          *
          * @param {string|Object=} mainType When mainType is object, the definition
          *                                  is the same as the method 'findComponents'.
@@ -383,15 +382,11 @@ define(function (require) {
                 });
             }
             else if (zrUtil.isString(mainType)) {
-                each(componentsMap[mainType], function (cpt, index) {
-                    cb.call(context, cpt, index, {});
-                }, context);
+                each(componentsMap[mainType], cb, context);
             }
             else if (isObject(mainType)) {
                 var queryResult = this.findComponents(mainType);
-                each(queryResult, function (cpt, index) {
-                    cb.call(context, cpt, index);
-                });
+                each(queryResult, cb, context);
             }
         },
 
