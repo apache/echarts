@@ -4,26 +4,19 @@
 define(function(require) {
 
     var echarts = require('../../echarts');
+    var zrUtil = require('zrender/core/util');
 
-    /**
-     * @event legendToggleSelect
-     * @type {Object}
-     * @property {string} type 'legendToggleSelect'
-     * @property {string} [from]
-     * @property {string} name Series name or data item
-     */
-    echarts.registerAction('legendToggleSelect', 'legendSelectChanged', function (action, ecModel) {
+    function legendSelectActionHandler(methodName, action, ecModel) {
         var selectedMap = {};
         // Update all legend components
         ecModel.eachComponent('legend', function (legendModel) {
-            legendModel.toggleSelected(action.name);
+            legendModel[methodName](action.name);
             var legendData = legendModel.getData();
-            for (var i = 0; i < legendData.length; i++) {
-                var model = legendData[i];
+            zrUtil.each(legendData, function (model) {
                 var name = model.get('name');
                 // Wrap element
                 if (name === '\n' || name === '') {
-                    continue;
+                    return;
                 }
                 var isItemSelected = legendModel.isSelected(name);
                 if (name in selectedMap) {
@@ -33,12 +26,45 @@ define(function(require) {
                 else {
                     selectedMap[name] = isItemSelected;
                 }
-            }
+            });
         });
         // Return the event explicitly
         return {
             name: action.name,
             selected: selectedMap
         };
-    });
+    }
+    /**
+     * @event legendToggleSelect
+     * @type {Object}
+     * @property {string} type 'legendToggleSelect'
+     * @property {string} [from]
+     * @property {string} name Series name or data item name
+     */
+    echarts.registerAction(
+        'legendToggleSelect', 'legendSelectChanged',
+        zrUtil.curry(legendSelectActionHandler, 'toggleSelected')
+    );
+
+    /**
+     * @event legendSelect
+     * @type {Object}
+     * @property {string} type 'legendSelect'
+     * @property {string} name Series name or data item name
+     */
+    echarts.registerAction(
+        'legendSelect', 'legendSelected',
+        zrUtil.curry(legendSelectActionHandler, 'select')
+    );
+
+    /**
+     * @event legendUnSelect
+     * @type {Object}
+     * @property {string} type 'legendUnSelect'
+     * @property {string} name Series name or data item name
+     */
+    echarts.registerAction(
+        'legendUnSelect', 'legendUnSelected',
+        zrUtil.curry(legendSelectActionHandler, 'unSelect')
+    );
 });
