@@ -571,13 +571,14 @@ define(function (require) {
         if (actionWrap) {
             var actionInfo = actionWrap.actionInfo;
             var updateMethod = actionInfo.update || 'update';
-            actionWrap.action(payload, this._model);
+            // Action can specify the event by return it.
+            var eventObj = actionWrap.action(payload, this._model);
             updateMethod !== 'none' && updateMethods[updateMethod].call(this, payload);
 
             if (!silent) {
                 // Emit event outside
+                eventObj = eventObj || zrUtil.extend({}, payload);
                 // Convert type to eventType
-                var eventObj = zrUtil.extend({}, payload);
                 eventObj.type = actionInfo.event || eventObj.type;
                 this._messageCenter.trigger(eventObj.type, eventObj);
             }

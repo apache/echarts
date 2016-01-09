@@ -12,10 +12,33 @@ define(function(require) {
      * @property {string} [from]
      * @property {string} name Series name or data item
      */
-    echarts.registerAction('legendToggleSelect', 'legendSelected', function (event, ecModel) {
+    echarts.registerAction('legendToggleSelect', 'legendSelectChanged', function (action, ecModel) {
+        var selectedMap = {};
         // Update all legend components
         ecModel.eachComponent('legend', function (legendModel) {
-            legendModel && legendModel.toggleSelected(event.name);
+            legendModel.toggleSelected(action.name);
+            var legendData = legendModel.getData();
+            for (var i = 0; i < legendData.length; i++) {
+                var model = legendData[i];
+                var name = model.get('name');
+                // Wrap element
+                if (name === '\n' || name === '') {
+                    continue;
+                }
+                var isItemSelected = legendModel.isSelected(name);
+                if (name in selectedMap) {
+                    // Unselected if any legend is unselected
+                    selectedMap[name] = selectedMap[name] && isItemSelected;
+                }
+                else {
+                    selectedMap[name] = isItemSelected;
+                }
+            }
         });
+        // Return the event explicitly
+        return {
+            name: action.name,
+            selected: selectedMap
+        };
     });
 });

@@ -178,7 +178,7 @@ define(function(require) {
         // 2. Aspect must be keeped
         // 3. Graph should take the space as more as possible
         if (isNaN(width) && isNaN(height)) {
-            if (aspect  > containerWidth / containerHeight) {
+            if (aspect > containerWidth / containerHeight) {
                 width = containerWidth * 0.8;
             }
             else {
