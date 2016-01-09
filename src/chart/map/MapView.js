@@ -10,7 +10,7 @@ define(function (require) {
         type: 'map',
 
         render: function (mapModel, ecModel, api, payload) {
-            // Not render if it is an select action from self
+            // Not render if it is an toggleSelect action from self
             if (payload && payload.type === 'mapToggleSelect'
                 && payload.from === this.uid
             ) {
@@ -19,7 +19,7 @@ define(function (require) {
 
             var group = this.group;
             group.removeAll();
-            // No update map if it is an roam action from self
+            // Not update map if it is an roam action from self
             if (!(payload && payload.type === 'geoRoam'
                 && payload.component === 'series'
                 && payload.name === mapModel.name)) {

@@ -279,7 +279,11 @@ define(function (require) {
                     });
                 }
                 if (seriesModel) {
-                    var el = seriesModel.getData().getItemGraphicEl(dataIndex);
+                    var data = seriesModel.getData();
+                    if (dataIndex == null) {
+                        dataIndex = data.indexOfName(event.name);
+                    }
+                    var el = data.getItemGraphicEl(dataIndex);
                     // Use
                     if (el) {
                         // Use graphic bounding rect
