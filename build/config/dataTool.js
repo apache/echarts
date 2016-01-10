@@ -1,7 +1,5 @@
 ({
-    // appDir: './',
-    // baseUrl: '../src',
-    // optimize: 'none',
+    baseUrl: '../',
     name: 'echarts',
     paths: {
         extension: '../extension',
@@ -20,5 +18,5 @@
         'extension/dataTool/prepareBoxplotData',
         'extension/dataTool/gexf'
     ],
-    out: '../dist/extension/dataTool.js'
+    out: '../../dist/extension/dataTool.js'
 })

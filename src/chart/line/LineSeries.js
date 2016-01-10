@@ -28,6 +28,9 @@ define(function(require) {
 
             polarIndex: 0,
 
+            // If clip the overflow value
+            clipOverflow: true,
+
             label: {
                 normal: {
                     // show: false,

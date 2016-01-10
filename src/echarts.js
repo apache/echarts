@@ -572,8 +572,10 @@ define(function (require) {
             var updateMethod = actionInfo.update || 'update';
 
             var payloads = [payload];
+            var batched = false;
             // Batch action
             if (payload.batch) {
+                batched = true;
                 payloads = zrUtil.map(payload.batch, function (item) {
                     item = zrUtil.defaults(zrUtil.extend({}, item), payload);
                     item.batch = null;
@@ -594,7 +596,7 @@ define(function (require) {
                 eventObj.type = actionInfo.event || eventObj.type;
                 eventObjBatch.push(eventObj);
 
-                // Highlight and downplay is special.
+                // Highlight and downplay are special.
                 isHighlightOrDownplay && updateMethods[updateMethod].call(this, batchItem);
             }
 
@@ -602,7 +604,8 @@ define(function (require) {
                 && updateMethods[updateMethod].call(this, payload);
 
             if (!silent) {
-                if (eventObjBatch.length > 1) {
+                // Follow the rule of action batch
+                if (batched) {
                     eventObj = {
                         type: eventObjBatch[0].type,
                         batch: eventObjBatch

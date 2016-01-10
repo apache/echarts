@@ -30,15 +30,18 @@ define(function(require) {
 
             // If has any selected in option.selected
             var selectedMap = this.option.selected;
-            var hasSelected = false;
-            for (var name in selectedMap) {
-                if (selectedMap[name]) {
-                    legendData[0] && this.select(name);
-                    hasSelected = true;
+            // If selectedMode is single, try to select one
+            if (legendData[0] && this.get('selectedMode') === 'single') {
+                var hasSelected = false;
+                for (var name in selectedMap) {
+                    if (selectedMap[name]) {
+                        this.select(name);
+                        hasSelected = true;
+                    }
                 }
+                // Try select the first if selectedMode is single
+                !hasSelected && this.select(legendData[0].get('name'));
             }
-            // Try select the first if selectedMode is single
-            !hasSelected && legendData[0] && this.select(legendData[0].get('name'));
         },
 
         mergeOption: function (option) {

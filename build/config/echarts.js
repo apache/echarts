@@ -1,12 +1,11 @@
 ({
-    // appDir: './',
-    // baseUrl: '../src',
+    baseUrl: '../',
     optimize: 'none',
     name: 'echarts',
     packages: [
         {
             name: 'zrender',
-            location: '../../zrender-dev3.0/src',
+            location: '../../zrender/src',
             main: 'zrender'
         },
         {
@@ -54,9 +53,7 @@
         'echarts/component/timeline',
         'echarts/component/toolbox',
 
-        'echarts/scale/Time',
-        'echarts/scale/Log',
         'zrender/vml/vml'
     ],
-    out: '../dist/echarts.js'
+    out: '../../dist/echarts.js'
 })

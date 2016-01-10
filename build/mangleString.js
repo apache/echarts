@@ -48,7 +48,7 @@ var base54 = (function(){
     };
 })();
 
-function optimizeString(source) {
+function mangleString(source) {
 
     var ast = esprima.parse(source, {
         loc: true
@@ -162,4 +162,4 @@ function optimizeString(source) {
     );
 }
 
-exports = module.exports = optimizeString;
+exports = module.exports = mangleString;

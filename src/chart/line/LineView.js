@@ -99,15 +99,16 @@ define(function(require) {
         var width = xExtent[1] - x;
         var height = yExtent[1] - y;
         // Expand clip shape to avoid line value exceeds axis
-        if (isHorizontal) {
-            height *= 10;
-            y -= height / 2;
+        if (!seriesModel.get('clipOverflow')) {
+            if (isHorizontal) {
+                y -= height;
+                height *= 3;
+            }
+            else {
+                x -= width;
+                width *= 3;
+            }
         }
-        else {
-            width *= 10;
-            x -= width / 2;
-        }
-        isHorizontal ? (height *= 10) : (width *= 10);
         var clipPath = new graphic.Rect({
             shape: {
                 x: x,
