@@ -13,19 +13,7 @@ define(function(require) {
 
         dependencies: ['xAxis', 'yAxis'],
 
-        mergeDefaultAndTheme: function (option, ecModel) {
-            // Not specify layout with right, width, bottom, height
-            // FIXME 通用？
-            if (option.right == null || option.width == null || option.left != null) {
-                option.left = option.left != null ? option.left : '10%';
-                option.right = option.right != null ? option.right : '10%';
-            }
-            if (option.bottom == null || option.height == null || option.top != null) {
-                option.top = option.top != null ? option.top : 60;
-                option.bottom = option.bottom != null ? option.bottom : 60;
-            }
-            this.$superCall('mergeDefaultAndTheme', option, ecModel);
-        },
+        layoutMode: 'box',
 
         /**
          * @type {module:echarts/coord/cartesian/Grid}
@@ -36,10 +24,10 @@ define(function(require) {
             show: false,
             zlevel: 0,
             z: 0,
-            // left: '10%',
-            // top: 60,
-            // right: '10%',
-            // bottom: 60,
+            left: '10%',
+            top: 60,
+            right: '10%',
+            bottom: 60,
             // If grid size contain label
             containLabel: false,
             // width: {totalWidth} - left - right,
