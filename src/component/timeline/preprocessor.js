@@ -63,14 +63,6 @@ define(function(require) {
         var itemStyleEmphasis = itemStyle.emphasis || (itemStyle.emphasis = {});
         var itemStyleNormal = itemStyle.normal || (itemStyle.normal = {});
 
-        // Transfer to itemSytle.normal
-        if (opt.symbol && !has(itemStyleNormal, 'symbol')) {
-            itemStyleNormal.symbol = opt.symbol;
-        }
-        if (opt.symbolSize != null && !has(itemStyleNormal, 'symbolSize')) {
-            itemStyleNormal.symbolSize = opt.symbolSize;
-        }
-
         // Transfer label out
         var label = opt.label || (opt.label || {});
         var labelNormal = label.normal || (label.normal = {});
