@@ -6,11 +6,21 @@ define(function(require) {
     var echarts = require('../../echarts');
     var zrUtil = require('zrender/core/util');
 
-    function legendSelectActionHandler(methodName, action, ecModel) {
+    function legendSelectActionHandler(methodName, payload, ecModel) {
         var selectedMap = {};
+        var isToggleSelect = methodName === 'toggleSelected';
+        var isSelected;
         // Update all legend components
         ecModel.eachComponent('legend', function (legendModel) {
-            legendModel[methodName](action.name);
+            if (isToggleSelect && isSelected != null) {
+                // Force other legend has same selected status
+                // Or the first is toggled to true and other are toggled to false
+                legendModel[isSelected ? 'select' : 'unSelect'](payload.name);
+            }
+            else {
+                legendModel[methodName](payload.name);
+                isSelected = legendModel.isSelected(payload.name);
+            }
             var legendData = legendModel.getData();
             zrUtil.each(legendData, function (model) {
                 var name = model.get('name');
@@ -30,7 +40,7 @@ define(function(require) {
         });
         // Return the event explicitly
         return {
-            name: action.name,
+            name: payload.name,
             selected: selectedMap
         };
     }
