@@ -35,6 +35,7 @@ define(function(require) {
             selected: null,             // Object. If not specified, means selected.
                                         // When pieces and splitNumber: {'0': true, '5': true}
                                         // When categories: {'cate1': false, 'cate3': true}
+                                        // When selected === false, means all unselected.
             align: 'auto',              // 'auto', 'left', 'right'
             itemWidth: 20,              // 值域图形宽度
             itemHeight: 14,             // 值域图形高度
@@ -51,8 +52,8 @@ define(function(require) {
         /**
          * @override
          */
-        mergeOption: function (newOption, isInit) {
-            this.baseMergeOption(newOption);
+        doMergeOption: function (newOption, isInit) {
+            this.$superApply('doMergeOption', arguments);
 
             /**
              * The order is always [low, ..., high].

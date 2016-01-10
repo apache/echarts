@@ -76,7 +76,7 @@ define(function (require) {
             return parseFloat(percent);
         }
 
-        return +percent;
+        return percent == null ? NaN : +percent;
     };
 
     /**

@@ -12,6 +12,8 @@ define(function(require) {
 
         type: 'timeline',
 
+        layoutMode: 'box',
+
         /**
          * @protected
          */
@@ -75,15 +77,14 @@ define(function(require) {
             this._names;
 
             this.mergeDefaultAndTheme(option, ecModel);
-            this.mergeOption({}, true);
+            this._initData();
         },
 
         /**
          * @override
          */
-        mergeOption: function (newOption) {
-            newOption && zrUtil.merge(this.option, newOption, true);
-
+        mergeOption: function (option) {
+            this.$superApply('mergeOption', arguments);
             this._initData();
         },
 

@@ -38,6 +38,12 @@ define(function(require) {
         stateList: ['inRange', 'outOfRange'],
 
         /**
+         * @readOnly
+         * @type {string|Object}
+         */
+        layoutMode: {type: 'box', ignoreSize: true},
+
+        /**
          * @protected
          */
         defaultOption: {
@@ -62,6 +68,7 @@ define(function(require) {
             right: null,            // The same as left.
             top: null,              // 'top' ¦ 'bottom' ¦ 'center' ¦ {number} (px)
             bottom: 0,              // The same as top.
+
             itemWidth: null,
             itemHeight: null,
             inverse: false,
@@ -125,20 +132,22 @@ define(function(require) {
             this.itemSize;
 
             this.mergeDefaultAndTheme(option, ecModel);
-            this.mergeOption({}, true);
+            this.doMergeOption({}, true);
         },
 
         /**
-         * @override
+         * @public
          */
-        baseMergeOption: function (newOption) {
+        mergeOption: function (option) {
+            this.$superApply('mergeOption', arguments);
+            this.doMergeOption(option, false);
+        },
+
+        /**
+         * @protected
+         */
+        doMergeOption: function (newOption, isInit) {
             var thisOption = this.option;
-
-            newOption && zrUtil.merge(thisOption, newOption);
-
-            if (newOption.text && isArray(newOption.text)) {
-                thisOption.text = newOption.text.slice();
-            }
 
             // FIXME
             // necessary?

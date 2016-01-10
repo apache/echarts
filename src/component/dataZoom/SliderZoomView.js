@@ -7,9 +7,8 @@ define(function (require) {
     var Rect = graphic.Rect;
     var numberUtil = require('../../util/number');
     var linearMap = numberUtil.linearMap;
+    var layout = require('../../util/layout');
     var sliderMove = require('../helper/sliderMove');
-    var retrieveValue = zrUtil.retrieve;
-    var parsePercent = numberUtil.parsePercent;
     var asc = numberUtil.asc;
     var bind = zrUtil.bind;
     var mathRound = Math.round;
@@ -157,40 +156,47 @@ define(function (require) {
          */
         _resetLocation: function () {
             var dataZoomModel = this.dataZoomModel;
+            var api = this.api;
 
             // If some of x/y/width/height are not specified,
             // auto-adapt according to target grid.
-            var gridRect = this._findCoordRect();
+            var coordRect = this._findCoordRect();
+            var ecSize = {width: api.getWidth(), height: api.getHeight()};
 
-            var api = this.api;
-            var ecWidth = api.getWidth();
-            var ecHeight = api.getHeight();
+            // Default align by coordinate system rect.
+            // Notice: Those params have processed by layout.mergeLayoutParam.
+            var positionInfo = this._orient === HORIZONTAL
+                ? {
+                    left: coordRect.x,
+                    top: (ecSize.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP),
+                    width: coordRect.width,
+                    height: DEFAULT_FILLER_SIZE
+                }
+                : { // vertical
+                    right: DEFAULT_LOCATION_EDGE_GAP,
+                    top: coordRect.y,
+                    width: DEFAULT_FILLER_SIZE,
+                    height: coordRect.height
+                };
 
-            var x = dataZoomModel.get('left');
-            var y = dataZoomModel.get('top');
-            var width = dataZoomModel.get('width');
-            var height = dataZoomModel.get('height');
+            zrUtil.each(
+                layout.getLayoutParams(dataZoomModel.option),
+                function (value, name) {
+                    if (value !== 'auto') {
+                        positionInfo[name] = value;
+                    }
+                }
+            );
 
-            var location = this._location = {};
-            var size = this._size = [];
+            var layoutRect = layout.getLayoutRect(
+                positionInfo,
+                ecSize,
+                dataZoomModel.padding
+            );
 
-            // FIXME
-            // 是否用layout.positionGroup中支持x2 y2？
-            // 检查top bottom 等 margin。
-            if (this._orient === HORIZONTAL) {
-                size[0] = parsePercent(retrieveValue(width, gridRect.width), ecWidth);
-                size[1] = parsePercent(retrieveValue(height, DEFAULT_FILLER_SIZE), ecHeight);
-                location.x = parsePercent(retrieveValue(x, gridRect.x), ecWidth);
-                location.y = parsePercent(retrieveValue(
-                    y, (ecHeight - size[1] - DEFAULT_LOCATION_EDGE_GAP)
-                ), ecHeight);
-            }
-            else { // vertical
-                size[0] = parsePercent(retrieveValue(height, gridRect.height), ecHeight);
-                size[1] = parsePercent(retrieveValue(width, DEFAULT_FILLER_SIZE), ecWidth);
-                location.x = parsePercent(retrieveValue(x, DEFAULT_LOCATION_EDGE_GAP), ecWidth);
-                location.y = parsePercent(retrieveValue(y, gridRect.y), ecHeight);
-            }
+            this._location = {x: layoutRect.x, y: layoutRect.y};
+            this._size = [layoutRect.width, layoutRect.height];
+            this._orient === VERTICAL && this._size.reverse();
         },
 
         /**
@@ -567,7 +573,7 @@ define(function (require) {
             }
 
             var labelPrecision = dataZoomModel.get('labelPrecision');
-            if (labelPrecision == null) {
+            if (labelPrecision == null || labelPrecision === 'auto') {
                 labelPrecision = axis.getPixelPrecision();
             }
 

@@ -31,15 +31,17 @@ define(function (require) {
 
         // [0, 500]: guess axis extent.
         var precision = numberUtil.getPixelPrecision(valueRange, [0, 500]);
+        // toFixed() digits argument must be between 0 and 20
+        var invalidPrecision = !(precision < 20 && precision >= 0);
 
         axisModel.setNeedsCrossZero && axisModel.setNeedsCrossZero(
             isFull ? !backup.scale : false
         );
         axisModel.setMin && axisModel.setMin(
-            isFull ? backup.min : +valueRange[0].toFixed(precision)
+            (isFull || invalidPrecision) ? backup.min : +valueRange[0].toFixed(precision)
         );
         axisModel.setMax && axisModel.setMax(
-            isFull ? backup.max : +valueRange[1].toFixed(precision)
+            (isFull || invalidPrecision) ? backup.max : +valueRange[1].toFixed(precision)
         );
     }
 

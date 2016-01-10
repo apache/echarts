@@ -23,17 +23,17 @@ define(function(require) {
          * @protected
          */
         defaultOption: {
-            zlevel: 0,                 // 一级层叠
-            z: 4,                      // 二级层叠
-            orient: null,             // 布局方式，默认根据axisIndex自适应。可选值为：'horizontal' ¦ 'vertical'
-            xAxisIndex: null,         // 默认控制所有横向类目
-            yAxisIndex: null,         // 默认控制所有横向类目
-            filterMode: 'filter',       // 'filter' or 'empty'
-                                      // 'filter': data items which are out of window will be removed.
-                                      //           This option is applicable when filtering outliers.
-                                      // 'empty': data items which are out of window will be set to empty.
-                                      //          This option is applicable when user should not neglect
-                                      //          that there are some data items out of window.
+            zlevel: 0,
+            z: 4,                   // Higher than normal component (z: 2).
+            orient: null,           // Default auto by axisIndex. Possible value: 'horizontal', 'vertical'.
+            xAxisIndex: null,       // Default all horizontal category axis.
+            yAxisIndex: null,       // Default all vertical category axis.
+            filterMode: 'filter',   // 'filter' or 'empty'
+                                    // 'filter': data items which are out of window will be removed.
+                                    //           This option is applicable when filtering outliers.
+                                    // 'empty': data items which are out of window will be set to empty.
+                                    //          This option is applicable when user should not neglect
+                                    //          that there are some data items out of window.
             throttle: 100,          // Dispatch action by the fixed rate, avoid frequency.
                                     // default 100. Do not throttle when use null/undefined.
             start: 0,               // Start percent. 0 ~ 100

@@ -31,8 +31,8 @@ define(function(require) {
         /**
          * @override
          */
-        mergeOption: function (newOption, isInit) {
-            this.baseMergeOption(newOption);
+        doMergeOption: function (newOption, isInit) {
+            this.$superApply('doMergeOption', arguments);
 
             this.resetTargetSeries(newOption, isInit);
             this.resetExtent();

@@ -10,6 +10,7 @@ define(function(require) {
     var arrayPush = Array.prototype.push;
     var componentUtil = require('../util/component');
     var clazzUtil = require('../util/clazz');
+    var layout = require('../util/layout');
 
     /**
      * @alias module:echarts/model/Component
@@ -77,14 +78,40 @@ define(function(require) {
          */
         uid: null,
 
+        /**
+         * Support merge layout params.
+         * Only support 'box' now (left/right/top/bottom/width/height).
+         * @type {string|Object} Object can be {ignoreSize: true}
+         * @readOnly
+         */
+        layoutMode: null,
+
+
         init: function (option, parentModel, ecModel, extraOpt) {
             this.mergeDefaultAndTheme(this.option, this.ecModel);
         },
 
         mergeDefaultAndTheme: function (option, ecModel) {
+            var layoutMode = this.layoutMode;
+            var inputPositionParams = layoutMode
+                ? layout.getLayoutParams(option) : {};
+
             var themeModel = ecModel.getTheme();
             zrUtil.merge(option, themeModel.get(this.mainType));
             zrUtil.merge(option, this.getDefaultOption());
+
+            if (layoutMode) {
+                layout.mergeLayoutParam(option, inputPositionParams, layoutMode);
+            }
+        },
+
+        mergeOption: function (option) {
+            zrUtil.merge(this.option, option, true);
+
+            var layoutMode = this.layoutMode;
+            if (layoutMode) {
+                layout.mergeLayoutParam(this.option, option, layoutMode);
+            }
         },
 
         getDefaultOption: function () {
