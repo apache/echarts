@@ -28,24 +28,44 @@ define(function (require) {
                 RootClass.apply(this, arguments);
             };
 
-            var superProto = this.prototype;
-
             zrUtil.extend(ExtendedClass.prototype, zrUtil.extend({
                 $superCall: function (methodName) {
                     var args = zrUtil.slice(arguments, 1);
-                    return superProto[methodName].apply(this, args);
+                    return findSuperMethod(this, methodName).apply(this, args);
                 },
                 $superApply: function (methodName, args) {
-                    return superProto[methodName].apply(this, args);
+                    return findSuperMethod(this, methodName).apply(this, args);
                 }
             }, proto));
 
             ExtendedClass.extend = this.extend;
             zrUtil.inherits(ExtendedClass, this);
+            ExtendedClass.$superClass = this;
 
             return ExtendedClass;
         };
     };
+
+    // Find the first method that different with given metod.
+    // If only use closure to implements $superApply and $supperCall,
+    // Consider this case:
+    // class A has method f,
+    // class B inherits class A, overrides method f, f call this.$superApply('f'),
+    // class C inherits class B, do not overrides method f,
+    // then when method of class C is called, dead loop occured.
+    function findSuperMethod(context, methodName) {
+        var SuperClass = context.constructor;
+        var thisMethod = context[methodName];
+        var method;
+
+        while (
+            (SuperClass = SuperClass.prototype.$superClass)
+            && (method = SuperClass.prototype[methodName])
+            && method === thisMethod
+        ) {/*jshint noempty:false */}
+
+        return method;
+    }
 
     /**
      * @param {Object} entity
