@@ -59,7 +59,7 @@ define(function (require) {
         var method;
 
         while (
-            (SuperClass = SuperClass.prototype.$superClass)
+            (SuperClass = SuperClass.$superClass)
             && (method = SuperClass.prototype[methodName])
             && method === thisMethod
         ) {/*jshint noempty:false */}
