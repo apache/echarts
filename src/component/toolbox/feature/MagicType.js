@@ -128,6 +128,7 @@ define(function(require) {
         );
         api.dispatchAction({
             type: 'changeMagicType',
+            currentType: type,
             newOption: newOption
         });
     };
