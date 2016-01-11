@@ -16,7 +16,16 @@ define(function (require) {
         zrUtil.defaults(opts, {
             text: 'loading',
             color: '#c23531',
-            textColor: '#000'
+            textColor: '#000',
+            maskColor: 'rgba(255, 255, 255, 0.8)',
+            zlevel: 0
+        });
+        var mask = new graphic.Rect({
+            style: {
+                fill: opts.maskColor
+            },
+            zlevel: opts.zlevel,
+            z: 10000
         });
         var arc = new graphic.Arc({
             shape: {
@@ -29,7 +38,8 @@ define(function (require) {
                 lineCap: 'round',
                 lineWidth: 5
             },
-            z: 10000
+            zlevel: opts.zlevel,
+            z: 10001
         });
         var labelRect = new graphic.Rect({
             style: {
@@ -38,7 +48,9 @@ define(function (require) {
                 textPosition: 'right',
                 textDistance: 10,
                 textFill: opts.textColor
-            }
+            },
+            zlevel: opts.zlevel,
+            z: 10001
         });
 
         arc.animateShape(true)
@@ -56,6 +68,7 @@ define(function (require) {
         var group = new graphic.Group();
         group.add(arc);
         group.add(labelRect);
+        group.add(mask);
         // Inject resize
         group.resize = function () {
             var cx = api.getWidth() / 2;
@@ -70,6 +83,13 @@ define(function (require) {
                 y: cy - r,
                 width: r * 2,
                 height: r * 2
+            });
+
+            mask.setShape({
+                x: 0,
+                y: 0,
+                width: api.getWidth(),
+                height: api.getHeight()
             });
         };
         group.resize();
