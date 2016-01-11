@@ -132,39 +132,6 @@ define(function (require) {
         /**
          * @protected
          */
-        getItemAlignByOrient: function (itemOrient, ecSize) {
-            var modelOption = this.visualMapModel.option;
-            var itemAlign = modelOption.align;
-            var orient = modelOption.orient;
-
-            return itemOrient === 'horizontal'
-                ? getAlign('x', ['left', 'right'])
-                : getAlign('y', ['top', 'bottom']);
-
-            function getAlign(dim, values) {
-                var dim2 = dim + '2';
-                var v = zrUtil.retrieve(modelOption[dim], modelOption[dim2], 0);
-                if (!itemAlign || itemAlign === 'auto') {
-                    itemAlign = (orient === 'horizontal' && orient === itemOrient)
-                        ? 'right'
-                        : has(dim, dim2, values[1])
-                        ? values[0]
-                        : has(dim, dim2, values[0])
-                        ? values[1]
-                        : (v > ecSize * 0.6 ? values[0] : values[1]);
-                }
-
-                return itemAlign;
-            }
-
-            function has(attr1, attr2, value) {
-                return modelOption[attr1] === value || modelOption[attr2] === value;
-            }
-        },
-
-        /**
-         * @protected
-         */
         positionGroup: function (group) {
             var model = this.visualMapModel;
             var api = this.api;

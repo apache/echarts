@@ -5,6 +5,7 @@ define(function(require) {
     var graphic = require('../../util/graphic');
     var symbolCreators = require('../../util/symbol');
     var layout = require('../../util/layout');
+    var helper = require('./helper');
 
     var PiecewiseVisualMapView = VisualMapView.extend({
 
@@ -20,13 +21,11 @@ define(function(require) {
             thisGroup.removeAll();
 
             var visualMapModel = this.visualMapModel;
-            var api = this.api;
-            var ecWidth = api.getWidth();
             var textGap = visualMapModel.get('textGap');
             var textStyleModel = visualMapModel.textStyleModel;
             var textFont = textStyleModel.getFont();
             var textFill = textStyleModel.getTextColor();
-            var itemAlign = this.getItemAlignByOrient('horizontal', ecWidth);
+            var itemAlign = this._getItemAlign();
             var itemSize = visualMapModel.itemSize;
 
             var viewData = this._getViewData();
@@ -56,11 +55,11 @@ define(function(require) {
                 if (showLabel) {
                     itemGroup.add(new graphic.Text({
                         style: {
-                            x: itemAlign === 'right' ? itemSize[0] + textGap : -textGap,
+                            x: itemAlign === 'right' ? -textGap : itemSize[0] + textGap,
                             y: itemSize[1] / 2,
                             text: item.piece.text,
                             textBaseline: 'middle',
-                            textAlign: itemAlign === 'right' ? 'left' : 'right',
+                            textAlign: itemAlign,
                             textFont: textFont,
                             fill: textFill
                         }
@@ -68,6 +67,26 @@ define(function(require) {
                 }
 
                 thisGroup.add(itemGroup);
+            }
+        },
+
+        /**
+         * @private
+         */
+        _getItemAlign: function () {
+            var visualMapModel = this.visualMapModel;
+            var modelOption = visualMapModel.option;
+            if (modelOption.orient === 'vertical') {
+                return helper.getItemAlign(
+                    visualMapModel, this.api, visualMapModel.itemSize
+                );
+            }
+            else { // horizontal, most case left unless specifying right.
+                var align = modelOption.align;
+                if (!align || align === 'auto') {
+                    align = 'left';
+                }
+                return align;
             }
         },
 

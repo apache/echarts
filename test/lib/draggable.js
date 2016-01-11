@@ -29,6 +29,9 @@
             }
 
             var mainEl = $(mainEl);
+
+            $('.draggable-control').remove();
+
             var controlEl = $(
                 '<div class="draggable-control">DRAG<span class="draggable-label"></span></div>'
             );
@@ -44,6 +47,7 @@
                 'color': '#fff',
                 'cursor': 'pointer',
                 'font-size': '18px',
+                'box-shadow': '0 0 5px #333',
                 '-webkit-user-select': 'none',
                 'user-select': 'none'
             });

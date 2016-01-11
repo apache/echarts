@@ -7,6 +7,7 @@ define(function(require) {
     var sliderMove = require('../helper/sliderMove');
     var linearMap = numberUtil.linearMap;
     var LinearGradient = require('zrender/graphic/LinearGradient');
+    var helper = require('./helper');
     var each = zrUtil.each;
 
     // Notice:
@@ -151,15 +152,9 @@ define(function(require) {
             var visualMapModel = this.visualMapModel;
             var shapes = this._shapes;
             var itemSize = visualMapModel.itemSize;
-            var api = this.api;
             var orient = this._orient;
             var useHandle = this._useHandle;
-
-            var itemAlign = this.getItemAlignByOrient(
-                orient === 'horizontal' ? 'vertical' : 'horizontal',
-                orient === 'horizontal' ? api.getWidth() : api.getHeight()
-            );
-
+            var itemAlign = helper.getItemAlign(visualMapModel, this.api, itemSize);
             var barGroup = shapes.barGroup = this._createBarGroup(itemAlign);
 
             // Bar
@@ -193,7 +188,7 @@ define(function(require) {
         /**
          * @private
          */
-        _createHandle: function (barGroup, handleIndex, itemSize, textSize, orient, itemAlign) {
+        _createHandle: function (barGroup, handleIndex, itemSize, textSize, orient) {
             var handleGroup = new graphic.Group({position: [itemSize[0], 0]});
             var handleThumb = createPolygon(
                 createHandlePoints(handleIndex, textSize),
@@ -391,12 +386,12 @@ define(function(require) {
 
             return new graphic.Group(
                 (orient === 'horizontal' && !inverse)
-                ? {scale: itemAlign === 'top' ? [1, 1] : [-1, 1], rotation: Math.PI / 2}
+                ? {scale: itemAlign === 'bottom' ? [1, 1] : [-1, 1], rotation: Math.PI / 2}
                 : (orient === 'horizontal' && inverse)
-                ? {scale: itemAlign === 'top' ? [-1, 1] : [1, 1], rotation: -Math.PI / 2}
+                ? {scale: itemAlign === 'bottom' ? [-1, 1] : [1, 1], rotation: -Math.PI / 2}
                 : (orient === 'vertical' && !inverse)
-                ? {scale: itemAlign === 'right' ? [1, -1] : [-1, -1]}
-                : {scale: itemAlign === 'right' ? [1, 1] : [-1, 1]}
+                ? {scale: itemAlign === 'left' ? [1, -1] : [-1, -1]}
+                : {scale: itemAlign === 'left' ? [1, 1] : [-1, 1]}
             );
         },
 
