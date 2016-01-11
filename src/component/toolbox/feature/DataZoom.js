@@ -7,6 +7,7 @@ define(function(require) {
     var BoundingRect = require('zrender/core/BoundingRect');
     var Group = require('zrender/container/Group');
     var history = require('../../dataZoom/history');
+    var interactionMutex = require('../../helper/interactionMutex');
 
     var each = zrUtil.each;
     var asc = numberUtil.asc;
@@ -69,13 +70,16 @@ define(function(require) {
         handlers[type].call(this, controllerGroup, this.model, ecModel, api);
     };
 
-    proto.remove = function () {
+    proto.remove = function (ecModel, api) {
         this._disposeController();
+        interactionMutex.release('globalPan', api.getZr());
     };
 
     proto.dispose = function (ecModel, api) {
+        var zr = api.getZr();
+        interactionMutex.release('globalPan', zr);
         this._disposeController();
-        this._controllerGroup && api.getZr().remove(this._controllerGroup);
+        this._controllerGroup && zr.remove(this._controllerGroup);
     };
 
     /**
@@ -86,6 +90,8 @@ define(function(require) {
         zoom: function (controllerGroup, featureModel, ecModel, api) {
             var isZoomActive = this._isZoomActive = !this._isZoomActive;
             var zr = api.getZr();
+
+            interactionMutex[isZoomActive ? 'take' : 'release']('globalPan', zr);
 
             featureModel.setIconStatus('zoom', isZoomActive ? 'emphasis' : 'normal');
 

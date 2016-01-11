@@ -7,6 +7,7 @@ define(function (require) {
     var Eventful = require('zrender/mixin/Eventful');
     var zrUtil = require('zrender/core/util');
     var eventTool = require('zrender/core/event');
+    var interactionMutex = require('./interactionMutex');
 
     function mousedown(e) {
         if (e.target && e.target.draggable) {
@@ -31,6 +32,11 @@ define(function (require) {
         eventTool.stop(e.event);
 
         if (e.gestureEvent !== 'pinch') {
+
+            if (interactionMutex.isTaken('globalPan', this._zr)) {
+                return;
+            }
+
             var x = e.offsetX;
             var y = e.offsetY;
 
@@ -65,6 +71,10 @@ define(function (require) {
     }
 
     function pinch(e) {
+        if (interactionMutex.isTaken('globalPan', this._zr)) {
+            return;
+        }
+
         eventTool.stop(e.event);
         var zoomDelta = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
         zoom.call(this, e, zoomDelta, e.pinchX, e.pinchY);
@@ -122,6 +132,11 @@ define(function (require) {
          * @type {module:zrender/core/BoundingRect}
          */
         this.rect = rect;
+
+        /**
+         * @type {module:zrender}
+         */
+        this._zr = zr;
 
         // Avoid two roamController bind the same handler
         var bind = zrUtil.bind;
