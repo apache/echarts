@@ -14,7 +14,7 @@ require.config({
         },
         {
             main: 'zrender',
-            location: '../../zrender-dev3.0/src',
+            location: '../../zrender/src',
             name: 'zrender'
         }
     ]

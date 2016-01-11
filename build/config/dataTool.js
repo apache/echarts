@@ -7,11 +7,11 @@
     },
     wrap: {
         startFile: [
-            'wrap/startDataTool.js',
-            'wrap/nut.js'
+            '../wrap/startDataTool.js',
+            '../wrap/nut.js'
         ],
         endFile: [
-            'wrap/endDataTool.js'
+            '../wrap/endDataTool.js'
         ]
     },
     include:[
