@@ -68,7 +68,9 @@ define(function (require) {
 
         graphic.Group.call(this);
 
-        var sector = new graphic.Sector();
+        var sector = new graphic.Sector({
+            z2: 2
+        });
         var polyline = new graphic.Polyline();
         var text = new graphic.Text();
         this.add(sector);
