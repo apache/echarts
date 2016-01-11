@@ -545,7 +545,7 @@ define(function (require) {
      * Hide loading effect
      */
     echartsProto.hideLoading = function () {
-        this._zr.remove(this._loadingFX);
+        this._loadingFX && this._zr.remove(this._loadingFX);
         this._loadingFX = null;
     };
 
