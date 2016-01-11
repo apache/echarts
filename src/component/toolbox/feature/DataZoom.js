@@ -284,16 +284,24 @@ define(function(require) {
             dataZoomOpts = [dataZoomOpts];
         }
 
-        // TODO
-        // polar
+        var toolboxOpt = option.toolbox;
+        if (toolboxOpt) {
+            // Assume there is only one toolbox
+            if (zrUtil.isArray(toolboxOpt)) {
+                toolboxOpt = toolboxOpt[0];
+            }
 
-        addForAxis('xAxis');
-        addForAxis('yAxis');
+            if (toolboxOpt && toolboxOpt.feature && toolboxOpt.feature.dataZoom) {
+                addForAxis('xAxis');
+                addForAxis('yAxis');
+            }
+        }
 
         function addForAxis(axisName) {
             forEachComponent(axisName, function (axisOpt, axisIndex) {
                 var newOpt = {
                     type: 'select',
+                    $fromToolbox: true,
                     // Id for merge mapping.
                     id: DATA_ZOOM_ID_BASE + axisName + axisIndex
                 };

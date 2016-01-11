@@ -134,6 +134,35 @@ define(function(require) {
             return seriesModels;
         },
 
+        getAxisModel: function () {
+            return this.ecModel.getComponent(this._dimName + 'Axis', this._axisIndex);
+        },
+
+        getOtherAxisModel: function () {
+            var axisDim = this._dimName;
+            var ecModel = this.ecModel;
+            var axisModel = this.getAxisModel();
+            var isCartesian = axisDim === 'x' || axisDim === 'y';
+            var otherAxisDim;
+            var coordSysIndexName;
+            if (isCartesian) {
+                coordSysIndexName = 'gridIndex';
+                otherAxisDim = axisDim === 'x' ? 'y' : 'x';
+            }
+            else {
+                coordSysIndexName = 'polarIndex';
+                otherAxisDim = axisDim === 'angle' ? 'radius' : 'angle';
+            }
+            var foundOtherAxisModel;
+            ecModel.eachComponent(otherAxisDim + 'Axis', function (otherAxisModel) {
+                if ((otherAxisModel.get(coordSysIndexName) || 0)
+                    === (axisModel.get(coordSysIndexName) || 0)) {
+                    foundOtherAxisModel = otherAxisModel;
+                }
+            });
+            return foundOtherAxisModel;
+        },
+
         /**
          * @param {module: echarts/component/dataZoom/DataZoomModel} model
          */
@@ -144,7 +173,7 @@ define(function(require) {
 
             // Process axis data
             var axisDim = this._dimName;
-            var axisModel = this.ecModel.getComponent(axisDim + 'Axis', this._axisIndex);
+            var axisModel = this.getAxisModel();
             var isCategoryFilter = axisModel.get('type') === 'category';
             var seriesModels = this.getTargetSeriesModels();
 
@@ -170,6 +199,15 @@ define(function(require) {
             var filterMode = model.get('filterMode');
             var valueWindow = this._valueWindow;
 
+            // FIXME
+            // Toolbox may has dataZoom injected. And if there are stacked bar chart
+            // with NaN data. NaN will be filtered and stack will be wrong.
+            // So we need to force the mode to be set empty
+            var otherAxisModel = this.getOtherAxisModel();
+            if (model.get('$fromToolbox')
+                && otherAxisModel && otherAxisModel.get('type') === 'category') {
+                filterMode = 'empty';
+            }
             // Process series data
             each(seriesModels, function (seriesModel) {
                 var seriesData = seriesModel.getData();
