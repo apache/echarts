@@ -83,13 +83,17 @@ define(function (require) {
             }
 
             if (!type || type === 'recreate' || type === 'timeline') {
-                var partialOption = optionManager.getTimelineOption(this);
-                partialOption && (this.mergeOption(partialOption), optionChanged = true);
+                var timelineOption = optionManager.getTimelineOption(this);
+                timelineOption && (this.mergeOption(timelineOption), optionChanged = true);
             }
 
             if (!type || type === 'recreate' || type === 'media') {
-                var partialOption = optionManager.getMediaOption(this, this._api);
-                partialOption && (this.mergeOption(partialOption), optionChanged = true);
+                var mediaOptions = optionManager.getMediaOption(this, this._api);
+                if (mediaOptions.length) {
+                    each(mediaOptions, function (mediaOption) {
+                        this.mergeOption(mediaOption, optionChanged = true);
+                    }, this);
+                }
             }
 
             return optionChanged;

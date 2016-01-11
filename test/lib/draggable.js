@@ -4,11 +4,29 @@
  */
 (function (global) {
 
-    var BORDER_WIDTH = 3;
+    var BORDER_WIDTH = 4;
+    var $ = global.jQuery;
 
     global.draggable = {
 
-        init: function (mainEl, chart) {
+        /**
+         * @param {HTMLElement} mainEl
+         * @param {module:echarts/echarts~EChart} chart
+         * @param {Object} [opt] {width: ..., height: ...}
+         * @param {number} [opt.width] If not specified, use mainEl current width.
+         * @param {number} [opt.height] If not specified, use mainEl current height.
+         * @param {boolean} [opt.lockX=false]
+         * @param {boolean} [opt.lockY=false]
+         * @param {number} [opt.throttle=false]
+         * @return {type}  description
+         */
+        init: function (mainEl, chart, opt) {
+            opt = opt || {};
+
+            var chartResize = chart ? $.proxy(chart.resize, chart) : function () {};
+            if (opt.throttle) {
+                chartResize = throttle(chartResize, opt.throttle, true, false);
+            }
 
             var mainEl = $(mainEl);
             var controlEl = $(
@@ -51,7 +69,7 @@
                 'width': mainEl[0].offsetWidth + 'px',
                 'height': mainEl[0].offsetHeight + 'px',
                 'border-style': 'solid',
-                'border-color': '#777',
+                'border-color': '#ddd',
                 'border-width': BORDER_WIDTH + 'px',
                 'padding': 0,
                 'margin': 0
@@ -61,14 +79,18 @@
 
             var controlSize = controlEl[0].offsetWidth;
 
-            var mainElWidth = mainEl[0].offsetWidth - 2 * BORDER_WIDTH;
-            var mainElHeight = mainEl[0].offsetHeight - 2 * BORDER_WIDTH;
-            controlEl.css({
-                left: mainEl[0].offsetLeft + mainElWidth - controlSize / 2,
-                top: mainEl[0].offsetTop + mainElHeight - controlSize / 2
-            });
+            var boxSizing = mainEl.css('box-sizing');
 
-            label.text(mainElWidth + ' x ' + mainElHeight);
+            var borderBoxBroder = boxSizing === 'border-box' ? 2 * BORDER_WIDTH : 0;
+            var mainContentWidth = opt.width || (mainEl.width() + borderBoxBroder);
+            var mainContentHeight = opt.height || (mainEl.height() + borderBoxBroder);
+
+            var mainOffset = mainEl.offset();
+            resize(
+                mainOffset.left + mainContentWidth + BORDER_WIDTH,
+                mainOffset.top + mainContentHeight + BORDER_WIDTH,
+                true
+            );
 
             var dragging = false;
 
@@ -86,20 +108,115 @@
                 dragging = false;
             });
 
-            function resize(x, y) {
-                controlEl.css({left: x - controlSize / 2, top: y - controlSize / 2});
-                var mainElWidth = x - mainEl[0].offsetLeft;
-                var mainElHeight = y - mainEl[0].offsetTop;
 
-                mainEl.css({width: mainElWidth, height: mainElHeight});
 
-                label.text(mainElWidth + ' x ' + mainElHeight)
+            function resize(x, y, isInit) {
+                var mainOffset = mainEl.offset();
+                var mainPosition = mainEl.position();
+                var mainContentWidth = x - mainOffset.left - BORDER_WIDTH;
+                var mainContentHeight = y - mainOffset.top - BORDER_WIDTH;
 
-                if (chart) {
-                    chart.resize();
+                if (isInit || !opt.lockX) {
+                    controlEl.css(
+                        'left',
+                        (mainPosition.left + mainContentWidth + BORDER_WIDTH - controlSize / 2) + 'px'
+                    );
+                    mainEl.css(
+                        'width',
+                        (mainContentWidth + borderBoxBroder) + 'px'
+                    );
                 }
+
+                if (isInit || !opt.lockY) {
+                    controlEl.css(
+                        'top',
+                        (mainPosition.top + mainContentHeight + BORDER_WIDTH - controlSize / 2) + 'px'
+                    );
+                    mainEl.css(
+                        'height',
+                        (mainContentHeight + borderBoxBroder) + 'px'
+                    );
+                }
+
+                label.text(Math.round(mainContentWidth) + ' x ' + Math.round(mainContentHeight));
+
+                chartResize();
             }
         }
     };
+
+    function throttle(fn, delay, trailing, debounce) {
+
+        var currCall = (new Date()).getTime();
+        var lastCall = 0;
+        var lastExec = 0;
+        var timer = null;
+        var diff;
+        var scope;
+        var args;
+        var isSingle = typeof fn === 'function';
+        delay = delay || 0;
+
+        if (isSingle) {
+            return createCallback();
+        }
+        else {
+            var ret = [];
+            for (var i = 0; i < fn.length; i++) {
+                ret[i] = createCallback(i);
+            }
+            return ret;
+        }
+
+        function createCallback(index) {
+
+            function exec() {
+                lastExec = (new Date()).getTime();
+                timer = null;
+                (isSingle ? fn : fn[index]).apply(scope, args || []);
+            }
+
+            var cb = function () {
+                currCall = (new Date()).getTime();
+                scope = this;
+                args = arguments;
+                diff = currCall - (debounce ? lastCall : lastExec) - delay;
+
+                clearTimeout(timer);
+
+                if (debounce) {
+                    if (trailing) {
+                        timer = setTimeout(exec, delay);
+                    }
+                    else if (diff >= 0) {
+                        exec();
+                    }
+                }
+                else {
+                    if (diff >= 0) {
+                        exec();
+                    }
+                    else if (trailing) {
+                        timer = setTimeout(exec, -diff);
+                    }
+                }
+
+                lastCall = currCall;
+            };
+
+            /**
+             * Clear throttle.
+             * @public
+             */
+            cb.clear = function () {
+                if (timer) {
+                    clearTimeout(timer);
+                    timer = null;
+                }
+            };
+
+            return cb;
+        }
+    }
 
 })(window);

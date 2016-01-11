@@ -96,10 +96,11 @@ define(function (require) {
 
         /**
          * -1, means default.
-         * null means no media.
+         * empty means no media.
          * @private
+         * @type {Array.<number>}
          */
-        this._currentMediaIndex = null;
+        this._currentMediaIndices = [];
 
         /**
          * @private
@@ -151,7 +152,7 @@ define(function (require) {
             this._timelineOptions = map(optionBackup.timelineOptions, clone);
             this._mediaList = map(optionBackup.mediaList, clone);
             this._mediaDefault = clone(optionBackup.mediaDefault);
-            this._currentMediaIndex = null;
+            this._currentMediaIndices = [];
 
             return clone(optionBackup.baseOption);
         },
@@ -181,39 +182,44 @@ define(function (require) {
 
         /**
          * @param {module:echarts/model/Global} ecModel
-         * @return {Object}
+         * @return {Array.<Object>}
          */
         getMediaOption: function (ecModel) {
             var ecWidth = this._api.getWidth();
             var ecHeight = this._api.getHeight();
             var mediaList = this._mediaList;
-            var index;
-            var result;
+            var mediaDefault = this._mediaDefault;
+            var indices = [];
+            var result = [];
 
+            // No media defined.
+            if (!mediaList.length && !mediaDefault) {
+                return result;
+            }
+
+            // Multi media may be applied, the latter defined media has higher priority.
             for (var i = 0, len = mediaList.length; i < len; i++) {
                 if (applyMediaQuery(mediaList[i].query, ecWidth, ecHeight)) {
-                    index = i;
-                    break;
+                    indices.push(i);
                 }
             }
 
             // FIXME
             // 是否mediaDefault应该强制用户设置，否则可能修改不能回归。
-            if (index == null && this._mediaDefault) {
-                index = -1;
+            if (!indices.length && mediaDefault) {
+                indices = [-1];
             }
 
-            if (index != null && index !== this._currentMediaIndex) {
-                result = clone(
-                    index === -1
-                        ? this._mediaDefault.option
-                        : mediaList[index].option,
-                    true
-                );
+            if (indices.length && !indicesEquals(indices, this._currentMediaIndices)) {
+                result = map(indices, function (index) {
+                    return clone(
+                        index === -1 ? mediaDefault.option : mediaList[index].option
+                    );
+                });
             }
             // Otherwise return nothing.
 
-            this._currentMediaIndex = index;
+            this._currentMediaIndices = indices;
 
             return result;
         }
@@ -322,6 +328,11 @@ define(function (require) {
         else { // Equals
             return real === expect;
         }
+    }
+
+    function indicesEquals(indices1, indices2) {
+        // indices is always order by asc and has only finite number.
+        return indices1.join(',') === indices2.join(',');
     }
 
     return OptionManager;
