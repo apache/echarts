@@ -11,6 +11,8 @@ define(function(require) {
 
         dependencies: ['series'],
 
+        layoutMode: {type: 'box', ignoreSize: true},
+
         init: function (option, parentModel, ecModel) {
             this.mergeDefaultAndTheme(option, ecModel);
 
