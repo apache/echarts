@@ -24,7 +24,7 @@ define(function(require) {
                         name: dataItem
                     };
                 }
-                return new Model(dataItem, this);
+                return new Model(dataItem, this, this.ecModel);
             }, this);
             this._data = legendData;
 
