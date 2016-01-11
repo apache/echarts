@@ -1,0 +1,37 @@
+{
+    "name": "echarts",
+    "version": "3.0.0",
+    "description": "A powerful charting and visualization library for browser",
+    "keywords": [
+        "visualization",
+        "canvas"
+    ],
+    "homepage": "http://echarts.baidu.com/",
+    "author": [{
+        "name": "Kenner",
+        "email": "kener.linfeng@gmail.com"
+    }, {
+        "name": "Yi Shen",
+        "url": "https://github.com/pissang"
+    }, {
+        "name": "Shuang Su",
+        "url": "https://github.com/100pah"
+    }],
+    "contributors": [{
+        "name": "erik",
+        "email": "errorrik@gmail.com"
+    }],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ecomfe/echarts.git"
+    },
+    "main": "dist/echarts.min.js",
+    "browserify": "dist/echarts.min.js",
+    "files": [
+        "dist",
+        "src"
+    ],
+    "devDependencies": {
+        "zrender": "~3.0.0"
+    }
+}
