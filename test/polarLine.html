@@ -1,0 +1,114 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/polar',
+                'echarts/component/tooltip',
+                'echarts/component/markPoint',
+                'echarts/component/markLine'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 10; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((Math.random() * 2 + 1).toFixed(3));
+                    data3.push((Math.random() + 0.5).toFixed(3));
+                    data2.push((Math.random() + 0.5).toFixed(3));
+                }
+
+                chart.setOption({
+                    legend: {
+                        data: ['line', 'line2', 'line3']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    polar: {},
+                    angleAxis: {
+                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        data: xAxisData
+                    },
+                    radiusAxis: {
+                    },
+                    series: [{
+                        coordinateSystem: 'polar',
+                        name: 'line',
+                        stack: 'all',
+                        type: 'line',
+                        symbolSize: 10,
+                        itemStyle: {
+                            normal: {
+                                areaStyle: {}
+                            }
+                        },
+                        markPoint: {
+                            data: [{
+                                type: 'max'
+                            }]
+                        },
+                        data: data1
+                    }, {
+                        coordinateSystem: 'polar',
+                        name: 'line2',
+                        stack: 'all',
+                        type: 'line',
+                        symbolSize: 10,
+                        itemStyle: {
+                            normal: {
+                                areaStyle: {}
+                            }
+                        },
+                        markLine: {
+                            data: [[{
+                                type: 'max'
+                            }, {
+                                type: 'min'
+                            }]]
+                        },
+                        data: data2
+                    }, {
+                        coordinateSystem: 'polar',
+                        name: 'line3',
+                        stack: 'all',
+                        type: 'line',
+                        symbolSize: 10,
+                        itemStyle: {
+                            normal: {
+                                areaStyle: {}
+                            }
+                        },
+                        data: data3
+                    }]
+                });
+            })
+
+        </script>
+    </body>
+</html>

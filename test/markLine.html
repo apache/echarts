@@ -1,0 +1,98 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/markLine'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+
+                for (var i = 0; i < 10; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push(+Math.random().toFixed(2));
+                    data2.push(+Math.random().toFixed(2));
+                }
+
+                chart.setOption({
+                    legend: {
+                        data: ['line', 'line2']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    xAxis: {
+                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        data: xAxisData,
+                        boundaryGap: false,
+                        // inverse: true,
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                        splitLine: {
+                            // show: false
+                        }
+                    },
+                    series: [{
+                        name: 'line',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 6,
+                        data: data1,
+
+                        markLine: {
+                            data: [{
+                                name: '平均值',
+                                type: 'average',
+                                valueIndex: 1
+                            }]
+                        }
+                    }, {
+                        name: 'line2',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 6,
+                        data: data2,
+
+                        markLine: {
+                            data: [{
+                                name: '平均值',
+                                type: 'average',
+                                valueIndex: 0
+                            }]
+                        }
+                    }]
+                });
+            });
+
+        </script>
+    </body>
+</html>

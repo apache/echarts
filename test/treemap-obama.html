@@ -1,0 +1,320 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body {
+                width: 100%;
+                height: 100%;
+            }
+            html, body, #main {
+                margin: 0;
+                padding: 0;
+            }
+            #main {
+                margin-top: 90px;
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                top: 0;
+            }
+            .controller {
+                font-size: 14px;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                background: #eee;
+                border-bottom: 1px solid #ccc;
+                line-height: 20px;
+                z-index: 100;
+            }
+            .controller label {
+                margin-right: 10px;
+            }
+            .item-title {
+                font-weight: bold;
+            }
+            .controller .mode-title {
+                float: left;
+                width: 60px;
+                vertical-align: middle;
+                padding-left: 10px;
+            }
+            .controller .mode-body {
+                float: left;
+                width: 700px;
+            }
+            .controller .query {
+                margin-left: 800px;
+                padding-top: 10px;
+            }
+            .controller .query #query-input {
+                width: 250px;
+            }
+            .tooltip-title {
+                color: yellow;
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+        </style>
+        <div class="controller">
+            <div class="mode-title">示例模式<br>(Mode)</div>
+            <div class="mode-body">
+                <input type="radio" id="area-meaning-0" name="area-meaning" onclick="areaMeasureChange(0);" checked="checked"/>
+                <label for="area-meaning-0">面积代表“2012年预算额” (Area represents '2012 Amount)</label><br>
+                <input type="radio" id="area-meaning-2" name="area-meaning" onclick="areaMeasureChange(2);"/>
+                <label for="area-meaning-2">面积代表“2012年预算额”，明暗代表“2011年相比的增长率”<br>&nbsp;&nbsp;&nbsp;&nbsp; (Area represents '2012 Amount' and color-alpha represents 'Change from 2011')</label><br>
+                <input type="radio" id="area-meaning-1" name="area-meaning" onclick="areaMeasureChange(1);"/>
+                <label for="area-meaning-1">面积代表“2011年预算额” (Area represents '2011 Amount')</label>
+            </div>
+            <div class="query">
+                <input id="query-input" type="text" placeholder="请输入节点名 (Please node name)" onkeypress="if (event.keyCode === 13) { query(); return false; }"/>
+                <input type="button" class="query-btn" value="检索节点(query)" onclick="query();" />
+            </div>
+        </div>
+        <div id="main"></div>
+
+        <script src="data/obama_budget_proposal_2012.tree.js"></script>
+
+        <script>
+
+            var chart;
+            var formatUtil;
+
+            var SERIES_NAME = 'Obama’s 2012 Budget Proposal: How $3.7 Trillion is Spent';
+
+            require([
+                'echarts',
+                'echarts/util/format',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/chart/treemap'
+            ], init);
+
+            function areaMeasureChange(mode) {
+                chart.setOption({
+                    tooltip: {
+                        formatter: getTooltipFormatter(mode)
+                    },
+                    series: [{
+                        visualDimension: mode === 2 ? 2 : null,
+                        data: buildData(mode, window.obama_budget_2012),
+                        levels: getLevelOption(mode)
+                    }]
+                });
+            }
+
+            function query() {
+                var nodeName = document.getElementById('query-input').value;
+                // 先找精确匹配的
+                var nodeIdList = findNodeId(nodeName, window.obama_budget_2012);
+                // 再找模糊匹配的
+                if (!nodeIdList.length) {
+                    nodeIdList = findNodeId(nodeName, window.obama_budget_2012, true);
+                }
+
+                if (nodeIdList.length) {
+                    // FIXME
+                    // 接口？
+                    chart.dispatchAction({
+                        type: 'treemapZoomToNode',
+                        seriesName: SERIES_NAME,
+                        // 这个示例中简单处理，只聚焦到找到的第一个节点上。
+                        targetNodeId: nodeIdList[0]
+                    });
+                }
+                else {
+                    alert('没有找到节点 (No result)');
+                }
+            }
+
+            function findNodeId(nodeName, originList, fuzzy) {
+                var out = [];
+                nodeName = nodeName.toLowerCase();
+
+                for (var i = 0, len = originList.length; i < len; i++) {
+                    var node = originList[i];
+                    if (node.name
+                        && (
+                            fuzzy
+                            ? node.name.toLowerCase().indexOf(nodeName) === 0
+                            : node.name.toLowerCase() === nodeName
+                        )
+                    ) {
+                        out.push(node.id);
+                    }
+                    if (node.children) {
+                        out.push.apply(out, findNodeId(nodeName, node.children, fuzzy));
+                    }
+                }
+
+                return out;
+            }
+
+            function buildData(mode, originList) {
+                var out = [];
+
+                for (var i = 0; i < originList.length; i++) {
+                    var node = originList[i];
+                    var newNode = out[i] = cloneNodeInfo(node);
+                    var value = newNode.value;
+
+                    if (!newNode) {
+                        continue;
+                    }
+
+                    // Calculate amount per household.
+                    value[3] = value[0] / window.household_america_2012;
+
+                    // if mode === 0 and mode === 2 do nothing
+                    if (mode === 1) {
+                        // Set 'Change from 2010' to value[0].
+                        var tmp = value[1];
+                        value[1] = value[0];
+                        value[0] = tmp;
+                    }
+
+                    if (node.children) {
+                        newNode.children = buildData(mode, node.children);
+                    }
+                }
+
+                return out;
+            }
+
+            function cloneNodeInfo(node) {
+                if (!node) {
+                    return;
+                }
+
+                var newNode = {};
+                newNode.name = node.name;
+                newNode.id = node.id;
+                newNode.discretion = node.discretion;
+                newNode.value = (node.value || []).slice();
+                return newNode;
+            }
+
+            function getLevelOption(mode) {
+                return [
+                    {
+                        color: mode === 2
+                            ? [
+                                '#5793f3', '#d14a61', '#fd9c35',
+                                '#675bba', '#fec42c', '#dd4444',
+                                '#d4df5a', '#cd4870'
+                            ]
+                            : null,
+                        colorMappingBy: 'id',
+                        itemStyle: {
+                            normal: {
+                                borderWidth: 3,
+                                gapWidth: 3
+                            }
+                        }
+                    },
+                    {
+                        colorAlpha: mode === 2
+                            ? [0.5, 1] : null,
+                        itemStyle: {
+                            normal: {
+                                gapWidth: 1
+                            }
+                        }
+                    }
+                ];
+            }
+
+            function isValidNumber(num) {
+                return num != null && isFinite(num);
+            }
+
+            function getTooltipFormatter(mode) {
+                var amountIndex = mode === 1 ? 1 : 0;
+                var amountIndex2011 = mode === 1 ? 0 : 1;
+
+                return function (info) {
+                    var value = info.value;
+
+                    var amount = value[amountIndex];
+                    amount = isValidNumber(amount)
+                        ? formatUtil.addCommas(amount * 1000) + '$'
+                        : '-';
+
+                    var amount2011 = value[amountIndex2011];
+                    amount2011 = isValidNumber(amount2011)
+                        ? formatUtil.addCommas(amount2011 * 1000) + '$'
+                        : '-';
+
+                    var perHousehold = value[3];
+                    perHousehold = isValidNumber(perHousehold)
+                        ? formatUtil.addCommas((+perHousehold.toFixed(4)) * 1000) + '$'
+                        : '-';
+
+                    var change = value[2];
+                    change = isValidNumber(change)
+                        ? change.toFixed(2) + '%'
+                        : '-';
+
+                    return [
+                        '<div class="tooltip-title">' + formatUtil.encodeHTML(info.name) + '</div>',
+                        '2012 Amount: &nbsp;&nbsp;' + amount + '<br>',
+                        'Per Household: &nbsp;&nbsp;' + perHousehold + '<br>',
+                        '2011 Amount: &nbsp;&nbsp;' + amount2011 + '<br>',
+                        'Change From 2011: &nbsp;&nbsp;' + change
+                    ].join('');
+                }
+            }
+
+            function init(echarts, format) {
+
+                formatUtil = format;
+
+                chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                chart.setOption({
+
+                    legend: {
+                        data: [SERIES_NAME]
+                    },
+
+                    tooltip: {
+                        formatter: getTooltipFormatter(0)
+                    },
+
+                    series: [
+                        {
+                            name: SERIES_NAME,
+                            type: 'treemap',
+                            label: {
+                                show: true,
+                                formatter: "{b}",
+                                normal: {
+                                    textStyle: {
+                                        ellipsis: true
+                                    }
+                                }
+                            },
+                            itemStyle: {
+                                normal: {
+                                    borderColor: 'black'
+                                }
+                            },
+                            levels: getLevelOption(0),
+                            data: buildData('2012 Amount', window.obama_budget_2012)
+                        }
+                    ]
+                });
+            }
+
+        </script>
+    </body>
+</html>

@@ -1,0 +1,165 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="info"></div>
+        <div id="main"></div>
+        <script>
+
+            /**
+             * @see <https://en.wikipedia.org/wiki/Michelson%E2%80%93Morley_experiment>
+             * @see <http://bl.ocks.org/mbostock/4061502>
+             */
+            var chart;
+            var data;
+            var mean;
+
+            require([
+                'echarts',
+                'data/Michelson-Morley.json',
+                'extension/dataTool/prepareBoxplotData',
+                'echarts/chart/boxplot',
+                'echarts/chart/scatter',
+                'echarts/component/title',
+                'echarts/component/legend',
+                'echarts/component/markLine',
+                'echarts/component/grid',
+                'echarts/component/tooltip'
+            ], function (echarts, rawData, prepareBoxplotData) {
+
+                chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                update('vertical');
+
+                function update(layout) {
+
+                    data = prepareBoxplotData(rawData, {
+                        layout: layout
+                    });
+                    mean = calculateMean(rawData);
+
+                    var categoryAxis = {
+                        type: 'category',
+                        data: data.axisData,
+                        boundaryGap: true,
+                        nameGap: 30,
+                        splitArea: {
+                            show: false
+                        },
+                        axisLabel: {
+                            formatter: 'expr {value}'
+                        },
+                        splitLine: {
+                            show: false
+                        }
+                    };
+                    var valueAxis = {
+                        type: 'value',
+                        name: 'km/s minus 299,000',
+                        splitArea: {
+                            show: true
+                        }
+                    };
+
+                    chart.setOption({
+                        title: [
+                            {
+                                text: 'Michelson-Morley Experiment',
+                                left: 'center',
+                            },
+                            {
+                                text: 'upper: Q3 + 1.5 * IRQ \nlower: Q1 - 1.5 * IRQ',
+                                borderColor: '#999',
+                                borderWidth: 1,
+                                textStyle: {
+                                    fontSize: 14
+                                },
+                                left: '10%',
+                                top: '90%'
+                            }
+                        ],
+                        legend: {
+                            data: ['line', 'line2', 'line3']
+                        },
+                        tooltip: {
+                            trigger: 'item',
+                            axisPointer: {
+                                type: 'shadow'
+                            }
+                        },
+                        grid: {
+                            left: '10%',
+                            right: '10%',
+                            bottom: '15%'
+                        },
+                        xAxis: layout === 'horizontal' ? categoryAxis : valueAxis,
+                        yAxis: layout === 'vertical' ? categoryAxis : valueAxis,
+                        series: [
+                            {
+                                name: 'boxplot',
+                                type: 'boxplot',
+                                data: data.boxData,
+                                tooltip: {
+                                    formatter: function (param) {
+                                        return [
+                                            'Experiment ' + param.name + ': ',
+                                            'upper: ' + param.data[0],
+                                            'Q1: ' + param.data[1],
+                                            'median: ' + param.data[2],
+                                            'Q3: ' + param.data[3],
+                                            'lower: ' + param.data[4]
+                                        ].join('<br/>')
+                                    }
+                                }
+                            },
+                            {
+                                name: 'outlier',
+                                type: 'scatter',
+                                data: data.outliers
+                            }
+                        ]
+                    });
+                }
+
+                function calculateMean(rawData) {
+                    var sum = 0;
+                    var count = 0;
+                    for (var i = 0, len = rawData.length; i < len; i++) {
+                        for (var j = 0, lenj = rawData[i].length; j < lenj; j++) {
+                            var value = rawData[i][j];
+                            count++;
+                            if (!isNaN(value) && value != null && value !== '') {
+                                sum += value;
+                            }
+                        }
+                    }
+                    return sum / count;
+                };
+
+
+                var gui = new dat.GUI();
+                var config = {
+                    layout: 'horizontal'
+                };
+                gui
+                    .add(config, 'layout', ['horizontal', 'vertical'])
+                    .onChange(update);
+            });
+
+        </script>
+    </body>
+</html>

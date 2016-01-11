@@ -1,0 +1,97 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                var symbolList = [
+                    'circle',
+                    'triangle',
+                    'diamond',
+                    'pin',
+                    'image://http://echarts.baidu.com/doc/asset/img/echarts-logo.png',
+                    'path://M432.45,595.444c0,2.177-4.661,6.82-11.305,6.82c-6.475,0-11.306-4.567-11.306-6.82s4.852-6.812,11.306-6.812C427.841,588.632,432.452,593.191,432.45,595.444L432.45,595.444z M421.155,589.876c-3.009,0-5.448,2.495-5.448,5.572s2.439,5.572,5.448,5.572c3.01,0,5.449-2.495,5.449-5.572C426.604,592.371,424.165,589.876,421.155,589.876L421.155,589.876z M421.146,591.891c-1.916,0-3.47,1.589-3.47,3.549c0,1.959,1.554,3.548,3.47,3.548s3.469-1.589,3.469-3.548C424.614,593.479,423.062,591.891,421.146,591.891L421.146,591.891zM421.146,591.891',
+                    'emptyPath://M432.45,595.444c0,2.177-4.661,6.82-11.305,6.82c-6.475,0-11.306-4.567-11.306-6.82s4.852-6.812,11.306-6.812C427.841,588.632,432.452,593.191,432.45,595.444L432.45,595.444z M421.155,589.876c-3.009,0-5.448,2.495-5.448,5.572s2.439,5.572,5.448,5.572c3.01,0,5.449-2.495,5.449-5.572C426.604,592.371,424.165,589.876,421.155,589.876L421.155,589.876z M421.146,591.891c-1.916,0-3.47,1.589-3.47,3.549c0,1.959,1.554,3.548,3.47,3.548s3.469-1.589,3.469-3.548C424.614,593.479,423.062,591.891,421.146,591.891L421.146,591.891zM421.146,591.891'
+                ];
+
+                function random(max) {
+                    return (Math.random() * max).toFixed(3);
+                }
+
+                var series = symbolList.map(function (symbol, idx) {
+                    var seriesData = [];
+                    for (var i = 0; i < 20; i++) {
+                        seriesData.push([random(10), random(10), (+random(0.5) + 0.2).toFixed(3)]);
+                    }
+                    return {
+                        name: symbol.split('://')[0],
+                        type: 'scatter',
+                        symbol: symbol,
+                        symbolSize: function (val) {
+                            if (symbol.indexOf('path') >= 0 || symbol.indexOf('Path') >= 0) {
+                                return [val[2] * 60, val[2] * 40];
+                            }
+                            else {
+                                return val[2] * 60;
+                            }
+                        },
+                        label: {
+                            emphasis: {
+                                show: false
+                            }
+                        },
+                        data: seriesData
+                    };
+                });
+
+                chart.setOption({
+                    legend: {
+                        data: series.map(function (series) {return series.name;})
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'cross'
+                        }
+                    },
+                    xAxis: {
+                        type: 'value',
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    series: series
+                });
+            });
+
+        </script>
+    </body>
+</html>

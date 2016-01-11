@@ -1,0 +1,82 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+
+                'extension/dataTool/gexf',
+
+                'echarts/chart/graph',
+
+                'echarts/component/title',
+                'echarts/component/legend',
+                'echarts/component/geo',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                var data = [];
+                var edges = [];
+                chart.setOption({
+                    series: [{
+                        type: 'graph',
+                        layout: 'force',
+                        animation: false,
+                        data: data,
+                        force: {
+                            // initLayout: 'circular'
+                            // gravity: 0
+                            repulsion: 100,
+                            edgeLength: 5
+                        },
+                        edges: edges
+                    }]
+                });
+
+                setInterval(function () {
+                    data.push({
+                        id: data.length
+                    });
+                    var source = Math.round((data.length - 1) * Math.random());
+                    var target = Math.round((data.length - 1) * Math.random());
+                    if (source !== target) {
+                        edges.push({
+                            source: source,
+                            target: target
+                        });
+                    }
+                    chart.setOption({
+                        series: [{
+                            roam: true,
+                            data: data,
+                            edges: edges
+                        }]
+                    });
+
+                    console.log('nodes: ' + data.length);
+                    console.log('links: ' + data.length);
+                }, 500);
+            });
+        </script>
+    </body>
+</html>

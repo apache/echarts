@@ -1,0 +1,118 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/funnel',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/title'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                var itemStyle = {
+                    normal: {
+                        borderWidth: 0
+                    },
+                    emphasis: {
+                        shadowBlur: 40,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.4)',
+                        borderWidth: 2
+                    }
+                };
+
+                chart.setOption({
+                    title : {
+                        text: '漏斗图',
+                        subtext: '纯属虚构'
+                    },
+                    tooltip : {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b} : {c}%'
+                    },
+                    legend: {
+                        data : ['展现','点击','访问','咨询','订单']
+                    },
+                    series: [
+                        {
+                            name:'漏斗图',
+                            type:'funnel',
+                            gap: 3,
+                            itemStyle: itemStyle,
+                            left: 300,
+                            right: 300,
+                            sort: 'ascending',
+                            label: {
+                                normal: {
+                                    position: 'inside'
+                                }
+                            },
+                            data:[
+                                {value:60, name:'访问'},
+                                {value:40, name:'咨询'},
+                                {value:20, name:'订单'},
+                                {value:80, name:'点击'},
+                                {value:100, name:'展现'}
+                            ]
+                        }
+                    ]
+                });
+
+                var config = {
+                    sort: 'ascending',
+                    labelPosition: 'inside',
+                    labelLineLen: 20
+                };
+
+                function update() {
+                    chart.setOption({
+                        series: [{
+                            name: '漏斗图',
+                            sort: config.sort,
+                            label: {
+                                normal: {
+                                    position: config.labelPosition
+                                }
+                            },
+                            labelLine: {
+                                normal: {
+                                    length: config.labelLineLen
+                                }
+                            }
+                        }]
+                    });
+                }
+
+                var gui = new dat.GUI();
+                gui.add(config, 'sort', ['descending', 'ascending'])
+                    .onChange(update);
+                gui.add(config, 'labelPosition', ['inside', 'left', 'right'])
+                    .onChange(update);
+                gui.add(config, 'labelLineLen', 0, 100)
+                    .onChange(update);
+            });
+
+        </script>
+    </body>
+</html>
