@@ -33,6 +33,7 @@ define(function(require) {
                 // Wrap when width exceeds maxWidth or meet a `newline` group
                 if (nextX > maxWidth || child.newline) {
                     x = 0;
+                    nextX = -gap;
                     y += currentLineMaxSize + gap;
                     currentLineMaxSize = 0;
                 }
@@ -46,6 +47,7 @@ define(function(require) {
                 if (nextY > maxHeight || child.newline) {
                     x += currentLineMaxSize + gap;
                     y = 0;
+                    nextY = -gap;
                     currentLineMaxSize = 0;
                 }
                 else {
