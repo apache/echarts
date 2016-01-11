@@ -705,7 +705,7 @@ define(function (require) {
             var view = viewList[i];
             if (!view.__keepAlive) {
                 zr.remove(view.group);
-                view.dispose(this._api);
+                view.dispose(ecModel, this._api);
                 viewList.splice(i, 1);
                 delete viewMap[view.__id];
             }
@@ -850,12 +850,13 @@ define(function (require) {
     echartsProto.dispose = function () {
         this._disposed = true;
         var api = this._api;
+        var ecModel = this._model;
 
         each(this._componentsViews, function (component) {
-            component.dispose(api);
+            component.dispose(ecModel, api);
         });
         each(this._chartsViews, function (chart) {
-            chart.dispose(api);
+            chart.dispose(ecModel, api);
         });
 
         this._zr.dispose();

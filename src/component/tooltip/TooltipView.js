@@ -988,7 +988,7 @@ define(function (require) {
             }
         },
 
-        dispose: function (api) {
+        dispose: function (ecModel, api) {
             var zr = api.getZr();
             zr.off('click', this._tryShow);
             zr.off('mousemove', this._tryShow);
