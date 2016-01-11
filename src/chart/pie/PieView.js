@@ -136,20 +136,7 @@ define(function (require) {
         var visualColor = data.getItemVisual(idx, 'color');
 
         sector.setStyle(
-            zrUtil.extend(
-                {
-                    fill: visualColor
-                },
-                itemStyleModel.getModel('normal').getItemStyle()
-            )
-        );
-        graphic.setHoverStyle(
-            sector,
-            itemStyleModel.getModel('emphasis').getItemStyle()
-        );
-
-        sector.setStyle(
-            zrUtil.extend(
+            zrUtil.defaults(
                 {
                     fill: visualColor
                 },

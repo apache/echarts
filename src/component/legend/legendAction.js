@@ -15,6 +15,8 @@ define(function(require) {
             if (isToggleSelect && isSelected != null) {
                 // Force other legend has same selected status
                 // Or the first is toggled to true and other are toggled to false
+                // In the case one legend has some item unSelected in option. And if other legend
+                // doesn't has the item, they will assume it is selected.
                 legendModel[isSelected ? 'select' : 'unSelect'](payload.name);
             }
             else {

@@ -85,20 +85,7 @@ define(function (require) {
         var visualColor = data.getItemVisual(idx, 'color');
 
         polygon.setStyle(
-            zrUtil.extend(
-                {
-                    fill: visualColor
-                },
-                itemStyleModel.getModel('normal').getItemStyle()
-            )
-        );
-        graphic.setHoverStyle(
-            polygon,
-            itemStyleModel.getModel('emphasis').getItemStyle()
-        );
-
-        polygon.setStyle(
-            zrUtil.extend(
+            zrUtil.defaults(
                 {
                     fill: visualColor
                 },

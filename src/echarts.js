@@ -950,12 +950,15 @@ define(function (require) {
     echarts.init = function (dom, theme, opts) {
         // Check version
         if ((zrender.version.replace('.', '') - 0) < (echarts.dependencies.zrender.replace('.', '') - 0)) {
-            console.error(
+            throw new Error(
                 'ZRender ' + zrender.version
                 + ' is too old for ECharts ' + echarts.version
                 + '. Current version need ZRender '
                 + echarts.dependencies.zrender + '+'
             );
+        }
+        if (!dom) {
+            throw new Error('Initialize failed: invalid dom.');
         }
 
         var chart = new ECharts(dom, theme, opts);
