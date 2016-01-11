@@ -29,11 +29,12 @@ define(function(require) {
             var nextX;
             var nextY;
             if (orient === 'horizontal') {
-                nextX = x + rect.width + (nextChildRect ? (-nextChildRect.x + rect.x) : 0);
+                var moveX = rect.width + (nextChildRect ? (-nextChildRect.x + rect.x) : 0);
+                nextX = x + moveX;
                 // Wrap when width exceeds maxWidth or meet a `newline` group
                 if (nextX > maxWidth || child.newline) {
                     x = 0;
-                    nextX = -gap;
+                    nextX = moveX;
                     y += currentLineMaxSize + gap;
                     currentLineMaxSize = 0;
                 }
@@ -42,12 +43,13 @@ define(function(require) {
                 }
             }
             else {
-                nextY = y + rect.height + (nextChildRect ? (-nextChildRect.y + rect.y) : 0);
+                var moveY = rect.height + (nextChildRect ? (-nextChildRect.y + rect.y) : 0);
+                nextY = y + moveY;
                 // Wrap when width exceeds maxHeight or meet a `newline` group
                 if (nextY > maxHeight || child.newline) {
                     x += currentLineMaxSize + gap;
                     y = 0;
-                    nextY = -gap;
+                    nextY = moveY;
                     currentLineMaxSize = 0;
                 }
                 else {
