@@ -232,8 +232,8 @@ define(function (require) {
                 var textEl = new graphic.Text({
                     style: {
                         text: labels[i],
-                        textAlign: labelLayout.textAlign,
-                        textBaseline: labelLayout.textBaseline,
+                        textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
+                        textBaseline: itemTextStyleModel.get('baseline', true) || labelLayout.textBaseline,
                         textFont: itemTextStyleModel.getFont(),
                         fill: itemTextStyleModel.getTextColor()
                     },
