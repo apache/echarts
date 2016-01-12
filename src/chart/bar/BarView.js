@@ -10,6 +10,8 @@ define(function (require) {
     function fixLayoutWithLineWidth(layout, lineWidth) {
         var signX = layout.width > 0 ? 1 : -1;
         var signY = layout.height > 0 ? 1 : -1;
+        // In case width or height are too small.
+        lineWidth = Math.min(lineWidth, Math.abs(layout.width), Math.abs(layout.height));
         layout.x += signX * lineWidth / 2;
         layout.y += signY * lineWidth / 2;
         layout.width -= signX * lineWidth;
