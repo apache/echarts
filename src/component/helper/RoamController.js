@@ -66,7 +66,10 @@ define(function (require) {
 
     function mousewheel(e) {
         eventTool.stop(e.event);
-        var zoomDelta = e.wheelDelta < 0 ? 1.1 : 1 / 1.1;
+        // Convenience:
+        // Mac and VM Windows on Mac: scroll up: zoom out.
+        // Windows: scroll up: zoom in.
+        var zoomDelta = e.wheelDelta > 0 ? 1.1 : 1 / 1.1;
         zoom.call(this, e, zoomDelta, e.offsetX, e.offsetY);
     }
 
