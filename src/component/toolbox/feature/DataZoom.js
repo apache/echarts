@@ -238,11 +238,13 @@ define(function(require) {
         var dimCoordInfo = coordInfo[dimIdx];
         var dataZoomModel = dimCoordInfo.dataZoomModel;
 
-        return {
-            dataZoomId: dataZoomModel.id,
-            startValue: selDataRange[dimIdx][0],
-            endValue: selDataRange[dimIdx][1]
-        };
+        if (dataZoomModel) {
+            return {
+                dataZoomId: dataZoomModel.id,
+                startValue: selDataRange[dimIdx][0],
+                endValue: selDataRange[dimIdx][1]
+            };
+        }
     }
 
     /**
@@ -291,14 +293,30 @@ define(function(require) {
                 toolboxOpt = toolboxOpt[0];
             }
 
-            if (toolboxOpt && toolboxOpt.feature && toolboxOpt.feature.dataZoom) {
-                addForAxis('xAxis');
-                addForAxis('yAxis');
+            if (toolboxOpt && toolboxOpt.feature) {
+                var dataZoomOpt = toolboxOpt.feature.dataZoom;
+                addForAxis('xAxis', dataZoomOpt);
+                addForAxis('yAxis', dataZoomOpt);
             }
         }
 
-        function addForAxis(axisName) {
+        function addForAxis(axisName, dataZoomOpt) {
+            if (!dataZoomOpt) {
+                return;
+            }
+
+            var axisIndicesName = axisName + 'Index';
+            var givenAxisIndices = dataZoomOpt[axisIndicesName];
+            if (givenAxisIndices != null && !zrUtil.isArray(givenAxisIndices)) {
+                givenAxisIndices = givenAxisIndices === false ? [] : [givenAxisIndices];
+            }
+
             forEachComponent(axisName, function (axisOpt, axisIndex) {
+                if (givenAxisIndices != null
+                    && zrUtil.indexOf(givenAxisIndices, axisIndex) === -1
+                ) {
+                    return;
+                }
                 var newOpt = {
                     type: 'select',
                     $fromToolbox: true,
@@ -307,7 +325,7 @@ define(function(require) {
                 };
                 // FIXME
                 // Only support one axis now.
-                newOpt[axisName + 'Index'] = axisIndex;
+                newOpt[axisIndicesName] = axisIndex;
                 dataZoomOpts.push(newOpt);
             });
         }
