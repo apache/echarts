@@ -41,13 +41,17 @@ define(function (require) {
         },
 
         render: function (legendModel, ecModel, api) {
+            var group = this.group;
+            group.removeAll();
+
+            if (!legendModel.get('show')) {
+                return;
+            }
+
             var selectMode = legendModel.get('selectedMode');
             var itemWidth = legendModel.get('itemWidth');
             var itemHeight = legendModel.get('itemHeight');
             var itemAlign = legendModel.get('align');
-
-            var group = this.group;
-            group.removeAll();
 
             if (itemAlign === 'auto') {
                 itemAlign = (legendModel.get('left') === 'right'

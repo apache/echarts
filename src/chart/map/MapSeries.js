@@ -58,7 +58,7 @@ define(function (require) {
         },
 
         getInitialData: function (option) {
-            var dimensions = completeDimensions(['value'], option.data);
+            var dimensions = completeDimensions(['value'], option.data || []);
 
             var list = new List(dimensions, this);
 
