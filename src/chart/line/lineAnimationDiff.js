@@ -64,8 +64,14 @@ define(function (require) {
             // Which is in case remvoing or add more than one data in the tail or head
             switch (diffItem.cmd) {
                 case '=':
-                    currPoints.push(oldData.getItemLayout(diffItem.idx));
-                    nextPoints.push(newData.getItemLayout(diffItem.idx1));
+                    var currentPt = oldData.getItemLayout(diffItem.idx);
+                    var nextPt = newData.getItemLayout(diffItem.idx1);
+                    // If previous data is NaN, use next point directly
+                    if (isNaN(currentPt[0]) || isNaN(currentPt[1])) {
+                        currentPt = nextPt.slice();
+                    }
+                    currPoints.push(currentPt);
+                    nextPoints.push(nextPt);
 
                     currStackedPoints.push(oldStackedOnPoints[diffItem.idx]);
                     nextStackedPoints.push(newStackedOnPoints[diffItem.idx1]);
