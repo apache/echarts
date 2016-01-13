@@ -30,18 +30,16 @@ define(function (require) {
             var mlFrom = zrUtil.extend({}, item);
             var mlTo = {};
 
-            var extent = data.getDataExtent(valueAxis.dim, true);
-
             mlFrom.type = null;
 
             // FIXME Polar should use circle
             mlFrom[baseAxisKey] = baseScaleExtent[0];
             mlTo[baseAxisKey] = baseScaleExtent[1];
 
-            var percent = mlType === 'average' ?
-                0.5 : (mlType === 'max' ? 1 : 0);
+            var value = mlType === 'average'
+                ? data.getSum(valueAxis.dim, true) / data.count()
+                : data.getDataExtent(valueAxis.dim)[mlType === 'max' ? 1 : 0];
 
-            var value = (extent[1] - extent[0]) * percent + extent[0];
             // Round if axis is cateogry
             value = valueAxis.coordToData(valueAxis.dataToCoord(value));
 

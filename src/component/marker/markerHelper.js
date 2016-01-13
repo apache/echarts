@@ -18,13 +18,13 @@ define(function (require) {
         return precision;
     }
 
-    function markerTypeCalculatorWithExtent(percent, data, baseAxisDim, valueAxisDim, valueIndex) {
-        var extent = data.getDataExtent(valueAxisDim);
+    function markerTypeCalculatorWithExtent(mlType, data, baseAxisDim, valueAxisDim, valueIndex) {
         var coordArr = [];
-        var min = extent[0];
-        var max = extent[1];
-        var val = (max - min) * percent + min;
-        var dataIndex = data.indexOfNearest(valueAxisDim, val);
+        var value = mlType === 'average'
+            ? data.getSum(valueAxisDim, true) / data.count()
+            : data.getDataExtent(valueAxisDim)[mlType === 'max' ? 1 : 0];
+
+        var dataIndex = data.indexOfNearest(valueAxisDim, value);
         coordArr[1 - valueIndex] = data.get(baseAxisDim, dataIndex);
         coordArr[valueIndex] = data.get(valueAxisDim, dataIndex, true);
 
@@ -45,21 +45,21 @@ define(function (require) {
          * @param {string} baseAxisDim
          * @param {string} valueAxisDim
          */
-        min: curry(markerTypeCalculatorWithExtent, 0),
+        min: curry(markerTypeCalculatorWithExtent, 'min'),
         /**
          * @method
          * @param {module:echarts/data/List} data
          * @param {string} baseAxisDim
          * @param {string} valueAxisDim
          */
-        max: curry(markerTypeCalculatorWithExtent, 1),
+        max: curry(markerTypeCalculatorWithExtent, 'max'),
         /**
          * @method
          * @param {module:echarts/data/List} data
          * @param {string} baseAxisDim
          * @param {string} valueAxisDim
          */
-        average: curry(markerTypeCalculatorWithExtent, 0.5)
+        average: curry(markerTypeCalculatorWithExtent, 'average')
     };
 
     /**
