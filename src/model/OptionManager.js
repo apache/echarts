@@ -234,14 +234,18 @@ define(function (require) {
         // Compatible with ec2.
         var timelineOpt = rawOption.timeline;
 
+        if (rawOption.baseOption) {
+            baseOption = rawOption.baseOption;
+        }
+
         // For timeline
         if (timelineOpt || rawOption.options) {
-            baseOption = rawOption.baseOption || {};
+            baseOption = baseOption || {};
             timelineOptions = (rawOption.options || []).slice();
         }
         // For media query
         if (rawOption.media) {
-            baseOption = rawOption.baseOption || {};
+            baseOption = baseOption || {};
             var media = rawOption.media;
             each(media, function (singleMedia) {
                 if (singleMedia && singleMedia.option) {
@@ -255,6 +259,7 @@ define(function (require) {
                 }
             });
         }
+
         // For normal option
         if (!baseOption) {
             baseOption = rawOption;
