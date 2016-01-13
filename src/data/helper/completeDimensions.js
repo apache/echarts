@@ -6,6 +6,10 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
 
     function completeDimensions(dimensions, data, defaultNames) {
+        if (!data) {
+            return dimensions;
+        }
+
         var value0 = retrieveValue(data[0]);
         var dimSize = zrUtil.isArray(value0) && value0.length || 1;
 
