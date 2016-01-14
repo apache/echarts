@@ -154,7 +154,7 @@ define(function (require) {
         }
     }
 
-    var itemSplitRegex = new RegExp('[' + ITEM_SPLITER + '| ]+', 'g');
+    var itemSplitRegex = new RegExp('[' + ITEM_SPLITER + ']+', 'g');
     /**
      * @param {string} tsv
      * @return {Array.<Object>}
