@@ -14,6 +14,7 @@ define(function (require) {
 
     var mathCeil = Math.ceil;
     var mathFloor = Math.floor;
+    var ONE_DAY = 3600000 * 24;
 
     // FIXME 公用？
     var bisect = function (a, x, lo, hi) {
@@ -94,6 +95,35 @@ define(function (require) {
         },
 
         // Overwrite
+        niceExtent: function (approxTickNum, fixMin, fixMax) {
+            var extent = this._extent;
+            // If extent start and end are same, expand them
+            if (extent[0] === extent[1]) {
+                // Expand extent
+                extent[0] -= ONE_DAY;
+                extent[1] += ONE_DAY;
+            }
+            // If there are no data and extent are [Infinity, -Infinity]
+            if (extent[1] === -Infinity && extent[0] === Infinity) {
+                var d = new Date();
+                extent[1] = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                extent[0] = extent[1] - ONE_DAY;
+            }
+
+            this.niceTicks(approxTickNum, fixMin, fixMax);
+
+            // var extent = this._extent;
+            var interval = this._interval;
+
+            if (!fixMin) {
+                extent[0] = numberUtil.round(mathFloor(extent[0] / interval) * interval);
+            }
+            if (!fixMax) {
+                extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
+            }
+        },
+
+        // Overwrite
         niceTicks: function (approxTickNum) {
             approxTickNum = approxTickNum || 10;
 
@@ -142,12 +172,12 @@ define(function (require) {
         ['hh:mm\nMM-dd',2,      3600000 * 2],    // 2h
         ['hh:mm\nMM-dd',6,      3600000 * 6],    // 6h
         ['hh:mm\nMM-dd',12,     3600000 * 12],   // 12h
-        ['MM-dd\nyyyy', 1,      3600000 * 24],   // 1d
-        ['week',        7,      3600000 * 24 * 7],        // 7d
-        ['month',       1,      3600000 * 24 * 31],       // 1M
-        ['quarter',     3,      3600000 * 24 * 380 / 4],  // 3M
-        ['half-year',   6,      3600000 * 24 * 380 / 2],  // 6M
-        ['year',        1,      3600000 * 24 * 380]       // 1Y
+        ['MM-dd\nyyyy', 1,      ONE_DAY],   // 1d
+        ['week',        7,      ONE_DAY * 7],        // 7d
+        ['month',       1,      ONE_DAY * 31],       // 1M
+        ['quarter',     3,      ONE_DAY * 380 / 4],  // 3M
+        ['half-year',   6,      ONE_DAY * 380 / 2],  // 6M
+        ['year',        1,      ONE_DAY * 380]       // 1Y
     ];
 
     /**
