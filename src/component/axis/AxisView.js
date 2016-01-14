@@ -135,8 +135,8 @@ define(function (require) {
             var gridRect = gridModel.coordinateSystem.getRect();
             var ticksCoords = axis.getTicksCoords();
 
-            var prevX = ticksCoords[0];
-            var prevY = ticksCoords[0];
+            var prevX = axis.toGlobalCoord(ticksCoords[0]);
+            var prevY = axis.toGlobalCoord(ticksCoords[0]);
 
             var splitAreaRects = [];
             var count = 0;
