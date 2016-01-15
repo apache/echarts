@@ -499,7 +499,7 @@ define(function (require) {
             {mainType: 'series', query: payload},
             function (seriesModel, index) {
                 var chartView = this._chartsMap[seriesModel.__viewId];
-                if (chartView) {
+                if (chartView && chartView.__alive) {
                     chartView[method](
                         seriesModel, ecModel, this._api, payload
                     );
@@ -602,7 +602,6 @@ define(function (require) {
 
             (updateMethod !== 'none' && !isHighlightOrDownplay)
                 && updateMethods[updateMethod].call(this, payload);
-
             if (!silent) {
                 // Follow the rule of action batch
                 if (batched) {
@@ -662,7 +661,7 @@ define(function (require) {
         var zr = this._zr;
 
         for (var i = 0; i < viewList.length; i++) {
-            viewList[i].__keepAlive = false;
+            viewList[i].__alive = false;
         }
 
         ecModel[isComponent ? 'eachComponent' : 'eachSeries'](function (componentType, model) {
@@ -696,14 +695,14 @@ define(function (require) {
             }
 
             model.__viewId = viewId;
-            view.__keepAlive = true;
+            view.__alive = true;
             view.__id = viewId;
             view.__model = model;
         }, this);
 
         for (var i = 0; i < viewList.length;) {
             var view = viewList[i];
-            if (!view.__keepAlive) {
+            if (!view.__alive) {
                 zr.remove(view.group);
                 view.dispose(ecModel, this._api);
                 viewList.splice(i, 1);
@@ -789,13 +788,13 @@ define(function (require) {
         }, this);
 
         each(this._chartsViews, function (chart) {
-            chart.__keepAlive = false;
+            chart.__alive = false;
         }, this);
 
         // Render all charts
         ecModel.eachSeries(function (seriesModel, idx) {
             var chartView = this._chartsMap[seriesModel.__viewId];
-            chartView.__keepAlive = true;
+            chartView.__alive = true;
             chartView.render(seriesModel, ecModel, api, payload);
 
             updateZ(seriesModel, chartView);
@@ -803,7 +802,7 @@ define(function (require) {
 
         // Remove groups of unrendered charts
         each(this._chartsViews, function (chart) {
-            if (!chart.__keepAlive) {
+            if (!chart.__alive) {
                 chart.remove(ecModel, api);
             }
         }, this);
@@ -963,7 +962,7 @@ define(function (require) {
         }
 
         var chart = new ECharts(dom, theme, opts);
-        chart.id = idBase++;
+        chart.id = 'ec_' + idBase++;
         instances[chart.id] = chart;
 
         dom.setAttribute &&
@@ -974,9 +973,12 @@ define(function (require) {
             // FIXME
             chart._messageCenter.on(eventType, function (event) {
                 if (connectedGroups[chart.group]) {
+                    var action = chart.makeActionFromEvent(event);
                     chart.__connectedActionDispatching = true;
                     for (var id in instances) {
-                        var action = chart.makeActionFromEvent(event);
+                        if (instances[id] === chart) {
+                            continue;
+                        }
                         var otherChart = instances[id];
                         if (otherChart !== chart && otherChart.group === chart.group) {
                             if (!otherChart.__connectedActionDispatching) {
@@ -1006,7 +1008,7 @@ define(function (require) {
                     groupId = chart.group;
                 }
             });
-            groupId = groupId || groupIdBase++;
+            groupId = groupId || ('g_' + groupIdBase++);
             zrUtil.each(charts, function (chart) {
                 chart.group = groupId;
             });
