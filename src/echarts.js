@@ -942,6 +942,41 @@ define(function (require) {
         }
     };
 
+    function enableConnect(chart) {
+
+        var STATUS_PENDING = 0;
+        var STATUS_UPDATING = 1;
+        var STATUS_UPDATED = 2;
+        var STATUS_KEY = '__connectUpdateStatus';
+        function updateConnectedChartsStatus(charts, status) {
+            for (var i = 0; i < charts.length; i++) {
+                var otherChart = charts[i];
+                otherChart[STATUS_KEY] = status;
+            }
+        }
+        zrUtil.each(eventActionMap, function (actionType, eventType) {
+            chart._messageCenter.on(eventType, function (event) {
+                if (connectedGroups[chart.group] && chart[STATUS_KEY] !== STATUS_PENDING) {
+                    var action = chart.makeActionFromEvent(event);
+                    var otherCharts = [];
+                    for (var id in instances) {
+                        var otherChart = instances[id];
+                        if (otherChart !== chart && otherChart.group === chart.group) {
+                            otherCharts.push(otherChart);
+                        }
+                    }
+                    updateConnectedChartsStatus(otherCharts, STATUS_PENDING);
+                    each(otherCharts, function (otherChart) {
+                        if (otherChart[STATUS_KEY] !== STATUS_UPDATING) {
+                            otherChart.dispatchAction(action);
+                        }
+                    });
+                    updateConnectedChartsStatus(otherCharts, STATUS_UPDATED);
+                }
+            });
+        });
+
+    }
     /**
      * @param {HTMLDomElement} dom
      * @param {Object} [theme]
@@ -968,28 +1003,7 @@ define(function (require) {
         dom.setAttribute &&
             dom.setAttribute(DOM_ATTRIBUTE_KEY, chart.id);
 
-        // Connecting
-        zrUtil.each(eventActionMap, function (actionType, eventType) {
-            // FIXME
-            chart._messageCenter.on(eventType, function (event) {
-                if (connectedGroups[chart.group]) {
-                    var action = chart.makeActionFromEvent(event);
-                    chart.__connectedActionDispatching = true;
-                    for (var id in instances) {
-                        if (instances[id] === chart) {
-                            continue;
-                        }
-                        var otherChart = instances[id];
-                        if (otherChart !== chart && otherChart.group === chart.group) {
-                            if (!otherChart.__connectedActionDispatching) {
-                                otherChart.dispatchAction(action);
-                            }
-                        }
-                    }
-                    chart.__connectedActionDispatching = false;
-                }
-            });
-        });
+        enableConnect(chart);
 
         return chart;
     };
