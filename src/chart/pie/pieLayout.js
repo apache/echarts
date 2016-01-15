@@ -37,10 +37,8 @@ define(function (require) {
             var minAngle = seriesModel.get('minAngle') * RADIAN;
 
             var sum = data.getSum('value');
-            if (sum === 0) {
-                sum = data.count();
-            }
-            var unitRadian = Math.PI / sum * 2;
+            // Sum may be 0
+            var unitRadian = Math.PI / (sum || data.count()) * 2;
 
             var clockwise = seriesModel.get('clockwise');
 
