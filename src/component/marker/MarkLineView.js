@@ -13,7 +13,7 @@ define(function (require) {
 
     var LineDraw = require('../../chart/helper/LineDraw');
 
-    var markLineTransform = function (data, coordSys, baseAxis, valueAxis, item) {
+    var markLineTransform = function (data, coordSys, baseAxis, valueAxis, precision, item) {
         // Special type markLine like 'min', 'max', 'average'
         var mlType = item.type;
         if (!zrUtil.isArray(item)
@@ -46,13 +46,15 @@ define(function (require) {
             mlFrom[valueAxisKey] = mlTo[valueAxisKey] = value;
 
             item = [mlFrom, mlTo, { // Extra option for tooltip and label
-                type: mlType
+                type: mlType,
+                // Force to use the value of calculated value.
+                value: +value.toFixed(precision)
             }];
         }
         item = [
             markerHelper.dataTransform(data, coordSys, item[0]),
             markerHelper.dataTransform(data, coordSys, item[1]),
-            {}
+            zrUtil.extend({}, item[2])
         ];
 
         // Merge from option and to option into line option
@@ -241,10 +243,11 @@ define(function (require) {
         if (coordSys) {
             var baseAxis = coordSys.getBaseAxis();
             var valueAxis = coordSys.getOtherAxis(baseAxis);
+            var precision = mlModel.get('precision');
 
             var optData = zrUtil.filter(
                 zrUtil.map(mlModel.get('data'), zrUtil.curry(
-                    markLineTransform, seriesData, coordSys, baseAxis, valueAxis
+                    markLineTransform, seriesData, coordSys, baseAxis, valueAxis, precision
                 )),
                 zrUtil.curry(markLineFilter, coordSys)
             );

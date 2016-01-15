@@ -104,6 +104,8 @@ define(function (require) {
                 item.coord = markerTypeCalculator[item.type](
                     data, baseAxis.dim, valueAxisDim, valueIndex
                 );
+                // Force to use the value of calculated value.
+                item.value = item.coord[valueIndex];
             }
             else {
                 // FIXME Only has one of xAxis and yAxis.
