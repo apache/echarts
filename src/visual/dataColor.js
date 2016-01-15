@@ -11,12 +11,17 @@ define(function (require) {
                     var itemModel = data.getItemModel(idx);
                     var rawIdx = data.getRawIndex(idx);
                     // If series.itemStyle.normal.color is a function. itemVisual may be encoded
-                    if (!data.getItemVisual(idx, 'color', true)) {
+                    var singleDataColor = data.getItemVisual(idx, 'color', true);
+                    if (!singleDataColor) {
                         var color = itemModel.get('itemStyle.normal.color')
                             || colorList[rawIdx % colorList.length];
                         // Legend may use the visual info in data before processed
                         dataAll.setItemVisual(rawIdx, 'color', color);
                         data.setItemVisual(idx, 'color', color);
+                    }
+                    else {
+                        // Set data all color for legend
+                        dataAll.setItemVisual(rawIdx, 'color', singleDataColor);
                     }
                 });
             }
