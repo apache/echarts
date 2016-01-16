@@ -2,8 +2,10 @@
 define(function (require) {
 
     return function (seriesType, ecModel) {
-        ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-            var colorList = seriesModel.get('color');
+        var globalColorList = ecModel.get('color');
+        var offset = 0;
+        ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
+            var colorList = seriesModel.get('color', true);
             var dataAll = seriesModel.getRawData();
             if (!ecModel.isSeriesFiltered(seriesModel)) {
                 var data = seriesModel.getData();
@@ -13,8 +15,9 @@ define(function (require) {
                     // If series.itemStyle.normal.color is a function. itemVisual may be encoded
                     var singleDataColor = data.getItemVisual(idx, 'color', true);
                     if (!singleDataColor) {
-                        var color = itemModel.get('itemStyle.normal.color')
-                            || colorList[rawIdx % colorList.length];
+                        var paletteColor = colorList ? colorList[rawIdx % colorList.length]
+                            : globalColorList[(rawIdx + offset) % globalColorList.length];
+                        var color = itemModel.get('itemStyle.normal.color') || paletteColor;
                         // Legend may use the visual info in data before processed
                         dataAll.setItemVisual(rawIdx, 'color', color);
                         data.setItemVisual(idx, 'color', color);
@@ -25,6 +28,7 @@ define(function (require) {
                     }
                 });
             }
+            offset += dataAll.count();
         });
     };
 });
