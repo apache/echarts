@@ -373,15 +373,7 @@ define(function (require) {
             doRender.call(this, ecModel, payload);
 
             // Set background
-            var backgroundColor = ecModel.get('backgroundColor');
-            // In IE8
-            if (!env.canvasSupported) {
-                var colorArr = colorTool.parse(backgroundColor);
-                backgroundColor = colorTool.stringify(colorArr, 'rgb');
-                if (colorArr[3] === 0) {
-                    backgroundColor = 'transparent';
-                }
-            }
+            var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
 
             var painter = this._zr.painter;
             // TODO all use clearColor ?
@@ -391,7 +383,15 @@ define(function (require) {
                 });
             }
             else {
-                backgroundColor = backgroundColor || 'transparent';
+                // In IE8
+                if (!env.canvasSupported) {
+                    var colorArr = colorTool.parse(backgroundColor);
+                    backgroundColor = colorTool.stringify(colorArr, 'rgb');
+                    if (colorArr[3] === 0) {
+                        backgroundColor = 'transparent';
+                    }
+                }
+                backgroundColor = backgroundColor;
                 this._dom.style.backgroundColor = backgroundColor;
             }
 
