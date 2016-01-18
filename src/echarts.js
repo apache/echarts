@@ -201,6 +201,13 @@ define(function (require) {
     };
 
     /**
+     * @return {Object}
+     */
+    echartsProto.getOption = function () {
+        return zrUtil.clone(this._model.option);
+    };
+
+    /**
      * @return {number}
      */
     echartsProto.getWidth = function () {
@@ -844,10 +851,17 @@ define(function (require) {
     };
 
     /**
-     * @return {boolean]
+     * @return {boolean}
      */
     echartsProto.isDisposed = function () {
         return this._disposed;
+    };
+
+    /**
+     * Clear
+     */
+    echartsProto.clear = function () {
+        this.setOption({}, true);
     };
     /**
      * Dispose instance
