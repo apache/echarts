@@ -190,14 +190,15 @@ define(function (require) {
             hoverStyle.text = '';
         }
 
-        graphic.setHoverStyle(symbolPath, hoverStyle);
-
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
         symbolPath.off('mouseover')
             .off('mouseout')
             .off('emphasis')
             .off('normal');
+
+        graphic.setHoverStyle(symbolPath, hoverStyle);
+
         if (itemModel.getShallow('hoverAnimation')) {
             var onEmphasis = function() {
                 var ratio = size[1] / size[0];
