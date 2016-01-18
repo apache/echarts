@@ -990,6 +990,8 @@ define(function (require) {
 
         dispose: function (ecModel, api) {
             var zr = api.getZr();
+            this._hide();
+
             zr.off('click', this._tryShow);
             zr.off('mousemove', this._tryShow);
             zr.off('mouseout', this._hide);
