@@ -990,13 +990,14 @@ define(function (require) {
 
         dispose: function (ecModel, api) {
             var zr = api.getZr();
-            this._hide();
+            this._tooltipContent.hide();
 
             zr.off('click', this._tryShow);
             zr.off('mousemove', this._tryShow);
             zr.off('mouseout', this._hide);
 
-            api.off('showTip');
+            api.off('showTip', this._manuallyShowTip);
+            api.off('hideTip', this._hide);
         }
     });
 });

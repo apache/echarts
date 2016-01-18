@@ -38,10 +38,12 @@ define(function (require) {
     // TODO Transform first or filter first
     var PROCESSOR_STAGES = ['transform', 'filter', 'statistic'];
 
-    function registerEventWithLowercaseName(eventName, handler, context) {
-        // Event name is all lowercase
-        eventName = eventName && eventName.toLowerCase();
-        Eventful.prototype.on.call(this, eventName, handler, context);
+    function createRegisterEventWithLowercaseName(method) {
+        return function (eventName, handler, context) {
+            // Event name is all lowercase
+            eventName = eventName && eventName.toLowerCase();
+            Eventful.prototype[method].call(this, eventName, handler, context);
+        };
     }
     /**
      * @module echarts~MessageCenter
@@ -49,7 +51,9 @@ define(function (require) {
     function MessageCenter() {
         Eventful.call(this);
     }
-    MessageCenter.prototype.on = registerEventWithLowercaseName;
+    MessageCenter.prototype.on = createRegisterEventWithLowercaseName('on');
+    MessageCenter.prototype.off = createRegisterEventWithLowercaseName('off');
+    MessageCenter.prototype.one = createRegisterEventWithLowercaseName('one');
     zrUtil.mixin(MessageCenter, Eventful);
     /**
      * @module echarts~ECharts
@@ -622,7 +626,9 @@ define(function (require) {
      * Register event
      * @method
      */
-    echartsProto.on = registerEventWithLowercaseName;
+    echartsProto.on = createRegisterEventWithLowercaseName('on');
+    echartsProto.off = createRegisterEventWithLowercaseName('off');
+    echartsProto.one = createRegisterEventWithLowercaseName('one');
 
     /**
      * @param {string} methodName
