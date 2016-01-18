@@ -13,6 +13,8 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 + [API](http://echarts.baidu.com/api.html)
 + [Option Manual](http://echarts.baidu.com/option.html)
 
+We will release the English doc soon:)
+
 ## License
 Copyright (c) 2013, Baidu Inc.
 All rights reserved.

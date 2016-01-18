@@ -232,16 +232,15 @@ define('zrender/core/util',['require','../graphic/Gradient'],function(require) {
     }
 
     /**
-     * @param {Object=} target
-     * @param {Object=} source
+     * @param {*} target
+     * @param {*} source
      * @param {boolean} [overwrite=false]
      */
     function merge(target, source, overwrite) {
-        if (!target) { // Might be null/undefined
-            return;
-        }
-        if (!source) { // Might be null/undefined
-            return target;
+        // We should escapse that source is string
+        // and enter for ... in ...
+        if (!isObject(source) || !isObject(target)) {
+            return overwrite ? clone(source) : target;
         }
 
         for (var key in source) {
@@ -4182,14 +4181,18 @@ define('echarts/model/OptionManager',['require','zrender/core/util'],function (r
         // Compatible with ec2.
         var timelineOpt = rawOption.timeline;
 
+        if (rawOption.baseOption) {
+            baseOption = rawOption.baseOption;
+        }
+
         // For timeline
         if (timelineOpt || rawOption.options) {
-            baseOption = rawOption.baseOption || {};
+            baseOption = baseOption || {};
             timelineOptions = (rawOption.options || []).slice();
         }
         // For media query
         if (rawOption.media) {
-            baseOption = rawOption.baseOption || {};
+            baseOption = baseOption || {};
             var media = rawOption.media;
             each(media, function (singleMedia) {
                 if (singleMedia && singleMedia.option) {
@@ -4203,6 +4206,7 @@ define('echarts/model/OptionManager',['require','zrender/core/util'],function (r
                 }
             });
         }
+
         // For normal option
         if (!baseOption) {
             baseOption = rawOption;
@@ -9214,7 +9218,10 @@ define('zrender/core/bbox',['require','./vector','./curve'],function (require) {
         var vec2Min = vec2.min;
         var vec2Max = vec2.max;
 
-        if (Math.abs(startAngle - endAngle) % PI2 < 1e-4) {
+        var diff = Math.abs(startAngle - endAngle);
+
+
+        if (diff % PI2 < 1e-4 && diff > 1e-4) {
             // Is a circle
             min[0] = x - rx;
             min[1] = y - ry;
@@ -10325,7 +10332,11 @@ define('zrender/contain/path',['require','../core/PathProxy','./line','./cubic',
         roots[0] = -tmp;
         roots[1] = tmp;
 
-        if (Math.abs(startAngle - endAngle) % PI2 < 1e-4) {
+        var diff = Math.abs(startAngle - endAngle);
+        if (diff < 1e-4) {
+            return 0;
+        }
+        if (diff % PI2 < 1e-4) {
             // Is a circle
             startAngle = 0;
             endAngle = PI2;
@@ -11944,10 +11955,10 @@ define('zrender/graphic/shape/Sector',['require','../Path'],function (require) {
 
         buildPath: function (ctx, shape) {
 
-            var x = shape.cx;   // 圆心x
-            var y = shape.cy;   // 圆心y
-            var r0 = shape.r0 || 0;     // 形内半径[0,r)
-            var r = shape.r;            // 扇形外半径(0,r]
+            var x = shape.cx;
+            var y = shape.cy;
+            var r0 = Math.max(shape.r0 || 0, 0);
+            var r = Math.max(shape.r, 0);
             var startAngle = shape.startAngle;
             var endAngle = shape.endAngle;
             var clockwise = shape.clockwise;
@@ -12504,7 +12515,7 @@ define('zrender/graphic/shape/BezierCurve',['require','../../core/curve','../Pat
 
             var x = shape.cx;
             var y = shape.cy;
-            var r = shape.r;
+            var r = Math.max(shape.r, 0);
             var startAngle = shape.startAngle;
             var endAngle = shape.endAngle;
             var clockwise = shape.clockwise;
@@ -15346,7 +15357,7 @@ define('zrender/zrender',['require','./core/guid','./core/env','./Handler','./St
     /**
      * @type {string}
      */
-    zrender.version = '3.0.0';
+    zrender.version = '3.0.1';
 
     /**
      * @param {HTMLElement} dom
@@ -16024,10 +16035,12 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
     // TODO Transform first or filter first
     var PROCESSOR_STAGES = ['transform', 'filter', 'statistic'];
 
-    function registerEventWithLowercaseName(eventName, handler, context) {
-        // Event name is all lowercase
-        eventName = eventName && eventName.toLowerCase();
-        Eventful.prototype.on.call(this, eventName, handler, context);
+    function createRegisterEventWithLowercaseName(method) {
+        return function (eventName, handler, context) {
+            // Event name is all lowercase
+            eventName = eventName && eventName.toLowerCase();
+            Eventful.prototype[method].call(this, eventName, handler, context);
+        };
     }
     /**
      * @module echarts~MessageCenter
@@ -16035,7 +16048,9 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
     function MessageCenter() {
         Eventful.call(this);
     }
-    MessageCenter.prototype.on = registerEventWithLowercaseName;
+    MessageCenter.prototype.on = createRegisterEventWithLowercaseName('on');
+    MessageCenter.prototype.off = createRegisterEventWithLowercaseName('off');
+    MessageCenter.prototype.one = createRegisterEventWithLowercaseName('one');
     zrUtil.mixin(MessageCenter, Eventful);
     /**
      * @module echarts~ECharts
@@ -16180,6 +16195,13 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
      */
     echartsProto.getModel = function () {
         return this._model;
+    };
+
+    /**
+     * @return {Object}
+     */
+    echartsProto.getOption = function () {
+        return zrUtil.clone(this._model.option);
     };
 
     /**
@@ -16359,15 +16381,7 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
             doRender.call(this, ecModel, payload);
 
             // Set background
-            var backgroundColor = ecModel.get('backgroundColor');
-            // In IE8
-            if (!env.canvasSupported) {
-                var colorArr = colorTool.parse(backgroundColor);
-                backgroundColor = colorTool.stringify(colorArr, 'rgb');
-                if (colorArr[3] === 0) {
-                    backgroundColor = 'transparent';
-                }
-            }
+            var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
 
             var painter = this._zr.painter;
             // TODO all use clearColor ?
@@ -16377,7 +16391,15 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
                 });
             }
             else {
-                backgroundColor = backgroundColor || 'transparent';
+                // In IE8
+                if (!env.canvasSupported) {
+                    var colorArr = colorTool.parse(backgroundColor);
+                    backgroundColor = colorTool.stringify(colorArr, 'rgb');
+                    if (colorArr[3] === 0) {
+                        backgroundColor = 'transparent';
+                    }
+                }
+                backgroundColor = backgroundColor;
                 this._dom.style.backgroundColor = backgroundColor;
             }
 
@@ -16485,7 +16507,7 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
             {mainType: 'series', query: payload},
             function (seriesModel, index) {
                 var chartView = this._chartsMap[seriesModel.__viewId];
-                if (chartView) {
+                if (chartView && chartView.__alive) {
                     chartView[method](
                         seriesModel, ecModel, this._api, payload
                     );
@@ -16588,7 +16610,6 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
 
             (updateMethod !== 'none' && !isHighlightOrDownplay)
                 && updateMethods[updateMethod].call(this, payload);
-
             if (!silent) {
                 // Follow the rule of action batch
                 if (batched) {
@@ -16609,7 +16630,9 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
      * Register event
      * @method
      */
-    echartsProto.on = registerEventWithLowercaseName;
+    echartsProto.on = createRegisterEventWithLowercaseName('on');
+    echartsProto.off = createRegisterEventWithLowercaseName('off');
+    echartsProto.one = createRegisterEventWithLowercaseName('one');
 
     /**
      * @param {string} methodName
@@ -16648,7 +16671,7 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
         var zr = this._zr;
 
         for (var i = 0; i < viewList.length; i++) {
-            viewList[i].__keepAlive = false;
+            viewList[i].__alive = false;
         }
 
         ecModel[isComponent ? 'eachComponent' : 'eachSeries'](function (componentType, model) {
@@ -16682,14 +16705,14 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
             }
 
             model.__viewId = viewId;
-            view.__keepAlive = true;
+            view.__alive = true;
             view.__id = viewId;
             view.__model = model;
         }, this);
 
         for (var i = 0; i < viewList.length;) {
             var view = viewList[i];
-            if (!view.__keepAlive) {
+            if (!view.__alive) {
                 zr.remove(view.group);
                 view.dispose(ecModel, this._api);
                 viewList.splice(i, 1);
@@ -16775,13 +16798,13 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
         }, this);
 
         each(this._chartsViews, function (chart) {
-            chart.__keepAlive = false;
+            chart.__alive = false;
         }, this);
 
         // Render all charts
         ecModel.eachSeries(function (seriesModel, idx) {
             var chartView = this._chartsMap[seriesModel.__viewId];
-            chartView.__keepAlive = true;
+            chartView.__alive = true;
             chartView.render(seriesModel, ecModel, api, payload);
 
             updateZ(seriesModel, chartView);
@@ -16789,7 +16812,7 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
 
         // Remove groups of unrendered charts
         each(this._chartsViews, function (chart) {
-            if (!chart.__keepAlive) {
+            if (!chart.__alive) {
                 chart.remove(ecModel, api);
             }
         }, this);
@@ -16825,10 +16848,17 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
     };
 
     /**
-     * @return {boolean]
+     * @return {boolean}
      */
     echartsProto.isDisposed = function () {
         return this._disposed;
+    };
+
+    /**
+     * Clear
+     */
+    echartsProto.clear = function () {
+        this.setOption({}, true);
     };
     /**
      * Dispose instance
@@ -16923,12 +16953,47 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
         /**
          * @type {number}
          */
-        version: '3.0.0',
+        version: '3.0.1',
         dependencies: {
-            zrender: '3.0.0'
+            zrender: '3.0.1'
         }
     };
 
+    function enableConnect(chart) {
+
+        var STATUS_PENDING = 0;
+        var STATUS_UPDATING = 1;
+        var STATUS_UPDATED = 2;
+        var STATUS_KEY = '__connectUpdateStatus';
+        function updateConnectedChartsStatus(charts, status) {
+            for (var i = 0; i < charts.length; i++) {
+                var otherChart = charts[i];
+                otherChart[STATUS_KEY] = status;
+            }
+        }
+        zrUtil.each(eventActionMap, function (actionType, eventType) {
+            chart._messageCenter.on(eventType, function (event) {
+                if (connectedGroups[chart.group] && chart[STATUS_KEY] !== STATUS_PENDING) {
+                    var action = chart.makeActionFromEvent(event);
+                    var otherCharts = [];
+                    for (var id in instances) {
+                        var otherChart = instances[id];
+                        if (otherChart !== chart && otherChart.group === chart.group) {
+                            otherCharts.push(otherChart);
+                        }
+                    }
+                    updateConnectedChartsStatus(otherCharts, STATUS_PENDING);
+                    each(otherCharts, function (otherChart) {
+                        if (otherChart[STATUS_KEY] !== STATUS_UPDATING) {
+                            otherChart.dispatchAction(action);
+                        }
+                    });
+                    updateConnectedChartsStatus(otherCharts, STATUS_UPDATED);
+                }
+            });
+        });
+
+    }
     /**
      * @param {HTMLDomElement} dom
      * @param {Object} [theme]
@@ -16949,31 +17014,13 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
         }
 
         var chart = new ECharts(dom, theme, opts);
-        chart.id = idBase++;
+        chart.id = 'ec_' + idBase++;
         instances[chart.id] = chart;
 
         dom.setAttribute &&
             dom.setAttribute(DOM_ATTRIBUTE_KEY, chart.id);
 
-        // Connecting
-        zrUtil.each(eventActionMap, function (actionType, eventType) {
-            // FIXME
-            chart._messageCenter.on(eventType, function (event) {
-                if (connectedGroups[chart.group]) {
-                    chart.__connectedActionDispatching = true;
-                    for (var id in instances) {
-                        var action = chart.makeActionFromEvent(event);
-                        var otherChart = instances[id];
-                        if (otherChart !== chart && otherChart.group === chart.group) {
-                            if (!otherChart.__connectedActionDispatching) {
-                                otherChart.dispatchAction(action);
-                            }
-                        }
-                    }
-                    chart.__connectedActionDispatching = false;
-                }
-            });
-        });
+        enableConnect(chart);
 
         return chart;
     };
@@ -16992,7 +17039,7 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
                     groupId = chart.group;
                 }
             });
-            groupId = groupId || groupIdBase++;
+            groupId = groupId || ('g_' + groupIdBase++);
             zrUtil.each(charts, function (chart) {
                 chart.group = groupId;
             });
@@ -18298,6 +18345,10 @@ define('echarts/data/helper/completeDimensions',['require','zrender/core/util'],
     var zrUtil = require('zrender/core/util');
 
     function completeDimensions(dimensions, data, defaultNames) {
+        if (!data) {
+            return dimensions;
+        }
+
         var value0 = retrieveValue(data[0]);
         var dimSize = zrUtil.isArray(value0) && value0.length || 1;
 
@@ -19576,8 +19627,14 @@ define('echarts/chart/line/lineAnimationDiff',['require','zrender/core/arrayDiff
             // Which is in case remvoing or add more than one data in the tail or head
             switch (diffItem.cmd) {
                 case '=':
-                    currPoints.push(oldData.getItemLayout(diffItem.idx));
-                    nextPoints.push(newData.getItemLayout(diffItem.idx1));
+                    var currentPt = oldData.getItemLayout(diffItem.idx);
+                    var nextPt = newData.getItemLayout(diffItem.idx1);
+                    // If previous data is NaN, use next point directly
+                    if (isNaN(currentPt[0]) || isNaN(currentPt[1])) {
+                        currentPt = nextPt.slice();
+                    }
+                    currPoints.push(currentPt);
+                    nextPoints.push(nextPt);
 
                     currStackedPoints.push(oldStackedOnPoints[diffItem.idx]);
                     nextStackedPoints.push(newStackedOnPoints[diffItem.idx1]);
@@ -20811,18 +20868,20 @@ define('echarts/scale/Interval',['require','../util/number','../util/format','./
             var extent = this._extent;
             // If extent start and end are same, expand them
             if (extent[0] === extent[1]) {
-                // Expand extent
-                var expandSize = extent[0] / 2 || 1;
-                extent[0] -= expandSize;
-                extent[1] += expandSize;
+                if (extent[0] !== 0) {
+                    // Expand extent
+                    var expandSize = extent[0] / 2;
+                    extent[0] -= expandSize;
+                    extent[1] += expandSize;
+                }
+                else {
+                    extent[1] = 1;
+                }
             }
             // If there are no data and extent are [Infinity, -Infinity]
             if (extent[1] === -Infinity && extent[0] === Infinity) {
+                extent[0] = 0;
                 extent[1] = 1;
-                extent[0] = -1;
-                this._niceExtent = [-1, 1];
-                this._interval = 0.5;
-                return;
             }
 
             this.niceTicks(approxTickNum, fixMin, fixMax);
@@ -20864,6 +20923,7 @@ define('echarts/scale/Time',['require','zrender/core/util','../util/number','./I
 
     var mathCeil = Math.ceil;
     var mathFloor = Math.floor;
+    var ONE_DAY = 3600000 * 24;
 
     // FIXME 公用？
     var bisect = function (a, x, lo, hi) {
@@ -20944,6 +21004,35 @@ define('echarts/scale/Time',['require','zrender/core/util','../util/number','./I
         },
 
         // Overwrite
+        niceExtent: function (approxTickNum, fixMin, fixMax) {
+            var extent = this._extent;
+            // If extent start and end are same, expand them
+            if (extent[0] === extent[1]) {
+                // Expand extent
+                extent[0] -= ONE_DAY;
+                extent[1] += ONE_DAY;
+            }
+            // If there are no data and extent are [Infinity, -Infinity]
+            if (extent[1] === -Infinity && extent[0] === Infinity) {
+                var d = new Date();
+                extent[1] = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                extent[0] = extent[1] - ONE_DAY;
+            }
+
+            this.niceTicks(approxTickNum, fixMin, fixMax);
+
+            // var extent = this._extent;
+            var interval = this._interval;
+
+            if (!fixMin) {
+                extent[0] = numberUtil.round(mathFloor(extent[0] / interval) * interval);
+            }
+            if (!fixMax) {
+                extent[1] = numberUtil.round(mathCeil(extent[1] / interval) * interval);
+            }
+        },
+
+        // Overwrite
         niceTicks: function (approxTickNum) {
             approxTickNum = approxTickNum || 10;
 
@@ -20992,12 +21081,12 @@ define('echarts/scale/Time',['require','zrender/core/util','../util/number','./I
         ['hh:mm\nMM-dd',2,      3600000 * 2],    // 2h
         ['hh:mm\nMM-dd',6,      3600000 * 6],    // 6h
         ['hh:mm\nMM-dd',12,     3600000 * 12],   // 12h
-        ['MM-dd\nyyyy', 1,      3600000 * 24],   // 1d
-        ['week',        7,      3600000 * 24 * 7],        // 7d
-        ['month',       1,      3600000 * 24 * 31],       // 1M
-        ['quarter',     3,      3600000 * 24 * 380 / 4],  // 3M
-        ['half-year',   6,      3600000 * 24 * 380 / 2],  // 6M
-        ['year',        1,      3600000 * 24 * 380]       // 1Y
+        ['MM-dd\nyyyy', 1,      ONE_DAY],   // 1d
+        ['week',        7,      ONE_DAY * 7],        // 7d
+        ['month',       1,      ONE_DAY * 31],       // 1M
+        ['quarter',     3,      ONE_DAY * 380 / 4],  // 3M
+        ['half-year',   6,      ONE_DAY * 380 / 2],  // 6M
+        ['year',        1,      ONE_DAY * 380]       // 1Y
     ];
 
     /**
@@ -22713,6 +22802,8 @@ define('echarts/chart/bar/BarView',['require','zrender/core/util','../../util/gr
     function fixLayoutWithLineWidth(layout, lineWidth) {
         var signX = layout.width > 0 ? 1 : -1;
         var signY = layout.height > 0 ? 1 : -1;
+        // In case width or height are too small.
+        lineWidth = Math.min(lineWidth, Math.abs(layout.width), Math.abs(layout.height));
         layout.x += signX * lineWidth / 2;
         layout.y += signY * lineWidth / 2;
         layout.width -= signX * lineWidth;
@@ -23097,7 +23188,6 @@ define('echarts/layout/barGrid',['require','zrender/core/util','../util/number']
                     y = lastCoord;
                     width = columnWidth;
                     height = coord[1] - lastCoord;
-
                     if (Math.abs(height) < barMinHeight) {
                         // Include zero to has a positive bar
                         height = (height <= 0 ? -1 : 1) * barMinHeight;
@@ -23745,8 +23835,10 @@ define('echarts/action/createDataSelectAction',['require','../echarts','zrender/
 define('echarts/visual/dataColor',['require'],function (require) {
 
     return function (seriesType, ecModel) {
-        ecModel.eachSeriesByType(seriesType, function (seriesModel) {
-            var colorList = seriesModel.get('color');
+        var globalColorList = ecModel.get('color');
+        var offset = 0;
+        ecModel.eachRawSeriesByType(seriesType, function (seriesModel) {
+            var colorList = seriesModel.get('color', true);
             var dataAll = seriesModel.getRawData();
             if (!ecModel.isSeriesFiltered(seriesModel)) {
                 var data = seriesModel.getData();
@@ -23754,15 +23846,22 @@ define('echarts/visual/dataColor',['require'],function (require) {
                     var itemModel = data.getItemModel(idx);
                     var rawIdx = data.getRawIndex(idx);
                     // If series.itemStyle.normal.color is a function. itemVisual may be encoded
-                    if (!data.getItemVisual(idx, 'color', true)) {
-                        var color = itemModel.get('itemStyle.normal.color')
-                            || colorList[rawIdx % colorList.length];
+                    var singleDataColor = data.getItemVisual(idx, 'color', true);
+                    if (!singleDataColor) {
+                        var paletteColor = colorList ? colorList[rawIdx % colorList.length]
+                            : globalColorList[(rawIdx + offset) % globalColorList.length];
+                        var color = itemModel.get('itemStyle.normal.color') || paletteColor;
                         // Legend may use the visual info in data before processed
                         dataAll.setItemVisual(rawIdx, 'color', color);
                         data.setItemVisual(idx, 'color', color);
                     }
+                    else {
+                        // Set data all color for legend
+                        dataAll.setItemVisual(rawIdx, 'color', singleDataColor);
+                    }
                 });
             }
+            offset += dataAll.count();
         });
     };
 });
@@ -24028,10 +24127,8 @@ define('echarts/chart/pie/pieLayout',['require','../../util/number','./labelLayo
             var minAngle = seriesModel.get('minAngle') * RADIAN;
 
             var sum = data.getSum('value');
-            if (sum === 0) {
-                sum = data.count();
-            }
-            var unitRadian = Math.PI / sum * 2;
+            // Sum may be 0
+            var unitRadian = Math.PI / (sum || data.count()) * 2;
 
             var clockwise = seriesModel.get('clockwise');
 
@@ -25749,11 +25846,14 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
 
         dispose: function (ecModel, api) {
             var zr = api.getZr();
+            this._tooltipContent.hide();
+
             zr.off('click', this._tryShow);
             zr.off('mousemove', this._tryShow);
             zr.off('mouseout', this._hide);
 
-            api.off('showTip');
+            api.off('showTip', this._manuallyShowTip);
+            api.off('hideTip', this._hide);
         }
     });
 });
@@ -26153,13 +26253,17 @@ define('echarts/component/legend/LegendView',['require','zrender/core/util','../
         },
 
         render: function (legendModel, ecModel, api) {
+            var group = this.group;
+            group.removeAll();
+
+            if (!legendModel.get('show')) {
+                return;
+            }
+
             var selectMode = legendModel.get('selectedMode');
             var itemWidth = legendModel.get('itemWidth');
             var itemHeight = legendModel.get('itemHeight');
             var itemAlign = legendModel.get('align');
-
-            var group = this.group;
-            group.removeAll();
 
             if (itemAlign === 'auto') {
                 itemAlign = (legendModel.get('left') === 'right'
@@ -26933,8 +27037,8 @@ define('echarts/component/axis/AxisView',['require','zrender/core/util','../../u
             var gridRect = gridModel.coordinateSystem.getRect();
             var ticksCoords = axis.getTicksCoords();
 
-            var prevX = ticksCoords[0];
-            var prevY = ticksCoords[0];
+            var prevX = axis.toGlobalCoord(ticksCoords[0]);
+            var prevY = axis.toGlobalCoord(ticksCoords[0]);
 
             var splitAreaRects = [];
             var count = 0;
@@ -27414,13 +27518,13 @@ define('echarts/component/marker/markerHelper',['require','zrender/core/util','.
         return precision;
     }
 
-    function markerTypeCalculatorWithExtent(percent, data, baseAxisDim, valueAxisDim, valueIndex) {
-        var extent = data.getDataExtent(valueAxisDim);
+    function markerTypeCalculatorWithExtent(mlType, data, baseAxisDim, valueAxisDim, valueIndex) {
         var coordArr = [];
-        var min = extent[0];
-        var max = extent[1];
-        var val = (max - min) * percent + min;
-        var dataIndex = data.indexOfNearest(valueAxisDim, val);
+        var value = mlType === 'average'
+            ? data.getSum(valueAxisDim, true) / data.count()
+            : data.getDataExtent(valueAxisDim)[mlType === 'max' ? 1 : 0];
+
+        var dataIndex = data.indexOfNearest(valueAxisDim, value);
         coordArr[1 - valueIndex] = data.get(baseAxisDim, dataIndex);
         coordArr[valueIndex] = data.get(valueAxisDim, dataIndex, true);
 
@@ -27441,21 +27545,21 @@ define('echarts/component/marker/markerHelper',['require','zrender/core/util','.
          * @param {string} baseAxisDim
          * @param {string} valueAxisDim
          */
-        min: curry(markerTypeCalculatorWithExtent, 0),
+        min: curry(markerTypeCalculatorWithExtent, 'min'),
         /**
          * @method
          * @param {module:echarts/data/List} data
          * @param {string} baseAxisDim
          * @param {string} valueAxisDim
          */
-        max: curry(markerTypeCalculatorWithExtent, 1),
+        max: curry(markerTypeCalculatorWithExtent, 'max'),
         /**
          * @method
          * @param {module:echarts/data/List} data
          * @param {string} baseAxisDim
          * @param {string} valueAxisDim
          */
-        average: curry(markerTypeCalculatorWithExtent, 0.5)
+        average: curry(markerTypeCalculatorWithExtent, 'average')
     };
 
     /**
@@ -27500,6 +27604,8 @@ define('echarts/component/marker/markerHelper',['require','zrender/core/util','.
                 item.coord = markerTypeCalculator[item.type](
                     data, baseAxis.dim, valueAxisDim, valueIndex
                 );
+                // Force to use the value of calculated value.
+                item.value = item.coord[valueIndex];
             }
             else {
                 // FIXME Only has one of xAxis and yAxis.
@@ -28226,7 +28332,7 @@ define('echarts/component/marker/MarkLineView',['require','zrender/core/util','.
 
     var LineDraw = require('../../chart/helper/LineDraw');
 
-    var markLineTransform = function (data, coordSys, baseAxis, valueAxis, item) {
+    var markLineTransform = function (data, coordSys, baseAxis, valueAxis, precision, item) {
         // Special type markLine like 'min', 'max', 'average'
         var mlType = item.type;
         if (!zrUtil.isArray(item)
@@ -28243,31 +28349,31 @@ define('echarts/component/marker/MarkLineView',['require','zrender/core/util','.
             var mlFrom = zrUtil.extend({}, item);
             var mlTo = {};
 
-            var extent = data.getDataExtent(valueAxis.dim, true);
-
             mlFrom.type = null;
 
             // FIXME Polar should use circle
             mlFrom[baseAxisKey] = baseScaleExtent[0];
             mlTo[baseAxisKey] = baseScaleExtent[1];
 
-            var percent = mlType === 'average' ?
-                0.5 : (mlType === 'max' ? 1 : 0);
+            var value = mlType === 'average'
+                ? data.getSum(valueAxis.dim, true) / data.count()
+                : data.getDataExtent(valueAxis.dim)[mlType === 'max' ? 1 : 0];
 
-            var value = (extent[1] - extent[0]) * percent + extent[0];
             // Round if axis is cateogry
             value = valueAxis.coordToData(valueAxis.dataToCoord(value));
 
             mlFrom[valueAxisKey] = mlTo[valueAxisKey] = value;
 
             item = [mlFrom, mlTo, { // Extra option for tooltip and label
-                type: mlType
+                type: mlType,
+                // Force to use the value of calculated value.
+                value: +value.toFixed(precision)
             }];
         }
         item = [
             markerHelper.dataTransform(data, coordSys, item[0]),
             markerHelper.dataTransform(data, coordSys, item[1]),
-            {}
+            zrUtil.extend({}, item[2])
         ];
 
         // Merge from option and to option into line option
@@ -28456,10 +28562,11 @@ define('echarts/component/marker/MarkLineView',['require','zrender/core/util','.
         if (coordSys) {
             var baseAxis = coordSys.getBaseAxis();
             var valueAxis = coordSys.getOtherAxis(baseAxis);
+            var precision = mlModel.get('precision');
 
             var optData = zrUtil.filter(
                 zrUtil.map(mlModel.get('data'), zrUtil.curry(
-                    markLineTransform, seriesData, coordSys, baseAxis, valueAxis
+                    markLineTransform, seriesData, coordSys, baseAxis, valueAxis, precision
                 )),
                 zrUtil.curry(markLineFilter, coordSys)
             );
@@ -30375,7 +30482,10 @@ define('echarts/component/helper/RoamController',['require','zrender/mixin/Event
 
     function mousewheel(e) {
         eventTool.stop(e.event);
-        var zoomDelta = e.wheelDelta < 0 ? 1.1 : 1 / 1.1;
+        // Convenience:
+        // Mac and VM Windows on Mac: scroll up: zoom out.
+        // Windows: scroll up: zoom in.
+        var zoomDelta = e.wheelDelta > 0 ? 1.1 : 1 / 1.1;
         zoom.call(this, e, zoomDelta, e.offsetX, e.offsetY);
     }
 
@@ -31483,7 +31593,7 @@ define('echarts/component/toolbox/feature/DataView',['require','zrender/core/uti
         }
     }
 
-    var itemSplitRegex = new RegExp('[' + ITEM_SPLITER + '| ]+', 'g');
+    var itemSplitRegex = new RegExp('[' + ITEM_SPLITER + ']+', 'g');
     /**
      * @param {string} tsv
      * @return {Array.<Object>}
@@ -32532,11 +32642,13 @@ define('echarts/component/toolbox/feature/DataZoom',['require','zrender/core/uti
         var dimCoordInfo = coordInfo[dimIdx];
         var dataZoomModel = dimCoordInfo.dataZoomModel;
 
-        return {
-            dataZoomId: dataZoomModel.id,
-            startValue: selDataRange[dimIdx][0],
-            endValue: selDataRange[dimIdx][1]
-        };
+        if (dataZoomModel) {
+            return {
+                dataZoomId: dataZoomModel.id,
+                startValue: selDataRange[dimIdx][0],
+                endValue: selDataRange[dimIdx][1]
+            };
+        }
     }
 
     /**
@@ -32585,14 +32697,30 @@ define('echarts/component/toolbox/feature/DataZoom',['require','zrender/core/uti
                 toolboxOpt = toolboxOpt[0];
             }
 
-            if (toolboxOpt && toolboxOpt.feature && toolboxOpt.feature.dataZoom) {
-                addForAxis('xAxis');
-                addForAxis('yAxis');
+            if (toolboxOpt && toolboxOpt.feature) {
+                var dataZoomOpt = toolboxOpt.feature.dataZoom;
+                addForAxis('xAxis', dataZoomOpt);
+                addForAxis('yAxis', dataZoomOpt);
             }
         }
 
-        function addForAxis(axisName) {
+        function addForAxis(axisName, dataZoomOpt) {
+            if (!dataZoomOpt) {
+                return;
+            }
+
+            var axisIndicesName = axisName + 'Index';
+            var givenAxisIndices = dataZoomOpt[axisIndicesName];
+            if (givenAxisIndices != null && !zrUtil.isArray(givenAxisIndices)) {
+                givenAxisIndices = givenAxisIndices === false ? [] : [givenAxisIndices];
+            }
+
             forEachComponent(axisName, function (axisOpt, axisIndex) {
+                if (givenAxisIndices != null
+                    && zrUtil.indexOf(givenAxisIndices, axisIndex) === -1
+                ) {
+                    return;
+                }
                 var newOpt = {
                     type: 'select',
                     $fromToolbox: true,
@@ -32601,7 +32729,7 @@ define('echarts/component/toolbox/feature/DataZoom',['require','zrender/core/uti
                 };
                 // FIXME
                 // Only support one axis now.
-                newOpt[axisName + 'Index'] = axisIndex;
+                newOpt[axisIndicesName] = axisIndex;
                 dataZoomOpts.push(newOpt);
             });
         }
