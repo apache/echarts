@@ -7,7 +7,14 @@ define(function(require) {
 
     return DataZoomModel.extend({
 
-        type: 'dataZoom.inside'
+        type: 'dataZoom.inside',
+
+        /**
+         * @protected
+         */
+        defaultOption: {
+            zoomLock: false // Whether disable zoom but only pan.
+        }
 
     });
 

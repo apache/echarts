@@ -121,6 +121,11 @@ define(function (require) {
          */
         _onZoom: function (controller, coordInfo, scale, mouseX, mouseY) {
             var dataZoomModel = this.dataZoomModel;
+
+            if (dataZoomModel.option.zoomLock) {
+                return;
+            }
+
             scale = 1 / scale;
             var range = this._range = scaleCartesian(
                 scale, [mouseX, mouseY], this._range,
