@@ -139,7 +139,7 @@ define(function (require) {
             else if (err <= 0.3) {
                 interval *= 5;
             }
-            else if (err <= 0.5) {
+            else if (err <= 0.45) {
                 interval *= 3;
             }
             else if (err <= 0.75) {
