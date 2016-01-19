@@ -49,6 +49,10 @@ define(function (require) {
         });
     }
 
+    function mapNotExistsError(name) {
+        console.error('Map ' + name + ' not exists');
+    }
+
     var geoCreator = {
 
         create: function (ecModel, api) {
@@ -58,9 +62,9 @@ define(function (require) {
             ecModel.eachComponent('geo', function (geoModel, idx) {
                 var name = geoModel.get('map');
                 var mapData = mapDataStores[name];
-                // if (!mapData) {
-                    // Warning
-                // }
+                if (!mapData) {
+                    mapNotExistsError(name);
+                }
                 var geo = new Geo(
                     name + idx, name,
                     mapData && mapData.geoJson, mapData && mapData.specialAreas,
@@ -100,9 +104,9 @@ define(function (require) {
 
             zrUtil.each(mapModelGroupBySeries, function (mapSeries, mapType) {
                 var mapData = mapDataStores[mapType];
-                // if (!mapData) {
-                    // Warning
-                // }
+                if (!mapData) {
+                    mapNotExistsError(name);
+                }
 
                 var nameMapList = zrUtil.map(mapSeries, function (singleMapSeries) {
                     return singleMapSeries.get('nameMap');
