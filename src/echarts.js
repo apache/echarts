@@ -548,7 +548,6 @@ define(function (require) {
         var zr = this._zr;
         this._loadingFX = el;
 
-        zr.painter.clear();
         zr.add(el);
     };
 
