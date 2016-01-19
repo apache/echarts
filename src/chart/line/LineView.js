@@ -179,7 +179,6 @@ define(function(require) {
 
             var symbolDraw = new SymbolDraw();
             this.group.add(symbolDraw.group);
-            this.group.add(lineGroup);
 
             this._symbolDraw = symbolDraw;
             this._lineGroup = lineGroup;
@@ -226,6 +225,8 @@ define(function(require) {
             if (!showSymbol) {
                 symbolDraw.remove();
             }
+
+            group.add(lineGroup);
 
             // Initialization animation or coordinate system changed
             if (
@@ -280,8 +281,6 @@ define(function(require) {
                         });
                     }
                 }
-                // Add back
-                group.add(lineGroup);
             }
 
             polyline.setStyle(zrUtil.defaults(
@@ -510,9 +509,15 @@ define(function(require) {
         },
 
         remove: function (ecModel) {
-            var group = this.group;
-            group.remove(this._lineGroup);
+            this._lineGroup.removeAll();
             this._symbolDraw.remove(true);
+
+            this._polyline =
+            this._polygon =
+            this._coordSys =
+            this._points =
+            this._stackedOnPoints =
+            this._data = null;
         }
     });
 });
