@@ -5,9 +5,7 @@ define(function (require) {
     var completeDimensions = require('../../data/helper/completeDimensions');
     var SeriesModel = require('../../model/Series');
     var List = require('../../data/List');
-    var numberUtil = require('../../util/number');
     var zrUtil = require('zrender/core/util');
-    var dataSelectableMixin = require('../helper/dataSelectableMixin');
     var formatUtil = require('../../util/format');
     var encodeHTML = formatUtil.encodeHTML;
     var nest = require('../../util/array/nest');
@@ -37,7 +35,6 @@ define(function (require) {
             this.legendDataProvider = function () {
                 return this._dataBeforeProcessed;
             };
-            this.updateSelectedMap();
         },
 
         /**
@@ -45,7 +42,6 @@ define(function (require) {
          */
         mergeOption: function (newOption) {
             this.$superCall('mergeOption', newOption);
-            this.updateSelectedMap();
         },
 
         /**
@@ -91,7 +87,6 @@ define(function (require) {
 
             for (var i = 0; i < data.length; ++i) {
                 nameList.push(data[i][DATA_NAME_INDEX]);
-
                 if (!nameMap[data[i][DATA_NAME_INDEX]]) {
                     nameMap[data[i][DATA_NAME_INDEX]] = count++;
                 }
@@ -142,13 +137,16 @@ define(function (require) {
                 .entries(indexArr);
 
             var layerSeries = zrUtil.map(dataByName, function (d) {
-                return d.values;
+                return {
+                    name: d.key,
+                    indices: d.values
+                };
             });
             return layerSeries;
         },
 
         /**
-         * Get data indexs for show tooltip content.
+         * Get data indices for show tooltip content.
          *
          * @param {Array.<string>} dim
          * @param {Array.<number>} value
@@ -170,23 +168,23 @@ define(function (require) {
             }
 
             var layerSeries = this.getLayerSeries();
-            var indexs = [];
+            var indices = [];
             var layerNum = layerSeries.length;
 
             for (var i = 0; i < layerNum; ++i) {
                 var minDist = Number.MAX_VALUE;
                 var nearestIdx = -1;
-                var pointNum = layerSeries[i].length;
+                var pointNum = layerSeries[i].indices.length;
                 for (var j = 0; j < pointNum; ++j) {
-                    var dist = Math.abs(data.get(dim[0], layerSeries[i][j]) - value);
+                    var dist = Math.abs(data.get(dim[0], layerSeries[i].indices[j]) - value);
                     if (dist <= minDist) {
                         minDist = dist;
-                        nearestIdx = layerSeries[i][j];
+                        nearestIdx = layerSeries[i].indices[j];
                     }
                 }
-                indexs.push(nearestIdx);
+                indices.push(nearestIdx);
             }
-            return indexs;
+            return indices;
         },
 
         /**
@@ -228,6 +226,14 @@ define(function (require) {
 
             singleAxisIndex: 0,
 
+            animationEasing: 'linear',
+
+            // itemStyle: {
+            //     normal: {},
+            //     emphasis: {
+            //     }
+            // },
+
             label: {
                 normal: {
                     margin: 4,
@@ -242,24 +248,9 @@ define(function (require) {
                 emphasis: {
                     show: true
                 }
-            },
-
-            areaStyle: {
-                normal: {},
-                emphasis: {
-                    stroke: '#000'
-                }
-            },
-
-            lineStyle: {
-                normal: {},
-                emphasis: {}
             }
-
         }
     });
-
-    zrUtil.mixin(ThemeRiverSeries, dataSelectableMixin);
 
     return ThemeRiverSeries;
 });

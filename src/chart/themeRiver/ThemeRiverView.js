@@ -2,10 +2,16 @@ define(function (require) {
 
     var poly = require('../line/poly');
     var graphic = require('../../util/graphic');
+    var zrUtil = require('zrender/core/util');
+    var DataDiffer = require('../../data/DataDiffer');
 
     return require('../../echarts').extendChartView({
 
         type: 'themeRiver',
+
+        init: function () {
+            this._layers = [];
+        },
 
         render: function (seriesModel, ecModel, api) {
             var data = seriesModel.getData();
@@ -19,84 +25,153 @@ define(function (require) {
 
             var layerSeries = seriesModel.getLayerSeries();
 
-            group.removeAll();
-
             var layoutInfo = data.getLayout('layoutInfo');
             var rect = layoutInfo.rect;
             var boundaryGap = layoutInfo.boundaryGap;
 
             group.position = [0, rect.y + boundaryGap[0]];
 
-            var m = layerSeries.length;
+            function keyGetter(item) {
+                return item.name;
+            }
+            var dataDiffer = new DataDiffer(
+                this._layersSeries || [], layerSeries,
+                keyGetter, keyGetter
+            );
 
-            for (var i = 0; i < m; i++) {
-                var polygon = new poly.Polygon();
-                var text = new graphic.Text();
+            var newLayersGroups = {};
+
+            dataDiffer.add(zrUtil.bind(zrUtil.curry(process, 'add'), this))
+                .update(zrUtil.bind(zrUtil.curry(process, 'update'), this))
+                .remove(zrUtil.bind(zrUtil.curry(process, 'remove'), this))
+                .execute();
+
+            function process(status, idx, oldIdx) {
+                var oldLayersGroups = this._layers;
+                if (status === 'remove') {
+                    group.remove(oldLayersGroups[idx]);
+                    return;
+                }
+
                 var points0 = [];
                 var points1 = [];
                 var color;
-                var n = layerSeries[i].length;
+                var indices = layerSeries[idx].indices;
 
-                for (var j = 0; j < n; j++) {
-                    var layout = data.getItemLayout(layerSeries[i][j]);
+                for (var j = 0; j < indices.length; j++) {
+                    var layout = data.getItemLayout(indices[j]);
                     var x = layout.x;
                     var y0 = layout.y0;
-
-                    color = rawData.getItemVisual(
-                        data.getRawIndex(layerSeries[i][j]), 'color'
-                    );
 
                     var y = layout.y;
 
                     points0.push([x, y0]);
                     points1.push([x, y0 + y]);
+
+                    color = rawData.getItemVisual(
+                        data.getRawIndex(indices[j]), 'color'
+                    );
                 }
 
-                polygon.setShape({
-                    points: points0,
-                    stackedOnPoints: points1,
-                    smooth: 0.4,
-                    stackedOnSmooth: 0.4
-                });
-
-                var itemModel = data.getItemModel(layerSeries[i][j-1]);
+                var polygon;
+                var text;
+                var textLayout = data.getItemLayout(indices[0]);
+                var itemModel = data.getItemModel(indices[j - 1]);
                 var labelModel = itemModel.getModel('label.normal');
                 var margin = labelModel.get('margin');
-                var areaStyleModel = itemModel.getModel('areaStyle.emphasis');
-                var textStyleModel = labelModel.getModel('textStyle');
-                var textLayout = data.getItemLayout(layerSeries[i][0]);
+                if (status === 'add') {
+                    var layerGroup = newLayersGroups[idx] = new graphic.Group();
+                    polygon = new poly.Polygon({
+                        shape: {
+                            points: points0,
+                            stackedOnPoints: points1,
+                            smooth: 0.4,
+                            stackedOnSmooth: 0.4,
+                            smoothConstraint: false
+                        },
+                        z2: 0
+                    });
+                    text = new graphic.Text({
+                        style: {
+                            x: textLayout.x - margin,
+                            y: textLayout.y0 + textLayout.y / 2
+                        }
+                    });
+                    layerGroup.add(polygon);
+                    layerGroup.add(text);
+                    group.add(layerGroup);
 
-                graphic.updateProps(text, {
-                    style: {
-                        x: textLayout.x - margin,
-                        y: textLayout.y0 + textLayout.y / 2
-                    }
-                }, seriesModel);
+                    polygon.setClipPath(createGridClipShape(polygon.getBoundingRect(), seriesModel, function () {
+                        polygon.removeClipPath();
+                    }));
+                }
+                else {
+                    var layerGroup = oldLayersGroups[oldIdx];
+                    polygon = layerGroup.childAt(0);
+                    text = layerGroup.childAt(1);
+                    group.add(layerGroup);
+
+                    newLayersGroups[idx] = layerGroup;
+
+                    graphic.updateProps(polygon, {
+                        shape: {
+                            points: points0,
+                            stackedOnPoints: points1
+                        }
+                    }, seriesModel);
+
+                    graphic.updateProps(text, {
+                        style: {
+                            x: textLayout.x - margin,
+                            y: textLayout.y0 + textLayout.y / 2
+                        }
+                    }, seriesModel);
+                }
+
+                var hoverItemStyleModel = itemModel.getModel('itemStyle.emphasis');
+                var itemStyleModel = itemModel.getModel('itemStyle.nomral');
+                var textStyleModel = labelModel.getModel('textStyle');
 
                 text.setStyle({
                     text: labelModel.get('show')
-                        ? seriesModel.getFormattedLabel(layerSeries[i][j-1], 'normal')
-                            || data.getName(layerSeries[i][j-1])
-                        :'',
+                        ? seriesModel.getFormattedLabel(indices[j - 1], 'normal')
+                            || data.getName(indices[j - 1])
+                        : '',
                     textFont: textStyleModel.getFont(),
                     textAlign: labelModel.get('textAlign'),
                     textBaseline: 'middle'
                 });
 
-                polygon.setStyle({
+                polygon.setStyle(zrUtil.extend({
                     fill: color
-                });
+                }, itemStyleModel.getItemStyle(['color'])));
 
-                var stroke = areaStyleModel.get('stroke');
-
-                graphic.setHoverStyle(polygon, {
-                    stroke: stroke
-                });
-
-                group.add(polygon);
-                group.add(text);
+                graphic.setHoverStyle(polygon, hoverItemStyleModel.getItemStyle());
             }
+
+            this._layersSeries = layerSeries;
+            this._layers = newLayersGroups;
         }
     });
+
+    //add animation to the view
+    function createGridClipShape(rect, seriesModel, cb) {
+        var rectEl = new graphic.Rect({
+            shape: {
+                x: rect.x - 10,
+                y: rect.y - 10,
+                width: 0,
+                height: rect.height + 20
+            }
+        });
+        graphic.initProps(rectEl, {
+            shape: {
+                width: rect.width + 20,
+                height: rect.height + 20
+            }
+        }, seriesModel, cb);
+
+        return rectEl;
+    }
 
 });
