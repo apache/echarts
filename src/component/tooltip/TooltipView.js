@@ -612,7 +612,7 @@ define(function (require) {
             var otherExtent = [rect.y, rect.y + rect.height];
 
             moveSingleLine(axisType, point, otherExtent);
-            
+
             /**
              * @inner
              */
@@ -635,7 +635,7 @@ define(function (require) {
                         shape: targetShape
                     });
             }
-            
+
         },
 
         /**
@@ -855,8 +855,6 @@ define(function (require) {
                 };
             });
 
-            var api = this._api;
-
             var lastHover = this._lastHover;
             var api = this._api;
             // Dispatch downplay action
@@ -875,15 +873,12 @@ define(function (require) {
                 lastHover.payloadBatch = payloadBatch;
             }
             // Dispatch showTip action
-            if (payloadBatch.length > 0) {
-                // TODO Empty data
-                api.dispatchAction({
-                    type: 'showTip',
-                    dataIndex: payloadBatch[0].dataIndex,
-                    seriesIndex: payloadBatch[0].seriesIndex,
-                    from: this.uid
-                });
-            }
+            api.dispatchAction({
+                type: 'showTip',
+                dataIndex: payloadBatch[0].dataIndex,
+                seriesIndex: payloadBatch[0].seriesIndex,
+                from: this.uid
+            });
 
             if (baseAxis && rootTooltipModel.get('showContent')) {
 
@@ -903,16 +898,16 @@ define(function (require) {
                 tooltipContent.show(rootTooltipModel);
 
                 // Update html content
-                var fitstDataIndex = payloadBatch[0].dataIndex;
+                var firstDataIndex = payloadBatch[0].dataIndex;
                 if (!contentNotChange) {
                     // Reset ticket
                     this._ticket = '';
                     if (!formatter) {
                         // Default tooltip content
-                        // FIXME 
+                        // FIXME
                         // (1) shold be the first data which has name?
-                        // (2) themeRiver, fitstDataIndex is array, and first line is unnecessary.
-                        var firstLine = seriesList[0].getData().getName(fitstDataIndex);
+                        // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
+                        var firstLine = seriesList[0].getData().getName(firstDataIndex);
                         html = (firstLine ? firstLine + '<br />' : '')
                             + zrUtil.map(seriesList, function (series, index) {
                                 return series.formatTooltip(payloadBatch[index].dataIndex, true);
@@ -924,7 +919,7 @@ define(function (require) {
                         }
                         else if (typeof formatter === 'function') {
                             var self = this;
-                            var ticket = 'axis_' + coordSys.name + '_' + fitstDataIndex;
+                            var ticket = 'axis_' + coordSys.name + '_' + firstDataIndex;
                             var callback = function (cbTicket, html) {
                                 if (cbTicket === self._ticket) {
                                     tooltipContent.setContent(html);

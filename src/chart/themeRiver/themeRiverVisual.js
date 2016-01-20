@@ -11,7 +11,7 @@ define(function (require) {
                 var name = data.getName(index);
                 var rawIndex = data.getRawIndex(index);
 
-                // ...........
+                // use rawData just for drawing legend
                 rawData.setItemVisual(
                     rawIndex,
                     'color',
