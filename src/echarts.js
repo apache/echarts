@@ -1253,9 +1253,9 @@ define(function (require) {
     // Exports
     // --------
 
-    echarts.graphic = require('echarts/util/graphic');
-    echarts.number = require('echarts/util/number');
-    echarts.format = require('echarts/util/format');
+    echarts.graphic = require('./util/graphic');
+    echarts.number = require('./util/number');
+    echarts.format = require('./util/format');
 
     echarts.util = {};
     each([
