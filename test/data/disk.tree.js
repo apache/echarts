@@ -18,12 +18,14 @@ window.disk_usage_tree =
                     {
                         "value": 12,
                         "name": "DefaultAccessPlugin.bundle",
-                        "path": "Accounts/Access/DefaultAccessPlugin.bundle"
+                        "path": "Accounts/Access/DefaultAccessPlugin.bundle",
+                        "link": "http://www.baidu.com"
                     },
                     {
                         "value": 28,
                         "name": "FacebookAccessPlugin.bundle",
-                        "path": "Accounts/Access/FacebookAccessPlugin.bundle"
+                        "path": "Accounts/Access/FacebookAccessPlugin.bundle",
+                        "link": "http://tushuo.baidu.com"
                     },
                     {
                         "value": 20,
@@ -18139,7 +18141,8 @@ window.disk_usage_tree =
                     {
                         "value": 408836,
                         "name": "Kyoko.SpeechVoice",
-                        "path": "Speech/Voices/Kyoko.SpeechVoice"
+                        "path": "Speech/Voices/Kyoko.SpeechVoice",
+                        "link": "http://tushuo.baidu.com"
                     },
                     {
                         "value": 2620,
@@ -18254,7 +18257,8 @@ window.disk_usage_tree =
                     {
                         "value": 610156,
                         "name": "Ting-Ting.SpeechVoice",
-                        "path": "Speech/Voices/Ting-Ting.SpeechVoice"
+                        "path": "Speech/Voices/Ting-Ting.SpeechVoice",
+                        "link": "http://www.baidu.com"
                     },
                     {
                         "value": 1708,

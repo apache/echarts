@@ -31,7 +31,8 @@ define(function(require) {
             root: null,                         // default: tree root. This feature doesnt work unless node have id.
             visualDimension: 0,                 // Can be 0, 1, 2, 3.
             zoomToNodeRatio: 0.32 * 0.32,       // zoom to node时 node占可视区域的面积比例。
-            roam: true,
+            roam: true,                         // true, false, 'scale' or 'zoom', 'move'
+            nodeClick: 'zoomToNode',            // 'zoomToNode', 'link', false
             animation: true,
             animationDurationUpdate: 1500,
             animationEasing: 'quinticInOut',
@@ -99,6 +100,12 @@ define(function(require) {
             levels: []         // Each item: {
                                //     visibleMin, itemStyle, visualDimension, label
                                // }
+            // data: {
+            //      value: [],
+            //      children: [],
+            //      link: 'http://xxx.xxx.xxx',
+            //      target: 'blank' or 'self'
+            // }
         },
 
         /**

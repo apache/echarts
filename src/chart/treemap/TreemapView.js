@@ -499,28 +499,46 @@
             if (!controller) {
                 controller = this._controller = new RoamController(api.getZr());
                 controller.enable();
-                controller.on('pan', bind(handle, this, this._onPan));
-                controller.on('zoom', bind(handle, this, this._onZoom));
-            }
-
-            function handle(handler) {
-                this._mayClick = false;
-                return handler.apply(this, Array.prototype.slice.call(arguments, 1));
+                controller.on('pan', bind(this._onPan, this));
+                controller.on('zoom', bind(this._onZoom, this));
             }
 
             controller.rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
+        },
 
-            if (!this.seriesModel.get('roam')) {
+        /**
+         * @private
+         */
+        _clearController: function () {
+            var controller = this._controller;
+            if (controller) {
                 controller.off('pan').off('zoom');
-                this._controller = null;
-                return;
+                controller = null;
             }
+        },
+
+        /**
+         * @private
+         * @param {string} type 'zoom' or 'move'
+         */
+        _isRoamEnabled: function (type) {
+            var roam = this.seriesModel.get('roam');
+
+            return roam === true
+                || ((roam === 'scale' || roam === 'zoom') && type === 'zoom')
+                || (roam === type && type === 'move');
         },
 
         /**
          * @private
          */
         _onPan: function (dx, dy) {
+            if (!this._isRoamEnabled('move')) {
+                return;
+            }
+
+            this._mayClick = false;
+
             if (this._state !== 'animating'
                 && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
             ) {
@@ -553,6 +571,12 @@
          * @private
          */
         _onZoom: function (scale, mouseX, mouseY) {
+            if (!this._isRoamEnabled('zoom')) {
+                return;
+            }
+
+            this._mayClick = false;
+
             if (this._state !== 'animating') {
                 // These param must not be cached.
                 var viewRoot = this.seriesModel.getViewRoot();
@@ -619,9 +643,25 @@
             }, this);
 
             function onClick(e) {
+                var nodeClick = this.seriesModel.get('nodeClick', true);
+
+                if (!nodeClick) {
+                    return;
+                }
+
                 var targetInfo = this.findTarget(e.offsetX, e.offsetY);
+
                 if (targetInfo) {
-                    this._zoomToNode(targetInfo);
+                    if (nodeClick === 'zoomToNode') {
+                        this._zoomToNode(targetInfo);
+                    }
+                    else if (nodeClick === 'link') {
+                        var node = targetInfo.node;
+                        var itemModel = node.hostTree.data.getItemModel(node.dataIndex);
+                        var link = itemModel.get('link', true);
+                        var linkTarget = itemModel.get('target', true) || 'blank';
+                        link && window.open(link, linkTarget);
+                    }
                 }
             }
         },
@@ -651,10 +691,15 @@
          * @override
          */
         remove: function () {
+            this._clearController();
             this._containerGroup && this._containerGroup.removeAll();
             this._storage = createStorage();
             this._state = 'ready';
             this._breadcrumb && this._breadcrumb.remove();
+        },
+
+        dispose: function () {
+            this._clearController();
         },
 
         /**
