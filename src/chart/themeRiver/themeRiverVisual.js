@@ -7,10 +7,8 @@ define(function (require) {
             var colorList = seriesModel.get('color');
 
             data.each(function (index) {
-                var layoutInfo = data.getItemLayout(index);
                 var name = data.getName(index);
                 var rawIndex = data.getRawIndex(index);
-
                 // use rawData just for drawing legend
                 rawData.setItemVisual(
                     rawIndex,

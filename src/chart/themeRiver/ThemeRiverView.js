@@ -56,7 +56,8 @@ define(function (require) {
                     points: points0,
                     stackedOnPoints: points1,
                     smooth: 0.4,
-                    stackedOnSmooth: 0.4
+                    stackedOnSmooth: 0.4,
+                    smoothConstraint: false
                 });
 
                 var itemModel = data.getItemModel(layerSeries[i][j-1]);

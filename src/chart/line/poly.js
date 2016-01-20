@@ -36,25 +36,24 @@ define(function (require) {
                 if (smooth > 0) {
                     var prevIdx = idx - dir;
                     var nextIdx = idx + dir;
-                    if (dir > 0) {
-                        prevIdx = mathMax(prevIdx, start);
-                        nextIdx = mathMin(nextIdx, allLen - 1);
+                    // Last point
+                    if ((dir > 0 && idx === allLen - 1)
+                        || (dir <= 0 && idx  === 0)
+                    ) {
+                        v2Copy(cp1, p);
                     }
                     else {
-                        nextIdx = mathMax(nextIdx, 0);
-                        prevIdx = mathMin(prevIdx, start);
+                        var prevP = points[prevIdx];
+                        var nextP = points[nextIdx];
+                        // If next data is null
+                        if (isNaN(nextP[0]) || isNaN(nextP[1])) {
+                            nextP = p;
+                        }
+
+                        vec2.sub(v, nextP, prevP);
+
+                        scaleAndAdd(cp1, p, v, -smooth / 2);
                     }
-                    var prevP = points[prevIdx];
-                    var nextP = points[nextIdx];
-                    // If next data is null
-                    if (isNaN(nextP[0]) || isNaN(nextP[1])) {
-                        nextP = p;
-                    }
-
-                    vec2.sub(v, nextP, prevP);
-
-                    scaleAndAdd(cp1, p, v, -smooth / 2);
-
                     // Smooth constraint
                     vec2Min(cp0, cp0, smoothMax);
                     vec2Max(cp0, cp0, smoothMin);
@@ -80,19 +79,21 @@ define(function (require) {
         return k;
     }
 
-    function getBoundingBox(points) {
+    function getBoundingBox(points, smoothConstraint) {
         var ptMin = [Infinity, Infinity];
         var ptMax = [-Infinity, -Infinity];
-        for (var i = 0; i < points.length; i++) {
-            var pt = points[i];
-            if (pt[0] < ptMin[0]) { ptMin[0] = pt[0]; }
-            if (pt[1] < ptMin[1]) { ptMin[1] = pt[1]; }
-            if (pt[0] > ptMax[0]) { ptMax[0] = pt[0]; }
-            if (pt[1] > ptMax[1]) { ptMax[1] = pt[1]; }
+        if (smoothConstraint) {
+            for (var i = 0; i < points.length; i++) {
+                var pt = points[i];
+                if (pt[0] < ptMin[0]) { ptMin[0] = pt[0]; }
+                if (pt[1] < ptMin[1]) { ptMin[1] = pt[1]; }
+                if (pt[0] > ptMax[0]) { ptMax[0] = pt[0]; }
+                if (pt[1] > ptMax[1]) { ptMax[1] = pt[1]; }
+            }
         }
         return {
-            min: ptMin,
-            max: ptMax
+            min: smoothConstraint ? ptMin : ptMax,
+            max: smoothConstraint ? ptMax : ptMin
         };
     }
 
@@ -105,15 +106,15 @@ define(function (require) {
             shape: {
                 points: [],
 
-                smooth: 0
+                smooth: 0,
+
+                smoothConstraint: true
             },
 
             style: {
                 fill: null,
 
-                stroke: '#000',
-
-                smooth: 0
+                stroke: '#000'
             },
 
             buildPath: function (ctx, shape) {
@@ -122,7 +123,7 @@ define(function (require) {
                 var i = 0;
                 var len = points.length;
 
-                var result = getBoundingBox(points);
+                var result = getBoundingBox(points, shape.smoothConstraint);
 
                 while (i < len) {
                     i += drawSegment(
@@ -142,7 +143,8 @@ define(function (require) {
                 // Offset between stacked base points and points
                 stackedOnPoints: [],
                 smooth: 0,
-                stackedOnSmooth: 0
+                stackedOnSmooth: 0,
+                smoothConstraint: true
             },
 
             buildPath: function (ctx, shape) {
@@ -151,8 +153,8 @@ define(function (require) {
 
                 var i = 0;
                 var len = points.length;
-                var bbox = getBoundingBox(points);
-                var stackedOnBBox = getBoundingBox(stackedOnPoints);
+                var bbox = getBoundingBox(points, shape.smoothConstraint);
+                var stackedOnBBox = getBoundingBox(stackedOnPoints, shape.smoothConstraint);
                 while (i < len) {
                     var k = drawSegment(
                         ctx, points, i, len, len,
