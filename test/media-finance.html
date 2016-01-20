@@ -182,6 +182,7 @@ for (var i = 0; i < categoryData.length; i++) {
                         }
                     },
                     timeline: {
+                        show: true,
                         orient: 'horizontal',
                         inverse: false,
                         left: '20%',
@@ -219,6 +220,7 @@ for (var i = 0; i < categoryData.length; i++) {
                         }
                     },
                     timeline: {
+                        show: true,
                         orient: 'horizontal',
                         inverse: false,
                         left: '20%',
@@ -253,12 +255,42 @@ for (var i = 0; i < categoryData.length; i++) {
                         }
                     },
                     timeline: {
+                        show: true,
                         orient: 'vertical',
                         inverse: true,
                         right: 10,
                         top: 150,
                         bottom: 10,
                         width: 55
+                    },
+                    series: [
+                        {name: 'GDP占比', center: ['45%', '20%'], radius: '28%'}
+                    ]
+                }
+            },
+            {
+                query: {maxWidth: 350},
+                option: {
+                    legend: {
+                        orient: 'vertical',
+                        left: 'right',
+                        itemGap: 5
+                    },
+                    grid: {
+                        left: 55,
+                        top: '32%',
+                        right: 100,
+                        bottom: 50
+                    },
+                    xAxis: {
+                        nameLocation: 'middle',
+                        nameGap: 25,
+                        axisLabel: {
+                            interval: 1
+                        }
+                    },
+                    timeline: {
+                        show: false
                     },
                     series: [
                         {name: 'GDP占比', center: ['45%', '20%'], radius: '28%'}

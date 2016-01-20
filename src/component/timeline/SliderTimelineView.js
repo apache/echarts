@@ -73,30 +73,30 @@ define(function (require) {
 
             this.group.removeAll();
 
-            // var mainGroup = new graphic.Group();
+            if (timelineModel.get('show', true)) {
 
-            var layoutInfo = this._layout(timelineModel, api);
+                var layoutInfo = this._layout(timelineModel, api);
+                var mainGroup = this._createGroup('mainGroup');
+                var labelGroup = this._createGroup('labelGroup');
 
-            var mainGroup = this._createGroup('mainGroup');
-            var labelGroup = this._createGroup('labelGroup');
+                /**
+                 * @private
+                 * @type {module:echarts/component/timeline/TimelineAxis}
+                 */
+                var axis = this._axis = this._createAxis(layoutInfo, timelineModel);
 
-            /**
-             * @private
-             * @type {module:echarts/component/timeline/TimelineAxis}
-             */
-            var axis = this._axis = this._createAxis(layoutInfo, timelineModel);
+                each(
+                    ['AxisLine', 'AxisTick', 'Control', 'CurrentPointer'],
+                    function (name) {
+                        this['_render' + name](layoutInfo, mainGroup, axis, timelineModel);
+                    },
+                    this
+                );
 
-            each(
-                ['AxisLine', 'AxisTick', 'Control', 'CurrentPointer'],
-                function (name) {
-                    this['_render' + name](layoutInfo, mainGroup, axis, timelineModel);
-                },
-                this
-            );
+                this._renderAxisLabel(layoutInfo, labelGroup, axis, timelineModel);
 
-            this._renderAxisLabel(layoutInfo, labelGroup, axis, timelineModel);
-
-            this._position(layoutInfo, timelineModel);
+                this._position(layoutInfo, timelineModel);
+            }
 
             this._doPlayStop();
         },
