@@ -51,10 +51,10 @@ define(function (require) {
         var layerSeries = seriesModel.getLayerSeries();
 
         //the points in each layer.
-        var layerPoints = zrUtil.map(layerSeries, function (d) {
-            return zrUtil.map(d, function (d) {
+        var layerPoints = zrUtil.map(layerSeries, function (singleLayer) {
+            return zrUtil.map(singleLayer.indices, function (idx) {
                 return seriesModel.coordinateSystem.dataToPoint([
-                    data.get('time', d), data.get('value', d)
+                    data.get('time', idx), data.get('value', idx)
                 ]);
             });
         });
@@ -65,11 +65,11 @@ define(function (require) {
 
         //set layout information for each item.
         var n = layerSeries.length;
-        var m = layerSeries[0].length;
+        var m = layerSeries[0].indices.length;
         var baseY0;
         for (var j = 0; j < m; ++j) {
             baseY0 = baseLine[j] * ky;
-            data.setItemLayout(layerSeries[0][j], {
+            data.setItemLayout(layerSeries[0].indices[j], {
                 layerIndex: 0,
                 x: layerPoints[0][j][0],
                 y0: baseY0,
@@ -77,7 +77,7 @@ define(function (require) {
             });
             for (var i = 1; i < n; ++i) {
                 baseY0 += layerPoints[i - 1][j][1] * ky;
-                data.setItemLayout(layerSeries[i][j], {
+                data.setItemLayout(layerSeries[i].indices[j], {
                     layerIndex: i,
                     x: layerPoints[i][j][0],
                     y0: baseY0,

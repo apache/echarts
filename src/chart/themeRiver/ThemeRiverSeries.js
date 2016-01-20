@@ -37,7 +37,6 @@ define(function (require) {
             this.legendDataProvider = function () {
                 return this._dataBeforeProcessed;
             };
-            this.updateSelectedMap();
         },
 
         /**
@@ -45,7 +44,6 @@ define(function (require) {
          */
         mergeOption: function (newOption) {
             this.$superCall('mergeOption', newOption);
-            this.updateSelectedMap();
         },
 
         /**
@@ -91,7 +89,6 @@ define(function (require) {
 
             for (var i = 0; i < data.length; ++i) {
                 nameList.push(data[i][DATA_NAME_INDEX]);
-
                 if (!nameMap[data[i][DATA_NAME_INDEX]]) {
                     nameMap[data[i][DATA_NAME_INDEX]] = count++;
                 }
@@ -142,7 +139,10 @@ define(function (require) {
                 .entries(indexArr);
 
             var layerSeries = zrUtil.map(dataByName, function (d) {
-                return d.values;
+                return {
+                    name: d.key,
+                    indices: d.values
+                };
             });
             return layerSeries;
         },
@@ -228,6 +228,8 @@ define(function (require) {
 
             singleAxisIndex: 0,
 
+            animationEasing: 'linear',
+
             label: {
                 normal: {
                     margin: 4,
@@ -258,8 +260,6 @@ define(function (require) {
 
         }
     });
-
-    zrUtil.mixin(ThemeRiverSeries, dataSelectableMixin);
 
     return ThemeRiverSeries;
 });
