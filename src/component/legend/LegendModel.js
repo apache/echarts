@@ -18,18 +18,9 @@ define(function(require) {
 
             option.selected = option.selected || {};
 
-            var legendData = zrUtil.map(option.data || [], function (dataItem) {
-                if (typeof dataItem === 'string') {
-                    dataItem = {
-                        name: dataItem
-                    };
-                }
-                return new Model(dataItem, this, this.ecModel);
-            }, this);
-            this._data = legendData;
+            this._updateData(ecModel);
 
-            this._updateAvailableNames(ecModel);
-
+            var legendData = this._data;
             // If has any selected in option.selected
             var selectedMap = this.option.selected;
             // If selectedMode is single, try to select one
@@ -49,10 +40,20 @@ define(function(require) {
         mergeOption: function (option) {
             this.$superCall('mergeOption', option);
 
-            this._updateAvailableNames(this.ecModel);
+            this._updateData(this.ecModel);
         },
 
-        _updateAvailableNames: function (ecModel) {
+        _updateData: function (ecModel) {
+            var legendData = zrUtil.map(this.get('data') || [], function (dataItem) {
+                if (typeof dataItem === 'string') {
+                    dataItem = {
+                        name: dataItem
+                    };
+                }
+                return new Model(dataItem, this, this.ecModel);
+            }, this);
+            this._data = legendData;
+
             var availableNames = zrUtil.map(ecModel.getSeries(), function (series) {
                 return series.name;
             });
@@ -67,7 +68,6 @@ define(function(require) {
              * @private
              */
             this._availableNames = availableNames;
-
         },
 
         /**
