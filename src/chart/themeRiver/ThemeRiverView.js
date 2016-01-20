@@ -57,9 +57,8 @@ define(function (require) {
                 var points1 = [];
                 var color;
                 var indices = layerSeries[idx].indices;
-                var n = indices.length;
 
-                for (var j = 0; j < n; j++) {
+                for (var j = 0; j < indices.length; j++) {
                     var layout = data.getItemLayout(indices[j]);
                     var x = layout.x;
                     var y0 = layout.y0;
@@ -128,7 +127,7 @@ define(function (require) {
                     }, seriesModel);
                 }
 
-                var areaStyleModel = itemModel.getModel('areaStyle.emphasis');
+                var itemStyleModel = itemModel.getModel('itemStyle.emphasis');
                 var textStyleModel = labelModel.getModel('textStyle');
 
                 text.setStyle({
@@ -145,7 +144,7 @@ define(function (require) {
                     fill: color
                 });
 
-                var stroke = areaStyleModel.get('stroke');
+                var stroke = itemStyleModel.get('stroke');
 
                 graphic.setHoverStyle(polygon, {
                     stroke: stroke

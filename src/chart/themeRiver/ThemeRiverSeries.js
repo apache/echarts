@@ -148,7 +148,7 @@ define(function (require) {
         },
 
         /**
-         * Get data indexs for show tooltip content.
+         * Get data indices for show tooltip content.
          *
          * @param {Array.<string>} dim
          * @param {Array.<number>} value
@@ -170,23 +170,23 @@ define(function (require) {
             }
 
             var layerSeries = this.getLayerSeries();
-            var indexs = [];
+            var indices = [];
             var layerNum = layerSeries.length;
 
             for (var i = 0; i < layerNum; ++i) {
                 var minDist = Number.MAX_VALUE;
                 var nearestIdx = -1;
-                var pointNum = layerSeries[i].length;
+                var pointNum = layerSeries[i].indices.length;
                 for (var j = 0; j < pointNum; ++j) {
-                    var dist = Math.abs(data.get(dim[0], layerSeries[i][j]) - value);
+                    var dist = Math.abs(data.get(dim[0], layerSeries[i].indices[j]) - value);
                     if (dist <= minDist) {
                         minDist = dist;
-                        nearestIdx = layerSeries[i][j];
+                        nearestIdx = layerSeries[i].indices[j];
                     }
                 }
-                indexs.push(nearestIdx);
+                indices.push(nearestIdx);
             }
-            return indexs;
+            return indices;
         },
 
         /**
@@ -246,18 +246,12 @@ define(function (require) {
                 }
             },
 
-            areaStyle: {
+            itemStyle: {
                 normal: {},
                 emphasis: {
                     stroke: '#000'
                 }
-            },
-
-            lineStyle: {
-                normal: {},
-                emphasis: {}
             }
-
         }
     });
 
