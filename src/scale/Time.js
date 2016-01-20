@@ -7,6 +7,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../util/number');
+    var formatUtil = require('../util/format');
 
     var IntervalScale = require('./Interval');
 
@@ -31,54 +32,6 @@ define(function (require) {
     };
 
     /**
-     * @param {string} str
-     * @return {string}
-     * @inner
-     */
-    var s2d = function (str) {
-        return str < 10 ? ('0' + str) : str;
-    };
-
-    /**
-     * ISO Date format
-     * @param {string} tpl
-     * @param {number} value
-     * @inner
-     */
-    var format = function (tpl, value) {
-        if (tpl === 'week'
-            || tpl === 'month'
-            || tpl === 'quarter'
-            || tpl === 'half-year'
-            || tpl === 'year'
-        ) {
-            tpl = 'MM-dd\nyyyy';
-        }
-
-        var date = numberUtil.parseDate(value);
-        var y = date.getFullYear();
-        var M = date.getMonth() + 1;
-        var d = date.getDate();
-        var h = date.getHours();
-        var m = date.getMinutes();
-        var s = date.getSeconds();
-
-        tpl = tpl.replace('MM', s2d(M))
-            .toLowerCase()
-            .replace('yyyy', y)
-            .replace('yy', y % 100)
-            .replace('dd', s2d(d))
-            .replace('d', d)
-            .replace('hh', s2d(h))
-            .replace('h', h)
-            .replace('mm', s2d(m))
-            .replace('m', m)
-            .replace('ss', s2d(s))
-            .replace('s', s);
-
-        return tpl;
-    };
-    /**
      * @alias module:echarts/coord/scale/Time
      * @constructor
      */
@@ -91,7 +44,7 @@ define(function (require) {
 
             var date = new Date(val);
 
-            return format(stepLvl[0], date);
+            return formatUtil.formatTime(stepLvl[0], date);
         },
 
         // Overwrite

@@ -155,7 +155,7 @@ define(function (require) {
         var trigger = seriesModel.get('tooltip.trigger', true);
         // Ignore series use item tooltip trigger and series coordinate system is not cartesian or
         return !(!coordSys
-            || (coordSys.type !== 'cartesian2d' && coordSys.type !== 'polar')
+            || (coordSys.type !== 'cartesian2d' && coordSys.type !== 'polar' && coordSys.type !== 'single')
             || trigger === 'item');
     }
 
@@ -345,6 +345,10 @@ define(function (require) {
                         baseAxis = coordSys.getBaseAxis();
                         key = baseAxis.dim + baseAxis.index;
                     }
+                    else if (coordSys.type === 'single') {
+                        baseAxis = coordSys.getAxis();
+                        key = baseAxis.dim + baseAxis.type;
+                    }
                     else {
                         baseAxis = coordSys.getBaseAxis();
                         key = baseAxis.dim + coordSys.name;
@@ -489,6 +493,7 @@ define(function (require) {
                 }
                 else {
                     var valIndex = zrUtil.indexOf(dimensions, axisType);
+
                     // If hover data not changed on the axis dimension
                     if (lastHover.data === value[valIndex]) {
                         contentNotChange = true;
@@ -503,6 +508,11 @@ define(function (require) {
                 }
                 else if (coordSys.type === 'polar' && !contentNotChange) {
                     this._showPolarPointer(
+                        axisPointerModel, coordSys, axisType, point
+                    );
+                }
+                else if (coordSys.type === 'single' && !contentNotChange) {
+                    this._showSinglePointer(
                         axisPointerModel, coordSys, axisType, point
                     );
                 }
@@ -592,6 +602,40 @@ define(function (require) {
                         shape: targetShape
                     });
             }
+        },
+
+        _showSinglePointer: function (axisPointerModel, single, axisType, point) {
+            var self = this;
+            var axisPointerType = axisPointerModel.get('type');
+            var moveAnimation = axisPointerType !== 'cross';
+            var rect = single.getRect();
+            var otherExtent = [rect.y, rect.y + rect.height];
+
+            moveSingleLine(axisType, point, otherExtent);
+            
+            /**
+             * @inner
+             */
+            function moveSingleLine(axisType, point, otherExtent) {
+                var axis = single.getAxis();
+                var orient = axis.orient;
+
+                var targetShape = orient === 'horizontal'
+                    ? makeLineShape(point[0], otherExtent[0], point[0], otherExtent[1])
+                    : makeLineShape(otherExtent[0], point[1], otherExtent[1], point[1]);
+
+                var pointerEl = self._getPointerElement(
+                    single, axisPointerModel, axisType, targetShape
+                );
+                moveAnimation
+                    ? graphic.updateProps(pointerEl, {
+                        shape: targetShape
+                    }, axisPointerModel)
+                    :  pointerEl.attr({
+                        shape: targetShape
+                    });
+            }
+            
         },
 
         /**
@@ -798,17 +842,16 @@ define(function (require) {
             var tooltipContent = this._tooltipContent;
 
             var baseAxis = coordSys.getBaseAxis();
-            // FIXME
-            // Dont case by case
-            var val = value[baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1];
 
             var payloadBatch = zrUtil.map(seriesList, function (series) {
                 return {
                     seriesIndex: series.seriesIndex,
-                    dataIndex: series.getData().indexOfNearest(
-                        series.getDimensionsOnAxis(baseAxis.dim),
-                        val
-                    )
+                    dataIndex: series.getAxisTooltipDataIndex
+                        ? series.getAxisTooltipDataIndex(series.getDimensionsOnAxis(baseAxis.dim), value, baseAxis)
+                        : series.getData().indexOfNearest(
+                            series.getDimensionsOnAxis(baseAxis.dim),
+                            value[baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1]
+                        )
                 };
             });
 
@@ -866,8 +909,11 @@ define(function (require) {
                     this._ticket = '';
                     if (!formatter) {
                         // Default tooltip content
-                        // FIXME shold be the first data which has name?
-                        html = seriesList[0].getData().getName(fitstDataIndex) + '<br />'
+                        // FIXME 
+                        // (1) shold be the first data which has name?
+                        // (2) themeRiver, fitstDataIndex is array, and first line is unnecessary.
+                        var firstLine = seriesList[0].getData().getName(fitstDataIndex);
+                        html = (firstLine ? firstLine + '<br />' : '')
                             + zrUtil.map(seriesList, function (series, index) {
                                 return series.formatTooltip(payloadBatch[index].dataIndex, true);
                             }).join('<br />');

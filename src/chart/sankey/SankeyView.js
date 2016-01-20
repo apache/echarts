@@ -169,6 +169,7 @@ define(function (require) {
         }
     });
 
+    //add animation to the view
     function createGridClipShape(rect, seriesModel, cb) {
         var rectEl = new graphic.Rect({
             shape: {

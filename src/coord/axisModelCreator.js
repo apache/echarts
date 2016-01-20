@@ -3,6 +3,7 @@ define(function (require) {
     var axisDefault = require('./axisDefault');
     var zrUtil = require('zrender/core/util');
     var ComponentModel = require('../model/Component');
+    var layout = require('../util/layout');
 
     // FIXME axisType is fixed ?
     var AXIS_TYPES = ['value', 'category', 'time', 'log'];
@@ -23,11 +24,19 @@ define(function (require) {
                 type: axisName + 'Axis.' + axisType,
 
                 mergeDefaultAndTheme: function (option, ecModel) {
+                    var layoutMode = this.layoutMode;
+                    var inputPositionParams = layoutMode
+                        ? layout.getLayoutParams(option) : {};
+
                     var themeModel = ecModel.getTheme();
                     zrUtil.merge(option, themeModel.get(axisType + 'Axis'));
                     zrUtil.merge(option, this.getDefaultOption());
 
                     option.type = axisTypeDefaulter(axisName, option);
+
+                    if (layoutMode) {
+                        layout.mergeLayoutParam(option, inputPositionParams, layoutMode);
+                    }
                 },
 
                 defaultOption: zrUtil.mergeAll(

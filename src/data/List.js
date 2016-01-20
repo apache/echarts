@@ -134,6 +134,13 @@ define(function (require) {
         this._visual = {};
 
         /**
+         * Globel layout properties.
+         * @type {Object}
+         * @private
+         */
+        this._layout = {};
+
+        /**
          * Item visual properties after visual coding
          * @type {Array.<Object>}
          * @private
@@ -796,6 +803,24 @@ define(function (require) {
         }
         this._visual = this._visual || {};
         this._visual[key] = val;
+    };
+
+    /**
+     * Set layout property.
+     * @param {string} key 
+     * @param {*} val
+     */
+    listProto.setLayout = function (key, val) {
+        this._layout[key] = val;
+    };
+
+    /**
+     * Get layout property.
+     * @param  {string} key.
+     * @return {*}
+     */
+    listProto.getLayout = function (key) { 
+        return this._layout[key];
     };
 
     /**

@@ -92,7 +92,7 @@ define(function (require) {
             },
 
             /**
-             * the a
+             * the array to be grouped by.
              * @param {Array} array
              */
             entries: function (array) {
