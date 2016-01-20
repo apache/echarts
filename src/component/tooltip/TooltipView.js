@@ -612,7 +612,7 @@ define(function (require) {
             var otherExtent = [rect.y, rect.y + rect.height];
 
             moveSingleLine(axisType, point, otherExtent);
-            
+
             /**
              * @inner
              */
@@ -635,7 +635,7 @@ define(function (require) {
                         shape: targetShape
                     });
             }
-            
+
         },
 
         /**
@@ -855,8 +855,6 @@ define(function (require) {
                 };
             });
 
-            var api = this._api;
-
             var lastHover = this._lastHover;
             var api = this._api;
             // Dispatch downplay action
@@ -909,7 +907,7 @@ define(function (require) {
                     this._ticket = '';
                     if (!formatter) {
                         // Default tooltip content
-                        // FIXME 
+                        // FIXME
                         // (1) shold be the first data which has name?
                         // (2) themeRiver, fitstDataIndex is array, and first line is unnecessary.
                         var firstLine = seriesList[0].getData().getName(fitstDataIndex);
