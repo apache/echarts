@@ -4,7 +4,7 @@ define(function (require) {
 
     /**
      * nest helper used to group by the array.
-     * can specified the keys and sort the keys. 
+     * can specified the keys and sort the keys.
      */
     function nest() {
 
@@ -12,7 +12,7 @@ define(function (require) {
         var sortKeysFunction = [];
 
         /**
-         * map an Array into the mapObject. 
+         * map an Array into the mapObject.
          * @param {Array} array
          * @param {number} depth
          */
@@ -41,12 +41,12 @@ define(function (require) {
             zrUtil.each(valuesByKey, function (value, key) {
                 mapObject[key] = map(value, depth);
             });
-            
+
             return mapObject;
         }
 
         /**
-         * transform the Map Object to multidimensional Array 
+         * transform the Map Object to multidimensional Array
          * @param {Object} map
          * @param {number} depth
          */
@@ -58,7 +58,9 @@ define(function (require) {
             var sortKeyFunction = sortKeysFunction[depth++];
 
             zrUtil.each(mapObject, function (value, key) {
-                array.push({key: key, values: entriesMap(value, depth)});
+                array.push({
+                    key: key, values: entriesMap(value, depth)
+                });
             });
 
             if (sortKeyFunction) {
@@ -68,7 +70,7 @@ define(function (require) {
             }
             else {
                 return array;
-            } 
+            }
         }
 
         return {

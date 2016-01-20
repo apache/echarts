@@ -88,7 +88,8 @@ define(function (require) {
                             smooth: 0.4,
                             stackedOnSmooth: 0.4,
                             smoothConstraint: false
-                        }
+                        },
+                        z2: 0
                     });
                     text = new graphic.Text({
                         style: {
@@ -127,7 +128,8 @@ define(function (require) {
                     }, seriesModel);
                 }
 
-                var itemStyleModel = itemModel.getModel('itemStyle.emphasis');
+                var hoverItemStyleModel = itemModel.getModel('itemStyle.emphasis');
+                var itemStyleModel = itemModel.getModel('itemStyle.nomral');
                 var textStyleModel = labelModel.getModel('textStyle');
 
                 text.setStyle({
@@ -140,15 +142,11 @@ define(function (require) {
                     textBaseline: 'middle'
                 });
 
-                polygon.setStyle({
+                polygon.setStyle(zrUtil.extend({
                     fill: color
-                });
+                }, itemStyleModel.getItemStyle(['color'])));
 
-                var stroke = itemStyleModel.get('stroke');
-
-                graphic.setHoverStyle(polygon, {
-                    stroke: stroke
-                });
+                graphic.setHoverStyle(polygon, hoverItemStyleModel.getItemStyle());
             }
 
             this._layersSeries = layerSeries;

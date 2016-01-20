@@ -230,6 +230,12 @@ define(function (require) {
 
             animationEasing: 'linear',
 
+            // itemStyle: {
+            //     normal: {},
+            //     emphasis: {
+            //     }
+            // },
+
             label: {
                 normal: {
                     margin: 4,
@@ -243,13 +249,6 @@ define(function (require) {
                 },
                 emphasis: {
                     show: true
-                }
-            },
-
-            itemStyle: {
-                normal: {},
-                emphasis: {
-                    stroke: '#000'
                 }
             }
         }
