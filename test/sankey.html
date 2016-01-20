@@ -1,0 +1,60 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 90%;
+                /*border: 1px solid #000;*/
+            }
+        </style>
+        <div id="main"><div>
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/sankey',
+                'echarts/component/tooltip'
+                ], function (echarts) {
+
+                    var chart = echarts.init(document.getElementById('main'), null, {
+                        renderer: 'canvas'
+                    });
+
+                    window.onresize = function () {
+                        chart.resize();
+                    }
+
+                    $.getJSON('./data/energy.json')
+                    .done(function(data) {
+                        chart.setOption({
+                            tooltip: {
+                                trigger: 'item',
+                                triggerOn: 'mousemove'
+
+                            },
+                            series: [
+                                {
+                                    type: 'sankey',
+                                    layout:'none',
+                                    data: data.nodes,
+                                    links: data.links,
+                                    lineStyle: {
+                                        normal: {
+                                            curveness: 0.5
+                                        }
+                                    }
+                                }
+                            ]
+                        });
+                    });
+                });
+        </script>
+    </body>
+</html>

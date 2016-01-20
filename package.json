@@ -1,17 +1,37 @@
 {
     "name": "echarts",
-    "description": "Enterprise Charts，基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据可视化表。",
-    "version": "2.2.6",
-    "maintainers": [
-        { "name": "Kener", "email": "kener.linfeng@gmail.com" },
-        { "name": "Pissang", "email": "shenyi.914@gmail.com" },
-        { "name": "Erik", "email": "errorrik@gmail.com" },
-        { "name": "Yangji", "email": "511415343@qq.com" }
+    "version": "3.0.1",
+    "description": "A powerful charting and visualization library for browser",
+    "keywords": [
+        "visualization",
+        "canvas"
     ],
-    "dependencies": {
-        "zrender": "~2.1.1"
+    "homepage": "http://echarts.baidu.com/",
+    "author": [{
+        "name": "Kenner",
+        "email": "kener.linfeng@gmail.com"
+    }, {
+        "name": "Yi Shen",
+        "url": "https://github.com/pissang"
+    }, {
+        "name": "Shuang Su",
+        "url": "https://github.com/100pah"
+    }],
+    "contributors": [{
+        "name": "erik",
+        "email": "errorrik@gmail.com"
+    }],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ecomfe/echarts.git"
     },
-    "repository": "git://github.com/ecomfe/echarts",
-    "main": "echarts",
-    "homepage": "http://echarts.baidu.com"
+    "main": "dist/echarts.min.js",
+    "browserify": "dist/echarts.min.js",
+    "files": [
+        "dist",
+        "src"
+    ],
+    "devDependencies": {
+        "zrender": "~3.0.0"
+    }
 }

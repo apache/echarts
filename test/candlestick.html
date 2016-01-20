@@ -1,0 +1,135 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <script src="lib/dat.gui.min.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="info"></div>
+        <div id="main"></div>
+        <script>
+
+            /**
+             * @see <https://en.wikipedia.org/wiki/Michelson%E2%80%93Morley_experiment>
+             * @see <http://bl.ocks.org/mbostock/4061502>
+             */
+            var chart;
+            var data;
+
+            require([
+                'echarts',
+                'data/security-sh-2013.json',
+                'echarts/chart/candlestick',
+                'echarts/component/title',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom'
+            ], function (echarts, rawData) {
+
+                chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+                data = splitData(rawData);
+
+                update();
+            })
+
+            function splitData(rawData) {
+                var categoryData = [];
+                var values = []
+                for (var i = 0; i < rawData.length; i++) {
+                    categoryData.push(rawData[i].splice(0, 1)[0]);
+                    values.push(rawData[i])
+                }
+                return {
+                    categoryData: categoryData,
+                    values: values
+                };
+            }
+
+            function parseDate(timestamp) {
+                var date = new Date(timestamp);
+                return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+            }
+
+            function update() {
+
+                chart.setOption({
+                    legend: {
+                        data: ['上证指数']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        },
+                        formatter: function (param) {
+                            var param = param[0];
+                            return [
+                                '日期：' + param.name + '<hr size=1 style="margin: 3px 0">',
+                                '开盘：' + param.data[0] + '<br/>',
+                                '收盘：' + param.data[1] + '<br/>',
+                                '日最低：' + param.data[2] + '<br/>',
+                                '日最高：' + param.data[3] + '<br/>'
+                            ].join('')
+                        }
+                    },
+                    grid: {
+                        left: '10%',
+                        right: '10%',
+                        bottom: '15%'
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: data.categoryData,
+                        scale: true,
+                        boundaryGap : false,
+                        axisLine: {onZero: false},
+                        splitLine: {show: false},
+                        splitNumber: 20,
+                        min: 'dataMin',
+                        max: 'dataMax'
+                    },
+                    yAxis: {
+                        scale: true,
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    dataZoom: [
+                        {
+                            type: 'inside',
+                            start: 50,
+                            end: 100
+                        },
+                        {
+                            show: true,
+                            type: 'slider',
+                            y: '90%',
+                            start: 50,
+                            end: 100
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '上证指数',
+                            type: 'candlestick',
+                            data: data.values
+                        }
+                    ]
+                });
+            }
+
+        </script>
+    </body>
+</html>

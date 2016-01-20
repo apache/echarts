@@ -1,0 +1,82 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/axis',
+                'echarts/component/dataZoom'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 20; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push(Math.random() * 2);
+                    data2.push(Math.random() * 2);
+                    data3.push(Math.random() * 2);
+                }
+
+                chart.setOption({
+                    legend: {
+                        data: ['bar', 'bar2', 'bar3']
+                    },
+                    xAxis: {
+                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        data: xAxisData,
+                        boundaryGap: true
+                    },
+                    yAxis: {
+                        // scale: true
+                        boundaryGap: false
+                    },
+                    series: [
+                        {
+                            name: 'bar',
+                            type: 'bar',
+                            data: data1
+                        },
+                        {
+                            name: 'bar2',
+                            type: 'bar',
+                            data: data2
+                        },
+                        {
+                            name: 'bar3',
+                            type: 'bar',
+                            data: data3
+                        }
+                    ],
+                    dataZoom: {
+                        show: true,
+                        orient: 'vertical',
+                        yAxisIndex: [0]
+                    }
+                });
+            })
+
+        </script>
+    </body>
+</html>

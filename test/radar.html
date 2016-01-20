@@ -1,0 +1,94 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/radar',
+                'echarts/component/legend',
+                'echarts/component/tooltip'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'));
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 10; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((Math.random() * 2 + 1).toFixed(3));
+                    data3.push((Math.random() + 0.5).toFixed(3));
+                    data2.push((Math.random() + 0.5).toFixed(3));
+                }
+
+                chart.setOption({
+                    legend: {
+                        data: ['radar', 'radar2', 'radar3']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'shadow'
+                        }
+                    },
+                    polar: {},
+                    angleAxis: {
+                        data: xAxisData,
+                        boundaryGap: false
+                    },
+                    radiusAxis: {
+                    },
+                    series: [{
+                        name: 'radar',
+                        stack: 'all',
+                        type: 'radar',
+                        symbolSize: 10,
+                        itemStyle: {
+                            normal: {
+                                areaStyle: {}
+                            }
+                        },
+                        data: data1
+                    }, {
+                        name: 'radar2',
+                        stack: 'all',
+                        type: 'radar',
+                        symbolSize: 10,
+                        itemStyle: {
+                            normal: {
+                                areaStyle: {}
+                            }
+                        },
+                        data: data2
+                    }, {
+                        name: 'radar3',
+                        stack: 'all',
+                        type: 'radar',
+                        symbolSize: 10,
+                        itemStyle: {
+                            normal: {
+                                areaStyle: {}
+                            }
+                        },
+                        data: data3
+                    }]
+                });
+            })
+
+        </script>
+    </body>
+</html>

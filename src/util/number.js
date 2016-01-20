@@ -1,77 +1,110 @@
 /**
- * echarts数字运算相关
- *
- * @desc echarts基于Canvas，纯Javascript图表库，提供直观，生动，可交互，可个性化定制的数据统计图表。
- * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
- *
+ * 数值处理模块
+ * @module echarts/util/number
  */
-define(function() {
+
+define(function (require) {
+
+    var zrUtil = require('zrender/core/util');
+    var number = {};
+
+    var RADIAN_EPSILON = 1e-4;
+
     function _trim(str) {
         return str.replace(/^\s+/, '').replace(/\s+$/, '');
     }
-    
+
     /**
-     * 百分比计算
+     * Linear mapping a value from domain to range
+     * @memberOf module:echarts/util/number
+     * @param  {(number|Array.<number>)} val
+     * @param  {Array.<number>} domain Domain extent domain[0] can be bigger than domain[1]
+     * @param  {Array.<number>} range  Range extent range[0] can be bigger than range[1]
+     * @param  {boolean} clamp
+     * @return {(number|Array.<number>}
      */
-    function parsePercent(value, maxValue) {
-        if (typeof value === 'string') {
-            if (_trim(value).match(/%$/)) {
-                return parseFloat(value) / 100 * maxValue;
+    number.linearMap = function (val, domain, range, clamp) {
+
+        if (zrUtil.isArray(val)) {
+            return zrUtil.map(val, function (v) {
+                return number.linearMap(v, domain, range, clamp);
+            });
+        }
+
+        var sub = domain[1] - domain[0];
+
+        if (sub === 0) {
+            return (range[0] + range[1]) / 2;
+        }
+        var t = (val - domain[0]) / sub;
+
+        if (clamp) {
+            t = Math.min(Math.max(t, 0), 1);
+        }
+
+        return t * (range[1] - range[0]) + range[0];
+    };
+
+    /**
+     * Convert a percent string to absolute number.
+     * Returns NaN if percent is not a valid string or number
+     * @memberOf module:echarts/util/number
+     * @param {string|number} percent
+     * @param {number} all
+     * @return {number}
+     */
+    number.parsePercent = function(percent, all) {
+        switch (percent) {
+            case 'center':
+            case 'middle':
+                percent = '50%';
+                break;
+            case 'left':
+            case 'top':
+                percent = '0%';
+                break;
+            case 'right':
+            case 'bottom':
+                percent = '100%';
+                break;
+        }
+        if (typeof percent === 'string') {
+            if (_trim(percent).match(/%$/)) {
+                return parseFloat(percent) / 100 * all;
             }
 
-            return parseFloat(value);
+            return parseFloat(percent);
         }
 
-        return value;
-    }
-    
-    /**
-     * 获取中心坐标
-     */ 
-    function parseCenter(zr, center) {
-        return [
-            parsePercent(center[0], zr.getWidth()),
-            parsePercent(center[1], zr.getHeight())
-        ];
-    }
+        return percent == null ? NaN : +percent;
+    };
 
     /**
-     * 获取自适应半径
-     */ 
-    function parseRadius(zr, radius) {
-        // 传数组实现环形图，[内半径，外半径]，传单个则默认为外半径为
-        if (!(radius instanceof Array)) {
-            radius = [0, radius];
-        }
-        var zrSize = Math.min(zr.getWidth(), zr.getHeight()) / 2;
-        return [
-            parsePercent(radius[0], zrSize),
-            parsePercent(radius[1], zrSize)
-        ];
-    }
-    
-    /**
-     * 每三位默认加,格式化
+     * Fix rounding error of float numbers
+     * @param {number} x
+     * @return {number}
      */
-    function addCommas(x) {
-        if (isNaN(x)) {
-            return '-';
-        }
-        x = (x + '').split('.');
-        return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,') 
-               + (x.length > 1 ? ('.' + x[1]) : '');
-    }
+    number.round = function (x) {
+        // PENDING
+        return +(+x).toFixed(12);
+    };
+
+    number.asc = function (arr) {
+        arr.sort(function (a, b) {
+            return a - b;
+        });
+        return arr;
+    };
 
     /**
-     * 获取数字的小数位数
+     * Get precision
      * @param {number} val
      */
-    
-    // It is much faster than methods converting number to string as follows 
-    //      var tmp = val.toString();
-    //      return tmp.length - 1 - tmp.indexOf('.');
-    // especially when precision is low
-    function getPrecision(val) {
+    number.getPrecision = function (val) {
+        // It is much faster than methods converting number to string as follows
+        //      var tmp = val.toString();
+        //      return tmp.length - 1 - tmp.indexOf('.');
+        // especially when precision is low
         var e = 1;
         var count = 0;
         while (Math.round(val * e) / e !== val) {
@@ -79,13 +112,54 @@ define(function() {
             count++;
         }
         return count;
-    }
-    
-    return {
-        parsePercent: parsePercent,
-        parseCenter: parseCenter,
-        parseRadius: parseRadius,
-        addCommas: addCommas,
-        getPrecision: getPrecision
     };
+
+    /**
+     * @param {Array.<number>} dataExtent
+     * @param {Array.<number>} pixelExtent
+     * @return {number}  precision
+     */
+    number.getPixelPrecision = function (dataExtent, pixelExtent) {
+        var log = Math.log;
+        var LN10 = Math.LN10;
+        var dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
+        var sizeQuantity = Math.round(log(Math.abs(pixelExtent[1] - pixelExtent[0])) / LN10);
+        return Math.max(
+            -dataQuantity + sizeQuantity,
+            0
+        );
+    };
+
+    // Number.MAX_SAFE_INTEGER, ie do not support.
+    number.MAX_SAFE_INTEGER = 9007199254740991;
+
+    /**
+     * To 0 - 2 * PI, considering negative radian.
+     * @param {number} radian
+     * @return {number}
+     */
+    number.remRadian = function (radian) {
+        var pi2 = Math.PI * 2;
+        return (radian % pi2 + pi2) % pi2;
+    };
+
+    /**
+     * @param {type} radian
+     * @return {boolean}
+     */
+    number.isRadianAroundZero = function (val) {
+        return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
+    };
+
+    /**
+     * @param {string|Date|number} value
+     * @return {number} timestamp
+     */
+    number.parseDate = function (value) {
+        return value instanceof Date
+            ? value
+            : new Date(typeof value === 'string' ? value.replace(/-/g, '/') : value);
+    };
+
+    return number;
 });

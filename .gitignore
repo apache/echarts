@@ -1,5 +1,5 @@
 #################
-## Eclipse 
+## Eclipse
 #################
 
 *.pydevproject
@@ -163,3 +163,6 @@ pip-log.txt
 .DS_Store
 
 node_modules
+
+map/tool
+todo

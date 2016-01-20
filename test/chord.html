@@ -1,0 +1,58 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/facePrint.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="info"></div>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/chord',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'));
+                chart.setOption({
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    series: [{
+                        name: 'chord',
+                        type: 'chord',
+                        sort: 'ascending',
+                        data : [
+                            {name : 'group1'},
+                            {name : 'group2'},
+                            {name : 'group3'},
+                            {name : 'group4'}
+                        ],
+                        matrix: [
+                            [11975,  5871, 8916, 2868],
+                            [ 1951, 10048, 2060, 6171],
+                            [ 8010, 16145, 8090, 8045],
+                            [ 1013,   990,  940, 6907]
+                        ]
+                    }]
+                });
+            })
+
+        </script>
+    </body>
+</html>

@@ -1,0 +1,87 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+            .tooltip-content {
+                color: #000;
+                width: 200px;
+                text-align: center;
+                margin-left: -100px;
+                margin-top: -80px;
+            }
+            .tooltip-content h4 {
+                font-size: 20px;
+                color: #999;
+            }
+            .tooltip-content h5 {
+                font-size: 28px;
+                color: #666;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/pie',
+                'echarts/component/legend',
+                'echarts/component/tooltip'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+                chart.setOption({
+                    tooltip: {
+                        position: ['50%', '50%'],
+                        backgroundColor: 'trasparent',
+                        formatter: function (params) {
+                            return '<div class="tooltip-content">\
+                                <h4>' + params.name + '</h4>\
+                                <h5>' + (params.percent * 100).toFixed(1) + '%</h5>\
+                                </div>\
+                            ';
+                        }
+                    },
+                    series: [{
+                        name: 'pie',
+                        type: 'pie',
+                        selectedMode: 'single',
+                        selectedOffset: 30,
+                        clockwise: true,
+                        radius: ['20%', '40%'],
+                        label: {
+                            normal: {
+                                show: false
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        data:[
+                            {value:379.5, name:'前任2：备胎反击战', selected: true},
+                            {value:252.7, name:'移动迷宫：烧痕审判'},
+                            {value:173.4, name:'绝命海拔'},
+                            {value:153.1, name:'剩者为王'},
+                            {value:49.4, name:'史努比：花生大电影'},
+                            {value:32.2, name:'山河故人'},
+                            {value:21.9, name:'蚁人'},
+                            {value:19.5, name:'夏洛特烦恼'}
+                        ]
+                    }]
+                });
+            });
+
+        </script>
+    </body>
+</html>
