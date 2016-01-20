@@ -5,9 +5,7 @@ define(function (require) {
     var completeDimensions = require('../../data/helper/completeDimensions');
     var SeriesModel = require('../../model/Series');
     var List = require('../../data/List');
-    var numberUtil = require('../../util/number');
     var zrUtil = require('zrender/core/util');
-    var dataSelectableMixin = require('../helper/dataSelectableMixin');
     var formatUtil = require('../../util/format');
     var encodeHTML = formatUtil.encodeHTML;
     var nest = require('../../util/array/nest');
