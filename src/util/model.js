@@ -299,7 +299,7 @@ define(function(require) {
          */
         getRawValue: function (idx) {
             var itemModel = this.getData().getItemModel(idx);
-            if (itemModel && itemModel.option) {
+            if (itemModel && itemModel.option != null) {
                 var dataItem = itemModel.option;
                 return (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem))
                     ? dataItem.value : dataItem;
