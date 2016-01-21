@@ -285,7 +285,7 @@ define(function (require) {
             var thisShadowExtent = [0, size[0]];
 
             var points = [[size[0], 0], [0, 0]];
-            var step = thisShadowExtent[1] / data.count();
+            var step = thisShadowExtent[1] / (data.count() - 1);
             var thisCoord = 0;
 
             // Optimize for large data shadow
