@@ -45,6 +45,70 @@ define(function (require) {
         },
 
         /**
+         * If there is no value of a certain point in the time for some event,set it value to 0.
+         *
+         * @param {Array} data
+         * @return {Array}
+         */
+        fixData: function (data) {
+            var rawDataLength = data.length;
+
+            // grouped data by name
+            var dataByName = nest()
+                .key(function (dataItem) {
+                    return dataItem[2] ;
+                })
+                .entries(data);
+
+            // data group in each layer
+            var layData = zrUtil.map(dataByName, function (d) {
+                return {
+                    name: d.key,
+                    dataList: d.values
+                };
+            });
+
+            var layerNum = layData.length;
+            var largestLayer = -1;
+            var index = -1;
+            for (var i = 0; i < layerNum; ++i) {
+                var len = layData[i].dataList.length;
+                if (len > largestLayer) {
+                    largestLayer = len;
+                    index = i;
+                }
+            }
+
+            for (var k = 0; k < layerNum; ++k) {
+                if (k === index) {
+                    continue;
+                }
+                var name = layData[k].name;
+                for (var j = 0; j < largestLayer; ++j) {
+                    var timeValue = layData[index].dataList[j][0];
+                    var length = layData[k].dataList.length;
+                    var keyIndex = -1;
+                    for (var l = 0; l < length; ++l){
+                        var value = layData[k].dataList[l][0];
+                        if (value === timeValue) {
+                            keyIndex = l;
+                            break;
+                        }
+                    }
+                    if (keyIndex === -1) {
+                        data[rawDataLength] = [];
+                        data[rawDataLength][0] = timeValue;
+                        data[rawDataLength][1] = 0;
+                        data[rawDataLength][2] = name;
+                        rawDataLength++;
+
+                    }
+                }
+            }
+            return data;
+        },
+
+        /**
          * @override
          * @param  {Object} option  the initial option that user gived
          * @param  {module:echarts/model/Model} ecModel
@@ -80,7 +144,7 @@ define(function (require) {
                 }
             ];
 
-            var data = option.data;
+            var data = this.fixData(option.data);
             var nameList = [];
             var nameMap = this.nameMap = {};
             var count = 0;
@@ -111,7 +175,6 @@ define(function (require) {
             var dims = {
                 oneDim: ['time']
             };
-
             return dims[axisDim];
         },
 
@@ -142,6 +205,13 @@ define(function (require) {
                     indices: d.values
                 };
             });
+
+            for(var j = 0; j < layerSeries.length; ++j) {
+                layerSeries[j].indices.sort(function (index1, index2) {
+                    return data.get('time', index1) - data.get('time', index2);
+                });
+            }
+
             return layerSeries;
         },
 
@@ -220,6 +290,7 @@ define(function (require) {
 
             coordinateSystem: 'single',
 
+            // gap in axis's orthogonal orientation
             boundaryGap: ['10%', '10%'],
 
             legendHoverLink: true,
@@ -227,12 +298,6 @@ define(function (require) {
             singleAxisIndex: 0,
 
             animationEasing: 'linear',
-
-            // itemStyle: {
-            //     normal: {},
-            //     emphasis: {
-            //     }
-            // },
 
             label: {
                 normal: {

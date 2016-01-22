@@ -17,23 +17,31 @@ define(function (require) {
 
             var layoutInfo = {};
 
+            // use the axis boundingRect for view
             var rect = single.getRect();
 
             layoutInfo.rect = rect;
 
             var boundaryGap = seriesModel.get('boundaryGap');
 
+            var axis = single.getAxis();
+
             layoutInfo.boundaryGap = boundaryGap;
 
-            boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], rect.height);
-            boundaryGap[1] = numberUtil.parsePercent(boundaryGap[0], rect.height);
+            if (axis.orient === 'horizontal') {
+                boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], rect.height);
+                boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], rect.height);
+                var height = rect.height - boundaryGap[0] - boundaryGap[1];
+                themeRiverLayout(data, seriesModel, height);
+            }
+            else {
+                boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], rect.width);
+                boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], rect.width);
+                var width = rect.width - boundaryGap[0] - boundaryGap[1];
+                themeRiverLayout(data, seriesModel, width);
+            }
 
             data.setLayout('layoutInfo', layoutInfo);
-
-            var height = rect.height - boundaryGap[0] - boundaryGap[1];
-
-            themeRiverLayout(data, seriesModel, height);
-
         });
     };
 
@@ -46,7 +54,6 @@ define(function (require) {
         if (!data.count()) {
             return;
         }
-
         // the data in each layer are organized into a series.
         var layerSeries = seriesModel.getLayerSeries();
 

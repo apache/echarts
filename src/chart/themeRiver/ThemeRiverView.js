@@ -52,17 +52,14 @@ define(function (require) {
                     group.remove(oldLayersGroups[idx]);
                     return;
                 }
-
                 var points0 = [];
                 var points1 = [];
                 var color;
                 var indices = layerSeries[idx].indices;
-
                 for (var j = 0; j < indices.length; j++) {
                     var layout = data.getItemLayout(indices[j]);
                     var x = layout.x;
                     var y0 = layout.y0;
-
                     var y = layout.y;
 
                     points0.push([x, y0]);
