@@ -23,11 +23,12 @@ define(function (require) {
 
         setExtent: function (start, end) {
             var thisExtent = this._extent;
+            //start,end may be a Number like '25',so...
             if (!isNaN(start)) {
-                thisExtent[0] = start;
+                thisExtent[0] = parseFloat(start);
             }
             if (!isNaN(end)) {
-                thisExtent[1] = end;
+                thisExtent[1] = parseFloat(end);
             }
         },
 
