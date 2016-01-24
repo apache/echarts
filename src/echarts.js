@@ -957,7 +957,7 @@ define(function (require) {
          */
         version: '3.0.2',
         dependencies: {
-            zrender: '3.0.2'
+            zrender: '3.0.1'
         }
     };
 

@@ -17012,7 +17012,7 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
          */
         version: '3.0.2',
         dependencies: {
-            zrender: '3.0.2'
+            zrender: '3.0.1'
         }
     };
 
