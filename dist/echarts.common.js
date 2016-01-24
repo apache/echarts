@@ -2342,9 +2342,11 @@ define('echarts/util/number',['require','zrender/core/util'],function (require) 
 
     return number;
 });
-define('echarts/util/format',['require','zrender/core/util'],function (require) {
+define('echarts/util/format',['require','zrender/core/util','./number'],function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var numberUtil = require('./number');
+
     /**
      * 每三位默认加,格式化
      * @type {string|number} x
@@ -2438,6 +2440,55 @@ define('echarts/util/format',['require','zrender/core/util'],function (require) 
         return tpl;
     }
 
+    /**
+     * ISO Date format
+     * @param {string} tpl
+     * @param {number} value
+     * @inner
+     */
+    function formatTime(tpl, value) {
+        if (tpl === 'week'
+            || tpl === 'month'
+            || tpl === 'quarter'
+            || tpl === 'half-year'
+            || tpl === 'year'
+        ) {
+            tpl = 'MM-dd\nyyyy';
+        }
+
+        var date = numberUtil.parseDate(value);
+        var y = date.getFullYear();
+        var M = date.getMonth() + 1;
+        var d = date.getDate();
+        var h = date.getHours();
+        var m = date.getMinutes();
+        var s = date.getSeconds();
+
+        tpl = tpl.replace('MM', s2d(M))
+            .toLowerCase()
+            .replace('yyyy', y)
+            .replace('yy', y % 100)
+            .replace('dd', s2d(d))
+            .replace('d', d)
+            .replace('hh', s2d(h))
+            .replace('h', h)
+            .replace('mm', s2d(m))
+            .replace('m', m)
+            .replace('ss', s2d(s))
+            .replace('s', s);
+
+        return tpl;
+    }
+
+    /**
+     * @param {string} str
+     * @return {string}
+     * @inner
+     */
+    function s2d(str) {
+        return str < 10 ? ('0' + str) : str;
+    }
+
     return {
 
         normalizeCssArray: normalizeCssArray,
@@ -2448,7 +2499,9 @@ define('echarts/util/format',['require','zrender/core/util'],function (require) 
 
         encodeHTML: encodeHTML,
 
-        formatTpl: formatTpl
+        formatTpl: formatTpl,
+
+        formatTime: formatTime        
     };
 });
 // Layout helpers for each component positioning
@@ -4590,7 +4643,7 @@ define('echarts/util/model',['require','./format','./number','zrender/core/util'
          */
         getRawValue: function (idx) {
             var itemModel = this.getData().getItemModel(idx);
-            if (itemModel && itemModel.option) {
+            if (itemModel && itemModel.option != null) {
                 var dataItem = itemModel.option;
                 return (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem))
                     ? dataItem.value : dataItem;
@@ -13099,7 +13152,7 @@ define('zrender/core/env',[],function() {
             node: true,
             // Assume canvas is supported
             canvasSupported: true
-        }
+        };
     }
     // Zepto.js
     // (c) 2010-2013 Thomas Fuchs
@@ -13168,7 +13221,10 @@ define('zrender/core/env',[],function() {
             node: false,
             // 原生canvas支持，改极端点了
             // canvasSupported : !(browser.ie && parseFloat(browser.version) < 9)
-            canvasSupported : document.createElement('canvas').getContext ? true : false
+            canvasSupported : document.createElement('canvas').getContext ? true : false,
+            // @see <http://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript>
+            touchEventsSupported: 'ontouchstart' in window  // works on most browsers
+                || navigator.maxTouchPoints                 // works on IE10/11 and Surface
         };
     }
 
@@ -13761,7 +13817,9 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
 
         initDomHandler(this);
 
-        if (env.os.tablet || env.os.phone) {
+        // @see #2350, some windows tablet (like lenovo X240) enable touch but can
+        // use IE10, which not supports touch events.
+        if (env.touchEventsSupported) {
             // mobile支持
             // mobile的click/move/up/down自己模拟
             util.each(touchHandlerNames, function (name) {
@@ -16008,7 +16066,7 @@ define('echarts/preprocessor/backwardCompat',['require','zrender/core/util','./h
 /**
  * @module echarts
  */
-define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./CoordinateSystem','./model/OptionManager','./model/Component','./model/Series','./view/Component','./view/Chart','./util/graphic','zrender','zrender/core/util','zrender/tool/color','zrender/core/env','zrender/mixin/Eventful','./loading/default','./visual/seriesColor','./preprocessor/backwardCompat','echarts/util/graphic','echarts/util/number','echarts/util/format'],function (require) {
+define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./CoordinateSystem','./model/OptionManager','./model/Component','./model/Series','./view/Component','./view/Chart','./util/graphic','zrender','zrender/core/util','zrender/tool/color','zrender/core/env','zrender/mixin/Eventful','./loading/default','./visual/seriesColor','./preprocessor/backwardCompat','./util/graphic','./util/number','./util/format'],function (require) {
 
     var GlobalModel = require('./model/Global');
     var ExtensionAPI = require('./ExtensionAPI');
@@ -16545,7 +16603,6 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
         var zr = this._zr;
         this._loadingFX = el;
 
-        zr.painter.clear();
         zr.add(el);
     };
 
@@ -16953,9 +17010,9 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
         /**
          * @type {number}
          */
-        version: '3.0.1',
+        version: '3.0.2',
         dependencies: {
-            zrender: '3.0.1'
+            zrender: '3.0.2'
         }
     };
 
@@ -17251,9 +17308,9 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
     // Exports
     // --------
 
-    echarts.graphic = require('echarts/util/graphic');
-    echarts.number = require('echarts/util/number');
-    echarts.format = require('echarts/util/format');
+    echarts.graphic = require('./util/graphic');
+    echarts.number = require('./util/number');
+    echarts.format = require('./util/format');
 
     echarts.util = {};
     each([
@@ -17524,6 +17581,13 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
          * @private
          */
         this._visual = {};
+
+        /**
+         * Globel layout properties.
+         * @type {Object}
+         * @private
+         */
+        this._layout = {};
 
         /**
          * Item visual properties after visual coding
@@ -18188,6 +18252,24 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
         }
         this._visual = this._visual || {};
         this._visual[key] = val;
+    };
+
+    /**
+     * Set layout property.
+     * @param {string} key 
+     * @param {*} val
+     */
+    listProto.setLayout = function (key, val) {
+        this._layout[key] = val;
+    };
+
+    /**
+     * Get layout property.
+     * @param  {string} key.
+     * @return {*}
+     */
+    listProto.getLayout = function (key) { 
+        return this._layout[key];
     };
 
     /**
@@ -19197,14 +19279,15 @@ define('echarts/chart/helper/Symbol',['require','zrender/core/util','../../util/
             hoverStyle.text = '';
         }
 
-        graphic.setHoverStyle(symbolPath, hoverStyle);
-
         var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
 
         symbolPath.off('mouseover')
             .off('mouseout')
             .off('emphasis')
             .off('normal');
+
+        graphic.setHoverStyle(symbolPath, hoverStyle);
+
         if (itemModel.getShallow('hoverAnimation')) {
             var onEmphasis = function() {
                 var ratio = size[1] / size[0];
@@ -19763,25 +19846,24 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
                 if (smooth > 0) {
                     var prevIdx = idx - dir;
                     var nextIdx = idx + dir;
-                    if (dir > 0) {
-                        prevIdx = mathMax(prevIdx, start);
-                        nextIdx = mathMin(nextIdx, allLen - 1);
+                    // Last point
+                    if ((dir > 0 && idx === allLen - 1)
+                        || (dir <= 0 && idx  === 0)
+                    ) {
+                        v2Copy(cp1, p);
                     }
                     else {
-                        nextIdx = mathMax(nextIdx, 0);
-                        prevIdx = mathMin(prevIdx, start);
+                        var prevP = points[prevIdx];
+                        var nextP = points[nextIdx];
+                        // If next data is null
+                        if (isNaN(nextP[0]) || isNaN(nextP[1])) {
+                            nextP = p;
+                        }
+
+                        vec2.sub(v, nextP, prevP);
+
+                        scaleAndAdd(cp1, p, v, -smooth / 2);
                     }
-                    var prevP = points[prevIdx];
-                    var nextP = points[nextIdx];
-                    // If next data is null
-                    if (isNaN(nextP[0]) || isNaN(nextP[1])) {
-                        nextP = p;
-                    }
-
-                    vec2.sub(v, nextP, prevP);
-
-                    scaleAndAdd(cp1, p, v, -smooth / 2);
-
                     // Smooth constraint
                     vec2Min(cp0, cp0, smoothMax);
                     vec2Max(cp0, cp0, smoothMin);
@@ -19807,19 +19889,21 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
         return k;
     }
 
-    function getBoundingBox(points) {
+    function getBoundingBox(points, smoothConstraint) {
         var ptMin = [Infinity, Infinity];
         var ptMax = [-Infinity, -Infinity];
-        for (var i = 0; i < points.length; i++) {
-            var pt = points[i];
-            if (pt[0] < ptMin[0]) { ptMin[0] = pt[0]; }
-            if (pt[1] < ptMin[1]) { ptMin[1] = pt[1]; }
-            if (pt[0] > ptMax[0]) { ptMax[0] = pt[0]; }
-            if (pt[1] > ptMax[1]) { ptMax[1] = pt[1]; }
+        if (smoothConstraint) {
+            for (var i = 0; i < points.length; i++) {
+                var pt = points[i];
+                if (pt[0] < ptMin[0]) { ptMin[0] = pt[0]; }
+                if (pt[1] < ptMin[1]) { ptMin[1] = pt[1]; }
+                if (pt[0] > ptMax[0]) { ptMax[0] = pt[0]; }
+                if (pt[1] > ptMax[1]) { ptMax[1] = pt[1]; }
+            }
         }
         return {
-            min: ptMin,
-            max: ptMax
+            min: smoothConstraint ? ptMin : ptMax,
+            max: smoothConstraint ? ptMax : ptMin
         };
     }
 
@@ -19832,15 +19916,15 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
             shape: {
                 points: [],
 
-                smooth: 0
+                smooth: 0,
+
+                smoothConstraint: true
             },
 
             style: {
                 fill: null,
 
-                stroke: '#000',
-
-                smooth: 0
+                stroke: '#000'
             },
 
             buildPath: function (ctx, shape) {
@@ -19849,7 +19933,7 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
                 var i = 0;
                 var len = points.length;
 
-                var result = getBoundingBox(points);
+                var result = getBoundingBox(points, shape.smoothConstraint);
 
                 while (i < len) {
                     i += drawSegment(
@@ -19869,7 +19953,8 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
                 // Offset between stacked base points and points
                 stackedOnPoints: [],
                 smooth: 0,
-                stackedOnSmooth: 0
+                stackedOnSmooth: 0,
+                smoothConstraint: true
             },
 
             buildPath: function (ctx, shape) {
@@ -19878,8 +19963,8 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
 
                 var i = 0;
                 var len = points.length;
-                var bbox = getBoundingBox(points);
-                var stackedOnBBox = getBoundingBox(stackedOnPoints);
+                var bbox = getBoundingBox(points, shape.smoothConstraint);
+                var stackedOnBBox = getBoundingBox(stackedOnPoints, shape.smoothConstraint);
                 while (i < len) {
                     var k = drawSegment(
                         ctx, points, i, len, len,
@@ -20078,7 +20163,6 @@ define('echarts/chart/line/LineView',['require','zrender/core/util','../helper/S
 
             var symbolDraw = new SymbolDraw();
             this.group.add(symbolDraw.group);
-            this.group.add(lineGroup);
 
             this._symbolDraw = symbolDraw;
             this._lineGroup = lineGroup;
@@ -20125,6 +20209,8 @@ define('echarts/chart/line/LineView',['require','zrender/core/util','../helper/S
             if (!showSymbol) {
                 symbolDraw.remove();
             }
+
+            group.add(lineGroup);
 
             // Initialization animation or coordinate system changed
             if (
@@ -20179,8 +20265,6 @@ define('echarts/chart/line/LineView',['require','zrender/core/util','../helper/S
                         });
                     }
                 }
-                // Add back
-                group.add(lineGroup);
             }
 
             polyline.setStyle(zrUtil.defaults(
@@ -20409,9 +20493,15 @@ define('echarts/chart/line/LineView',['require','zrender/core/util','../helper/S
         },
 
         remove: function (ecModel) {
-            var group = this.group;
-            group.remove(this._lineGroup);
+            this._lineGroup.removeAll();
             this._symbolDraw.remove(true);
+
+            this._polyline =
+            this._polygon =
+            this._coordSys =
+            this._points =
+            this._stackedOnPoints =
+            this._data = null;
         }
     });
 });
@@ -20726,11 +20816,12 @@ define('echarts/scale/Interval',['require','../util/number','../util/format','./
 
         setExtent: function (start, end) {
             var thisExtent = this._extent;
+            //start,end may be a Number like '25',so...
             if (!isNaN(start)) {
-                thisExtent[0] = start;
+                thisExtent[0] = parseFloat(start);
             }
             if (!isNaN(end)) {
-                thisExtent[1] = end;
+                thisExtent[1] = parseFloat(end);
             }
         },
 
@@ -20842,7 +20933,7 @@ define('echarts/scale/Interval',['require','../util/number','../util/format','./
             else if (err <= 0.3) {
                 interval *= 5;
             }
-            else if (err <= 0.5) {
+            else if (err <= 0.45) {
                 interval *= 3;
             }
             else if (err <= 0.75) {
@@ -20907,15 +20998,17 @@ define('echarts/scale/Interval',['require','../util/number','../util/format','./
 
     return IntervalScale;
 });
+
 /**
  * Interval scale
  * @module echarts/coord/scale/Time
  */
 
-define('echarts/scale/Time',['require','zrender/core/util','../util/number','./Interval'],function (require) {
+define('echarts/scale/Time',['require','zrender/core/util','../util/number','../util/format','./Interval'],function (require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../util/number');
+    var formatUtil = require('../util/format');
 
     var IntervalScale = require('./Interval');
 
@@ -20940,54 +21033,6 @@ define('echarts/scale/Time',['require','zrender/core/util','../util/number','./I
     };
 
     /**
-     * @param {string} str
-     * @return {string}
-     * @inner
-     */
-    var s2d = function (str) {
-        return str < 10 ? ('0' + str) : str;
-    };
-
-    /**
-     * ISO Date format
-     * @param {string} tpl
-     * @param {number} value
-     * @inner
-     */
-    var format = function (tpl, value) {
-        if (tpl === 'week'
-            || tpl === 'month'
-            || tpl === 'quarter'
-            || tpl === 'half-year'
-            || tpl === 'year'
-        ) {
-            tpl = 'MM-dd\nyyyy';
-        }
-
-        var date = numberUtil.parseDate(value);
-        var y = date.getFullYear();
-        var M = date.getMonth() + 1;
-        var d = date.getDate();
-        var h = date.getHours();
-        var m = date.getMinutes();
-        var s = date.getSeconds();
-
-        tpl = tpl.replace('MM', s2d(M))
-            .toLowerCase()
-            .replace('yyyy', y)
-            .replace('yy', y % 100)
-            .replace('dd', s2d(d))
-            .replace('d', d)
-            .replace('hh', s2d(h))
-            .replace('h', h)
-            .replace('mm', s2d(m))
-            .replace('m', m)
-            .replace('ss', s2d(s))
-            .replace('s', s);
-
-        return tpl;
-    };
-    /**
      * @alias module:echarts/coord/scale/Time
      * @constructor
      */
@@ -21000,7 +21045,7 @@ define('echarts/scale/Time',['require','zrender/core/util','../util/number','./I
 
             var date = new Date(val);
 
-            return format(stepLvl[0], date);
+            return formatUtil.formatTime(stepLvl[0], date);
         },
 
         // Overwrite
@@ -22124,11 +22169,12 @@ define('echarts/coord/axisDefault',['require','zrender/core/util'],function (req
         logAxis: logAxis
     };
 });
-define('echarts/coord/axisModelCreator',['require','./axisDefault','zrender/core/util','../model/Component'],function (require) {
+define('echarts/coord/axisModelCreator',['require','./axisDefault','zrender/core/util','../model/Component','../util/layout'],function (require) {
 
     var axisDefault = require('./axisDefault');
     var zrUtil = require('zrender/core/util');
     var ComponentModel = require('../model/Component');
+    var layout = require('../util/layout');
 
     // FIXME axisType is fixed ?
     var AXIS_TYPES = ['value', 'category', 'time', 'log'];
@@ -22149,11 +22195,19 @@ define('echarts/coord/axisModelCreator',['require','./axisDefault','zrender/core
                 type: axisName + 'Axis.' + axisType,
 
                 mergeDefaultAndTheme: function (option, ecModel) {
+                    var layoutMode = this.layoutMode;
+                    var inputPositionParams = layoutMode
+                        ? layout.getLayoutParams(option) : {};
+
                     var themeModel = ecModel.getTheme();
                     zrUtil.merge(option, themeModel.get(axisType + 'Axis'));
                     zrUtil.merge(option, this.getDefaultOption());
 
                     option.type = axisTypeDefaulter(axisName, option);
+
+                    if (layoutMode) {
+                        layout.mergeLayoutParam(option, inputPositionParams, layoutMode);
+                    }
                 },
 
                 defaultOption: zrUtil.mergeAll(
@@ -25011,7 +25065,7 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
         var trigger = seriesModel.get('tooltip.trigger', true);
         // Ignore series use item tooltip trigger and series coordinate system is not cartesian or
         return !(!coordSys
-            || (coordSys.type !== 'cartesian2d' && coordSys.type !== 'polar')
+            || (coordSys.type !== 'cartesian2d' && coordSys.type !== 'polar' && coordSys.type !== 'single')
             || trigger === 'item');
     }
 
@@ -25026,7 +25080,7 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
             this._tooltipContent = tooltipContent;
 
             api.on('showTip', this._manuallyShowTip, this);
-            api.on('hideTip', this._hide, this);
+            api.on('hideTip', this._manuallyHideTip, this);
         },
 
         render: function (tooltipModel, ecModel, api) {
@@ -25112,6 +25166,8 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
          *      seriesIndex: 0,
          *      dataIndex: 1
          *  });
+         *
+         *  TODO Batch
          */
         _manuallyShowTip: function (event) {
             // From self
@@ -25140,14 +25196,24 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                         dataIndex = data.indexOfName(event.name);
                     }
                     var el = data.getItemGraphicEl(dataIndex);
-                    // Use
-                    if (el) {
+                    var cx, cy;
+                    // Try to get the point in coordinate system
+                    var coordSys = seriesModel.coordinateSystem;
+                    if (coordSys && coordSys.dataToPoint) {
+                        var point = coordSys.dataToPoint(
+                            data.getValues(coordSys.dimensions, dataIndex, true)
+                        );
+                        cx = point && point[0];
+                        cy = point && point[1];
+                    }
+                    else if (el) {
                         // Use graphic bounding rect
                         var rect = el.getBoundingRect().clone();
                         rect.applyTransform(el.transform);
-                        var cx = rect.x + rect.width / 2;
-                        var cy = rect.y + rect.height / 2;
-
+                        cx = rect.x + rect.width / 2;
+                        cy = rect.y + rect.height / 2;
+                    }
+                    if (cx != null && cy != null) {
                         this._tryShow({
                             offsetX: cx,
                             offsetY: cy,
@@ -25166,6 +25232,14 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
             }
         },
 
+        _manuallyHideTip: function (e) {
+            if (e.from === this.uid) {
+                return;
+            }
+
+            this._hide();
+        },
+
         _prepareAxisTriggerData: function (tooltipModel, ecModel) {
             // Prepare data for axis trigger
             var seriesGroupByAxis = {};
@@ -25180,6 +25254,10 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                         // FIXME `axisPointer.axis` is not baseAxis
                         baseAxis = coordSys.getBaseAxis();
                         key = baseAxis.dim + baseAxis.index;
+                    }
+                    else if (coordSys.type === 'single') {
+                        baseAxis = coordSys.getAxis();
+                        key = baseAxis.dim + baseAxis.type;
                     }
                     else {
                         baseAxis = coordSys.getBaseAxis();
@@ -25253,12 +25331,16 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                     this._showAxisTooltip(tooltipModel, ecModel, e);
                 }
 
-                api.dispatchAction({
-                    type: 'showTip',
-                    from: this.uid,
-                    x: e.offsetX,
-                    y: e.offsetY
-                });
+                // Action of cross pointer
+                // other pointer types will trigger action in _dispatchAndShowSeriesTooltipContent method
+                if (tooltipModel.get('axisPointer.type') === 'cross') {
+                    api.dispatchAction({
+                        type: 'showTip',
+                        from: this.uid,
+                        x: e.offsetX,
+                        y: e.offsetY
+                    });
+                }
             }
         },
 
@@ -25321,6 +25403,7 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                 }
                 else {
                     var valIndex = zrUtil.indexOf(dimensions, axisType);
+
                     // If hover data not changed on the axis dimension
                     if (lastHover.data === value[valIndex]) {
                         contentNotChange = true;
@@ -25338,9 +25421,14 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                         axisPointerModel, coordSys, axisType, point
                     );
                 }
+                else if (coordSys.type === 'single' && !contentNotChange) {
+                    this._showSinglePointer(
+                        axisPointerModel, coordSys, axisType, point
+                    );
+                }
 
                 if (axisPointerType !== 'cross') {
-                    this._showSeriesTooltipContent(
+                    this._dispatchAndShowSeriesTooltipContent(
                         coordSys, seriesCoordSysSameAxis.series, point, value, contentNotChange
                     );
                 }
@@ -25424,6 +25512,40 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                         shape: targetShape
                     });
             }
+        },
+
+        _showSinglePointer: function (axisPointerModel, single, axisType, point) {
+            var self = this;
+            var axisPointerType = axisPointerModel.get('type');
+            var moveAnimation = axisPointerType !== 'cross';
+            var rect = single.getRect();
+            var otherExtent = [rect.y, rect.y + rect.height];
+
+            moveSingleLine(axisType, point, otherExtent);
+
+            /**
+             * @inner
+             */
+            function moveSingleLine(axisType, point, otherExtent) {
+                var axis = single.getAxis();
+                var orient = axis.orient;
+
+                var targetShape = orient === 'horizontal'
+                    ? makeLineShape(point[0], otherExtent[0], point[0], otherExtent[1])
+                    : makeLineShape(otherExtent[0], point[1], otherExtent[1], point[1]);
+
+                var pointerEl = self._getPointerElement(
+                    single, axisPointerModel, axisType, targetShape
+                );
+                moveAnimation
+                    ? graphic.updateProps(pointerEl, {
+                        shape: targetShape
+                    }, axisPointerModel)
+                    :  pointerEl.attr({
+                        shape: targetShape
+                    });
+            }
+
         },
 
         /**
@@ -25615,14 +25737,14 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
         },
 
         /**
-         * Show tooltip on item
+         * Dispatch actions and show tooltip on series
          * @param {Array.<module:echarts/model/Series>} seriesList
          * @param {Array.<number>} point
          * @param {Array.<number>} value
          * @param {boolean} contentNotChange
          * @param {Object} e
          */
-        _showSeriesTooltipContent: function (
+        _dispatchAndShowSeriesTooltipContent: function (
             coordSys, seriesList, point, value, contentNotChange
         ) {
 
@@ -25630,37 +25752,43 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
             var tooltipContent = this._tooltipContent;
 
             var baseAxis = coordSys.getBaseAxis();
-            // FIXME
-            // Dont case by case
-            var val = value[baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1];
 
             var payloadBatch = zrUtil.map(seriesList, function (series) {
                 return {
                     seriesIndex: series.seriesIndex,
-                    dataIndex: series.getData().indexOfNearest(
-                        series.getDimensionsOnAxis(baseAxis.dim),
-                        val
-                    )
+                    dataIndex: series.getAxisTooltipDataIndex
+                        ? series.getAxisTooltipDataIndex(series.getDimensionsOnAxis(baseAxis.dim), value, baseAxis)
+                        : series.getData().indexOfNearest(
+                            series.getDimensionsOnAxis(baseAxis.dim),
+                            value[baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1]
+                        )
                 };
             });
 
-            var api = this._api;
-
             var lastHover = this._lastHover;
+            var api = this._api;
+            // Dispatch downplay action
             if (lastHover.payloadBatch && !contentNotChange) {
-                this._api.dispatchAction({
+                api.dispatchAction({
                     type: 'downplay',
-                    batch: zrUtil.clone(lastHover.payloadBatch)
+                    batch: lastHover.payloadBatch
                 });
             }
             // Dispatch highlight action
             if (!contentNotChange) {
-                this._api.dispatchAction({
+                api.dispatchAction({
                     type: 'highlight',
-                    batch: zrUtil.clone(payloadBatch)
+                    batch: payloadBatch
                 });
                 lastHover.payloadBatch = payloadBatch;
             }
+            // Dispatch showTip action
+            api.dispatchAction({
+                type: 'showTip',
+                dataIndex: payloadBatch[0].dataIndex,
+                seriesIndex: payloadBatch[0].seriesIndex,
+                from: this.uid
+            });
 
             if (baseAxis && rootTooltipModel.get('showContent')) {
 
@@ -25680,14 +25808,17 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                 tooltipContent.show(rootTooltipModel);
 
                 // Update html content
-                var fitstDataIndex = payloadBatch[0].dataIndex;
+                var firstDataIndex = payloadBatch[0].dataIndex;
                 if (!contentNotChange) {
                     // Reset ticket
                     this._ticket = '';
                     if (!formatter) {
                         // Default tooltip content
-                        // FIXME shold be the first data which has name?
-                        html = seriesList[0].getData().getName(fitstDataIndex) + '<br />'
+                        // FIXME
+                        // (1) shold be the first data which has name?
+                        // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
+                        var firstLine = seriesList[0].getData().getName(firstDataIndex);
+                        html = (firstLine ? firstLine + '<br />' : '')
                             + zrUtil.map(seriesList, function (series, index) {
                                 return series.formatTooltip(payloadBatch[index].dataIndex, true);
                             }).join('<br />');
@@ -25698,7 +25829,7 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                         }
                         else if (typeof formatter === 'function') {
                             var self = this;
-                            var ticket = 'axis_' + coordSys.name + '_' + fitstDataIndex;
+                            var ticket = 'axis_' + coordSys.name + '_' + firstDataIndex;
                             var callback = function (cbTicket, html) {
                                 if (cbTicket === self._ticket) {
                                     tooltipContent.setContent(html);
@@ -25842,6 +25973,11 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
             if (!this._alwaysShowContent) {
                 this._tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
             }
+
+            this._api.dispatchAction({
+                type: 'hideTip',
+                from: this.uid
+            });
         },
 
         dispose: function (ecModel, api) {
@@ -25853,7 +25989,7 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
             zr.off('mouseout', this._hide);
 
             api.off('showTip', this._manuallyShowTip);
-            api.off('hideTip', this._hide);
+            api.off('hideTip', this._manuallyHideTip);
         }
     });
 });
@@ -25913,18 +26049,9 @@ define('echarts/component/legend/LegendModel',['require','zrender/core/util','..
 
             option.selected = option.selected || {};
 
-            var legendData = zrUtil.map(option.data || [], function (dataItem) {
-                if (typeof dataItem === 'string') {
-                    dataItem = {
-                        name: dataItem
-                    };
-                }
-                return new Model(dataItem, this, this.ecModel);
-            }, this);
-            this._data = legendData;
+            this._updateData(ecModel);
 
-            this._updateAvailableNames(ecModel);
-
+            var legendData = this._data;
             // If has any selected in option.selected
             var selectedMap = this.option.selected;
             // If selectedMode is single, try to select one
@@ -25944,10 +26071,20 @@ define('echarts/component/legend/LegendModel',['require','zrender/core/util','..
         mergeOption: function (option) {
             this.$superCall('mergeOption', option);
 
-            this._updateAvailableNames(this.ecModel);
+            this._updateData(this.ecModel);
         },
 
-        _updateAvailableNames: function (ecModel) {
+        _updateData: function (ecModel) {
+            var legendData = zrUtil.map(this.get('data') || [], function (dataItem) {
+                if (typeof dataItem === 'string') {
+                    dataItem = {
+                        name: dataItem
+                    };
+                }
+                return new Model(dataItem, this, this.ecModel);
+            }, this);
+            this._data = legendData;
+
             var availableNames = zrUtil.map(ecModel.getSeries(), function (series) {
                 return series.name;
             });
@@ -25962,7 +26099,6 @@ define('echarts/component/legend/LegendModel',['require','zrender/core/util','..
              * @private
              */
             this._availableNames = availableNames;
-
         },
 
         /**
@@ -29973,7 +30109,7 @@ define('echarts/component/dataZoom/SliderZoomView',['require','zrender/core/util
             var thisShadowExtent = [0, size[0]];
 
             var points = [[size[0], 0], [0, 0]];
-            var step = thisShadowExtent[1] / data.count();
+            var step = thisShadowExtent[1] / (data.count() - 1);
             var thisCoord = 0;
 
             // Optimize for large data shadow
@@ -30384,7 +30520,14 @@ define('echarts/component/dataZoom/InsideZoomModel',['require','./DataZoomModel'
 
     return DataZoomModel.extend({
 
-        type: 'dataZoom.inside'
+        type: 'dataZoom.inside',
+
+        /**
+         * @protected
+         */
+        defaultOption: {
+            zoomLock: false // Whether disable zoom but only pan.
+        }
 
     });
 
@@ -30733,6 +30876,11 @@ define('echarts/component/dataZoom/InsideZoomView',['require','./DataZoomView','
          */
         _onZoom: function (controller, coordInfo, scale, mouseX, mouseY) {
             var dataZoomModel = this.dataZoomModel;
+
+            if (dataZoomModel.option.zoomLock) {
+                return;
+            }
+
             scale = 1 / scale;
             var range = this._range = scaleCartesian(
                 scale, [mouseX, mouseY], this._range,
