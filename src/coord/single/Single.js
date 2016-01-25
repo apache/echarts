@@ -69,7 +69,7 @@ define(function (require) {
                 axisHelper.createScaleByModel(axisModel),
                 [0, 0],
                 axisModel.get('type'),
-                axisModel.position
+                axisModel.get('position')
             );
 
             var isCategory = axis.type === 'category';

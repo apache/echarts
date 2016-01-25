@@ -293,7 +293,7 @@ define(function (require) {
             // gap in axis's orthogonal orientation
             boundaryGap: ['10%', '10%'],
 
-            legendHoverLink: true,
+            // legendHoverLink: true,
 
             singleAxisIndex: 0,
 
