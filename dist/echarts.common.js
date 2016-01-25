@@ -856,20 +856,21 @@ define('echarts/util/clazz',['require','zrender/core/util'],function (require) {
      * @param {string|Array.<string>} properties
      */
     clazz.setReadOnly = function (obj, properties) {
-        if (!zrUtil.isArray(properties)) {
-            properties = properties != null ? [properties] : [];
-        }
-        zrUtil.each(properties, function (prop) {
-            var value = obj[prop];
+        // FIXME It seems broken in IE8 simulation of IE11
+        // if (!zrUtil.isArray(properties)) {
+        //     properties = properties != null ? [properties] : [];
+        // }
+        // zrUtil.each(properties, function (prop) {
+        //     var value = obj[prop];
 
-            Object.defineProperty
-                && Object.defineProperty(obj, prop, {
-                    value: value, writable: false
-                });
-            zrUtil.isArray(obj[prop])
-                && Object.freeze
-                && Object.freeze(obj[prop]);
-        });
+        //     Object.defineProperty
+        //         && Object.defineProperty(obj, prop, {
+        //             value: value, writable: false
+        //         });
+        //     zrUtil.isArray(obj[prop])
+        //         && Object.freeze
+        //         && Object.freeze(obj[prop]);
+        // });
     };
 
     return clazz;
