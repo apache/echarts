@@ -32,6 +32,6 @@
         "src"
     ],
     "devDependencies": {
-        "zrender": "~3.0.0"
+        "zrender": "~3.0.1"
     }
 }
