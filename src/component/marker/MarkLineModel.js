@@ -1,11 +1,11 @@
 define(function (require) {
 
     // Default enable markLine
-    var globalDefault = require('../../model/globalDefault');
+    // var globalDefault = require('../../model/globalDefault');
     var modelUtil = require('../../util/model');
 
-    // Force to load markLine component
-    globalDefault.markLine = {};
+    // // Force to load markLine component
+    // globalDefault.markLine = {};
 
     var MarkLineModel = require('../../echarts').extendComponentModel({
 
@@ -17,12 +17,11 @@ define(function (require) {
          */
         init: function (option, parentModel, ecModel, extraOpt, createdBySelf) {
             this.mergeDefaultAndTheme(option, ecModel);
-            this.mergeOption(option, createdBySelf, true);
+            this.mergeOption(option, ecModel, createdBySelf, true);
         },
 
-        mergeOption: function (newOpt, createdBySelf, isInit) {
+        mergeOption: function (newOpt, ecModel, createdBySelf, isInit) {
             if (!createdBySelf) {
-                var ecModel = this.ecModel;
                 ecModel.eachSeries(function (seriesModel) {
                     var markLineOpt = seriesModel.get('markLine');
                     var mlModel = seriesModel.markLineModel;
@@ -48,7 +47,7 @@ define(function (require) {
                         );
                     }
                     else {
-                        mlModel.mergeOption(markLineOpt, true);
+                        mlModel.mergeOption(markLineOpt, ecModel, true);
                     }
                     seriesModel.markLineModel = mlModel;
                 }, this);

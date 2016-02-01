@@ -49,7 +49,9 @@ define(function(require) {
                     type: 'line',
                     // Preserve data related option
                     data: seriesModel.get('data'),
-                    stack: seriesModel.get('stack')
+                    stack: seriesModel.get('stack'),
+                    markPoint: seriesModel.get('markPoint'),
+                    markLine: seriesModel.get('markLine')
                 }, model.get('option.line'));
             }
         },
@@ -60,7 +62,9 @@ define(function(require) {
                     type: 'bar',
                     // Preserve data related option
                     data: seriesModel.get('data'),
-                    stack: seriesModel.get('stack')
+                    stack: seriesModel.get('stack'),
+                    markPoint: seriesModel.get('markPoint'),
+                    markLine: seriesModel.get('markLine')
                 }, model.get('option.bar'));
             }
         },
