@@ -411,10 +411,17 @@ define(function (require) {
      * @static
      */
     var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick = function (axis, i, interval) {
-        return axis.scale.type === 'ordinal'
-            && (typeof interval === 'function')
-                && !interval(i, axis.scale.getLabel(i))
-                || i % (interval + 1);
+        var rawTick;
+        var scale = axis.scale;
+        return scale.type === 'ordinal'
+            && (
+                typeof interval === 'function'
+                    ? (
+                        rawTick = scale.getTicks()[i],
+                        !interval(rawTick, scale.getLabel(rawTick))
+                    )
+                    : i % (interval + 1)
+            );
     };
 
     /**
