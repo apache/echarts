@@ -50,7 +50,8 @@ define(function (require) {
                     height: boundingRect.height + padding[0] + padding[2]
                 },
                 style: style,
-                silent: true
+                silent: true,
+                z2: -1
             });
             graphic.subPixelOptimizeRect(rect);
 

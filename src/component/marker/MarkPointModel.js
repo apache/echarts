@@ -1,10 +1,9 @@
 define(function (require) {
     // Default enable markPoint
-    var globalDefault = require('../../model/globalDefault');
+    // var globalDefault = require('../../model/globalDefault');
     var modelUtil = require('../../util/model');
-
-    // Force to load markPoint component
-    globalDefault.markPoint = {};
+    // // Force to load markPoint component
+    // globalDefault.markPoint = {};
 
     var MarkPointModel = require('../../echarts').extendComponentModel({
 
@@ -16,12 +15,11 @@ define(function (require) {
          */
         init: function (option, parentModel, ecModel, extraOpt, createdBySelf) {
             this.mergeDefaultAndTheme(option, ecModel);
-            this.mergeOption(option, createdBySelf, true);
+            this.mergeOption(option, ecModel, createdBySelf, true);
         },
 
-        mergeOption: function (newOpt, createdBySelf, isInit) {
+        mergeOption: function (newOpt, ecModel, createdBySelf, isInit) {
             if (!createdBySelf) {
-                var ecModel = this.ecModel;
                 ecModel.eachSeries(function (seriesModel) {
                     var markPointOpt = seriesModel.get('markPoint');
                     var mpModel = seriesModel.markPointModel;
@@ -47,7 +45,7 @@ define(function (require) {
                         );
                     }
                     else {
-                        mpModel.mergeOption(markPointOpt, true);
+                        mpModel.mergeOption(markPointOpt, ecModel, true);
                     }
                     seriesModel.markPointModel = mpModel;
                 }, this);
