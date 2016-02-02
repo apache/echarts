@@ -443,7 +443,7 @@ define(function(require) {
             return;
         }
         var graph = this.hostGraph;
-        var itemModel = graph.data.getItemModel(this.dataIndex);
+        var itemModel = graph.edgeData.getItemModel(this.dataIndex);
 
         return itemModel.getModel(path);
     };
