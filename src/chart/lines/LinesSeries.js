@@ -5,6 +5,7 @@ define(function (require) {
     var SeriesModel = require('../../model/Series');
     var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
+    // var CoordinateSystem = require('../../CoordinateSystem');
 
     return SeriesModel.extend({
 
@@ -26,11 +27,12 @@ define(function (require) {
             });
 
             var coordSys = option.coordinateSystem;
-            if (coordSys !== 'cartesian2d' && coordSys !== 'geo') {
-                throw new Error('Coordinate system can only be cartesian2d or geo in lines');
-            }
+            // if (coordSys !== 'cartesian2d' && coordSys !== 'geo') {
+            //     throw new Error('Coordinate system can only be cartesian2d or geo in lines');
+            // }
 
-            var dimensions = coordSys === 'geo' ? ['lng', 'lat'] : ['x', 'y'];
+            // var dimensions = coordSys === 'geo' ? ['lng', 'lat'] : ['x', 'y'];
+            var dimensions = (coordSys && coordSys.dimensions) || ['x', 'y'];
 
             var fromData = new List(dimensions, this);
             var toData = new List(dimensions, this);

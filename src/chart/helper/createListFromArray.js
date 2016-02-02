@@ -5,6 +5,7 @@ define(function(require) {
     var completeDimensions = require('../../data/helper/completeDimensions');
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
+    var CoordinateSystem = require('../../CoordinateSystem');
     var getDataItemValue = modelUtil.getDataItemValue;
     var converDataValue = modelUtil.converDataValue;
 
@@ -28,9 +29,13 @@ define(function(require) {
         // If data is undefined
         data = data || [];
 
-        var result = creaters[seriesModel.get('coordinateSystem')](
-            data, seriesModel, ecModel
-        );
+        var coordSysName = seriesModel.get('coordinateSystem');
+        var creator = creators[coordSysName];
+        var registeredCoordSys = CoordinateSystem.get(coordSysName);
+        // FIXME
+        var result = creator ? creator(data, seriesModel, ecModel)
+            // Get dimensions from registered coordinate system
+            : ((registeredCoordSys && registeredCoordSys.dimensions) || ['x', 'y']);
         var dimensions = result.dimensions;
         var categoryAxisModel = result.categoryAxisModel;
 
@@ -65,7 +70,7 @@ define(function(require) {
      * Creaters for each coord system.
      * @return {Object} {dimensions, categoryAxisModel};
      */
-    var creaters = {
+    var creators = {
 
         cartesian2d: function (data, seriesModel, ecModel) {
             var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));

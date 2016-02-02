@@ -37,5 +37,9 @@ define(function(require) {
         coordinateSystemCreators[type] = coordinateSystemCreator;
     };
 
+    CoordinateSystemManager.get = function (type) {
+        return coordinateSystemCreators[type];
+    }
+
     return CoordinateSystemManager;
 });
