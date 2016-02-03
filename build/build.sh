@@ -12,3 +12,4 @@ node r.js -o config/echarts.js
 node optimize.js -m all
 
 node r.js -o config/dataTool.js
+node r.js -o config/bmap.js

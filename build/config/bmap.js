@@ -7,16 +7,15 @@
     },
     wrap: {
         startFile: [
-            '../wrap/startDataTool.js',
+            '../wrap/startExtension.js',
             '../wrap/nut.js'
         ],
         endFile: [
-            '../wrap/endDataTool.js'
+            '../wrap/endExtension.js'
         ]
     },
     include:[
-        'extension/dataTool/prepareBoxplotData',
-        'extension/dataTool/gexf'
+        'extension/bmap/bmap'
     ],
-    out: '../../dist/extension/dataTool.js'
+    out: '../../dist/extension/bmap.js'
 })

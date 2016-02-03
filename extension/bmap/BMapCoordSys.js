@@ -102,7 +102,7 @@ define(function require() {
 
                 bmap.setMapStyle(bmapModel.get('mapStyle'));
 
-                function moveHandler() {
+                var moveHandler = function () {
                     var offsetEl = viewportRoot.parentNode.parentNode.parentNode;
                     var mapOffset = [
                         -parseInt(offsetEl.style.left) || 0,
@@ -117,7 +117,7 @@ define(function require() {
                     api.dispatchAction({
                         type: 'bmapRoam'
                     });
-                }
+                };
 
                 bmap.addEventListener('moving', moveHandler);
                 bmap.addEventListener('moveend', moveHandler);
@@ -131,7 +131,6 @@ define(function require() {
             bmapCoordSys.setMapOffset(bmapModel.__mapOffset || [0, 0]);
             bmapModel.coordinateSystem = bmapCoordSys;
         });
-
 
         ecModel.eachSeries(function (seriesModel) {
             var coordSys = seriesModel.get('coordinateSystem');
