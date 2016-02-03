@@ -191,7 +191,6 @@ define(function(require) {
                     y = lastCoord;
                     width = columnWidth;
                     height = coord[1] - lastCoord;
-
                     if (Math.abs(height) < barMinHeight) {
                         // Include zero to has a positive bar
                         height = (height <= 0 ? -1 : 1) * barMinHeight;

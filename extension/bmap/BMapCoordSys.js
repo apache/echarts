@@ -1,33 +1,15 @@
-define(function require() {
-    function Overlay(root) {
-        this._root = root;
-    }
+define(function (require) {
+    var echarts = require('echarts');
 
-    Overlay.prototype = new BMap.Overlay();
-
-    /**
-     * 初始化
-     *
-     * @param {BMap.Map} map
-     * @override
-     */
-    Overlay.prototype.initialize = function (map) {
-        map.getPanes().labelPane.appendChild(this._root);
-        return this._root;
-    };
-
-    /**
-     * @override
-     */
-    Overlay.prototype.draw = function () {};
-
-
-    function BMapCoordSys(bmap) {
+    function BMapCoordSys(bmap, api) {
         this._bmap = bmap;
         this.dimensions = ['lng', 'lat'];
-
         this._mapOffset = [0, 0];
+
+        this._api = api;
     }
+
+    BMapCoordSys.prototype.dimensions = ['lng', 'lat'];
 
     BMapCoordSys.prototype.setMapOffset = function (mapOffset) {
         this._mapOffset = mapOffset;
@@ -53,11 +35,47 @@ define(function require() {
         return [pt.lng, pt.lat];
     };
 
+    BMapCoordSys.prototype.getViewRect = function () {
+        var api = this._api;
+        return new echarts.graphic.BoundingRect(0, 0, api.getWidth(), api.getHeight());
+    };
+
+    BMapCoordSys.prototype.getRoamTransform = function () {
+        return echarts.matrix.create();
+    };
+
+    var Overlay;
     BMapCoordSys.create = function (ecModel, api) {
         var bmapCoordSys;
         var root = api.getDom();
+
         // TODO Dispose
         ecModel.eachComponent('bmap', function (bmapModel) {
+            if (typeof BMap === 'undefined') {
+                throw new Error('BMap api is not loaded');
+            }
+            if (!Overlay) {
+                Overlay = function (root) {
+                    this._root = root;
+                }
+
+                Overlay.prototype = new BMap.Overlay();
+                /**
+                 * 初始化
+                 *
+                 * @param {BMap.Map} map
+                 * @override
+                 */
+                Overlay.prototype.initialize = function (map) {
+                    map.getPanes().labelPane.appendChild(this._root);
+                    return this._root;
+                };
+                /**
+                 * @override
+                 */
+                Overlay.prototype.draw = function () {};
+
+            }
             if (bmapCoordSys) {
                 throw new Error('Only one bmap component can exist');
             }
@@ -127,14 +145,14 @@ define(function require() {
                     });
                 });
             }
-            bmapCoordSys = new BMapCoordSys(bmapModel.__bmap);
+            bmapCoordSys = new BMapCoordSys(bmapModel.__bmap, api);
             bmapCoordSys.setMapOffset(bmapModel.__mapOffset || [0, 0]);
             bmapModel.coordinateSystem = bmapCoordSys;
         });
 
         ecModel.eachSeries(function (seriesModel) {
             var coordSys = seriesModel.get('coordinateSystem');
-            if (coordSys === 'geo') {
+            if (coordSys === 'bmap') {
                 seriesModel.coordinateSystem = bmapCoordSys;
             }
         });

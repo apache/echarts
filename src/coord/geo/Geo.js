@@ -35,11 +35,6 @@ define(function (require) {
          * @type {string}
          */
         this.map = map;
-        /**
-         * @param {Array.<string>}
-         * @readOnly
-         */
-        this.dimensions = ['lng', 'lat'];
 
         this._nameCoordMap = {};
 
@@ -51,6 +46,12 @@ define(function (require) {
         constructor: Geo,
 
         type: 'geo',
+
+        /**
+         * @param {Array.<string>}
+         * @readOnly
+         */
+        dimensions: ['lng', 'lat'],
 
         /**
          * @param {Object} geoJson

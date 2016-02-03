@@ -55,6 +55,9 @@ define(function (require) {
 
     var geoCreator = {
 
+        // For deciding which dimensions to use when creating list data
+        dimensions: Geo.prototype.dimensions,
+
         create: function (ecModel, api) {
             var geoList = [];
 

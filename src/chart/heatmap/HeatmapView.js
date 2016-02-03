@@ -49,6 +49,12 @@ define(function (require) {
         };
     }
 
+    function isGeoCoordSys(coordSys) {
+        var dimensions = coordSys.dimensions;
+        // Not use coorSys.type === 'geo' because coordSys maybe extended
+        return dimensions[0] === 'lng' && dimensions[1] === 'lat';
+    }
+
     return require('../../echarts').extendChartView({
 
         type: 'heatmap',
@@ -72,7 +78,7 @@ define(function (require) {
             if (coordSys.type === 'cartesian2d') {
                 this._renderOnCartesian(coordSys, seriesModel, api);
             }
-            else if (coordSys.type === 'geo') {
+            else if (isGeoCoordSys(coordSys)) {
                 this._renderOnGeo(
                     coordSys, seriesModel, visualMapOfThisSeries, api
                 );
@@ -150,6 +156,7 @@ define(function (require) {
             var data = seriesModel.getData();
             var hmLayer = this._hmLayer || (this._hmLayer || new HeatmapLayer());
             hmLayer.blurSize = seriesModel.get('blurSize');
+            hmLayer.pointSize = seriesModel.get('pointSize');
 
             var rect = geo.getViewRect().clone();
             var roamTransform = geo.getRoamTransform();
