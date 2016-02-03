@@ -723,7 +723,6 @@ define(function (require) {
         return list;
     };
 
-    var temporaryModel = new Model(null);
     // Since temporate model is shared by all data items. So we must make sure it can't be write.
     // PENDING may cause any performance problem?
     // if (Object.freeze) {
@@ -731,29 +730,14 @@ define(function (require) {
     // }
     /**
      * Get model of one data item.
-     * It will create a temporary model if value on idx is not an option.
      *
      * @param {number} idx
-     * @param {boolean} [createNew=false]
      */
     // FIXME Model proxy ?
-    listProto.getItemModel = function (idx, createNew) {
-        var model;
+    listProto.getItemModel = function (idx) {
         var hostModel = this.hostModel;
         idx = this.indices[idx];
-        // Use a temporary model proxy
-        // FIXME Create a new one may cause memory leak
-        if (createNew) {
-            model = new Model(null, hostModel);
-        }
-        else {
-            model = temporaryModel;
-        }
-        // FIXME If return null when idx not exists
-        model.option = this._rawData[idx];
-        model.parentModel = hostModel;
-        model.ecModel = hostModel.ecModel;
-        return model;
+        return new Model(this._rawData[idx], hostModel, hostModel.ecModel);
     };
 
     /**
@@ -807,7 +791,7 @@ define(function (require) {
 
     /**
      * Set layout property.
-     * @param {string} key 
+     * @param {string} key
      * @param {*} val
      */
     listProto.setLayout = function (key, val) {
@@ -819,7 +803,7 @@ define(function (require) {
      * @param  {string} key.
      * @return {*}
      */
-    listProto.getLayout = function (key) { 
+    listProto.getLayout = function (key) {
         return this._layout[key];
     };
 

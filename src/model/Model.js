@@ -12,19 +12,20 @@ define(function (require) {
      * @param {Object} option
      * @param {module:echarts/model/Model} parentModel
      * @param {module:echarts/model/Global} ecModel
+     * @param {Object} extraOpt
      */
-    function Model(option, parentModel, ecModel) {
+    function Model(option, parentModel, ecModel, extraOpt) {
         /**
          * @type {module:echarts/model/Model}
          * @readOnly
          */
-        this.parentModel = parentModel || null;
+        this.parentModel = parentModel;
 
         /**
          * @type {module:echarts/model/Global}
          * @readOnly
          */
-        this.ecModel = ecModel || null;
+        this.ecModel = ecModel;
 
         /**
          * @type {Object}
@@ -32,7 +33,15 @@ define(function (require) {
          */
         this.option = option;
 
-        this.init.apply(this, arguments);
+        // Simple optimization
+        if (this.init) {
+            if (arguments.length <= 4) {
+                this.init(option, parentModel, ecModel, extraOpt);
+            }
+            else {
+                this.init.apply(this, arguments);
+            }
+        }
     }
 
     Model.prototype = {
@@ -43,7 +52,7 @@ define(function (require) {
          * Model 的初始化函数
          * @param {Object} option
          */
-        init: function (option) {},
+        init: null,
 
         /**
          * 从新的 Option merge

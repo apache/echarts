@@ -15,9 +15,9 @@ define(function (require) {
         /**
          * @overrite
          */
-        init: function (option, parentModel, ecModel, extraOpt, createdBySelf) {
+        init: function (option, parentModel, ecModel, extraOpt) {
             this.mergeDefaultAndTheme(option, ecModel);
-            this.mergeOption(option, ecModel, createdBySelf, true);
+            this.mergeOption(option, ecModel, extraOpt.createdBySelf, true);
         },
 
         mergeOption: function (newOpt, ecModel, createdBySelf, isInit) {
@@ -40,10 +40,11 @@ define(function (require) {
                         var opt = {
                             // Use the same series index and name
                             seriesIndex: seriesModel.seriesIndex,
-                            name: seriesModel.name
+                            name: seriesModel.name,
+                            createdBySelf: true
                         };
                         mlModel = new MarkLineModel(
-                            markLineOpt, this, ecModel, opt, true
+                            markLineOpt, this, ecModel, opt
                         );
                     }
                     else {
