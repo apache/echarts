@@ -66,7 +66,7 @@ define(function (require) {
                     return;
                 }
 
-                if (!featureModel.get('show')) {
+                if (!featureModel.get('show') || !feature.available) {
                     feature.remove && feature.remove(ecModel, api);
                     return;
                 }
@@ -111,7 +111,6 @@ define(function (require) {
                     icons[featureName] = icon;
                     titles[featureName] = title;
                 }
-
                 var iconPaths = featureModel.iconPaths = {};
                 zrUtil.each(icons, function (icon, iconName) {
                     var normalStyle = iconStyleModel.getModel('normal').getItemStyle();

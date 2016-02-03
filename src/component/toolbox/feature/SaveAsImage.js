@@ -1,5 +1,7 @@
 define(function (require) {
 
+    var env = require('zrender/core/env');
+
     function SaveAsImage (model) {
         this.model = model;
     }
@@ -14,8 +16,11 @@ define(function (require) {
         // backgroundColor: '#fff',
         name: '',
         excludeComponents: ['toolbox'],
-        pixelRatio: 1
+        pixelRatio: 1,
+        lang: ['右键另存为图片']
     };
+
+    SaveAsImage.prototype.available = env.canvasSupported;
 
     var proto = SaveAsImage.prototype;
 
@@ -26,14 +31,32 @@ define(function (require) {
         var type = model.get('type', true) || 'png';
         $a.download = title + '.' + type;
         $a.target = '_blank';
-        $a.href = api.getConnectedDataURL({
+        var url = api.getConnectedDataURL({
             type: type,
             backgroundColor: model.get('backgroundColor', true)
                 || ecModel.get('backgroundColor') || '#fff',
             excludeComponents: model.get('excludeComponents'),
             pixelRatio: model.get('pixelRatio')
         });
-        $a.click();
+        $a.href = url;
+        // Chrome and Firefox
+        if (typeof MouseEvent === 'function') {
+            var evt = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: false
+            });
+            $a.dispatchEvent(evt);
+        }
+        // IE
+        else {
+            var lang = model.get('lang');
+            var html = '<body style="margin:0;">\
+                <img src="' + url + '" style="max-width:100%;" title="' + ((lang && lang[0]) || '') + '" />\
+            </body>';
+            var tab = window.open();
+            tab.document.write(html);
+        }
     };
 
     require('../featureManager').register(
