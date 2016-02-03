@@ -31,8 +31,8 @@ define(function (require) {
             );
         },
 
-        updateLayout: function () {
-            this._symbolDraw.updateLayout();
+        updateLayout: function (seriesModel) {
+            this._symbolDraw.updateLayout(seriesModel);
         },
 
         remove: function (ecModel, api) {
