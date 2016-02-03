@@ -40,6 +40,8 @@ define(function(require) {
 
     graphic.RadialGradient = require('zrender/graphic/RadialGradient');
 
+    graphic.BoundingRect = require('zrender/core/BoundingRect');
+
     /**
      * Extend shape with parameters
      */
