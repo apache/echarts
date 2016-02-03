@@ -26,7 +26,7 @@ define(function (require) {
 
     proto.onclick = function (ecModel, api) {
         var model = this.model;
-        var title = ecModel.get('title.0.text') || 'echarts';
+        var title = model.get('name') || ecModel.get('title.0.text') || 'echarts';
         var $a = document.createElement('a');
         var type = model.get('type', true) || 'png';
         $a.download = title + '.' + type;
