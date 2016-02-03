@@ -136,17 +136,19 @@ define(function (require) {
 
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
-                var labelModel = itemModel.getModel('label.normal');
                 var color = data.getItemVisual(idx, 'color');
                 var layout = data.getItemLayout(idx);
+                var itemStyleModel = itemModel.getModel('itemStyle.normal');
 
                 var hoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+
+                rect.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
 
                 rect.setStyle(zrUtil.defaults(
                     {
                         fill: color
                     },
-                    itemModel.getModel('itemStyle.normal').getBarItemStyle()
+                    itemStyleModel.getBarItemStyle()
                 ));
 
                 var labelPositionOutside = isHorizontal
