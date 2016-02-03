@@ -79,20 +79,27 @@ define(function(require) {
             this.textStyleModel;
 
             this.mergeDefaultAndTheme(option, ecModel);
-            this.mergeOption({}, true);
+
+            this.doInit({}, true);
         },
 
         /**
          * @override
          */
-        mergeOption: function (newOption, isInit) {
-            var thisOption = this.option;
+        mergeOption: function (newOption) {
 
-            newOption && zrUtil.merge(thisOption, newOption);
+            newOption && zrUtil.merge(this.option, newOption);
 
+            this.doInit(newOption, false);
+        },
+
+        /**
+         * @protected
+         */
+        doInit: function (newOption, isInit) {
             // Disable realtime view update if canvas is not supported.
             if (!env.canvasSupported) {
-                thisOption.realtime = false;
+                this.option.realtime = false;
             }
 
             this.textStyleModel = this.getModel('textStyle');

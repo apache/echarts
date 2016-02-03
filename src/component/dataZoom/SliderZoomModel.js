@@ -4,6 +4,7 @@
 define(function(require) {
 
     var DataZoomModel = require('./DataZoomModel');
+    var layout = require('../../util/layout');
 
     return DataZoomModel.extend({
 
@@ -12,7 +13,7 @@ define(function(require) {
         /**
          * @readOnly
          */
-        layoutMode: 'box',
+        inputPositionParams: null,
 
         /**
          * @protected
@@ -42,6 +43,22 @@ define(function(require) {
             textStyle: {
                 color: '#333'
             }
+        },
+
+        /**
+         * @override
+         */
+        init: function (option) {
+            this.inputPositionParams = layout.getLayoutParams(option);
+            this.$superApply('init', arguments);
+        },
+
+        /**
+         * @override
+         */
+        mergeOption: function (option) {
+            this.inputPositionParams = layout.getLayoutParams(option);
+            this.$superApply('mergeOption', arguments);
         }
 
     });

@@ -164,7 +164,6 @@ define(function (require) {
             var ecSize = {width: api.getWidth(), height: api.getHeight()};
 
             // Default align by coordinate system rect.
-            // Notice: Those params have processed by layout.mergeLayoutParam.
             var positionInfo = this._orient === HORIZONTAL
                 ? {
                     left: coordRect.x,
@@ -179,14 +178,7 @@ define(function (require) {
                     height: coordRect.height
                 };
 
-            zrUtil.each(
-                layout.getLayoutParams(dataZoomModel.option),
-                function (value, name) {
-                    if (value !== 'auto') {
-                        positionInfo[name] = value;
-                    }
-                }
-            );
+            layout.mergeLayoutParam(positionInfo, dataZoomModel.inputPositionParams);
 
             var layoutRect = layout.getLayoutRect(
                 positionInfo,
