@@ -20,7 +20,7 @@ define(function (require) {
         lang: ['右键另存为图片']
     };
 
-    SaveAsImage.prototype.available = env.canvasSupported;
+    SaveAsImage.prototype.unusable = !env.canvasSupported;
 
     var proto = SaveAsImage.prototype;
 

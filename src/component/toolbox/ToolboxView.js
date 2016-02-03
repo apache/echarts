@@ -66,7 +66,7 @@ define(function (require) {
                     return;
                 }
 
-                if (!featureModel.get('show') || !feature.available) {
+                if (!featureModel.get('show') || feature.unusable) {
                     feature.remove && feature.remove(ecModel, api);
                     return;
                 }
