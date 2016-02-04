@@ -10,9 +10,7 @@
             '../wrap/startExtension.js',
             '../wrap/nut.js'
         ],
-        endFile: [
-            '../wrap/endExtension.js'
-        ]
+        end: 'require("extension/bmap/bmap") }));'
     },
     include:[
         'extension/bmap/bmap'

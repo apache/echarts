@@ -7,7 +7,6 @@
  */
 define(function (require) {
 
-    var BRUSH_SIZE = 20;
     var GRADIENT_LEVELS = 256;
     var zrUtil = require('zrender/core/util');
 
@@ -21,6 +20,7 @@ define(function (require) {
         this.canvas = canvas;
 
         this.blurSize = 30;
+        this.pointSize = 20;
         this.opacity = 1;
 
         this._gradientPixels = {};
@@ -37,7 +37,7 @@ define(function (require) {
             var brush = this._getBrush();
             var gradientInRange = this._getGradient(data, colorFunc, 'inRange');
             var gradientOutOfRange = this._getGradient(data, colorFunc, 'outOfRange');
-            var r = BRUSH_SIZE + this.blurSize;
+            var r = this.pointSize + this.blurSize;
 
             var canvas = this.canvas;
             var ctx = canvas.getContext('2d');
@@ -91,7 +91,7 @@ define(function (require) {
         _getBrush: function() {
             var brushCanvas = this._brushCanvas || (this._brushCanvas = zrUtil.createCanvas());
             // set brush size
-            var r = BRUSH_SIZE + this.blurSize;
+            var r = this.pointSize + this.blurSize;
             var d = r * 2;
             brushCanvas.width = d;
             brushCanvas.height = d;
@@ -110,7 +110,7 @@ define(function (require) {
 
             // draw circle in the left to the canvas
             ctx.beginPath();
-            ctx.arc(-r, r, BRUSH_SIZE, 0, Math.PI * 2, true);
+            ctx.arc(-r, r, this.pointSize, 0, Math.PI * 2, true);
             ctx.closePath();
             ctx.fill();
             return brushCanvas;

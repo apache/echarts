@@ -26,12 +26,6 @@ define(function (require) {
          */
         this.name = name;
 
-        /**
-         * @param {Array.<string>}
-         * @readOnly
-         */
-        this.dimensions = ['x', 'y'];
-
         Transformable.call(this);
 
         this._roamTransform = new TransformDummy();
@@ -44,6 +38,12 @@ define(function (require) {
         constructor: View,
 
         type: 'view',
+
+        /**
+         * @param {Array.<string>}
+         * @readOnly
+         */
+        dimensions: ['x', 'y'],
 
         /**
          * Set bounding rect

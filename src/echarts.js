@@ -1257,6 +1257,8 @@ define(function (require) {
     echarts.graphic = require('./util/graphic');
     echarts.number = require('./util/number');
     echarts.format = require('./util/format');
+    echarts.matrix = require('zrender/core/matrix');
+    echarts.vector = require('zrender/core/vector');
 
     echarts.util = {};
     each([

@@ -8,12 +8,6 @@ define(function(require) {
     function Cartesian2D(name) {
 
         Cartesian.call(this, name);
-
-        /**
-         * @type {Array.<string>}
-         * @readOnly
-         */
-        this.dimensions = ['x', 'y'];
     }
 
     Cartesian2D.prototype = {
@@ -21,6 +15,12 @@ define(function(require) {
         constructor: Cartesian2D,
 
         type: 'cartesian2d',
+
+        /**
+         * @type {Array.<string>}
+         * @readOnly
+         */
+        dimensions: ['x', 'y'],
 
         /**
          * Base axis will be used on stacking.

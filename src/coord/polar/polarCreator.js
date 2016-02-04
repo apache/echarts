@@ -94,6 +94,8 @@ define(function (require) {
 
     var polarCreator = {
 
+        dimensions: Polar.prototype.dimensions,
+
         create: function (ecModel, api) {
             var polarList = [];
             ecModel.eachComponent('polar', function (polarModel, idx) {

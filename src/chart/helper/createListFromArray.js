@@ -33,11 +33,14 @@ define(function(require) {
         var creator = creators[coordSysName];
         var registeredCoordSys = CoordinateSystem.get(coordSysName);
         // FIXME
-        var result = creator ? creator(data, seriesModel, ecModel)
+        var result = creator && creator(data, seriesModel, ecModel);
+        var dimensions = result && result.dimensions;
+        if (!dimensions) {
             // Get dimensions from registered coordinate system
-            : ((registeredCoordSys && registeredCoordSys.dimensions) || ['x', 'y']);
-        var dimensions = result.dimensions;
-        var categoryAxisModel = result.categoryAxisModel;
+            dimensions = (registeredCoordSys && registeredCoordSys.dimensions) || ['x', 'y'];
+            dimensions = completeDimensions(dimensions, data, dimensions.concat(['value']));
+        }
+        var categoryAxisModel = result && result.categoryAxisModel;
 
         var categoryDimIndex = dimensions[0].type === 'ordinal' ? 0
             : (dimensions[1].type === 'ordinal' ? 1 : -1);
@@ -150,7 +153,7 @@ define(function(require) {
     function createNameList(result, data) {
         var nameList = [];
 
-        if (result.categoryAxisModel) {
+        if (result && result.categoryAxisModel) {
             // FIXME Two category axis
             var categories = result.categoryAxisModel.getCategories();
             if (categories) {

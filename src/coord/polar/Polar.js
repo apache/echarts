@@ -33,12 +33,6 @@ define(function(require) {
         this.cy = 0;
 
         /**
-         * @param {Array.<string>}
-         * @readOnly
-         */
-        this.dimensions = ['radius', 'angle'];
-
-        /**
          * @type {module:echarts/coord/polar/RadiusAxis}
          * @private
          */
@@ -56,6 +50,12 @@ define(function(require) {
         constructor: Polar,
 
         type: 'polar',
+
+        /**
+         * @param {Array.<string>}
+         * @readOnly
+         */
+        dimensions: ['radius', 'angle'],
 
         /**
          * If contain coord
