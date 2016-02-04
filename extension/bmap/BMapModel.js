@@ -8,6 +8,11 @@ define(function (require) {
             return this.__bmap;
         },
 
+        setCenterAndZoom: function (center, zoom) {
+            this.option.center = center;
+            this.option.zoom = zoom;
+        },
+
         defaultOption: {
             center: null,
 

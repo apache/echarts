@@ -14,8 +14,11 @@ define(function (require) {
         type: 'bmapRoam',
         event: 'bmapRoam',
         update: 'updateLayout'
-    }, function () {
-        // Do nothing
-        // console.log(payload);
+    }, function (payload, ecModel) {
+        ecModel.eachComponent('bmap', function (bMapModel) {
+            var bmap = bMapModel.getBMap();
+            var center = bmap.getCenter();
+            bMapModel.setCenterAndZoom([center.lng, center.lat], bmap.getZoom());
+        });
     });
 });
