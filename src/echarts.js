@@ -686,6 +686,7 @@ define(function (require) {
                 model = componentType;
             }
 
+            // Consider: id same and type changed.
             var viewId = model.id + '_' + model.type;
             var view = viewMap[viewId];
             if (!view) {

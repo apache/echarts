@@ -289,11 +289,11 @@ define(function(require) {
      *
      * @param {Object} targetOption
      * @param {Object} newOption
-     * @param {Object} [opt]
+     * @param {Object|string} [opt]
      * @param {boolean} [opt.ignoreSize=false] Some component must has width and height.
      */
     layout.mergeLayoutParam = function (targetOption, newOption, opt) {
-        opt = opt || {};
+        !zrUtil.isObject(opt) && (opt = {});
         var hNames = ['width', 'left', 'right']; // Order by priority.
         var vNames = ['height', 'top', 'bottom']; // Order by priority.
         var hResult = merge(hNames);

@@ -106,7 +106,7 @@ define(function(require) {
                 }
             }
 
-            // Consider this case: legend depends series, we call
+            // Consider this case: legend depends on series, and we call
             // chart.setOption({series: [...]}), where only series is in option.
             // If we do not have 'removeEdgeAndAdd', legendModel.mergeOption will
             // not be called, but only sereis.mergeOption is called. Thus legend

@@ -131,79 +131,67 @@ define(function (require) {
             function visitComponent(mainType, dependencies) {
                 var newCptOptionList = newOption[mainType];
 
-                newCptOptionList
-                    ? handleNew.call(this, mainType, newCptOptionList, dependencies)
-                    : handleNoNew.call(this, mainType);
-
-                // Backup series for filtering.
-                if (mainType === 'series') {
-                    this._seriesIndices = createSeriesIndices(componentsMap.series);
-                }
-            }
-
-            function handleNoNew(mainType) {
-                // Possible when using removeEdgeAndAdd in topologicalTravel
-                // and ComponentModel.getAllClassMainTypes
-                each(componentsMap[mainType], function (cpt) {
-                    cpt.mergeOption({}, this);
-                }, this);
-            }
-
-            function handleNew(mainType, newCptOptionList, dependencies) {
-                // Normalize
                 if (!(zrUtil.isArray(newCptOptionList))) {
-                    newCptOptionList = [newCptOptionList];
-                }
-                if (!componentsMap[mainType]) {
-                    componentsMap[mainType] = [];
+                    newCptOptionList = newCptOptionList ? [newCptOptionList] : [];
                 }
 
-                var existComponents = mappingToExists(
-                    componentsMap[mainType], newCptOptionList
-                );
+                var mapResult = mappingToExists(componentsMap[mainType], newCptOptionList);
 
-                var keyInfoList = makeKeyInfo(
-                    mainType, newCptOptionList, existComponents
-                );
+                makeKeyInfo(mainType, mapResult);
 
                 var dependentModels = getComponentsByTypes(
                     componentsMap, dependencies
                 );
 
                 option[mainType] = [];
+                componentsMap[mainType] = [];
 
-                each(newCptOptionList, function (newCptOption, index) {
-                    if (!isObject(newCptOption)) {
-                        return;
-                    }
+                each(mapResult, function (resultItem, index) {
+                    var componentModel = resultItem.exist;
+                    var newCptOption = resultItem.option;
 
-                    var componentModel = existComponents[index];
-
-                    var ComponentModelClass = ComponentModel.getClass(
-                        mainType, keyInfoList[index].subType, true
+                    zrUtil.assert(
+                        isObject(newCptOption) || componentModel,
+                        'Empty component definition'
                     );
 
-                    if (componentModel && componentModel instanceof ComponentModelClass) {
-                        componentModel.mergeOption(newCptOption, this);
+                    // Consider where is no new option and should be merged using {},
+                    // see removeEdgeAndAdd in topologicalTravel and
+                    // ComponentModel.getAllClassMainTypes.
+                    if (!newCptOption) {
+                        componentModel.mergeOption({}, this);
                     }
                     else {
-                        // PENDING Global as parent ?
-                        componentModel = new ComponentModelClass(
-                            newCptOption, this, this,
-                            zrUtil.extend(
-                                {
-                                    dependentModels: dependentModels,
-                                    componentIndex: index
-                                },
-                                keyInfoList[index]
-                            )
+                        var ComponentModelClass = ComponentModel.getClass(
+                            mainType, resultItem.keyInfo.subType, true
                         );
-                        componentsMap[mainType][index] = componentModel;
+
+                        if (componentModel && componentModel instanceof ComponentModelClass) {
+                            componentModel.mergeOption(newCptOption, this);
+                        }
+                        else {
+                            // PENDING Global as parent ?
+                            componentModel = new ComponentModelClass(
+                                newCptOption, this, this,
+                                zrUtil.extend(
+                                    {
+                                        dependentModels: dependentModels,
+                                        componentIndex: index
+                                    },
+                                    resultItem.keyInfo
+                                )
+                            );
+                        }
                     }
 
-                    // Keep option
+                    componentsMap[mainType][index] = componentModel;
                     option[mainType][index] = componentModel.option;
                 }, this);
+
+                // Backup series for filtering.
+                if (mainType === 'series') {
+                    this._seriesIndices = createSeriesIndices(componentsMap.series);
+                }
             }
         },
 
@@ -595,46 +583,69 @@ define(function (require) {
     /**
      * @inner
      */
-    function mappingToExists(existComponents, newComponentOptionList) {
-        existComponents = (existComponents || []).slice();
-        var result = [];
+    function mappingToExists(existCpts, newCptOptions) {
+        // Mapping by the order by original option (but not order of
+        // new option) in merge mode. Because we should ensure
+        // some specified index (like xAxisIndex) is consistent with
+        // original option, which is easy to understand, espatially in
+        // media query. And in most case, merge option is used to
+        // update partial option but not be expected to change order.
+        newCptOptions = (newCptOptions || []).slice();
 
-        // Mapping by id if specified.
-        each(newComponentOptionList, function (componentOption, index) {
-            if (!isObject(componentOption) || !componentOption.id) {
-                return;
-            }
-            for (var i = 0, len = existComponents.length; i < len; i++) {
-                if (existComponents[i].id === componentOption.id) {
-                    result[index] = existComponents.splice(i, 1)[0];
-                    return;
-                }
-            }
+        var result = map(existCpts || [], function (cpt, index) {
+            return {exist: cpt};
         });
 
-        // Mapping by name if specified.
-        each(newComponentOptionList, function (componentOption, index) {
-            if (!isObject(componentOption)
-                || !componentOption.name
-                || hasInnerId(componentOption)
-            ) {
+        // Mapping by id or name if specified.
+        each(newCptOptions, function (cptOption, index) {
+            if (!isObject(cptOption)) {
                 return;
             }
-            for (var i = 0, len = existComponents.length; i < len; i++) {
-                if (existComponents[i].name === componentOption.name) {
-                    result[index] = existComponents.splice(i, 1)[0];
-                    return;
+            for (var i = 0; i < result.length; i++) {
+                var exist = result[i].exist;
+                if (!result[i].option // Consider name: two map to one.
+                    && (
+                        // id has highest priority.
+                        (cptOption.id != null && exist.id === cptOption.id + '')
+                        || (cptOption.name != null
+                            && !isIdInner(cptOption)
+                            && !isIdInner(exist)
+                            && exist.name === cptOption.name + ''
+                        )
+                    )
+                ) {
+                    result[i].option = cptOption;
+                    newCptOptions[index] = null;
+                    break;
                 }
             }
         });
 
         // Otherwise mapping by index.
-        each(newComponentOptionList, function (componentOption, index) {
-            if (!result[index]
-                && existComponents[index]
-                && !hasInnerId(componentOption)
-            ) {
-                result[index] = existComponents[index];
+        each(newCptOptions, function (cptOption, index) {
+            if (!isObject(cptOption)) {
+                return;
+            }
+
+            var i = 0;
+            for (; i < result.length; i++) {
+                var exist = result[i].exist;
+                if (!result[i].option
+                    && !isIdInner(exist)
+                    // Caution:
+                    // Do not overwrite id. But name can be overwritten,
+                    // because axis use name as 'show label text'.
+                    // 'exist' always has id and name and we dont
+                    // need to check it.
+                    && cptOption.id == null
+                ) {
+                    result[i].option = cptOption;
+                    break;
+                }
+            }
+
+            if (i >= result.length) {
+                result.push({option: cptOption});
             }
         });
 
@@ -644,95 +655,81 @@ define(function (require) {
     /**
      * @inner
      */
-    function makeKeyInfo(mainType, newCptOptionList, existComponents) {
+    function makeKeyInfo(mainType, mapResult) {
         // We use this id to hash component models and view instances
         // in echarts. id can be specified by user, or auto generated.
 
-        // The id generation rule ensures when setOption are called in
-        // no-merge mode, new model is able to replace old model, and
-        // new view instance are able to mapped to old instance.
-        // So we generate id by name and type.
+        // The id generation rule ensures new view instance are able
+        // to mapped to old instance when setOption are called in
+        // no-merge mode. So we generate model id by name and plus
+        // type in view id.
 
         // name can be duplicated among components, which is convenient
         // to specify multi components (like series) by one name.
 
-        // raw option should not be modified. for example, xxx.name might
-        // be rendered, so default name ('') should not be replaced by
-        // generated name. So we use keyInfoList wrap key info.
-        var keyInfoList = [];
-
-        // We use a prefix when generating name or id to prevent
-        // user using the generated name or id directly.
-        var prefix = '\0';
-
         // Ensure that each id is distinct.
-        var idSet = {};
+        var idMap = {};
 
-        // key: name, value: count by single name.
-        var nameCount = {};
+        each(mapResult, function (item, index) {
+            var existCpt = item.exist;
+            var opt = item.option;
 
-        // Complete subType
-        each(newCptOptionList, function (opt, index) {
+            zrUtil.assert(
+                !opt || opt.id == null || !idMap[opt.id],
+                'id duplicates: ' + (opt && opt.id)
+            );
+
+            existCpt && (idMap[existCpt.id] = item);
+            opt && (idMap[opt.id] = item);
+
+            // Complete subType
+            if (isObject(opt)) {
+                var subType = determineSubType(mainType, opt, existCpt);
+                item.keyInfo = {mainType: mainType, subType: subType};
+            }
+        });
+
+        // Make name and id.
+        each(mapResult, function (item, index) {
+            var existCpt = item.exist;
+            var opt = item.option;
+            var keyInfo = item.keyInfo;
+
             if (!isObject(opt)) {
                 return;
             }
-            var existCpt = existComponents[index];
-            var subType = determineSubType(mainType, opt, existCpt);
-            var item = {mainType: mainType, subType: subType};
-            keyInfoList[index] = item;
-        });
 
-        function eachOpt(cb) {
-            each(newCptOptionList, function (opt, index) {
-                if (!isObject(opt)) {
-                    return;
-                }
-                var existCpt = existComponents[index];
-                var item = keyInfoList[index];
-                var fullType = mainType + '.' + item.subType;
-                cb(item, opt, existCpt, fullType);
-            });
-        }
-
-        // Make name
-        eachOpt(function (item, opt, existCpt, fullType) {
-            item.name = existCpt
+            // name can be overwitten. Consider case: axis.name = '20km'.
+            // But id generated by name will not be changed, which affect
+            // only in that case: setOption with 'not merge mode' and view
+            // instance will be recreated, which can be accepted.
+            keyInfo.name = opt.name != null
+                ? opt.name + ''
+                : existCpt
                 ? existCpt.name
-                : opt.name != null
-                ? opt.name
-                : prefix + '-';
-            // init nameCount
-            nameCount[item.name] = 0;
-        });
+                : '\0-';
 
-        // Make id
-        eachOpt(function (item, opt, existCpt, fullType) {
-            var itemName = item.name;
-
-            item.id = existCpt
-                ? existCpt.id
-                : opt.id != null
-                ? opt.id
-                // (1) Using delimiter to escapse dulipcation.
-                // (2) Using type tu ensure that view with different
-                //     type will not be mapped.
-                // (3) Consider this situatoin:
-                //      optionA: [{name: 'a'}, {name: 'a'}, {..}]
-                //      optionB [{..}, {name: 'a'}, {name: 'a'}]
-                //     Using nameCount to ensure that series with
-                //     the same name between optionA and optionB
-                //     can be mapped.
-                : prefix + [fullType, itemName, nameCount[itemName]++].join('|');
-
-            if (idSet[item.id]) {
-                // FIXME
-                // how to throw
-                throw new Error('id duplicates: ' + item.id);
+            if (existCpt) {
+                keyInfo.id = existCpt.id;
             }
-            idSet[item.id] = 1;
-        });
+            else if (opt.id != null) {
+                keyInfo.id = opt.id + '';
+            }
+            else {
+                // Consider this situatoin:
+                //  optionA: [{name: 'a'}, {name: 'a'}, {..}]
+                //  optionB [{..}, {name: 'a'}, {name: 'a'}]
+                // Series with the same name between optionA and optionB
+                // should be mapped.
+                var idNum = 0;
+                do {
+                    keyInfo.id = '\0' + keyInfo.name + '\0' + idNum++;
+                }
+                while (idMap[keyInfo.id]);
+            }
 
-        return keyInfoList;
+            idMap[keyInfo.id] = item;
+        });
     }
 
     /**
@@ -775,11 +772,9 @@ define(function (require) {
     /**
      * @inner
      */
-    function hasInnerId(componentOption) {
-        return componentOption.id
-            // FIXME
-            // Where to put this constant.
-            && (componentOption.id + '').indexOf('\0_ec_\0') === 0;
+    function isIdInner(cptOption) {
+        // FIXME: Where to put this constant.
+        return cptOption && cptOption.id && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
     }
 
     /**
