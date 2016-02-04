@@ -113,8 +113,8 @@
                                 show: true,
                                 height: 20,
                                 type: 'slider',
-                                top: '10%',
-                                // xAxisIndex: layout === 'horizontal' ? [0] : [],
+                                bottom: 50,
+                                xAxisIndex: layout === 'horizontal' ? [0] : [],
                                 yAxisIndex: layout === 'horizontal' ? [] : [0],
                                 start: 0,
                                 end: 20
@@ -155,15 +155,15 @@
                 }
 
 
-                var gui = new dat.GUI();
-                var config = {
-                    layout: 'horizontal'
-                };
-                gui
-                    .add(config, 'layout', ['horizontal', 'vertical'])
-                    .onChange(update);
+                // var gui = new dat.GUI();
+                // var config = {
+                //     layout: 'horizontal'
+                // };
+                // gui
+                //     .add(config, 'layout', ['horizontal', 'vertical'])
+                //     .onChange(update);
 
-                update('vertical');
+                update('horizontal');
             })
 
         </script>
