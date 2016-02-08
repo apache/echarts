@@ -15,6 +15,7 @@ define(function (require) {
     var mathMax = Math.max;
     var mathPow = Math.pow;
 
+    var COVER_Z = 10000;
     var UNSELECT_THRESHOLD = 2;
     var EVENTS = ['mousedown', 'mousemove', 'mouseup'];
 
@@ -155,6 +156,11 @@ define(function (require) {
 
     zrUtil.mixin(SelectController, Eventful);
 
+    function updateZ(group) {
+        group.traverse(function (el) {
+            el.z = COVER_Z;
+        });
+    }
 
     function isInContainer(x, y) {
         var localPos = this.group.transformCoordToLocal(x, y);
@@ -259,6 +265,8 @@ define(function (require) {
             this.group.remove(this._cover);
             this._cover = null;
         }
+
+        updateZ(this.group);
     }
 
     function removeGroup() {
