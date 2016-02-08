@@ -50,6 +50,7 @@ define(function (require) {
                 strokeNoScale: true
             },
             z2: 100,
+            culling: true,
             scale: [0, 0]
         });
         // Rewrite drift method
