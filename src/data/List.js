@@ -720,7 +720,7 @@ define(function (require) {
                     }
                 }
             }
-        });
+        }, stack, context);
 
         return list;
     };
