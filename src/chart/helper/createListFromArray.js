@@ -42,8 +42,8 @@ define(function(require) {
         }
         var categoryAxisModel = result && result.categoryAxisModel;
 
-        var categoryDimIndex = dimensions[0].type === 'ordinal' ? 0
-            : (dimensions[1].type === 'ordinal' ? 1 : -1);
+        var categoryDimIndex = dimensions[0].type === 'ordinal'
+            ? 0 : (dimensions[1].type === 'ordinal' ? 1 : -1);
 
         var list = new List(dimensions, seriesModel);
 
