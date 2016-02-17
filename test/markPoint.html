@@ -30,7 +30,6 @@
                 var xAxisData = [];
                 var data1 = [];
                 var data2 = [];
-                var data3 = [];
 
                 for (var i = 0; i < 10; i++) {
                     xAxisData.push('类目' + i);
@@ -38,9 +37,14 @@
                     data2.push(+Math.random().toFixed(2));
                 }
 
+                if (console && console.log) {
+                    console.log(data1);
+                    console.log(data2);
+                }
+
                 chart.setOption({
                     legend: {
-                        data: ['line', 'line2', 'line3']
+                        data: ['line-stack', 'line2-stack', 'line3']
                     },
                     tooltip: {
                         trigger: 'axis',
@@ -62,39 +66,113 @@
                             // show: false
                         }
                     },
-                    series: [{
-                        name: 'line',
-                        type: 'line',
-                        stack: 'all',
-                        symbolSize: 6,
-                        data: data1,
+                    series: [
+                        {
+                            name: 'line-stack',
+                            type: 'line',
+                            stack: 'all',
+                            symbolSize: 6,
+                            areaStyle: {normal: {}},
+                            data: data1,
 
-                        markPoint: {
-                            data: [{
-                                name: '最大值',
-                                type: 'max',
-                                value: 1
-                            }, {
-                                xAxis: '类目3',
-                                yAxis: 0.5,
-                                value: 2
-                            }]
-                        }
-                    }, {
-                        name: 'line2',
-                        type: 'line',
-                        stack: 'all',
-                        symbolSize: 6,
-                        data: data2,
+                            markPoint: {
+                                data: [
+                                    {
+                                        name: '最大值',
+                                        type: 'max',
+                                        value: 1
+                                    },
+                                    {
+                                        xAxis: '类目3',
+                                        yAxis: 0.5,
+                                        value: 2
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            name: 'line2-stack',
+                            type: 'line',
+                            stack: 'all',
+                            symbolSize: 6,
+                            areaStyle: {normal: {}},
+                            data: data2,
 
-                        markPoint: {
-                            data: [{
-                                name: '最大值',
-                                type: 'max',
-                                value: 1
-                            }]
+                            markPoint: {
+                                label: {
+                                    normal: {
+                                        formatter: function (param) {
+                                            return param.name + ' ' + param.value;
+                                        },
+                                        textStyle: {
+                                            color: '#000'
+                                        },
+                                        position: 'top'
+                                    }
+                                },
+                                data: [
+                                    {
+                                        name: '最小值stack',
+                                        type: 'min',
+                                        value: 1
+                                    },
+                                    {
+                                        name: '最大值stack',
+                                        type: 'max',
+                                        value: 1
+                                    },
+                                    {
+                                        name: '平均值stack',
+                                        type: 'average',
+                                        value: 1
+                                    }
+                                ]
+                            }
+                        },
+                        {
+                            name: 'line3',
+                            type: 'line',
+                            symbolSize: 6,
+                            data: data2,
+
+                            markPoint: {
+                                label: {
+                                    normal: {
+                                        formatter: function (param) {
+                                            return param.name + ' ' + param.value;
+                                        },
+                                        textStyle: {
+                                            color: '#000'
+                                        },
+                                        position: 'top'
+                                    }
+                                },
+                                data: [
+                                    {
+                                        name: '最小值',
+                                        type: 'min',
+                                        value: 1
+                                    },
+                                    {
+                                        name: '最大值x',
+                                        type: 'max',
+                                        value: 1
+                                    },
+                                    {
+                                        name: '最大值y',
+                                        type: 'max',
+                                        valueIndex: 0,
+                                        value: 1
+                                    },
+                                    {
+                                        name: '平均值',
+                                        type: 'average',
+                                        value: 1
+                                    }
+                                ]
+                            }
                         }
-                    }]
+                    ]
                 });
             })
 

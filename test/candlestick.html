@@ -33,7 +33,8 @@
                 'echarts/component/legend',
                 'echarts/component/grid',
                 'echarts/component/tooltip',
-                'echarts/component/dataZoom'
+                'echarts/component/dataZoom',
+                'echarts/component/markPoint'
             ], function (echarts, rawData) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
@@ -72,16 +73,6 @@
                         trigger: 'axis',
                         axisPointer: {
                             type: 'line'
-                        },
-                        formatter: function (param) {
-                            var param = param[0];
-                            return [
-                                '日期：' + param.name + '<hr size=1 style="margin: 3px 0">',
-                                '开盘：' + param.data[0] + '<br/>',
-                                '收盘：' + param.data[1] + '<br/>',
-                                '日最低：' + param.data[2] + '<br/>',
-                                '日最高：' + param.data[3] + '<br/>'
-                            ].join('')
                         }
                     },
                     grid: {
@@ -124,10 +115,78 @@
                         {
                             name: '上证指数',
                             type: 'candlestick',
-                            data: data.values
+                            data: data.values,
+                            tooltip: {
+                                formatter: function (param) {
+                                    var param = param[0];
+                                    return [
+                                        '日期：' + param.name + '<hr size=1 style="margin: 3px 0">',
+                                        '开盘：' + param.data[0] + '<br/>',
+                                        '收盘：' + param.data[1] + '<br/>',
+                                        '日最低：' + param.data[2] + '<br/>',
+                                        '日最高：' + param.data[3] + '<br/>'
+                                    ].join('')
+                                }
+                            },
+                            markPoint: {
+                                data: [
+                                    {
+                                        name: '某个坐标',
+                                        coord: ['2013/5/21', 2300]
+                                    },
+                                    {
+                                        name: '某个屏幕坐标',
+                                        x: 100,
+                                        y: 200,
+                                        label: {
+                                            normal: {
+                                                show: false,
+                                                formatter: 'asdf'
+                                            },
+                                            emphasis: {
+                                                show: true,
+                                                position: 'top',
+                                                formatter: 'zxcv'
+                                            }
+                                        }
+                                    },
+                                    {
+                                        name: 'max value (default)',
+                                        type: 'max'
+                                    },
+                                    {
+                                        name: 'min value (default)',
+                                        type: 'min'
+                                    },
+                                    {
+                                        name: 'max value (dim:close)',
+                                        type: 'max',
+                                        valueDim: 'close'
+                                    },
+                                    {
+                                        name: 'average value (dim:close)',
+                                        type: 'average',
+                                        valueDim: 'close'
+                                    }
+                                ],
+                                tooltip: {
+                                    formatter: function (param) {
+                                        return param.name + '<br>' + (param.data.coord || '');
+                                    }
+                                }
+                            }
                         }
                     ]
                 });
+
+                // setTimeout(function () {
+                //     chart.setOption({
+                //         dataZoom: {
+                //             startValue: '2013/1/28',
+                //             endValue: '2013/1/30'
+                //         }
+                //     });
+                // }, 1000);
             }
 
         </script>

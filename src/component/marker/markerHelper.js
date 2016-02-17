@@ -2,6 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
+    var indexOf = zrUtil.indexOf;
 
     function getPrecision(data, valueAxisDim, dataIndex) {
         var precision = -1;
@@ -18,19 +19,21 @@ define(function (require) {
         return precision;
     }
 
-    function markerTypeCalculatorWithExtent(mlType, data, baseAxisDim, valueAxisDim, valueIndex) {
+    function markerTypeCalculatorWithExtent(
+        mlType, data, baseDataDim, valueDataDim, baseCoordIndex, valueCoordIndex
+    ) {
         var coordArr = [];
         var value = mlType === 'average'
-            ? data.getSum(valueAxisDim, true) / data.count()
-            : data.getDataExtent(valueAxisDim)[mlType === 'max' ? 1 : 0];
+            ? data.getSum(valueDataDim, true) / data.count()
+            : data.getDataExtent(valueDataDim, true)[mlType === 'max' ? 1 : 0];
 
-        var dataIndex = data.indexOfNearest(valueAxisDim, value);
-        coordArr[1 - valueIndex] = data.get(baseAxisDim, dataIndex);
-        coordArr[valueIndex] = data.get(valueAxisDim, dataIndex, true);
+        var dataIndex = data.indexOfNearest(valueDataDim, value, true);
+        coordArr[baseCoordIndex] = data.get(baseDataDim, dataIndex, true);
+        coordArr[valueCoordIndex] = data.get(valueDataDim, dataIndex, true);
 
-        var precision = getPrecision(data, valueAxisDim, dataIndex);
+        var precision = getPrecision(data, valueDataDim, dataIndex);
         if (precision >= 0) {
-            coordArr[valueIndex] = +coordArr[valueIndex].toFixed(precision);
+            coordArr[valueCoordIndex] = +coordArr[valueCoordIndex].toFixed(precision);
         }
 
         return coordArr;
@@ -66,46 +69,55 @@ define(function (require) {
      * Transform markPoint data item to format used in List by do the following
      * 1. Calculate statistic like `max`, `min`, `average`
      * 2. Convert `item.xAxis`, `item.yAxis` to `item.coord` array
-     * @param  {module:echarts/data/List} data
+     * @param  {module:echarts/model/Series} seriesModel
      * @param  {module:echarts/coord/*} [coordSys]
      * @param  {Object} item
      * @return {Object}
      */
-    var dataTransform = function (data, coordSys, item) {
+    var dataTransform = function (seriesModel, item) {
+        var data = seriesModel.getData();
+        var coordSys = seriesModel.coordinateSystem;
+
         // 1. If not specify the position with pixel directly
-        // 2. If `coord` is not a data array. Which uses `xAxis`, `yAxis` to specify the coord on each dimension
+        // 2. If `coord` is not a data array. Which uses `xAxis`,
+        // `yAxis` to specify the coord on each dimension
         if ((isNaN(item.x) || isNaN(item.y))
             && !zrUtil.isArray(item.coord)
             && coordSys
         ) {
-            var valueAxisDim;
-            var baseAxisDim;
-            var valueAxis;
             var baseAxis;
-            if (item.valueIndex != null) {
-                valueAxisDim = coordSys.dimensions[item.valueIndex];
-                baseAxisDim = coordSys.dimensions[1 - item.valueIndex];
-                valueAxis = coordSys.getAxis(valueAxisDim);
-                baseAxis = coordSys.getAxis(baseAxisDim);
+            var baseDataDim;
+            var valueDataDim;
+            var valueAxis;
+
+            if (item.valueIndex != null || item.valueDim != null) {
+                valueDataDim = item.valueIndex != null
+                    ? data.getDimension(item.valueIndex) : item.valueDim;
+                valueAxis = coordSys.getAxis(seriesModel.getCoordDimensionInfo(valueDataDim).name);
+                baseAxis = coordSys.getOtherAxis(valueAxis);
+                baseDataDim = seriesModel.getDimensionsOnAxis(baseAxis.dim)[0];
             }
             else {
-                baseAxis = coordSys.getBaseAxis();
+                baseAxis = seriesModel.getBaseAxis();
                 valueAxis = coordSys.getOtherAxis(baseAxis);
-                baseAxisDim = baseAxis.dim;
-                valueAxisDim = valueAxis.dim;
+                baseDataDim = seriesModel.getDimensionsOnAxis(baseAxis.dim)[0];
+                valueDataDim = seriesModel.getDimensionsOnAxis(valueAxis.dim)[0];
             }
-            var valueIndex = item.valueIndex != null
-                ? item.valueIndex
-                : ((valueAxisDim === 'angle' || valueAxisDim === 'x') ? 0 : 1);
+
             // Clone the option
             // Transform the properties xAxis, yAxis, radiusAxis, angleAxis, geoCoord to value
-            item = zrUtil.extend({}, item);
+            item = zrUtil.clone(item);
+
             if (item.type && markerTypeCalculator[item.type] && baseAxis && valueAxis) {
+                var dims = coordSys.dimensions;
+                var baseCoordIndex = indexOf(dims, baseAxis.dim);
+                var valueCoordIndex = indexOf(dims, valueAxis.dim);
+
                 item.coord = markerTypeCalculator[item.type](
-                    data, baseAxis.dim, valueAxisDim, valueIndex
+                    data, baseDataDim, valueDataDim, baseCoordIndex, valueCoordIndex
                 );
                 // Force to use the value of calculated value.
-                item.value = item.coord[valueIndex];
+                item.value = item.coord[valueCoordIndex];
             }
             else {
                 // FIXME Only has one of xAxis and yAxis.

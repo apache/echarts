@@ -36,7 +36,7 @@ define(function (require) {
         var axisList = [];
 
         ecModel.eachSeriesByType('boxplot', function (seriesModel) {
-            var baseAxis = seriesModel.getBaseAxisModel().axis;
+            var baseAxis = seriesModel.getBaseAxis();
             var idx = zrUtil.indexOf(axisList, baseAxis);
 
             if (idx < 0) {

@@ -5,6 +5,7 @@ define(function(require) {
     var List = require('../../data/List');
     var completeDimensions = require('../../data/helper/completeDimensions');
     var WhiskerBoxDraw = require('../helper/WhiskerBoxDraw');
+    var zrUtil = require('zrender/core/util');
 
     function getItemValue(item) {
         return item.value == null ? item : item.value;
@@ -82,11 +83,35 @@ define(function(require) {
         },
 
         /**
-         * If horizontal, base axis is x, otherwise y.
+         * @override
+         * @param {string|number} [dataDim]
+         * @return {Array.<Object>} dimension info list.
          */
-        getBaseAxisModel: function () {
+        getCoordDimensionInfo: function (dataDim) {
+            var data = this.getData();
+            var infoList = [];
+            var info;
+
+            zrUtil.each(['x', 'y'], function (coordDim, index) {
+                var dataDims = this.getDimensionsOnAxis(coordDim);
+                if (dataDim != null && zrUtil.indexOf(dataDims, dataDim) >= 0) {
+                    info = data.getDimensionInfo(dataDim);
+                    info.name = coordDim;
+                }
+                infoList[index] = data.getDimensionInfo(dataDims[0]);
+                infoList[index].name = coordDim;
+            }, this);
+
+            return dataDim != null ? info : infoList;
+        },
+
+        /**
+         * If horizontal, base axis is x, otherwise y.
+         * @override
+         */
+        getBaseAxis: function () {
             var dim = this._baseAxisDim;
-            return this.ecModel.getComponent(dim + 'Axis', this.get(dim + 'AxisIndex'));
+            return this.ecModel.getComponent(dim + 'Axis', this.get(dim + 'AxisIndex')).axis;
         }
     };
 
@@ -112,15 +137,6 @@ define(function(require) {
             this._whiskerBoxDraw.remove();
         }
     };
-
-    function queryDataIndex(data, payload) {
-        if (payload.dataIndex != null) {
-            return payload.dataIndex;
-        }
-        else if (payload.name != null) {
-            return data.indexOfName(payload.name);
-        }
-    }
 
     return {
         seriesModelMixin: seriesModelMixin,

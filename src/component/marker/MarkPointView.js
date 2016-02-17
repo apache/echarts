@@ -78,7 +78,7 @@ define(function (require) {
                 symbolDraw = symbolDrawMap[seriesName] = new SymbolDraw();
             }
 
-            var mpData = createList(coordSys, seriesData, mpModel);
+            var mpData = createList(coordSys, seriesModel, mpModel);
             var dims = coordSys && coordSys.dimensions;
 
             // FIXME
@@ -138,21 +138,20 @@ define(function (require) {
     /**
      * @inner
      * @param {module:echarts/coord/*} [coordSys]
-     * @param {module:echarts/data/List} seriesData
+     * @param {module:echarts/model/Series} seriesModel
      * @param {module:echarts/model/Model} mpModel
      */
-    function createList (coordSys, seriesData, mpModel) {
+    function createList(coordSys, seriesModel, mpModel) {
+        var seriesData = seriesModel.getData();
         var dataDimensions = seriesData.dimensions;
 
-        var mpData = new List(zrUtil.map(
-            dataDimensions, seriesData.getDimensionInfo, seriesData
-        ), mpModel);
+        var mpData = new List(seriesModel.getCoordDimensionInfo(), mpModel);
 
         if (coordSys) {
             mpData.initData(
                 zrUtil.filter(
                     zrUtil.map(mpModel.get('data'), zrUtil.curry(
-                        markerHelper.dataTransform, seriesData, coordSys
+                        markerHelper.dataTransform, seriesModel
                     )),
                     zrUtil.curry(markerHelper.dataFilter, coordSys)
                 ),
@@ -163,4 +162,5 @@ define(function (require) {
 
         return mpData;
     }
+
 });

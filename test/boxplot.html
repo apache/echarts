@@ -35,8 +35,10 @@
                 'echarts/component/title',
                 'echarts/component/legend',
                 'echarts/component/markLine',
+                'echarts/component/markPoint',
                 'echarts/component/grid',
-                'echarts/component/tooltip'
+                'echarts/component/tooltip',
+                'zrender/vml/vml'
             ], function (echarts, rawData, prepareBoxplotData) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
@@ -125,6 +127,48 @@
                                             'lower: ' + param.data[4]
                                         ].join('<br/>')
                                     }
+                                },
+                                markPoint: {
+                                    data: [
+                                        {
+                                            name: '某个坐标',
+                                            coord: [2, 300]
+                                        },
+                                        {
+                                            name: '某个屏幕坐标',
+                                            x: 100,
+                                            y: 200,
+                                            label: {
+                                                normal: {
+                                                    show: false,
+                                                    formatter: 'asdf'
+                                                },
+                                                emphasis: {
+                                                    show: true,
+                                                    position: 'top',
+                                                    formatter: 'zxcv'
+                                                }
+                                            }
+                                        },
+                                        {
+                                            name: 'max value (default)',
+                                            type: 'max'
+                                        },
+                                        {
+                                            name: 'min value (default)',
+                                            type: 'min'
+                                        },
+                                        {
+                                            name: 'max value (dim:Q1)',
+                                            type: 'max',
+                                            valueDim: 'Q1'
+                                        },
+                                        {
+                                            name: 'average value (dim:Q1)',
+                                            type: 'average',
+                                            valueDim: 'Q1'
+                                        }
+                                    ]
                                 }
                             },
                             {

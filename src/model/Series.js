@@ -136,6 +136,38 @@ define(function(require) {
             return [axisDim]; // Retunr axisDim default.
         },
 
+        /**
+         * Get coordinate dimensions info.
+         * By default the result is the same as dimensions info of series data.
+         * But some series dimensions are different from coord dimensions (i.e.
+         * candlestick and boxplot). Override this method to handle those cases.
+         * @param {string|number} [dataDim]
+         * @return {Array.<Object>} If dataDim specified, return cooresponding
+         *                          coord dim info, otherwise return dimension
+         *                          info list. If no coordinate system, reutrn [].
+         */
+        getCoordDimensionInfo: function (dataDim) {
+            var data = this.getData();
+            return this.coordinateSystem
+                ? (
+                    dataDim != null
+                        ? data.getDimensionInfo(dataDim)
+                        : zrUtil.map(data.dimensions, data.getDimensionInfo, data)
+                )
+                : [];
+        },
+
+        /**
+         * Get base axis if has coordinate system and has axis.
+         * By default use coordSys.getBaseAxis();
+         * Can be overrided for some chart.
+         * @return {type} description
+         */
+        getBaseAxis: function () {
+            var coordSys = this.coordinateSystem;
+            return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
+        },
+
         // FIXME
         /**
          * Default tooltip formatter

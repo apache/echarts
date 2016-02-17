@@ -166,6 +166,12 @@ define(function (require) {
          * @private
          */
         this._rawData;
+
+        /**
+         * @type {Object}
+         * @private
+         */
+        this._extent;
     };
 
     var listProto = List.prototype;
@@ -191,7 +197,7 @@ define(function (require) {
      *        Or a ordinal number. For example getDimensionInfo(0) will return 'x' or 'lng' or 'radius'
      */
     listProto.getDimensionInfo = function (dim) {
-        return this._dimensionInfos[this.getDimension(dim)];
+        return zrUtil.clone(this._dimensionInfos[this.getDimension(dim)]);
     };
 
     /**

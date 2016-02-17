@@ -13,7 +13,8 @@ define(function (require) {
 
     var LineDraw = require('../../chart/helper/LineDraw');
 
-    var markLineTransform = function (data, coordSys, baseAxis, valueAxis, precision, item) {
+    var markLineTransform = function (seriesModel, coordSys, baseAxis, valueAxis, precision, item) {
+        var data = seriesModel.getData();
         // Special type markLine like 'min', 'max', 'average'
         var mlType = item.type;
         if (!zrUtil.isArray(item)
@@ -52,8 +53,8 @@ define(function (require) {
             }];
         }
         item = [
-            markerHelper.dataTransform(data, coordSys, item[0]),
-            markerHelper.dataTransform(data, coordSys, item[1]),
+            markerHelper.dataTransform(seriesModel, item[0]),
+            markerHelper.dataTransform(seriesModel, item[1]),
             zrUtil.extend({}, item[2])
         ];
 
@@ -138,7 +139,7 @@ define(function (require) {
             }
             this.group.add(lineDraw.group);
 
-            var mlData = createList(coordSys, seriesData, mlModel);
+            var mlData = createList(coordSys, seriesModel, mlModel);
             var dims = coordSys.dimensions;
 
             var fromData = mlData.from;
@@ -223,10 +224,10 @@ define(function (require) {
     /**
      * @inner
      * @param {module:echarts/coord/*} coordSys
-     * @param {module:echarts/data/List} seriesData
+     * @param {module:echarts/model/Series} seriesModel
      * @param {module:echarts/model/Model} mpModel
      */
-    function createList(coordSys, seriesData, mlModel) {
+    function createList(coordSys, seriesModel, mlModel) {
         // var dataDimensions = seriesData.dimensions;
         // var dimensionInfosMap = zrUtil.map(
         //         dataDimensions, seriesData.getDimensionInfo, seriesData
@@ -247,7 +248,7 @@ define(function (require) {
 
             var optData = zrUtil.filter(
                 zrUtil.map(mlModel.get('data'), zrUtil.curry(
-                    markLineTransform, seriesData, coordSys, baseAxis, valueAxis, precision
+                    markLineTransform, seriesModel, coordSys, baseAxis, valueAxis, precision
                 )),
                 zrUtil.curry(markLineFilter, coordSys)
             );

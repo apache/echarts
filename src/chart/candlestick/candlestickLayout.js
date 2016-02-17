@@ -78,7 +78,7 @@ define(function (require) {
     };
 
     function calculateCandleWidth(seriesModel, data) {
-        var baseAxis = seriesModel.getBaseAxisModel().axis;
+        var baseAxis = seriesModel.getBaseAxis();
         var extent;
 
         var bandWidth = baseAxis.type === 'category'
