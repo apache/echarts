@@ -87,8 +87,8 @@ define(function(require) {
          * @override
          */
         mergeOption: function (newOption) {
-
-            newOption && zrUtil.merge(this.option, newOption);
+            //FIX #2591
+            newOption && zrUtil.merge(this.option, newOption, true);
 
             this.doInit(newOption, false);
         },
