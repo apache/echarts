@@ -9,10 +9,13 @@
 ### 版本及环境(Version & Environment) ###
 [3.0.2] & Windows7 64bit & Chrome 48.0.2564.103
 
-### 重现条件(Reproduction conditions) ###
+### 重现条件(Steps to reproduce) ###
 - 当设置yAxis，min为'11'字符，max为'29'字符时，正常显示。
 - 当min为'21'字符，max为'29'字符时，tooltip消失，不正常显示。
 - 当以上值为数字时，正常显示。
+
+### 期望结果(Expected behaviour) ###
+正常显示tooltip。
 
 ### 配置项(Option) ###
 ```javascript
