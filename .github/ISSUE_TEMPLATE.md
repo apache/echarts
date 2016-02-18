@@ -7,7 +7,7 @@
 ![tooltip](https://cloud.githubusercontent.com/assets/7768611/12501135/e55f34c6-c0f4-11e5-9847-f5b2cc7ce97d.png)
 
 ### 版本及环境(Version & Environment) ###
-[3.0.2] & Windows7 64bit , Chrome 48.0.2564.103
+[3.0.2] & Windows7 64bit & Chrome 48.0.2564.103
 
 ### 重现条件(Reproduction conditions) ###
 - 当设置yAxis，min为'11'字符，max为'29'字符时，正常显示。
