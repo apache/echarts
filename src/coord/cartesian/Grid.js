@@ -15,7 +15,6 @@ define(function(require, factory) {
     var each = zrUtil.each;
 
     var ifAxisCrossZero = axisHelper.ifAxisCrossZero;
-    var ifAxisNeedsCrossZero = axisHelper.ifAxisNeedsCrossZero;
     var niceScaleExtent = axisHelper.niceScaleExtent;
 
     // 依赖 GridModel, AxisModel 做预处理
@@ -178,7 +177,6 @@ define(function(require, factory) {
         };
 
         ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
-
         ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
 
         if (!axesCount.x || !axesCount.y) {
@@ -208,10 +206,21 @@ define(function(require, factory) {
 
         function ifAxisCanNotOnZero(otherAxisDim) {
             var axes = axesMap[otherAxisDim];
-            return (axes[0] && (axes[0].type === 'category' || !ifAxisCrossZero(axes[0])))
-                || (axes[1] && (axes[1].type === 'category' || !ifAxisCrossZero(axes[1])));
+            for (var idx in axes) {
+                var axis = axes[idx];
+                if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
+                    return true;
+                }
+            }
+            return false;
         }
 
+        each(axesMap.x, function (xAxis) {
+            niceScaleExtent(xAxis, xAxis.model);
+        });
+        each(axesMap.y, function (yAxis) {
+            niceScaleExtent(yAxis, yAxis.model);
+        });
         // Fix configuration
         each(axesMap.x, function (xAxis) {
             // onZero can not be enabled in these two situations
@@ -220,21 +229,12 @@ define(function(require, factory) {
             if (ifAxisCanNotOnZero('y')) {
                 xAxis.onZero = false;
             }
-            if (ifAxisNeedsCrossZero(xAxis)) {
-                xAxis.scale.unionExtent([0, 0]);
-            }
-            niceScaleExtent(xAxis, xAxis.model);
-        }, this);
-
+        });
         each(axesMap.y, function (yAxis) {
             if (ifAxisCanNotOnZero('x')) {
                 yAxis.onZero = false;
             }
-            if (ifAxisNeedsCrossZero(yAxis)) {
-                yAxis.scale.unionExtent([0, 0]);
-            }
-            niceScaleExtent(yAxis, yAxis.model);
-        }, this);
+        });
 
         function createAxisCreator(axisType) {
             return function (axisModel, idx) {

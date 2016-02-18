@@ -33,9 +33,9 @@ define(function(require) {
             // 默认自适应
             // barWidth: null,
             // 柱间距离，默认为柱形宽度的30%，可设固定值
-            barGap: '30%',
+            // barGap: '30%',
             // 类目间柱形距离，默认为类目间距的20%，可设固定值
-            barCategoryGap: '20%',
+            // barCategoryGap: '20%',
             // label: {
             //     normal: {
             //         show: false
