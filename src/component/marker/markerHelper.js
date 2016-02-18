@@ -23,9 +23,7 @@ define(function (require) {
         mlType, data, baseDataDim, valueDataDim, baseCoordIndex, valueCoordIndex
     ) {
         var coordArr = [];
-        var value = mlType === 'average'
-            ? data.getSum(valueDataDim, true) / data.count()
-            : data.getDataExtent(valueDataDim, true)[mlType === 'max' ? 1 : 0];
+        var value = numCalculate(data, valueDataDim, mlType);
 
         var dataIndex = data.indexOfNearest(valueDataDim, value, true);
         coordArr[baseCoordIndex] = data.get(baseDataDim, dataIndex, true);
@@ -85,36 +83,23 @@ define(function (require) {
             && !zrUtil.isArray(item.coord)
             && coordSys
         ) {
-            var baseAxis;
-            var baseDataDim;
-            var valueDataDim;
-            var valueAxis;
-
-            if (item.valueIndex != null || item.valueDim != null) {
-                valueDataDim = item.valueIndex != null
-                    ? data.getDimension(item.valueIndex) : item.valueDim;
-                valueAxis = coordSys.getAxis(seriesModel.getCoordDimensionInfo(valueDataDim).name);
-                baseAxis = coordSys.getOtherAxis(valueAxis);
-                baseDataDim = seriesModel.getDimensionsOnAxis(baseAxis.dim)[0];
-            }
-            else {
-                baseAxis = seriesModel.getBaseAxis();
-                valueAxis = coordSys.getOtherAxis(baseAxis);
-                baseDataDim = seriesModel.getDimensionsOnAxis(baseAxis.dim)[0];
-                valueDataDim = seriesModel.getDimensionsOnAxis(valueAxis.dim)[0];
-            }
+            var axisInfo = getAxisInfo(item, data, coordSys, seriesModel);
 
             // Clone the option
             // Transform the properties xAxis, yAxis, radiusAxis, angleAxis, geoCoord to value
             item = zrUtil.clone(item);
 
-            if (item.type && markerTypeCalculator[item.type] && baseAxis && valueAxis) {
+            if (item.type
+                && markerTypeCalculator[item.type]
+                && axisInfo.baseAxis && axisInfo.valueAxis
+            ) {
                 var dims = coordSys.dimensions;
-                var baseCoordIndex = indexOf(dims, baseAxis.dim);
-                var valueCoordIndex = indexOf(dims, valueAxis.dim);
+                var baseCoordIndex = indexOf(dims, axisInfo.baseAxis.dim);
+                var valueCoordIndex = indexOf(dims, axisInfo.valueAxis.dim);
 
                 item.coord = markerTypeCalculator[item.type](
-                    data, baseDataDim, valueDataDim, baseCoordIndex, valueCoordIndex
+                    data, axisInfo.baseDataDim, axisInfo.valueDataDim,
+                    baseCoordIndex, valueCoordIndex
                 );
                 // Force to use the value of calculated value.
                 item.value = item.coord[valueCoordIndex];
@@ -130,6 +115,25 @@ define(function (require) {
         return item;
     };
 
+    var getAxisInfo = function (item, data, coordSys, seriesModel) {
+        var ret = {};
+
+        if (item.valueIndex != null || item.valueDim != null) {
+            ret.valueDataDim = item.valueIndex != null
+                ? data.getDimension(item.valueIndex) : item.valueDim;
+            ret.valueAxis = coordSys.getAxis(seriesModel.getCoordDimensionInfo(ret.valueDataDim).name);
+            ret.baseAxis = coordSys.getOtherAxis(ret.valueAxis);
+            ret.baseDataDim = seriesModel.getDimensionsOnAxis(ret.baseAxis.dim)[0];
+        }
+        else {
+            ret.baseAxis = seriesModel.getBaseAxis();
+            ret.valueAxis = coordSys.getOtherAxis(ret.baseAxis);
+            ret.baseDataDim = seriesModel.getDimensionsOnAxis(ret.baseAxis.dim)[0];
+            ret.valueDataDim = seriesModel.getDimensionsOnAxis(ret.valueAxis.dim)[0];
+        }
+
+        return ret;
+    };
 
     /**
      * Filter data which is out of coordinateSystem range
@@ -154,9 +158,17 @@ define(function (require) {
         }
     };
 
+    var numCalculate = function (data, valueDataDim, mlType) {
+        return mlType === 'average'
+            ? data.getSum(valueDataDim, true) / data.count()
+            : data.getDataExtent(valueDataDim, true)[mlType === 'max' ? 1 : 0];
+    };
+
     return {
         dataTransform: dataTransform,
         dataFilter: dataFilter,
-        dimValueGetter: dimValueGetter
+        dimValueGetter: dimValueGetter,
+        getAxisInfo: getAxisInfo,
+        numCalculate: numCalculate
     };
 });

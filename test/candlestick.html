@@ -34,7 +34,8 @@
                 'echarts/component/grid',
                 'echarts/component/tooltip',
                 'echarts/component/dataZoom',
-                'echarts/component/markPoint'
+                'echarts/component/markPoint',
+                'echarts/component/markLine'
             ], function (echarts, rawData) {
 
                 chart = echarts.init(document.getElementById('main'), null, {
@@ -174,6 +175,31 @@
                                         return param.name + '<br>' + (param.data.coord || '');
                                     }
                                 }
+                            },
+                            markLine: {
+                                data: [
+                                    [
+                                        {name: '两个坐标之间的标线', coord: ['2013/4/25', 2130]},
+                                        {coord: ['2013/5/27', 2220]}
+                                    ],
+                                    [
+                                        {name: '两个屏幕坐标之间的标线', x: 100, y: 100},
+                                        {x: 250, y: 130}
+                                    ],
+                                    [
+                                        {name: 'max - min', type: 'max'},
+                                        {type: 'min'}
+                                    ],
+                                    {
+                                        name: 'min line',
+                                        type: 'min'
+                                    },
+                                    {
+                                        name: 'max line on dim:open',
+                                        type: 'max',
+                                        valueDim: 'open'
+                                    }
+                                ]
                             }
                         }
                     ]

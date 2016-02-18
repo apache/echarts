@@ -128,6 +128,7 @@
                                         ].join('<br/>')
                                     }
                                 },
+
                                 markPoint: {
                                     data: [
                                         {
@@ -169,7 +170,34 @@
                                             valueDim: 'Q1'
                                         }
                                     ]
+                                },
+
+                                markLine: {
+                                    data: [
+                                        [
+                                            {name: '两个坐标之间的标线', coord: [1, 240]},
+                                            {coord: [2, 260]}
+                                        ],
+                                        [
+                                            {name: '两个屏幕坐标之间的标线', x: 50, y: 60},
+                                            {x: 70, y: 90}
+                                        ],
+                                        [
+                                            {name: 'max - min', type: 'max'},
+                                            {type: 'min'}
+                                        ],
+                                        {
+                                            name: 'min line',
+                                            type: 'min'
+                                        },
+                                        {
+                                            name: 'max line on dim:Q3',
+                                            type: 'max',
+                                            valueDim: 'Q3'
+                                        }
+                                    ]
                                 }
+
                             },
                             {
                                 name: 'outlier',

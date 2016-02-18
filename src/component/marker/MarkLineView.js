@@ -13,22 +13,21 @@ define(function (require) {
 
     var LineDraw = require('../../chart/helper/LineDraw');
 
-    var markLineTransform = function (seriesModel, coordSys, baseAxis, valueAxis, precision, item) {
+    var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
         var data = seriesModel.getData();
         // Special type markLine like 'min', 'max', 'average'
         var mlType = item.type;
-        if (!zrUtil.isArray(item)
-            && mlType === 'min' || mlType === 'max' || mlType === 'average'
-        ) {
-            if (item.valueIndex != null) {
-                baseAxis = coordSys.getAxis(coordSys.dimensions[1 - item.valueIndex]);
-                valueAxis = coordSys.getAxis(coordSys.dimensions[item.valueIndex]);
-            }
-            var baseAxisKey = baseAxis.dim + 'Axis';
-            var valueAxisKey = valueAxis.dim + 'Axis';
-            var baseScaleExtent = baseAxis.scale.getExtent();
 
-            var mlFrom = zrUtil.extend({}, item);
+        if (!zrUtil.isArray(item)
+            && (mlType === 'min' || mlType === 'max' || mlType === 'average')
+        ) {
+            var axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
+
+            var baseAxisKey = axisInfo.baseAxis.dim + 'Axis';
+            var valueAxisKey = axisInfo.valueAxis.dim + 'Axis';
+            var baseScaleExtent = axisInfo.baseAxis.scale.getExtent();
+
+            var mlFrom = zrUtil.clone(item);
             var mlTo = {};
 
             mlFrom.type = null;
@@ -37,21 +36,25 @@ define(function (require) {
             mlFrom[baseAxisKey] = baseScaleExtent[0];
             mlTo[baseAxisKey] = baseScaleExtent[1];
 
-            var value = mlType === 'average'
-                ? data.getSum(valueAxis.dim, true) / data.count()
-                : data.getDataExtent(valueAxis.dim)[mlType === 'max' ? 1 : 0];
+            var value = markerHelper.numCalculate(data, axisInfo.valueDataDim, mlType);
 
             // Round if axis is cateogry
-            value = valueAxis.coordToData(valueAxis.dataToCoord(value));
+            value = axisInfo.valueAxis.coordToData(axisInfo.valueAxis.dataToCoord(value));
+
+            var precision = mlModel.get('precision');
+            if (precision >= 0) {
+                value = +value.toFixed(precision);
+            }
 
             mlFrom[valueAxisKey] = mlTo[valueAxisKey] = value;
 
             item = [mlFrom, mlTo, { // Extra option for tooltip and label
                 type: mlType,
                 // Force to use the value of calculated value.
-                value: +value.toFixed(precision)
+                value: value
             }];
         }
+
         item = [
             markerHelper.dataTransform(seriesModel, item[0]),
             markerHelper.dataTransform(seriesModel, item[1]),
@@ -228,27 +231,15 @@ define(function (require) {
      * @param {module:echarts/model/Model} mpModel
      */
     function createList(coordSys, seriesModel, mlModel) {
-        // var dataDimensions = seriesData.dimensions;
-        // var dimensionInfosMap = zrUtil.map(
-        //         dataDimensions, seriesData.getDimensionInfo, seriesData
-        //     );
-
-        // Mark line get the dimensions from coordinate system
-        // Because user specify the data by xAxis, yAxis
-        var dimensions = coordSys.dimensions;
-        var fromData = new List(dimensions, mlModel);
-        var toData = new List(dimensions, mlModel);
+        var fromData = new List(seriesModel.getCoordDimensionInfo(), mlModel);
+        var toData = new List(seriesModel.getCoordDimensionInfo(), mlModel);
         // No dimensions
         var lineData = new List([], mlModel);
 
         if (coordSys) {
-            var baseAxis = coordSys.getBaseAxis();
-            var valueAxis = coordSys.getOtherAxis(baseAxis);
-            var precision = mlModel.get('precision');
-
             var optData = zrUtil.filter(
                 zrUtil.map(mlModel.get('data'), zrUtil.curry(
-                    markLineTransform, seriesModel, coordSys, baseAxis, valueAxis, precision
+                    markLineTransform, seriesModel, coordSys, mlModel
                 )),
                 zrUtil.curry(markLineFilter, coordSys)
             );
