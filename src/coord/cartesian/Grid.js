@@ -177,7 +177,6 @@ define(function(require, factory) {
         };
 
         ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
-
         ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
 
         if (!axesCount.x || !axesCount.y) {
@@ -207,29 +206,35 @@ define(function(require, factory) {
 
         function ifAxisCanNotOnZero(otherAxisDim) {
             var axes = axesMap[otherAxisDim];
-            return (axes[0] && (axes[0].type === 'category' || !ifAxisCrossZero(axes[0])))
-                || (axes[1] && (axes[1].type === 'category' || !ifAxisCrossZero(axes[1])));
+            for (var idx in axes) {
+                var axis = axes[idx];
+                if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
+                    return true;
+                }
+            }
+            return false;
         }
 
-        // Fix configuration
         each(axesMap.x, function (xAxis) {
             niceScaleExtent(xAxis, xAxis.model);
-
+        });
+        each(axesMap.y, function (yAxis) {
+            niceScaleExtent(yAxis, yAxis.model);
+        });
+        // Fix configuration
+        each(axesMap.x, function (xAxis) {
             // onZero can not be enabled in these two situations
             // 1. When any other axis is a category axis
             // 2. When any other axis not across 0 point
             if (ifAxisCanNotOnZero('y')) {
                 xAxis.onZero = false;
             }
-        }, this);
-
+        });
         each(axesMap.y, function (yAxis) {
-            niceScaleExtent(yAxis, yAxis.model);
-
             if (ifAxisCanNotOnZero('x')) {
                 yAxis.onZero = false;
             }
-        }, this);
+        });
 
         function createAxisCreator(axisType) {
             return function (axisModel, idx) {
