@@ -4,6 +4,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="./esl.js"></script>
         <script src="./config.js"></script>
+        <script src="./lib/facePrint.js"></script>
     </head>
     <body>
         <style>
@@ -22,6 +23,7 @@
             require([
                 'data/rainfall.json',
                 'echarts',
+                'zrender/vml/vml',
                 'echarts/chart/bar',
                 'echarts/chart/line',
                 'echarts/component/legend',
@@ -31,9 +33,14 @@
                 'echarts/component/dataZoomInside'
             ], function (data, echarts) {
 
+
                 var chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
                 });
+
+            chart.showLoading({
+                text : '正在读取数据中...'
+            });
 
                 var xAxisData = [];
                 var data1 = [];

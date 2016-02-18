@@ -7,30 +7,37 @@
 
     var count = 0;
 
-    window.facePrint = function (msg, delimiter, max) {
+    window.facePrint = function (msg, printObj) {
         if (!infoDom) {
             infoDom = createInfoDom();
+        }
+
+        if (printObj && isObject(msg)) {
+            msg = window.facePrint.objToStr(msg);
         }
 
         msgs.push(encodeHTML(msg));
         count++;
 
-        if (msgs.length > (max || 30)) {
+        if (msgs.length > 30) {
             msgs.shift();
         }
 
-        if (delimiter) {
-            infoDom.innerHTML = msgs.join(delimiter);
+        var str = '';
+        // Make some change in view, otherwise user may
+        // be not aware that log is still printing.
+        for (var i = 0; i < msgs.length; i++) {
+            str += msgs[i] + ' ' + (count - msgs.length + i) + ' ';
         }
-        else {
-            var str = '';
-            // Make some change in view, otherwise user may
-            // be not aware that log is still printing.
-            for (var i = 0; i < msgs.length; i++) {
-                str += msgs[i] + ' ' + (count - msgs.length + i) + ' ';
-            }
-            infoDom.innerHTML = str;
+        infoDom.innerHTML = str;
+    };
+
+    window.facePrint.objToStr = function (obj) {
+        var msgArr = [];
+        for (var key in obj) {
+            msgArr.push(key + '=' + obj[key]);
         }
+        return msgArr.join(', ');
     };
 
     function createInfoDom() {
@@ -60,6 +67,13 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;');
+    }
+
+    function isObject(value) {
+        // Avoid a V8 JIT bug in Chrome 19-20.
+        // See https://code.google.com/p/v8/issues/detail?id=2291 for more details.
+        var type = typeof value;
+        return type === 'function' || (!!value && type == 'object');
     }
 
 })();
