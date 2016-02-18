@@ -60,7 +60,7 @@ define(function(require) {
         mergeOption: function (newOption) {
             var thisOption = this.option;
 
-            newOption && zrUtil.merge(thisOption, newOption);
+            newOption && zrUtil.merge(thisOption, newOption, true);
 
             this._initDimensions();
         },
