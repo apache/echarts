@@ -66,6 +66,7 @@ define(function(require) {
             // areaStyle: {
             // },
             // smooth: false,
+            // smoothMonotone: null,
             // 拐点图形类型
             symbol: 'emptyCircle',
             // 拐点图形大小
