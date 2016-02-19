@@ -7,6 +7,8 @@ define(function (require) {
 
         type: 'toolbox',
 
+        layoutMode: {type: 'box', ignoreSize: true},
+
         mergeDefaultAndTheme: function (option) {
             this.$superApply('mergeDefaultAndTheme', arguments);
 
