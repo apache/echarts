@@ -23,12 +23,57 @@
                 height: 650px;
                 background: #fff;
             }
+            .code-panel {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                width: 200px;
+                border: 2px solid #555;
+            }
+            .code-line {
+                margin: 15px 5px;
+                font-size: 12px;
+            }
+            .code-line textarea{
+                width: 190px;
+                height: 80px;
+                margin-bottom: 5px;
+            }
         </style>
         <div id="main"></div>
+
+        <div class="code-panel">
+            <div class="code-line">
+                <textarea id="code1">
+chart.setOption({backgroundColor: '#000'});
+                </textarea>
+                <input type="button" value="run" onclick="runCode('code1');"/>
+                Then press restore buttton.
+            </div>
+            <div class="code-line">
+                <textarea id="code2">
+chart.setOption({backgroundColor: '#fff'});
+                </textarea>
+                <input type="button" value="run" onclick="runCode('code2');"/>
+            </div>
+            <div class="code-line">
+                <textarea id="code3">
+chart.setOption({
+    series: [
+        {id: 'pie0', label: {normal: {position: 'inside'}}}
+    ]
+});
+                </textarea>
+                <input type="button" value="run" onclick="runCode('code3');"/>
+            </div>
+        </div>
 
         <script src="data/timelineGDP.js"></script>
 
         <script>
+
+        var chart;
+        var echarts;
 
 // markLine: {
 //     symbol: ['arrow','none'],
@@ -57,8 +102,10 @@
                 'echarts/component/legend',
                 'echarts/component/grid',
                 'echarts/component/tooltip',
-                'echarts/component/timeline'
-            ], function (echarts) {
+                'echarts/component/timeline',
+                'echarts/component/toolbox'
+            ], function (ec) {
+                echarts = ec;
 
                 chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
@@ -119,6 +166,13 @@ for (var i = 0; i < categoryData.length; i++) {
                     }
                 }
             },
+            toolbox: {
+                left: 0,
+                bottom: 0,
+                feature: {
+                    restore: {}
+                }
+            },
             title: {
                 subtext: 'Media Query 示例'
             },
@@ -154,7 +208,7 @@ for (var i = 0; i < categoryData.length; i++) {
                 {name: '第一产业', type: 'bar'},
                 {name: '第二产业', type: 'bar'},
                 {name: '第三产业', type: 'bar'},
-                {name: 'GDP占比', type: 'pie'}
+                {name: 'GDP占比', type: 'pie', id: 'pie0'}
             ]
         },
         media: [
@@ -312,7 +366,7 @@ for (var i = 0; i < categoryData.length; i++) {
                         {name: '第一产业', value: dataMap.dataPI['2002sum']},
                         {name: '第二产业', value: dataMap.dataSI['2002sum']},
                         {name: '第三产业', value: dataMap.dataTI['2002sum']}
-                    ]}
+                    ], id: 'pie0'}
                 ]
             },
             {
@@ -328,7 +382,7 @@ for (var i = 0; i < categoryData.length; i++) {
                         {name: '第一产业', value: dataMap.dataPI['2003sum']},
                         {name: '第二产业', value: dataMap.dataSI['2003sum']},
                         {name: '第三产业', value: dataMap.dataTI['2003sum']}
-                    ]}
+                    ], id: 'pie0'}
                 ]
             },
             {
@@ -344,7 +398,7 @@ for (var i = 0; i < categoryData.length; i++) {
                         {name: '第一产业', value: dataMap.dataPI['2004sum']},
                         {name: '第二产业', value: dataMap.dataSI['2004sum']},
                         {name: '第三产业', value: dataMap.dataTI['2004sum']}
-                    ]}
+                    ], id: 'pie0'}
                 ]
             },
             {
@@ -360,7 +414,7 @@ for (var i = 0; i < categoryData.length; i++) {
                         {name: '第一产业', value: dataMap.dataPI['2005sum']},
                         {name: '第二产业', value: dataMap.dataSI['2005sum']},
                         {name: '第三产业', value: dataMap.dataTI['2005sum']}
-                    ]}
+                    ], id: 'pie0'}
                 ]
             },
             {
@@ -376,7 +430,7 @@ for (var i = 0; i < categoryData.length; i++) {
                         {name: '第一产业', value: dataMap.dataPI['2006sum']},
                         {name: '第二产业', value: dataMap.dataSI['2006sum']},
                         {name: '第三产业', value: dataMap.dataTI['2006sum']}
-                    ]}
+                    ], id: 'pie0'}
                 ]
             },
             {
@@ -392,7 +446,7 @@ for (var i = 0; i < categoryData.length; i++) {
                         {name: '第一产业', value: dataMap.dataPI['2007sum']},
                         {name: '第二产业', value: dataMap.dataSI['2007sum']},
                         {name: '第三产业', value: dataMap.dataTI['2007sum']}
-                    ]}
+                    ], id: 'pie0'}
                 ]
             },
             {
@@ -408,7 +462,7 @@ for (var i = 0; i < categoryData.length; i++) {
                         {name: '第一产业', value: dataMap.dataPI['2008sum']},
                         {name: '第二产业', value: dataMap.dataSI['2008sum']},
                         {name: '第三产业', value: dataMap.dataTI['2008sum']}
-                    ]}
+                    ], id: 'pie0'}
                 ]
             },
             {
@@ -424,7 +478,7 @@ for (var i = 0; i < categoryData.length; i++) {
                         {name: '第一产业', value: dataMap.dataPI['2009sum']},
                         {name: '第二产业', value: dataMap.dataSI['2009sum']},
                         {name: '第三产业', value: dataMap.dataTI['2009sum']}
-                    ]}
+                    ], id: 'pie0'}
                 ]
             },
             {
@@ -440,7 +494,7 @@ for (var i = 0; i < categoryData.length; i++) {
                         {name: '第一产业', value: dataMap.dataPI['2010sum']},
                         {name: '第二产业', value: dataMap.dataSI['2010sum']},
                         {name: '第三产业', value: dataMap.dataTI['2010sum']}
-                    ]}
+                    ], id: 'pie0'}
                 ]
             },
             {
@@ -456,15 +510,11 @@ for (var i = 0; i < categoryData.length; i++) {
                         {name: '第一产业', value: dataMap.dataPI['2011sum']},
                         {name: '第二产业', value: dataMap.dataSI['2011sum']},
                         {name: '第三产业', value: dataMap.dataTI['2011sum']}
-                    ]}
+                    ], id: 'pie0'}
                 ]
             }
         ]
     };
-
-
-
-
 
                 chart.setOption(option);
 
@@ -474,5 +524,15 @@ for (var i = 0; i < categoryData.length; i++) {
                 window.onresize = chart.resize;
             });
         </script>
+
+
+        <script type="text/javascript">
+            function runCode(id) {
+                var textarea = document.getElementById(id);
+                var code = textarea.value;
+                (new Function('chart', 'echarts', code))(chart, echarts);
+            }
+        </script>
+
     </body>
 </html>

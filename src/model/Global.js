@@ -8,6 +8,7 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../util/model');
     var Model = require('./Model');
     var each = zrUtil.each;
     var filter = zrUtil.filter;
@@ -131,11 +132,13 @@ define(function (require) {
             function visitComponent(mainType, dependencies) {
                 var newCptOptionList = newOption[mainType];
 
-                if (!(zrUtil.isArray(newCptOptionList))) {
+                if (!zrUtil.isArray(newCptOptionList)) {
                     newCptOptionList = newCptOptionList ? [newCptOptionList] : [];
                 }
 
-                var mapResult = mappingToExists(componentsMap[mainType], newCptOptionList);
+                var mapResult = modelUtil.mappingToExists(
+                    componentsMap[mainType], newCptOptionList
+                );
 
                 makeKeyInfo(mainType, mapResult);
 
@@ -583,78 +586,6 @@ define(function (require) {
     /**
      * @inner
      */
-    function mappingToExists(existCpts, newCptOptions) {
-        // Mapping by the order by original option (but not order of
-        // new option) in merge mode. Because we should ensure
-        // some specified index (like xAxisIndex) is consistent with
-        // original option, which is easy to understand, espatially in
-        // media query. And in most case, merge option is used to
-        // update partial option but not be expected to change order.
-        newCptOptions = (newCptOptions || []).slice();
-
-        var result = map(existCpts || [], function (cpt, index) {
-            return {exist: cpt};
-        });
-
-        // Mapping by id or name if specified.
-        each(newCptOptions, function (cptOption, index) {
-            if (!isObject(cptOption)) {
-                return;
-            }
-            for (var i = 0; i < result.length; i++) {
-                var exist = result[i].exist;
-                if (!result[i].option // Consider name: two map to one.
-                    && (
-                        // id has highest priority.
-                        (cptOption.id != null && exist.id === cptOption.id + '')
-                        || (cptOption.name != null
-                            && !isIdInner(cptOption)
-                            && !isIdInner(exist)
-                            && exist.name === cptOption.name + ''
-                        )
-                    )
-                ) {
-                    result[i].option = cptOption;
-                    newCptOptions[index] = null;
-                    break;
-                }
-            }
-        });
-
-        // Otherwise mapping by index.
-        each(newCptOptions, function (cptOption, index) {
-            if (!isObject(cptOption)) {
-                return;
-            }
-
-            var i = 0;
-            for (; i < result.length; i++) {
-                var exist = result[i].exist;
-                if (!result[i].option
-                    && !isIdInner(exist)
-                    // Caution:
-                    // Do not overwrite id. But name can be overwritten,
-                    // because axis use name as 'show label text'.
-                    // 'exist' always has id and name and we dont
-                    // need to check it.
-                    && cptOption.id == null
-                ) {
-                    result[i].option = cptOption;
-                    break;
-                }
-            }
-
-            if (i >= result.length) {
-                result.push({option: cptOption});
-            }
-        });
-
-        return result;
-    }
-
-    /**
-     * @inner
-     */
     function makeKeyInfo(mainType, mapResult) {
         // We use this id to hash component models and view instances
         // in echarts. id can be specified by user, or auto generated.
@@ -767,14 +698,6 @@ define(function (require) {
                 return cpt.subType === condition.subType;
             })
             : components;
-    }
-
-    /**
-     * @inner
-     */
-    function isIdInner(cptOption) {
-        // FIXME: Where to put this constant.
-        return cptOption && cptOption.id && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
     }
 
     /**

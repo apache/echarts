@@ -307,5 +307,92 @@ define(function(require) {
         }
     };
 
+    /**
+     * Mapping to exists for merge.
+     *
+     * @public
+     * @param {Array.<Object>|Array.<module:echarts/model/Component>} exists
+     * @param {Object|Array.<Object>} newCptOptions
+     * @return {Array.<Object>} Result, like [{exist: ..., option: ...}, {}],
+     *                          which order is the same as exists.
+     */
+    modelUtil.mappingToExists = function (exists, newCptOptions) {
+        // Mapping by the order by original option (but not order of
+        // new option) in merge mode. Because we should ensure
+        // some specified index (like xAxisIndex) is consistent with
+        // original option, which is easy to understand, espatially in
+        // media query. And in most case, merge option is used to
+        // update partial option but not be expected to change order.
+        newCptOptions = (newCptOptions || []).slice();
+
+        var result = zrUtil.map(exists || [], function (obj, index) {
+            return {exist: obj};
+        });
+
+        // Mapping by id or name if specified.
+        zrUtil.each(newCptOptions, function (cptOption, index) {
+            if (!zrUtil.isObject(cptOption)) {
+                return;
+            }
+
+            for (var i = 0; i < result.length; i++) {
+                var exist = result[i].exist;
+                if (!result[i].option // Consider name: two map to one.
+                    && (
+                        // id has highest priority.
+                        (cptOption.id != null && exist.id === cptOption.id + '')
+                        || (cptOption.name != null
+                            && !isIdInner(cptOption)
+                            && !isIdInner(exist)
+                            && exist.name === cptOption.name + ''
+                        )
+                    )
+                ) {
+                    result[i].option = cptOption;
+                    newCptOptions[index] = null;
+                    break;
+                }
+            }
+        });
+
+        // Otherwise mapping by index.
+        zrUtil.each(newCptOptions, function (cptOption, index) {
+            if (!zrUtil.isObject(cptOption)) {
+                return;
+            }
+
+            var i = 0;
+            for (; i < result.length; i++) {
+                var exist = result[i].exist;
+                if (!result[i].option
+                    && !isIdInner(exist)
+                    // Caution:
+                    // Do not overwrite id. But name can be overwritten,
+                    // because axis use name as 'show label text'.
+                    // 'exist' always has id and name and we dont
+                    // need to check it.
+                    && cptOption.id == null
+                ) {
+                    result[i].option = cptOption;
+                    break;
+                }
+            }
+
+            if (i >= result.length) {
+                result.push({option: cptOption});
+            }
+        });
+
+        return result;
+    };
+
+    /**
+     * @inner
+     */
+    function isIdInner(cptOption) {
+        // FIXME: Where to put this constant.
+        return cptOption && cptOption.id && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
+    }
+
     return modelUtil;
 });

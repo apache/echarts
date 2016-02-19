@@ -7,9 +7,12 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../util/model');
+    var ComponentModel = require('./Component');
     var each = zrUtil.each;
     var clone = zrUtil.clone;
     var map = zrUtil.map;
+    var merge = zrUtil.merge;
 
     var QUERY_REG = /^(min|max)?(.+)$/;
 
@@ -80,13 +83,13 @@ define(function (require) {
          * @private
          * @type {Array.<number>}
          */
-        this._timelineOptions;
+        this._timelineOptions = [];
 
         /**
          * @private
          * @type {Array.<Object>}
          */
-        this._mediaList;
+        this._mediaList = [];
 
         /**
          * @private
@@ -135,9 +138,27 @@ define(function (require) {
             // FIXME
             // 如果 timeline options 或者 media 中设置了某个属性，而baseOption中没有设置，则进行警告。
 
-            this._optionBackup = parseRawOption.call(
-                this, rawOption, optionPreprocessorFuncs
-            );
+            var oldOptionBackup = this._optionBackup;
+            var newOptionBackup = parseRawOption.call(this, rawOption, optionPreprocessorFuncs);
+
+            // For setOption at second time (using merge mode);
+            if (oldOptionBackup) {
+                // Only baseOption can be merged.
+                newOptionBackup.baseOption = mergeOption(
+                    oldOptionBackup.baseOption, newOptionBackup.baseOption
+                );
+                if (!newOptionBackup.timelineOptions.length) {
+                    newOptionBackup.timelineOptions = oldOptionBackup.timelineOptions;
+                }
+                if (!newOptionBackup.mediaList.length) {
+                    newOptionBackup.mediaList = oldOptionBackup.mediaList;
+                }
+                if (!newOptionBackup.mediaDefault) {
+                    newOptionBackup.mediaDefault = oldOptionBackup.mediaDefault;
+                }
+            }
+
+            this._optionBackup = newOptionBackup;
         },
 
         /**
@@ -338,6 +359,59 @@ define(function (require) {
     function indicesEquals(indices1, indices2) {
         // indices is always order by asc and has only finite number.
         return indices1.join(',') === indices2.join(',');
+    }
+
+    /**
+     * Consider case:
+     * `chart.setOption(opt1);`
+     * Then user do some interaction like dataZoom, dataView changing.
+     * `chart.setOption(opt2);`
+     * Then user press 'reset button' in toolbox.
+     *
+     * After doing that all of the interaction effects should be reset, the
+     * chart should be the same as the result of invoke
+     * `chart.setOption(opt1); chart.setOption(opt2);`.
+     *
+     * Although it is not able ensure that
+     * `chart.setOption(opt1); chart.setOption(opt2);` is equivalents to
+     * `chart.setOption(merge(opt1, opt2));` exactly,
+     * this might be the only simple way to implement that feature.
+     *
+     * MEMO: We've considered some other approaches:
+     * 1. Each model handle its self restoration but not uniform treatment.
+     *     (Too complex in logic and error-prone)
+     * 2. Use a shadow ecModel. (Performace expensive)
+     */
+    function mergeOption(oldOption, newOption) {
+        oldOption = oldOption || {};
+        newOption = newOption || {};
+
+        each(newOption, function (newCptOpt, mainType) {
+            if (newCptOpt == null) {
+                return;
+            }
+
+            var oldCptOpt = oldOption[mainType];
+
+            if (!ComponentModel.hasClass(mainType)) {
+                oldOption[mainType] = merge(oldCptOpt, newCptOpt, true);
+            }
+            else {
+                if (!zrUtil.isArray(newCptOpt)) {
+                    newCptOpt = newCptOpt ? [newCptOpt] : [];
+                }
+
+                var mapResult = modelUtil.mappingToExists(oldCptOpt || [], newCptOpt);
+
+                oldOption[mainType] = map(mapResult, function (item) {
+                    return (item.option && item.exist)
+                        ? merge(item.exist, item.option, true)
+                        : (item.exist || item.option);
+                });
+            }
+        });
+
+        return oldOption;
     }
 
     return OptionManager;
