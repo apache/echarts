@@ -498,7 +498,7 @@
             // Init controller.
             if (!controller) {
                 controller = this._controller = new RoamController(api.getZr());
-                controller.enable();
+                controller.enable(this.seriesModel.get('roam'));
                 controller.on('pan', bind(this._onPan, this));
                 controller.on('zoom', bind(this._onZoom, this));
             }
@@ -519,24 +519,8 @@
 
         /**
          * @private
-         * @param {string} type 'zoom' or 'move'
-         */
-        _isRoamEnabled: function (type) {
-            var roam = this.seriesModel.get('roam');
-
-            return roam === true
-                || ((roam === 'scale' || roam === 'zoom') && type === 'zoom')
-                || (roam === type && type === 'move');
-        },
-
-        /**
-         * @private
          */
         _onPan: function (dx, dy) {
-            if (!this._isRoamEnabled('move')) {
-                return;
-            }
-
             this._mayClick = false;
 
             if (this._state !== 'animating'
@@ -571,10 +555,6 @@
          * @private
          */
         _onZoom: function (scale, mouseX, mouseY) {
-            if (!this._isRoamEnabled('zoom')) {
-                return;
-            }
-
             this._mayClick = false;
 
             if (this._state !== 'animating') {

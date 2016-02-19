@@ -152,20 +152,28 @@ define(function (require) {
         Eventful.call(this);
 
         /**
-         * @param  {boolean} [controlType=true] Specify the control type, which can be only 'pan' or 'zoom'
+         * Notice: only enable needed types. For example, if 'zoom'
+         * is not needed, 'zoom' should not be enabled, otherwise
+         * default mousewheel behaviour (scroll page) will be disabled.
+         *
+         * @param  {boolean|string} [controlType=true] Specify the control type,
+         *                          which can be null/undefined or true/false
+         *                          or 'pan/move' or 'zoom'/'scale'
          */
         this.enable = function (controlType) {
             // Disable previous first
             this.disable();
+
             if (controlType == null) {
                 controlType = true;
             }
-            if (controlType && controlType !== 'scale') {
+
+            if (controlType === true || (controlType === 'move' || controlType === 'pan')) {
                 zr.on('mousedown', mousedownHandler);
                 zr.on('mousemove', mousemoveHandler);
                 zr.on('mouseup', mouseupHandler);
             }
-            if (controlType && controlType !== 'move') {
+            if (controlType === true || (controlType === 'scale' || controlType === 'zoom')) {
                 zr.on('mousewheel', mousewheelHandler);
                 zr.on('pinch', pinchHandler);
             }
