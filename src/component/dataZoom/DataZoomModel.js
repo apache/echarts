@@ -369,29 +369,56 @@ define(function(require) {
 
         /**
          * @public
-         * @return {Array.<number>}
+         * @return {Array.<number>} [startPercent, endPercent]
          */
         getPercentRange: function () {
-            // Find the first hosted axisProxy
-            var axisProxies = this._axisProxies;
-            for (var key in axisProxies) {
-                if (axisProxies.hasOwnProperty(key) && axisProxies[key].hostedBy(this)) {
-                    return axisProxies[key].getDataPercentWindow();
+            var axisProxy = findRepresentativeAxisProxy(this);
+            if (axisProxy) {
+                return axisProxy.getDataPercentWindow();
+            }
+        },
+
+        /**
+         * @public
+         * For example, chart.getModel().getComponent('dataZoom').getValueRange('y', 0);
+         *
+         * @param {string} [axisDimName]
+         * @param {number} [axisIndex]
+         * @return {Array.<number>} [startValue, endValue]
+         */
+        getValueRange: function (axisDimName, axisIndex) {
+            if (axisDimName == null && axisIndex == null) {
+                var axisProxy = findRepresentativeAxisProxy(this);
+                if (axisProxy) {
+                    return axisProxy.getDataValueWindow();
                 }
             }
-
-            // If no hosted axis find not hosted axisProxy.
-            // Consider this case: dataZoomModel1 and dataZoomModel2 control the same axis,
-            // and the option.start or option.end settings are different. The percentRange
-            // show follow axisProxy.
-            // (We encounter this problem in toolbox data zoom.)
-            for (var key in axisProxies) {
-                if (axisProxies.hasOwnProperty(key) && !axisProxies[key].hostedBy(this)) {
-                    return axisProxies[key].getDataPercentWindow();
-                }
+            else {
+                return this.getAxisProxy(axisDimName, axisIndex).getDataValueWindow();
             }
         }
 
     });
+
+    function findRepresentativeAxisProxy(dataZoomModel) {
+        // Find the first hosted axisProxy
+        var axisProxies = dataZoomModel._axisProxies;
+        for (var key in axisProxies) {
+            if (axisProxies.hasOwnProperty(key) && axisProxies[key].hostedBy(dataZoomModel)) {
+                return axisProxies[key];
+            }
+        }
+
+        // If no hosted axis find not hosted axisProxy.
+        // Consider this case: dataZoomModel1 and dataZoomModel2 control the same axis,
+        // and the option.start or option.end settings are different. The percentRange
+        // should follow axisProxy.
+        // (We encounter this problem in toolbox data zoom.)
+        for (var key in axisProxies) {
+            if (axisProxies.hasOwnProperty(key) && !axisProxies[key].hostedBy(dataZoomModel)) {
+                return axisProxies[key];
+            }
+        }
+    }
 
 });
