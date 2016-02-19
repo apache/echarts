@@ -172,20 +172,21 @@ define(function (require) {
         var labelModel = itemModel.getModel(normalLabelAccessPath);
         var hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
         var lastDim = data.dimensions[data.dimensions.length - 1];
-        var labelText = seriesModel.getFormattedLabel(idx, 'normal')
-                    || data.get(lastDim, idx);
         var elStyle = symbolPath.style;
 
         if (labelModel.get('show')) {
             graphic.setText(elStyle, labelModel, color);
-            elStyle.text = labelText;
+            elStyle.text = seriesModel.getFormattedLabel(idx, 'normal')
+                || data.get(lastDim, idx);
         }
         else {
             elStyle.text = '';
         }
+
         if (hoverLabelModel.getShallow('show')) {
             graphic.setText(hoverStyle, hoverLabelModel, color);
-            hoverStyle.text = labelText;
+            hoverStyle.text = seriesModel.getFormattedLabel(idx, 'emphasis')
+                || data.get(lastDim, idx);
         }
         else {
             hoverStyle.text = '';
