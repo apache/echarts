@@ -4,8 +4,6 @@ define(function (require) {
     var Path = require('zrender/graphic/Path');
     var vec2 = require('zrender/core/vector');
 
-    var mathMin = Math.min;
-    var mathMax = Math.max;
     var vec2Min = vec2.min;
     var vec2Max = vec2.max;
 
@@ -18,13 +16,13 @@ define(function (require) {
     var cp1 = [];
 
     function drawSegment(
-        ctx, points, start, allLen, segLen,
-        dir, smoothMin, smoothMax, smooth
+        ctx, points, start, stop, len,
+        dir, smoothMin, smoothMax, smooth, smoothMonotone
     ) {
         var idx = start;
-        for (var k = 0; k < segLen; k++) {
+        for (var k = 0; k < len; k++) {
             var p = points[idx];
-            if (idx >= allLen || idx < 0 || isNaN(p[0]) || isNaN(p[1])) {
+            if (idx >= stop || idx < 0 || isNaN(p[0]) || isNaN(p[1])) {
                 break;
             }
 
@@ -36,15 +34,17 @@ define(function (require) {
                 if (smooth > 0) {
                     var prevIdx = idx - dir;
                     var nextIdx = idx + dir;
+
+                    var ratioNextSeg = 0.5;
+                    var prevP = points[prevIdx];
+                    var nextP = points[nextIdx];
                     // Last point
-                    if ((dir > 0 && idx === allLen - 1)
-                        || (dir <= 0 && idx  === 0)
+                    if ((dir > 0 && (idx === len - 1 || isNaN(nextP[0]) || isNaN(nextP[1])))
+                        || (dir <= 0 && (idx === 0 ||  isNaN(nextP[0]) || isNaN(nextP[1])))
                     ) {
                         v2Copy(cp1, p);
                     }
                     else {
-                        var prevP = points[prevIdx];
-                        var nextP = points[nextIdx];
                         // If next data is null
                         if (isNaN(nextP[0]) || isNaN(nextP[1])) {
                             nextP = p;
@@ -52,7 +52,22 @@ define(function (require) {
 
                         vec2.sub(v, nextP, prevP);
 
-                        scaleAndAdd(cp1, p, v, -smooth / 2);
+                        var lenPrevSeg;
+                        var lenNextSeg;
+                        if (smoothMonotone === 'x' || smoothMonotone === 'y') {
+                            var dim = smoothMonotone === 'x' ? 0 : 1;
+                            lenPrevSeg = Math.abs(p[dim] - prevP[dim]);
+                            lenNextSeg = Math.abs(p[dim] - nextP[dim]);
+                        }
+                        else {
+                            lenPrevSeg = vec2.dist(p, prevP);
+                            lenNextSeg = vec2.dist(p, nextP);
+                        }
+
+                        // Use ratio of seg length
+                        ratioNextSeg = lenNextSeg / (lenNextSeg + lenPrevSeg);
+
+                        scaleAndAdd(cp1, p, v, -smooth * (1 - ratioNextSeg));
                     }
                     // Smooth constraint
                     vec2Min(cp0, cp0, smoothMax);
@@ -66,7 +81,7 @@ define(function (require) {
                         p[0], p[1]
                     );
                     // cp0 of next segment
-                    scaleAndAdd(cp0, p, v, smooth / 2);
+                    scaleAndAdd(cp0, p, v, smooth * ratioNextSeg);
                 }
                 else {
                     ctx.lineTo(p[0], p[1]);
@@ -108,7 +123,9 @@ define(function (require) {
 
                 smooth: 0,
 
-                smoothConstraint: true
+                smoothConstraint: true,
+
+                smoothMonotone: null
             },
 
             style: {
@@ -128,7 +145,8 @@ define(function (require) {
                 while (i < len) {
                     i += drawSegment(
                         ctx, points, i, len, len,
-                        1, result.min, result.max, shape.smooth
+                        1, result.min, result.max, shape.smooth,
+                        shape.smoothMonotone
                     ) + 1;
                 }
             }
@@ -140,11 +158,17 @@ define(function (require) {
 
             shape: {
                 points: [],
+
                 // Offset between stacked base points and points
                 stackedOnPoints: [],
+
                 smooth: 0,
+
                 stackedOnSmooth: 0,
-                smoothConstraint: true
+
+                smoothConstraint: true,
+
+                smoothMonotone: null
             },
 
             buildPath: function (ctx, shape) {
@@ -153,16 +177,19 @@ define(function (require) {
 
                 var i = 0;
                 var len = points.length;
+                var smoothMonotone = shape.smoothMonotone;
                 var bbox = getBoundingBox(points, shape.smoothConstraint);
                 var stackedOnBBox = getBoundingBox(stackedOnPoints, shape.smoothConstraint);
                 while (i < len) {
                     var k = drawSegment(
                         ctx, points, i, len, len,
-                        1, bbox.min, bbox.max, shape.smooth
+                        1, bbox.min, bbox.max, shape.smooth,
+                        smoothMonotone
                     );
                     drawSegment(
                         ctx, stackedOnPoints, i + k - 1, len, k,
-                        -1, stackedOnBBox.min, stackedOnBBox.max, shape.stackedOnSmooth
+                        -1, stackedOnBBox.min, stackedOnBBox.max, shape.stackedOnSmooth,
+                        smoothMonotone
                     );
                     i += k + 1;
 

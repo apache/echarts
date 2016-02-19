@@ -294,10 +294,12 @@ define(function(require) {
 
             var smooth = seriesModel.get('smooth');
             smooth = getSmooth(seriesModel.get('smooth'));
-            polyline.shape.smooth = smooth;
+            polyline.setShape({
+                smooth: smooth,
+                smoothMonotone: seriesModel.get('smoothMonotone')
+            });
 
             if (polygon) {
-                var polygonShape = polygon.shape;
                 var stackedOn = data.stackedOn;
                 var stackedOnSmooth = 0;
 
@@ -309,14 +311,17 @@ define(function(require) {
                         lineJoin: 'bevel'
                     }
                 ));
-                polygonShape.smooth = smooth;
 
                 if (stackedOn) {
                     var stackedOnSeries = stackedOn.hostModel;
                     stackedOnSmooth = getSmooth(stackedOnSeries.get('smooth'));
                 }
 
-                polygonShape.stackedOnSmooth = stackedOnSmooth;
+                polygon.setShape({
+                    smooth: smooth,
+                    stackedOnSmooth: stackedOnSmooth,
+                    smoothMonotone: seriesModel.get('smoothMonotone')
+                });
             }
 
             this._data = data;
