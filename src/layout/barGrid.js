@@ -158,6 +158,10 @@ define(function(require) {
             var coords = cartesian.dataToPoints(data, true);
             lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 
+            data.setLayout({
+                offset: columnOffset,
+                size: columnWidth
+            });
             data.each(valueAxis.dim, function (value, idx) {
                 // 空数据
                 if (isNaN(value)) {
@@ -205,6 +209,7 @@ define(function(require) {
                     height: height
                 });
             }, true);
+
         }, this);
     }
 

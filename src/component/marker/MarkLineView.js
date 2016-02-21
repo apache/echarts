@@ -202,6 +202,13 @@ define(function (require) {
                         numberUtil.parsePercent(yPx, api.getHeight())
                     ];
                 }
+                // Chart like bar may have there own marker positioning logic
+                else if (seriesModel.getMarkerPosition) {
+                    // Use the getMarkerPoisition
+                    point = seriesModel.getMarkerPosition(
+                        data.getValues(data.dimensions, idx)
+                    );
+                }
                 else {
                     var x = data.get(dims[0], idx);
                     var y = data.get(dims[1], idx);
