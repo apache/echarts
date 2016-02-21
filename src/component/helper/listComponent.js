@@ -24,12 +24,16 @@ define(function (require) {
          * @param {module:echarts/ExtensionAPI}
          */
         layout: function (group, componentModel, api) {
+            var rect = layout.getLayoutRect(componentModel.getBoxLayoutParams(), {
+                width: api.getWidth(),
+                height: api.getHeight()
+            }, componentModel.get('padding'));
             layout.box(
                 componentModel.get('orient'),
                 group,
                 componentModel.get('itemGap'),
-                api.getWidth(),
-                api.getHeight()
+                rect.width,
+                rect.height
             );
 
             positionGroup(group, componentModel, api);

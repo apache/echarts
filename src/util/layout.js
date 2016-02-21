@@ -227,6 +227,17 @@ define(function(require) {
                 top = containerHeight - height - verticalMargin;
                 break;
         }
+        // If something is wrong and left, top, width, height are calculated as NaN
+        left = left || 0;
+        top = top || 0;
+        if (isNaN(width)) {
+            // Width may be NaN if only one value is given except width
+            width = containerWidth - left - (right || 0);
+        }
+        if (isNaN(height)) {
+            // Height may be NaN if only one value is given except height
+            height = containerHeight - top - (bottom || 0);
+        }
 
         var rect = new BoundingRect(left + margin[3], top + margin[0], width, height);
         rect.margin = margin;

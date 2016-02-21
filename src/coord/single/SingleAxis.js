@@ -34,7 +34,7 @@ define(function (require) {
          *  - 'left'
          *  - 'right'
          *  @type {string}
-         */ 
+         */
         this.position = position || 'bottom';
 
         /**
@@ -49,7 +49,7 @@ define(function (require) {
          * @type {number}
          */
         this._labelInterval = null;
-        
+
     };
 
     SingleAxis.prototype = {
@@ -64,7 +64,7 @@ define(function (require) {
 
         /**
          * Judge the orient of the axis.
-         * @return {boolean} 
+         * @return {boolean}
          */
         isHorizontal: function () {
             var position = this.position;
@@ -74,7 +74,7 @@ define(function (require) {
 
         /**
          * Get interval of the axis label.
-         * @return {number} 
+         * @return {number}
          */
         getLabelInterval: function () {
             var labelInterval = this._labelInterval;
@@ -89,16 +89,17 @@ define(function (require) {
                 }
                 labelInterval = this._labelInterval =
                     axisHelper.getAxisLabelInterval(
-                    zrUtil.map(this.scale.getTicks(), this.dataToCoord, this),
-                    axisModel.getFormattedLabels(),
-                    labelModel.getModel('textStyle').getFont(),
-                    this.isHorizontal());
+                        zrUtil.map(this.scale.getTicks(), this.dataToCoord, this),
+                        axisModel.getFormattedLabels(),
+                        labelModel.getModel('textStyle').getFont(),
+                        this.isHorizontal()
+                    );
             }
             return labelInterval;
         },
 
         /**
-         * Convert the local coord(processed by dataToCoord()) 
+         * Convert the local coord(processed by dataToCoord())
          * to global coord(concrete pixel coord).
          * designated by module:echarts/coord/single/Single.
          * @type {Function}
