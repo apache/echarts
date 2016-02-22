@@ -61,6 +61,11 @@ define(function (require) {
     function ECharts (dom, theme, opts) {
         opts = opts || {};
 
+        // Get theme by name
+        if (typeof theme === 'string') {
+            theme = themeStorage[theme];
+        }
+
         if (theme) {
             each(optionPreprocessorFuncs, function (preProcess) {
                 preProcess(theme);
@@ -89,10 +94,6 @@ define(function (require) {
             devicePixelRatio: opts.devicePixelRatio
         });
 
-        // Get theme by name
-        if (typeof theme === 'string') {
-            theme = themeStorage[theme];
-        }
         /**
          * @type {Object}
          * @private

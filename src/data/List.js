@@ -800,9 +800,17 @@ define(function (require) {
     /**
      * Set layout property.
      * @param {string} key
-     * @param {*} val
+     * @param {*} [val]
      */
     listProto.setLayout = function (key, val) {
+        if (isObject(key)) {
+            for (var name in key) {
+                if (key.hasOwnProperty(name)) {
+                    this.setLayout(name, key[name]);
+                }
+            }
+            return;
+        }
         this._layout[key] = val;
     };
 

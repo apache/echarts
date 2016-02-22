@@ -96,6 +96,13 @@ define(function (require) {
                         numberUtil.parsePercent(yPx, api.getHeight())
                     ];
                 }
+                // Chart like bar may have there own marker positioning logic
+                else if (seriesModel.getMarkerPosition) {
+                    // Use the getMarkerPoisition
+                    point = seriesModel.getMarkerPosition(
+                        mpData.getValues(mpData.dimensions, idx)
+                    );
+                }
                 else if (coordSys) {
                     var x = mpData.get(dims[0], idx);
                     var y = mpData.get(dims[1], idx);
