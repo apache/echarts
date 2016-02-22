@@ -34,8 +34,7 @@ define(function (require) {
         position: 'bottom',
 
         orient: 'horizontal',
-
-        singleIndex: 0,
+        // singleIndex: 0,
 
         axisLine: {
             show: true,

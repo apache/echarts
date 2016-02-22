@@ -165,4 +165,5 @@ pip-log.txt
 node_modules
 
 map/tool
+/lib
 todo
