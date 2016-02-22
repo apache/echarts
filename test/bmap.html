@@ -584,7 +584,7 @@
                         {
                             name: 'pm2.5',
                             type: 'scatter',
-                            coordinateSystem: 'geo',
+                            coordinateSystem: 'bmap',
                             data: convertData(data),
                             symbolSize: function (val) {
                                 return val[2] / 10;
@@ -608,7 +608,7 @@
                         {
                             name: 'Top 5',
                             type: 'effectScatter',
-                            coordinateSystem: 'geo',
+                            coordinateSystem: 'bmap',
                             data: convertData(data.sort(function (a, b) {
                                 return b.value - a.value;
                             }).slice(0, 6)),
