@@ -258,7 +258,7 @@ define(function(require) {
                 }
 
                 // Update clipPath
-                lineGroup.setClipPath(createClipShape(coordSys, hasAnimation, seriesModel));
+                lineGroup.setClipPath(createClipShape(coordSys, false, seriesModel));
 
                 // Always update, or it is wrong in the case turning on legend
                 // because points are not changed
