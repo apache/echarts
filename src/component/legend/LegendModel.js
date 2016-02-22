@@ -12,7 +12,8 @@ define(function(require) {
         dependencies: ['series'],
 
         layoutMode: {
-            type: 'box'
+            type: 'box',
+            ignoreSize: true
         },
 
         init: function (option, parentModel, ecModel) {
