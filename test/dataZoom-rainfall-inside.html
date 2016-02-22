@@ -38,9 +38,9 @@
                     renderer: 'canvas'
                 });
 
-            chart.showLoading({
-                text : '正在读取数据中...'
-            });
+                chart.showLoading({
+                    text : '正在读取数据中...'
+                });
 
                 var xAxisData = [];
                 var data1 = [];
@@ -169,6 +169,9 @@
                         }
                     ]
                 });
+
+                chart.hideLoading();
+
             })
 
         </script>

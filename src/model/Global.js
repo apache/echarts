@@ -67,7 +67,7 @@ define(function (require) {
             var optionManager = this._optionManager;
 
             if (!type || type === 'recreate') {
-                var baseOption = optionManager.mountOption();
+                var baseOption = optionManager.mountOption(type === 'recreate');
 
                 if (!this.option || type === 'recreate') {
                     initBase.call(this, baseOption);

@@ -5,6 +5,7 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
+    var axisHelper = require('../../coord/axisHelper');
     var each = zrUtil.each;
     var asc = numberUtil.asc;
 
@@ -164,6 +165,10 @@ define(function(require) {
         },
 
         /**
+         * Notice: reset should not be called before series.restoreData() called,
+         * so it is recommanded to be called in "process stage" but not "model init
+         * stage".
+         *
          * @param {module: echarts/component/dataZoom/DataZoomModel} model
          */
         reset: function (model) {
@@ -171,14 +176,15 @@ define(function(require) {
                 return;
             }
 
+            var opt = model.option;
+
             // Process axis data
             var axisDim = this._dimName;
             var axisModel = this.getAxisModel();
-            var isCategoryFilter = axisModel.get('type') === 'category';
             var seriesModels = this.getTargetSeriesModels();
 
             var dataExtent = calculateDataExtent(axisDim, seriesModels);
-            var dataWindow = calculateDataWindow(model, dataExtent, isCategoryFilter);
+            var dataWindow = calculateDataWindow(opt, dataExtent, axisModel);
 
             // Record data window and data extent.
             this._dataExtent = dataExtent.slice();
@@ -236,7 +242,7 @@ define(function(require) {
     };
 
     function calculateDataExtent(axisDim, seriesModels) {
-        var dataExtent = [Number.MAX_VALUE, Number.MIN_VALUE];
+        var dataExtent = [Infinity, -Infinity];
 
         each(seriesModels, function (seriesModel) {
             var seriesData = seriesModel.getData();
@@ -252,39 +258,43 @@ define(function(require) {
         return dataExtent;
     }
 
-    function calculateDataWindow(dataZoomModel, dataExtent, isCategoryFilter) {
+    function calculateDataWindow(opt, dataExtent, axisModel) {
         var percentExtent = [0, 100];
-        var modelOption = dataZoomModel.option;
         var percentWindow = [
-            modelOption.start,
-            modelOption.end
+            opt.start,
+            opt.end
         ];
-        var valueWindow = [
-            modelOption.startValue,
-            modelOption.endValue
-        ];
-        var mathFn = ['floor', 'ceil'];
+
+        var scale = axisHelper.createScaleByModel(axisModel);
+        var valueWindow = [];
+
+        each(['startValue', 'endValue'], function (prop) {
+            valueWindow.push(
+                opt[prop] != null
+                    ? scale.parse(opt[prop])
+                    : null
+            );
+        });
 
         // Normalize bound.
         each([0, 1], function (idx) {
             var boundValue = valueWindow[idx];
-            var boundPercent;
-            var calcuPercent = true;
+            var boundPercent = percentWindow[idx];
 
-            if (isInvalidNumber(boundValue)) {
-                boundPercent = percentWindow[idx];
-                if (isInvalidNumber(boundPercent)) {
+            // start/end has higher priority over startValue/endValue,
+            // because start/end can be consistent among different type
+            // of axis but startValue/endValue not.
+
+            if (boundPercent != null || boundValue == null) {
+                if (boundPercent == null) {
                     boundPercent = percentExtent[idx];
                 }
-                boundValue = numberUtil.linearMap(
+                // Use scale.parse to math round for category or time axis.
+                boundValue = scale.parse(numberUtil.linearMap(
                     boundPercent, percentExtent, dataExtent, true
-                );
-                calcuPercent = false;
+                ));
             }
-            if (isCategoryFilter) {
-                boundValue = Math[mathFn[idx]](boundValue);
-            }
-            if (calcuPercent) {
+            else { // boundPercent == null && boundValue != null
                 boundPercent = numberUtil.linearMap(
                     boundValue, dataExtent, percentExtent, true
                 );
@@ -297,10 +307,6 @@ define(function(require) {
             valueWindow: asc(valueWindow),
             percentWindow: asc(percentWindow)
         };
-    }
-
-    function isInvalidNumber(val) {
-        return isNaN(val) || val == null;
     }
 
     return AxisProxy;

@@ -69,6 +69,15 @@ define(function(require) {
     function isStackable(axisType) {
         return axisType !== 'category' && axisType !== 'time';
     }
+
+    function getDimTypeByAxis(axisType) {
+        return axisType === 'category'
+            ? 'ordinal'
+            : axisType === 'time'
+            ? 'time'
+            : 'float';
+    }
+
     /**
      * Creaters for each coord system.
      * @return {Object} {dimensions, categoryAxisModel};
@@ -80,26 +89,28 @@ define(function(require) {
             var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
             var xAxisType = xAxisModel.get('type');
             var yAxisType = yAxisModel.get('type');
-            var isYAxisCategory = yAxisType === 'category';
-            var isXAxisCategory = xAxisType === 'category';
 
-            var dimensions = [{
-                name: 'x',
-                type: isXAxisCategory ? 'ordinal' : 'float',
-                stackable: isStackable(xAxisType)
-            }, {
-                name: 'y',
-                // If two category axes
-                type: isYAxisCategory ? 'ordinal' : 'float',
-                stackable: isStackable(yAxisType)
-            }];
+            var dimensions = [
+                {
+                    name: 'x',
+                    type: getDimTypeByAxis(xAxisType),
+                    stackable: isStackable(xAxisType)
+                },
+                {
+                    name: 'y',
+                    // If two category axes
+                    type: getDimTypeByAxis(yAxisType),
+                    stackable: isStackable(yAxisType)
+                }
+            ];
 
             completeDimensions(dimensions, data, ['x', 'y', 'z']);
 
             return {
                 dimensions: dimensions,
-                categoryAxisModel: isXAxisCategory ? xAxisModel
-                    : (isYAxisCategory ? yAxisModel : null)
+                categoryAxisModel: xAxisType === 'category'
+                    ? xAxisModel
+                    : (yAxisType === 'category' ? yAxisModel : null)
             };
         },
 
@@ -117,24 +128,29 @@ define(function(require) {
                 mainType: 'radiusAxis', filter: axisFinder
             })[0];
 
-            var isRadiusAxisCategory = radiusAxisModel.get('type') === 'category';
-            var isAngleAxisCategory = angleAxisModel.get('type') === 'category';
-            var dimensions = [{
-                name: 'radius',
-                type: isRadiusAxisCategory ? 'ordinal' : 'float',
-                stackable: isStackable(radiusAxisModel.get('type'))
-            }, {
-                name: 'angle',
-                type: isAngleAxisCategory ? 'ordinal' : 'float',
-                stackable: isStackable(angleAxisModel.get('type'))
-            }];
+            var radiusAxisType = radiusAxisModel.get('type');
+            var angleAxisType = angleAxisModel.get('type');
+
+            var dimensions = [
+                {
+                    name: 'radius',
+                    type: getDimTypeByAxis(radiusAxisType),
+                    stackable: isStackable(radiusAxisType)
+                },
+                {
+                    name: 'angle',
+                    type: getDimTypeByAxis(angleAxisType),
+                    stackable: isStackable(angleAxisType)
+                }
+            ];
 
             completeDimensions(dimensions, data, ['radius', 'angle', 'value']);
 
             return {
                 dimensions: dimensions,
-                categoryAxisModel: isAngleAxisCategory ? angleAxisModel
-                    : (isRadiusAxisCategory ? radiusAxisModel : null)
+                categoryAxisModel: angleAxisType === 'category'
+                    ? angleAxisModel
+                    : (radiusAxisType === 'category' ? radiusAxisModel : null)
             };
         },
 

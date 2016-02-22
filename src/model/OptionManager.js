@@ -110,6 +110,12 @@ define(function (require) {
          * @type {Object}
          */
         this._optionBackup;
+
+        /**
+         * @private
+         * @type {Object}
+         */
+        this._newOptionBackup;
     }
 
     // timeline.notMerge is not supported in ec3. Firstly there is rearly
@@ -139,33 +145,39 @@ define(function (require) {
             // 如果 timeline options 或者 media 中设置了某个属性，而baseOption中没有设置，则进行警告。
 
             var oldOptionBackup = this._optionBackup;
-            var newOptionBackup = parseRawOption.call(this, rawOption, optionPreprocessorFuncs);
+            var newOptionBackup = this._newOptionBackup = parseRawOption.call(
+                this, rawOption, optionPreprocessorFuncs
+            );
 
             // For setOption at second time (using merge mode);
             if (oldOptionBackup) {
                 // Only baseOption can be merged.
-                newOptionBackup.baseOption = mergeOption(
-                    oldOptionBackup.baseOption, newOptionBackup.baseOption
-                );
-                if (!newOptionBackup.timelineOptions.length) {
-                    newOptionBackup.timelineOptions = oldOptionBackup.timelineOptions;
+                mergeOption(oldOptionBackup.baseOption, newOptionBackup.baseOption);
+
+                if (newOptionBackup.timelineOptions.length) {
+                    oldOptionBackup.timelineOptions = newOptionBackup.timelineOptions;
                 }
-                if (!newOptionBackup.mediaList.length) {
-                    newOptionBackup.mediaList = oldOptionBackup.mediaList;
+                if (newOptionBackup.mediaList.length) {
+                    oldOptionBackup.mediaList = newOptionBackup.mediaList;
                 }
-                if (!newOptionBackup.mediaDefault) {
-                    newOptionBackup.mediaDefault = oldOptionBackup.mediaDefault;
+                if (newOptionBackup.mediaDefault) {
+                    oldOptionBackup.mediaDefault = newOptionBackup.mediaDefault;
                 }
             }
-
-            this._optionBackup = newOptionBackup;
+            else {
+                this._optionBackup = newOptionBackup;
+            }
         },
 
         /**
+         * @param {boolean} isRecreate
          * @return {Object}
          */
-        mountOption: function () {
-            var optionBackup = this._optionBackup;
+        mountOption: function (isRecreate) {
+            var optionBackup = isRecreate
+                // this._optionBackup can be only used when recreate.
+                // In other cases we use model.mergeOption to handle merge.
+                ? this._optionBackup : this._newOptionBackup;
 
             // FIXME
             // 如果没有reset功能则不clone。
@@ -383,7 +395,6 @@ define(function (require) {
      * 2. Use a shadow ecModel. (Performace expensive)
      */
     function mergeOption(oldOption, newOption) {
-        oldOption = oldOption || {};
         newOption = newOption || {};
 
         each(newOption, function (newCptOpt, mainType) {
@@ -410,8 +421,6 @@ define(function (require) {
                 });
             }
         });
-
-        return oldOption;
     }
 
     return OptionManager;

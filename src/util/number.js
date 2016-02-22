@@ -158,7 +158,11 @@ define(function (require) {
     number.parseDate = function (value) {
         return value instanceof Date
             ? value
-            : new Date(typeof value === 'string' ? value.replace(/-/g, '/') : value);
+            : new Date(
+                typeof value === 'string'
+                    ? value.replace(/-/g, '/')
+                    : Math.round(value)
+            );
     };
 
     return number;

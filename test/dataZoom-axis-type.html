@@ -1,0 +1,321 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            #main {
+                position: relative;
+                text-align: center;
+                margin-right: 200px;
+            }
+            .title {
+                display: block;
+                cursor: pointer;
+                text-decoration: none;
+                clear: both;
+                text-align: center;
+                margin: 0;
+                background: #eef;
+                line-height: 22px;
+            }
+            .block {
+                display: inline-block;
+                *display: inline;
+                *zoom: 1;
+                vertical-align: top;
+                margin: 30px 0 30px 50px;
+            }
+            .block .ec {
+                width: 800px;
+                height: 240px;
+            }
+            .block .info {
+                display: block;
+                text-align: left;
+                background: #eee;
+                border-radius: 3px;
+                font-size: 12px;
+                line-height: 18px;
+                padding: 0 5px;
+            }
+            .block .info td {
+                font-size: 12px;
+                border: 1px solid #bbb;
+                padding: 1px 3px;
+            }
+            .code-panel {
+                width: 200px;
+                position: fixed;
+                top: 0;
+                right: 0;
+                border: 2px solid #aaa;
+            }
+            .code-line {
+                margin: 15px 5px;
+                font-size: 12px;
+            }
+            .code-line textarea{
+                width: 190px;
+                height: 180px;
+                margin-bottom: 5px;
+            }
+        </style>
+        <div id="main"></div>
+
+        <div class="code-panel">
+            <div class="code-line">
+                <textarea id="code1">
+chart.setOption({
+    dataZoom: [
+        {
+            id: 'xSlider',
+            startValue: '类目36',
+            endValue: '类目90'
+        }
+    ]
+});
+                </textarea>
+                chartIndex: <input id="chartIndex1" type="text" value="1"/>
+                <input type="button" value="run" onclick="runCode(1);"/>
+            </div>
+
+            <div class="code-line">
+                <textarea id="code2">
+chart.setOption({
+    dataZoom: [
+        {
+            id: 'xSlider',
+            startValue: '2011-02-04',
+            endValue: '2011-05-06'
+        }
+    ]
+});
+                </textarea>
+                chartIndex: <input id="chartIndex2" type="text" value="2"/>
+                <input type="button" value="run" onclick="runCode(2);"/>
+            </div>
+        </div>
+
+
+
+
+        <script>
+
+            var echarts;
+            var zrUtil;
+            var charts = [];
+            var els = [];
+
+            require([
+                'echarts',
+                'zrender/core/util',
+                'echarts/chart/line',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/toolbox',
+                'echarts/component/dataZoom'
+            ], function (ec, zu) {
+                echarts = ec;
+                zrUtil = zu;
+
+                renderTitle('axisType_value');
+                var data = {data1: [], data2: []};
+                for (var i = 0; i < 500; i++) {
+                    data.data1.push([random(1000), random(500), random(1)]);
+                    data.data2.push([random(1000), random(500), random(1)]);
+                }
+                makeChart(getOption(data, 'value'));
+
+
+                renderTitle('axisType_category');
+                var data = {data1: [], data2: []};
+                var xAxisData = [];
+                for (var i = 0; i < 500; i++) {
+                    data.data1.push(random(500));
+                    data.data2.push(random(500));
+                    xAxisData.push('类目' + i);
+                }
+                makeChart(getOption(data, 'category', xAxisData));
+
+
+                renderTitle('axisType_time');
+                var data = {data1: [], data2: []};
+                var baseDate = +new Date(2010, 3, 3);
+                for (var i = 0; i < 500; i++) {
+                    var date = new Date(baseDate + i * 3600 * 24 * 1000);
+                    date = [date.getFullYear(), date.getMonth() + 1, date.getDate()].join('-');
+                    data.data1.push([date, random(500)]);
+                    data.data2.push([date, random(500)]);
+                }
+                makeChart(getOption(data, 'time'));
+
+            });
+
+
+
+
+
+
+            function renderTitle(label) {
+                var containerEl = document.getElementById('main');
+                var el = document.createElement('a');
+                el.className = 'title';
+                var html = encodeHTML(label);
+                el.innerHTML = html;
+                el.href = '#' + html.replace(/\s/g, '_');
+                el.name = html.replace(/\s/g, '_');
+                containerEl.appendChild(el);
+            }
+
+            function makeChart(opt) {
+                var containerEl = document.getElementById('main');
+                var el = document.createElement('div');
+                el.className = 'block';
+                el.innerHTML = '<div class="ec"></div><div class="info"></div>';
+                containerEl.appendChild(el);
+
+                var chart = echarts.init(el.firstChild, null, {renderer: 'canvas'});
+                chart.setOption(opt);
+
+                charts.push(chart);
+                els.push(el);
+
+                chart.on('dataZoom', zrUtil.curry(renderProp, chart, el, false));
+                renderProp(chart, el, true);
+            }
+
+            function renderProp(chart, el, isInit) {
+                var resultOpt = chart.getOption();
+                var dataZoomOpt = zrUtil.map(resultOpt.dataZoom, function (rawOpt) {
+                    return ''
+                        + '<tr>'
+                        + '<td>name:</td><td>' + encodeHTML(rawOpt.name) + '</td>'
+                        + '<td>start:</td><td>' + encodeHTML(rawOpt.start) + '</td>'
+                        + '<td>end:</td><td>' + encodeHTML(rawOpt.end) + '</td>'
+                        + '<td>startValue:</td><td>' + encodeHTML(rawOpt.startValue) + '</td>'
+                        + '<td>endValue:</td><td>' + encodeHTML(rawOpt.endValue) + '</td>'
+                        + '</tr>';
+                });
+
+                el.lastChild.innerHTML = ''
+                    + (isInit ? 'ON_INIT: ' : 'ON_EVENT: ') + '<br>'
+                    + '<table><tbody>' + dataZoomOpt.join('') + '</tbody></table>';
+            }
+
+            function encodeHTML(source) {
+                return source == null
+                    ? ''
+                    : String(source)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
+            }
+
+            function random(max) {
+                return (Math.random() * max).toFixed(3);
+            };
+
+            function getOption(data, xAxisType, xAxisData) {
+                return {
+                    animation: false,
+                    legend: {
+                        data: ['n1', 'n2']
+                    },
+                    toolbox: {
+                        feature: {
+                            dataView: {},
+                            dataZoom: {show: true},
+                            restore: {show: true},
+                            saveAsImage: {}
+                        }
+                    },
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    xAxis: {
+                        type: xAxisType,
+                        splitLine: {
+                            show: true
+                        },
+                        data: xAxisData
+                    },
+                    yAxis: {
+                        type: 'value',
+                        splitLine: {
+                            show: true
+                        }
+                    },
+                    dataZoom: [
+                        {
+                            id: 'xSlider',
+                            name: 'xSlider',
+                            show: true,
+                            xAxisIndex: [0],
+                            start: 1,
+                            end: 5
+                        },
+                        {
+                            name: 'ySlider',
+                            show: true,
+                            yAxisIndex: [0],
+                            start: 0,
+                            end: 100
+                        },
+                        {
+                            name: 'xInside',
+                            type: 'inside',
+                            xAxisIndex: [0],
+                            start: 1,
+                            end: 5
+                        },
+                        {
+                            name: 'yInside',
+                            type: 'inside',
+                            yAxisIndex: [0],
+                            start: 0,
+                            end: 100
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'n1',
+                            type: 'line',
+                            symbolSize: 10,
+                            data: data.data1
+                        },
+                        {
+                            name: 'n2',
+                            type: 'line',
+                            symbolSize: 10,
+                            data: data.data2
+                        }
+                    ]
+                };
+            }
+
+
+        </script>
+
+
+        <script type="text/javascript">
+            function runCode(num) {
+                var id = 'code' + num;
+                var textarea = document.getElementById(id);
+                var chartIndex = +document.getElementById('chartIndex' + num).value;
+                var code = ''
+                    + 'var chart = charts[chartIndex];'
+                    + textarea.value
+                    + ';renderProp(chart, els[chartIndex], true);';
+                (new Function('charts', 'chartIndex', code))(charts, chartIndex);
+            }
+        </script>
+
+    </body>
+</html>
