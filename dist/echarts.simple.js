@@ -660,6 +660,337 @@ define('zrender/core/util',['require','../graphic/Gradient'],function(require) {
     return util;
 });
 
+/**
+ * 数值处理模块
+ * @module echarts/util/number
+ */
+
+define('echarts/util/number',['require','zrender/core/util'],function (require) {
+
+    var zrUtil = require('zrender/core/util');
+    var number = {};
+
+    var RADIAN_EPSILON = 1e-4;
+
+    function _trim(str) {
+        return str.replace(/^\s+/, '').replace(/\s+$/, '');
+    }
+
+    /**
+     * Linear mapping a value from domain to range
+     * @memberOf module:echarts/util/number
+     * @param  {(number|Array.<number>)} val
+     * @param  {Array.<number>} domain Domain extent domain[0] can be bigger than domain[1]
+     * @param  {Array.<number>} range  Range extent range[0] can be bigger than range[1]
+     * @param  {boolean} clamp
+     * @return {(number|Array.<number>}
+     */
+    number.linearMap = function (val, domain, range, clamp) {
+
+        if (zrUtil.isArray(val)) {
+            return zrUtil.map(val, function (v) {
+                return number.linearMap(v, domain, range, clamp);
+            });
+        }
+
+        var sub = domain[1] - domain[0];
+
+        if (sub === 0) {
+            return (range[0] + range[1]) / 2;
+        }
+        var t = (val - domain[0]) / sub;
+
+        if (clamp) {
+            t = Math.min(Math.max(t, 0), 1);
+        }
+
+        return t * (range[1] - range[0]) + range[0];
+    };
+
+    /**
+     * Convert a percent string to absolute number.
+     * Returns NaN if percent is not a valid string or number
+     * @memberOf module:echarts/util/number
+     * @param {string|number} percent
+     * @param {number} all
+     * @return {number}
+     */
+    number.parsePercent = function(percent, all) {
+        switch (percent) {
+            case 'center':
+            case 'middle':
+                percent = '50%';
+                break;
+            case 'left':
+            case 'top':
+                percent = '0%';
+                break;
+            case 'right':
+            case 'bottom':
+                percent = '100%';
+                break;
+        }
+        if (typeof percent === 'string') {
+            if (_trim(percent).match(/%$/)) {
+                return parseFloat(percent) / 100 * all;
+            }
+
+            return parseFloat(percent);
+        }
+
+        return percent == null ? NaN : +percent;
+    };
+
+    /**
+     * Fix rounding error of float numbers
+     * @param {number} x
+     * @return {number}
+     */
+    number.round = function (x) {
+        // PENDING
+        return +(+x).toFixed(12);
+    };
+
+    number.asc = function (arr) {
+        arr.sort(function (a, b) {
+            return a - b;
+        });
+        return arr;
+    };
+
+    /**
+     * Get precision
+     * @param {number} val
+     */
+    number.getPrecision = function (val) {
+        // It is much faster than methods converting number to string as follows
+        //      var tmp = val.toString();
+        //      return tmp.length - 1 - tmp.indexOf('.');
+        // especially when precision is low
+        var e = 1;
+        var count = 0;
+        while (Math.round(val * e) / e !== val) {
+            e *= 10;
+            count++;
+        }
+        return count;
+    };
+
+    /**
+     * @param {Array.<number>} dataExtent
+     * @param {Array.<number>} pixelExtent
+     * @return {number}  precision
+     */
+    number.getPixelPrecision = function (dataExtent, pixelExtent) {
+        var log = Math.log;
+        var LN10 = Math.LN10;
+        var dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
+        var sizeQuantity = Math.round(log(Math.abs(pixelExtent[1] - pixelExtent[0])) / LN10);
+        return Math.max(
+            -dataQuantity + sizeQuantity,
+            0
+        );
+    };
+
+    // Number.MAX_SAFE_INTEGER, ie do not support.
+    number.MAX_SAFE_INTEGER = 9007199254740991;
+
+    /**
+     * To 0 - 2 * PI, considering negative radian.
+     * @param {number} radian
+     * @return {number}
+     */
+    number.remRadian = function (radian) {
+        var pi2 = Math.PI * 2;
+        return (radian % pi2 + pi2) % pi2;
+    };
+
+    /**
+     * @param {type} radian
+     * @return {boolean}
+     */
+    number.isRadianAroundZero = function (val) {
+        return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
+    };
+
+    /**
+     * @param {string|Date|number} value
+     * @return {number} timestamp
+     */
+    number.parseDate = function (value) {
+        return value instanceof Date
+            ? value
+            : new Date(
+                typeof value === 'string'
+                    ? value.replace(/-/g, '/')
+                    : Math.round(value)
+            );
+    };
+
+    return number;
+});
+define('echarts/util/format',['require','zrender/core/util','./number'],function (require) {
+
+    var zrUtil = require('zrender/core/util');
+    var numberUtil = require('./number');
+
+    /**
+     * 每三位默认加,格式化
+     * @type {string|number} x
+     */
+    function addCommas(x) {
+        if (isNaN(x)) {
+            return '-';
+        }
+        x = (x + '').split('.');
+        return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,')
+               + (x.length > 1 ? ('.' + x[1]) : '');
+    }
+
+    /**
+     * @param {string} str
+     * @return {string} str
+     */
+    function toCamelCase(str) {
+        return str.toLowerCase().replace(/-(.)/g, function(match, group1) {
+            return group1.toUpperCase();
+        });
+    }
+
+    /**
+     * Normalize css liked array configuration
+     * e.g.
+     *  3 => [3, 3, 3, 3]
+     *  [4, 2] => [4, 2, 4, 2]
+     *  [4, 3, 2] => [4, 3, 2, 3]
+     * @param {number|Array.<number>} val
+     */
+    function normalizeCssArray(val) {
+        var len = val.length;
+        if (typeof (val) === 'number') {
+            return [val, val, val, val];
+        }
+        else if (len === 2) {
+            // vertical | horizontal
+            return [val[0], val[1], val[0], val[1]];
+        }
+        else if (len === 3) {
+            // top | horizontal | bottom
+            return [val[0], val[1], val[2], val[1]];
+        }
+        return val;
+    }
+
+    function encodeHTML(source) {
+        return String(source)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
+
+    function wrapVar(varName, seriesIdx) {
+        return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
+    }
+    /**
+     * Template formatter
+     * @param  {string} tpl
+     * @param  {Array.<Object>|Object} paramsList
+     * @return {string}
+     */
+    function formatTpl(tpl, paramsList) {
+        if (!zrUtil.isArray(paramsList)) {
+            paramsList = [paramsList];
+        }
+        var seriesLen = paramsList.length;
+        if (!seriesLen) {
+            return '';
+        }
+
+        var $vars = paramsList[0].$vars;
+        for (var i = 0; i < $vars.length; i++) {
+            var alias = TPL_VAR_ALIAS[i];
+            tpl = tpl.replace(wrapVar(alias),  wrapVar(alias, 0));
+        }
+        for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
+            for (var k = 0; k < $vars.length; k++) {
+                tpl = tpl.replace(
+                    wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
+                    paramsList[seriesIdx][$vars[k]]
+                );
+            }
+        }
+
+        return tpl;
+    }
+
+    /**
+     * ISO Date format
+     * @param {string} tpl
+     * @param {number} value
+     * @inner
+     */
+    function formatTime(tpl, value) {
+        if (tpl === 'week'
+            || tpl === 'month'
+            || tpl === 'quarter'
+            || tpl === 'half-year'
+            || tpl === 'year'
+        ) {
+            tpl = 'MM-dd\nyyyy';
+        }
+
+        var date = numberUtil.parseDate(value);
+        var y = date.getFullYear();
+        var M = date.getMonth() + 1;
+        var d = date.getDate();
+        var h = date.getHours();
+        var m = date.getMinutes();
+        var s = date.getSeconds();
+
+        tpl = tpl.replace('MM', s2d(M))
+            .toLowerCase()
+            .replace('yyyy', y)
+            .replace('yy', y % 100)
+            .replace('dd', s2d(d))
+            .replace('d', d)
+            .replace('hh', s2d(h))
+            .replace('h', h)
+            .replace('mm', s2d(m))
+            .replace('m', m)
+            .replace('ss', s2d(s))
+            .replace('s', s);
+
+        return tpl;
+    }
+
+    /**
+     * @param {string} str
+     * @return {string}
+     * @inner
+     */
+    function s2d(str) {
+        return str < 10 ? ('0' + str) : str;
+    }
+
+    return {
+
+        normalizeCssArray: normalizeCssArray,
+
+        addCommas: addCommas,
+
+        toCamelCase: toCamelCase,
+
+        encodeHTML: encodeHTML,
+
+        formatTpl: formatTpl,
+
+        formatTime: formatTime        
+    };
+});
 define('echarts/util/clazz',['require','zrender/core/util'],function (require) {
 
     var zrUtil = require('zrender/core/util');
@@ -1872,19 +2203,20 @@ define('echarts/model/Model',['require','zrender/core/util','../util/clazz','./m
      * @param {Object} option
      * @param {module:echarts/model/Model} parentModel
      * @param {module:echarts/model/Global} ecModel
+     * @param {Object} extraOpt
      */
-    function Model(option, parentModel, ecModel) {
+    function Model(option, parentModel, ecModel, extraOpt) {
         /**
          * @type {module:echarts/model/Model}
          * @readOnly
          */
-        this.parentModel = parentModel || null;
+        this.parentModel = parentModel;
 
         /**
          * @type {module:echarts/model/Global}
          * @readOnly
          */
-        this.ecModel = ecModel || null;
+        this.ecModel = ecModel;
 
         /**
          * @type {Object}
@@ -1892,7 +2224,15 @@ define('echarts/model/Model',['require','zrender/core/util','../util/clazz','./m
          */
         this.option = option;
 
-        this.init.apply(this, arguments);
+        // Simple optimization
+        if (this.init) {
+            if (arguments.length <= 4) {
+                this.init(option, parentModel, ecModel, extraOpt);
+            }
+            else {
+                this.init.apply(this, arguments);
+            }
+        }
     }
 
     Model.prototype = {
@@ -1903,7 +2243,7 @@ define('echarts/model/Model',['require','zrender/core/util','../util/clazz','./m
          * Model 的初始化函数
          * @param {Object} option
          */
-        init: function (option) {},
+        init: null,
 
         /**
          * 从新的 Option merge
@@ -2001,6 +2341,404 @@ define('echarts/model/Model',['require','zrender/core/util','../util/clazz','./m
     mixin(Model, require('./mixin/itemStyle'));
 
     return Model;
+});
+define('echarts/util/model',['require','./format','./number','zrender/core/util','../model/Model'],function(require) {
+
+    var formatUtil = require('./format');
+    var nubmerUtil = require('./number');
+    var zrUtil = require('zrender/core/util');
+
+    var Model = require('../model/Model');
+
+    var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
+
+    var modelUtil = {};
+
+    /**
+     * Create "each" method to iterate names.
+     *
+     * @pubilc
+     * @param  {Array.<string>} names
+     * @param  {Array.<string>=} attrs
+     * @return {Function}
+     */
+    modelUtil.createNameEach = function (names, attrs) {
+        names = names.slice();
+        var capitalNames = zrUtil.map(names, modelUtil.capitalFirst);
+        attrs = (attrs || []).slice();
+        var capitalAttrs = zrUtil.map(attrs, modelUtil.capitalFirst);
+
+        return function (callback, context) {
+            zrUtil.each(names, function (name, index) {
+                var nameObj = {name: name, capital: capitalNames[index]};
+
+                for (var j = 0; j < attrs.length; j++) {
+                    nameObj[attrs[j]] = name + capitalAttrs[j];
+                }
+
+                callback.call(context, nameObj);
+            });
+        };
+    };
+
+    /**
+     * @public
+     */
+    modelUtil.capitalFirst = function (str) {
+        return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
+    };
+
+    /**
+     * Iterate each dimension name.
+     *
+     * @public
+     * @param {Function} callback The parameter is like:
+     *                            {
+     *                                name: 'angle',
+     *                                capital: 'Angle',
+     *                                axis: 'angleAxis',
+     *                                axisIndex: 'angleAixs',
+     *                                index: 'angleIndex'
+     *                            }
+     * @param {Object} context
+     */
+    modelUtil.eachAxisDim = modelUtil.createNameEach(AXIS_DIMS, ['axisIndex', 'axis', 'index']);
+
+    /**
+     * If value is not array, then translate it to array.
+     * @param  {*} value
+     * @return {Array} [value] or value
+     */
+    modelUtil.normalizeToArray = function (value) {
+        return zrUtil.isArray(value)
+            ? value
+            : value == null
+            ? []
+            : [value];
+    };
+
+    /**
+     * If tow dataZoomModels has the same axis controlled, we say that they are 'linked'.
+     * dataZoomModels and 'links' make up one or more graphics.
+     * This function finds the graphic where the source dataZoomModel is in.
+     *
+     * @public
+     * @param {Function} forEachNode Node iterator.
+     * @param {Function} forEachEdgeType edgeType iterator
+     * @param {Function} edgeIdGetter Giving node and edgeType, return an array of edge id.
+     * @return {Function} Input: sourceNode, Output: Like {nodes: [], dims: {}}
+     */
+    modelUtil.createLinkedNodesFinder = function (forEachNode, forEachEdgeType, edgeIdGetter) {
+
+        return function (sourceNode) {
+            var result = {
+                nodes: [],
+                records: {} // key: edgeType.name, value: Object (key: edge id, value: boolean).
+            };
+
+            forEachEdgeType(function (edgeType) {
+                result.records[edgeType.name] = {};
+            });
+
+            if (!sourceNode) {
+                return result;
+            }
+
+            absorb(sourceNode, result);
+
+            var existsLink;
+            do {
+                existsLink = false;
+                forEachNode(processSingleNode);
+            }
+            while (existsLink);
+
+            function processSingleNode(node) {
+                if (!isNodeAbsorded(node, result) && isLinked(node, result)) {
+                    absorb(node, result);
+                    existsLink = true;
+                }
+            }
+
+            return result;
+        };
+
+        function isNodeAbsorded(node, result) {
+            return zrUtil.indexOf(result.nodes, node) >= 0;
+        }
+
+        function isLinked(node, result) {
+            var hasLink = false;
+            forEachEdgeType(function (edgeType) {
+                zrUtil.each(edgeIdGetter(node, edgeType) || [], function (edgeId) {
+                    result.records[edgeType.name][edgeId] && (hasLink = true);
+                });
+            });
+            return hasLink;
+        }
+
+        function absorb(node, result) {
+            result.nodes.push(node);
+            forEachEdgeType(function (edgeType) {
+                zrUtil.each(edgeIdGetter(node, edgeType) || [], function (edgeId) {
+                    result.records[edgeType.name][edgeId] = true;
+                });
+            });
+        }
+    };
+
+    /**
+     * Sync default option between normal and emphasis like `position` and `show`
+     * In case some one will write code like
+     *     label: {
+     *         normal: {
+     *             show: false,
+     *             position: 'outside',
+     *             textStyle: {
+     *                 fontSize: 18
+     *             }
+     *         },
+     *         emphasis: {
+     *             show: true
+     *         }
+     *     }
+     * @param {Object} opt
+     * @param {Array.<string>} subOpts
+     */
+     modelUtil.defaultEmphasis = function (opt, subOpts) {
+        if (opt) {
+            var emphasisOpt = opt.emphasis = opt.emphasis || {};
+            var normalOpt = opt.normal = opt.normal || {};
+
+            // Default emphasis option from normal
+            zrUtil.each(subOpts, function (subOptName) {
+                var val = zrUtil.retrieve(emphasisOpt[subOptName], normalOpt[subOptName]);
+                if (val != null) {
+                    emphasisOpt[subOptName] = val;
+                }
+            });
+        }
+    };
+
+    /**
+     * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
+     * @param {Object} opt
+     * @param {string} [opt.seriesIndex]
+     * @param {Object} [opt.name]
+     * @param {module:echarts/data/List} data
+     * @param {Array.<Object>} rawData
+     */
+    modelUtil.createDataFormatModel = function (opt, data, rawData) {
+        var model = new Model();
+        zrUtil.mixin(model, modelUtil.dataFormatMixin);
+        model.seriesIndex = opt.seriesIndex;
+        model.name = opt.name || '';
+
+        model.getData = function () {
+            return data;
+        };
+        model.getRawDataArray = function () {
+            return rawData;
+        };
+        return model;
+    };
+
+    /**
+     * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
+     * This helper method retieves value from data.
+     * @param {string|number|Date|Array|Object} dataItem
+     * @return {number|string|Date|Array.<number|string|Date>}
+     */
+    modelUtil.getDataItemValue = function (dataItem) {
+        // Performance sensitive.
+        return dataItem && (dataItem.value == null ? dataItem : dataItem.value);
+    };
+
+    /**
+     * This helper method convert value in data.
+     * @param {string|number|Date} value
+     * @param {Object|string} [dimInfo] If string (like 'x'), dimType defaults 'number'.
+     */
+    modelUtil.converDataValue = function (value, dimInfo) {
+        // Performance sensitive.
+        var dimType = dimInfo && dimInfo.type;
+        if (dimType === 'ordinal') {
+            return value;
+        }
+
+        if (dimType === 'time' && !isFinite(value) && value != null && value !== '-') {
+            value = +nubmerUtil.parseDate(value);
+        }
+
+        // dimType defaults 'number'.
+        // If dimType is not ordinal and value is null or undefined or NaN or '-',
+        // parse to NaN.
+        return (value == null || value === '')
+            ? NaN : +value; // If string (like '-'), using '+' parse to NaN
+    };
+
+    modelUtil.dataFormatMixin = {
+        /**
+         * Get params for formatter
+         * @param {number} dataIndex
+         * @return {Object}
+         */
+        getDataParams: function (dataIndex) {
+            var data = this.getData();
+
+            var seriesIndex = this.seriesIndex;
+            var seriesName = this.name;
+
+            var rawValue = this.getRawValue(dataIndex);
+            var rawDataIndex = data.getRawIndex(dataIndex);
+            var name = data.getName(dataIndex, true);
+
+            // Data may not exists in the option given by user
+            var rawDataArray = this.getRawDataArray();
+            var itemOpt = rawDataArray && rawDataArray[rawDataIndex];
+
+            return {
+                seriesIndex: seriesIndex,
+                seriesName: seriesName,
+                name: name,
+                dataIndex: rawDataIndex,
+                data: itemOpt,
+                value: rawValue,
+
+                // Param name list for mapping `a`, `b`, `c`, `d`, `e`
+                $vars: ['seriesName', 'name', 'value']
+            };
+        },
+
+        /**
+         * Format label
+         * @param {number} dataIndex
+         * @param {string} [status='normal'] 'normal' or 'emphasis'
+         * @param {Function|string} [formatter] Default use the `itemStyle[status].label.formatter`
+         * @return {string}
+         */
+        getFormattedLabel: function (dataIndex, status, formatter) {
+            status = status || 'normal';
+            var data = this.getData();
+            var itemModel = data.getItemModel(dataIndex);
+
+            var params = this.getDataParams(dataIndex);
+            if (!formatter) {
+                formatter = itemModel.get(['label', status, 'formatter']);
+            }
+
+            if (typeof formatter === 'function') {
+                params.status = status;
+                return formatter(params);
+            }
+            else if (typeof formatter === 'string') {
+                return formatUtil.formatTpl(formatter, params);
+            }
+        },
+
+        /**
+         * Get raw value in option
+         * @param {number} idx
+         * @return {Object}
+         */
+        getRawValue: function (idx) {
+            var itemModel = this.getData().getItemModel(idx);
+            if (itemModel && itemModel.option != null) {
+                var dataItem = itemModel.option;
+                return (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem))
+                    ? dataItem.value : dataItem;
+            }
+        }
+    };
+
+    /**
+     * Mapping to exists for merge.
+     *
+     * @public
+     * @param {Array.<Object>|Array.<module:echarts/model/Component>} exists
+     * @param {Object|Array.<Object>} newCptOptions
+     * @return {Array.<Object>} Result, like [{exist: ..., option: ...}, {}],
+     *                          which order is the same as exists.
+     */
+    modelUtil.mappingToExists = function (exists, newCptOptions) {
+        // Mapping by the order by original option (but not order of
+        // new option) in merge mode. Because we should ensure
+        // some specified index (like xAxisIndex) is consistent with
+        // original option, which is easy to understand, espatially in
+        // media query. And in most case, merge option is used to
+        // update partial option but not be expected to change order.
+        newCptOptions = (newCptOptions || []).slice();
+
+        var result = zrUtil.map(exists || [], function (obj, index) {
+            return {exist: obj};
+        });
+
+        // Mapping by id or name if specified.
+        zrUtil.each(newCptOptions, function (cptOption, index) {
+            if (!zrUtil.isObject(cptOption)) {
+                return;
+            }
+
+            for (var i = 0; i < result.length; i++) {
+                var exist = result[i].exist;
+                if (!result[i].option // Consider name: two map to one.
+                    && (
+                        // id has highest priority.
+                        (cptOption.id != null && exist.id === cptOption.id + '')
+                        || (cptOption.name != null
+                            && !isIdInner(cptOption)
+                            && !isIdInner(exist)
+                            && exist.name === cptOption.name + ''
+                        )
+                    )
+                ) {
+                    result[i].option = cptOption;
+                    newCptOptions[index] = null;
+                    break;
+                }
+            }
+        });
+
+        // Otherwise mapping by index.
+        zrUtil.each(newCptOptions, function (cptOption, index) {
+            if (!zrUtil.isObject(cptOption)) {
+                return;
+            }
+
+            var i = 0;
+            for (; i < result.length; i++) {
+                var exist = result[i].exist;
+                if (!result[i].option
+                    && !isIdInner(exist)
+                    // Caution:
+                    // Do not overwrite id. But name can be overwritten,
+                    // because axis use name as 'show label text'.
+                    // 'exist' always has id and name and we dont
+                    // need to check it.
+                    && cptOption.id == null
+                ) {
+                    result[i].option = cptOption;
+                    break;
+                }
+            }
+
+            if (i >= result.length) {
+                result.push({option: cptOption});
+            }
+        });
+
+        return result;
+    };
+
+    /**
+     * @inner
+     */
+    function isIdInner(cptOption) {
+        // FIXME: Where to put this constant.
+        return cptOption && cptOption.id && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
+    }
+
+    return modelUtil;
 });
 define('echarts/util/component',['require','zrender/core/util','./clazz'],function(require) {
 
@@ -2110,7 +2848,7 @@ define('echarts/util/component',['require','zrender/core/util','./clazz'],functi
                 }
             }
 
-            // Consider this case: legend depends series, we call
+            // Consider this case: legend depends on series, and we call
             // chart.setOption({series: [...]}), where only series is in option.
             // If we do not have 'removeEdgeAndAdd', legendModel.mergeOption will
             // not be called, but only sereis.mergeOption is called. Thus legend
@@ -2178,333 +2916,6 @@ define('echarts/util/component',['require','zrender/core/util','./clazz'],functi
 
     return componentUtil;
 });
-/**
- * 数值处理模块
- * @module echarts/util/number
- */
-
-define('echarts/util/number',['require','zrender/core/util'],function (require) {
-
-    var zrUtil = require('zrender/core/util');
-    var number = {};
-
-    var RADIAN_EPSILON = 1e-4;
-
-    function _trim(str) {
-        return str.replace(/^\s+/, '').replace(/\s+$/, '');
-    }
-
-    /**
-     * Linear mapping a value from domain to range
-     * @memberOf module:echarts/util/number
-     * @param  {(number|Array.<number>)} val
-     * @param  {Array.<number>} domain Domain extent domain[0] can be bigger than domain[1]
-     * @param  {Array.<number>} range  Range extent range[0] can be bigger than range[1]
-     * @param  {boolean} clamp
-     * @return {(number|Array.<number>}
-     */
-    number.linearMap = function (val, domain, range, clamp) {
-
-        if (zrUtil.isArray(val)) {
-            return zrUtil.map(val, function (v) {
-                return number.linearMap(v, domain, range, clamp);
-            });
-        }
-
-        var sub = domain[1] - domain[0];
-
-        if (sub === 0) {
-            return (range[0] + range[1]) / 2;
-        }
-        var t = (val - domain[0]) / sub;
-
-        if (clamp) {
-            t = Math.min(Math.max(t, 0), 1);
-        }
-
-        return t * (range[1] - range[0]) + range[0];
-    };
-
-    /**
-     * Convert a percent string to absolute number.
-     * Returns NaN if percent is not a valid string or number
-     * @memberOf module:echarts/util/number
-     * @param {string|number} percent
-     * @param {number} all
-     * @return {number}
-     */
-    number.parsePercent = function(percent, all) {
-        switch (percent) {
-            case 'center':
-            case 'middle':
-                percent = '50%';
-                break;
-            case 'left':
-            case 'top':
-                percent = '0%';
-                break;
-            case 'right':
-            case 'bottom':
-                percent = '100%';
-                break;
-        }
-        if (typeof percent === 'string') {
-            if (_trim(percent).match(/%$/)) {
-                return parseFloat(percent) / 100 * all;
-            }
-
-            return parseFloat(percent);
-        }
-
-        return percent == null ? NaN : +percent;
-    };
-
-    /**
-     * Fix rounding error of float numbers
-     * @param {number} x
-     * @return {number}
-     */
-    number.round = function (x) {
-        // PENDING
-        return +(+x).toFixed(12);
-    };
-
-    number.asc = function (arr) {
-        arr.sort(function (a, b) {
-            return a - b;
-        });
-        return arr;
-    };
-
-    /**
-     * Get precision
-     * @param {number} val
-     */
-    number.getPrecision = function (val) {
-        // It is much faster than methods converting number to string as follows
-        //      var tmp = val.toString();
-        //      return tmp.length - 1 - tmp.indexOf('.');
-        // especially when precision is low
-        var e = 1;
-        var count = 0;
-        while (Math.round(val * e) / e !== val) {
-            e *= 10;
-            count++;
-        }
-        return count;
-    };
-
-    /**
-     * @param {Array.<number>} dataExtent
-     * @param {Array.<number>} pixelExtent
-     * @return {number}  precision
-     */
-    number.getPixelPrecision = function (dataExtent, pixelExtent) {
-        var log = Math.log;
-        var LN10 = Math.LN10;
-        var dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
-        var sizeQuantity = Math.round(log(Math.abs(pixelExtent[1] - pixelExtent[0])) / LN10);
-        return Math.max(
-            -dataQuantity + sizeQuantity,
-            0
-        );
-    };
-
-    // Number.MAX_SAFE_INTEGER, ie do not support.
-    number.MAX_SAFE_INTEGER = 9007199254740991;
-
-    /**
-     * To 0 - 2 * PI, considering negative radian.
-     * @param {number} radian
-     * @return {number}
-     */
-    number.remRadian = function (radian) {
-        var pi2 = Math.PI * 2;
-        return (radian % pi2 + pi2) % pi2;
-    };
-
-    /**
-     * @param {type} radian
-     * @return {boolean}
-     */
-    number.isRadianAroundZero = function (val) {
-        return val > -RADIAN_EPSILON && val < RADIAN_EPSILON;
-    };
-
-    /**
-     * @param {string|Date|number} value
-     * @return {number} timestamp
-     */
-    number.parseDate = function (value) {
-        return value instanceof Date
-            ? value
-            : new Date(typeof value === 'string' ? value.replace(/-/g, '/') : value);
-    };
-
-    return number;
-});
-define('echarts/util/format',['require','zrender/core/util','./number'],function (require) {
-
-    var zrUtil = require('zrender/core/util');
-    var numberUtil = require('./number');
-
-    /**
-     * 每三位默认加,格式化
-     * @type {string|number} x
-     */
-    function addCommas(x) {
-        if (isNaN(x)) {
-            return '-';
-        }
-        x = (x + '').split('.');
-        return x[0].replace(/(\d{1,3})(?=(?:\d{3})+(?!\d))/g,'$1,')
-               + (x.length > 1 ? ('.' + x[1]) : '');
-    }
-
-    /**
-     * @param {string} str
-     * @return {string} str
-     */
-    function toCamelCase(str) {
-        return str.toLowerCase().replace(/-(.)/g, function(match, group1) {
-            return group1.toUpperCase();
-        });
-    }
-
-    /**
-     * Normalize css liked array configuration
-     * e.g.
-     *  3 => [3, 3, 3, 3]
-     *  [4, 2] => [4, 2, 4, 2]
-     *  [4, 3, 2] => [4, 3, 2, 3]
-     * @param {number|Array.<number>} val
-     */
-    function normalizeCssArray(val) {
-        var len = val.length;
-        if (typeof (val) === 'number') {
-            return [val, val, val, val];
-        }
-        else if (len === 2) {
-            // vertical | horizontal
-            return [val[0], val[1], val[0], val[1]];
-        }
-        else if (len === 3) {
-            // top | horizontal | bottom
-            return [val[0], val[1], val[2], val[1]];
-        }
-        return val;
-    }
-
-    function encodeHTML(source) {
-        return String(source)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
-    var TPL_VAR_ALIAS = ['a', 'b', 'c', 'd', 'e', 'f', 'g'];
-
-    function wrapVar(varName, seriesIdx) {
-        return '{' + varName + (seriesIdx == null ? '' : seriesIdx) + '}';
-    }
-    /**
-     * Template formatter
-     * @param  {string} tpl
-     * @param  {Array.<Object>|Object} paramsList
-     * @return {string}
-     */
-    function formatTpl(tpl, paramsList) {
-        if (!zrUtil.isArray(paramsList)) {
-            paramsList = [paramsList];
-        }
-        var seriesLen = paramsList.length;
-        if (!seriesLen) {
-            return '';
-        }
-
-        var $vars = paramsList[0].$vars;
-        for (var i = 0; i < $vars.length; i++) {
-            var alias = TPL_VAR_ALIAS[i];
-            tpl = tpl.replace(wrapVar(alias),  wrapVar(alias, 0));
-        }
-        for (var seriesIdx = 0; seriesIdx < seriesLen; seriesIdx++) {
-            for (var k = 0; k < $vars.length; k++) {
-                tpl = tpl.replace(
-                    wrapVar(TPL_VAR_ALIAS[k], seriesIdx),
-                    paramsList[seriesIdx][$vars[k]]
-                );
-            }
-        }
-
-        return tpl;
-    }
-
-    /**
-     * ISO Date format
-     * @param {string} tpl
-     * @param {number} value
-     * @inner
-     */
-    function formatTime(tpl, value) {
-        if (tpl === 'week'
-            || tpl === 'month'
-            || tpl === 'quarter'
-            || tpl === 'half-year'
-            || tpl === 'year'
-        ) {
-            tpl = 'MM-dd\nyyyy';
-        }
-
-        var date = numberUtil.parseDate(value);
-        var y = date.getFullYear();
-        var M = date.getMonth() + 1;
-        var d = date.getDate();
-        var h = date.getHours();
-        var m = date.getMinutes();
-        var s = date.getSeconds();
-
-        tpl = tpl.replace('MM', s2d(M))
-            .toLowerCase()
-            .replace('yyyy', y)
-            .replace('yy', y % 100)
-            .replace('dd', s2d(d))
-            .replace('d', d)
-            .replace('hh', s2d(h))
-            .replace('h', h)
-            .replace('mm', s2d(m))
-            .replace('m', m)
-            .replace('ss', s2d(s))
-            .replace('s', s);
-
-        return tpl;
-    }
-
-    /**
-     * @param {string} str
-     * @return {string}
-     * @inner
-     */
-    function s2d(str) {
-        return str < 10 ? ('0' + str) : str;
-    }
-
-    return {
-
-        normalizeCssArray: normalizeCssArray,
-
-        addCommas: addCommas,
-
-        toCamelCase: toCamelCase,
-
-        encodeHTML: encodeHTML,
-
-        formatTpl: formatTpl,
-
-        formatTime: formatTime        
-    };
-});
 // Layout helpers for each component positioning
 define('echarts/util/layout',['require','zrender/core/util','zrender/core/BoundingRect','./number','./format'],function(require) {
     
@@ -2543,7 +2954,7 @@ define('echarts/util/layout',['require','zrender/core/util','zrender/core/Boundi
                     x = 0;
                     nextX = moveX;
                     y += currentLineMaxSize + gap;
-                    currentLineMaxSize = 0;
+                    currentLineMaxSize = rect.height;
                 }
                 else {
                     currentLineMaxSize = Math.max(currentLineMaxSize, rect.height);
@@ -2557,7 +2968,7 @@ define('echarts/util/layout',['require','zrender/core/util','zrender/core/Boundi
                     x += currentLineMaxSize + gap;
                     y = 0;
                     nextY = moveY;
-                    currentLineMaxSize = 0;
+                    currentLineMaxSize = rect.width;
                 }
                 else {
                     currentLineMaxSize = Math.max(currentLineMaxSize, rect.width);
@@ -2734,6 +3145,17 @@ define('echarts/util/layout',['require','zrender/core/util','zrender/core/Boundi
                 top = containerHeight - height - verticalMargin;
                 break;
         }
+        // If something is wrong and left, top, width, height are calculated as NaN
+        left = left || 0;
+        top = top || 0;
+        if (isNaN(width)) {
+            // Width may be NaN if only one value is given except width
+            width = containerWidth - left - (right || 0);
+        }
+        if (isNaN(height)) {
+            // Height may be NaN if only one value is given except height
+            height = containerHeight - top - (bottom || 0);
+        }
 
         var rect = new BoundingRect(left + margin[3], top + margin[0], width, height);
         rect.margin = margin;
@@ -2796,11 +3218,11 @@ define('echarts/util/layout',['require','zrender/core/util','zrender/core/Boundi
      *
      * @param {Object} targetOption
      * @param {Object} newOption
-     * @param {Object} [opt]
+     * @param {Object|string} [opt]
      * @param {boolean} [opt.ignoreSize=false] Some component must has width and height.
      */
     layout.mergeLayoutParam = function (targetOption, newOption, opt) {
-        opt = opt || {};
+        !zrUtil.isObject(opt) && (opt = {});
         var hNames = ['width', 'left', 'right']; // Order by priority.
         var vNames = ['height', 'top', 'bottom']; // Order by priority.
         var hResult = merge(hNames);
@@ -3112,7 +3534,7 @@ define('echarts/model/globalDefault',[],function () {
         // color: ['#bcd3bb', '#e88f70', '#edc1a5', '#9dc5c8', '#e1e8c8', '#7b7c68', '#e5b5b5', '#f0b489', '#928ea8', '#bda29a'],
         // color: ['#cc5664', '#9bd6ec', '#ea946e', '#8acaaa', '#f1ec64', '#ee8686', '#a48dc1', '#5da6bc', '#b9dcae'],
         // 深色
-        color: ['#c23531', '#314656', '#61a0a8', '#dd8668', '#91c7ae', '#6e7074', '#61a0a8', '#bda29a', '#44525d', '#c4ccd3'],
+        color: ['#c23531', '#314656', '#61a0a8', '#dd8668', '#91c7ae', '#6e7074', '#ca8622', '#bda29a', '#44525d', '#c4ccd3'],
 
         // 默认需要 Grid 配置项
         grid: {},
@@ -3147,9 +3569,10 @@ define('echarts/model/globalDefault',[],function () {
  *
  */
 
-define('echarts/model/Global',['require','zrender/core/util','./Model','./Component','./globalDefault'],function (require) {
+define('echarts/model/Global',['require','zrender/core/util','../util/model','./Model','./Component','./globalDefault'],function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../util/model');
     var Model = require('./Model');
     var each = zrUtil.each;
     var filter = zrUtil.filter;
@@ -3208,7 +3631,7 @@ define('echarts/model/Global',['require','zrender/core/util','./Model','./Compon
             var optionManager = this._optionManager;
 
             if (!type || type === 'recreate') {
-                var baseOption = optionManager.mountOption();
+                var baseOption = optionManager.mountOption(type === 'recreate');
 
                 if (!this.option || type === 'recreate') {
                     initBase.call(this, baseOption);
@@ -3273,79 +3696,69 @@ define('echarts/model/Global',['require','zrender/core/util','./Model','./Compon
             function visitComponent(mainType, dependencies) {
                 var newCptOptionList = newOption[mainType];
 
-                newCptOptionList
-                    ? handleNew.call(this, mainType, newCptOptionList, dependencies)
-                    : handleNoNew.call(this, mainType);
-
-                // Backup series for filtering.
-                if (mainType === 'series') {
-                    this._seriesIndices = createSeriesIndices(componentsMap.series);
-                }
-            }
-
-            function handleNoNew(mainType) {
-                // Possible when using removeEdgeAndAdd in topologicalTravel
-                // and ComponentModel.getAllClassMainTypes
-                each(componentsMap[mainType], function (cpt) {
-                    cpt.mergeOption({}, this);
-                }, this);
-            }
-
-            function handleNew(mainType, newCptOptionList, dependencies) {
-                // Normalize
-                if (!(zrUtil.isArray(newCptOptionList))) {
-                    newCptOptionList = [newCptOptionList];
-                }
-                if (!componentsMap[mainType]) {
-                    componentsMap[mainType] = [];
+                if (!zrUtil.isArray(newCptOptionList)) {
+                    newCptOptionList = newCptOptionList ? [newCptOptionList] : [];
                 }
 
-                var existComponents = mappingToExists(
+                var mapResult = modelUtil.mappingToExists(
                     componentsMap[mainType], newCptOptionList
                 );
 
-                var keyInfoList = makeKeyInfo(
-                    mainType, newCptOptionList, existComponents
-                );
+                makeKeyInfo(mainType, mapResult);
 
                 var dependentModels = getComponentsByTypes(
                     componentsMap, dependencies
                 );
 
                 option[mainType] = [];
+                componentsMap[mainType] = [];
 
-                each(newCptOptionList, function (newCptOption, index) {
-                    if (!isObject(newCptOption)) {
-                        return;
-                    }
+                each(mapResult, function (resultItem, index) {
+                    var componentModel = resultItem.exist;
+                    var newCptOption = resultItem.option;
 
-                    var componentModel = existComponents[index];
-
-                    var ComponentModelClass = ComponentModel.getClass(
-                        mainType, keyInfoList[index].subType, true
+                    zrUtil.assert(
+                        isObject(newCptOption) || componentModel,
+                        'Empty component definition'
                     );
 
-                    if (componentModel && componentModel instanceof ComponentModelClass) {
-                        componentModel.mergeOption(newCptOption, this);
+                    // Consider where is no new option and should be merged using {},
+                    // see removeEdgeAndAdd in topologicalTravel and
+                    // ComponentModel.getAllClassMainTypes.
+                    if (!newCptOption) {
+                        componentModel.mergeOption({}, this);
                     }
                     else {
-                        // PENDING Global as parent ?
-                        componentModel = new ComponentModelClass(
-                            newCptOption, this, this,
-                            zrUtil.extend(
-                                {
-                                    dependentModels: dependentModels,
-                                    componentIndex: index
-                                },
-                                keyInfoList[index]
-                            )
+                        var ComponentModelClass = ComponentModel.getClass(
+                            mainType, resultItem.keyInfo.subType, true
                         );
-                        componentsMap[mainType][index] = componentModel;
+
+                        if (componentModel && componentModel instanceof ComponentModelClass) {
+                            componentModel.mergeOption(newCptOption, this);
+                        }
+                        else {
+                            // PENDING Global as parent ?
+                            componentModel = new ComponentModelClass(
+                                newCptOption, this, this,
+                                zrUtil.extend(
+                                    {
+                                        dependentModels: dependentModels,
+                                        componentIndex: index
+                                    },
+                                    resultItem.keyInfo
+                                )
+                            );
+                        }
                     }
 
-                    // Keep option
+                    componentsMap[mainType][index] = componentModel;
                     option[mainType][index] = componentModel.option;
                 }, this);
+
+                // Backup series for filtering.
+                if (mainType === 'series') {
+                    this._seriesIndices = createSeriesIndices(componentsMap.series);
+                }
             }
         },
 
@@ -3737,144 +4150,81 @@ define('echarts/model/Global',['require','zrender/core/util','./Model','./Compon
     /**
      * @inner
      */
-    function mappingToExists(existComponents, newComponentOptionList) {
-        existComponents = (existComponents || []).slice();
-        var result = [];
-
-        // Mapping by id if specified.
-        each(newComponentOptionList, function (componentOption, index) {
-            if (!isObject(componentOption) || !componentOption.id) {
-                return;
-            }
-            for (var i = 0, len = existComponents.length; i < len; i++) {
-                if (existComponents[i].id === componentOption.id) {
-                    result[index] = existComponents.splice(i, 1)[0];
-                    return;
-                }
-            }
-        });
-
-        // Mapping by name if specified.
-        each(newComponentOptionList, function (componentOption, index) {
-            if (!isObject(componentOption)
-                || !componentOption.name
-                || hasInnerId(componentOption)
-            ) {
-                return;
-            }
-            for (var i = 0, len = existComponents.length; i < len; i++) {
-                if (existComponents[i].name === componentOption.name) {
-                    result[index] = existComponents.splice(i, 1)[0];
-                    return;
-                }
-            }
-        });
-
-        // Otherwise mapping by index.
-        each(newComponentOptionList, function (componentOption, index) {
-            if (!result[index]
-                && existComponents[index]
-                && !hasInnerId(componentOption)
-            ) {
-                result[index] = existComponents[index];
-            }
-        });
-
-        return result;
-    }
-
-    /**
-     * @inner
-     */
-    function makeKeyInfo(mainType, newCptOptionList, existComponents) {
+    function makeKeyInfo(mainType, mapResult) {
         // We use this id to hash component models and view instances
         // in echarts. id can be specified by user, or auto generated.
 
-        // The id generation rule ensures when setOption are called in
-        // no-merge mode, new model is able to replace old model, and
-        // new view instance are able to mapped to old instance.
-        // So we generate id by name and type.
+        // The id generation rule ensures new view instance are able
+        // to mapped to old instance when setOption are called in
+        // no-merge mode. So we generate model id by name and plus
+        // type in view id.
 
         // name can be duplicated among components, which is convenient
         // to specify multi components (like series) by one name.
 
-        // raw option should not be modified. for example, xxx.name might
-        // be rendered, so default name ('') should not be replaced by
-        // generated name. So we use keyInfoList wrap key info.
-        var keyInfoList = [];
-
-        // We use a prefix when generating name or id to prevent
-        // user using the generated name or id directly.
-        var prefix = '\0';
-
         // Ensure that each id is distinct.
-        var idSet = {};
+        var idMap = {};
 
-        // key: name, value: count by single name.
-        var nameCount = {};
+        each(mapResult, function (item, index) {
+            var existCpt = item.exist;
+            var opt = item.option;
 
-        // Complete subType
-        each(newCptOptionList, function (opt, index) {
+            zrUtil.assert(
+                !opt || opt.id == null || !idMap[opt.id],
+                'id duplicates: ' + (opt && opt.id)
+            );
+
+            existCpt && (idMap[existCpt.id] = item);
+            opt && (idMap[opt.id] = item);
+
+            // Complete subType
+            if (isObject(opt)) {
+                var subType = determineSubType(mainType, opt, existCpt);
+                item.keyInfo = {mainType: mainType, subType: subType};
+            }
+        });
+
+        // Make name and id.
+        each(mapResult, function (item, index) {
+            var existCpt = item.exist;
+            var opt = item.option;
+            var keyInfo = item.keyInfo;
+
             if (!isObject(opt)) {
                 return;
             }
-            var existCpt = existComponents[index];
-            var subType = determineSubType(mainType, opt, existCpt);
-            var item = {mainType: mainType, subType: subType};
-            keyInfoList[index] = item;
-        });
 
-        function eachOpt(cb) {
-            each(newCptOptionList, function (opt, index) {
-                if (!isObject(opt)) {
-                    return;
-                }
-                var existCpt = existComponents[index];
-                var item = keyInfoList[index];
-                var fullType = mainType + '.' + item.subType;
-                cb(item, opt, existCpt, fullType);
-            });
-        }
-
-        // Make name
-        eachOpt(function (item, opt, existCpt, fullType) {
-            item.name = existCpt
+            // name can be overwitten. Consider case: axis.name = '20km'.
+            // But id generated by name will not be changed, which affect
+            // only in that case: setOption with 'not merge mode' and view
+            // instance will be recreated, which can be accepted.
+            keyInfo.name = opt.name != null
+                ? opt.name + ''
+                : existCpt
                 ? existCpt.name
-                : opt.name != null
-                ? opt.name
-                : prefix + '-';
-            // init nameCount
-            nameCount[item.name] = 0;
-        });
+                : '\0-';
 
-        // Make id
-        eachOpt(function (item, opt, existCpt, fullType) {
-            var itemName = item.name;
-
-            item.id = existCpt
-                ? existCpt.id
-                : opt.id != null
-                ? opt.id
-                // (1) Using delimiter to escapse dulipcation.
-                // (2) Using type tu ensure that view with different
-                //     type will not be mapped.
-                // (3) Consider this situatoin:
-                //      optionA: [{name: 'a'}, {name: 'a'}, {..}]
-                //      optionB [{..}, {name: 'a'}, {name: 'a'}]
-                //     Using nameCount to ensure that series with
-                //     the same name between optionA and optionB
-                //     can be mapped.
-                : prefix + [fullType, itemName, nameCount[itemName]++].join('|');
-
-            if (idSet[item.id]) {
-                // FIXME
-                // how to throw
-                throw new Error('id duplicates: ' + item.id);
+            if (existCpt) {
+                keyInfo.id = existCpt.id;
             }
-            idSet[item.id] = 1;
-        });
+            else if (opt.id != null) {
+                keyInfo.id = opt.id + '';
+            }
+            else {
+                // Consider this situatoin:
+                //  optionA: [{name: 'a'}, {name: 'a'}, {..}]
+                //  optionB [{..}, {name: 'a'}, {name: 'a'}]
+                // Series with the same name between optionA and optionB
+                // should be mapped.
+                var idNum = 0;
+                do {
+                    keyInfo.id = '\0' + keyInfo.name + '\0' + idNum++;
+                }
+                while (idMap[keyInfo.id]);
+            }
 
-        return keyInfoList;
+            idMap[keyInfo.id] = item;
+        });
     }
 
     /**
@@ -3917,16 +4267,6 @@ define('echarts/model/Global',['require','zrender/core/util','./Model','./Compon
     /**
      * @inner
      */
-    function hasInnerId(componentOption) {
-        return componentOption.id
-            // FIXME
-            // Where to put this constant.
-            && (componentOption.id + '').indexOf('\0_ec_\0') === 0;
-    }
-
-    /**
-     * @inner
-     */
     function assertSeriesInitialized(ecModel) {
         // Components that use _seriesIndices should depends on series component,
         // which make sure that their initialization is after series.
@@ -3947,7 +4287,7 @@ define('echarts/ExtensionAPI',['require','zrender/core/util'],function(require) 
 
     var echartsAPIList = [
         'getDom', 'getZr', 'getWidth', 'getHeight', 'dispatchAction',
-        'on', 'off', 'getDataURL', 'getConnectedDataURL'
+        'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getModel', 'getOption'
     ];
 
     function ExtensionAPI(chartInstance) {
@@ -3997,6 +4337,10 @@ define('echarts/CoordinateSystem',['require'],function(require) {
         coordinateSystemCreators[type] = coordinateSystemCreator;
     };
 
+    CoordinateSystemManager.get = function (type) {
+        return coordinateSystemCreators[type];
+    }
+
     return CoordinateSystemManager;
 });
 /**
@@ -4005,12 +4349,15 @@ define('echarts/CoordinateSystem',['require'],function(require) {
  * @module {echarts/model/OptionManager}
  */
 
-define('echarts/model/OptionManager',['require','zrender/core/util'],function (require) {
+define('echarts/model/OptionManager',['require','zrender/core/util','../util/model','./Component'],function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../util/model');
+    var ComponentModel = require('./Component');
     var each = zrUtil.each;
     var clone = zrUtil.clone;
     var map = zrUtil.map;
+    var merge = zrUtil.merge;
 
     var QUERY_REG = /^(min|max)?(.+)$/;
 
@@ -4081,13 +4428,13 @@ define('echarts/model/OptionManager',['require','zrender/core/util'],function (r
          * @private
          * @type {Array.<number>}
          */
-        this._timelineOptions;
+        this._timelineOptions = [];
 
         /**
          * @private
          * @type {Array.<Object>}
          */
-        this._mediaList;
+        this._mediaList = [];
 
         /**
          * @private
@@ -4108,6 +4455,12 @@ define('echarts/model/OptionManager',['require','zrender/core/util'],function (r
          * @type {Object}
          */
         this._optionBackup;
+
+        /**
+         * @private
+         * @type {Object}
+         */
+        this._newOptionBackup;
     }
 
     // timeline.notMerge is not supported in ec3. Firstly there is rearly
@@ -4136,16 +4489,40 @@ define('echarts/model/OptionManager',['require','zrender/core/util'],function (r
             // FIXME
             // 如果 timeline options 或者 media 中设置了某个属性，而baseOption中没有设置，则进行警告。
 
-            this._optionBackup = parseRawOption.call(
+            var oldOptionBackup = this._optionBackup;
+            var newOptionBackup = this._newOptionBackup = parseRawOption.call(
                 this, rawOption, optionPreprocessorFuncs
             );
+
+            // For setOption at second time (using merge mode);
+            if (oldOptionBackup) {
+                // Only baseOption can be merged.
+                mergeOption(oldOptionBackup.baseOption, newOptionBackup.baseOption);
+
+                if (newOptionBackup.timelineOptions.length) {
+                    oldOptionBackup.timelineOptions = newOptionBackup.timelineOptions;
+                }
+                if (newOptionBackup.mediaList.length) {
+                    oldOptionBackup.mediaList = newOptionBackup.mediaList;
+                }
+                if (newOptionBackup.mediaDefault) {
+                    oldOptionBackup.mediaDefault = newOptionBackup.mediaDefault;
+                }
+            }
+            else {
+                this._optionBackup = newOptionBackup;
+            }
         },
 
         /**
+         * @param {boolean} isRecreate
          * @return {Object}
          */
-        mountOption: function () {
-            var optionBackup = this._optionBackup;
+        mountOption: function (isRecreate) {
+            var optionBackup = isRecreate
+                // this._optionBackup can be only used when recreate.
+                // In other cases we use model.mergeOption to handle merge.
+                ? this._optionBackup : this._newOptionBackup;
 
             // FIXME
             // 如果没有reset功能则不clone。
@@ -4341,318 +4718,57 @@ define('echarts/model/OptionManager',['require','zrender/core/util'],function (r
         return indices1.join(',') === indices2.join(',');
     }
 
+    /**
+     * Consider case:
+     * `chart.setOption(opt1);`
+     * Then user do some interaction like dataZoom, dataView changing.
+     * `chart.setOption(opt2);`
+     * Then user press 'reset button' in toolbox.
+     *
+     * After doing that all of the interaction effects should be reset, the
+     * chart should be the same as the result of invoke
+     * `chart.setOption(opt1); chart.setOption(opt2);`.
+     *
+     * Although it is not able ensure that
+     * `chart.setOption(opt1); chart.setOption(opt2);` is equivalents to
+     * `chart.setOption(merge(opt1, opt2));` exactly,
+     * this might be the only simple way to implement that feature.
+     *
+     * MEMO: We've considered some other approaches:
+     * 1. Each model handle its self restoration but not uniform treatment.
+     *     (Too complex in logic and error-prone)
+     * 2. Use a shadow ecModel. (Performace expensive)
+     */
+    function mergeOption(oldOption, newOption) {
+        newOption = newOption || {};
+
+        each(newOption, function (newCptOpt, mainType) {
+            if (newCptOpt == null) {
+                return;
+            }
+
+            var oldCptOpt = oldOption[mainType];
+
+            if (!ComponentModel.hasClass(mainType)) {
+                oldOption[mainType] = merge(oldCptOpt, newCptOpt, true);
+            }
+            else {
+                if (!zrUtil.isArray(newCptOpt)) {
+                    newCptOpt = newCptOpt ? [newCptOpt] : [];
+                }
+
+                var mapResult = modelUtil.mappingToExists(oldCptOpt || [], newCptOpt);
+
+                oldOption[mainType] = map(mapResult, function (item) {
+                    return (item.option && item.exist)
+                        ? merge(item.exist, item.option, true)
+                        : (item.exist || item.option);
+                });
+            }
+        });
+    }
+
     return OptionManager;
-});
-define('echarts/util/model',['require','./format','./number','zrender/core/util','../model/Model'],function(require) {
-
-    var formatUtil = require('./format');
-    var nubmerUtil = require('./number');
-    var zrUtil = require('zrender/core/util');
-
-    var Model = require('../model/Model');
-
-    var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
-
-    var modelUtil = {};
-
-    /**
-     * Create "each" method to iterate names.
-     *
-     * @pubilc
-     * @param  {Array.<string>} names
-     * @param  {Array.<string>=} attrs
-     * @return {Function}
-     */
-    modelUtil.createNameEach = function (names, attrs) {
-        names = names.slice();
-        var capitalNames = zrUtil.map(names, modelUtil.capitalFirst);
-        attrs = (attrs || []).slice();
-        var capitalAttrs = zrUtil.map(attrs, modelUtil.capitalFirst);
-
-        return function (callback, context) {
-            zrUtil.each(names, function (name, index) {
-                var nameObj = {name: name, capital: capitalNames[index]};
-
-                for (var j = 0; j < attrs.length; j++) {
-                    nameObj[attrs[j]] = name + capitalAttrs[j];
-                }
-
-                callback.call(context, nameObj);
-            });
-        };
-    };
-
-    /**
-     * @public
-     */
-    modelUtil.capitalFirst = function (str) {
-        return str ? str.charAt(0).toUpperCase() + str.substr(1) : str;
-    };
-
-    /**
-     * Iterate each dimension name.
-     *
-     * @public
-     * @param {Function} callback The parameter is like:
-     *                            {
-     *                                name: 'angle',
-     *                                capital: 'Angle',
-     *                                axis: 'angleAxis',
-     *                                axisIndex: 'angleAixs',
-     *                                index: 'angleIndex'
-     *                            }
-     * @param {Object} context
-     */
-    modelUtil.eachAxisDim = modelUtil.createNameEach(AXIS_DIMS, ['axisIndex', 'axis', 'index']);
-
-    /**
-     * If value is not array, then translate it to array.
-     * @param  {*} value
-     * @return {Array} [value] or value
-     */
-    modelUtil.normalizeToArray = function (value) {
-        return zrUtil.isArray(value)
-            ? value
-            : value == null
-            ? []
-            : [value];
-    };
-
-    /**
-     * If tow dataZoomModels has the same axis controlled, we say that they are 'linked'.
-     * dataZoomModels and 'links' make up one or more graphics.
-     * This function finds the graphic where the source dataZoomModel is in.
-     *
-     * @public
-     * @param {Function} forEachNode Node iterator.
-     * @param {Function} forEachEdgeType edgeType iterator
-     * @param {Function} edgeIdGetter Giving node and edgeType, return an array of edge id.
-     * @return {Function} Input: sourceNode, Output: Like {nodes: [], dims: {}}
-     */
-    modelUtil.createLinkedNodesFinder = function (forEachNode, forEachEdgeType, edgeIdGetter) {
-
-        return function (sourceNode) {
-            var result = {
-                nodes: [],
-                records: {} // key: edgeType.name, value: Object (key: edge id, value: boolean).
-            };
-
-            forEachEdgeType(function (edgeType) {
-                result.records[edgeType.name] = {};
-            });
-
-            if (!sourceNode) {
-                return result;
-            }
-
-            absorb(sourceNode, result);
-
-            var existsLink;
-            do {
-                existsLink = false;
-                forEachNode(processSingleNode);
-            }
-            while (existsLink);
-
-            function processSingleNode(node) {
-                if (!isNodeAbsorded(node, result) && isLinked(node, result)) {
-                    absorb(node, result);
-                    existsLink = true;
-                }
-            }
-
-            return result;
-        };
-
-        function isNodeAbsorded(node, result) {
-            return zrUtil.indexOf(result.nodes, node) >= 0;
-        }
-
-        function isLinked(node, result) {
-            var hasLink = false;
-            forEachEdgeType(function (edgeType) {
-                zrUtil.each(edgeIdGetter(node, edgeType) || [], function (edgeId) {
-                    result.records[edgeType.name][edgeId] && (hasLink = true);
-                });
-            });
-            return hasLink;
-        }
-
-        function absorb(node, result) {
-            result.nodes.push(node);
-            forEachEdgeType(function (edgeType) {
-                zrUtil.each(edgeIdGetter(node, edgeType) || [], function (edgeId) {
-                    result.records[edgeType.name][edgeId] = true;
-                });
-            });
-        }
-    };
-
-    /**
-     * Sync default option between normal and emphasis like `position` and `show`
-     * In case some one will write code like
-     *     label: {
-     *         normal: {
-     *             show: false,
-     *             position: 'outside',
-     *             textStyle: {
-     *                 fontSize: 18
-     *             }
-     *         },
-     *         emphasis: {
-     *             show: true
-     *         }
-     *     }
-     * @param {Object} opt
-     * @param {Array.<string>} subOpts
-     */
-     modelUtil.defaultEmphasis = function (opt, subOpts) {
-        if (opt) {
-            var emphasisOpt = opt.emphasis = opt.emphasis || {};
-            var normalOpt = opt.normal = opt.normal || {};
-
-            // Default emphasis option from normal
-            zrUtil.each(subOpts, function (subOptName) {
-                var val = zrUtil.retrieve(emphasisOpt[subOptName], normalOpt[subOptName]);
-                if (val != null) {
-                    emphasisOpt[subOptName] = val;
-                }
-            });
-        }
-    };
-
-    /**
-     * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
-     * @param {Object} opt
-     * @param {string} [opt.seriesIndex]
-     * @param {Object} [opt.name]
-     * @param {module:echarts/data/List} data
-     * @param {Array.<Object>} rawData
-     */
-    modelUtil.createDataFormatModel = function (opt, data, rawData) {
-        var model = new Model();
-        zrUtil.mixin(model, modelUtil.dataFormatMixin);
-        model.seriesIndex = opt.seriesIndex;
-        model.name = opt.name || '';
-
-        model.getData = function () {
-            return data;
-        };
-        model.getRawDataArray = function () {
-            return rawData;
-        };
-        return model;
-    };
-
-    /**
-     * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
-     * This helper method retieves value from data.
-     * @param {string|number|Date|Array|Object} dataItem
-     * @return {number|string|Date|Array.<number|string|Date>}
-     */
-    modelUtil.getDataItemValue = function (dataItem) {
-        // Performance sensitive.
-        return dataItem && (dataItem.value == null ? dataItem : dataItem.value);
-    };
-
-    /**
-     * This helper method convert value in data.
-     * @param {string|number|Date} value
-     * @param {Object|string} [dimInfo] If string (like 'x'), dimType defaults 'number'.
-     */
-    modelUtil.converDataValue = function (value, dimInfo) {
-        // Performance sensitive.
-        var dimType = dimInfo && dimInfo.type;
-        if (dimType === 'ordinal') {
-            return value;
-        }
-
-        if (dimType === 'time' && !isFinite(value) && value != null && value !== '-') {
-            value = +nubmerUtil.parseDate(value);
-        }
-
-        // dimType defaults 'number'.
-        // If dimType is not ordinal and value is null or undefined or NaN or '-',
-        // parse to NaN.
-        return (value == null || value === '')
-            ? NaN : +value; // If string (like '-'), using '+' parse to NaN
-    };
-
-    modelUtil.dataFormatMixin = {
-        /**
-         * Get params for formatter
-         * @param {number} dataIndex
-         * @return {Object}
-         */
-        getDataParams: function (dataIndex) {
-            var data = this.getData();
-
-            var seriesIndex = this.seriesIndex;
-            var seriesName = this.name;
-
-            var rawValue = this.getRawValue(dataIndex);
-            var rawDataIndex = data.getRawIndex(dataIndex);
-            var name = data.getName(dataIndex, true);
-
-            // Data may not exists in the option given by user
-            var rawDataArray = this.getRawDataArray();
-            var itemOpt = rawDataArray && rawDataArray[rawDataIndex];
-
-            return {
-                seriesIndex: seriesIndex,
-                seriesName: seriesName,
-                name: name,
-                dataIndex: rawDataIndex,
-                data: itemOpt,
-                value: rawValue,
-
-                // Param name list for mapping `a`, `b`, `c`, `d`, `e`
-                $vars: ['seriesName', 'name', 'value']
-            };
-        },
-
-        /**
-         * Format label
-         * @param {number} dataIndex
-         * @param {string} [status='normal'] 'normal' or 'emphasis'
-         * @param {Function|string} [formatter] Default use the `itemStyle[status].label.formatter`
-         * @return {string}
-         */
-        getFormattedLabel: function (dataIndex, status, formatter) {
-            status = status || 'normal';
-            var data = this.getData();
-            var itemModel = data.getItemModel(dataIndex);
-
-            var params = this.getDataParams(dataIndex);
-            if (!formatter) {
-                formatter = itemModel.get(['label', status, 'formatter']);
-            }
-
-            if (typeof formatter === 'function') {
-                params.status = status;
-                return formatter(params);
-            }
-            else if (typeof formatter === 'string') {
-                return formatUtil.formatTpl(formatter, params);
-            }
-        },
-
-        /**
-         * Get raw value in option
-         * @param {number} idx
-         * @return {Object}
-         */
-        getRawValue: function (idx) {
-            var itemModel = this.getData().getItemModel(idx);
-            if (itemModel && itemModel.option != null) {
-                var dataItem = itemModel.option;
-                return (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem))
-                    ? dataItem.value : dataItem;
-            }
-        }
-    };
-
-    return modelUtil;
 });
 define('echarts/model/Series',['require','zrender/core/util','../util/format','../util/model','./Component'],function(require) {
 
@@ -4790,6 +4906,38 @@ define('echarts/model/Series',['require','zrender/core/util','../util/format','.
          */
         getDimensionsOnAxis: function (axisDim) {
             return [axisDim]; // Retunr axisDim default.
+        },
+
+        /**
+         * Get coordinate dimensions info.
+         * By default the result is the same as dimensions info of series data.
+         * But some series dimensions are different from coord dimensions (i.e.
+         * candlestick and boxplot). Override this method to handle those cases.
+         * @param {string|number} [dataDim]
+         * @return {Array.<Object>} If dataDim specified, return cooresponding
+         *                          coord dim info, otherwise return dimension
+         *                          info list. If no coordinate system, reutrn [].
+         */
+        getCoordDimensionInfo: function (dataDim) {
+            var data = this.getData();
+            return this.coordinateSystem
+                ? (
+                    dataDim != null
+                        ? data.getDimensionInfo(dataDim)
+                        : zrUtil.map(data.dimensions, data.getDimensionInfo, data)
+                )
+                : [];
+        },
+
+        /**
+         * Get base axis if has coordinate system and has axis.
+         * By default use coordSys.getBaseAxis();
+         * Can be overrided for some chart.
+         * @return {type} description
+         */
+        getBaseAxis: function () {
+            var coordSys = this.coordinateSystem;
+            return coordSys && coordSys.getBaseAxis && coordSys.getBaseAxis();
         },
 
         // FIXME
@@ -10780,7 +10928,11 @@ define('zrender/graphic/Path',['require','./Displayable','../core/util','../core
                 var w = style.lineWidth;
                 // PENDING, Min line width is needed when line is horizontal or vertical
                 var lineScale = style.strokeNoScale ? this.getLineScale() : 1;
-                w = Math.max(w, this.strokeContainThreshold);
+
+                // Only add extra hover lineWidth when there are no fill
+                if (!pathHasFill(style)) {
+                    w = Math.max(w, this.strokeContainThreshold);
+                }
                 // Consider line width
                 // Line scale can't be 0;
                 if (lineScale > 1e-10) {
@@ -10808,14 +10960,16 @@ define('zrender/graphic/Path',['require','./Displayable','../core/util','../core
                     var lineWidth = style.lineWidth;
                     var lineScale = style.strokeNoScale ? this.getLineScale() : 1;
                     // Line scale can't be 0;
-                    if (lineScale < 1e-10) {
-                        return false;
-                    }
-                    lineWidth = Math.max(lineWidth, this.strokeContainThreshold);
-                    if (pathContain.containStroke(
-                        pathData, lineWidth / lineScale, x, y
-                    )) {
-                        return true;
+                    if (lineScale > 1e-10) {
+                        // Only add extra hover lineWidth when there are no fill
+                        if (!pathHasFill(style)) {
+                            lineWidth = Math.max(lineWidth, this.strokeContainThreshold);
+                        }
+                        if (pathContain.containStroke(
+                            pathData, lineWidth / lineScale, x, y
+                        )) {
+                            return true;
+                        }
                     }
                 }
                 if (pathHasFill(style)) {
@@ -11461,11 +11615,21 @@ define('zrender/graphic/helper/roundRect',['require'],function (require) {
             var width = shape.width;
             var height = shape.height;
             var r = shape.r;
-            var r1; 
-            var r2; 
-            var r3; 
+            var r1;
+            var r2;
+            var r3;
             var r4;
-              
+
+            // Convert width and height to positive for better borderRadius
+            if (width < 0) {
+                x = x + width;
+                width = -width;
+            }
+            if (height < 0) {
+                y = y + height;
+                height = -height;
+            }
+
             if (typeof r === 'number') {
                 r1 = r2 = r3 = r4 = r;
             }
@@ -11492,7 +11656,7 @@ define('zrender/graphic/helper/roundRect',['require'],function (require) {
             else {
                 r1 = r2 = r3 = r4 = 0;
             }
-            
+
             var total;
             if (r1 + r2 > width) {
                 total = r1 + r2;
@@ -11531,7 +11695,7 @@ define('zrender/graphic/helper/roundRect',['require'],function (require) {
             r1 !== 0 && ctx.quadraticCurveTo(x, y, x + r1, y);
         }
     }
-}); 
+});
 // Simple LRU cache use doubly linked list
 // @module zrender/core/LRU
 define('zrender/core/LRU',['require'],function(require) {
@@ -12700,7 +12864,7 @@ define('zrender/graphic/RadialGradient',['require','../core/util','./Gradient'],
 
     return RadialGradient;
 });
-define('echarts/util/graphic',['require','zrender/core/util','zrender/tool/path','zrender/graphic/Path','zrender/tool/color','zrender/core/matrix','zrender/core/vector','zrender/graphic/Gradient','zrender/container/Group','zrender/graphic/Image','zrender/graphic/Text','zrender/graphic/shape/Circle','zrender/graphic/shape/Sector','zrender/graphic/shape/Polygon','zrender/graphic/shape/Polyline','zrender/graphic/shape/Rect','zrender/graphic/shape/Line','zrender/graphic/shape/BezierCurve','zrender/graphic/shape/Arc','zrender/graphic/LinearGradient','zrender/graphic/RadialGradient'],function(require) {
+define('echarts/util/graphic',['require','zrender/core/util','zrender/tool/path','zrender/graphic/Path','zrender/tool/color','zrender/core/matrix','zrender/core/vector','zrender/graphic/Gradient','zrender/container/Group','zrender/graphic/Image','zrender/graphic/Text','zrender/graphic/shape/Circle','zrender/graphic/shape/Sector','zrender/graphic/shape/Polygon','zrender/graphic/shape/Polyline','zrender/graphic/shape/Rect','zrender/graphic/shape/Line','zrender/graphic/shape/BezierCurve','zrender/graphic/shape/Arc','zrender/graphic/LinearGradient','zrender/graphic/RadialGradient','zrender/core/BoundingRect'],function(require) {
 
     
 
@@ -12741,6 +12905,8 @@ define('echarts/util/graphic',['require','zrender/core/util','zrender/tool/path'
     graphic.LinearGradient = require('zrender/graphic/LinearGradient');
 
     graphic.RadialGradient = require('zrender/graphic/RadialGradient');
+
+    graphic.BoundingRect = require('zrender/core/BoundingRect');
 
     /**
      * Extend shape with parameters
@@ -13143,11 +13309,11 @@ define('echarts/util/graphic',['require','zrender/core/util','zrender/tool/path'
  * @author firede[firede@firede.us]
  * @desc thanks zepto.
  */
-define('zrender/core/env',[],function() {
-
+define('zrender/core/env',[],function () {
+    var env = {};
     if (typeof navigator === 'undefined') {
         // In node
-        return {
+        env = {
             browser: {},
             os: {},
             node: true,
@@ -13155,13 +13321,19 @@ define('zrender/core/env',[],function() {
             canvasSupported: true
         };
     }
+    else {
+        env = detect(navigator.userAgent);
+    }
+
+    return env;
+
     // Zepto.js
     // (c) 2010-2013 Thomas Fuchs
     // Zepto.js may be freely distributed under the MIT license.
 
     function detect(ua) {
-        var os = this.os = {};
-        var browser = this.browser = {};
+        var os = {};
+        var browser = {};
         var webkit = ua.match(/Web[kK]it[\/]{0,1}([\d.]+)/);
         var android = ua.match(/(Android);?[\s\/]+([\d.]+)?/);
         var ipad = ua.match(/(iPad).*OS\s([\d_]+)/);
@@ -13177,10 +13349,12 @@ define('zrender/core/env',[],function() {
         var playbook = ua.match(/PlayBook/);
         var chrome = ua.match(/Chrome\/([\d.]+)/) || ua.match(/CriOS\/([\d.]+)/);
         var firefox = ua.match(/Firefox\/([\d.]+)/);
-        var ie = ua.match(/MSIE ([\d.]+)/);
         var safari = webkit && ua.match(/Mobile\//) && !chrome;
         var webview = ua.match(/(iPhone|iPod|iPad).*AppleWebKit(?!.*Safari)/) && !chrome;
-        var ie = ua.match(/MSIE\s([\d.]+)/);
+        var ie = ua.match(/MSIE\s([\d.]+)/)
+            // IE 11 Trident/7.0; rv:11.0
+            || ua.match(/Trident\/.+?rv:(([\d.]+))/);
+        var edge = ua.match(/Edge\/([\d.]+)/); // IE 12 and 12+
 
         // Todo: clean this up with a better OS/browser seperation:
         // - discern (more) between multiple browsers on android
@@ -13209,6 +13383,7 @@ define('zrender/core/env',[],function() {
         if (safari && (ua.match(/Safari/) || !!os.ios)) browser.safari = true;
         if (webview) browser.webview = true;
         if (ie) browser.ie = true, browser.version = ie[1];
+        if (edge) browser.edge = true, browser.version = edge[1];
 
         os.tablet = !!(ipad || playbook || (android && !ua.match(/Mobile/)) ||
             (firefox && ua.match(/Tablet/)) || (ie && !ua.match(/Phone/) && ua.match(/Touch/)));
@@ -13224,12 +13399,17 @@ define('zrender/core/env',[],function() {
             // canvasSupported : !(browser.ie && parseFloat(browser.version) < 9)
             canvasSupported : document.createElement('canvas').getContext ? true : false,
             // @see <http://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript>
-            touchEventsSupported: 'ontouchstart' in window  // works on most browsers
-                || navigator.maxTouchPoints                 // works on IE10/11 and Surface
+            // works on most browsers
+            // IE10/11 does not support touch event, and MS Edge supports them but not by
+            // default, so we dont check navigator.maxTouchPoints for them here.
+            touchEventsSupported: 'ontouchstart' in window && !browser.ie && !browser.edge,
+            // <http://caniuse.com/#search=pointer%20event>.
+            pointerEventsSupported: 'onpointerdown' in window
+                // Firefox supports pointer but not by default,
+                // only MS browsers are reliable on pointer events currently.
+                && (browser.edge || (browser.ie && browser.version >= 10))
         };
     }
-
-    return detect(navigator.userAgent);
 });
 /**
  * 事件辅助类
@@ -13565,13 +13745,19 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
 
     var Eventful = require('./mixin/Eventful');
 
-    var domHandlerNames = [
-        'click', 'dblclick',
-        'mousewheel', 'mousemove', 'mouseout', 'mouseup', 'mousedown'
+    var mouseHandlerNames = [
+        'click', 'dblclick', 'mousewheel', 'mouseout'
     ];
+    !usePointerEvent() && mouseHandlerNames.push(
+        'mouseup', 'mousedown', 'mousemove'
+    );
 
     var touchHandlerNames = [
         'touchstart', 'touchend', 'touchmove'
+    ];
+
+    var pointerHandlerNames = [
+        'pointerdown', 'pointerup', 'pointermove'
     ];
 
     var TOUCH_CLICK_DELAY = 300;
@@ -13587,10 +13773,6 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
     var addEventListener = eventTool.addEventListener;
     var removeEventListener = eventTool.removeEventListener;
     var normalizeEvent = eventTool.normalizeEvent;
-
-    function proxyEventName(name) {
-        return '_' + name + 'Handler';
-    }
 
     function makeEventPacket(eveType, target, event) {
         return {
@@ -13685,9 +13867,11 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
             // 平板补充一次findHover
             // this._mobileFindFixed(event);
             // Trigger mousemove and mousedown
-            this._mousemoveHandler(event);
+            domHandlers.mousemove.call(this, event);
 
-            this._mousedownHandler(event);
+            domHandlers.mousedown.call(this, event);
+
+            setTouchTimer(this);
         },
 
         /**
@@ -13704,7 +13888,9 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
             // Mouse move should always be triggered no matter whether
             // there is gestrue event, because mouse move and pinch may
             // be used at the same time.
-            this._mousemoveHandler(event);
+            domHandlers.mousemove.call(this, event);
+
+            setTouchTimer(this);
         },
 
         /**
@@ -13718,14 +13904,16 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
 
             processGesture(this, event, 'end');
 
-            this._mouseupHandler(event);
+            domHandlers.mouseup.call(this, event);
 
             // click event should always be triggered no matter whether
             // there is gestrue event. System click can not be prevented.
             if (+new Date() - this._lastTouchMoment < TOUCH_CLICK_DELAY) {
                 // this._mobileFindFixed(event);
-                this._clickHandler(event);
+                domHandlers.click.call(this, event);
             }
+
+            setTouchTimer(this);
         }
     };
 
@@ -13733,12 +13921,19 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
     util.each(['click', 'mousedown', 'mouseup', 'mousewheel', 'dblclick'], function (name) {
         domHandlers[name] = function (event) {
             event = normalizeEvent(this.root, event);
-
             // Find hover again to avoid click event is dispatched manually. Or click is triggered without mouseover
             var hovered = this._findHover(event.zrX, event.zrY, null);
             this._dispatchProxy(hovered, name, event);
         };
     });
+
+    // Pointer event handlers
+    // util.each(['pointerdown', 'pointermove', 'pointerup'], function (name) {
+    //     domHandlers[name] = function (event) {
+    //         var mouseName = name.replace('pointer', 'mouse');
+    //         domHandlers[mouseName].call(this, event);
+    //     };
+    // });
 
     function processGesture(zrHandler, event, stage) {
         var gestureMgr = zrHandler._gestureMgr;
@@ -13768,11 +13963,24 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
      * @param {module:zrender/Handler} instance 控制类实例
      */
     function initDomHandler(instance) {
-        var handlerNames = domHandlerNames.concat(touchHandlerNames);
-        var len = handlerNames.length;
-        while (len--) {
-            var name = handlerNames[len];
-            instance[proxyEventName(name)] = util.bind(domHandlers[name], instance);
+        var handlerNames = touchHandlerNames.concat(pointerHandlerNames);
+        for (var i = 0; i < handlerNames.length; i++) {
+            var name = handlerNames[i];
+            instance._handlers[name] = util.bind(domHandlers[name], instance);
+        }
+
+        for (var i = 0; i < mouseHandlerNames.length; i++) {
+            var name = mouseHandlerNames[i];
+            instance._handlers[name] = makeMouseHandler(domHandlers[name], instance);
+        }
+
+        function makeMouseHandler(fn, instance) {
+            return function () {
+                if (instance._touching) {
+                    return;
+                }
+                return fn.apply(instance, arguments);
+            };
         }
     }
 
@@ -13780,9 +13988,9 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
      * @alias module:zrender/Handler
      * @constructor
      * @extends module:zrender/mixin/Eventful
-     * @param {HTMLElement} root 绘图区域
-     * @param {module:zrender/Storage} storage Storage实例
-     * @param {module:zrender/Painter} painter Painter实例
+     * @param {HTMLElement} root Main HTML element for painting.
+     * @param {module:zrender/Storage} storage Storage instance.
+     * @param {module:zrender/Painter} painter Painter instance.
      */
     var Handler = function(root, storage, painter) {
         Eventful.call(this);
@@ -13793,51 +14001,82 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
 
         /**
          * @private
+         * @type {boolean}
          */
         this._hovered;
+
         /**
          * @private
+         * @type {Date}
          */
         this._lastTouchMoment;
+
         /**
          * @private
+         * @type {number}
          */
         this._lastX;
+
         /**
          * @private
+         * @type {number}
          */
         this._lastY;
+
         /**
          * @private
+         * @type {string}
          */
-        this._defaultCursorStyle = 'default'
+        this._defaultCursorStyle = 'default';
+
         /**
          * @private
+         * @type {module:zrender/core/GestureMgr}
          */
         this._gestureMgr = new GestureMgr();
 
+        /**
+         * @private
+         * @type {Array.<Function>}
+         */
+        this._handlers = [];
+
+        /**
+         * @private
+         * @type {boolean}
+         */
+        this._touching = false;
+
+        /**
+         * @private
+         * @type {number}
+         */
+        this._touchTimer;
+
         initDomHandler(this);
 
-        // @see #2350, some windows tablet (like lenovo X240) enable touch but can
-        // use IE10, which not supports touch events.
-        if (env.touchEventsSupported) {
-            // mobile支持
-            // mobile的click/move/up/down自己模拟
-            util.each(touchHandlerNames, function (name) {
-                addEventListener(root, name, this[proxyEventName(name)]);
-            }, this);
+        if (usePointerEvent()) {
+            mountHandlers(pointerHandlerNames, this);
+        }
+        else if (useTouchEvent()) {
+            mountHandlers(touchHandlerNames, this);
 
-            addEventListener(root, 'mouseout', this._mouseoutHandler);
+            // Handler of 'mouseout' event is needed in touch mode, which will be mounted below.
+            // addEventListener(root, 'mouseout', this._mouseoutHandler);
         }
-        else {
-            util.each(domHandlerNames, function (name) {
-                addEventListener(root, name, this[proxyEventName(name)]);
-            }, this);
-            // Firefox
-            addEventListener(root, 'DOMMouseScroll', this._mousewheelHandler);
-        }
+
+        // Considering some devices that both enable touch and mouse event (like MS Surface
+        // and lenovo X240, @see #2350), we make mouse event be always listened, otherwise
+        // mouse event can not be handle in those devices.
+        mountHandlers(mouseHandlerNames, this);
 
         Draggable.call(this);
+
+        function mountHandlers(handlerNames, instance) {
+            util.each(handlerNames, function (name) {
+                addEventListener(root, eventNameFix(name), instance._handlers[name]);
+            }, instance);
+        }
     };
 
     Handler.prototype = {
@@ -13857,8 +14096,8 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
          * @param {event=} eventArgs
          */
         dispatch: function (eventName, eventArgs) {
-            var handler = this[proxyEventName(eventName)];
-            handler && handler(eventArgs);
+            var handler = this._handlers[eventName];
+            handler && handler.call(this, eventArgs);
         },
 
         /**
@@ -13867,15 +14106,12 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
         dispose: function () {
             var root = this.root;
 
-            var handlerNames = domHandlerNames.concat(touchHandlerNames);
+            var handlerNames = mouseHandlerNames.concat(touchHandlerNames);
 
             for (var i = 0; i < handlerNames.length; i++) {
                 var name = handlerNames[i];
-                removeEventListener(root, name, this[proxyEventName(name)]);
+                removeEventListener(root, eventNameFix(name), this._handlers[name]);
             }
-
-            // Firefox
-            removeEventListener(root, 'DOMMouseScroll', this._mousewheelHandler);
 
             this.root =
             this.storage =
@@ -13968,12 +14204,50 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
         return false;
     }
 
+    /**
+     * Prevent mouse event from being dispatched after Touch Events action
+     * @see <https://github.com/deltakosh/handjs/blob/master/src/hand.base.js>
+     * 1. Mobile browsers dispatch mouse events 300ms after touchend.
+     * 2. Chrome for Android dispatch mousedown for long-touch about 650ms
+     * Result: Blocking Mouse Events for 700ms.
+     */
+    function setTouchTimer(instance) {
+        instance._touching = true;
+        clearTimeout(instance._touchTimer);
+        instance._touchTimer = setTimeout(function () {
+            instance._touching = false;
+        }, 700);
+    }
+
+    /**
+     * Althought MS Surface support screen touch, IE10/11 do not support
+     * touch event and MS Edge supported them but not by default (but chrome
+     * and firefox do). Thus we use Pointer event on MS browsers to handle touch.
+     */
+    function usePointerEvent() {
+        // TODO
+        // pointermove event dont trigger when using finger.
+        // We may figger it out latter.
+        return false;
+        // return env.pointerEventsSupported
+            // In no-touch device we dont use pointer but just traditional way for
+            // avoiding problem.
+            // && window.navigator.maxTouchPoints;
+    }
+
+    function useTouchEvent() {
+        return env.touchEventsSupported;
+    }
+
+    function eventNameFix(name) {
+        return (name === 'mousewheel' && env.firefox) ? 'DOMMouseScroll' : name;
+    }
+
     util.mixin(Handler, Eventful);
     util.mixin(Handler, Draggable);
 
     return Handler;
 });
-
 /**
  * Storage内容仓库模块
  * @module zrender/Storage
@@ -15336,9 +15610,9 @@ define('zrender/Layer',['require','./core/util','./config'],function (require) {
             ctx.clearRect(0, 0, width * dpr, height * dpr);
 
             var pathTransform = {
-                position : path.position,
-                rotation : path.rotation,
-                scale : path.scale
+                position: path.position,
+                rotation: path.rotation,
+                scale: path.scale
             };
             path.position = [0, 0, 0];
             path.rotation = 0;
@@ -15349,11 +15623,11 @@ define('zrender/Layer',['require','./core/util','./config'],function (require) {
 
             var ImageShape = require('./graphic/Image');
             var imgShape = new ImageShape({
-                id : id,
-                style : {
-                    x : 0,
-                    y : 0,
-                    image : canvas
+                id: id,
+                style: {
+                    x: 0,
+                    y: 0,
+                    image: canvas
                 }
             });
 
@@ -15416,7 +15690,7 @@ define('zrender/zrender',['require','./core/guid','./core/env','./Handler','./St
     /**
      * @type {string}
      */
-    zrender.version = '3.0.1';
+    zrender.version = '3.0.2';
 
     /**
      * @param {HTMLElement} dom
@@ -15509,9 +15783,6 @@ define('zrender/zrender',['require','./core/guid','./core/env','./Handler','./St
 
         this.storage = storage;
         this.painter = painter;
-        // VML 下为了性能可能会直接操作 VMLRoot 的位置
-        // 因此鼠标的相对位置应该是相对于 VMLRoot
-        // PENDING
         if (!env.node) {
             this.handler = new Handler(painter.getViewportRoot(), storage, painter);
         }
@@ -15662,7 +15933,7 @@ define('zrender/zrender',['require','./core/guid','./core/env','./Handler','./St
 
         /**
          * 将常规shape转成image shape
-         * @param {module:zrender/shape/Base} e
+         * @param {module:zrender/graphic/Path} e
          * @param {number} width
          * @param {number} height
          */
@@ -16067,7 +16338,7 @@ define('echarts/preprocessor/backwardCompat',['require','zrender/core/util','./h
 /**
  * @module echarts
  */
-define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./CoordinateSystem','./model/OptionManager','./model/Component','./model/Series','./view/Component','./view/Chart','./util/graphic','zrender','zrender/core/util','zrender/tool/color','zrender/core/env','zrender/mixin/Eventful','./loading/default','./visual/seriesColor','./preprocessor/backwardCompat','./util/graphic','./util/number','./util/format'],function (require) {
+define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./CoordinateSystem','./model/OptionManager','./model/Component','./model/Series','./view/Component','./view/Chart','./util/graphic','zrender','zrender/core/util','zrender/tool/color','zrender/core/env','zrender/mixin/Eventful','./loading/default','./visual/seriesColor','./preprocessor/backwardCompat','./util/graphic','./util/number','./util/format','zrender/core/matrix','zrender/core/vector'],function (require) {
 
     var GlobalModel = require('./model/Global');
     var ExtensionAPI = require('./ExtensionAPI');
@@ -16117,6 +16388,11 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
     function ECharts (dom, theme, opts) {
         opts = opts || {};
 
+        // Get theme by name
+        if (typeof theme === 'string') {
+            theme = themeStorage[theme];
+        }
+
         if (theme) {
             each(optionPreprocessorFuncs, function (preProcess) {
                 preProcess(theme);
@@ -16145,10 +16421,6 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
             devicePixelRatio: opts.devicePixelRatio
         });
 
-        // Get theme by name
-        if (typeof theme === 'string') {
-            theme = themeStorage[theme];
-        }
         /**
          * @type {Object}
          * @private
@@ -16742,6 +17014,7 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
                 model = componentType;
             }
 
+            // Consider: id same and type changed.
             var viewId = model.id + '_' + model.type;
             var view = viewMap[viewId];
             if (!view) {
@@ -17011,9 +17284,9 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
         /**
          * @type {number}
          */
-        version: '3.0.2',
+        version: '3.1.0',
         dependencies: {
-            zrender: '3.0.1'
+            zrender: '3.0.2'
         }
     };
 
@@ -17312,6 +17585,8 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
     echarts.graphic = require('./util/graphic');
     echarts.number = require('./util/number');
     echarts.format = require('./util/format');
+    echarts.matrix = require('zrender/core/matrix');
+    echarts.vector = require('zrender/core/vector');
 
     echarts.util = {};
     each([
@@ -17616,6 +17891,12 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
          * @private
          */
         this._rawData;
+
+        /**
+         * @type {Object}
+         * @private
+         */
+        this._extent;
     };
 
     var listProto = List.prototype;
@@ -17641,7 +17922,7 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
      *        Or a ordinal number. For example getDimensionInfo(0) will return 'x' or 'lng' or 'radius'
      */
     listProto.getDimensionInfo = function (dim) {
-        return this._dimensionInfos[this.getDimension(dim)];
+        return zrUtil.clone(this._dimensionInfos[this.getDimension(dim)]);
     };
 
     /**
@@ -17751,20 +18032,22 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
         var dataIndex = this.indices[idx];
 
         var value = storage[dim] && storage[dim][dataIndex];
-        var dimensionInfo = this._dimensionInfos[dim];
         // FIXME ordinal data type is not stackable
-        if (stack && dimensionInfo && dimensionInfo.stackable) {
-            var stackedOn = this.stackedOn;
-            while (stackedOn) {
-                // Get no stacked data of stacked on
-                var stackedValue = stackedOn.get(dim, idx);
-                // Considering positive stack, negative stack and empty data
-                if ((value >= 0 && stackedValue > 0)  // Positive stack
-                    || (value <= 0 && stackedValue < 0) // Negative stack
-                ) {
-                    value += stackedValue;
+        if (stack) {
+            var dimensionInfo = this._dimensionInfos[dim];
+            if (dimensionInfo && dimensionInfo.stackable) {
+                var stackedOn = this.stackedOn;
+                while (stackedOn) {
+                    // Get no stacked data of stacked on
+                    var stackedValue = stackedOn.get(dim, idx);
+                    // Considering positive stack, negative stack and empty data
+                    if ((value >= 0 && stackedValue > 0)  // Positive stack
+                        || (value <= 0 && stackedValue < 0) // Negative stack
+                    ) {
+                        value += stackedValue;
+                    }
+                    stackedOn = stackedOn.stackedOn;
                 }
-                stackedOn = stackedOn.stackedOn;
             }
         }
         return value;
@@ -18168,12 +18451,11 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
                     }
                 }
             }
-        });
+        }, stack, context);
 
         return list;
     };
 
-    var temporaryModel = new Model(null);
     // Since temporate model is shared by all data items. So we must make sure it can't be write.
     // PENDING may cause any performance problem?
     // if (Object.freeze) {
@@ -18181,29 +18463,14 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
     // }
     /**
      * Get model of one data item.
-     * It will create a temporary model if value on idx is not an option.
      *
      * @param {number} idx
-     * @param {boolean} [createNew=false]
      */
     // FIXME Model proxy ?
-    listProto.getItemModel = function (idx, createNew) {
-        var model;
+    listProto.getItemModel = function (idx) {
         var hostModel = this.hostModel;
         idx = this.indices[idx];
-        // Use a temporary model proxy
-        // FIXME Create a new one may cause memory leak
-        if (createNew) {
-            model = new Model(null, hostModel);
-        }
-        else {
-            model = temporaryModel;
-        }
-        // FIXME If return null when idx not exists
-        model.option = this._rawData[idx];
-        model.parentModel = hostModel;
-        model.ecModel = hostModel.ecModel;
-        return model;
+        return new Model(this._rawData[idx], hostModel, hostModel.ecModel);
     };
 
     /**
@@ -18257,10 +18524,18 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
 
     /**
      * Set layout property.
-     * @param {string} key 
-     * @param {*} val
+     * @param {string} key
+     * @param {*} [val]
      */
     listProto.setLayout = function (key, val) {
+        if (isObject(key)) {
+            for (var name in key) {
+                if (key.hasOwnProperty(name)) {
+                    this.setLayout(name, key[name]);
+                }
+            }
+            return;
+        }
         this._layout[key] = val;
     };
 
@@ -18269,7 +18544,7 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
      * @param  {string} key.
      * @return {*}
      */
-    listProto.getLayout = function (key) { 
+    listProto.getLayout = function (key) {
         return this._layout[key];
     };
 
@@ -18476,13 +18751,14 @@ define('echarts/data/helper/completeDimensions',['require','zrender/core/util'],
     return completeDimensions;
 
 });
-define('echarts/chart/helper/createListFromArray',['require','../../data/List','../../data/helper/completeDimensions','zrender/core/util','../../util/model'],function(require) {
+define('echarts/chart/helper/createListFromArray',['require','../../data/List','../../data/helper/completeDimensions','zrender/core/util','../../util/model','../../CoordinateSystem'],function(require) {
     
 
     var List = require('../../data/List');
     var completeDimensions = require('../../data/helper/completeDimensions');
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
+    var CoordinateSystem = require('../../CoordinateSystem');
     var getDataItemValue = modelUtil.getDataItemValue;
     var converDataValue = modelUtil.converDataValue;
 
@@ -18506,14 +18782,21 @@ define('echarts/chart/helper/createListFromArray',['require','../../data/List','
         // If data is undefined
         data = data || [];
 
-        var result = creaters[seriesModel.get('coordinateSystem')](
-            data, seriesModel, ecModel
-        );
-        var dimensions = result.dimensions;
-        var categoryAxisModel = result.categoryAxisModel;
+        var coordSysName = seriesModel.get('coordinateSystem');
+        var creator = creators[coordSysName];
+        var registeredCoordSys = CoordinateSystem.get(coordSysName);
+        // FIXME
+        var result = creator && creator(data, seriesModel, ecModel);
+        var dimensions = result && result.dimensions;
+        if (!dimensions) {
+            // Get dimensions from registered coordinate system
+            dimensions = (registeredCoordSys && registeredCoordSys.dimensions) || ['x', 'y'];
+            dimensions = completeDimensions(dimensions, data, dimensions.concat(['value']));
+        }
+        var categoryAxisModel = result && result.categoryAxisModel;
 
-        var categoryDimIndex = dimensions[0].type === 'ordinal' ? 0
-            : (dimensions[1].type === 'ordinal' ? 1 : -1);
+        var categoryDimIndex = dimensions[0].type === 'ordinal'
+            ? 0 : (dimensions[1].type === 'ordinal' ? 1 : -1);
 
         var list = new List(dimensions, seriesModel);
 
@@ -18539,37 +18822,48 @@ define('echarts/chart/helper/createListFromArray',['require','../../data/List','
     function isStackable(axisType) {
         return axisType !== 'category' && axisType !== 'time';
     }
+
+    function getDimTypeByAxis(axisType) {
+        return axisType === 'category'
+            ? 'ordinal'
+            : axisType === 'time'
+            ? 'time'
+            : 'float';
+    }
+
     /**
      * Creaters for each coord system.
      * @return {Object} {dimensions, categoryAxisModel};
      */
-    var creaters = {
+    var creators = {
 
         cartesian2d: function (data, seriesModel, ecModel) {
             var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
             var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
             var xAxisType = xAxisModel.get('type');
             var yAxisType = yAxisModel.get('type');
-            var isYAxisCategory = yAxisType === 'category';
-            var isXAxisCategory = xAxisType === 'category';
 
-            var dimensions = [{
-                name: 'x',
-                type: isXAxisCategory ? 'ordinal' : 'float',
-                stackable: isStackable(xAxisType)
-            }, {
-                name: 'y',
-                // If two category axes
-                type: isYAxisCategory ? 'ordinal' : 'float',
-                stackable: isStackable(yAxisType)
-            }];
+            var dimensions = [
+                {
+                    name: 'x',
+                    type: getDimTypeByAxis(xAxisType),
+                    stackable: isStackable(xAxisType)
+                },
+                {
+                    name: 'y',
+                    // If two category axes
+                    type: getDimTypeByAxis(yAxisType),
+                    stackable: isStackable(yAxisType)
+                }
+            ];
 
             completeDimensions(dimensions, data, ['x', 'y', 'z']);
 
             return {
                 dimensions: dimensions,
-                categoryAxisModel: isXAxisCategory ? xAxisModel
-                    : (isYAxisCategory ? yAxisModel : null)
+                categoryAxisModel: xAxisType === 'category'
+                    ? xAxisModel
+                    : (yAxisType === 'category' ? yAxisModel : null)
             };
         },
 
@@ -18587,24 +18881,29 @@ define('echarts/chart/helper/createListFromArray',['require','../../data/List','
                 mainType: 'radiusAxis', filter: axisFinder
             })[0];
 
-            var isRadiusAxisCategory = radiusAxisModel.get('type') === 'category';
-            var isAngleAxisCategory = angleAxisModel.get('type') === 'category';
-            var dimensions = [{
-                name: 'radius',
-                type: isRadiusAxisCategory ? 'ordinal' : 'float',
-                stackable: isStackable(radiusAxisModel.get('type'))
-            }, {
-                name: 'angle',
-                type: isAngleAxisCategory ? 'ordinal' : 'float',
-                stackable: isStackable(angleAxisModel.get('type'))
-            }];
+            var radiusAxisType = radiusAxisModel.get('type');
+            var angleAxisType = angleAxisModel.get('type');
+
+            var dimensions = [
+                {
+                    name: 'radius',
+                    type: getDimTypeByAxis(radiusAxisType),
+                    stackable: isStackable(radiusAxisType)
+                },
+                {
+                    name: 'angle',
+                    type: getDimTypeByAxis(angleAxisType),
+                    stackable: isStackable(angleAxisType)
+                }
+            ];
 
             completeDimensions(dimensions, data, ['radius', 'angle', 'value']);
 
             return {
                 dimensions: dimensions,
-                categoryAxisModel: isAngleAxisCategory ? angleAxisModel
-                    : (isRadiusAxisCategory ? radiusAxisModel : null)
+                categoryAxisModel: angleAxisType === 'category'
+                    ? angleAxisModel
+                    : (radiusAxisType === 'category' ? radiusAxisModel : null)
             };
         },
 
@@ -18623,7 +18922,7 @@ define('echarts/chart/helper/createListFromArray',['require','../../data/List','
     function createNameList(result, data) {
         var nameList = [];
 
-        if (result.categoryAxisModel) {
+        if (result && result.categoryAxisModel) {
             // FIXME Two category axis
             var categories = result.categoryAxisModel.getCategories();
             if (categories) {
@@ -18718,6 +19017,7 @@ define('echarts/chart/line/LineSeries',['require','../helper/createListFromArray
             // areaStyle: {
             // },
             // smooth: false,
+            // smoothMonotone: null,
             // 拐点图形类型
             symbol: 'emptyCircle',
             // 拐点图形大小
@@ -19140,6 +19440,7 @@ define('echarts/chart/helper/Symbol',['require','zrender/core/util','../../util/
                 strokeNoScale: true
             },
             z2: 100,
+            culling: true,
             scale: [0, 0]
         });
         // Rewrite drift method
@@ -19261,20 +19562,21 @@ define('echarts/chart/helper/Symbol',['require','zrender/core/util','../../util/
         var labelModel = itemModel.getModel(normalLabelAccessPath);
         var hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
         var lastDim = data.dimensions[data.dimensions.length - 1];
-        var labelText = seriesModel.getFormattedLabel(idx, 'normal')
-                    || data.get(lastDim, idx);
         var elStyle = symbolPath.style;
 
         if (labelModel.get('show')) {
             graphic.setText(elStyle, labelModel, color);
-            elStyle.text = labelText;
+            elStyle.text = seriesModel.getFormattedLabel(idx, 'normal')
+                || data.get(lastDim, idx);
         }
         else {
             elStyle.text = '';
         }
+
         if (hoverLabelModel.getShallow('show')) {
             graphic.setText(hoverStyle, hoverLabelModel, color);
-            hoverStyle.text = labelText;
+            hoverStyle.text = seriesModel.getFormattedLabel(idx, 'emphasis')
+                || data.get(lastDim, idx);
         }
         else {
             hoverStyle.text = '';
@@ -19815,8 +20117,6 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
     var Path = require('zrender/graphic/Path');
     var vec2 = require('zrender/core/vector');
 
-    var mathMin = Math.min;
-    var mathMax = Math.max;
     var vec2Min = vec2.min;
     var vec2Max = vec2.max;
 
@@ -19829,13 +20129,13 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
     var cp1 = [];
 
     function drawSegment(
-        ctx, points, start, allLen, segLen,
-        dir, smoothMin, smoothMax, smooth
+        ctx, points, start, stop, len,
+        dir, smoothMin, smoothMax, smooth, smoothMonotone
     ) {
         var idx = start;
-        for (var k = 0; k < segLen; k++) {
+        for (var k = 0; k < len; k++) {
             var p = points[idx];
-            if (idx >= allLen || idx < 0 || isNaN(p[0]) || isNaN(p[1])) {
+            if (idx >= stop || idx < 0 || isNaN(p[0]) || isNaN(p[1])) {
                 break;
             }
 
@@ -19847,15 +20147,17 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
                 if (smooth > 0) {
                     var prevIdx = idx - dir;
                     var nextIdx = idx + dir;
+
+                    var ratioNextSeg = 0.5;
+                    var prevP = points[prevIdx];
+                    var nextP = points[nextIdx];
                     // Last point
-                    if ((dir > 0 && idx === allLen - 1)
-                        || (dir <= 0 && idx  === 0)
+                    if ((dir > 0 && (idx === len - 1 || isNaN(nextP[0]) || isNaN(nextP[1])))
+                        || (dir <= 0 && (idx === 0 ||  isNaN(nextP[0]) || isNaN(nextP[1])))
                     ) {
                         v2Copy(cp1, p);
                     }
                     else {
-                        var prevP = points[prevIdx];
-                        var nextP = points[nextIdx];
                         // If next data is null
                         if (isNaN(nextP[0]) || isNaN(nextP[1])) {
                             nextP = p;
@@ -19863,7 +20165,22 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
 
                         vec2.sub(v, nextP, prevP);
 
-                        scaleAndAdd(cp1, p, v, -smooth / 2);
+                        var lenPrevSeg;
+                        var lenNextSeg;
+                        if (smoothMonotone === 'x' || smoothMonotone === 'y') {
+                            var dim = smoothMonotone === 'x' ? 0 : 1;
+                            lenPrevSeg = Math.abs(p[dim] - prevP[dim]);
+                            lenNextSeg = Math.abs(p[dim] - nextP[dim]);
+                        }
+                        else {
+                            lenPrevSeg = vec2.dist(p, prevP);
+                            lenNextSeg = vec2.dist(p, nextP);
+                        }
+
+                        // Use ratio of seg length
+                        ratioNextSeg = lenNextSeg / (lenNextSeg + lenPrevSeg);
+
+                        scaleAndAdd(cp1, p, v, -smooth * (1 - ratioNextSeg));
                     }
                     // Smooth constraint
                     vec2Min(cp0, cp0, smoothMax);
@@ -19877,7 +20194,7 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
                         p[0], p[1]
                     );
                     // cp0 of next segment
-                    scaleAndAdd(cp0, p, v, smooth / 2);
+                    scaleAndAdd(cp0, p, v, smooth * ratioNextSeg);
                 }
                 else {
                     ctx.lineTo(p[0], p[1]);
@@ -19919,7 +20236,9 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
 
                 smooth: 0,
 
-                smoothConstraint: true
+                smoothConstraint: true,
+
+                smoothMonotone: null
             },
 
             style: {
@@ -19939,7 +20258,8 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
                 while (i < len) {
                     i += drawSegment(
                         ctx, points, i, len, len,
-                        1, result.min, result.max, shape.smooth
+                        1, result.min, result.max, shape.smooth,
+                        shape.smoothMonotone
                     ) + 1;
                 }
             }
@@ -19951,11 +20271,17 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
 
             shape: {
                 points: [],
+
                 // Offset between stacked base points and points
                 stackedOnPoints: [],
+
                 smooth: 0,
+
                 stackedOnSmooth: 0,
-                smoothConstraint: true
+
+                smoothConstraint: true,
+
+                smoothMonotone: null
             },
 
             buildPath: function (ctx, shape) {
@@ -19964,16 +20290,19 @@ define('echarts/chart/line/poly',['require','zrender/graphic/Path','zrender/core
 
                 var i = 0;
                 var len = points.length;
+                var smoothMonotone = shape.smoothMonotone;
                 var bbox = getBoundingBox(points, shape.smoothConstraint);
                 var stackedOnBBox = getBoundingBox(stackedOnPoints, shape.smoothConstraint);
                 while (i < len) {
                     var k = drawSegment(
                         ctx, points, i, len, len,
-                        1, bbox.min, bbox.max, shape.smooth
+                        1, bbox.min, bbox.max, shape.smooth,
+                        smoothMonotone
                     );
                     drawSegment(
                         ctx, stackedOnPoints, i + k - 1, len, k,
-                        -1, stackedOnBBox.min, stackedOnBBox.max, shape.stackedOnSmooth
+                        -1, stackedOnBBox.min, stackedOnBBox.max, shape.stackedOnSmooth,
+                        smoothMonotone
                     );
                     i += k + 1;
 
@@ -20215,26 +20544,35 @@ define('echarts/chart/line/LineView',['require','zrender/core/util','../helper/S
 
             // Initialization animation or coordinate system changed
             if (
-                !(polyline
-                && prevCoordSys.type === coordSys.type)
+                !(polyline && prevCoordSys.type === coordSys.type)
             ) {
                 showSymbol && symbolDraw.updateData(data, isSymbolIgnore);
 
-                polyline = this._newPolyline(group, points, coordSys, hasAnimation);
+                polyline = this._newPolyline(points, coordSys, hasAnimation);
                 if (isAreaChart) {
                     polygon = this._newPolygon(
-                        group, points,
-                        stackedOnPoints,
+                        points, stackedOnPoints,
                         coordSys, hasAnimation
                     );
                 }
                 lineGroup.setClipPath(createClipShape(coordSys, true, seriesModel));
             }
             else {
-                // Update clipPath
-                if (hasAnimation) {
-                    lineGroup.setClipPath(createClipShape(coordSys, false, seriesModel));
+                if (isAreaChart && !polygon) {
+                    // If areaStyle is added
+                    polygon = this._newPolygon(
+                        points, stackedOnPoints,
+                        coordSys, hasAnimation
+                    );
                 }
+                else if (polygon && !isAreaChart) {
+                    // If areaStyle is removed
+                    lineGroup.remove(polygon);
+                    polygon = this._polygon = null;
+                }
+
+                // Update clipPath
+                lineGroup.setClipPath(createClipShape(coordSys, false, seriesModel));
 
                 // Always update, or it is wrong in the case turning on legend
                 // because points are not changed
@@ -20279,10 +20617,12 @@ define('echarts/chart/line/LineView',['require','zrender/core/util','../helper/S
 
             var smooth = seriesModel.get('smooth');
             smooth = getSmooth(seriesModel.get('smooth'));
-            polyline.shape.smooth = smooth;
+            polyline.setShape({
+                smooth: smooth,
+                smoothMonotone: seriesModel.get('smoothMonotone')
+            });
 
             if (polygon) {
-                var polygonShape = polygon.shape;
                 var stackedOn = data.stackedOn;
                 var stackedOnSmooth = 0;
 
@@ -20294,14 +20634,17 @@ define('echarts/chart/line/LineView',['require','zrender/core/util','../helper/S
                         lineJoin: 'bevel'
                     }
                 ));
-                polygonShape.smooth = smooth;
 
                 if (stackedOn) {
                     var stackedOnSeries = stackedOn.hostModel;
                     stackedOnSmooth = getSmooth(stackedOnSeries.get('smooth'));
                 }
 
-                polygonShape.stackedOnSmooth = stackedOnSmooth;
+                polygon.setShape({
+                    smooth: smooth,
+                    stackedOnSmooth: stackedOnSmooth,
+                    smoothMonotone: seriesModel.get('smoothMonotone')
+                });
             }
 
             this._data = data;
@@ -20373,11 +20716,11 @@ define('echarts/chart/line/LineView',['require','zrender/core/util','../helper/S
          * @param {Array.<Array.<number>>} points
          * @private
          */
-        _newPolyline: function (group, points) {
+        _newPolyline: function (points) {
             var polyline = this._polyline;
             // Remove previous created polyline
             if (polyline) {
-                group.remove(polyline);
+                this._lineGroup.remove(polyline);
             }
 
             polyline = new polyHelper.Polyline({
@@ -20401,11 +20744,11 @@ define('echarts/chart/line/LineView',['require','zrender/core/util','../helper/S
          * @param {Array.<Array.<number>>} points
          * @private
          */
-        _newPolygon: function (group, points, stackedOnPoints) {
+        _newPolygon: function (points, stackedOnPoints) {
             var polygon = this._polygon;
             // Remove previous created polygon
             if (polygon) {
-                group.remove(polygon);
+                this._lineGroup.remove(polygon);
             }
 
             polygon = new polyHelper.Polygon({
@@ -20620,6 +20963,19 @@ define('echarts/scale/Scale',['require','../util/clazz'],function (require) {
 
     var scaleProto = Scale.prototype;
 
+    /**
+     * Parse input val to valid inner number.
+     * @param {*} val
+     * @return {number}
+     */
+    scaleProto.parse = function (val) {
+        // Notice: This would be a trap here, If the implementation
+        // of this method depends on extent, and this method is used
+        // before extent set (like in dataZoom), it would be wrong.
+        // Nevertheless, parse does not depend on extent generally.
+        return val;
+    };
+
     scaleProto.contain = function (val) {
         var extent = this._extent;
         return val >= extent[0] && val <= extent[1];
@@ -20726,7 +21082,15 @@ define('echarts/scale/Ordinal',['require','zrender/core/util','./Scale'],functio
             this._extent = extent || [0, data.length - 1];
         },
 
+        parse: function (val) {
+            return typeof val === 'string'
+                ? zrUtil.indexOf(this._data, val)
+                // val might be float.
+                : Math.round(val);
+        },
+
         contain: function (rank) {
+            rank = this.parse(rank);
             return scaleProto.contain.call(this, rank)
                 && this._data[rank] != null;
         },
@@ -20737,10 +21101,7 @@ define('echarts/scale/Ordinal',['require','zrender/core/util','./Scale'],functio
          * @return {number}
          */
         normalize: function (val) {
-            if (typeof val === 'string') { // Is string
-                val = zrUtil.indexOf(this._data, val);
-            }
-            return scaleProto.normalize.call(this, val);
+            return scaleProto.normalize.call(this, this.parse(val));
         },
 
         scale: function (val) {
@@ -21100,13 +21461,17 @@ define('echarts/scale/Time',['require','zrender/core/util','../util/number','../
             // Interval will be used in getTicks
             this._interval = interval;
             this._niceExtent = niceExtent;
+        },
+
+        parse: function (val) {
+            // val might be float.
+            return +numberUtil.parseDate(val);
         }
     });
 
     zrUtil.each(['contain', 'normalize'], function (methodName) {
         TimeScale.prototype[methodName] = function (val) {
-            val = +numberUtil.parseDate(val);
-            return intervalScaleProto[methodName].call(this, val);
+            return intervalScaleProto[methodName].call(this, this.parse(val));
         };
     });
 
@@ -21294,6 +21659,7 @@ define('echarts/coord/axisHelper',['require','../scale/Ordinal','../scale/Interv
         }
         var min = model.get('min');
         var max = model.get('max');
+        var crossZero = !model.get('scale');
         var boundaryGap = model.get('boundaryGap');
         if (!zrUtil.isArray(boundaryGap)) {
             boundaryGap = [boundaryGap || 0, boundaryGap || 0];
@@ -21319,6 +21685,17 @@ define('echarts/coord/axisHelper',['require','../scale/Ordinal','../scale/Interv
         }
         if (max === 'dataMax') {
             max = originalExtent[1];
+        }
+        // Evaluate if axis needs cross zero
+        if (crossZero) {
+            // Axis is over zero and min is not set
+            if (min > 0 && max > 0 && !fixMin) {
+                min = 0;
+            }
+            // Axis is under zero and max is not set
+            if (min < 0 && max < 0 && !fixMax) {
+                max = 0;
+            }
         }
         scale.setExtent(min, max);
         scale.niceExtent(model.get('splitNumber'), fixMin, fixMax);
@@ -21364,23 +21741,7 @@ define('echarts/coord/axisHelper',['require','../scale/Ordinal','../scale/Interv
         var dataExtent = axis.scale.getExtent();
         var min = dataExtent[0];
         var max = dataExtent[1];
-        var optMin = axis.model.get('min');
-        var optMax = axis.model.get('max');
-        if (!isNaN(optMin)) {
-            min = Math.min(optMin, min);
-        }
-        if (!isNaN(optMax)) {
-            max = Math.max(optMax, max);
-        }
-        return !((min > 0 && max > 0) || (min < 0 && max < 0))
-            || axisHelper.ifAxisNeedsCrossZero(axis);
-    };
-
-    /**
-     * Check if the axis scale needs include data 0
-     */
-    axisHelper.ifAxisNeedsCrossZero = function (axis) {
-        return !axis.model.get('scale');
+        return !((min > 0 && max > 0) || (min < 0 && max < 0));
     };
 
     /**
@@ -21579,12 +21940,6 @@ define('echarts/coord/cartesian/Cartesian2D',['require','zrender/core/util','./C
     function Cartesian2D(name) {
 
         Cartesian.call(this, name);
-
-        /**
-         * @type {Array.<string>}
-         * @readOnly
-         */
-        this.dimensions = ['x', 'y'];
     }
 
     Cartesian2D.prototype = {
@@ -21592,6 +21947,12 @@ define('echarts/coord/cartesian/Cartesian2D',['require','zrender/core/util','./C
         constructor: Cartesian2D,
 
         type: 'cartesian2d',
+
+        /**
+         * @type {Array.<string>}
+         * @readOnly
+         */
+        dimensions: ['x', 'y'],
 
         /**
          * Base axis will be used on stacking.
@@ -22382,7 +22743,6 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
     var each = zrUtil.each;
 
     var ifAxisCrossZero = axisHelper.ifAxisCrossZero;
-    var ifAxisNeedsCrossZero = axisHelper.ifAxisNeedsCrossZero;
     var niceScaleExtent = axisHelper.niceScaleExtent;
 
     // 依赖 GridModel, AxisModel 做预处理
@@ -22545,7 +22905,6 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
         };
 
         ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
-
         ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
 
         if (!axesCount.x || !axesCount.y) {
@@ -22575,10 +22934,21 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
 
         function ifAxisCanNotOnZero(otherAxisDim) {
             var axes = axesMap[otherAxisDim];
-            return (axes[0] && (axes[0].type === 'category' || !ifAxisCrossZero(axes[0])))
-                || (axes[1] && (axes[1].type === 'category' || !ifAxisCrossZero(axes[1])));
+            for (var idx in axes) {
+                var axis = axes[idx];
+                if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
+                    return true;
+                }
+            }
+            return false;
         }
 
+        each(axesMap.x, function (xAxis) {
+            niceScaleExtent(xAxis, xAxis.model);
+        });
+        each(axesMap.y, function (yAxis) {
+            niceScaleExtent(yAxis, yAxis.model);
+        });
         // Fix configuration
         each(axesMap.x, function (xAxis) {
             // onZero can not be enabled in these two situations
@@ -22587,21 +22957,12 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
             if (ifAxisCanNotOnZero('y')) {
                 xAxis.onZero = false;
             }
-            if (ifAxisNeedsCrossZero(xAxis)) {
-                xAxis.scale.unionExtent([0, 0]);
-            }
-            niceScaleExtent(xAxis, xAxis.model);
-        }, this);
-
+        });
         each(axesMap.y, function (yAxis) {
             if (ifAxisCanNotOnZero('x')) {
                 yAxis.onZero = false;
             }
-            if (ifAxisNeedsCrossZero(yAxis)) {
-                yAxis.scale.unionExtent([0, 0]);
-            }
-            niceScaleExtent(yAxis, yAxis.model);
-        }, this);
+        });
 
         function createAxisCreator(axisType) {
             return function (axisModel, idx) {
@@ -22755,6 +23116,9 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
         return grids;
     };
 
+    // For deciding which dimensions to use when creating list data
+    Grid.dimensions = Cartesian2D.prototype.dimensions;
+
     require('../../CoordinateSystem').register('grid', Grid);
 
     return Grid;
@@ -22776,6 +23140,20 @@ define('echarts/chart/bar/BarSeries',['require','../../model/Series','../helper/
             return createListFromArray(option.data, this, ecModel);
         },
 
+        getMarkerPosition: function (value) {
+            var coordSys = this.coordinateSystem;
+            if (coordSys) {
+                var pt = coordSys.dataToPoint(value);
+                var data = this.getData();
+                var offset = data.getLayout('offset');
+                var size = data.getLayout('size');
+                var offsetIndex = coordSys.getBaseAxis().isHorizontal() ? 0 : 1;
+                pt[offsetIndex] += offset + size / 2;
+                return pt;
+            }
+            return [NaN, NaN];
+        },
+
         defaultOption: {
             zlevel: 0,                  // 一级层叠
             z: 2,                       // 二级层叠
@@ -22794,9 +23172,9 @@ define('echarts/chart/bar/BarSeries',['require','../../model/Series','../helper/
             // 默认自适应
             // barWidth: null,
             // 柱间距离，默认为柱形宽度的30%，可设固定值
-            barGap: '30%',
+            // barGap: '30%',
             // 类目间柱形距离，默认为类目间距的20%，可设固定值
-            barCategoryGap: '20%',
+            // barCategoryGap: '20%',
             // label: {
             //     normal: {
             //         show: false
@@ -22983,17 +23361,19 @@ define('echarts/chart/bar/BarView',['require','zrender/core/util','../../util/gr
 
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
-                var labelModel = itemModel.getModel('label.normal');
                 var color = data.getItemVisual(idx, 'color');
                 var layout = data.getItemLayout(idx);
+                var itemStyleModel = itemModel.getModel('itemStyle.normal');
 
                 var hoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+
+                rect.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
 
                 rect.setStyle(zrUtil.defaults(
                     {
                         fill: color
                     },
-                    itemModel.getModel('itemStyle.normal').getBarItemStyle()
+                    itemStyleModel.getBarItemStyle()
                 ));
 
                 var labelPositionOutside = isHorizontal
@@ -23210,6 +23590,10 @@ define('echarts/layout/barGrid',['require','zrender/core/util','../util/number']
             var coords = cartesian.dataToPoints(data, true);
             lastStackCoords[stackId] = lastStackCoords[stackId] || [];
 
+            data.setLayout({
+                offset: columnOffset,
+                size: columnWidth
+            });
             data.each(valueAxis.dim, function (value, idx) {
                 // 空数据
                 if (isNaN(value)) {
@@ -23257,6 +23641,7 @@ define('echarts/layout/barGrid',['require','zrender/core/util','../util/number']
                     height: height
                 });
             }, true);
+
         }, this);
     }
 
@@ -24736,10 +25121,17 @@ define('echarts/component/axis/AxisBuilder',['require','zrender/core/util','../.
      * @static
      */
     var ifIgnoreOnTick = AxisBuilder.ifIgnoreOnTick = function (axis, i, interval) {
-        return axis.scale.type === 'ordinal'
-            && (typeof interval === 'function')
-                && !interval(i, axis.scale.getLabel(i))
-                || i % (interval + 1);
+        var rawTick;
+        var scale = axis.scale;
+        return scale.type === 'ordinal'
+            && (
+                typeof interval === 'function'
+                    ? (
+                        rawTick = scale.getTicks()[i],
+                        !interval(rawTick, scale.getLabel(rawTick))
+                    )
+                    : i % (interval + 1)
+            );
     };
 
     /**
