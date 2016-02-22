@@ -233,7 +233,7 @@ define(function(require) {
     graphProto.breadthFirstTraverse = function (
         cb, startNode, direction, context
     ) {
-        if (!startNode instanceof Node) {
+        if (!(startNode instanceof Node)) {
             startNode = this._nodesMap[startNode];
         }
         if (!startNode) {

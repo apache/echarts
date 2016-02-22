@@ -8,8 +8,7 @@ define(function (require) {
 
     SaveAsImage.defaultOption = {
         show: true,
-        icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6\
-            M29.2,45.1L29.2,0',
+        icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6M29.2,45.1L29.2,0',
         title: '保存为图片',
         type: 'png',
         // Default use option.backgroundColor
@@ -51,9 +50,10 @@ define(function (require) {
         // IE
         else {
             var lang = model.get('lang');
-            var html = '<body style="margin:0;">\
-                <img src="' + url + '" style="max-width:100%;" title="' + ((lang && lang[0]) || '') + '" />\
-            </body>';
+            var html = ''
+                + '<body style="margin:0;">'
+                + '<img src="' + url + '" style="max-width:100%;" title="' + ((lang && lang[0]) || '') + '" />'
+                + '</body>';
             var tab = window.open();
             tab.document.write(html);
         }
