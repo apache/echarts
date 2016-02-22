@@ -235,17 +235,29 @@ define(function(require) {
             ) {
                 showSymbol && symbolDraw.updateData(data, isSymbolIgnore);
 
-                polyline = this._newPolyline(group, points, coordSys, hasAnimation);
+                polyline = this._newPolyline(points, coordSys, hasAnimation);
                 if (isAreaChart) {
                     polygon = this._newPolygon(
-                        group, points,
-                        stackedOnPoints,
+                        points, stackedOnPoints,
                         coordSys, hasAnimation
                     );
                 }
                 lineGroup.setClipPath(createClipShape(coordSys, true, seriesModel));
             }
             else {
+                if (isAreaChart && !polygon) {
+                    // If areaStyle is added
+                    polygon = this._newPolygon(
+                        points, stackedOnPoints,
+                        coordSys, hasAnimation
+                    );
+                }
+                else if (polygon && !isAreaChart) {
+                    // If areaStyle is removed
+                    lineGroup.remove(polygon);
+                    polygon = this._polygon = null;
+                }
+
                 // Update clipPath
                 if (hasAnimation) {
                     lineGroup.setClipPath(createClipShape(coordSys, false, seriesModel));
@@ -393,11 +405,11 @@ define(function(require) {
          * @param {Array.<Array.<number>>} points
          * @private
          */
-        _newPolyline: function (group, points) {
+        _newPolyline: function (points) {
             var polyline = this._polyline;
             // Remove previous created polyline
             if (polyline) {
-                group.remove(polyline);
+                this._lineGroup.remove(polyline);
             }
 
             polyline = new polyHelper.Polyline({
@@ -421,11 +433,11 @@ define(function(require) {
          * @param {Array.<Array.<number>>} points
          * @private
          */
-        _newPolygon: function (group, points, stackedOnPoints) {
+        _newPolygon: function (points, stackedOnPoints) {
             var polygon = this._polygon;
             // Remove previous created polygon
             if (polygon) {
-                group.remove(polygon);
+                this._lineGroup.remove(polygon);
             }
 
             polygon = new polyHelper.Polygon({
