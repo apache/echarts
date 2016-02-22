@@ -36,7 +36,7 @@ define(function(require) {
                     x = 0;
                     nextX = moveX;
                     y += currentLineMaxSize + gap;
-                    currentLineMaxSize = 0;
+                    currentLineMaxSize = rect.height;
                 }
                 else {
                     currentLineMaxSize = Math.max(currentLineMaxSize, rect.height);
@@ -50,7 +50,7 @@ define(function(require) {
                     x += currentLineMaxSize + gap;
                     y = 0;
                     nextY = moveY;
-                    currentLineMaxSize = 0;
+                    currentLineMaxSize = rect.width;
                 }
                 else {
                     currentLineMaxSize = Math.max(currentLineMaxSize, rect.width);
