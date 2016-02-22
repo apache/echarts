@@ -230,8 +230,7 @@ define(function(require) {
 
             // Initialization animation or coordinate system changed
             if (
-                !(polyline
-                && prevCoordSys.type === coordSys.type)
+                !(polyline && prevCoordSys.type === coordSys.type)
             ) {
                 showSymbol && symbolDraw.updateData(data, isSymbolIgnore);
 
@@ -247,9 +246,7 @@ define(function(require) {
             }
             else {
                 // Update clipPath
-                if (hasAnimation) {
-                    lineGroup.setClipPath(createClipShape(coordSys, false, seriesModel));
-                }
+                lineGroup.setClipPath(createClipShape(coordSys, hasAnimation, seriesModel));
 
                 // Always update, or it is wrong in the case turning on legend
                 // because points are not changed
