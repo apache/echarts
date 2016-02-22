@@ -98,13 +98,17 @@ define(function (require) {
             // Interval will be used in getTicks
             this._interval = interval;
             this._niceExtent = niceExtent;
+        },
+
+        parse: function (val) {
+            // val might be float.
+            return +numberUtil.parseDate(val);
         }
     });
 
     zrUtil.each(['contain', 'normalize'], function (methodName) {
         TimeScale.prototype[methodName] = function (val) {
-            val = +numberUtil.parseDate(val);
-            return intervalScaleProto[methodName].call(this, val);
+            return intervalScaleProto[methodName].call(this, this.parse(val));
         };
     });
 

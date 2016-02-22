@@ -26,6 +26,19 @@ define(function (require) {
 
     var scaleProto = Scale.prototype;
 
+    /**
+     * Parse input val to valid inner number.
+     * @param {*} val
+     * @return {number}
+     */
+    scaleProto.parse = function (val) {
+        // Notice: This would be a trap here, If the implementation
+        // of this method depends on extent, and this method is used
+        // before extent set (like in dataZoom), it would be wrong.
+        // Nevertheless, parse does not depend on extent generally.
+        return val;
+    };
+
     scaleProto.contain = function (val) {
         var extent = this._extent;
         return val >= extent[0] && val <= extent[1];

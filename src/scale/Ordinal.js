@@ -22,7 +22,15 @@ define(function (require) {
             this._extent = extent || [0, data.length - 1];
         },
 
+        parse: function (val) {
+            return typeof val === 'string'
+                ? zrUtil.indexOf(this._data, val)
+                // val might be float.
+                : Math.round(val);
+        },
+
         contain: function (rank) {
+            rank = this.parse(rank);
             return scaleProto.contain.call(this, rank)
                 && this._data[rank] != null;
         },
@@ -33,10 +41,7 @@ define(function (require) {
          * @return {number}
          */
         normalize: function (val) {
-            if (typeof val === 'string') { // Is string
-                val = zrUtil.indexOf(this._data, val);
-            }
-            return scaleProto.normalize.call(this, val);
+            return scaleProto.normalize.call(this, this.parse(val));
         },
 
         scale: function (val) {

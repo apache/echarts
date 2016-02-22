@@ -28,6 +28,8 @@ define(function(require) {
             orient: null,           // Default auto by axisIndex. Possible value: 'horizontal', 'vertical'.
             xAxisIndex: null,       // Default all horizontal category axis.
             yAxisIndex: null,       // Default all vertical category axis.
+            angleAxisIndex: null,
+            radiusAxisIndex: null,
             filterMode: 'filter',   // 'filter' or 'empty'
                                     // 'filter': data items which are out of window will be removed.
                                     //           This option is applicable when filtering outliers.
@@ -46,14 +48,6 @@ define(function(require) {
          * @override
          */
         init: function (option, parentModel, ecModel) {
-
-            /**
-             * can be 'axisIndex' or 'orient'
-             *
-             * @private
-             * @type {string}
-             */
-            this._autoMode;
 
             /**
              * key like x_0, y_1
@@ -78,33 +72,42 @@ define(function(require) {
              */
             this.textStyleModel;
 
+            var rawOption = retrieveRaw(option);
+
             this.mergeDefaultAndTheme(option, ecModel);
 
-            this.doInit({}, true);
+            this.doInit(rawOption);
         },
 
         /**
          * @override
          */
         mergeOption: function (newOption) {
-            //FIX #2591
-            newOption && zrUtil.merge(this.option, newOption, true);
+            var rawOption = retrieveRaw(newOption);
 
-            this.doInit(newOption, false);
+            //FIX #2591
+            zrUtil.merge(this.option, newOption, true);
+
+            this.doInit(rawOption);
         },
 
         /**
          * @protected
          */
-        doInit: function (newOption, isInit) {
+        doInit: function (rawOption) {
+            var thisOption = this.option;
+
             // Disable realtime view update if canvas is not supported.
             if (!env.canvasSupported) {
-                this.option.realtime = false;
+                thisOption.realtime = false;
             }
+
+            processRangeProp('start', 'startValue', rawOption, thisOption);
+            processRangeProp('end', 'endValue', rawOption, thisOption);
 
             this.textStyleModel = this.getModel('textStyle');
 
-            this._resetTarget(newOption, isInit);
+            this._resetTarget();
 
             this._giveAxisProxies();
 
@@ -137,19 +140,17 @@ define(function(require) {
         /**
          * @private
          */
-        _resetTarget: function (newOption, isInit) {
-
-            this._resetAutoMode(newOption, isInit);
-
+        _resetTarget: function () {
             var thisOption = this.option;
+
+            var autoMode = this._judgeAutoMode();
 
             eachAxisDim(function (dimNames) {
                 var axisIndexName = dimNames.axisIndex;
-                thisOption[axisIndexName] = autoMode === 'axisIndex'
-                    ? [] : modelUtil.normalizeToArray(thisOption[axisIndexName]);
+                thisOption[axisIndexName] = modelUtil.normalizeToArray(
+                    thisOption[axisIndexName]
+                );
             }, this);
-
-            var autoMode = this._autoMode;
 
             if (autoMode === 'axisIndex') {
                 this._autoSetAxisIndex();
@@ -162,39 +163,32 @@ define(function(require) {
         /**
          * @private
          */
-        _resetAutoMode: function (newOption, isInit) {
-            // Consider this case:
-            // There is no axisIndex specified at the begining,
-            // which means that auto choise of axisIndex is required.
-            // Then user modifies series using setOption and do not specify axisIndex either.
-            // At that moment axisIndex should be re-choised, but not remain last choise.
-            // So we keep auto mode util user specified axisIndex or orient in newOption.
-            var option = isInit ? this.option : newOption;
+        _judgeAutoMode: function () {
+            // Auto set only works for setOption at the first time.
+            // The following is user's reponsibility. So using merged
+            // option is OK.
+            var thisOption = this.option;
 
             var hasIndexSpecified = false;
             eachAxisDim(function (dimNames) {
                 // When user set axisIndex as a empty array, we think that user specify axisIndex
                 // but do not want use auto mode. Because empty array may be encountered when
                 // some error occured.
-                if (option[dimNames.axisIndex] != null) {
+                if (thisOption[dimNames.axisIndex] != null) {
                     hasIndexSpecified = true;
                 }
             }, this);
 
-            var orient = option.orient;
+            var orient = thisOption.orient;
 
             if (orient == null && hasIndexSpecified) {
-                // Auto set orient by axisIndex.
-                this._autoMode = 'orient';
+                return 'orient';
             }
-            else {
+            else if (!hasIndexSpecified) {
                 if (orient == null) {
-                    this.option.orient = 'horizontal';
+                    thisOption.orient = 'horizontal';
                 }
-                if (!hasIndexSpecified) {
-                    // Auto set axisIndex by orient.
-                    this._autoMode = 'axisIndex';
-                }
+                return 'axisIndex';
             }
         },
 
@@ -202,8 +196,8 @@ define(function(require) {
          * @private
          */
         _autoSetAxisIndex: function () {
-            var autoAxisIndex = this._autoMode === 'axisIndex';
-            var orient = this.get('orient');
+            var autoAxisIndex = true;
+            var orient = this.get('orient', true);
             var thisOption = this.option;
 
             if (autoAxisIndex) {
@@ -363,6 +357,9 @@ define(function(require) {
          */
         setRawRange: function (opt) {
             each(['start', 'end', 'startValue', 'endValue'], function (name) {
+                // If any of those prop is null/undefined, we should alos set
+                // them, because only one pair between start/end and
+                // startValue/endValue can work.
                 this.option[name] = opt[name];
             }, this);
         },
@@ -372,7 +369,7 @@ define(function(require) {
          * @return {Array.<number>} [startPercent, endPercent]
          */
         getPercentRange: function () {
-            var axisProxy = findRepresentativeAxisProxy(this);
+            var axisProxy = this.findRepresentativeAxisProxy();
             if (axisProxy) {
                 return axisProxy.getDataPercentWindow();
             }
@@ -388,7 +385,7 @@ define(function(require) {
          */
         getValueRange: function (axisDimName, axisIndex) {
             if (axisDimName == null && axisIndex == null) {
-                var axisProxy = findRepresentativeAxisProxy(this);
+                var axisProxy = this.findRepresentativeAxisProxy();
                 if (axisProxy) {
                     return axisProxy.getDataValueWindow();
                 }
@@ -396,29 +393,53 @@ define(function(require) {
             else {
                 return this.getAxisProxy(axisDimName, axisIndex).getDataValueWindow();
             }
+        },
+
+        /**
+         * @public
+         * @return {module:echarts/component/dataZoom/AxisProxy}
+         */
+        findRepresentativeAxisProxy: function () {
+            // Find the first hosted axisProxy
+            var axisProxies = this._axisProxies;
+            for (var key in axisProxies) {
+                if (axisProxies.hasOwnProperty(key) && axisProxies[key].hostedBy(this)) {
+                    return axisProxies[key];
+                }
+            }
+
+            // If no hosted axis find not hosted axisProxy.
+            // Consider this case: dataZoomModel1 and dataZoomModel2 control the same axis,
+            // and the option.start or option.end settings are different. The percentRange
+            // should follow axisProxy.
+            // (We encounter this problem in toolbox data zoom.)
+            for (var key in axisProxies) {
+                if (axisProxies.hasOwnProperty(key) && !axisProxies[key].hostedBy(this)) {
+                    return axisProxies[key];
+                }
+            }
         }
 
     });
 
-    function findRepresentativeAxisProxy(dataZoomModel) {
-        // Find the first hosted axisProxy
-        var axisProxies = dataZoomModel._axisProxies;
-        for (var key in axisProxies) {
-            if (axisProxies.hasOwnProperty(key) && axisProxies[key].hostedBy(dataZoomModel)) {
-                return axisProxies[key];
+    function retrieveRaw(option) {
+        var ret = {};
+        each(
+            ['start', 'end', 'startValue', 'endValue'],
+            function (name) {
+                ret[name] = option[name];
             }
-        }
-
-        // If no hosted axis find not hosted axisProxy.
-        // Consider this case: dataZoomModel1 and dataZoomModel2 control the same axis,
-        // and the option.start or option.end settings are different. The percentRange
-        // should follow axisProxy.
-        // (We encounter this problem in toolbox data zoom.)
-        for (var key in axisProxies) {
-            if (axisProxies.hasOwnProperty(key) && !axisProxies[key].hostedBy(dataZoomModel)) {
-                return axisProxies[key];
-            }
-        }
+        );
+        return ret;
     }
 
+    function processRangeProp(percentProp, valueProp, rawOption, thisOption) {
+        // start/end has higher priority over startValue/endValue,
+        // but we should make chart.setOption({endValue: 1000}) effective,
+        // rather than chart.setOption({endValue: 1000, end: null}).
+        if (rawOption[valueProp] != null && rawOption[percentProp] == null) {
+            thisOption[percentProp] = null;
+        }
+        // Otherwise do nothing and use the merge result.
+    }
 });
