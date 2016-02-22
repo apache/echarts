@@ -1,37 +1,48 @@
 {
-    "name": "echarts",
-    "version": "3.0.2",
-    "description": "A powerful charting and visualization library for browser",
-    "keywords": [
-        "visualization",
-        "canvas"
-    ],
-    "homepage": "http://echarts.baidu.com/",
-    "author": [{
-        "name": "Kenner",
-        "email": "kener.linfeng@gmail.com"
-    }, {
-        "name": "Yi Shen",
-        "url": "https://github.com/pissang"
-    }, {
-        "name": "Shuang Su",
-        "url": "https://github.com/100pah"
-    }],
-    "contributors": [{
-        "name": "erik",
-        "email": "errorrik@gmail.com"
-    }],
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/ecomfe/echarts.git"
+  "name": "echarts",
+  "version": "3.0.2",
+  "description": "A powerful charting and visualization library for browser",
+  "keywords": [
+    "visualization",
+    "canvas"
+  ],
+  "homepage": "http://echarts.baidu.com/",
+  "author": [
+    {
+      "name": "Kenner",
+      "email": "kener.linfeng@gmail.com"
     },
-    "main": "dist/echarts.min.js",
-    "browserify": "dist/echarts.min.js",
-    "files": [
-        "dist",
-        "src"
-    ],
-    "devDependencies": {
-        "zrender": "~3.0.1"
+    {
+      "name": "Yi Shen",
+      "url": "https://github.com/pissang"
+    },
+    {
+      "name": "Shuang Su",
+      "url": "https://github.com/100pah"
     }
+  ],
+  "contributors": [
+    {
+      "name": "erik",
+      "email": "errorrik@gmail.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ecomfe/echarts.git"
+  },
+  "scripts": {
+    "prepublish": "node build/amd2common.bundle.js"
+  },
+  "dependencies": {
+    "zrender": "^3.0.1"
+  },
+  "devDependencies": {
+    "escodegen": "^1.8.0",
+    "esprima": "^2.7.2",
+    "estraverse": "^4.1.1",
+    "etpl": "^3.0.1",
+    "optimist": "^0.6.1",
+    "uglify-js": "^2.6.1"
+  }
 }
