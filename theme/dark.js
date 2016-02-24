@@ -20,35 +20,40 @@
         return;
     }
     var contrastColor = '#eee';
-    var axisCommon = {
-        axisLine: {
-            lineStyle: {
-                color: contrastColor
+    var axisCommon = function () {
+        return {
+            axisLine: {
+                lineStyle: {
+                    color: contrastColor
+                }
+            },
+            axisTick: {
+                lineStyle: {
+                    color: contrastColor
+                }
+            },
+            axisLabel: {
+                textStyle: {
+                    color: contrastColor
+                }
+            },
+            splitLine: {
+                lineStyle: {
+                    type: 'dashed',
+                    color: '#aaa'
+                }
+            },
+            splitArea: {
+                areaStyle: {
+                    color: contrastColor
+                }
             }
-        },
-        axisTick: {
-            lineStyle: {
-                color: contrastColor
-            }
-        },
-        axisLabel: {
-            textStyle: {
-                color: contrastColor
-            }
-        },
-        splitLine: {
-            lineStyle: {
-                color: contrastColor
-            }
-        },
-        splitArea: {
-            areaStyle: {
-                color: contrastColor
-            }
-        }
+        };
     };
-    echarts.registerTheme('dark', {
-        color: ['#dd6b66','#e69d87','#8dc1a9','#759aa0','#ea7e53','#eedd78','#73a373','#73b9bc','#7289ab', '#91ca8c','#f49f42'],
+
+    var colorPalette = ['#dd6b66','#e69d87','#8dc1a9','#759aa0','#ea7e53','#eedd78','#73a373','#73b9bc','#7289ab', '#91ca8c','#f49f42'];
+    var theme = {
+        color: colorPalette,
         backgroundColor: '#333',
         legend: {
             textStyle: {
@@ -73,9 +78,14 @@
                 }
             }
         },
-        timeAxis: axisCommon,
-        logAxis: axisCommon,
-        valueAxis: axisCommon,
-        categoryAxis: axisCommon
-    });
+        graph: {
+            color: colorPalette
+        },
+        timeAxis: axisCommon(),
+        logAxis: axisCommon(),
+        valueAxis: axisCommon(),
+        categoryAxis: axisCommon()
+    };
+    theme.categoryAxis.splitLine.show = false;
+    echarts.registerTheme('dark', theme);
 }));
