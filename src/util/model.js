@@ -342,8 +342,8 @@ define(function(require) {
                         // id has highest priority.
                         (cptOption.id != null && exist.id === cptOption.id + '')
                         || (cptOption.name != null
-                            && !isIdInner(cptOption)
-                            && !isIdInner(exist)
+                            && !modelUtil.isIdInner(cptOption)
+                            && !modelUtil.isIdInner(exist)
                             && exist.name === cptOption.name + ''
                         )
                     )
@@ -365,7 +365,7 @@ define(function(require) {
             for (; i < result.length; i++) {
                 var exist = result[i].exist;
                 if (!result[i].option
-                    && !isIdInner(exist)
+                    && !modelUtil.isIdInner(exist)
                     // Caution:
                     // Do not overwrite id. But name can be overwritten,
                     // because axis use name as 'show label text'.
@@ -387,12 +387,15 @@ define(function(require) {
     };
 
     /**
-     * @inner
+     * @public
+     * @param {Object} cptOption
+     * @return {boolean}
      */
-    function isIdInner(cptOption) {
-        // FIXME: Where to put this constant.
-        return cptOption && cptOption.id && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
-    }
+    modelUtil.isIdInner = function (cptOption) {
+        return zrUtil.isObject(cptOption)
+            && cptOption.id
+            && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
+    };
 
     return modelUtil;
 });

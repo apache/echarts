@@ -11,6 +11,8 @@ define(function(require) {
 
     var layout = {};
 
+    var LOCATION_PARAMS = ['left', 'right', 'top', 'bottom', 'width', 'height'];
+
     function boxLayout(orient, group, gap, maxWidth, maxHeight) {
         var x = 0;
         var y = 0;
@@ -338,23 +340,6 @@ define(function(require) {
             if (mergedValueCount === enoughParamNumber || !newValueCount) {
                 return merged;
             }
-            else if (mergedValueCount < enoughParamNumber) {
-                // In common way, 'auto' means auto calculate by left/right
-                // or top/bottom. But Some components may auto calculate by
-                // other way (like dataZoom auto by coordnate system). In
-                // that case we can set defualtOption 'auto', and if
-                // mergedValueCount litter than enoughParamNumber, 'auto'
-                // will filtered by priority and returned.
-                var autoCount = 0;
-                each(names, function (name) {
-                    if (merged[name] === 'auto') {
-                        autoCount < enoughParamNumber - mergedValueCount
-                            ? autoCount++
-                            : (merged[name] = null);
-                    }
-                });
-                return merged;
-            }
             // Case: newOption: {width: ..., right: ...},
             // Than we can make sure user only want those two, and ignore
             // all origin params in targetOption.
@@ -396,14 +381,19 @@ define(function(require) {
      * @return {Object} Result contains those props.
      */
     layout.getLayoutParams = function (source) {
-        var params = {};
-        source && each(
-            ['left', 'right', 'top', 'bottom', 'width', 'height'],
-            function (name) {
-                source.hasOwnProperty(name) && (params[name] = source[name]);
-            }
-        );
-        return params;
+        return layout.copyLayoutParams({}, source);
+    };
+
+    /**
+     * Retrieve 'left', 'right', 'top', 'bottom', 'width', 'height' from object.
+     * @param {Object} source
+     * @return {Object} Result contains those props.
+     */
+    layout.copyLayoutParams = function (target, source) {
+        source && target && each(LOCATION_PARAMS, function (name) {
+            source.hasOwnProperty(name) && (target[name] = source[name]);
+        });
+        return target;
     };
 
     return layout;

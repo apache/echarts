@@ -27,6 +27,7 @@ define(function (require) {
 
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('./util/model');
     var colorTool = require('zrender/tool/color');
     var env = require('zrender/core/env');
     var Eventful = require('zrender/mixin/Eventful');
@@ -205,7 +206,7 @@ define(function (require) {
      * @return {Object}
      */
     echartsProto.getOption = function () {
-        return zrUtil.clone(this._model.option);
+        return this._model.getOption();
     };
 
     /**

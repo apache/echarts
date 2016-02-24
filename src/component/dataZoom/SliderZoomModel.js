@@ -21,12 +21,12 @@ define(function(require) {
         defaultOption: {
             show: true,
 
-            left: 'auto',   // Default align to grid rect.
-            right: 'auto',  // Default align to grid rect.
-            top: 'auto',    // Default align to grid rect.
-            bottom: 'auto', // Default align to grid rect.
-            width: 'auto',  // Default align to grid rect.
-            height: 'auto', // Default align to grid rect.
+            left: null,   // Default align to grid rect.
+            right: null,  // Default align to grid rect.
+            top: null,    // Default align to grid rect.
+            bottom: null, // Default align to grid rect.
+            width: null,  // Default align to grid rect.
+            height: null, // Default align to grid rect.
 
             backgroundColor: 'rgba(47,69,84,0)',    // Background of slider zoom component.
             dataBackgroundColor: '#ddd',            // Background of data shadow.

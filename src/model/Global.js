@@ -21,6 +21,8 @@ define(function (require) {
 
     var globalDefault = require('./globalDefault');
 
+    var OPTION_INNER_KEY = '\0_ec_inner';
+
     /**
      * @alias module:echarts/model/Global
      *
@@ -50,6 +52,11 @@ define(function (require) {
         },
 
         setOption: function (option, optionPreprocessorFuncs) {
+            zrUtil.assert(
+                !(OPTION_INNER_KEY in option),
+                'please use chart.getOption()'
+            );
+
             this._optionManager.setOption(option, optionPreprocessorFuncs);
 
             this.resetOption();
@@ -130,11 +137,7 @@ define(function (require) {
             );
 
             function visitComponent(mainType, dependencies) {
-                var newCptOptionList = newOption[mainType];
-
-                if (!zrUtil.isArray(newCptOptionList)) {
-                    newCptOptionList = newCptOptionList ? [newCptOptionList] : [];
-                }
+                var newCptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
 
                 var mapResult = modelUtil.mappingToExists(
                     componentsMap[mainType], newCptOptionList
@@ -196,6 +199,32 @@ define(function (require) {
                     this._seriesIndices = createSeriesIndices(componentsMap.series);
                 }
             }
+        },
+
+        /**
+         * Get option for output (cloned option and inner info removed)
+         * @public
+         * @return {Object}
+         */
+        getOption: function () {
+            var option = zrUtil.clone(this.option);
+
+            each(option, function (opts, mainType) {
+                if (ComponentModel.hasClass(mainType)) {
+                    var opts = modelUtil.normalizeToArray(opts);
+                    for (var i = opts.length - 1; i >= 0; i--) {
+                        // Remove options with inner id.
+                        if (modelUtil.isIdInner(opts[i])) {
+                            opts.splice(i, 1);
+                        }
+                    }
+                    option[mainType] = opts;
+                }
+            });
+
+            delete option[OPTION_INNER_KEY];
+
+            return option;
         },
 
         /**
@@ -541,7 +570,10 @@ define(function (require) {
     function initBase(baseOption) {
         baseOption = baseOption;
 
+        // Using OPTION_INNER_KEY to mark that this option can not be used outside,
+        // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
         this.option = {};
+        this.option[OPTION_INNER_KEY] = 1;
 
         /**
          * @type {Object.<string, Array.<module:echarts/model/Model>>}
@@ -603,19 +635,22 @@ define(function (require) {
 
         each(mapResult, function (item, index) {
             var existCpt = item.exist;
+            existCpt && (idMap[existCpt.id] = item);
+        });
+
+        each(mapResult, function (item, index) {
             var opt = item.option;
 
             zrUtil.assert(
-                !opt || opt.id == null || !idMap[opt.id],
+                !opt || opt.id == null || !idMap[opt.id] || idMap[opt.id] === item,
                 'id duplicates: ' + (opt && opt.id)
             );
 
-            existCpt && (idMap[existCpt.id] = item);
-            opt && (idMap[opt.id] = item);
+            opt && opt.id != null && (idMap[opt.id] = item);
 
             // Complete subType
             if (isObject(opt)) {
-                var subType = determineSubType(mainType, opt, existCpt);
+                var subType = determineSubType(mainType, opt, item.exist);
                 item.keyInfo = {mainType: mainType, subType: subType};
             }
         });

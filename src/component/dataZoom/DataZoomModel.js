@@ -8,6 +8,7 @@ define(function(require) {
     var echarts = require('../../echarts');
     var modelUtil = require('../../util/model');
     var AxisProxy = require('./AxisProxy');
+    var layout = require('../../util/layout');
     var each = zrUtil.each;
     var eachAxisDim = modelUtil.eachAxisDim;
 
@@ -362,6 +363,13 @@ define(function(require) {
                 // startValue/endValue can work.
                 this.option[name] = opt[name];
             }, this);
+        },
+
+        /**
+         * @public
+         */
+        setLayoutParams: function (params) {
+            layout.copyLayoutParams(this.option, params);
         },
 
         /**

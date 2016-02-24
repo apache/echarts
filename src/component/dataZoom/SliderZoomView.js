@@ -180,6 +180,10 @@ define(function (require) {
 
             layout.mergeLayoutParam(positionInfo, dataZoomModel.inputPositionParams);
 
+            // Write back to option for chart.getOption(). (and may then
+            // chart.setOption() again, where current location value is needed);
+            dataZoomModel.setLayoutParams(positionInfo);
+
             var layoutRect = layout.getLayoutRect(
                 positionInfo,
                 ecSize,

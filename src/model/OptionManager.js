@@ -408,11 +408,10 @@ define(function (require) {
                 oldOption[mainType] = merge(oldCptOpt, newCptOpt, true);
             }
             else {
-                if (!zrUtil.isArray(newCptOpt)) {
-                    newCptOpt = newCptOpt ? [newCptOpt] : [];
-                }
+                newCptOpt = modelUtil.normalizeToArray(newCptOpt);
+                oldCptOpt = modelUtil.normalizeToArray(oldCptOpt);
 
-                var mapResult = modelUtil.mappingToExists(oldCptOpt || [], newCptOpt);
+                var mapResult = modelUtil.mappingToExists(oldCptOpt, newCptOpt);
 
                 oldOption[mainType] = map(mapResult, function (item) {
                     return (item.option && item.exist)
