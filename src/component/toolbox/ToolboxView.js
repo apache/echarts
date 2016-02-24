@@ -46,15 +46,25 @@ define(function (require) {
                 var feature;
 
                 if (featureName && !oldName) { // Create
-                    var Feature = featureManager.get(featureName);
-                    if (!Feature) {
-                        return;
+                    if (isUserFeatureName(featureName)) {
+                        feature = {
+                            model: featureModel,
+                            onclick: featureModel.option.onclick,
+                            featureName: featureName
+                        };
                     }
-                    features[featureName] = feature = new Feature(featureModel);
+                    else {
+                        var Feature = featureManager.get(featureName);
+                        if (!Feature) {
+                            return;
+                        }
+                        feature = new Feature(featureModel);
+                    }
+                    features[featureName] = feature;
                 }
                 else {
                     feature = features[oldName];
-                    // If not exsits feature
+                    // If feature does not exsit.
                     if (!feature) {
                         return;
                     }
@@ -115,18 +125,28 @@ define(function (require) {
                 zrUtil.each(icons, function (icon, iconName) {
                     var normalStyle = iconStyleModel.getModel('normal').getItemStyle();
                     var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
-                    var path = graphic.makePath(
-                        icon, {
-                            style: normalStyle,
-                            hoverStyle: hoverStyle,
-                            rectHover: true
-                        }, {
-                            x: -itemSize / 2,
-                            y: -itemSize / 2,
-                            width: itemSize,
-                            height: itemSize
-                        }, 'center'
-                    );
+
+                    var style = {
+                        x: -itemSize / 2,
+                        y: -itemSize / 2,
+                        width: itemSize,
+                        height: itemSize
+                    };
+                    var path = icon.indexOf('image://') === 0
+                        ? (
+                            style.image = icon.slice(8),
+                            new graphic.Image({style: style})
+                        )
+                        : graphic.makePath(
+                            icon.replace('path://', ''),
+                            {
+                                style: normalStyle,
+                                hoverStyle: hoverStyle,
+                                rectHover: true
+                            },
+                            style,
+                            'center'
+                        );
 
                     graphic.setHoverStyle(path);
 
@@ -205,4 +225,9 @@ define(function (require) {
             });
         }
     });
+
+    function isUserFeatureName(featureName) {
+        return featureName.indexOf('my') === 0;
+    }
+
 });
