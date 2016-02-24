@@ -13,7 +13,13 @@ define(function (require) {
 
     axisHelper.niceScaleExtent = function (axis, model) {
         var scale = axis.scale;
+        var originalExtent = scale.getExtent();
+        var span = originalExtent[1] - originalExtent[0];
         if (scale.type === 'ordinal') {
+            // If series has no data, scale extent may be wrong
+            if (!isFinite(span)) {
+                scale.setExtent(0, 0);
+            }
             return;
         }
         var min = model.get('min');
@@ -25,8 +31,6 @@ define(function (require) {
         }
         boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], 1);
         boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], 1);
-        var originalExtent = scale.getExtent();
-        var span = originalExtent[1] - originalExtent[0];
         var fixMin = true;
         var fixMax = true;
         // Add boundary gap
