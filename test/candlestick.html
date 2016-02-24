@@ -5,7 +5,6 @@
         <script src="esl.js"></script>
         <script src="config.js"></script>
         <script src="lib/facePrint.js"></script>
-        <script src="lib/dat.gui.min.js"></script>
     </head>
     <body>
         <style>
@@ -29,6 +28,7 @@
                 'echarts',
                 'data/security-sh-2013.json',
                 'echarts/chart/candlestick',
+                'echarts/chart/line',
                 'echarts/component/title',
                 'echarts/component/legend',
                 'echarts/component/grid',
@@ -68,7 +68,7 @@
 
                 chart.setOption({
                     legend: {
-                        data: ['上证指数']
+                        data: ['上证指数', '开盘']
                     },
                     tooltip: {
                         trigger: 'axis',
@@ -113,6 +113,21 @@
                         }
                     ],
                     series: [
+                        {
+                            name: '开盘',
+                            type: 'line',
+                            data: (function () {
+                                opens = [];
+                                for (var i = 0, len = data.values.length; i < len; i++) {
+                                    opens.push(data.values[i][0]);
+                                }
+                                return opens;
+                            })(),
+                            smooth: true,
+                            lineStyle: {
+                                normal: {color: '#aaa'}
+                            }
+                        },
                         {
                             name: '上证指数',
                             type: 'candlestick',
