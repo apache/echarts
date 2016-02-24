@@ -391,7 +391,7 @@ define(function(require, factory) {
     // For deciding which dimensions to use when creating list data
     Grid.dimensions = Cartesian2D.prototype.dimensions;
 
-    require('../../CoordinateSystem').register('grid', Grid);
+    require('../../CoordinateSystem').register('cartesian2d', Grid);
 
     return Grid;
 });
