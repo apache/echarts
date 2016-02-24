@@ -6,6 +6,7 @@ define(function (require) {
     var formatUtil = require('../../util/format');
     var numberUtil = require('../../util/number');
     var parsePercent = numberUtil.parsePercent;
+    var env = require('zrender/core/env');
 
     function dataEqual(a, b) {
         if (!a || !b) {
@@ -166,6 +167,9 @@ define(function (require) {
         _axisPointers: {},
 
         init: function (ecModel, api) {
+            if (!env.canvasSupported) {
+                return;
+            }
             var tooltipContent = new TooltipContent(api.getDom(), api);
             this._tooltipContent = tooltipContent;
 
@@ -174,7 +178,9 @@ define(function (require) {
         },
 
         render: function (tooltipModel, ecModel, api) {
-
+            if (!env.canvasSupported) {
+                return;
+            }
             // Reset
             this.group.removeAll();
 
