@@ -33,14 +33,38 @@ define(function (require) {
         return coordSys.dataToPoint(stackedData);
     }
 
+    function convertToIntId (newIdList, oldIdList) {
+        // Generate int index instead of string id.
+        // Compare string is slow in score function of arrDiff
+
+        // Assume id in idList are all unique
+        var idIndicesMap = {};
+        var idx = 0;
+        for (var i = 0; i < newIdList.length; i++) {
+            newIdList[i] = idx;
+            idIndicesMap[newIdList[i]] = idx++;
+        }
+        for (var i = 0; i < oldIdList.length; i++) {
+            var oldId = oldIdList[i];
+            // Same with newIdList
+            if (idIndicesMap[oldId]) {
+                oldIdList[i] = idIndicesMap[oldId];
+            }
+            else {
+                oldIdList[i] = idx++;
+            }
+        }
+    }
+
     return function (
         oldData, newData,
         oldStackedOnPoints, newStackedOnPoints,
         oldCoordSys, newCoordSys
     ) {
-
         var newIdList = newData.mapArray(newData.getId);
         var oldIdList = oldData.mapArray(oldData.getId);
+
+        convertToIntId(newIdList, oldIdList);
 
         var currPoints = [];
         var nextPoints = [];
