@@ -472,28 +472,23 @@ define(function (require) {
 
     /**
      * Retreive the index of nearest value
-     * @param {string|Array.<string>} dim
+     * @param {string>} dim
      * @param {number} value
      * @param {boolean} stack If given value is after stacked
      * @return {number}
      */
     listProto.indexOfNearest = function (dim, value, stack) {
-        if (!zrUtil.isArray(dim)) {
-            dim = dim ? [dim] : [];
-        }
         var storage = this._storage;
         var dimData = storage[dim];
 
         if (dimData) {
             var minDist = Number.MAX_VALUE;
             var nearestIdx = -1;
-            for (var j = 0, lenj = dim.length; j < lenj; j++) {
-                for (var i = 0, len = this.count(); i < len; i++) {
-                    var dist = Math.abs(this.get(dim[j], i, stack) - value);
-                    if (dist <= minDist) {
-                        minDist = dist;
-                        nearestIdx = i;
-                    }
+            for (var i = 0, len = this.count(); i < len; i++) {
+                var dist = Math.abs(this.get(dim, i, stack) - value);
+                if (dist <= minDist) {
+                    minDist = dist;
+                    nearestIdx = i;
                 }
             }
             return nearestIdx;
@@ -663,6 +658,34 @@ define(function (require) {
         return result;
     };
 
+    function cloneListForMapAndSample(original, excludeDimensions) {
+        var allDimensions = this.dimensions;
+        var list = new List(
+            zrUtil.map(allDimensions, this.getDimensionInfo, this),
+            this.hostModel
+        );
+        // FIXME If needs stackedOn, value may already been stacked
+        transferImmuProperties(list, original, original._wrappedMethods);
+
+        var storage = list._storage = {};
+        var originalStorage = original._storage;
+        // Init storage
+        for (var i = 0; i < allDimensions.length; i++) {
+            var dim = allDimensions[i];
+            var dimStore = originalStorage[dim];
+            if (zrUtil.indexOf(excludeDimensions, dim) >= 0) {
+                storage[dim] = new dimStore.constructor(
+                    originalStorage[dim].length
+                );
+            }
+            else {
+                // Direct reference for other dimensions
+                storage[dim] = originalStorage[dim];
+            }
+        }
+        return list;
+    }
+
     /**
      * Data mapping to a new List with given dimensions
      * @param {string|Array.<string>} dimensions
@@ -676,36 +699,12 @@ define(function (require) {
             normalizeDimensions(dimensions), this.getDimension, this
         );
 
-        var allDimensions = this.dimensions;
-        var list = new List(
-            zrUtil.map(allDimensions, this.getDimensionInfo, this),
-            this.hostModel
-        );
-
+        var list = cloneListForMapAndSample(this, dimensions);
         // Following properties are all immutable.
         // So we can reference to the same value
         var indices = list.indices = this.indices;
 
-        // FIXME If needs stackedOn, value may already been stacked
-        transferImmuProperties(list, this, this._wrappedMethods);
-
-        var storage = list._storage = {};
-        var thisStorage = this._storage;
-
-        // Init storage
-        for (var i = 0; i < allDimensions.length; i++) {
-            var dim = allDimensions[i];
-            var dimStore = thisStorage[dim];
-            if (zrUtil.indexOf(dimensions, dim) >= 0) {
-                storage[dim] = new dimStore.constructor(
-                    thisStorage[dim].length
-                );
-            }
-            else {
-                // Direct copy for other dimensions
-                storage[dim] = thisStorage[dim];
-            }
-        }
+        var storage = list._storage;
 
         var tmpRetValue = [];
         this.each(dimensions, function () {
@@ -731,11 +730,50 @@ define(function (require) {
         return list;
     };
 
-    // Since temporate model is shared by all data items. So we must make sure it can't be write.
-    // PENDING may cause any performance problem?
-    // if (Object.freeze) {
-    //     Object.freeze(temporaryModel);
-    // }
+    /**
+     * Large data down sampling on given dimension
+     * @param {string} dimension
+     * @param {number} rate
+     * @param {Function} sampleValue
+     * @param {Function} sampleIndex Sample index for name and id
+     */
+    listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
+        var list = cloneListForMapAndSample(this, [dimension]);
+        var storage = this._storage;
+        var targetStorage = list._storage;
+
+        var originalIndices = this.indices;
+        var indices = list.indices = [];
+
+        var frameValues = [];
+        var frameIndices = [];
+        var frameSize = Math.floor(1 / rate);
+
+        var dimStore = targetStorage[dimension];
+        var len = this.count();
+        // Copy data from original data
+        for (var i = 0; i < storage[dimension].length; i++) {
+            targetStorage[dimension][i] = storage[dimension][i];
+        }
+        for (var i = 0; i < len; i += frameSize) {
+            // Last frame
+            if (frameSize > len - i) {
+                frameSize = len - i;
+                frameValues.length = frameSize;
+            }
+            for (var k = 0; k < frameSize; k++) {
+                frameValues[k] = dimStore[i + k];
+                frameIndices[k] = originalIndices[i + k];
+            }
+            var value = sampleValue(frameValues);
+            var idx = frameIndices[sampleIndex(frameValues, value) || 0];
+            // Only write value on the filtered data
+            dimStore[idx] = value;
+            indices.push(idx);
+        }
+        return list;
+    };
+
     /**
      * Get model of one data item.
      *

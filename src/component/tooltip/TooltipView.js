@@ -855,7 +855,7 @@ define(function (require) {
                     dataIndex: series.getAxisTooltipDataIndex
                         ? series.getAxisTooltipDataIndex(series.getDimensionsOnAxis(baseAxis.dim), value, baseAxis)
                         : series.getData().indexOfNearest(
-                            series.getDimensionsOnAxis(baseAxis.dim),
+                            series.getDimensionsOnAxis(baseAxis.dim)[0],
                             value[baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1]
                         )
                 };
