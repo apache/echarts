@@ -35,7 +35,7 @@ define(function (require) {
 
     function convertToIntId (newIdList, oldIdList) {
         // Generate int id instead of string id.
-        // Compare string is slow in score function of arrDiff
+        // Compare string maybe slow in score function of arrDiff
 
         // Assume id in idList are all unique
         var idIndicesMap = {};
