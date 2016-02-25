@@ -7,28 +7,28 @@ define(function(require) {
 
     function CoordinateSystemManager() {
 
-        this._coordinateSystems = {};
-
-        this._coordinateSystemsList = [];
+        this._coordinateSystems = [];
     }
 
     CoordinateSystemManager.prototype = {
 
         constructor: CoordinateSystemManager,
 
-        update: function (ecModel, api) {
-            var coordinateSystems = {};
+        create: function (ecModel, api) {
+            var coordinateSystems = [];
             for (var type in coordinateSystemCreators) {
-                coordinateSystems[type] = coordinateSystemCreators[type].create(ecModel, api);
+                var list = coordinateSystemCreators[type].create(ecModel, api);
+                list && (coordinateSystems = coordinateSystems.concat(list));
             }
 
             this._coordinateSystems = coordinateSystems;
         },
 
-        get: function (type, idx) {
-            var list = this._coordinateSystems[type];
-            if (list) {
-                return list[idx || 0];
+        update: function (ecModel, api) {
+            var coordinateSystems = this._coordinateSystems;
+            for (var i = 0; i < coordinateSystems.length; i++) {
+                // FIXME MUST have
+                coordinateSystems[i].update && coordinateSystems[i].update(ecModel, api);
             }
         }
     };

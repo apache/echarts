@@ -659,10 +659,10 @@ define(function (require) {
     };
 
     function cloneListForMapAndSample(original, excludeDimensions) {
-        var allDimensions = this.dimensions;
+        var allDimensions = original.dimensions;
         var list = new List(
-            zrUtil.map(allDimensions, this.getDimensionInfo, this),
-            this.hostModel
+            zrUtil.map(allDimensions, original.getDimensionInfo, original),
+            original.hostModel
         );
         // FIXME If needs stackedOn, value may already been stacked
         transferImmuProperties(list, original, original._wrappedMethods);

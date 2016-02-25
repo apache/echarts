@@ -85,9 +85,7 @@ define(function (require) {
             switch (axisType) {
                 // Buildin scale
                 case 'category':
-                    return new OrdinalScale(
-                        model.getCategories(), [Infinity, -Infinity]
-                    );
+                    return new OrdinalScale(model.getCategories());
                 case 'value':
                     return new IntervalScale();
                 // Extended scale, like time and log

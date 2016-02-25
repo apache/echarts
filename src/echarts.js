@@ -27,7 +27,6 @@ define(function (require) {
 
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
-    var modelUtil = require('./util/model');
     var colorTool = require('zrender/tool/color');
     var env = require('zrender/core/env');
     var Eventful = require('zrender/mixin/Eventful');
@@ -135,7 +134,7 @@ define(function (require) {
          * @type {module:echarts/CoordinateSystem}
          * @private
          */
-        this._coordinateSystem = new CoordinateSystemManager();
+        this._coordSysMgr = new CoordinateSystemManager();
 
         Eventful.call(this);
 
@@ -174,7 +173,6 @@ define(function (require) {
      * @param {boolean} [notRefreshImmediately=false] Useful when setOption frequently.
      */
     echartsProto.setOption = function (option, notMerge, notRefreshImmediately) {
-
         if (!this._model || notMerge) {
             this._model = new GlobalModel(
                 null, null, this._theme, new OptionManager(this._api)
@@ -362,6 +360,8 @@ define(function (require) {
             // console.time && console.time('update');
 
             var ecModel = this._model;
+            var api = this._api;
+            var coordSysMgr = this._coordSysMgr;
             // update before setOption
             if (!ecModel) {
                 return;
@@ -373,11 +373,15 @@ define(function (require) {
             // Save total ecModel here for undo/redo (after restoring data and before processing data).
             // Undo (restoration of total ecModel) can be carried out in 'action' or outside API call.
 
-            processData.call(this, ecModel);
+            // Create new coordinate system each update
+            // In LineView may save the old coordinate system and use it to get the orignal point
+            coordSysMgr.create(this._model, this._api);
+
+            processData.call(this, ecModel, api);
 
             stackSeriesData.call(this, ecModel);
 
-            this._coordinateSystem.update(ecModel, this._api);
+            coordSysMgr.update(ecModel, api);
 
             doLayout.call(this, ecModel, payload);
 
@@ -735,10 +739,10 @@ define(function (require) {
      * @param {module:echarts/model/Global} ecModel
      * @private
      */
-    function processData(ecModel) {
+    function processData(ecModel, api) {
         each(PROCESSOR_STAGES, function (stage) {
             each(dataProcessorFuncs[stage] || [], function (process) {
-                process(ecModel);
+                process(ecModel, api);
             });
         });
     }
