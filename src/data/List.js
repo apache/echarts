@@ -472,28 +472,23 @@ define(function (require) {
 
     /**
      * Retreive the index of nearest value
-     * @param {string|Array.<string>} dim
+     * @param {string>} dim
      * @param {number} value
      * @param {boolean} stack If given value is after stacked
      * @return {number}
      */
     listProto.indexOfNearest = function (dim, value, stack) {
-        if (!zrUtil.isArray(dim)) {
-            dim = dim ? [dim] : [];
-        }
         var storage = this._storage;
         var dimData = storage[dim];
 
         if (dimData) {
             var minDist = Number.MAX_VALUE;
             var nearestIdx = -1;
-            for (var j = 0, lenj = dim.length; j < lenj; j++) {
-                for (var i = 0, len = this.count(); i < len; i++) {
-                    var dist = Math.abs(this.get(dim[j], i, stack) - value);
-                    if (dist <= minDist) {
-                        minDist = dist;
-                        nearestIdx = i;
-                    }
+            for (var i = 0, len = this.count(); i < len; i++) {
+                var dist = Math.abs(this.get(dim, i, stack) - value);
+                if (dist <= minDist) {
+                    minDist = dist;
+                    nearestIdx = i;
                 }
             }
             return nearestIdx;
