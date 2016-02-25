@@ -78,6 +78,9 @@ define(function(require) {
             showSymbol: true,
             // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
             // showAllSymbol: false
+            //
+            // 大数据过滤，'average', 'max', 'min', 'sum'
+            // sampling: 'none'
 
             animationEasing: 'linear'
         }

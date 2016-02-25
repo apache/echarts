@@ -12,4 +12,9 @@ define(function (require) {
     echarts.registerLayout(zrUtil.curry(
         require('../layout/points'), 'line'
     ));
+
+    // Down sample after filter
+    echarts.registerProcessor('statistic', zrUtil.curry(
+        require('../processor/dataSample'), 'line'
+    ));
 });
