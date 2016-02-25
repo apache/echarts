@@ -34,15 +34,15 @@ define(function (require) {
     }
 
     function convertToIntId (newIdList, oldIdList) {
-        // Generate int index instead of string id.
+        // Generate int id instead of string id.
         // Compare string is slow in score function of arrDiff
 
         // Assume id in idList are all unique
         var idIndicesMap = {};
         var idx = 0;
         for (var i = 0; i < newIdList.length; i++) {
-            newIdList[i] = idx;
-            idIndicesMap[newIdList[i]] = idx++;
+            idIndicesMap[newIdList[i]] = idx;
+            newIdList[i] = idx++;
         }
         for (var i = 0; i < oldIdList.length; i++) {
             var oldId = oldIdList[i];
