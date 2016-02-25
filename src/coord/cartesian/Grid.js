@@ -68,6 +68,8 @@ define(function(require, factory) {
         this._axesList = [];
 
         this._initCartesian(gridModel, ecModel, api);
+
+        this._model = gridModel;
     }
 
     var gridProto = Grid.prototype;
@@ -76,6 +78,45 @@ define(function(require, factory) {
 
     gridProto.getRect = function () {
         return this._rect;
+    };
+
+    gridProto.update = function (ecModel, api) {
+
+        var axesMap = this._axesMap;
+
+        this._updateScale(ecModel, this._model);
+
+        function ifAxisCanNotOnZero(otherAxisDim) {
+            var axes = axesMap[otherAxisDim];
+            for (var idx in axes) {
+                var axis = axes[idx];
+                if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        each(axesMap.x, function (xAxis) {
+            niceScaleExtent(xAxis, xAxis.model);
+        });
+        each(axesMap.y, function (yAxis) {
+            niceScaleExtent(yAxis, yAxis.model);
+        });
+        // Fix configuration
+        each(axesMap.x, function (xAxis) {
+            // onZero can not be enabled in these two situations
+            // 1. When any other axis is a category axis
+            // 2. When any other axis not across 0 point
+            if (ifAxisCanNotOnZero('y')) {
+                xAxis.onZero = false;
+            }
+        });
+        each(axesMap.y, function (yAxis) {
+            if (ifAxisCanNotOnZero('x')) {
+                yAxis.onZero = false;
+            }
+        });
     };
 
     /**
@@ -132,21 +173,18 @@ define(function(require, factory) {
 
     /**
      * @param {string} axisType
-     * @param {number} [axisIndex]
+     * @param {ndumber} [axisIndex]
      */
     gridProto.getAxis = function (axisType, axisIndex) {
-        if (axisIndex != null) {
-            var key = axisType + axisIndex;
-            return this._axesMap[key];
-        }
-        else {
-            // Find first axis with axisType
-            var axesList = this._axesList;
-            for (var i = 0; i < axesList.length; i++) {
-                if (axesList[i].dim === axisType) {
-                    return axesList[i];
+        var axesMapOnDim = this._axesMap[axisType];
+        if (axesMapOnDim != null) {
+            if (axisIndex == null) {
+                // Find first axis
+                for (var name in axesMapOnDim) {
+                    return axesMapOnDim[name];
                 }
             }
+            return axesMapOnDim[axisIndex];
         }
     };
 
@@ -176,17 +214,20 @@ define(function(require, factory) {
             y: 0
         };
 
+        /// Create axis
         ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
         ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
 
         if (!axesCount.x || !axesCount.y) {
-            // api.log('Grid must has at least one x axis and one y axis');
-            // Roll back
+            // Roll back when there no either x or y axis
             this._axesMap = {};
             this._axesList = [];
             return;
         }
 
+        this._axesMap = axesMap;
+
+        /// Create cartesian2d
         each(axesMap.x, function (xAxis, xAxisIndex) {
             each(axesMap.y, function (yAxis, yAxisIndex) {
                 var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
@@ -201,40 +242,6 @@ define(function(require, factory) {
                 cartesian.addAxis(yAxis);
             }, this);
         }, this);
-
-        this._updateCartesianFromSeries(ecModel, gridModel);
-
-        function ifAxisCanNotOnZero(otherAxisDim) {
-            var axes = axesMap[otherAxisDim];
-            for (var idx in axes) {
-                var axis = axes[idx];
-                if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        each(axesMap.x, function (xAxis) {
-            niceScaleExtent(xAxis, xAxis.model);
-        });
-        each(axesMap.y, function (yAxis) {
-            niceScaleExtent(yAxis, yAxis.model);
-        });
-        // Fix configuration
-        each(axesMap.x, function (xAxis) {
-            // onZero can not be enabled in these two situations
-            // 1. When any other axis is a category axis
-            // 2. When any other axis not across 0 point
-            if (ifAxisCanNotOnZero('y')) {
-                xAxis.onZero = false;
-            }
-        });
-        each(axesMap.y, function (yAxis) {
-            if (ifAxisCanNotOnZero('x')) {
-                yAxis.onZero = false;
-            }
-        });
 
         function createAxisCreator(axisType) {
             return function (axisModel, idx) {
@@ -288,7 +295,6 @@ define(function(require, factory) {
                 axis.index = idx;
 
                 this._axesList.push(axis);
-                this._axesMap[axisType + idx] = axis;
 
                 axesMap[axisType][idx] = axis;
                 axesCount[axisType]++;
@@ -301,7 +307,11 @@ define(function(require, factory) {
      * @param  {module:echarts/model/Option} option
      * @private
      */
-    gridProto._updateCartesianFromSeries = function (ecModel, gridModel) {
+    gridProto._updateScale = function (ecModel, gridModel) {
+        // Reset scale
+        zrUtil.each(this._axesList, function (axis) {
+            axis.scale.setExtent(Infinity, -Infinity);
+        });
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.get('coordinateSystem') === 'cartesian2d') {
                 var xAxisIndex = seriesModel.get('xAxisIndex');
@@ -317,17 +327,19 @@ define(function(require, factory) {
                 }
 
                 var cartesian = this.getCartesian(xAxisIndex, yAxisIndex);
-
                 var data = seriesModel.getData();
+                var xAxis = cartesian.getAxis('x');
+                var yAxis = cartesian.getAxis('y');
+
                 if (data.type === 'list') {
-                    unionExtent(data, cartesian.getAxis('x'), 'x', seriesModel);
-                    unionExtent(data, cartesian.getAxis('y'), 'y', seriesModel);
+                    unionExtent(data, xAxis, seriesModel);
+                    unionExtent(data, yAxis, seriesModel);
                 }
             }
         }, this);
 
-        function unionExtent(data, axis, axisDim, seriesModel) {
-            each(seriesModel.getDimensionsOnAxis(axisDim), function (dim) {
+        function unionExtent(data, axis, seriesModel) {
+            each(seriesModel.getDimensionsOnAxis(axis.dim), function (dim) {
                 axis.scale.unionExtent(data.getDataExtent(
                     dim, axis.scale.type !== 'ordinal'
                 ));

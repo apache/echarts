@@ -14,10 +14,12 @@ define(function (require) {
     }
 
     return function (ecModel, api) {
+        var viewList = [];
         ecModel.eachSeriesByType('graph', function (seriesModel) {
             var coordSysType = seriesModel.get('coordinateSystem');
             if (!coordSysType || coordSysType === 'view') {
                 var viewCoordSys = new View();
+                viewList.push(viewCoordSys);
 
                 var data = seriesModel.getData();
                 var positions = data.mapArray(function (idx) {
@@ -60,5 +62,6 @@ define(function (require) {
                 viewCoordSys.setZoom(roamDetailModel.get('zoom') || 1);
             }
         });
+        return viewList;
     };
 });
