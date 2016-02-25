@@ -11,6 +11,8 @@ define(function(require) {
 
         type: 'title',
 
+        layoutMode: {type: 'box', ignoreSize: true},
+
         defaultOption: {
             // 一级层叠
             zlevel: 0,
@@ -32,10 +34,10 @@ define(function(require) {
 
             // 'center' ¦ 'left' ¦ 'right'
             // ¦ {number}（x坐标，单位px）
-            left: 'left',
+            left: 0,
             // 'top' ¦ 'bottom' ¦ 'center'
             // ¦ {number}（y坐标，单位px）
-            top: 'top',
+            top: 0,
 
             // 水平对齐
             // 'auto' | 'left' | 'right'
