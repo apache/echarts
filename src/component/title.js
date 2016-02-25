@@ -148,17 +148,22 @@ define(function(require) {
                 var p = layoutRect.x / api.getWidth();
                 var p2 = (layoutRect.x + layoutRect.width) / api.getWidth();
 
-                if (p < 0.2) {
+                if (p < 0.1) {
                     textAlign = 'left';
                 }
-                else if (p2 > 0.8) {
-                    layoutRect.x += layoutRect.width;
+                else if (p2 > 0.9) {
                     textAlign = 'right';
                 }
                 else {
-                    layoutRect.x += layoutRect.width / 2;
                     textAlign = 'center';
                 }
+            }
+            // Adjust layout by text align
+            if (textAlign === 'right') {
+                layoutRect.x += layoutRect.width;
+            }
+            else if (textAlign === 'center') {
+                layoutRect.x += layoutRect.width / 2;
             }
             group.position = [layoutRect.x, layoutRect.y];
             textEl.setStyle('textAlign', textAlign);
