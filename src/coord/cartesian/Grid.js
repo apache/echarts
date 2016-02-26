@@ -32,7 +32,13 @@ define(function(require, factory) {
         var axisModel = axis.model;
         var labels = axisModel.getFormattedLabels();
         var rect;
-        for (var i = 0; i < labels.length; i++) {
+        var step = 1;
+        var labelCount = labels.length;
+        if (labelCount > 40) {
+            // Simple optimization for large amount of labels
+            step = Math.ceil(labelCount / 40);
+        }
+        for (var i = 0; i < labelCount; i += step) {
             if (!axis.isLabelIgnored(i)) {
                 var singleRect = axisModel.getTextRect(labels[i]);
                 // FIXME consider label rotate
