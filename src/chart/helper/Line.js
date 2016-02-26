@@ -244,14 +244,20 @@ define(function (require) {
         var label = this.childOfName('label');
         label.setStyle({
             text: labelModel.get('show')
-                ? seriesModel.getFormattedLabel(idx, 'normal') || defaultText
+                ? zrUtil.retrieve(
+                    seriesModel.getFormattedLabel(idx, 'normal'),
+                    defaultText
+                )
                 : '',
             textFont: textStyleModel.getFont(),
             fill: textStyleModel.getTextColor() || lineData.getItemVisual(idx, 'color')
         });
         label.hoverStyle = {
             text: labelHoverModel.get('show')
-                ? seriesModel.getFormattedLabel(idx, 'emphasis') || defaultText
+                ? zrUtil.retrieve(
+                    seriesModel.getFormattedLabel(idx, 'emphasis'),
+                    defaultText
+                )
                 : '',
             textFont: textStyleModel.getFont(),
             fill: textStyleHoverModel.getTextColor()

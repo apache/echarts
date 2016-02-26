@@ -176,8 +176,10 @@ define(function (require) {
 
         if (labelModel.get('show')) {
             graphic.setText(elStyle, labelModel, color);
-            elStyle.text = seriesModel.getFormattedLabel(idx, 'normal')
-                || data.get(lastDim, idx);
+            elStyle.text = zrUtil.retrieve(
+                seriesModel.getFormattedLabel(idx, 'normal'),
+                data.get(lastDim, idx)
+            );
         }
         else {
             elStyle.text = '';
@@ -185,8 +187,10 @@ define(function (require) {
 
         if (hoverLabelModel.getShallow('show')) {
             graphic.setText(hoverStyle, hoverLabelModel, color);
-            hoverStyle.text = seriesModel.getFormattedLabel(idx, 'emphasis')
-                || data.get(lastDim, idx);
+            hoverStyle.text = zrUtil.retrieve(
+                seriesModel.getFormattedLabel(idx, 'emphasis'),
+                data.get(lastDim, idx)
+            );
         }
         else {
             hoverStyle.text = '';
