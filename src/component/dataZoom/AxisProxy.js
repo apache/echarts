@@ -265,7 +265,7 @@ define(function(require) {
             opt.end
         ];
 
-        var scale = axisHelper.createScaleByModel(axisModel);
+        var scale = axisModel.axis.scale;
         var valueWindow = [];
 
         each(['startValue', 'endValue'], function (prop) {
