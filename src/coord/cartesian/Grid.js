@@ -117,6 +117,10 @@ define(function(require, factory) {
                 yAxis.onZero = false;
             }
         });
+
+        // Resize again if containLabel is enabled
+        // FIXME It may cause getting wrong grid size in data processing stage
+        this.resize(this._model, api);
     };
 
     /**

@@ -44,6 +44,10 @@ define(function (require) {
 
         this._init(axisModel, ecModel, api);
 
+        /**
+         * @type {module:echarts/coord/single/AxisModel}
+         */
+        this._model = axisModel;
     }
 
     Single.prototype = {
@@ -80,7 +84,14 @@ define(function (require) {
             axisModel.axis = axis;
             axis.model = axisModel;
             this._axis = axis;
+        },
 
+        /**
+         * Update axis scale after data processed
+         * @param  {module:echarts/model/Global} ecModel
+         * @param  {module:echarts/ExtensionAPI} api
+         */
+        update: function (ecModel, api) {
             this._updateAxisFromSeries(ecModel);
         },
 
@@ -97,7 +108,9 @@ define(function (require) {
                 var data = seriesModel.getData();
                 var dim = this.dimension;
                 this._axis.scale.unionExtent(
-                    data.getDataExtent(seriesModel.getDimensionsOnAxis(dim)));
+                    data.getDataExtent(seriesModel.getDimensionsOnAxis(dim))
+                );
+                axisHelper.niceScaleExtent(this._axis, this._axis.model);
             }, this);
         },
 

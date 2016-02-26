@@ -44,6 +44,11 @@ define(function(require) {
          */
         this._rect;
 
+        /**
+         * @type {module:echarts/coord/parallel/ParallelModel}
+         */
+        this._model = parallelModel;
+
         this._init(parallelModel, ecModel, api);
     }
 
@@ -84,10 +89,16 @@ define(function(require) {
 
                 // Inject axisModel into axis
                 axis.model = axisModel;
-
             }, this);
+        },
 
-            this._updateAxesFromSeries(parallelModel, ecModel);
+        /**
+         * Update axis scale after data processed
+         * @param  {module:echarts/model/Global} ecModel
+         * @param  {module:echarts/ExtensionAPI} api
+         */
+        update: function (ecModel, api) {
+            this._updateAxesFromSeries(this._model, ecModel);
         },
 
         /**
@@ -104,9 +115,10 @@ define(function(require) {
                 var data = seriesModel.getData();
 
                 each(this.dimensions, function (dim) {
-                    this._axesMap[dim].scale.unionExtent(data.getDataExtent(dim));
+                    var axis = this._axesMap[dim];
+                    axis.scale.unionExtent(data.getDataExtent(dim));
+                    axisHelper.niceScaleExtent(axis, axis.model);
                 }, this);
-
             }, this);
         },
 
@@ -152,7 +164,6 @@ define(function(require) {
             each(axes, function (axis) {
                 var idx = axis.inverse ? 1 : 0;
                 axis.setExtent(axisExtent[idx], axisExtent[1 - idx]);
-                axisHelper.niceScaleExtent(axis, axis.model);
             });
 
             each(dimensions, function (dim, idx) {
