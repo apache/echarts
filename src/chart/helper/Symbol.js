@@ -171,14 +171,25 @@ define(function (require) {
 
         var labelModel = itemModel.getModel(normalLabelAccessPath);
         var hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
-        var lastDim = data.dimensions[data.dimensions.length - 1];
+
         var elStyle = symbolPath.style;
+
+        // Get last value dim
+        var dimensions = data.dimensions.slice();
+        var valueDim = dimensions.pop();
+        var dataType;
+        while (
+            ((dataType = data.getDimensionInfo(valueDim).type) === 'ordinal')
+            || (dataType === 'time')
+        ) {
+            valueDim = dimensions.pop();
+        }
 
         if (labelModel.get('show')) {
             graphic.setText(elStyle, labelModel, color);
             elStyle.text = zrUtil.retrieve(
                 seriesModel.getFormattedLabel(idx, 'normal'),
-                data.get(lastDim, idx)
+                data.get(valueDim, idx)
             );
         }
         else {
@@ -189,7 +200,7 @@ define(function (require) {
             graphic.setText(hoverStyle, hoverLabelModel, color);
             hoverStyle.text = zrUtil.retrieve(
                 seriesModel.getFormattedLabel(idx, 'emphasis'),
-                data.get(lastDim, idx)
+                data.get(valueDim, idx)
             );
         }
         else {
