@@ -238,8 +238,16 @@ define(function (require) {
      * @param {module:echarts/model/Model} mpModel
      */
     function createList(coordSys, seriesModel, mlModel) {
-        var fromData = new List(seriesModel.getCoordDimensionInfo(), mlModel);
-        var toData = new List(seriesModel.getCoordDimensionInfo(), mlModel);
+
+        var coordDimsInfos = zrUtil.map(coordSys.dimensions, function (coordDim) {
+            var info = seriesModel.getData().getDimensionInfo(
+                seriesModel.coordDimToDataDim(coordDim)[0]
+            );
+            info.name = coordDim;
+            return info;
+        });
+        var fromData = new List(coordDimsInfos, mlModel);
+        var toData = new List(coordDimsInfos, mlModel);
         // No dimensions
         var lineData = new List([], mlModel);
 

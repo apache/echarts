@@ -108,7 +108,7 @@ define(function (require) {
                 var data = seriesModel.getData();
                 var dim = this.dimension;
                 this._axis.scale.unionExtent(
-                    data.getDataExtent(seriesModel.getDimensionsOnAxis(dim))
+                    data.getDataExtent(seriesModel.coordDimToDataDim(dim))
                 );
                 axisHelper.niceScaleExtent(this._axis, this._axis.model);
             }, this);

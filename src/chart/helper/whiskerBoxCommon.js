@@ -72,7 +72,7 @@ define(function(require) {
          * @param {string} axisDim 'x' or 'y'
          * @return {Array.<string>} dimensions on the axis.
          */
-        getDimensionsOnAxis: function (axisDim) {
+        coordDimToDataDim: function (axisDim) {
             var dims = this.valueDimensions.slice();
             var baseDim = ['base'];
             var map = {
@@ -84,25 +84,20 @@ define(function(require) {
 
         /**
          * @override
-         * @param {string|number} [dataDim]
-         * @return {Array.<Object>} dimension info list.
+         * @param {string|number} dataDim
+         * @return {string} coord dimension
          */
-        getCoordDimensionInfo: function (dataDim) {
-            var data = this.getData();
-            var infoList = [];
-            var info;
+        dataDimToCoordDim: function (dataDim) {
+            var dim;
 
             zrUtil.each(['x', 'y'], function (coordDim, index) {
-                var dataDims = this.getDimensionsOnAxis(coordDim);
-                if (dataDim != null && zrUtil.indexOf(dataDims, dataDim) >= 0) {
-                    info = data.getDimensionInfo(dataDim);
-                    info.name = coordDim;
+                var dataDims = this.coordDimToDataDim(coordDim);
+                if (zrUtil.indexOf(dataDims, dataDim) >= 0) {
+                    dim = coordDim;
                 }
-                infoList[index] = data.getDimensionInfo(dataDims[0]);
-                infoList[index].name = coordDim;
             }, this);
 
-            return dataDim != null ? info : infoList;
+            return dim;
         },
 
         /**

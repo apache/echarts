@@ -161,7 +161,10 @@ define(function (require) {
                 if (labelModel.get('show')) {
                     setLabel(
                         rectStyle, labelModel, color,
-                        seriesModel.getFormattedLabel(idx, 'normal') || seriesModel.getRawValue(idx),
+                        zrUtil.retrieve(
+                            seriesModel.getFormattedLabel(idx, 'normal'),
+                            seriesModel.getRawValue(idx)
+                        ),
                         labelPositionOutside
                     );
                 }
@@ -171,7 +174,10 @@ define(function (require) {
                 if (hoverLabelModel.get('show')) {
                     setLabel(
                         hoverStyle, hoverLabelModel, color,
-                        seriesModel.getFormattedLabel(idx, 'emphasis') || seriesModel.getRawValue(idx),
+                        zrUtil.retrieve(
+                            seriesModel.getFormattedLabel(idx, 'emphasis'),
+                            seriesModel.getRawValue(idx)
+                        ),
                         labelPositionOutside
                     );
                 }

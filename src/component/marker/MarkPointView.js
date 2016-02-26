@@ -149,10 +149,15 @@ define(function (require) {
      * @param {module:echarts/model/Model} mpModel
      */
     function createList(coordSys, seriesModel, mpModel) {
-        var seriesData = seriesModel.getData();
-        var dataDimensions = seriesData.dimensions;
+        var coordDimsInfos = zrUtil.map(coordSys.dimensions, function (coordDim) {
+            var info = seriesModel.getData().getDimensionInfo(
+                seriesModel.coordDimToDataDim(coordDim)[0]
+            );
+            info.name = coordDim;
+            return info;
+        });
 
-        var mpData = new List(seriesModel.getCoordDimensionInfo(), mpModel);
+        var mpData = new List(coordDimsInfos, mpModel);
 
         if (coordSys) {
             mpData.initData(

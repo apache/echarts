@@ -171,7 +171,7 @@ define(function (require) {
          * @param {string} axisDim
          * @return {Array.<string> } specified dimensions on the axis.
          */
-        getDimensionsOnAxis: function (axisDim) {
+        coordDimToDataDim: function (axisDim) {
             var dims = {
                 oneDim: ['time']
             };

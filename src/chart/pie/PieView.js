@@ -104,8 +104,9 @@ define(function (require) {
             fill: textStyleModel.getTextColor()
                 || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
             textFont: textStyleModel.getFont(),
-            text: data.hostModel.getFormattedLabel(idx, state)
-                || data.getName(idx)
+            text: zrUtil.retrieve(
+                data.hostModel.getFormattedLabel(idx, state), data.getName(idx)
+            )
         };
     }
 
