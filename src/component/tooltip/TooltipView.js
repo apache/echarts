@@ -167,7 +167,7 @@ define(function (require) {
         _axisPointers: {},
 
         init: function (ecModel, api) {
-            if (!env.canvasSupported) {
+            if (env.node) {
                 return;
             }
             var tooltipContent = new TooltipContent(api.getDom(), api);
@@ -178,7 +178,7 @@ define(function (require) {
         },
 
         render: function (tooltipModel, ecModel, api) {
-            if (!env.canvasSupported) {
+            if (env.node) {
                 return;
             }
             // Reset
