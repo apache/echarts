@@ -762,8 +762,9 @@ define(function (require) {
                 frameValues.length = frameSize;
             }
             for (var k = 0; k < frameSize; k++) {
-                frameValues[k] = dimStore[i + k];
-                frameIndices[k] = originalIndices[i + k];
+                var idx = originalIndices[i + k];
+                frameValues[k] = dimStore[idx];
+                frameIndices[k] = idx;
             }
             var value = sampleValue(frameValues);
             var idx = frameIndices[sampleIndex(frameValues, value) || 0];

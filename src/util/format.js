@@ -157,6 +157,6 @@ define(function (require) {
 
         formatTpl: formatTpl,
 
-        formatTime: formatTime        
+        formatTime: formatTime
     };
 });
