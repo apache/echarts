@@ -5,7 +5,6 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
-    var axisHelper = require('../../coord/axisHelper');
     var each = zrUtil.each;
     var asc = numberUtil.asc;
 
@@ -65,7 +64,7 @@ define(function(require) {
          * @private
          * @type {module: echarts/component/dataZoom/DataZoomModel}
          */
-        this._model = dataZoomModel;
+        this._dataZoomModel = dataZoomModel;
     };
 
     AxisProxy.prototype = {
@@ -73,28 +72,28 @@ define(function(require) {
         constructor: AxisProxy,
 
         /**
-         * Whether the axisProxy is hosted by model.
+         * Whether the axisProxy is hosted by dataZoomModel.
          * @public
+         * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
          * @return {boolean}
          */
-        hostedBy: function (model) {
-            return this._model === model;
+        hostedBy: function (dataZoomModel) {
+            return this._dataZoomModel === dataZoomModel;
         },
 
         /**
+         * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
          * @param {Object} option
          */
-        backup: function (model, option) {
-            if (model === this._model) {
-                this._backup = option;
+        backup: function (dataZoomModel, option) {
+            if (dataZoomModel === this._dataZoomModel) {
+                var axisModel = this.getAxisModel();
+                this._backup = {
+                    scale: axisModel.get('scale', true),
+                    min: axisModel.get('min', true),
+                    max: axisModel.get('max', true)
+                };
             }
-        },
-
-        /**
-         * @return {Object}
-         */
-        getBackup: function () {
-            return zrUtil.clone(this._backup);
         },
 
         /**
@@ -169,40 +168,50 @@ define(function(require) {
          * so it is recommanded to be called in "process stage" but not "model init
          * stage".
          *
-         * @param {module: echarts/component/dataZoom/DataZoomModel} model
+         * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
          */
-        reset: function (model) {
-            if (model !== this._model) {
+        reset: function (dataZoomModel) {
+            if (dataZoomModel !== this._dataZoomModel) {
                 return;
             }
 
-            var opt = model.option;
-
-            // Process axis data
+            // Culculate data window and data extent, and record them.
             var axisDim = this._dimName;
             var axisModel = this.getAxisModel();
             var seriesModels = this.getTargetSeriesModels();
 
-            var dataExtent = calculateDataExtent(axisDim, seriesModels);
-            var dataWindow = calculateDataWindow(opt, dataExtent, axisModel);
+            var dataExtent = this._dataExtent = calculateDataExtent(axisDim, seriesModels);
+            var dataWindow = calculateDataWindow(dataZoomModel.option, dataExtent, axisModel);
+            this._valueWindow = dataWindow.valueWindow;
+            this._percentWindow = dataWindow.percentWindow;
 
-            // Record data window and data extent.
-            this._dataExtent = dataExtent.slice();
-            this._valueWindow = dataWindow.valueWindow.slice();
-            this._percentWindow = dataWindow.percentWindow.slice();
+            // Update axis setting then.
+            setAxisModel(this);
         },
 
         /**
-         * @param {module: echarts/component/dataZoom/DataZoomModel} model
+         * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
          */
-        filterData: function (model) {
-            if (model !== this._model) {
+        restore: function (dataZoomModel) {
+            if (dataZoomModel !== this._dataZoomModel) {
+                return;
+            }
+
+            this._valueWindow = this._percentWindow = null;
+            setAxisModel(this, true);
+        },
+
+        /**
+         * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
+         */
+        filterData: function (dataZoomModel) {
+            if (dataZoomModel !== this._dataZoomModel) {
                 return;
             }
 
             var axisDim = this._dimName;
             var seriesModels = this.getTargetSeriesModels();
-            var filterMode = model.get('filterMode');
+            var filterMode = dataZoomModel.get('filterMode');
             var valueWindow = this._valueWindow;
 
             // FIXME
@@ -210,7 +219,7 @@ define(function(require) {
             // with NaN data. NaN will be filtered and stack will be wrong.
             // So we need to force the mode to be set empty
             var otherAxisModel = this.getOtherAxisModel();
-            if (model.get('$fromToolbox')
+            if (dataZoomModel.get('$fromToolbox')
                 && otherAxisModel && otherAxisModel.get('type') === 'category') {
                 filterMode = 'empty';
             }
@@ -307,6 +316,38 @@ define(function(require) {
             valueWindow: asc(valueWindow),
             percentWindow: asc(percentWindow)
         };
+    }
+
+    function setAxisModel(axisProxy, isRestore) {
+        var axisModel = axisProxy.getAxisModel();
+
+        var backup = axisProxy._backup;
+        var percentWindow = axisProxy._percentWindow;
+        var valueWindow = axisProxy._valueWindow;
+
+        if (!backup) {
+            return;
+        }
+
+        var isFull = isRestore || (percentWindow[0] === 0 && percentWindow[1] === 100);
+        // [0, 500]: arbitrary value, guess axis extent.
+        var precision = !isRestore && numberUtil.getPixelPrecision(valueWindow, [0, 500]);
+        // toFixed() digits argument must be between 0 and 20
+        var invalidPrecision = !isRestore && !(precision < 20 && precision >= 0);
+
+        axisModel.setNeedsCrossZero && axisModel.setNeedsCrossZero(
+            (isRestore || isFull) ? !backup.scale : false
+        );
+        axisModel.setMin && axisModel.setMin(
+            (isRestore || isFull || invalidPrecision)
+                ? backup.min
+                : +valueWindow[0].toFixed(precision)
+        );
+        axisModel.setMax && axisModel.setMax(
+            (isRestore || isFull || invalidPrecision)
+                ? backup.max
+                : +valueWindow[1].toFixed(precision)
+        );
     }
 
     return AxisProxy;
