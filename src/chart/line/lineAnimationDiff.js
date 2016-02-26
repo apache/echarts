@@ -1,6 +1,8 @@
 define(function (require) {
 
-    var arrayDiff = require('zrender/core/arrayDiff');
+    // var arrayDiff = require('zrender/core/arrayDiff');
+    // 'zrender/core/arrayDiff' has been used before, but it did
+    // not do well in performance when roam with fixed dataZoom window.
 
     function sign(val) {
         return val >= 0 ? 1 : -1;
@@ -33,27 +35,45 @@ define(function (require) {
         return coordSys.dataToPoint(stackedData);
     }
 
-    function convertToIntId (newIdList, oldIdList) {
-        // Generate int id instead of string id.
-        // Compare string maybe slow in score function of arrDiff
+    // function convertToIntId(newIdList, oldIdList) {
+    //     // Generate int id instead of string id.
+    //     // Compare string maybe slow in score function of arrDiff
 
-        // Assume id in idList are all unique
-        var idIndicesMap = {};
-        var idx = 0;
-        for (var i = 0; i < newIdList.length; i++) {
-            idIndicesMap[newIdList[i]] = idx;
-            newIdList[i] = idx++;
-        }
-        for (var i = 0; i < oldIdList.length; i++) {
-            var oldId = oldIdList[i];
-            // Same with newIdList
-            if (idIndicesMap[oldId]) {
-                oldIdList[i] = idIndicesMap[oldId];
-            }
-            else {
-                oldIdList[i] = idx++;
-            }
-        }
+    //     // Assume id in idList are all unique
+    //     var idIndicesMap = {};
+    //     var idx = 0;
+    //     for (var i = 0; i < newIdList.length; i++) {
+    //         idIndicesMap[newIdList[i]] = idx;
+    //         newIdList[i] = idx++;
+    //     }
+    //     for (var i = 0; i < oldIdList.length; i++) {
+    //         var oldId = oldIdList[i];
+    //         // Same with newIdList
+    //         if (idIndicesMap[oldId]) {
+    //             oldIdList[i] = idIndicesMap[oldId];
+    //         }
+    //         else {
+    //             oldIdList[i] = idx++;
+    //         }
+    //     }
+    // }
+
+    function diffData(oldData, newData) {
+        var diffResult = [];
+
+        newData.diff(oldData)
+            .add(function (idx) {
+                diffResult.push({cmd: '+', idx: idx});
+            })
+            .update(function (newIdx, oldIdx) {
+                diffResult.push({cmd: '=', idx: oldIdx, idx1: newIdx});
+            })
+            .remove(function (idx) {
+                diffResult.push({cmd: '-', idx: idx});
+            })
+            .execute();
+
+        return diffResult;
     }
 
     return function (
@@ -61,10 +81,15 @@ define(function (require) {
         oldStackedOnPoints, newStackedOnPoints,
         oldCoordSys, newCoordSys
     ) {
-        var newIdList = newData.mapArray(newData.getId);
-        var oldIdList = oldData.mapArray(oldData.getId);
+        var diff = diffData(oldData, newData);
 
-        convertToIntId(newIdList, oldIdList);
+        // var newIdList = newData.mapArray(newData.getId);
+        // var oldIdList = oldData.mapArray(oldData.getId);
+
+        // convertToIntId(newIdList, oldIdList);
+
+        // // FIXME One data ?
+        // diff = arrayDiff(oldIdList, newIdList);
 
         var currPoints = [];
         var nextPoints = [];
@@ -75,10 +100,6 @@ define(function (require) {
         var status = [];
         var sortedIndices = [];
         var rawIndices = [];
-
-        // FIXME One data ?
-        var diff = arrayDiff(oldIdList, newIdList);
-
         var dims = newCoordSys.dimensions;
         for (var i = 0; i < diff.length; i++) {
             var diffItem = diff[i];

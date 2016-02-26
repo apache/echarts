@@ -3,6 +3,7 @@
         <meta charset="utf-8">
         <script src="esl.js"></script>
         <script src="config.js"></script>
+        <meta name="viewport" content="user-scalable=no,width=device-width,height=device-height">
     </head>
     <body>
         <style>
@@ -28,6 +29,8 @@
                 var chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
                 });
+
+                var sampling = 'none';
 
                 chart.setOption({
                     title : {
@@ -68,12 +71,21 @@
                             saveAsImage : {show: true}
                         }
                     },
-                    dataZoom : {
-                        show : true,
-                        realtime : true,
-                        start : 0,
-                        end : 100
-                    },
+                    dataZoom: [
+                        {
+                            show: true,
+                            realtime: true,
+                            start: 80,
+                            end: 100
+                        },
+                        {
+                            type: 'inside',
+                            show: true,
+                            realtime: true,
+                            start: 80,
+                            end: 100
+                        }
+                    ],
                     xAxis : [
                         {
                             type : 'category',
@@ -153,6 +165,7 @@
                             name:'流量',
                             type:'line',
                             notShowSymbol: true,
+                            sampling: sampling,
                             hoverAnimation: false,
                             itemStyle: {normal: {areaStyle: {type: 'default'}}},
                             data:[
@@ -163,6 +176,7 @@
                             name:'降雨量',
                             type:'line',
                             yAxisIndex:1,
+                            sampling: sampling,
                             notShowSymbol: true,
                             hoverAnimation: false,
                             itemStyle: {normal: {areaStyle: {type: 'default'}}},
