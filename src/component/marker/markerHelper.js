@@ -121,15 +121,15 @@ define(function (require) {
         if (item.valueIndex != null || item.valueDim != null) {
             ret.valueDataDim = item.valueIndex != null
                 ? data.getDimension(item.valueIndex) : item.valueDim;
-            ret.valueAxis = coordSys.getAxis(seriesModel.getCoordDimensionInfo(ret.valueDataDim).name);
+            ret.valueAxis = coordSys.getAxis(seriesModel.dataDimToCoordDim(ret.valueDataDim));
             ret.baseAxis = coordSys.getOtherAxis(ret.valueAxis);
-            ret.baseDataDim = seriesModel.getDimensionsOnAxis(ret.baseAxis.dim)[0];
+            ret.baseDataDim = seriesModel.coordDimToDataDim(ret.baseAxis.dim)[0];
         }
         else {
             ret.baseAxis = seriesModel.getBaseAxis();
             ret.valueAxis = coordSys.getOtherAxis(ret.baseAxis);
-            ret.baseDataDim = seriesModel.getDimensionsOnAxis(ret.baseAxis.dim)[0];
-            ret.valueDataDim = seriesModel.getDimensionsOnAxis(ret.valueAxis.dim)[0];
+            ret.baseDataDim = seriesModel.coordDimToDataDim(ret.baseAxis.dim)[0];
+            ret.valueDataDim = seriesModel.coordDimToDataDim(ret.valueAxis.dim)[0];
         }
 
         return ret;

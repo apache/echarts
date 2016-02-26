@@ -349,7 +349,7 @@ define(function(require, factory) {
         }, this);
 
         function unionExtent(data, axis, seriesModel) {
-            each(seriesModel.getDimensionsOnAxis(axis.dim), function (dim) {
+            each(seriesModel.coordDimToDataDim(axis.dim), function (dim) {
                 axis.scale.unionExtent(data.getDataExtent(
                     dim, axis.scale.type !== 'ordinal'
                 ));

@@ -221,7 +221,7 @@ define(function(require) {
                     return;
                 }
 
-                each(seriesModel.getDimensionsOnAxis(axisDim), function (dim) {
+                each(seriesModel.coordDimToDataDim(axisDim), function (dim) {
                     if (filterMode === 'empty') {
                         seriesModel.setData(
                             seriesData.map(dim, function (value) {
@@ -247,7 +247,7 @@ define(function(require) {
         each(seriesModels, function (seriesModel) {
             var seriesData = seriesModel.getData();
             if (seriesData) {
-                each(seriesModel.getDimensionsOnAxis(axisDim), function (dim) {
+                each(seriesModel.coordDimToDataDim(axisDim), function (dim) {
                     var seriesExtent = seriesData.getDataExtent(dim);
                     seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
                     seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
