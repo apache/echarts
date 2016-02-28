@@ -31,12 +31,16 @@ define(function(require) {
             yAxisIndex: null,       // Default all vertical category axis.
             angleAxisIndex: null,
             radiusAxisIndex: null,
-            filterMode: 'filter',   // 'filter' or 'empty'
+            filterMode: 'filter',   // Possible values: 'filter' or 'empty'.
                                     // 'filter': data items which are out of window will be removed.
                                     //           This option is applicable when filtering outliers.
                                     // 'empty': data items which are out of window will be set to empty.
                                     //          This option is applicable when user should not neglect
                                     //          that there are some data items out of window.
+                                    // Taking line chart as an example, line will be broken in
+                                    // the filtered points when filterModel is set to 'empty', but
+                                    // be connected when set to 'filter'.
+
             throttle: 100,          // Dispatch action by the fixed rate, avoid frequency.
                                     // default 100. Do not throttle when use null/undefined.
             start: 0,               // Start percent. 0 ~ 100

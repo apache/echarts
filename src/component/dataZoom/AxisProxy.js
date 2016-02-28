@@ -31,6 +31,7 @@ define(function(require) {
         this._axisIndex = axisIndex;
 
         /**
+         * {scale, min, max}
          * @private
          * @type {Object}
          */
@@ -73,6 +74,7 @@ define(function(require) {
 
         /**
          * Whether the axisProxy is hosted by dataZoomModel.
+         *
          * @public
          * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
          * @return {boolean}
@@ -176,12 +178,12 @@ define(function(require) {
             }
 
             // Culculate data window and data extent, and record them.
-            var axisDim = this._dimName;
-            var axisModel = this.getAxisModel();
-            var seriesModels = this.getTargetSeriesModels();
-
-            var dataExtent = this._dataExtent = calculateDataExtent(axisDim, seriesModels);
-            var dataWindow = calculateDataWindow(dataZoomModel.option, dataExtent, axisModel);
+            var dataExtent = this._dataExtent = calculateDataExtent(
+                this._dimName, this.getTargetSeriesModels()
+            );
+            var dataWindow = calculateDataWindow(
+                dataZoomModel.option, dataExtent, this
+            );
             this._valueWindow = dataWindow.valueWindow;
             this._percentWindow = dataWindow.percentWindow;
 
@@ -267,15 +269,22 @@ define(function(require) {
         return dataExtent;
     }
 
-    function calculateDataWindow(opt, dataExtent, axisModel) {
+    function calculateDataWindow(opt, dataExtent, axisProxy) {
+        var axisModel = axisProxy.getAxisModel();
+        var scale = axisModel.axis.scale;
         var percentExtent = [0, 100];
         var percentWindow = [
             opt.start,
             opt.end
         ];
-
-        var scale = axisModel.axis.scale;
         var valueWindow = [];
+
+        // In percent range is used and axis min/max/scale is set,
+        // window should be based on min/max/0, but should not be
+        // based on the extent of filtered data.
+        var backup = axisProxy._backup;
+        dataExtent = dataExtent.slice();
+        fixExtendByAxis(dataExtent, backup, scale);
 
         each(['startValue', 'endValue'], function (prop) {
             valueWindow.push(
@@ -316,6 +325,22 @@ define(function(require) {
             valueWindow: asc(valueWindow),
             percentWindow: asc(percentWindow)
         };
+    }
+
+    function fixExtendByAxis(dataExtent, backup, scale) {
+        each(['min', 'max'], function (minMax, index) {
+            var axisMax = backup[minMax];
+            if (axisMax != null) {
+                dataExtent[index] = scale.parse(axisMax);
+            }
+        });
+
+        if (!backup.scale) {
+            dataExtent[0] > 0 && (dataExtent[0] = 0);
+            dataExtent[1] < 0 && (dataExtent[1] = 0);
+        }
+
+        return dataExtent;
     }
 
     function setAxisModel(axisProxy, isRestore) {

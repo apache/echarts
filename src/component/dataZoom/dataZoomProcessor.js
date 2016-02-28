@@ -10,8 +10,24 @@ define(function (require) {
         ecModel.eachComponent('dataZoom', function (dataZoomModel) {
             // We calculate window and reset axis here but not in model
             // init stage and not after action dispatch handler, because
-            // those reset should be done after seriesData.restoreData.
+            // reset should be called after seriesData.restoreData.
             dataZoomModel.eachTargetAxis(resetSingleAxis);
+
+            // Caution: data zoom filtering is order sensitive when using
+            // percent range and no min/max/scale set on axis.
+            // For example, we have dataZoom definition:
+            // [
+            //      {xAxisIndex: 0, start: 30, end: 70},
+            //      {yAxisIndex: 0, start: 20, end: 80}
+            // ]
+            // In this case, [20, 80] of y-dataZoom should be based on data
+            // that have filtered by x-dataZoom using range of [30, 70],
+            // but should not be based on full raw data. Thus sliding
+            // x-dataZoom will change both ranges of xAxis and yAxis,
+            // while sliding y-dataZoom will only change the range of yAxis.
+            // So we should filter x-axis after reset x-axis immediately,
+            // and then reset y-axis and filter y-axis.
+            dataZoomModel.eachTargetAxis(filterSingleAxis);
         });
 
         ecModel.eachComponent('dataZoom', function (dataZoomModel) {
@@ -26,10 +42,6 @@ define(function (require) {
                 startValue: valueRange[0],
                 endValue: valueRange[1]
             });
-        });
-
-        ecModel.eachComponent('dataZoom', function (dataZoomModel) {
-            dataZoomModel.eachTargetAxis(filterSingleAxis);
         });
     });
 
