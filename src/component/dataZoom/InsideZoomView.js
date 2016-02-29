@@ -7,7 +7,7 @@ define(function (require) {
     var RoamController = require('../../component/helper/RoamController');
     var bind = zrUtil.bind;
 
-    return DataZoomView.extend({
+    var InsideZoomView = DataZoomView.extend({
 
         type: 'dataZoom.inside',
 
@@ -35,7 +35,7 @@ define(function (require) {
          * @override
          */
         render: function (dataZoomModel, ecModel, api, payload) {
-            this.$superApply('render', arguments);
+            InsideZoomView.superApply(this, 'render', arguments);
 
             throttle.createOrUpdate(
                 this,
@@ -58,7 +58,7 @@ define(function (require) {
          * @override
          */
         remove: function () {
-            this.$superApply('remove', arguments);
+            InsideZoomView.superApply(this, 'remove', arguments);
 
             var controllers = this._controllers;
             zrUtil.each(controllers, function (controller) {
@@ -73,7 +73,7 @@ define(function (require) {
          * @override
          */
         dispose: function () {
-            this.$superApply('dispose', arguments);
+            InsideZoomView.superApply(this, 'dispose', arguments);
             throttle.clear(this, '_dispatchZoomAction');
         },
 
@@ -233,4 +233,6 @@ define(function (require) {
 
         return range;
     }
+
+    return InsideZoomView;
 });

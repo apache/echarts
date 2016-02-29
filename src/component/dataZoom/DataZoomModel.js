@@ -12,7 +12,7 @@ define(function(require) {
     var each = zrUtil.each;
     var eachAxisDim = modelUtil.eachAxisDim;
 
-    return echarts.extendComponentModel({
+    var DataZoomModel = echarts.extendComponentModel({
 
         type: 'dataZoom',
 
@@ -123,7 +123,7 @@ define(function(require) {
          * @protected
          */
         restoreData: function () {
-            this.$superApply('restoreData', arguments);
+            DataZoomModel.superApply(this, 'restoreData', arguments);
 
             // If use dataZoom while dynamic setOption, axis setting should
             // be restored before new option setting, otherwise axis status
@@ -460,4 +460,6 @@ define(function(require) {
         }
         // Otherwise do nothing and use the merge result.
     }
+
+    return DataZoomModel;
 });

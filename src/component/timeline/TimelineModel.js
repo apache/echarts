@@ -84,7 +84,7 @@ define(function(require) {
          * @override
          */
         mergeOption: function (option) {
-            this.$superApply('mergeOption', arguments);
+            TimelineModel.superApply(this, 'mergeOption', arguments);
             this._initData();
         },
 

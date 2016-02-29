@@ -28,43 +28,31 @@ define(function (require) {
                 RootClass.apply(this, arguments);
             };
 
-            zrUtil.extend(ExtendedClass.prototype, zrUtil.extend({
-                $superCall: function (methodName) {
-                    var args = zrUtil.slice(arguments, 1);
-                    return findSuperMethod(this, methodName).apply(this, args);
-                },
-                $superApply: function (methodName, args) {
-                    return findSuperMethod(this, methodName).apply(this, args);
-                }
-            }, proto));
+            zrUtil.extend(ExtendedClass.prototype, proto);
 
             ExtendedClass.extend = this.extend;
+            ExtendedClass.superCall = superCall;
+            ExtendedClass.superApply = superApply;
             zrUtil.inherits(ExtendedClass, this);
-            ExtendedClass.$superClass = this;
+            ExtendedClass.superClass = this;
 
             return ExtendedClass;
         };
     };
 
-    // Find the first method that different with given metod.
-    // If only use closure to implements $superApply and $supperCall,
+    // superCall should have class info, which can not be fetch from 'this'.
     // Consider this case:
     // class A has method f,
-    // class B inherits class A, overrides method f, f call this.$superApply('f'),
+    // class B inherits class A, overrides method f, f call superApply('f'),
     // class C inherits class B, do not overrides method f,
     // then when method of class C is called, dead loop occured.
-    function findSuperMethod(context, methodName) {
-        var SuperClass = context.constructor;
-        var thisMethod = context[methodName];
-        var method;
+    function superCall(context, methodName) {
+        var args = zrUtil.slice(arguments, 2);
+        this.superClass.prototype[methodName].call(context, args);
+    }
 
-        while (
-            (SuperClass = SuperClass.$superClass)
-            && (method = SuperClass.prototype[methodName])
-            && method === thisMethod
-        ) {/*jshint noempty:false */}
-
-        return method;
+    function superApply(context, methodName, args) {
+        this.superClass.prototype[methodName].apply(context, args);
     }
 
     /**

@@ -5,7 +5,7 @@ define(function(require) {
 
     var DataZoomModel = require('./DataZoomModel');
 
-    return DataZoomModel.extend({
+    var InsideZoomModel = DataZoomModel.extend({
 
         type: 'dataZoom.inside',
 
@@ -18,4 +18,5 @@ define(function(require) {
 
     });
 
+    return InsideZoomModel;
 });

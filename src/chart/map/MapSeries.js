@@ -52,7 +52,7 @@ define(function (require) {
             option = this._fillOption(option);
             this.option = option;
 
-            this.$superApply('init', arguments);
+            MapSeries.superApply(this, 'init', arguments);
 
             this.updateSelectedMap();
         },

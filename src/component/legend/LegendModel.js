@@ -5,7 +5,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var Model = require('../../model/Model');
 
-    return require('../../echarts').extendComponentModel({
+    var LegendModel = require('../../echarts').extendComponentModel({
 
         type: 'legend',
 
@@ -41,7 +41,7 @@ define(function(require) {
         },
 
         mergeOption: function (option) {
-            this.$superCall('mergeOption', option);
+            LegendModel.superCall(this, 'mergeOption', option);
 
             this._updateData(this.ecModel);
         },
@@ -175,4 +175,6 @@ define(function(require) {
             // data: [],
         }
     });
+
+    return LegendModel;
 });

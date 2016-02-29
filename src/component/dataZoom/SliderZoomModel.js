@@ -6,7 +6,7 @@ define(function(require) {
     var DataZoomModel = require('./DataZoomModel');
     var layout = require('../../util/layout');
 
-    return DataZoomModel.extend({
+    var SliderZoomModel = DataZoomModel.extend({
 
         type: 'dataZoom.slider',
 
@@ -50,7 +50,7 @@ define(function(require) {
          */
         init: function (option) {
             this.inputPositionParams = layout.getLayoutParams(option);
-            this.$superApply('init', arguments);
+            SliderZoomModel.superApply(this, 'init', arguments);
         },
 
         /**
@@ -58,9 +58,11 @@ define(function(require) {
          */
         mergeOption: function (option) {
             this.inputPositionParams = layout.getLayoutParams(option);
-            this.$superApply('mergeOption', arguments);
+            SliderZoomModel.superApply(this, 'mergeOption', arguments);
         }
 
     });
+
+    return SliderZoomModel;
 
 });

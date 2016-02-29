@@ -53,7 +53,7 @@ define(function(require) {
          * @override
          */
         doMergeOption: function (newOption, isInit) {
-            this.$superApply('doMergeOption', arguments);
+            PiecewiseModel.superApply(this, 'doMergeOption', arguments);
 
             /**
              * The order is always [low, ..., high].

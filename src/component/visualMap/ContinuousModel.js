@@ -11,7 +11,7 @@ define(function(require) {
     // Constant
     var DEFAULT_BAR_BOUND = [20, 140];
 
-    return VisualMapModel.extend({
+    var ContinuousModel = VisualMapModel.extend({
 
         type: 'visualMap.continuous',
 
@@ -32,7 +32,7 @@ define(function(require) {
          * @override
          */
         doMergeOption: function (newOption, isInit) {
-            this.$superApply('doMergeOption', arguments);
+            ContinuousModel.superApply(this, 'doMergeOption', arguments);
 
             this.resetTargetSeries(newOption, isInit);
             this.resetExtent();
@@ -132,5 +132,7 @@ define(function(require) {
         }
 
     });
+
+    return ContinuousModel;
 
 });

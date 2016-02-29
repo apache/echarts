@@ -15,7 +15,7 @@ define(function(require) {
 
         // Overwrite
         init: function (option) {
-            this.$superApply('init', arguments);
+            PieSeries.superApply(this, 'init', arguments);
 
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
@@ -30,7 +30,7 @@ define(function(require) {
 
         // Overwrite
         mergeOption: function (newOption) {
-            this.$superCall('mergeOption', newOption);
+            PieSeries.superCall(this, 'mergeOption', newOption);
             this.updateSelectedMap();
         },
 
@@ -44,7 +44,7 @@ define(function(require) {
         // Overwrite
         getDataParams: function (dataIndex) {
             var data = this._data;
-            var params = this.$superCall('getDataParams', dataIndex);
+            var params = PieSeries.superCall(this, 'getDataParams', dataIndex);
             // FIXME toFixed?
             params.percent = +(data.get('value', dataIndex) / data.getSum('value') * 100).toFixed(2);
 

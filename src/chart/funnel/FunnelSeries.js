@@ -6,12 +6,12 @@ define(function(require) {
     var modelUtil = require('../../util/model');
     var completeDimensions = require('../../data/helper/completeDimensions');
 
-    require('../../echarts').extendSeriesModel({
+    var FunnelSeries = require('../../echarts').extendSeriesModel({
 
         type: 'series.funnel',
 
         init: function (option) {
-            this.$superApply('init', arguments);
+            FunnelSeries.superApply(this, 'init', arguments);
 
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
@@ -96,4 +96,6 @@ define(function(require) {
             }
         }
     });
+
+    return FunnelSeries;
 });

@@ -24,7 +24,7 @@ define(function (require) {
     var LABEL_GAP = 5;
     var SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
 
-    return DataZoomView.extend({
+    var SliderZoomView = DataZoomView.extend({
 
         type: 'dataZoom.slider',
 
@@ -89,7 +89,7 @@ define(function (require) {
          * @override
          */
         render: function (dataZoomModel, ecModel, api, payload) {
-            this.$superApply('render', arguments);
+            SliderZoomView.superApply(this, 'render', arguments);
 
             throttle.createOrUpdate(
                 this,
@@ -120,7 +120,7 @@ define(function (require) {
          * @override
          */
         remove: function () {
-            this.$superApply('remove', arguments);
+            SliderZoomView.superApply(this, 'remove', arguments);
             throttle.clear(this, '_dispatchZoomAction');
         },
 
@@ -128,7 +128,7 @@ define(function (require) {
          * @override
          */
         dispose: function () {
-            this.$superApply('dispose', arguments);
+            SliderZoomView.superApply(this, 'dispose', arguments);
             throttle.clear(this, '_dispatchZoomAction');
         },
 
@@ -681,5 +681,7 @@ define(function (require) {
         // 这个逻辑和getOtherAxis里一致，但是写在这里是否不好
         return thisDim === 'x' ? 'y' : 'x';
     }
+
+    return SliderZoomView;
 
 });

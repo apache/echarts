@@ -7,12 +7,12 @@ define(function (require) {
 
     var createGraphFromNodeEdge = require('../helper/createGraphFromNodeEdge');
 
-    return require('../../echarts').extendSeriesModel({
+    var GraphSeries = require('../../echarts').extendSeriesModel({
 
         type: 'series.graph',
 
         init: function (option) {
-            this.$superApply('init', arguments);
+            GraphSeries.superApply(this, 'init', arguments);
 
             // Provide data for legend select
             this.legendDataProvider = function () {
@@ -23,7 +23,7 @@ define(function (require) {
         },
 
         mergeOption: function (option) {
-            this.$superApply('mergeOption', arguments);
+            GraphSeries.superApply(this, 'mergeOption', arguments);
 
             this._updateCategoriesData();
         },
@@ -51,7 +51,7 @@ define(function (require) {
         },
 
         restoreData: function () {
-            this.$superApply('restoreData', arguments);
+            GraphSeries.superApply(this, 'restoreData', arguments);
             this.getGraph().restoreData();
         },
 
@@ -197,6 +197,7 @@ define(function (require) {
                 emphasis: {}
             }
         }
-   });
+    });
 
+    return GraphSeries;
 });

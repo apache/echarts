@@ -17,7 +17,7 @@ define(function(require) {
     var asc = numberUtil.asc;
     var linearMap = numberUtil.linearMap;
 
-    return echarts.extendComponentModel({
+    var VisualMapModel = echarts.extendComponentModel({
 
         type: 'visualMap',
 
@@ -139,7 +139,7 @@ define(function(require) {
          * @public
          */
         mergeOption: function (option) {
-            this.$superApply('mergeOption', arguments);
+            VisualMapModel.superApply(this, 'mergeOption', arguments);
             this.doMergeOption(option, false);
         },
 
@@ -475,5 +475,7 @@ define(function(require) {
         getValueState: zrUtil.noop
 
     });
+
+    return VisualMapModel;
 
 });
