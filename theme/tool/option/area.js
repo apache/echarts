@@ -1,8 +1,16 @@
 module.exports = {
+    title: {
+        text: 'Area Chart',
+        left: 'center',
+        top: '3%',
+        textStyle: {
+            fontWeight: 'normal'
+        }
+    },
     grid: {
         left: '3%',
         right: '4%',
-        bottom: '3%',
+        bottom: '12%',
         containLabel: true
     },
     xAxis: {
@@ -14,9 +22,12 @@ module.exports = {
         type: 'value',
         splitNumber: 3
     },
+    dataZoom: {
+
+    },
     series: [
         {
-            name:'邮件营销',
+            name:'Email',
             type:'line',
             stack: '总量',
             areaStyle: {normal: {}},
