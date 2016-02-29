@@ -432,8 +432,12 @@ define(function (require) {
          */
         _resetInterval: function () {
             var range = this._range = this.dataZoomModel.getPercentRange();
+            var viewExtent = this._getViewExtent();
 
-            this._handleEnds = linearMap(range, [0, 100], this._getViewExtent(), true);
+            this._handleEnds = [
+                linearMap(range[0], [0, 100], viewExtent, true),
+                linearMap(range[1], [0, 100], viewExtent, true)
+            ];
         },
 
         /**
@@ -455,7 +459,10 @@ define(function (require) {
                 handleIndex
             );
 
-            this._range = asc(linearMap(handleEnds, viewExtend, [0, 100], true));
+            this._range = asc([
+                linearMap(handleEnds[0], viewExtend, [0, 100], true),
+                linearMap(handleEnds[1], viewExtend, [0, 100], true)
+            ]);
         },
 
         /**

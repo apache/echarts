@@ -11,6 +11,14 @@ define(function (require) {
 
     var CATEGORY_DEFAULT_VISUAL_INDEX = -1;
 
+    function linearMapArray(val, domain, range, clamp) {
+        if (zrUtil.isArray(val)) {
+            return zrUtil.map(val, function (v) {
+                return linearMap(v, domain, range, clamp);
+            });
+        }
+        return linearMap(val, domain, range, clamp);
+    }
     /**
      * @param {Object} option
      * @param {string} [option.type] See visualHandlers.
@@ -223,7 +231,7 @@ define(function (require) {
                 if (result == null) {
                     result = isCategory(this)
                         ? getVisualForCategory(this, visual, normalized)
-                        : linearMap(normalized, [0, 1], visual, true);
+                        : linearMapArray(normalized, [0, 1], visual, true);
                 }
                 return result;
             }
@@ -322,7 +330,7 @@ define(function (require) {
                 if (result == null) {
                     result = isCategory(this)
                         ? getVisualForCategory(this, visual, normalized)
-                        : linearMap(normalized, [0, 1], visual, true);
+                        : linearMapArray(normalized, [0, 1], visual, true);
                 }
                 return result;
             }
@@ -331,7 +339,7 @@ define(function (require) {
 
     function arrayGetByNormalizedValue(arr, normalized) {
         return arr[
-            Math.round(linearMap(normalized, [0, 1], [0, arr.length - 1], true))
+            Math.round(linearMapArray(normalized, [0, 1], [0, arr.length - 1], true))
         ];
     }
 
@@ -355,14 +363,14 @@ define(function (require) {
     var normalizers = {
 
         linear: function (value) {
-            return linearMap(value, this.option.dataExtent, [0, 1], true);
+            return linearMapArray(value, this.option.dataExtent, [0, 1], true);
         },
 
         piecewise: function (value) {
             var pieceList = this.option.pieceList;
             var pieceIndex = VisualMapping.findPieceIndex(value, pieceList);
             if (pieceIndex != null) {
-                return linearMap(pieceIndex, [0, pieceList.length - 1], [0, 1], true);
+                return linearMapArray(pieceIndex, [0, pieceList.length - 1], [0, 1], true);
             }
         },
 

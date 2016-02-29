@@ -11,6 +11,8 @@ define(function (require) {
         extent[0] += margin;
         extent[1] -= margin;
     }
+
+    var normalizedExtent = [0, 1];
     /**
      * @name module:echarts/coord/CartesianAxis
      * @constructor
@@ -111,14 +113,16 @@ define(function (require) {
          * @return {number}
          */
         dataToCoord: function (data, clamp) {
-            data = this.scale.normalize(data);
-            var extent = this.getExtent();
+            var extent = this._extent;
             var scale = this.scale;
+            data = scale.normalize(data);
+
             if (this.onBand && scale.type === 'ordinal') {
+                extent = extent.slice();
                 fixExtentWithBands(extent, scale.count());
             }
 
-            return linearMap(data, [0, 1], extent, clamp);
+            return linearMap(data, normalizedExtent, extent, clamp);
         },
 
         /**
@@ -128,13 +132,15 @@ define(function (require) {
          * @return {number}
          */
         coordToData: function (coord, clamp) {
-            var extent = this.getExtent();
+            var extent = this._extent;
+            var scale = this.scale;
 
-            if (this.onBand) {
-                fixExtentWithBands(extent, this.scale.count());
+            if (this.onBand && scale.type === 'ordinal') {
+                extent = extent.slice();
+                fixExtentWithBands(extent, scale.count());
             }
 
-            var t = linearMap(coord, extent, [0, 1], clamp);
+            var t = linearMap(coord, extent, normalizedExtent, clamp);
 
             return this.scale.scale(t);
         },

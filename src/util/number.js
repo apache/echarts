@@ -25,12 +25,6 @@ define(function (require) {
      */
     number.linearMap = function (val, domain, range, clamp) {
 
-        if (zrUtil.isArray(val)) {
-            return zrUtil.map(val, function (v) {
-                return number.linearMap(v, domain, range, clamp);
-            });
-        }
-
         var sub = domain[1] - domain[0];
 
         if (sub === 0) {

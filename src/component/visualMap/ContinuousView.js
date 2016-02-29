@@ -257,13 +257,13 @@ define(function(require) {
             var visualMapModel = this.visualMapModel;
 
             var dataInterval = this._dataInterval = visualMapModel.getSelected();
+            var dataExtent = visualMapModel.getExtent();
+            var sizeExtent = [0, visualMapModel.itemSize[1]];
 
-            this._handleEnds = linearMap(
-                dataInterval,
-                visualMapModel.getExtent(),
-                [0, visualMapModel.itemSize[1]],
-                true
-            );
+            this._handleEnds = [
+                linearMap(dataInterval[0], dataExtent, sizeExtent,true),
+                linearMap(dataInterval[1], dataExtent, sizeExtent,true)
+            ];
         },
 
         /**
@@ -284,14 +284,13 @@ define(function(require) {
                 handleIndex === 'all' ? 'rigid' : 'push',
                 handleIndex
             );
-
+            var dataExtent = visualMapModel.getExtent();
+            var sizeExtent = [0, visualMapModel.itemSize[1]];
             // Update data interval.
-            this._dataInterval = linearMap(
-                handleEnds,
-                [0, visualMapModel.itemSize[1]],
-                visualMapModel.getExtent(),
-                true
-            );
+            this._dataInterval = [
+                linearMap(handleEnds[0], sizeExtent, dataExtent, true),
+                linearMap(handleEnds[1], sizeExtent, dataExtent, true)
+            ];
         },
 
         /**
