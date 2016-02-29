@@ -45,8 +45,11 @@ define(function(require) {
         getDataParams: function (dataIndex) {
             var data = this._data;
             var params = this.$superCall('getDataParams', dataIndex);
+            var sum = data.getSum('value');
             // FIXME toFixed?
-            params.percent = +(data.get('value', dataIndex) / data.getSum('value') * 100).toFixed(2);
+            //
+            // Percent is 0 if sum is 0
+            params.percent = !sum ? 0 : +(data.get('value', dataIndex) / sum * 100).toFixed(2);
 
             params.$vars.push('percent');
             return params;
