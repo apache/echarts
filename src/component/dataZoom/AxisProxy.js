@@ -331,7 +331,7 @@ define(function(require) {
         each(['min', 'max'], function (minMax, index) {
             var axisMax = backup[minMax];
             // Consider 'dataMin', 'dataMax'
-            if (axisMax != null && axisMax.toLowerCase() !== 'data' + minMax) {
+            if (axisMax != null && (axisMax + '').toLowerCase() !== 'data' + minMax) {
                 dataExtent[index] = scale.parse(axisMax);
             }
         });
