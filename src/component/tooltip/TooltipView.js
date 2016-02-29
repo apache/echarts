@@ -237,9 +237,16 @@ define(function (require) {
 
             // Try to keep the tooltip show when refreshing
             if (this._lastX != null && this._lastY != null) {
-                this._manuallyShowTip({
-                    x: this._lastX,
-                    y: this._lastY
+                var self = this;
+                clearTimeout(this._refreshUpdateTimeout);
+                this._refreshUpdateTimeout = setTimeout(function () {
+                    // Show tip next tick after other charts are rendered
+                    // In case highlight action has wrong result
+                    // FIXME
+                    self._manuallyShowTip({
+                        x: self._lastX,
+                        y: self._lastY
+                    });
                 });
             }
 

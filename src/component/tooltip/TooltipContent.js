@@ -201,7 +201,7 @@ define(function (require) {
             }
             // Hide the tooltip
             // PENDING
-            this.hide();
+            // this.hide();
         },
 
         show: function (tooltipModel) {
