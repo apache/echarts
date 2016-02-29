@@ -40,7 +40,6 @@ define(function (require) {
             zrUtil.each(this.getTargetInfo().cartesians, function (coordInfo) {
                 var coordModel = coordInfo.model;
                 roams.register(
-                    ecModel,
                     api,
                     {
                         coordId: coordModel.id,
@@ -62,7 +61,7 @@ define(function (require) {
          * @override
          */
         remove: function () {
-            roams.unregister(this.ecModel, this.dataZoomModel.id);
+            roams.unregister(this.api, this.dataZoomModel.id);
             InsideZoomView.superApply(this, 'remove', arguments);
             this._range = null;
         },
@@ -71,7 +70,7 @@ define(function (require) {
          * @override
          */
         dispose: function () {
-            roams.unregister(this.ecModel, this.dataZoomModel.id);
+            roams.unregister(this.api, this.dataZoomModel.id);
             InsideZoomView.superApply(this, 'dispose', arguments);
             this._range = null;
         },

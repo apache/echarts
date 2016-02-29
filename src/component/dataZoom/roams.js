@@ -16,14 +16,10 @@ define(function(require) {
 
     var ATTR = '\0_ec_dataZoom_roams';
 
-    // FIXME
-    // clean when ecModel dispose (setOption with on merge mode);
-
     var roams = {
 
         /**
          * @public
-         * @param {module:echarts/model/Global} ecModel
          * @param {module:echarts/ExtensionAPI} api
          * @param {Object} dataZoomInfo
          * @param {string} dataZoomInfo.coordType
@@ -34,8 +30,8 @@ define(function(require) {
          * @param {Function} dataZoomInfo.panGetRange
          * @param {Function} dataZoomInfo.zoomGetRange
          */
-        register: function (ecModel, api, dataZoomInfo) {
-            var store = giveStore(ecModel);
+        register: function (api, dataZoomInfo) {
+            var store = giveStore(api);
             var theDataZoomId = dataZoomInfo.dataZoomId;
             var theCoordId = dataZoomInfo.coordType + '\0_' + dataZoomInfo.coordId;
 
@@ -79,11 +75,11 @@ define(function(require) {
 
         /**
          * @public
-         * @param {module:echarts/model/Global} ecModel
+         * @param {module:echarts/ExtensionAPI} api
          * @param {string} dataZoomId
          */
-        unregister: function (ecModel, dataZoomId) {
-            var store = giveStore(ecModel);
+        unregister: function (api, dataZoomId) {
+            var store = giveStore(api);
 
             zrUtil.each(store, function (record, coordId) {
                 var dataZoomInfos = record.dataZoomInfos;
@@ -116,8 +112,11 @@ define(function(require) {
      * Key: coordId, value: {dataZoomInfos: [], count, controller}
      * @type {Array.<Object>}
      */
-    function giveStore(ecModel) {
-        return ecModel[ATTR] || (ecModel[ATTR] = {});
+    function giveStore(api) {
+        // Mount store on zrender instance, so that we do not
+        // need to worry about dispose.
+        var zr = api.getZr();
+        return zr[ATTR] || (zr[ATTR] = {});
     }
 
     function createController(api, dataZoomInfo, newRecord) {
