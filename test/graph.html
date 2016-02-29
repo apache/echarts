@@ -28,10 +28,12 @@
                 'echarts/component/legend',
                 'echarts/component/geo',
                 'echarts/component/tooltip',
-                'echarts/component/visualMap'
+                'echarts/component/visualMap',
+
+                'theme/vintage'
             ], function (echarts, gexf) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
+                var chart = echarts.init(document.getElementById('main'), 'vintage', {
                     renderer: 'canvas'
                 });
 
@@ -44,12 +46,20 @@
                         };
                     }
                     graph.nodes.forEach(function (node) {
-                        node.itemStyle = null;
+                        delete node.itemStyle;
                         node.value = node.symbolSize;
-                        node.label.normal.show = node.symbolSize > 30;
+                        // node.label.normal.show = node.symbolSize > 30;
+                        node.label = {
+                            normal: {
+                                show: node.symbolSize > 30
+                            }
+                        };
                         node.category = node.attributes['modularity_class'];
                     });
-                    chart.setOption({
+                    graph.links.forEach(function (link) {
+                        delete link.lineStyle;
+                    });
+                    var option = {
                         tooltip: {},
                         legend: [{
                             // selectedMode: 'single',
@@ -57,12 +67,12 @@
                                 return a.name;
                             })
                         }],
-                        visualMap: {
-                            max: 100,
-                            inRange: {
-                                colorSaturation: [1, 0.3]
-                            }
-                        },
+                        // visualMap: {
+                        //     max: 100,
+                        //     inRange: {
+                        //         colorSaturation: [1, 0.3]
+                        //     }
+                        // },
                         animationDurationUpdate: 1500,
                         animationEasingUpdate: 'quinticInOut',
                         series : [
@@ -76,7 +86,8 @@
                                 roam: true,
                                 label: {
                                     normal: {
-                                        position: 'right'
+                                        position: 'right',
+                                        formatter: '{b}'
                                     }
                                 },
                                 lineStyle: {
@@ -86,7 +97,9 @@
                                 }
                             }
                         ]
-                    });
+                    };
+
+                    chart.setOption(option);
 
                     var config = {
                         layout: 'none'

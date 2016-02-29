@@ -84,11 +84,6 @@ define(function(require) {
                 this._data = data;
                 this._dataBeforeProcessed = data.cloneShallow();
             }
-            // FIXME
-            // Default label emphasis `position` and `show`
-            // Do it after option is merged. In case newSeriesOption only
-            // set the value in emphasis
-            // modelUtil.defaultNormalEmphasis(this.option.label);
         },
 
         /**
