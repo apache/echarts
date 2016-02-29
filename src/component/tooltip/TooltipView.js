@@ -181,12 +181,7 @@ define(function (require) {
             if (env.node) {
                 return;
             }
-            // When refreshing the chart, tooltip will try to show the last show tip.
-            // And it will trigger mousemove event. Which may cause chart.setOption() by someone.
-            if (this._rendering) {
-                return;
-            }
-            this._rendering = true;
+
             // Reset
             this.group.removeAll();
 
@@ -261,7 +256,6 @@ define(function (require) {
                 zr.on('mouseout', this._hide, this);
             }
 
-            this._rendering = false;
         },
 
         /**
@@ -335,10 +329,12 @@ define(function (require) {
                 }
             }
             else {
-                // Use zrender handler to trigger event
-                api.getZr().handler.dispatch('mousemove', {
-                    zrX: event.x,
-                    zrY: event.y
+                var el = api.getZr().handler.findHover(event.x, event.y);
+                this._tryShow({
+                    offsetX: event.x,
+                    offsetY: event.y,
+                    target: el,
+                    event: {}
                 });
             }
         },
