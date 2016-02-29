@@ -55,6 +55,16 @@
     var theme = {
         color: colorPalette,
         backgroundColor: '#333',
+        tooltip: {
+            axisPointer: {
+                lineStyle: {
+                    color: contrastColor
+                },
+                crossStyle: {
+                    color: contrastColor
+                }
+            }
+        },
         legend: {
             textStyle: {
                 color: contrastColor
