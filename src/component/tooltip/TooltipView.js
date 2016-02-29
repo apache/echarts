@@ -181,6 +181,12 @@ define(function (require) {
             if (env.node) {
                 return;
             }
+            // When refreshing the chart, tooltip will try to show the last show tip.
+            // And it will trigger mousemove event. Which may cause chart.setOption() by someone.
+            if (this._rendering) {
+                return;
+            }
+            this._rendering = true;
             // Reset
             this.group.removeAll();
 
@@ -220,7 +226,6 @@ define(function (require) {
             var tooltipContent = this._tooltipContent;
             tooltipContent.update();
             tooltipContent.enterable = tooltipModel.get('enterable');
-
             this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
             /**
@@ -235,6 +240,14 @@ define(function (require) {
                 this.group.add(crossText);
             }
 
+            // Try to keep the tooltip show when refreshing
+            if (this._lastX != null && this._lastY != null) {
+                this._manuallyShowTip({
+                    x: this._lastX,
+                    y: this._lastY
+                });
+            }
+
             var zr = this._api.getZr();
             var tryShow = this._tryShow;
             zr.off('click', tryShow);
@@ -247,6 +260,8 @@ define(function (require) {
                 zr.on('mousemove', tryShow, this);
                 zr.on('mouseout', this._hide, this);
             }
+
+            this._rendering = false;
         },
 
         /**
@@ -387,6 +402,10 @@ define(function (require) {
             if (!tooltipModel) {
                 return;
             }
+
+            // Save mouse x, mouse y. So we can try to keep showing the tip if chart is refreshed
+            this._lastX = e.offsetX;
+            this._lastY = e.offsetY;
 
             // Always show item tooltip if mouse is on the element with dataIndex
             if (el && el.dataIndex != null) {
