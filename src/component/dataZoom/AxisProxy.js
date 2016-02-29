@@ -330,7 +330,8 @@ define(function(require) {
     function fixExtendByAxis(dataExtent, backup, scale) {
         each(['min', 'max'], function (minMax, index) {
             var axisMax = backup[minMax];
-            if (axisMax != null) {
+            // Consider 'dataMin', 'dataMax'
+            if (axisMax != null && axisMax.toLowerCase() !== 'data' + minMax) {
                 dataExtent[index] = scale.parse(axisMax);
             }
         });

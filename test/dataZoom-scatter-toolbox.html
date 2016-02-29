@@ -25,7 +25,7 @@
                 'echarts/component/dataZoom'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'), null, {
+                chart = echarts.init(document.getElementById('main'), null, {
                     renderer: 'canvas'
                 });
 
@@ -37,7 +37,7 @@
                     return (Math.random() * max).toFixed(3);
                 };
 
-                for (var i = 0; i < 1000; i++) {
+                for (var i = 0; i < 100; i++) {
                     data1.push([random(15), random(10), random(1)]);
                     // data1.push([i, 10, i]);
                     data2.push([random(10), random(10), random(1)]);
@@ -82,26 +82,26 @@
                         {
                             show: true,
                             xAxisIndex: [0],
-                            start: 1,
-                            end: 5
+                            start: 10,
+                            end: 70
                         },
                         {
                             show: true,
                             yAxisIndex: [0],
-                            start: 29,
-                            end: 36
+                            start: 0,
+                            end: 20
                         },
                         {
                             type: 'inside',
                             xAxisIndex: [0],
-                            start: 1,
-                            end: 5
+                            start: 10,
+                            end: 70
                         },
                         {
                             type: 'inside',
                             yAxisIndex: [0],
-                            start: 29,
-                            end: 36
+                            start: 0,
+                            end: 20
                         }
                     ],
                     series: [
@@ -155,7 +155,7 @@
 
         </script>
 
-        <script src="js/memory-stats.js"></script>
-        <script src="js/memory.js"></script>
+        <!-- // <script src="js/memory-stats.js"></script> -->
+        <!-- // <script src="js/memory.js"></script> -->
     </body>
 </html>

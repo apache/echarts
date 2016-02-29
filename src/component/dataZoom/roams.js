@@ -1,0 +1,181 @@
+/**
+ * @file Roam controller manager.
+ */
+define(function(require) {
+
+    // Only create one roam controller for each coordinate system.
+    // one roam controller might be refered by two inside data zoom
+    // components (for example, one for x and one for y). When user
+    // pan or zoom, only dispatch one action for those data zoom
+    // components.
+
+    var zrUtil = require('zrender/core/util');
+    var RoamController = require('../../component/helper/RoamController');
+    var throttle = require('../../util/throttle');
+    var curry = zrUtil.curry;
+
+    var ATTR = '\0_ec_dataZoom_roams';
+
+    // FIXME
+    // clean when ecModel dispose (setOption with on merge mode);
+
+    var roams = {
+
+        /**
+         * @public
+         * @param {module:echarts/model/Global} ecModel
+         * @param {module:echarts/ExtensionAPI} api
+         * @param {Object} dataZoomInfo
+         * @param {string} dataZoomInfo.coordType
+         * @param {string} dataZoomInfo.coordId
+         * @param {Object} dataZoomInfo.coordinateSystem
+         * @param {string} dataZoomInfo.dataZoomId
+         * @param {number} dataZoomInfo.throttleRate
+         * @param {Function} dataZoomInfo.panGetRange
+         * @param {Function} dataZoomInfo.zoomGetRange
+         */
+        register: function (ecModel, api, dataZoomInfo) {
+            var store = giveStore(ecModel);
+            var theDataZoomId = dataZoomInfo.dataZoomId;
+            var theCoordId = dataZoomInfo.coordType + '\0_' + dataZoomInfo.coordId;
+
+            // Do clean when a dataZoom changes its target coordnate system.
+            zrUtil.each(store, function (record, coordId) {
+                var dataZoomInfos = record.dataZoomInfos;
+                if (dataZoomInfos[theDataZoomId] && coordId !== theCoordId) {
+                    delete dataZoomInfos[theDataZoomId];
+                    record.count--;
+                }
+            });
+
+            cleanStore(store);
+
+            var record = store[theCoordId];
+
+            // Create if needed.
+            if (!record) {
+                record = store[theCoordId] = {
+                    coordId: theCoordId,
+                    dataZoomInfos: {},
+                    count: 0
+                };
+                record.controller = createController(api, dataZoomInfo, record);
+                record.dispatchAction = zrUtil.curry(dispatchAction, api);
+            }
+
+            // Update.
+            if (record) {
+                throttle.createOrUpdate(
+                    record,
+                    'dispatchAction',
+                    dataZoomInfo.throttleRate,
+                    'fixRate'
+                );
+
+                !record.dataZoomInfos[theDataZoomId] && record.count++;
+                record.dataZoomInfos[theDataZoomId] = dataZoomInfo;
+            }
+        },
+
+        /**
+         * @public
+         * @param {module:echarts/model/Global} ecModel
+         * @param {string} dataZoomId
+         */
+        unregister: function (ecModel, dataZoomId) {
+            var store = giveStore(ecModel);
+
+            zrUtil.each(store, function (record, coordId) {
+                var dataZoomInfos = record.dataZoomInfos;
+                if (dataZoomInfos[dataZoomId]) {
+                    delete dataZoomInfos[dataZoomId];
+                    record.count--;
+                }
+            });
+
+            cleanStore(store);
+        },
+
+        /**
+         * @public
+         */
+        shouldRecordRange: function (payload, dataZoomId) {
+            if (payload && payload.type === 'dataZoom' && payload.batch) {
+                for (var i = 0, len = payload.batch.length; i < len; i++) {
+                    if (payload.batch[i].dataZoomId === dataZoomId) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+    };
+
+    /**
+     * Key: coordId, value: {dataZoomInfos: [], count, controller}
+     * @type {Array.<Object>}
+     */
+    function giveStore(ecModel) {
+        return ecModel[ATTR] || (ecModel[ATTR] = {});
+    }
+
+    function createController(api, dataZoomInfo, newRecord) {
+        var controller = new RoamController(api.getZr());
+        controller.enable();
+        controller.on('pan', curry(onPan, newRecord));
+        controller.on('zoom', curry(onZoom, newRecord));
+        controller.rect = dataZoomInfo.coordinateSystem.getRect().clone();
+
+        return controller;
+    }
+
+    function cleanStore(store) {
+        zrUtil.each(store, function (record, coordId) {
+            if (!record.count) {
+                record.controller.off('pan').off('zoom');
+                delete store[coordId];
+            }
+        });
+    }
+
+    function onPan(record, dx, dy) {
+        wrapAndDispatch(record, function (info) {
+            return info.panGetRange(record.controller, dx, dy);
+        });
+    }
+
+    function onZoom(record, scale, mouseX, mouseY) {
+        wrapAndDispatch(record, function (info) {
+            return info.zoomGetRange(record.controller, scale, mouseX, mouseY);
+        });
+    }
+
+    function wrapAndDispatch(record, getRange) {
+        var batch = [];
+
+        zrUtil.each(record.dataZoomInfos, function (info) {
+            var range = getRange(info);
+            range && batch.push({
+                dataZoomId: info.dataZoomId,
+                start: range[0],
+                end: range[1]
+            });
+        });
+
+        record.dispatchAction(batch);
+    }
+
+    /**
+     * This action will be throttled.
+     */
+    function dispatchAction(api, batch) {
+        api.dispatchAction({
+            type: 'dataZoom',
+            batch: batch
+        });
+    }
+
+    return roams;
+
+});
