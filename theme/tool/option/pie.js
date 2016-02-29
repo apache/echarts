@@ -1,12 +1,14 @@
 module.exports = {
-    calculable : true,
+    legend: {
+        bottom: '5%',
+        data: ['rose1', 'rose2', 'rose3', 'rose4']
+    },
     series : [
         {
             name:'半径模式',
             type:'pie',
             radius : [20, 110],
             center : ['25%', 200],
-            roseType : 'radius',
             label: {
                 normal: {
                     show: false

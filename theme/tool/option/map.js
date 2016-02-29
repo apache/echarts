@@ -1,12 +1,12 @@
 module.exports = {
     visualMap: {
-        show: false,
+        show: true,
         min: 0,
         max: 1500,
-        left: 'left',
-        top: 'bottom',
-        text:['高','低'],           // 文本，默认为数值文本
-        calculable : true
+        right: 50,
+        top: 'middle',
+        text:['高','低']
+        // orient: 'horizontal'
     },
     selectedMode: 'single',
     series : [

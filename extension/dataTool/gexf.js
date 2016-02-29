@@ -57,11 +57,6 @@ define(function (require) {
             var node = {
                 id: id,
                 name: label,
-                label: {
-                    normal: {
-                        formatter: label
-                    }
-                },
                 itemStyle: {
                     normal: {}
                 }

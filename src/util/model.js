@@ -279,7 +279,7 @@ define(function(require) {
             var itemModel = data.getItemModel(dataIndex);
 
             var params = this.getDataParams(dataIndex);
-            if (!formatter) {
+            if (formatter == null) {
                 formatter = itemModel.get(['label', status, 'formatter']);
             }
 

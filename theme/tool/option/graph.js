@@ -209,7 +209,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Valjean",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":100,
@@ -425,7 +425,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Fantine",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":42.4,
@@ -443,7 +443,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"MmeThenardier",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":31.428574,
@@ -461,7 +461,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Thenardier",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":45.142853,
@@ -479,7 +479,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Cosette",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":31.428574,
@@ -497,7 +497,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Javert",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":47.88571,
@@ -749,7 +749,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Eponine",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":31.428574,
@@ -875,7 +875,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Gavroche",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":61.600006,
@@ -1001,7 +1001,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Marius",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":53.37143,
@@ -1037,7 +1037,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Mabeuf",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":31.428574,
@@ -1055,7 +1055,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Enjolras",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":42.4,
@@ -1073,7 +1073,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Combeferre",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":31.428574,
@@ -1109,7 +1109,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Feuilly",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":31.428574,
@@ -1127,7 +1127,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Courfeyrac",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":36.91429,
@@ -1145,7 +1145,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Bahorel",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":34.17143,
@@ -1163,7 +1163,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Bossuet",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":36.91429,
@@ -1181,7 +1181,7 @@ module.exports = {
           "label":{
             "normal":{
               "formatter":"Joly",
-              "show":true
+              "show":  false
             }
           },
           "symbolSize":34.17143,

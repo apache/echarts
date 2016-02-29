@@ -1,8 +1,30 @@
 module.exports = {
+    title: {
+        text: 'Bar Chart',
+        left: 'center',
+        top: '3%',
+        textStyle: {
+            fontWeight: 'normal'
+        }
+    },
+    toolbox: {
+        top: '3%',
+        feature: {
+            magicType: {
+                type: ['line', 'bar', 'stack', 'tiled']
+            },
+            restore: {},
+            dataZoom: {},
+            saveAsImage: {}
+        }
+    },
     grid: {
         left: '13%',
         right: '5%',
-        bottom: '5%'
+        bottom: '5%',
+        textStyle: {
+            fontWeight: 'normal'
+        }
     },
     xAxis: {
         type: 'value'
