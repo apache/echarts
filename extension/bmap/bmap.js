@@ -21,4 +21,8 @@ define(function (require) {
             bMapModel.setCenterAndZoom([center.lng, center.lat], bmap.getZoom());
         });
     });
+
+    return {
+        version: '1.0.0'
+    };
 });

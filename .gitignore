@@ -165,5 +165,6 @@ pip-log.txt
 node_modules
 
 map/tool
+theme/thumb
 /lib
 todo

@@ -1,6 +1,6 @@
 {
   "name": "echarts",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "description": "A powerful charting and visualization library for browser",
   "keywords": [
     "visualization",
@@ -35,9 +35,10 @@
     "prepublish": "node build/amd2common.bundle.js"
   },
   "dependencies": {
-    "zrender": "^3.0.2"
+    "zrender": "^3.0.3"
   },
   "devDependencies": {
+    "zrender": "^3.0.3",
     "escodegen": "^1.8.0",
     "esprima": "^2.7.2",
     "estraverse": "^4.1.1",

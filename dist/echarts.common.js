@@ -665,9 +665,8 @@ define('zrender/core/util',['require','../graphic/Gradient'],function(require) {
  * @module echarts/util/number
  */
 
-define('echarts/util/number',['require','zrender/core/util'],function (require) {
+define('echarts/util/number',['require'],function (require) {
 
-    var zrUtil = require('zrender/core/util');
     var number = {};
 
     var RADIAN_EPSILON = 1e-4;
@@ -686,12 +685,6 @@ define('echarts/util/number',['require','zrender/core/util'],function (require) 
      * @return {(number|Array.<number>}
      */
     number.linearMap = function (val, domain, range, clamp) {
-
-        if (zrUtil.isArray(val)) {
-            return zrUtil.map(val, function (v) {
-                return number.linearMap(v, domain, range, clamp);
-            });
-        }
 
         var sub = domain[1] - domain[0];
 
@@ -988,7 +981,7 @@ define('echarts/util/format',['require','zrender/core/util','./number'],function
 
         formatTpl: formatTpl,
 
-        formatTime: formatTime        
+        formatTime: formatTime
     };
 });
 define('echarts/util/clazz',['require','zrender/core/util'],function (require) {
@@ -1021,43 +1014,31 @@ define('echarts/util/clazz',['require','zrender/core/util'],function (require) {
                 RootClass.apply(this, arguments);
             };
 
-            zrUtil.extend(ExtendedClass.prototype, zrUtil.extend({
-                $superCall: function (methodName) {
-                    var args = zrUtil.slice(arguments, 1);
-                    return findSuperMethod(this, methodName).apply(this, args);
-                },
-                $superApply: function (methodName, args) {
-                    return findSuperMethod(this, methodName).apply(this, args);
-                }
-            }, proto));
+            zrUtil.extend(ExtendedClass.prototype, proto);
 
             ExtendedClass.extend = this.extend;
+            ExtendedClass.superCall = superCall;
+            ExtendedClass.superApply = superApply;
             zrUtil.inherits(ExtendedClass, this);
-            ExtendedClass.$superClass = this;
+            ExtendedClass.superClass = this;
 
             return ExtendedClass;
         };
     };
 
-    // Find the first method that different with given metod.
-    // If only use closure to implements $superApply and $supperCall,
+    // superCall should have class info, which can not be fetch from 'this'.
     // Consider this case:
     // class A has method f,
-    // class B inherits class A, overrides method f, f call this.$superApply('f'),
+    // class B inherits class A, overrides method f, f call superApply('f'),
     // class C inherits class B, do not overrides method f,
     // then when method of class C is called, dead loop occured.
-    function findSuperMethod(context, methodName) {
-        var SuperClass = context.constructor;
-        var thisMethod = context[methodName];
-        var method;
+    function superCall(context, methodName) {
+        var args = zrUtil.slice(arguments, 2);
+        return this.superClass.prototype[methodName].apply(context, args);
+    }
 
-        while (
-            (SuperClass = SuperClass.$superClass)
-            && (method = SuperClass.prototype[methodName])
-            && method === thisMethod
-        ) {/*jshint noempty:false */}
-
-        return method;
+    function superApply(context, methodName, args) {
+        return this.superClass.prototype[methodName].apply(context, args);
     }
 
     /**
@@ -1231,8 +1212,8 @@ define('echarts/model/mixin/makeStyleMapper',['require','zrender/core/util'],fun
                 }
             }
             return style;
-        }
-    }
+        };
+    };
 });
 define('echarts/model/mixin/lineStyle',['require','./makeStyleMapper'],function (require) {
     var getLineStyle = require('./makeStyleMapper')(
@@ -2623,7 +2604,7 @@ define('echarts/util/model',['require','./format','./number','zrender/core/util'
             var itemModel = data.getItemModel(dataIndex);
 
             var params = this.getDataParams(dataIndex);
-            if (!formatter) {
+            if (formatter == null) {
                 formatter = itemModel.get(['label', status, 'formatter']);
             }
 
@@ -2686,8 +2667,8 @@ define('echarts/util/model',['require','./format','./number','zrender/core/util'
                         // id has highest priority.
                         (cptOption.id != null && exist.id === cptOption.id + '')
                         || (cptOption.name != null
-                            && !isIdInner(cptOption)
-                            && !isIdInner(exist)
+                            && !modelUtil.isIdInner(cptOption)
+                            && !modelUtil.isIdInner(exist)
                             && exist.name === cptOption.name + ''
                         )
                     )
@@ -2709,7 +2690,7 @@ define('echarts/util/model',['require','./format','./number','zrender/core/util'
             for (; i < result.length; i++) {
                 var exist = result[i].exist;
                 if (!result[i].option
-                    && !isIdInner(exist)
+                    && !modelUtil.isIdInner(exist)
                     // Caution:
                     // Do not overwrite id. But name can be overwritten,
                     // because axis use name as 'show label text'.
@@ -2731,12 +2712,15 @@ define('echarts/util/model',['require','./format','./number','zrender/core/util'
     };
 
     /**
-     * @inner
+     * @public
+     * @param {Object} cptOption
+     * @return {boolean}
      */
-    function isIdInner(cptOption) {
-        // FIXME: Where to put this constant.
-        return cptOption && cptOption.id && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
-    }
+    modelUtil.isIdInner = function (cptOption) {
+        return zrUtil.isObject(cptOption)
+            && cptOption.id
+            && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
+    };
 
     return modelUtil;
 });
@@ -2928,6 +2912,8 @@ define('echarts/util/layout',['require','zrender/core/util','zrender/core/Boundi
     var each = zrUtil.each;
 
     var layout = {};
+
+    var LOCATION_PARAMS = ['left', 'right', 'top', 'bottom', 'width', 'height'];
 
     function boxLayout(orient, group, gap, maxWidth, maxHeight) {
         var x = 0;
@@ -3256,23 +3242,6 @@ define('echarts/util/layout',['require','zrender/core/util','zrender/core/Boundi
             if (mergedValueCount === enoughParamNumber || !newValueCount) {
                 return merged;
             }
-            else if (mergedValueCount < enoughParamNumber) {
-                // In common way, 'auto' means auto calculate by left/right
-                // or top/bottom. But Some components may auto calculate by
-                // other way (like dataZoom auto by coordnate system). In
-                // that case we can set defualtOption 'auto', and if
-                // mergedValueCount litter than enoughParamNumber, 'auto'
-                // will filtered by priority and returned.
-                var autoCount = 0;
-                each(names, function (name) {
-                    if (merged[name] === 'auto') {
-                        autoCount < enoughParamNumber - mergedValueCount
-                            ? autoCount++
-                            : (merged[name] = null);
-                    }
-                });
-                return merged;
-            }
             // Case: newOption: {width: ..., right: ...},
             // Than we can make sure user only want those two, and ignore
             // all origin params in targetOption.
@@ -3314,14 +3283,19 @@ define('echarts/util/layout',['require','zrender/core/util','zrender/core/Boundi
      * @return {Object} Result contains those props.
      */
     layout.getLayoutParams = function (source) {
-        var params = {};
-        source && each(
-            ['left', 'right', 'top', 'bottom', 'width', 'height'],
-            function (name) {
-                source.hasOwnProperty(name) && (params[name] = source[name]);
-            }
-        );
-        return params;
+        return layout.copyLayoutParams({}, source);
+    };
+
+    /**
+     * Retrieve 'left', 'right', 'top', 'bottom', 'width', 'height' from object.
+     * @param {Object} source
+     * @return {Object} Result contains those props.
+     */
+    layout.copyLayoutParams = function (target, source) {
+        source && target && each(LOCATION_PARAMS, function (name) {
+            source.hasOwnProperty(name) && (target[name] = source[name]);
+        });
+        return target;
     };
 
     return layout;
@@ -3585,6 +3559,8 @@ define('echarts/model/Global',['require','zrender/core/util','../util/model','./
 
     var globalDefault = require('./globalDefault');
 
+    var OPTION_INNER_KEY = '\0_ec_inner';
+
     /**
      * @alias module:echarts/model/Global
      *
@@ -3614,6 +3590,11 @@ define('echarts/model/Global',['require','zrender/core/util','../util/model','./
         },
 
         setOption: function (option, optionPreprocessorFuncs) {
+            zrUtil.assert(
+                !(OPTION_INNER_KEY in option),
+                'please use chart.getOption()'
+            );
+
             this._optionManager.setOption(option, optionPreprocessorFuncs);
 
             this.resetOption();
@@ -3694,11 +3675,7 @@ define('echarts/model/Global',['require','zrender/core/util','../util/model','./
             );
 
             function visitComponent(mainType, dependencies) {
-                var newCptOptionList = newOption[mainType];
-
-                if (!zrUtil.isArray(newCptOptionList)) {
-                    newCptOptionList = newCptOptionList ? [newCptOptionList] : [];
-                }
+                var newCptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
 
                 var mapResult = modelUtil.mappingToExists(
                     componentsMap[mainType], newCptOptionList
@@ -3760,6 +3737,32 @@ define('echarts/model/Global',['require','zrender/core/util','../util/model','./
                     this._seriesIndices = createSeriesIndices(componentsMap.series);
                 }
             }
+        },
+
+        /**
+         * Get option for output (cloned option and inner info removed)
+         * @public
+         * @return {Object}
+         */
+        getOption: function () {
+            var option = zrUtil.clone(this.option);
+
+            each(option, function (opts, mainType) {
+                if (ComponentModel.hasClass(mainType)) {
+                    var opts = modelUtil.normalizeToArray(opts);
+                    for (var i = opts.length - 1; i >= 0; i--) {
+                        // Remove options with inner id.
+                        if (modelUtil.isIdInner(opts[i])) {
+                            opts.splice(i, 1);
+                        }
+                    }
+                    option[mainType] = opts;
+                }
+            });
+
+            delete option[OPTION_INNER_KEY];
+
+            return option;
         },
 
         /**
@@ -4105,7 +4108,10 @@ define('echarts/model/Global',['require','zrender/core/util','../util/model','./
     function initBase(baseOption) {
         baseOption = baseOption;
 
+        // Using OPTION_INNER_KEY to mark that this option can not be used outside,
+        // i.e. `chart.setOption(chart.getModel().option);` is forbiden.
         this.option = {};
+        this.option[OPTION_INNER_KEY] = 1;
 
         /**
          * @type {Object.<string, Array.<module:echarts/model/Model>>}
@@ -4167,19 +4173,22 @@ define('echarts/model/Global',['require','zrender/core/util','../util/model','./
 
         each(mapResult, function (item, index) {
             var existCpt = item.exist;
+            existCpt && (idMap[existCpt.id] = item);
+        });
+
+        each(mapResult, function (item, index) {
             var opt = item.option;
 
             zrUtil.assert(
-                !opt || opt.id == null || !idMap[opt.id],
+                !opt || opt.id == null || !idMap[opt.id] || idMap[opt.id] === item,
                 'id duplicates: ' + (opt && opt.id)
             );
 
-            existCpt && (idMap[existCpt.id] = item);
-            opt && (idMap[opt.id] = item);
+            opt && opt.id != null && (idMap[opt.id] = item);
 
             // Complete subType
             if (isObject(opt)) {
-                var subType = determineSubType(mainType, opt, existCpt);
+                var subType = determineSubType(mainType, opt, item.exist);
                 item.keyInfo = {mainType: mainType, subType: subType};
             }
         });
@@ -4307,28 +4316,28 @@ define('echarts/CoordinateSystem',['require'],function(require) {
 
     function CoordinateSystemManager() {
 
-        this._coordinateSystems = {};
-
-        this._coordinateSystemsList = [];
+        this._coordinateSystems = [];
     }
 
     CoordinateSystemManager.prototype = {
 
         constructor: CoordinateSystemManager,
 
-        update: function (ecModel, api) {
-            var coordinateSystems = {};
+        create: function (ecModel, api) {
+            var coordinateSystems = [];
             for (var type in coordinateSystemCreators) {
-                coordinateSystems[type] = coordinateSystemCreators[type].create(ecModel, api);
+                var list = coordinateSystemCreators[type].create(ecModel, api);
+                list && (coordinateSystems = coordinateSystems.concat(list));
             }
 
             this._coordinateSystems = coordinateSystems;
         },
 
-        get: function (type, idx) {
-            var list = this._coordinateSystems[type];
-            if (list) {
-                return list[idx || 0];
+        update: function (ecModel, api) {
+            var coordinateSystems = this._coordinateSystems;
+            for (var i = 0; i < coordinateSystems.length; i++) {
+                // FIXME MUST have
+                coordinateSystems[i].update && coordinateSystems[i].update(ecModel, api);
             }
         }
     };
@@ -4339,7 +4348,7 @@ define('echarts/CoordinateSystem',['require'],function(require) {
 
     CoordinateSystemManager.get = function (type) {
         return coordinateSystemCreators[type];
-    }
+    };
 
     return CoordinateSystemManager;
 });
@@ -4753,11 +4762,10 @@ define('echarts/model/OptionManager',['require','zrender/core/util','../util/mod
                 oldOption[mainType] = merge(oldCptOpt, newCptOpt, true);
             }
             else {
-                if (!zrUtil.isArray(newCptOpt)) {
-                    newCptOpt = newCptOpt ? [newCptOpt] : [];
-                }
+                newCptOpt = modelUtil.normalizeToArray(newCptOpt);
+                oldCptOpt = modelUtil.normalizeToArray(oldCptOpt);
 
-                var mapResult = modelUtil.mappingToExists(oldCptOpt || [], newCptOpt);
+                var mapResult = modelUtil.mappingToExists(oldCptOpt, newCptOpt);
 
                 oldOption[mainType] = map(mapResult, function (item) {
                     return (item.option && item.exist)
@@ -4856,11 +4864,6 @@ define('echarts/model/Series',['require','zrender/core/util','../util/format','.
                 this._data = data;
                 this._dataBeforeProcessed = data.cloneShallow();
             }
-            // FIXME
-            // Default label emphasis `position` and `show`
-            // Do it after option is merged. In case newSeriesOption only
-            // set the value in emphasis
-            // modelUtil.defaultNormalEmphasis(this.option.label);
         },
 
         /**
@@ -4900,33 +4903,29 @@ define('echarts/model/Series',['require','zrender/core/util','../util/format','.
         },
 
         /**
-         * Get dimensions on the given axis.
-         * @param {string} axisDim
+         * Coord dimension to data dimension.
+         *
+         * By default the result is the same as dimensions of series data.
+         * But some series dimensions are different from coord dimensions (i.e.
+         * candlestick and boxplot). Override this method to handle those cases.
+         *
+         * Coord dimension to data dimension can be one-to-many
+         *
+         * @param {string} coordDim
          * @return {Array.<string>} dimensions on the axis.
          */
-        getDimensionsOnAxis: function (axisDim) {
-            return [axisDim]; // Retunr axisDim default.
+        coordDimToDataDim: function (coordDim) {
+            return [coordDim];
         },
 
         /**
-         * Get coordinate dimensions info.
-         * By default the result is the same as dimensions info of series data.
-         * But some series dimensions are different from coord dimensions (i.e.
-         * candlestick and boxplot). Override this method to handle those cases.
-         * @param {string|number} [dataDim]
-         * @return {Array.<Object>} If dataDim specified, return cooresponding
-         *                          coord dim info, otherwise return dimension
-         *                          info list. If no coordinate system, reutrn [].
+         * Convert data dimension to coord dimension.
+         *
+         * @param {string|number} dataDim
+         * @return {string}
          */
-        getCoordDimensionInfo: function (dataDim) {
-            var data = this.getData();
-            return this.coordinateSystem
-                ? (
-                    dataDim != null
-                        ? data.getDimensionInfo(dataDim)
-                        : zrUtil.map(data.dimensions, data.getDimensionInfo, data)
-                )
-                : [];
+        dataDimToCoordDim: function (dataDim) {
+            return dataDim;
         },
 
         /**
@@ -5843,7 +5842,7 @@ define('zrender/animation/easing',[],function () {
             }
             return easing.bounceOut(k * 2 - 1) * 0.5 + 0.5;
         }
-    }
+    };
 
     return easing;
 });
@@ -5889,7 +5888,7 @@ define('zrender/animation/Clip',['require','./easing'],function(require) {
         this.onframe = options.onframe;
         this.ondestroy = options.ondestroy;
         this.onrestart = options.onrestart;
-    };
+    }
 
     Clip.prototype = {
 
@@ -8507,7 +8506,7 @@ define('zrender/graphic/Displayable',['require','../core/util','./Style','../Ele
 
         // FIXME Stateful must be mixined after style is setted
         // Stateful.call(this, opts);
-    };
+    }
 
     Displayable.prototype = {
 
@@ -9489,6 +9488,7 @@ define('zrender/core/bbox',['require','./vector','./curve'],function (require) {
 
  // TODO getTotalLength, getPointAtLength
 define('zrender/core/PathProxy',['require','./curve','./vector','./bbox','./BoundingRect'],function (require) {
+    
 
     var curve = require('./curve');
     var vec2 = require('./vector');
@@ -9835,7 +9835,7 @@ define('zrender/core/PathProxy',['require','./curve','./vector','./bbox','./Boun
 
         _expandData: function () {
             // Only if data is Float32Array
-            if (! (this.data instanceof Array)) {
+            if (!(this.data instanceof Array)) {
                 var newData = [];
                 for (var i = 0; i < this._len; i++) {
                     newData[i] = this.data[i];
@@ -9983,12 +9983,14 @@ define('zrender/core/PathProxy',['require','./curve','./vector','./bbox','./Boun
         /**
          * 转成静态的 Float32Array 减少堆内存占用
          * Convert dynamic array to static Float32Array
-         * @return {[type]} [description]
          */
         toStatic: function () {
-            this.data.length = this._len;
-            if (hasTypedArray && (this.data instanceof Array)) {
-                this.data = new Float32Array(this.data);
+            var data = this.data;
+            if (data instanceof Array) {
+                data.length = this._len;
+                if (hasTypedArray) {
+                    this.data = new Float32Array(data);
+                }
             }
         },
 
@@ -11120,7 +11122,10 @@ define('zrender/tool/transformPath',['require','../core/PathProxy','../core/vect
         var data = path.data;
         var cmd;
         var nPoint;
-        var i, j, k;
+        var i;
+        var j;
+        var k;
+        var p;
 
         var M = CMD.M;
         var C = CMD.C;
@@ -11153,7 +11158,6 @@ define('zrender/tool/transformPath',['require','../core/PathProxy','../core/vect
                     var sx = mathSqrt(m[0] * m[0] + m[1] * m[1]);
                     var sy = mathSqrt(m[2] * m[2] + m[3] * m[3]);
                     var angle = mathAtan2(-m[1] / sy, m[0] / sx);
-                    var clockwise = data[i + 7];
                     // cx
                     data[i++] += x;
                     // cy
@@ -11301,7 +11305,6 @@ define('zrender/tool/path',['require','../graphic/Path','../core/PathProxy','./t
 
         // create array
         var arr = cs.split('|');
-        var ca = [];
         // init context point
         var cpx = 0;
         var cpy = 0;
@@ -11694,7 +11697,7 @@ define('zrender/graphic/helper/roundRect',['require'],function (require) {
             ctx.lineTo(x, y + r1);
             r1 !== 0 && ctx.quadraticCurveTo(x, y, x + r1, y);
         }
-    }
+    };
 });
 // Simple LRU cache use doubly linked list
 // @module zrender/core/LRU
@@ -12417,7 +12420,7 @@ define('zrender/graphic/helper/poly',['require','./smoothSpline','./smoothBezier
                 closePath && ctx.closePath();
             }
         }
-    }
+    };
 });
 /**
  * 多边形
@@ -12744,7 +12747,7 @@ define('zrender/graphic/shape/BezierCurve',['require','../../core/curve','../Pat
             ctx.moveTo(unitX * r + x, unitY * r + y);
             ctx.arc(x, y, r, startAngle, endAngle, !clockwise);
         }
-    })
+    });
 });
 define('zrender/graphic/LinearGradient',['require','../core/util','./Gradient'],function(require) {
     
@@ -13443,24 +13446,9 @@ define('zrender/core/event',['require','../mixin/Eventful'],function(require) {
         var isTouch = eventType && eventType.indexOf('touch') >= 0;
 
         if (!isTouch) {
-            // https://gist.github.com/electricg/4435259
-            var mouseX = 0;
-            var mouseY = 0;
-
-            if (e.pageX || e.pageY) {
-                mouseX = e.pageX;
-                mouseY = e.pageY;
-            }
-            else {
-                mouseX = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
-                mouseY = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
-            }
-
             var box = getBoundingClientRect(el);
-            var top = box.top + (window.pageYOffset || el.scrollTop) - (el.clientTop || 0);
-            var left = box.left + (window.pageXOffset || el.scrollLeft) - (el.clientLeft || 0);
-            e.zrX = mouseX - left;
-            e.zrY = mouseY - top;
+            e.zrX = e.clientX - box.left;
+            e.zrY = e.clientY - box.top;
             e.zrDelta = (e.wheelDelta) ? e.wheelDelta / 120 : -(e.detail || 0) / 3;
         }
         else {
@@ -13571,7 +13559,7 @@ define('zrender/mixin/Draggable',['require'],function (require) {
                 draggingTarget.drift(dx, dy, e);
                 this._dispatchProxy(draggingTarget, 'drag', e.event);
 
-                var dropTarget = this._findHover(x, y, draggingTarget);
+                var dropTarget = this.findHover(x, y, draggingTarget);
                 var lastDropTarget = this._dropTarget;
                 this._dropTarget = dropTarget;
 
@@ -13802,7 +13790,7 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
             var x = event.zrX;
             var y = event.zrY;
 
-            var hovered = this._findHover(x, y, null);
+            var hovered = this.findHover(x, y, null);
             var lastHovered = this._hovered;
 
             this._hovered = hovered;
@@ -13922,7 +13910,7 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
         domHandlers[name] = function (event) {
             event = normalizeEvent(this.root, event);
             // Find hover again to avoid click event is dispatched manually. Or click is triggered without mouseover
-            var hovered = this._findHover(event.zrX, event.zrY, null);
+            var hovered = this.findHover(event.zrX, event.zrY, null);
             this._dispatchProxy(hovered, name, event);
         };
     });
@@ -13942,7 +13930,7 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
 
         var gestureInfo = gestureMgr.recognize(
             event,
-            zrHandler._findHover(event.zrX, event.zrY, null)
+            zrHandler.findHover(event.zrX, event.zrY, null)
         );
 
         stage === 'end' && gestureMgr.clear();
@@ -14176,7 +14164,7 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
          * @param {module:zrender/graphic/Displayable} exclude
          * @method
          */
-        _findHover: function(x, y, exclude) {
+        findHover: function(x, y, exclude) {
             var list = this.storage.getDisplayList();
             for (var i = list.length - 1; i >= 0 ; i--) {
                 if (!list[i].silent
@@ -14230,8 +14218,8 @@ define('zrender/Handler',['require','./core/env','./core/event','./core/util','.
         // We may figger it out latter.
         return false;
         // return env.pointerEventsSupported
-            // In no-touch device we dont use pointer but just traditional way for
-            // avoiding problem.
+            // In no-touch device we dont use pointer evnets but just
+            // use mouse event for avoiding problems.
             // && window.navigator.maxTouchPoints;
     }
 
@@ -15690,7 +15678,7 @@ define('zrender/zrender',['require','./core/guid','./core/env','./Handler','./St
     /**
      * @type {string}
      */
-    zrender.version = '3.0.2';
+    zrender.version = '3.0.3';
 
     /**
      * @param {HTMLElement} dom
@@ -16461,7 +16449,7 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
          * @type {module:echarts/CoordinateSystem}
          * @private
          */
-        this._coordinateSystem = new CoordinateSystemManager();
+        this._coordSysMgr = new CoordinateSystemManager();
 
         Eventful.call(this);
 
@@ -16500,7 +16488,6 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
      * @param {boolean} [notRefreshImmediately=false] Useful when setOption frequently.
      */
     echartsProto.setOption = function (option, notMerge, notRefreshImmediately) {
-
         if (!this._model || notMerge) {
             this._model = new GlobalModel(
                 null, null, this._theme, new OptionManager(this._api)
@@ -16532,7 +16519,7 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
      * @return {Object}
      */
     echartsProto.getOption = function () {
-        return zrUtil.clone(this._model.option);
+        return this._model.getOption();
     };
 
     /**
@@ -16688,6 +16675,8 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
             // console.time && console.time('update');
 
             var ecModel = this._model;
+            var api = this._api;
+            var coordSysMgr = this._coordSysMgr;
             // update before setOption
             if (!ecModel) {
                 return;
@@ -16699,11 +16688,15 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
             // Save total ecModel here for undo/redo (after restoring data and before processing data).
             // Undo (restoration of total ecModel) can be carried out in 'action' or outside API call.
 
-            processData.call(this, ecModel);
+            // Create new coordinate system each update
+            // In LineView may save the old coordinate system and use it to get the orignal point
+            coordSysMgr.create(this._model, this._api);
+
+            processData.call(this, ecModel, api);
 
             stackSeriesData.call(this, ecModel);
 
-            this._coordinateSystem.update(ecModel, this._api);
+            coordSysMgr.update(ecModel, api);
 
             doLayout.call(this, ecModel, payload);
 
@@ -17061,10 +17054,10 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
      * @param {module:echarts/model/Global} ecModel
      * @private
      */
-    function processData(ecModel) {
+    function processData(ecModel, api) {
         each(PROCESSOR_STAGES, function (stage) {
             each(dataProcessorFuncs[stage] || [], function (process) {
-                process(ecModel);
+                process(ecModel, api);
             });
         });
     }
@@ -17284,9 +17277,9 @@ define('echarts/echarts',['require','./model/Global','./ExtensionAPI','./Coordin
         /**
          * @type {number}
          */
-        version: '3.1.1',
+        version: '3.1.2',
         dependencies: {
-            zrender: '3.0.2'
+            zrender: '3.0.3'
         }
     };
 
@@ -18197,28 +18190,23 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
 
     /**
      * Retreive the index of nearest value
-     * @param {string|Array.<string>} dim
+     * @param {string>} dim
      * @param {number} value
      * @param {boolean} stack If given value is after stacked
      * @return {number}
      */
     listProto.indexOfNearest = function (dim, value, stack) {
-        if (!zrUtil.isArray(dim)) {
-            dim = dim ? [dim] : [];
-        }
         var storage = this._storage;
         var dimData = storage[dim];
 
         if (dimData) {
             var minDist = Number.MAX_VALUE;
             var nearestIdx = -1;
-            for (var j = 0, lenj = dim.length; j < lenj; j++) {
-                for (var i = 0, len = this.count(); i < len; i++) {
-                    var dist = Math.abs(this.get(dim[j], i, stack) - value);
-                    if (dist <= minDist) {
-                        minDist = dist;
-                        nearestIdx = i;
-                    }
+            for (var i = 0, len = this.count(); i < len; i++) {
+                var dist = Math.abs(this.get(dim, i, stack) - value);
+                if (dist <= minDist) {
+                    minDist = dist;
+                    nearestIdx = i;
                 }
             }
             return nearestIdx;
@@ -18388,6 +18376,34 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
         return result;
     };
 
+    function cloneListForMapAndSample(original, excludeDimensions) {
+        var allDimensions = original.dimensions;
+        var list = new List(
+            zrUtil.map(allDimensions, original.getDimensionInfo, original),
+            original.hostModel
+        );
+        // FIXME If needs stackedOn, value may already been stacked
+        transferImmuProperties(list, original, original._wrappedMethods);
+
+        var storage = list._storage = {};
+        var originalStorage = original._storage;
+        // Init storage
+        for (var i = 0; i < allDimensions.length; i++) {
+            var dim = allDimensions[i];
+            var dimStore = originalStorage[dim];
+            if (zrUtil.indexOf(excludeDimensions, dim) >= 0) {
+                storage[dim] = new dimStore.constructor(
+                    originalStorage[dim].length
+                );
+            }
+            else {
+                // Direct reference for other dimensions
+                storage[dim] = originalStorage[dim];
+            }
+        }
+        return list;
+    }
+
     /**
      * Data mapping to a new List with given dimensions
      * @param {string|Array.<string>} dimensions
@@ -18401,36 +18417,12 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
             normalizeDimensions(dimensions), this.getDimension, this
         );
 
-        var allDimensions = this.dimensions;
-        var list = new List(
-            zrUtil.map(allDimensions, this.getDimensionInfo, this),
-            this.hostModel
-        );
-
+        var list = cloneListForMapAndSample(this, dimensions);
         // Following properties are all immutable.
         // So we can reference to the same value
         var indices = list.indices = this.indices;
 
-        // FIXME If needs stackedOn, value may already been stacked
-        transferImmuProperties(list, this, this._wrappedMethods);
-
-        var storage = list._storage = {};
-        var thisStorage = this._storage;
-
-        // Init storage
-        for (var i = 0; i < allDimensions.length; i++) {
-            var dim = allDimensions[i];
-            var dimStore = thisStorage[dim];
-            if (zrUtil.indexOf(dimensions, dim) >= 0) {
-                storage[dim] = new dimStore.constructor(
-                    thisStorage[dim].length
-                );
-            }
-            else {
-                // Direct copy for other dimensions
-                storage[dim] = thisStorage[dim];
-            }
-        }
+        var storage = list._storage;
 
         var tmpRetValue = [];
         this.each(dimensions, function () {
@@ -18456,11 +18448,51 @@ define('echarts/data/List',['require','../model/Model','./DataDiffer','zrender/c
         return list;
     };
 
-    // Since temporate model is shared by all data items. So we must make sure it can't be write.
-    // PENDING may cause any performance problem?
-    // if (Object.freeze) {
-    //     Object.freeze(temporaryModel);
-    // }
+    /**
+     * Large data down sampling on given dimension
+     * @param {string} dimension
+     * @param {number} rate
+     * @param {Function} sampleValue
+     * @param {Function} sampleIndex Sample index for name and id
+     */
+    listProto.downSample = function (dimension, rate, sampleValue, sampleIndex) {
+        var list = cloneListForMapAndSample(this, [dimension]);
+        var storage = this._storage;
+        var targetStorage = list._storage;
+
+        var originalIndices = this.indices;
+        var indices = list.indices = [];
+
+        var frameValues = [];
+        var frameIndices = [];
+        var frameSize = Math.floor(1 / rate);
+
+        var dimStore = targetStorage[dimension];
+        var len = this.count();
+        // Copy data from original data
+        for (var i = 0; i < storage[dimension].length; i++) {
+            targetStorage[dimension][i] = storage[dimension][i];
+        }
+        for (var i = 0; i < len; i += frameSize) {
+            // Last frame
+            if (frameSize > len - i) {
+                frameSize = len - i;
+                frameValues.length = frameSize;
+            }
+            for (var k = 0; k < frameSize; k++) {
+                var idx = originalIndices[i + k];
+                frameValues[k] = dimStore[idx];
+                frameIndices[k] = idx;
+            }
+            var value = sampleValue(frameValues);
+            var idx = frameIndices[sampleIndex(frameValues, value) || 0];
+            // Only write value on the filtered data
+            dimStore[idx] = value;
+            indices.push(idx);
+        }
+        return list;
+    };
+
     /**
      * Get model of one data item.
      *
@@ -19029,6 +19061,9 @@ define('echarts/chart/line/LineSeries',['require','../helper/createListFromArray
             showSymbol: true,
             // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
             // showAllSymbol: false
+            //
+            // 大数据过滤，'average', 'max', 'min', 'sum'
+            // sampling: 'none'
 
             animationEasing: 'linear'
         }
@@ -19561,13 +19596,26 @@ define('echarts/chart/helper/Symbol',['require','zrender/core/util','../../util/
 
         var labelModel = itemModel.getModel(normalLabelAccessPath);
         var hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
-        var lastDim = data.dimensions[data.dimensions.length - 1];
+
         var elStyle = symbolPath.style;
+
+        // Get last value dim
+        var dimensions = data.dimensions.slice();
+        var valueDim = dimensions.pop();
+        var dataType;
+        while (
+            ((dataType = data.getDimensionInfo(valueDim).type) === 'ordinal')
+            || (dataType === 'time')
+        ) {
+            valueDim = dimensions.pop();
+        }
 
         if (labelModel.get('show')) {
             graphic.setText(elStyle, labelModel, color);
-            elStyle.text = seriesModel.getFormattedLabel(idx, 'normal')
-                || data.get(lastDim, idx);
+            elStyle.text = zrUtil.retrieve(
+                seriesModel.getFormattedLabel(idx, 'normal'),
+                data.get(valueDim, idx)
+            );
         }
         else {
             elStyle.text = '';
@@ -19575,8 +19623,10 @@ define('echarts/chart/helper/Symbol',['require','zrender/core/util','../../util/
 
         if (hoverLabelModel.getShallow('show')) {
             graphic.setText(hoverStyle, hoverLabelModel, color);
-            hoverStyle.text = seriesModel.getFormattedLabel(idx, 'emphasis')
-                || data.get(lastDim, idx);
+            hoverStyle.text = zrUtil.retrieve(
+                seriesModel.getFormattedLabel(idx, 'emphasis'),
+                data.get(valueDim, idx)
+            );
         }
         else {
             hoverStyle.text = '';
@@ -19737,219 +19787,11 @@ define('echarts/chart/helper/SymbolDraw',['require','../../util/graphic','./Symb
 
     return SymbolDraw;
 });
-// Hirschberg's algorithm
-// http://en.wikipedia.org/wiki/Hirschberg%27s_algorithm
+define('echarts/chart/line/lineAnimationDiff',['require'],function (require) {
 
-/**
- * @module zrender/core/arrayDiff
- * @author Yi Shen
- */
-define('zrender/core/arrayDiff',['require'],function (require) {
-
-    function defaultCompareFunc(a, b) {
-        return a === b;
-    }
-
-    function createItem(cmd, idx, idx1) {
-        var res = {
-            // cmd explanation
-            // '=': not change
-            // '^': replace with a new item in second array. Unused temporary
-            // '+': add a new item of second array
-            // '-': del item in first array
-            cmd: cmd,
-            // Value index, use index in the first array
-            // Except '+'. Adding a new item needs value in the second array
-            idx: idx
-        };
-        // Replace need to know both two indices
-        // if (cmd === '^') {
-        //     res.idx1 = idx1;
-        // }
-
-        if (cmd === '=') {
-            res.idx1 = idx1;
-        }
-        return res;
-    };
-
-    function append(out, cmd, idx, idx1) {
-        out.push(createItem(cmd, idx, idx1));
-    }
-
-    var abs = Math.abs;
-    // Needleman-Wunsch score
-    function score(arr0, arr1, i0, i1, j0, j1, equal, memo) {
-        var last;
-        var invM = i0 > i1;
-        var invN = j0 > j1;
-        var m = abs(i1 - i0);
-        var n = abs(j1 - j0);
-        var i;
-        var j;
-        for (i = 0; i <= m; i++) {
-            for (j = 0; j <= n; j++) {
-                if (i === 0) {
-                    memo[j] = j;
-                }
-                else if (j === 0) {
-                    last = memo[j];
-                    memo[j] = i;
-                }
-                else {
-                    // memo[i-1][j-1] + same(arr0[i-1], arr1[j-1]) ? 0 : 1
-                    // Retained or replace
-                    var val0 = arr0[invM ? (i0 - i) : (i - 1 + i0)];
-                    var val1 = arr1[invN ? (j0 - j) : (j - 1 + j0)];
-                    // Because replace is add after remove actually
-                    // It has a higher score than removing or adding
-                    // TODO custom score function
-                    var score0 = last + (equal(val0, val1) ? 0 : 2);
-                    // memo[i-1][j] + 1
-                    // Remove arr0[i-1]
-                    var score1 = memo[j] + 1;
-                    // memo[i][j-1] + 1
-                    // Add arr1[j-1]
-                    var score2 = memo[j - 1] + 1;
-
-                    last = memo[j];
-                    memo[j] = score0 < score1 ? score0 : score1;
-                    score2 < memo[j] && (memo[j] = score2);
-                    // Math min of three parameters seems slow
-                    // memo[j] = Math.min(score0, score1, score2);
-                }
-            }
-        }
-
-        return memo;
-    }
-
-    function hirschberg(arr0, arr1, i0, i1, j0, j1, equal, score0, score1) {
-        var out = [];
-        var len0 = i1 - i0;
-        var len1 = j1 - j0;
-        var i;
-        var j;
-        if (! len0) {
-            for (j = 0; j < len1; j++) {
-                append(out, '+', j + j0);
-            }
-        }
-        else if (! len1) {
-            for (i = 0; i < len0; i++) {
-                append(out, '-', i + i0);
-            }
-        }
-        else if (len0 === 1) {
-            var a = arr0[i0];
-            var matched = false;
-            for (j = 0; j < len1; j++) {
-                if (equal(a, arr1[j + j0]) && ! matched) {
-                    matched = true;
-                    // Equal and update use the index in first array
-                    append(out, '=', i0, j + j0);
-                }
-                else {
-                    // if (j === len1 - 1 && ! matched) {
-                    //     append(out, '^', i0, j + j0);
-                    // }
-                    // else {
-                    append(out, '+', j + j0);
-                    // }
-                }
-            }
-            if (! matched) {
-                append(out, '-', i0);
-            }
-        }
-        else if (len1 === 1) {
-            var b = arr1[j0];
-            var matched = false;
-            for (i = 0; i < len0; i++) {
-                if (equal(b, arr0[i + i0]) && ! matched) {
-                    matched = true;
-                    append(out, '=', i + i0, j0);
-                }
-                else {
-                    // if (i === len0 - 1 && ! matched) {
-                    //     append(out, '^', i + i0, j0);
-                    // }
-                    // else {
-                    append(out, '-', i + i0);
-                    // }
-                }
-            }
-            if (! matched) {
-                append(out, '+', j0);
-            }
-        }
-        else {
-            var imid = ((len0 / 2) | 0) + i0;
-
-            score(arr0, arr1, i0, imid, j0, j1, equal, score0);
-            score(arr0, arr1, i1, imid + 1, j1, j0, equal, score1);
-
-            var min = Infinity;
-            var jmid = 0;
-            var sum;
-            for (j = 0; j <= len1; j++) {
-                sum = score0[j] + score1[len1 - j];
-                if (sum < min) {
-                    min = sum;
-                    jmid = j;
-                }
-            }
-            jmid += j0;
-
-            out = hirschberg(arr0, arr1, i0, imid, j0, jmid, equal, score0, score1);
-            var out1 = hirschberg(arr0, arr1, imid, i1, jmid, j1, equal, score0, score1);
-            // Concat
-            for (i = 0; i < out1.length; i++) {
-                out.push(out1[i]);
-            }
-        }
-        return out;
-    }
-
-    function arrayDiff(arr0, arr1, equal) {
-        equal = equal || defaultCompareFunc;
-        // Remove the common head and tail
-        var i;
-        var j;
-        var len0 = arr0.length;
-        var len1 = arr1.length;
-        var lenMin = Math.min(len0, len1);
-        var head = [];
-        for (i = 0; i < lenMin; i++) {
-            if (! equal(arr0[i], arr1[i])) {
-                break;
-            }
-            append(head, '=', i, i);
-        }
-
-        for (j = 0; j < lenMin; j++) {
-            if (! equal(arr0[len0 - j - 1], arr1[len1 - j - 1])) {
-                break;
-            }
-        }
-
-        if (len0 - j >= i || len1 - j >= i) {
-            var middle = hirschberg(arr0, arr1, i, len0 - j, i, len1 - j, equal, [], []);
-            for (i = 0; i < middle.length; i++) {
-                head.push(middle[i]);
-            }
-            for (i = 0; i < j; i++) {
-                append(head, '=', len0 - j + i, len1 - j + i);
-            }
-        }
-        return head;
-    }
-
-    return arrayDiff;
-});
-define('echarts/chart/line/lineAnimationDiff',['require','zrender/core/arrayDiff'],function (require) {
-
-    var arrayDiff = require('zrender/core/arrayDiff');
+    // var arrayDiff = require('zrender/core/arrayDiff');
+    // 'zrender/core/arrayDiff' has been used before, but it did
+    // not do well in performance when roam with fixed dataZoom window.
 
     function sign(val) {
         return val >= 0 ? 1 : -1;
@@ -19982,14 +19824,61 @@ define('echarts/chart/line/lineAnimationDiff',['require','zrender/core/arrayDiff
         return coordSys.dataToPoint(stackedData);
     }
 
+    // function convertToIntId(newIdList, oldIdList) {
+    //     // Generate int id instead of string id.
+    //     // Compare string maybe slow in score function of arrDiff
+
+    //     // Assume id in idList are all unique
+    //     var idIndicesMap = {};
+    //     var idx = 0;
+    //     for (var i = 0; i < newIdList.length; i++) {
+    //         idIndicesMap[newIdList[i]] = idx;
+    //         newIdList[i] = idx++;
+    //     }
+    //     for (var i = 0; i < oldIdList.length; i++) {
+    //         var oldId = oldIdList[i];
+    //         // Same with newIdList
+    //         if (idIndicesMap[oldId]) {
+    //             oldIdList[i] = idIndicesMap[oldId];
+    //         }
+    //         else {
+    //             oldIdList[i] = idx++;
+    //         }
+    //     }
+    // }
+
+    function diffData(oldData, newData) {
+        var diffResult = [];
+
+        newData.diff(oldData)
+            .add(function (idx) {
+                diffResult.push({cmd: '+', idx: idx});
+            })
+            .update(function (newIdx, oldIdx) {
+                diffResult.push({cmd: '=', idx: oldIdx, idx1: newIdx});
+            })
+            .remove(function (idx) {
+                diffResult.push({cmd: '-', idx: idx});
+            })
+            .execute();
+
+        return diffResult;
+    }
+
     return function (
         oldData, newData,
         oldStackedOnPoints, newStackedOnPoints,
         oldCoordSys, newCoordSys
     ) {
+        var diff = diffData(oldData, newData);
 
-        var newIdList = newData.mapArray(newData.getId);
-        var oldIdList = oldData.mapArray(oldData.getId);
+        // var newIdList = newData.mapArray(newData.getId);
+        // var oldIdList = oldData.mapArray(oldData.getId);
+
+        // convertToIntId(newIdList, oldIdList);
+
+        // // FIXME One data ?
+        // diff = arrayDiff(oldIdList, newIdList);
 
         var currPoints = [];
         var nextPoints = [];
@@ -20000,10 +19889,6 @@ define('echarts/chart/line/lineAnimationDiff',['require','zrender/core/arrayDiff
         var status = [];
         var sortedIndices = [];
         var rawIndices = [];
-
-        // FIXME One data ?
-        var diff = arrayDiff(oldIdList, newIdList);
-
         var dims = newCoordSys.dimensions;
         for (var i = 0; i < diff.length; i++) {
             var diffItem = diff[i];
@@ -20851,10 +20736,6 @@ define('echarts/chart/line/LineView',['require','zrender/core/util','../helper/S
 });
 define('echarts/visual/symbol',['require'],function (require) {
 
-    function isSymbolNone(symbolType) {
-        return symbolType === 'none';
-    }
-
     return function (seriesType, defaultSymbolType, legendSymbol, ecModel, api) {
 
         // Encoding visual for all series include which is filtered for legend drawing
@@ -20920,7 +20801,80 @@ define('echarts/layout/points',['require'],function (require) {
         });
     };
 });
-define('echarts/chart/line',['require','zrender/core/util','../echarts','./line/LineSeries','./line/LineView','../visual/symbol','../layout/points'],function (require) {
+define('echarts/processor/dataSample',[],function () {
+    var samplers = {
+        average: function (frame) {
+            var sum = 0;
+            var count = 0;
+            for (var i = 0; i < frame.length; i++) {
+                if (!isNaN(frame[i])) {
+                    sum += frame[i];
+                    count++;
+                }
+            }
+            // Return NaN if count is 0
+            return count === 0 ? NaN : sum / count;
+        },
+        sum: function (frame) {
+            var sum = 0;
+            for (var i = 0; i < frame.length; i++) {
+                // Ignore NaN
+                sum += frame[i] || 0;
+            }
+            return sum;
+        },
+        max: function (frame) {
+            var max = -Infinity;
+            for (var i = 0; i < frame.length; i++) {
+                frame[i] > max && (max = frame[i]);
+            }
+            return max;
+        },
+        min: function (frame) {
+            var min = Infinity;
+            for (var i = 0; i < frame.length; i++) {
+                frame[i] < min && (min = frame[i]);
+            }
+            return min;
+        }
+    };
+
+    var indexSampler = function (frame, value) {
+        return Math.round(frame.length / 2);
+    };
+    return function (seriesType, ecModel, api) {
+        ecModel.eachSeriesByType(seriesType, function (seriesModel) {
+            var data = seriesModel.getData();
+            var sampling = seriesModel.get('sampling');
+            var coordSys = seriesModel.coordinateSystem;
+            // Only cartesian2d support down sampling
+            if (coordSys.type === 'cartesian2d' && sampling) {
+                var baseAxis = coordSys.getBaseAxis();
+                var valueAxis = coordSys.getOtherAxis(baseAxis);
+                var extent = baseAxis.getExtent();
+                // Coordinste system has been resized
+                var size = extent[1] - extent[0];
+                var rate = Math.round(data.count() / size);
+                if (rate > 1) {
+                    var sampler;
+                    if (typeof sampling === 'string') {
+                        sampler = samplers[sampling];
+                    }
+                    else if (typeof sampling === 'function') {
+                        sampler = sampling;
+                    }
+                    if (sampler) {
+                        data = data.downSample(
+                            valueAxis.dim, 1 / rate, sampler, indexSampler
+                        );
+                        seriesModel.setData(data);
+                    }
+                }
+            }
+        }, this);
+    };
+});
+define('echarts/chart/line',['require','zrender/core/util','../echarts','./line/LineSeries','./line/LineView','../visual/symbol','../layout/points','../processor/dataSample'],function (require) {
 
     var zrUtil = require('zrender/core/util');
     var echarts = require('../echarts');
@@ -20933,6 +20887,11 @@ define('echarts/chart/line',['require','zrender/core/util','../echarts','./line/
     ));
     echarts.registerLayout(zrUtil.curry(
         require('../layout/points'), 'line'
+    ));
+
+    // Down sample after filter
+    echarts.registerProcessor('statistic', zrUtil.curry(
+        require('../processor/dataSample'), 'line'
     ));
 });
 /**
@@ -21451,6 +21410,23 @@ define('echarts/scale/Time',['require','zrender/core/util','../util/number','../
 
             var level = scaleLevels[Math.min(idx, scaleLevelsLen - 1)];
             var interval = level[2];
+            // Same with interval scale if span is much larger than 1 year
+            if (level[0] === 'year') {
+                var year = span / interval;
+                var yearInterval = Math.pow(10, Math.floor(Math.log(year / approxTickNum) / Math.LN10));
+                var err = approxTickNum / year * yearInterval;
+                // Filter ticks to get closer to the desired count.
+                if (err <= 0.15) {
+                    yearInterval *= 10;
+                }
+                else if (err <= 0.3) {
+                    yearInterval *= 5;
+                }
+                else if (err <= 0.75) {
+                    yearInterval *= 2;
+                }
+                interval *= yearInterval;
+            }
 
             var niceExtent = [
                 mathCeil(extent[0] / interval) * interval,
@@ -21654,7 +21630,13 @@ define('echarts/coord/axisHelper',['require','../scale/Ordinal','../scale/Interv
 
     axisHelper.niceScaleExtent = function (axis, model) {
         var scale = axis.scale;
+        var originalExtent = scale.getExtent();
+        var span = originalExtent[1] - originalExtent[0];
         if (scale.type === 'ordinal') {
+            // If series has no data, scale extent may be wrong
+            if (!isFinite(span)) {
+                scale.setExtent(0, 0);
+            }
             return;
         }
         var min = model.get('min');
@@ -21666,8 +21648,6 @@ define('echarts/coord/axisHelper',['require','../scale/Ordinal','../scale/Interv
         }
         boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], 1);
         boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], 1);
-        var originalExtent = scale.getExtent();
-        var span = originalExtent[1] - originalExtent[0];
         var fixMin = true;
         var fixMax = true;
         // Add boundary gap
@@ -21759,7 +21739,12 @@ define('echarts/coord/axisHelper',['require','../scale/Ordinal','../scale/Interv
         var autoLabelInterval = 0;
         var accumulatedLabelInterval = 0;
 
-        for (var i = 0; i < tickCoords.length; i++) {
+        var step = 1;
+        if (labels.length > 40) {
+            // Simple optimization for large amount of labels
+            step = Math.round(labels.length / 40);
+        }
+        for (var i = 0; i < tickCoords.length; i += step) {
             var tickCoord = tickCoords[i];
             var rect = textContain.getBoundingRect(
                 labels[i], font, 'center', 'top'
@@ -21780,8 +21765,10 @@ define('echarts/coord/axisHelper',['require','../scale/Ordinal','../scale/Interv
                 accumulatedLabelInterval = 0;
             }
         }
-
-        return autoLabelInterval;
+        if (autoLabelInterval === 0 && step > 1) {
+            return step;
+        }
+        return autoLabelInterval * step;
     };
 
     /**
@@ -22055,6 +22042,8 @@ define('echarts/coord/Axis',['require','../util/number','zrender/core/util'],fun
         extent[0] += margin;
         extent[1] -= margin;
     }
+
+    var normalizedExtent = [0, 1];
     /**
      * @name module:echarts/coord/CartesianAxis
      * @constructor
@@ -22155,14 +22144,16 @@ define('echarts/coord/Axis',['require','../util/number','zrender/core/util'],fun
          * @return {number}
          */
         dataToCoord: function (data, clamp) {
-            data = this.scale.normalize(data);
-            var extent = this.getExtent();
+            var extent = this._extent;
             var scale = this.scale;
+            data = scale.normalize(data);
+
             if (this.onBand && scale.type === 'ordinal') {
+                extent = extent.slice();
                 fixExtentWithBands(extent, scale.count());
             }
 
-            return linearMap(data, [0, 1], extent, clamp);
+            return linearMap(data, normalizedExtent, extent, clamp);
         },
 
         /**
@@ -22172,13 +22163,15 @@ define('echarts/coord/Axis',['require','../util/number','zrender/core/util'],fun
          * @return {number}
          */
         coordToData: function (coord, clamp) {
-            var extent = this.getExtent();
+            var extent = this._extent;
+            var scale = this.scale;
 
-            if (this.onBand) {
-                fixExtentWithBands(extent, this.scale.count());
+            if (this.onBand && scale.type === 'ordinal') {
+                extent = extent.slice();
+                fixExtentWithBands(extent, scale.count());
             }
 
-            var t = linearMap(coord, extent, [0, 1], clamp);
+            var t = linearMap(coord, extent, normalizedExtent, clamp);
 
             return this.scale.scale(t);
         },
@@ -22760,7 +22753,13 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
         var axisModel = axis.model;
         var labels = axisModel.getFormattedLabels();
         var rect;
-        for (var i = 0; i < labels.length; i++) {
+        var step = 1;
+        var labelCount = labels.length;
+        if (labelCount > 40) {
+            // Simple optimization for large amount of labels
+            step = Math.ceil(labelCount / 40);
+        }
+        for (var i = 0; i < labelCount; i += step) {
             if (!axis.isLabelIgnored(i)) {
                 var singleRect = axisModel.getTextRect(labels[i]);
                 // FIXME consider label rotate
@@ -22796,6 +22795,8 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
         this._axesList = [];
 
         this._initCartesian(gridModel, ecModel, api);
+
+        this._model = gridModel;
     }
 
     var gridProto = Grid.prototype;
@@ -22804,6 +22805,49 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
 
     gridProto.getRect = function () {
         return this._rect;
+    };
+
+    gridProto.update = function (ecModel, api) {
+
+        var axesMap = this._axesMap;
+
+        this._updateScale(ecModel, this._model);
+
+        function ifAxisCanNotOnZero(otherAxisDim) {
+            var axes = axesMap[otherAxisDim];
+            for (var idx in axes) {
+                var axis = axes[idx];
+                if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        each(axesMap.x, function (xAxis) {
+            niceScaleExtent(xAxis, xAxis.model);
+        });
+        each(axesMap.y, function (yAxis) {
+            niceScaleExtent(yAxis, yAxis.model);
+        });
+        // Fix configuration
+        each(axesMap.x, function (xAxis) {
+            // onZero can not be enabled in these two situations
+            // 1. When any other axis is a category axis
+            // 2. When any other axis not across 0 point
+            if (ifAxisCanNotOnZero('y')) {
+                xAxis.onZero = false;
+            }
+        });
+        each(axesMap.y, function (yAxis) {
+            if (ifAxisCanNotOnZero('x')) {
+                yAxis.onZero = false;
+            }
+        });
+
+        // Resize again if containLabel is enabled
+        // FIXME It may cause getting wrong grid size in data processing stage
+        this.resize(this._model, api);
     };
 
     /**
@@ -22860,21 +22904,18 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
 
     /**
      * @param {string} axisType
-     * @param {number} [axisIndex]
+     * @param {ndumber} [axisIndex]
      */
     gridProto.getAxis = function (axisType, axisIndex) {
-        if (axisIndex != null) {
-            var key = axisType + axisIndex;
-            return this._axesMap[key];
-        }
-        else {
-            // Find first axis with axisType
-            var axesList = this._axesList;
-            for (var i = 0; i < axesList.length; i++) {
-                if (axesList[i].dim === axisType) {
-                    return axesList[i];
+        var axesMapOnDim = this._axesMap[axisType];
+        if (axesMapOnDim != null) {
+            if (axisIndex == null) {
+                // Find first axis
+                for (var name in axesMapOnDim) {
+                    return axesMapOnDim[name];
                 }
             }
+            return axesMapOnDim[axisIndex];
         }
     };
 
@@ -22904,17 +22945,20 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
             y: 0
         };
 
+        /// Create axis
         ecModel.eachComponent('xAxis', createAxisCreator('x'), this);
         ecModel.eachComponent('yAxis', createAxisCreator('y'), this);
 
         if (!axesCount.x || !axesCount.y) {
-            // api.log('Grid must has at least one x axis and one y axis');
-            // Roll back
+            // Roll back when there no either x or y axis
             this._axesMap = {};
             this._axesList = [];
             return;
         }
 
+        this._axesMap = axesMap;
+
+        /// Create cartesian2d
         each(axesMap.x, function (xAxis, xAxisIndex) {
             each(axesMap.y, function (yAxis, yAxisIndex) {
                 var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
@@ -22929,40 +22973,6 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
                 cartesian.addAxis(yAxis);
             }, this);
         }, this);
-
-        this._updateCartesianFromSeries(ecModel, gridModel);
-
-        function ifAxisCanNotOnZero(otherAxisDim) {
-            var axes = axesMap[otherAxisDim];
-            for (var idx in axes) {
-                var axis = axes[idx];
-                if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        each(axesMap.x, function (xAxis) {
-            niceScaleExtent(xAxis, xAxis.model);
-        });
-        each(axesMap.y, function (yAxis) {
-            niceScaleExtent(yAxis, yAxis.model);
-        });
-        // Fix configuration
-        each(axesMap.x, function (xAxis) {
-            // onZero can not be enabled in these two situations
-            // 1. When any other axis is a category axis
-            // 2. When any other axis not across 0 point
-            if (ifAxisCanNotOnZero('y')) {
-                xAxis.onZero = false;
-            }
-        });
-        each(axesMap.y, function (yAxis) {
-            if (ifAxisCanNotOnZero('x')) {
-                yAxis.onZero = false;
-            }
-        });
 
         function createAxisCreator(axisType) {
             return function (axisModel, idx) {
@@ -23016,7 +23026,6 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
                 axis.index = idx;
 
                 this._axesList.push(axis);
-                this._axesMap[axisType + idx] = axis;
 
                 axesMap[axisType][idx] = axis;
                 axesCount[axisType]++;
@@ -23029,7 +23038,11 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
      * @param  {module:echarts/model/Option} option
      * @private
      */
-    gridProto._updateCartesianFromSeries = function (ecModel, gridModel) {
+    gridProto._updateScale = function (ecModel, gridModel) {
+        // Reset scale
+        zrUtil.each(this._axesList, function (axis) {
+            axis.scale.setExtent(Infinity, -Infinity);
+        });
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.get('coordinateSystem') === 'cartesian2d') {
                 var xAxisIndex = seriesModel.get('xAxisIndex');
@@ -23045,17 +23058,19 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
                 }
 
                 var cartesian = this.getCartesian(xAxisIndex, yAxisIndex);
-
                 var data = seriesModel.getData();
+                var xAxis = cartesian.getAxis('x');
+                var yAxis = cartesian.getAxis('y');
+
                 if (data.type === 'list') {
-                    unionExtent(data, cartesian.getAxis('x'), 'x', seriesModel);
-                    unionExtent(data, cartesian.getAxis('y'), 'y', seriesModel);
+                    unionExtent(data, xAxis, seriesModel);
+                    unionExtent(data, yAxis, seriesModel);
                 }
             }
         }, this);
 
-        function unionExtent(data, axis, axisDim, seriesModel) {
-            each(seriesModel.getDimensionsOnAxis(axisDim), function (dim) {
+        function unionExtent(data, axis, seriesModel) {
+            each(seriesModel.coordDimToDataDim(axis.dim), function (dim) {
                 axis.scale.unionExtent(data.getDataExtent(
                     dim, axis.scale.type !== 'ordinal'
                 ));
@@ -23119,7 +23134,7 @@ define('echarts/coord/cartesian/Grid',['require','exports','module','../../util/
     // For deciding which dimensions to use when creating list data
     Grid.dimensions = Cartesian2D.prototype.dimensions;
 
-    require('../../CoordinateSystem').register('grid', Grid);
+    require('../../CoordinateSystem').register('cartesian2d', Grid);
 
     return Grid;
 });
@@ -23386,7 +23401,10 @@ define('echarts/chart/bar/BarView',['require','zrender/core/util','../../util/gr
                 if (labelModel.get('show')) {
                     setLabel(
                         rectStyle, labelModel, color,
-                        seriesModel.getFormattedLabel(idx, 'normal') || seriesModel.getRawValue(idx),
+                        zrUtil.retrieve(
+                            seriesModel.getFormattedLabel(idx, 'normal'),
+                            seriesModel.getRawValue(idx)
+                        ),
                         labelPositionOutside
                     );
                 }
@@ -23396,7 +23414,10 @@ define('echarts/chart/bar/BarView',['require','zrender/core/util','../../util/gr
                 if (hoverLabelModel.get('show')) {
                     setLabel(
                         hoverStyle, hoverLabelModel, color,
-                        seriesModel.getFormattedLabel(idx, 'emphasis') || seriesModel.getRawValue(idx),
+                        zrUtil.retrieve(
+                            seriesModel.getFormattedLabel(idx, 'emphasis'),
+                            seriesModel.getRawValue(idx)
+                        ),
                         labelPositionOutside
                     );
                 }
@@ -23751,7 +23772,7 @@ define('echarts/chart/pie/PieSeries',['require','../../data/List','zrender/core/
 
         // Overwrite
         init: function (option) {
-            this.$superApply('init', arguments);
+            PieSeries.superApply(this, 'init', arguments);
 
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
@@ -23766,7 +23787,7 @@ define('echarts/chart/pie/PieSeries',['require','../../data/List','zrender/core/
 
         // Overwrite
         mergeOption: function (newOption) {
-            this.$superCall('mergeOption', newOption);
+            PieSeries.superCall(this, 'mergeOption', newOption);
             this.updateSelectedMap();
         },
 
@@ -23780,9 +23801,12 @@ define('echarts/chart/pie/PieSeries',['require','../../data/List','zrender/core/
         // Overwrite
         getDataParams: function (dataIndex) {
             var data = this._data;
-            var params = this.$superCall('getDataParams', dataIndex);
+            var params = PieSeries.superCall(this, 'getDataParams', dataIndex);
+            var sum = data.getSum('value');
             // FIXME toFixed?
-            params.percent = +(data.get('value', dataIndex) / data.getSum('value') * 100).toFixed(2);
+            //
+            // Percent is 0 if sum is 0
+            params.percent = !sum ? 0 : +(data.get('value', dataIndex) / sum * 100).toFixed(2);
 
             params.$vars.push('percent');
             return params;
@@ -23983,8 +24007,9 @@ define('echarts/chart/pie/PieView',['require','../../util/graphic','zrender/core
             fill: textStyleModel.getTextColor()
                 || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
             textFont: textStyleModel.getFont(),
-            text: data.hostModel.getFormattedLabel(idx, state)
-                || data.getName(idx)
+            text: zrUtil.retrieve(
+                data.hostModel.getFormattedLabel(idx, state), data.getName(idx)
+            )
         };
     }
 
@@ -25238,7 +25263,7 @@ define('echarts/component/tooltip/TooltipContent',['require','zrender/core/util'
             }
             // Hide the tooltip
             // PENDING
-            this.hide();
+            // this.hide();
         },
 
         show: function (tooltipModel) {
@@ -25294,7 +25319,7 @@ define('echarts/component/tooltip/TooltipContent',['require','zrender/core/util'
 
     return TooltipContent;
 });
-define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','../../util/graphic','zrender/core/util','../../util/format','../../util/number','../../echarts'],function (require) {
+define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','../../util/graphic','zrender/core/util','../../util/format','../../util/number','zrender/core/env','../../echarts'],function (require) {
 
     var TooltipContent = require('./TooltipContent');
     var graphic = require('../../util/graphic');
@@ -25302,6 +25327,7 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
     var formatUtil = require('../../util/format');
     var numberUtil = require('../../util/number');
     var parsePercent = numberUtil.parsePercent;
+    var env = require('zrender/core/env');
 
     function dataEqual(a, b) {
         if (!a || !b) {
@@ -25462,6 +25488,9 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
         _axisPointers: {},
 
         init: function (ecModel, api) {
+            if (env.node) {
+                return;
+            }
             var tooltipContent = new TooltipContent(api.getDom(), api);
             this._tooltipContent = tooltipContent;
 
@@ -25470,6 +25499,9 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
         },
 
         render: function (tooltipModel, ecModel, api) {
+            if (env.node) {
+                return;
+            }
 
             // Reset
             this.group.removeAll();
@@ -25510,7 +25542,6 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
             var tooltipContent = this._tooltipContent;
             tooltipContent.update();
             tooltipContent.enterable = tooltipModel.get('enterable');
-
             this._alwaysShowContent = tooltipModel.get('alwaysShowContent');
 
             /**
@@ -25525,6 +25556,21 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                 this.group.add(crossText);
             }
 
+            // Try to keep the tooltip show when refreshing
+            if (this._lastX != null && this._lastY != null) {
+                var self = this;
+                clearTimeout(this._refreshUpdateTimeout);
+                this._refreshUpdateTimeout = setTimeout(function () {
+                    // Show tip next tick after other charts are rendered
+                    // In case highlight action has wrong result
+                    // FIXME
+                    self._manuallyShowTip({
+                        x: self._lastX,
+                        y: self._lastY
+                    });
+                });
+            }
+
             var zr = this._api.getZr();
             var tryShow = this._tryShow;
             zr.off('click', tryShow);
@@ -25537,6 +25583,7 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                 zr.on('mousemove', tryShow, this);
                 zr.on('mouseout', this._hide, this);
             }
+
         },
 
         /**
@@ -25610,10 +25657,12 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                 }
             }
             else {
-                // Use zrender handler to trigger event
-                api.getZr().handler.dispatch('mousemove', {
-                    zrX: event.x,
-                    zrY: event.y
+                var el = api.getZr().handler.findHover(event.x, event.y);
+                this._tryShow({
+                    offsetX: event.x,
+                    offsetY: event.y,
+                    target: el,
+                    event: {}
                 });
             }
         },
@@ -25677,6 +25726,10 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
             if (!tooltipModel) {
                 return;
             }
+
+            // Save mouse x, mouse y. So we can try to keep showing the tip if chart is refreshed
+            this._lastX = e.offsetX;
+            this._lastY = e.offsetY;
 
             // Always show item tooltip if mouse is on the element with dataIndex
             if (el && el.dataIndex != null) {
@@ -26143,9 +26196,9 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
                 return {
                     seriesIndex: series.seriesIndex,
                     dataIndex: series.getAxisTooltipDataIndex
-                        ? series.getAxisTooltipDataIndex(series.getDimensionsOnAxis(baseAxis.dim), value, baseAxis)
+                        ? series.getAxisTooltipDataIndex(series.coordDimToDataDim(baseAxis.dim), value, baseAxis)
                         : series.getData().indexOfNearest(
-                            series.getDimensionsOnAxis(baseAxis.dim),
+                            series.coordDimToDataDim(baseAxis.dim)[0],
                             value[baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1]
                         )
                 };
@@ -26367,6 +26420,9 @@ define('echarts/component/tooltip/TooltipView',['require','./TooltipContent','..
         },
 
         dispose: function (ecModel, api) {
+            if (env.node) {
+                return;
+            }
             var zr = api.getZr();
             this._tooltipContent.hide();
 
@@ -26422,7 +26478,7 @@ define('echarts/component/legend/LegendModel',['require','zrender/core/util','..
     var zrUtil = require('zrender/core/util');
     var Model = require('../../model/Model');
 
-    return require('../../echarts').extendComponentModel({
+    var LegendModel = require('../../echarts').extendComponentModel({
 
         type: 'legend',
 
@@ -26458,7 +26514,7 @@ define('echarts/component/legend/LegendModel',['require','zrender/core/util','..
         },
 
         mergeOption: function (option) {
-            this.$superCall('mergeOption', option);
+            LegendModel.superCall(this, 'mergeOption', option);
 
             this._updateData(this.ecModel);
         },
@@ -26592,6 +26648,8 @@ define('echarts/component/legend/LegendModel',['require','zrender/core/util','..
             // data: [],
         }
     });
+
+    return LegendModel;
 });
 /**
  * @file Legend action
@@ -27760,6 +27818,8 @@ define('echarts/component/title',['require','../echarts','../util/graphic','../u
 
         type: 'title',
 
+        layoutMode: {type: 'box', ignoreSize: true},
+
         defaultOption: {
             // 一级层叠
             zlevel: 0,
@@ -27781,10 +27841,10 @@ define('echarts/component/title',['require','../echarts','../util/graphic','../u
 
             // 'center' ¦ 'left' ¦ 'right'
             // ¦ {number}（x坐标，单位px）
-            left: 'left',
+            left: 0,
             // 'top' ¦ 'bottom' ¦ 'center'
             // ¦ {number}（y坐标，单位px）
-            top: 'top',
+            top: 0,
 
             // 水平对齐
             // 'auto' | 'left' | 'right'
@@ -27894,19 +27954,17 @@ define('echarts/component/title',['require','../echarts','../util/graphic','../u
             );
             // Adjust text align based on position
             if (!textAlign) {
-                var p = layoutRect.x / api.getWidth();
-                var p2 = (layoutRect.x + layoutRect.width) / api.getWidth();
-
-                if (p < 0.2) {
-                    textAlign = 'left';
-                }
-                else if (p2 > 0.8) {
-                    layoutRect.x += layoutRect.width;
-                    textAlign = 'right';
-                }
-                else {
-                    layoutRect.x += layoutRect.width / 2;
+                // Align left if title is on the left. center and right is same
+                textAlign = titleModel.get('left') || titleModel.get('right');
+                if (textAlign === 'middle') {
                     textAlign = 'center';
+                }
+                // Adjust layout by text align
+                if (textAlign === 'right') {
+                    layoutRect.x += layoutRect.width;
+                }
+                else if (textAlign === 'center') {
+                    layoutRect.x += layoutRect.width / 2;
                 }
             }
             group.position = [layoutRect.x, layoutRect.y];
@@ -28157,15 +28215,15 @@ define('echarts/component/marker/markerHelper',['require','zrender/core/util','.
         if (item.valueIndex != null || item.valueDim != null) {
             ret.valueDataDim = item.valueIndex != null
                 ? data.getDimension(item.valueIndex) : item.valueDim;
-            ret.valueAxis = coordSys.getAxis(seriesModel.getCoordDimensionInfo(ret.valueDataDim).name);
+            ret.valueAxis = coordSys.getAxis(seriesModel.dataDimToCoordDim(ret.valueDataDim));
             ret.baseAxis = coordSys.getOtherAxis(ret.valueAxis);
-            ret.baseDataDim = seriesModel.getDimensionsOnAxis(ret.baseAxis.dim)[0];
+            ret.baseDataDim = seriesModel.coordDimToDataDim(ret.baseAxis.dim)[0];
         }
         else {
             ret.baseAxis = seriesModel.getBaseAxis();
             ret.valueAxis = coordSys.getOtherAxis(ret.baseAxis);
-            ret.baseDataDim = seriesModel.getDimensionsOnAxis(ret.baseAxis.dim)[0];
-            ret.valueDataDim = seriesModel.getDimensionsOnAxis(ret.valueAxis.dim)[0];
+            ret.baseDataDim = seriesModel.coordDimToDataDim(ret.baseAxis.dim)[0];
+            ret.valueDataDim = seriesModel.coordDimToDataDim(ret.valueAxis.dim)[0];
         }
 
         return ret;
@@ -28359,10 +28417,15 @@ define('echarts/component/marker/MarkPointView',['require','../../chart/helper/S
      * @param {module:echarts/model/Model} mpModel
      */
     function createList(coordSys, seriesModel, mpModel) {
-        var seriesData = seriesModel.getData();
-        var dataDimensions = seriesData.dimensions;
+        var coordDimsInfos = zrUtil.map(coordSys.dimensions, function (coordDim) {
+            var info = seriesModel.getData().getDimensionInfo(
+                seriesModel.coordDimToDataDim(coordDim)[0]
+            );
+            info.name = coordDim;
+            return info;
+        });
 
-        var mpData = new List(seriesModel.getCoordDimensionInfo(), mpModel);
+        var mpData = new List(coordDimsInfos, mpModel);
 
         if (coordSys) {
             mpData.initData(
@@ -28784,14 +28847,20 @@ define('echarts/chart/helper/Line',['require','../../util/symbol','zrender/core/
         var label = this.childOfName('label');
         label.setStyle({
             text: labelModel.get('show')
-                ? seriesModel.getFormattedLabel(idx, 'normal') || defaultText
+                ? zrUtil.retrieve(
+                    seriesModel.getFormattedLabel(idx, 'normal'),
+                    defaultText
+                )
                 : '',
             textFont: textStyleModel.getFont(),
             fill: textStyleModel.getTextColor() || lineData.getItemVisual(idx, 'color')
         });
         label.hoverStyle = {
             text: labelHoverModel.get('show')
-                ? seriesModel.getFormattedLabel(idx, 'emphasis') || defaultText
+                ? zrUtil.retrieve(
+                    seriesModel.getFormattedLabel(idx, 'emphasis'),
+                    defaultText
+                )
                 : '',
             textFont: textStyleModel.getFont(),
             fill: textStyleHoverModel.getTextColor()
@@ -29127,8 +29196,16 @@ define('echarts/component/marker/MarkLineView',['require','zrender/core/util','.
      * @param {module:echarts/model/Model} mpModel
      */
     function createList(coordSys, seriesModel, mlModel) {
-        var fromData = new List(seriesModel.getCoordDimensionInfo(), mlModel);
-        var toData = new List(seriesModel.getCoordDimensionInfo(), mlModel);
+
+        var coordDimsInfos = zrUtil.map(coordSys.dimensions, function (coordDim) {
+            var info = seriesModel.getData().getDimensionInfo(
+                seriesModel.coordDimToDataDim(coordDim)[0]
+            );
+            info.name = coordDim;
+            return info;
+        });
+        var fromData = new List(coordDimsInfos, mlModel);
+        var toData = new List(coordDimsInfos, mlModel);
         // No dimensions
         var lineData = new List([], mlModel);
 
@@ -29182,11 +29259,10 @@ define('echarts/component/dataZoom/typeDefaulter',['require','../../model/Compon
 /**
  * @file Axis operator
  */
-define('echarts/component/dataZoom/AxisProxy',['require','zrender/core/util','../../util/number','../../coord/axisHelper'],function(require) {
+define('echarts/component/dataZoom/AxisProxy',['require','zrender/core/util','../../util/number'],function(require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
-    var axisHelper = require('../../coord/axisHelper');
     var each = zrUtil.each;
     var asc = numberUtil.asc;
 
@@ -29213,6 +29289,7 @@ define('echarts/component/dataZoom/AxisProxy',['require','zrender/core/util','..
         this._axisIndex = axisIndex;
 
         /**
+         * {scale, min, max}
          * @private
          * @type {Object}
          */
@@ -29246,7 +29323,7 @@ define('echarts/component/dataZoom/AxisProxy',['require','zrender/core/util','..
          * @private
          * @type {module: echarts/component/dataZoom/DataZoomModel}
          */
-        this._model = dataZoomModel;
+        this._dataZoomModel = dataZoomModel;
     };
 
     AxisProxy.prototype = {
@@ -29254,28 +29331,29 @@ define('echarts/component/dataZoom/AxisProxy',['require','zrender/core/util','..
         constructor: AxisProxy,
 
         /**
-         * Whether the axisProxy is hosted by model.
+         * Whether the axisProxy is hosted by dataZoomModel.
+         *
          * @public
+         * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
          * @return {boolean}
          */
-        hostedBy: function (model) {
-            return this._model === model;
+        hostedBy: function (dataZoomModel) {
+            return this._dataZoomModel === dataZoomModel;
         },
 
         /**
+         * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
          * @param {Object} option
          */
-        backup: function (model, option) {
-            if (model === this._model) {
-                this._backup = option;
+        backup: function (dataZoomModel, option) {
+            if (dataZoomModel === this._dataZoomModel) {
+                var axisModel = this.getAxisModel();
+                this._backup = {
+                    scale: axisModel.get('scale', true),
+                    min: axisModel.get('min', true),
+                    max: axisModel.get('max', true)
+                };
             }
-        },
-
-        /**
-         * @return {Object}
-         */
-        getBackup: function () {
-            return zrUtil.clone(this._backup);
         },
 
         /**
@@ -29350,40 +29428,50 @@ define('echarts/component/dataZoom/AxisProxy',['require','zrender/core/util','..
          * so it is recommanded to be called in "process stage" but not "model init
          * stage".
          *
-         * @param {module: echarts/component/dataZoom/DataZoomModel} model
+         * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
          */
-        reset: function (model) {
-            if (model !== this._model) {
+        reset: function (dataZoomModel) {
+            if (dataZoomModel !== this._dataZoomModel) {
                 return;
             }
 
-            var opt = model.option;
+            // Culculate data window and data extent, and record them.
+            var dataExtent = this._dataExtent = calculateDataExtent(
+                this._dimName, this.getTargetSeriesModels()
+            );
+            var dataWindow = calculateDataWindow(
+                dataZoomModel.option, dataExtent, this
+            );
+            this._valueWindow = dataWindow.valueWindow;
+            this._percentWindow = dataWindow.percentWindow;
 
-            // Process axis data
-            var axisDim = this._dimName;
-            var axisModel = this.getAxisModel();
-            var seriesModels = this.getTargetSeriesModels();
-
-            var dataExtent = calculateDataExtent(axisDim, seriesModels);
-            var dataWindow = calculateDataWindow(opt, dataExtent, axisModel);
-
-            // Record data window and data extent.
-            this._dataExtent = dataExtent.slice();
-            this._valueWindow = dataWindow.valueWindow.slice();
-            this._percentWindow = dataWindow.percentWindow.slice();
+            // Update axis setting then.
+            setAxisModel(this);
         },
 
         /**
-         * @param {module: echarts/component/dataZoom/DataZoomModel} model
+         * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
          */
-        filterData: function (model) {
-            if (model !== this._model) {
+        restore: function (dataZoomModel) {
+            if (dataZoomModel !== this._dataZoomModel) {
+                return;
+            }
+
+            this._valueWindow = this._percentWindow = null;
+            setAxisModel(this, true);
+        },
+
+        /**
+         * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
+         */
+        filterData: function (dataZoomModel) {
+            if (dataZoomModel !== this._dataZoomModel) {
                 return;
             }
 
             var axisDim = this._dimName;
             var seriesModels = this.getTargetSeriesModels();
-            var filterMode = model.get('filterMode');
+            var filterMode = dataZoomModel.get('filterMode');
             var valueWindow = this._valueWindow;
 
             // FIXME
@@ -29391,7 +29479,7 @@ define('echarts/component/dataZoom/AxisProxy',['require','zrender/core/util','..
             // with NaN data. NaN will be filtered and stack will be wrong.
             // So we need to force the mode to be set empty
             var otherAxisModel = this.getOtherAxisModel();
-            if (model.get('$fromToolbox')
+            if (dataZoomModel.get('$fromToolbox')
                 && otherAxisModel && otherAxisModel.get('type') === 'category') {
                 filterMode = 'empty';
             }
@@ -29402,7 +29490,7 @@ define('echarts/component/dataZoom/AxisProxy',['require','zrender/core/util','..
                     return;
                 }
 
-                each(seriesModel.getDimensionsOnAxis(axisDim), function (dim) {
+                each(seriesModel.coordDimToDataDim(axisDim), function (dim) {
                     if (filterMode === 'empty') {
                         seriesModel.setData(
                             seriesData.map(dim, function (value) {
@@ -29428,7 +29516,7 @@ define('echarts/component/dataZoom/AxisProxy',['require','zrender/core/util','..
         each(seriesModels, function (seriesModel) {
             var seriesData = seriesModel.getData();
             if (seriesData) {
-                each(seriesModel.getDimensionsOnAxis(axisDim), function (dim) {
+                each(seriesModel.coordDimToDataDim(axisDim), function (dim) {
                     var seriesExtent = seriesData.getDataExtent(dim);
                     seriesExtent[0] < dataExtent[0] && (dataExtent[0] = seriesExtent[0]);
                     seriesExtent[1] > dataExtent[1] && (dataExtent[1] = seriesExtent[1]);
@@ -29439,15 +29527,22 @@ define('echarts/component/dataZoom/AxisProxy',['require','zrender/core/util','..
         return dataExtent;
     }
 
-    function calculateDataWindow(opt, dataExtent, axisModel) {
+    function calculateDataWindow(opt, dataExtent, axisProxy) {
+        var axisModel = axisProxy.getAxisModel();
+        var scale = axisModel.axis.scale;
         var percentExtent = [0, 100];
         var percentWindow = [
             opt.start,
             opt.end
         ];
-
-        var scale = axisHelper.createScaleByModel(axisModel);
         var valueWindow = [];
+
+        // In percent range is used and axis min/max/scale is set,
+        // window should be based on min/max/0, but should not be
+        // based on the extent of filtered data.
+        var backup = axisProxy._backup;
+        dataExtent = dataExtent.slice();
+        fixExtendByAxis(dataExtent, backup, scale);
 
         each(['startValue', 'endValue'], function (prop) {
             valueWindow.push(
@@ -29490,23 +29585,73 @@ define('echarts/component/dataZoom/AxisProxy',['require','zrender/core/util','..
         };
     }
 
+    function fixExtendByAxis(dataExtent, backup, scale) {
+        each(['min', 'max'], function (minMax, index) {
+            var axisMax = backup[minMax];
+            // Consider 'dataMin', 'dataMax'
+            if (axisMax != null && (axisMax + '').toLowerCase() !== 'data' + minMax) {
+                dataExtent[index] = scale.parse(axisMax);
+            }
+        });
+
+        if (!backup.scale) {
+            dataExtent[0] > 0 && (dataExtent[0] = 0);
+            dataExtent[1] < 0 && (dataExtent[1] = 0);
+        }
+
+        return dataExtent;
+    }
+
+    function setAxisModel(axisProxy, isRestore) {
+        var axisModel = axisProxy.getAxisModel();
+
+        var backup = axisProxy._backup;
+        var percentWindow = axisProxy._percentWindow;
+        var valueWindow = axisProxy._valueWindow;
+
+        if (!backup) {
+            return;
+        }
+
+        var isFull = isRestore || (percentWindow[0] === 0 && percentWindow[1] === 100);
+        // [0, 500]: arbitrary value, guess axis extent.
+        var precision = !isRestore && numberUtil.getPixelPrecision(valueWindow, [0, 500]);
+        // toFixed() digits argument must be between 0 and 20
+        var invalidPrecision = !isRestore && !(precision < 20 && precision >= 0);
+
+        axisModel.setNeedsCrossZero && axisModel.setNeedsCrossZero(
+            (isRestore || isFull) ? !backup.scale : false
+        );
+        axisModel.setMin && axisModel.setMin(
+            (isRestore || isFull || invalidPrecision)
+                ? backup.min
+                : +valueWindow[0].toFixed(precision)
+        );
+        axisModel.setMax && axisModel.setMax(
+            (isRestore || isFull || invalidPrecision)
+                ? backup.max
+                : +valueWindow[1].toFixed(precision)
+        );
+    }
+
     return AxisProxy;
 
 });
 /**
  * @file Data zoom model
  */
-define('echarts/component/dataZoom/DataZoomModel',['require','zrender/core/util','zrender/core/env','../../echarts','../../util/model','./AxisProxy'],function(require) {
+define('echarts/component/dataZoom/DataZoomModel',['require','zrender/core/util','zrender/core/env','../../echarts','../../util/model','./AxisProxy','../../util/layout'],function(require) {
 
     var zrUtil = require('zrender/core/util');
     var env = require('zrender/core/env');
     var echarts = require('../../echarts');
     var modelUtil = require('../../util/model');
     var AxisProxy = require('./AxisProxy');
+    var layout = require('../../util/layout');
     var each = zrUtil.each;
     var eachAxisDim = modelUtil.eachAxisDim;
 
-    return echarts.extendComponentModel({
+    var DataZoomModel = echarts.extendComponentModel({
 
         type: 'dataZoom',
 
@@ -29525,12 +29670,16 @@ define('echarts/component/dataZoom/DataZoomModel',['require','zrender/core/util'
             yAxisIndex: null,       // Default all vertical category axis.
             angleAxisIndex: null,
             radiusAxisIndex: null,
-            filterMode: 'filter',   // 'filter' or 'empty'
+            filterMode: 'filter',   // Possible values: 'filter' or 'empty'.
                                     // 'filter': data items which are out of window will be removed.
                                     //           This option is applicable when filtering outliers.
                                     // 'empty': data items which are out of window will be set to empty.
                                     //          This option is applicable when user should not neglect
                                     //          that there are some data items out of window.
+                                    // Taking line chart as an example, line will be broken in
+                                    // the filtered points when filterModel is set to 'empty', but
+                                    // be connected when set to 'filter'.
+
             throttle: 100,          // Dispatch action by the fixed rate, avoid frequency.
                                     // default 100. Do not throttle when use null/undefined.
             start: 0,               // Start percent. 0 ~ 100
@@ -29607,6 +29756,20 @@ define('echarts/component/dataZoom/DataZoomModel',['require','zrender/core/util'
             this._giveAxisProxies();
 
             this._backup();
+        },
+
+        /**
+         * @protected
+         */
+        restoreData: function () {
+            DataZoomModel.superApply(this, 'restoreData', arguments);
+
+            // If use dataZoom while dynamic setOption, axis setting should
+            // be restored before new option setting, otherwise axis status
+            // that is set by dataZoom will be recorded in _backup calling.
+            this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {
+                dataZoomModel.getAxisProxy(dimNames.name, axisIndex).restore(dataZoomModel);
+            });
         },
 
         /**
@@ -29790,15 +29953,7 @@ define('echarts/component/dataZoom/DataZoomModel',['require','zrender/core/util'
          */
         _backup: function () {
             this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
-                var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
-                this.getAxisProxy(dimNames.name, axisIndex).backup(
-                    this,
-                    {
-                        scale: axisModel.get('scale', true),
-                        min: axisModel.get('min', true),
-                        max: axisModel.get('max', true)
-                    }
-                );
+                this.getAxisProxy(dimNames.name, axisIndex).backup(dataZoomModel);
             }, this);
         },
 
@@ -29857,6 +30012,13 @@ define('echarts/component/dataZoom/DataZoomModel',['require','zrender/core/util'
                 // startValue/endValue can work.
                 this.option[name] = opt[name];
             }, this);
+        },
+
+        /**
+         * @public
+         */
+        setLayoutParams: function (params) {
+            layout.copyLayoutParams(this.option, params);
         },
 
         /**
@@ -29937,6 +30099,8 @@ define('echarts/component/dataZoom/DataZoomModel',['require','zrender/core/util'
         }
         // Otherwise do nothing and use the merge result.
     }
+
+    return DataZoomModel;
 });
 
 define('echarts/component/dataZoom/DataZoomView',['require','../../view/Component'],function (require) {
@@ -30031,7 +30195,7 @@ define('echarts/component/dataZoom/SliderZoomModel',['require','./DataZoomModel'
     var DataZoomModel = require('./DataZoomModel');
     var layout = require('../../util/layout');
 
-    return DataZoomModel.extend({
+    var SliderZoomModel = DataZoomModel.extend({
 
         type: 'dataZoom.slider',
 
@@ -30046,12 +30210,12 @@ define('echarts/component/dataZoom/SliderZoomModel',['require','./DataZoomModel'
         defaultOption: {
             show: true,
 
-            left: 'auto',   // Default align to grid rect.
-            right: 'auto',  // Default align to grid rect.
-            top: 'auto',    // Default align to grid rect.
-            bottom: 'auto', // Default align to grid rect.
-            width: 'auto',  // Default align to grid rect.
-            height: 'auto', // Default align to grid rect.
+            left: null,   // Default align to grid rect.
+            right: null,  // Default align to grid rect.
+            top: null,    // Default align to grid rect.
+            bottom: null, // Default align to grid rect.
+            width: null,  // Default align to grid rect.
+            height: null, // Default align to grid rect.
 
             backgroundColor: 'rgba(47,69,84,0)',    // Background of slider zoom component.
             dataBackgroundColor: '#ddd',            // Background of data shadow.
@@ -30075,7 +30239,7 @@ define('echarts/component/dataZoom/SliderZoomModel',['require','./DataZoomModel'
          */
         init: function (option) {
             this.inputPositionParams = layout.getLayoutParams(option);
-            this.$superApply('init', arguments);
+            SliderZoomModel.superApply(this, 'init', arguments);
         },
 
         /**
@@ -30083,10 +30247,12 @@ define('echarts/component/dataZoom/SliderZoomModel',['require','./DataZoomModel'
          */
         mergeOption: function (option) {
             this.inputPositionParams = layout.getLayoutParams(option);
-            this.$superApply('mergeOption', arguments);
+            SliderZoomModel.superApply(this, 'mergeOption', arguments);
         }
 
     });
+
+    return SliderZoomModel;
 
 });
 define('echarts/util/throttle',[],function () {
@@ -30364,7 +30530,7 @@ define('echarts/component/dataZoom/SliderZoomView',['require','zrender/core/util
     var LABEL_GAP = 5;
     var SHOW_DATA_SHADOW_SERIES_TYPE = ['line', 'bar', 'candlestick', 'scatter'];
 
-    return DataZoomView.extend({
+    var SliderZoomView = DataZoomView.extend({
 
         type: 'dataZoom.slider',
 
@@ -30429,7 +30595,7 @@ define('echarts/component/dataZoom/SliderZoomView',['require','zrender/core/util
          * @override
          */
         render: function (dataZoomModel, ecModel, api, payload) {
-            this.$superApply('render', arguments);
+            SliderZoomView.superApply(this, 'render', arguments);
 
             throttle.createOrUpdate(
                 this,
@@ -30460,7 +30626,7 @@ define('echarts/component/dataZoom/SliderZoomView',['require','zrender/core/util
          * @override
          */
         remove: function () {
-            this.$superApply('remove', arguments);
+            SliderZoomView.superApply(this, 'remove', arguments);
             throttle.clear(this, '_dispatchZoomAction');
         },
 
@@ -30468,7 +30634,7 @@ define('echarts/component/dataZoom/SliderZoomView',['require','zrender/core/util
          * @override
          */
         dispose: function () {
-            this.$superApply('dispose', arguments);
+            SliderZoomView.superApply(this, 'dispose', arguments);
             throttle.clear(this, '_dispatchZoomAction');
         },
 
@@ -30519,6 +30685,10 @@ define('echarts/component/dataZoom/SliderZoomView',['require','zrender/core/util
                 };
 
             layout.mergeLayoutParam(positionInfo, dataZoomModel.inputPositionParams);
+
+            // Write back to option for chart.getOption(). (and may then
+            // chart.setOption() again, where current location value is needed);
+            dataZoomModel.setLayoutParams(positionInfo);
 
             var layoutRect = layout.getLayoutRect(
                 positionInfo,
@@ -30768,8 +30938,12 @@ define('echarts/component/dataZoom/SliderZoomView',['require','zrender/core/util
          */
         _resetInterval: function () {
             var range = this._range = this.dataZoomModel.getPercentRange();
+            var viewExtent = this._getViewExtent();
 
-            this._handleEnds = linearMap(range, [0, 100], this._getViewExtent(), true);
+            this._handleEnds = [
+                linearMap(range[0], [0, 100], viewExtent, true),
+                linearMap(range[1], [0, 100], viewExtent, true)
+            ];
         },
 
         /**
@@ -30791,7 +30965,10 @@ define('echarts/component/dataZoom/SliderZoomView',['require','zrender/core/util
                 handleIndex
             );
 
-            this._range = asc(linearMap(handleEnds, viewExtend, [0, 100], true));
+            this._range = asc([
+                linearMap(handleEnds[0], viewExtend, [0, 100], true),
+                linearMap(handleEnds[1], viewExtend, [0, 100], true)
+            ]);
         },
 
         /**
@@ -31018,15 +31195,15 @@ define('echarts/component/dataZoom/SliderZoomView',['require','zrender/core/util
         return thisDim === 'x' ? 'y' : 'x';
     }
 
+    return SliderZoomView;
+
 });
 /**
  * @file Data zoom model
  */
 define('echarts/component/dataZoom/InsideZoomModel',['require','./DataZoomModel'],function(require) {
 
-    var DataZoomModel = require('./DataZoomModel');
-
-    return DataZoomModel.extend({
+    return require('./DataZoomModel').extend({
 
         type: 'dataZoom.inside',
 
@@ -31036,9 +31213,7 @@ define('echarts/component/dataZoom/InsideZoomModel',['require','./DataZoomModel'
         defaultOption: {
             zoomLock: false // Whether disable zoom but only pan.
         }
-
     });
-
 });
 define('echarts/component/helper/interactionMutex',['require'],function (require) {
 
@@ -31269,16 +31444,195 @@ define('echarts/component/helper/RoamController',['require','zrender/mixin/Event
 
     return RoamController;
 });
-define('echarts/component/dataZoom/InsideZoomView',['require','./DataZoomView','../../util/throttle','zrender/core/util','../helper/sliderMove','../../component/helper/RoamController'],function (require) {
+/**
+ * @file Roam controller manager.
+ */
+define('echarts/component/dataZoom/roams',['require','zrender/core/util','../../component/helper/RoamController','../../util/throttle'],function(require) {
+
+    // Only create one roam controller for each coordinate system.
+    // one roam controller might be refered by two inside data zoom
+    // components (for example, one for x and one for y). When user
+    // pan or zoom, only dispatch one action for those data zoom
+    // components.
+
+    var zrUtil = require('zrender/core/util');
+    var RoamController = require('../../component/helper/RoamController');
+    var throttle = require('../../util/throttle');
+    var curry = zrUtil.curry;
+
+    var ATTR = '\0_ec_dataZoom_roams';
+
+    var roams = {
+
+        /**
+         * @public
+         * @param {module:echarts/ExtensionAPI} api
+         * @param {Object} dataZoomInfo
+         * @param {string} dataZoomInfo.coordType
+         * @param {string} dataZoomInfo.coordId
+         * @param {Object} dataZoomInfo.coordinateSystem
+         * @param {string} dataZoomInfo.dataZoomId
+         * @param {number} dataZoomInfo.throttleRate
+         * @param {Function} dataZoomInfo.panGetRange
+         * @param {Function} dataZoomInfo.zoomGetRange
+         */
+        register: function (api, dataZoomInfo) {
+            var store = giveStore(api);
+            var theDataZoomId = dataZoomInfo.dataZoomId;
+            var theCoordId = dataZoomInfo.coordType + '\0_' + dataZoomInfo.coordId;
+
+            // Do clean when a dataZoom changes its target coordnate system.
+            zrUtil.each(store, function (record, coordId) {
+                var dataZoomInfos = record.dataZoomInfos;
+                if (dataZoomInfos[theDataZoomId] && coordId !== theCoordId) {
+                    delete dataZoomInfos[theDataZoomId];
+                    record.count--;
+                }
+            });
+
+            cleanStore(store);
+
+            var record = store[theCoordId];
+
+            // Create if needed.
+            if (!record) {
+                record = store[theCoordId] = {
+                    coordId: theCoordId,
+                    dataZoomInfos: {},
+                    count: 0
+                };
+                record.controller = createController(api, dataZoomInfo, record);
+                record.dispatchAction = zrUtil.curry(dispatchAction, api);
+            }
+
+            // Update.
+            if (record) {
+                throttle.createOrUpdate(
+                    record,
+                    'dispatchAction',
+                    dataZoomInfo.throttleRate,
+                    'fixRate'
+                );
+
+                !record.dataZoomInfos[theDataZoomId] && record.count++;
+                record.dataZoomInfos[theDataZoomId] = dataZoomInfo;
+            }
+        },
+
+        /**
+         * @public
+         * @param {module:echarts/ExtensionAPI} api
+         * @param {string} dataZoomId
+         */
+        unregister: function (api, dataZoomId) {
+            var store = giveStore(api);
+
+            zrUtil.each(store, function (record, coordId) {
+                var dataZoomInfos = record.dataZoomInfos;
+                if (dataZoomInfos[dataZoomId]) {
+                    delete dataZoomInfos[dataZoomId];
+                    record.count--;
+                }
+            });
+
+            cleanStore(store);
+        },
+
+        /**
+         * @public
+         */
+        shouldRecordRange: function (payload, dataZoomId) {
+            if (payload && payload.type === 'dataZoom' && payload.batch) {
+                for (var i = 0, len = payload.batch.length; i < len; i++) {
+                    if (payload.batch[i].dataZoomId === dataZoomId) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+    };
+
+    /**
+     * Key: coordId, value: {dataZoomInfos: [], count, controller}
+     * @type {Array.<Object>}
+     */
+    function giveStore(api) {
+        // Mount store on zrender instance, so that we do not
+        // need to worry about dispose.
+        var zr = api.getZr();
+        return zr[ATTR] || (zr[ATTR] = {});
+    }
+
+    function createController(api, dataZoomInfo, newRecord) {
+        var controller = new RoamController(api.getZr());
+        controller.enable();
+        controller.on('pan', curry(onPan, newRecord));
+        controller.on('zoom', curry(onZoom, newRecord));
+        controller.rect = dataZoomInfo.coordinateSystem.getRect().clone();
+
+        return controller;
+    }
+
+    function cleanStore(store) {
+        zrUtil.each(store, function (record, coordId) {
+            if (!record.count) {
+                record.controller.off('pan').off('zoom');
+                delete store[coordId];
+            }
+        });
+    }
+
+    function onPan(record, dx, dy) {
+        wrapAndDispatch(record, function (info) {
+            return info.panGetRange(record.controller, dx, dy);
+        });
+    }
+
+    function onZoom(record, scale, mouseX, mouseY) {
+        wrapAndDispatch(record, function (info) {
+            return info.zoomGetRange(record.controller, scale, mouseX, mouseY);
+        });
+    }
+
+    function wrapAndDispatch(record, getRange) {
+        var batch = [];
+
+        zrUtil.each(record.dataZoomInfos, function (info) {
+            var range = getRange(info);
+            range && batch.push({
+                dataZoomId: info.dataZoomId,
+                start: range[0],
+                end: range[1]
+            });
+        });
+
+        record.dispatchAction(batch);
+    }
+
+    /**
+     * This action will be throttled.
+     */
+    function dispatchAction(api, batch) {
+        api.dispatchAction({
+            type: 'dataZoom',
+            batch: batch
+        });
+    }
+
+    return roams;
+
+});
+define('echarts/component/dataZoom/InsideZoomView',['require','./DataZoomView','zrender/core/util','../helper/sliderMove','./roams'],function (require) {
 
     var DataZoomView = require('./DataZoomView');
-    var throttle = require('../../util/throttle');
     var zrUtil = require('zrender/core/util');
     var sliderMove = require('../helper/sliderMove');
-    var RoamController = require('../../component/helper/RoamController');
+    var roams = require('./roams');
     var bind = zrUtil.bind;
 
-    return DataZoomView.extend({
+    var InsideZoomView = DataZoomView.extend({
 
         type: 'dataZoom.inside',
 
@@ -31286,13 +31640,6 @@ define('echarts/component/dataZoom/InsideZoomView',['require','./DataZoomView','
          * @override
          */
         init: function (ecModel, api) {
-
-            /**
-             * @private
-             * @type {Object.<string, module:echarts/component/helper/RoamController>}
-             */
-            this._controllers = {};
-
             /**
              * 'throttle' is used in this.dispatchAction, so we save range
              * to avoid missing some 'pan' info.
@@ -31306,68 +31653,30 @@ define('echarts/component/dataZoom/InsideZoomView',['require','./DataZoomView','
          * @override
          */
         render: function (dataZoomModel, ecModel, api, payload) {
-            this.$superApply('render', arguments);
+            InsideZoomView.superApply(this, 'render', arguments);
 
-            throttle.createOrUpdate(
-                this,
-                '_dispatchZoomAction',
-                this.dataZoomModel.get('throttle'),
-                'fixRate'
-            );
-
-            // Notice: this._resetInterval() should not be executed when payload.type
-            // is 'dataZoom', origin this._range should be maintained, otherwise 'pan'
-            // or 'zoom' info will be missed because of 'throttle' of this.dispatchAction,
-            if (!payload || payload.type !== 'dataZoom' || payload.from !== this.uid) {
+            // Notice: origin this._range should be maintained, and should not be re-fetched
+            // from dataZoomModel when payload.type is 'dataZoom', otherwise 'pan' or 'zoom'
+            // info will be missed because of 'throttle' of this.dispatchAction.
+            if (roams.shouldRecordRange(payload, dataZoomModel.id)) {
                 this._range = dataZoomModel.getPercentRange();
             }
 
-            this._resetController(api);
-        },
-
-        /**
-         * @override
-         */
-        remove: function () {
-            this.$superApply('remove', arguments);
-
-            var controllers = this._controllers;
-            zrUtil.each(controllers, function (controller) {
-                controller.off('pan').off('zoom');
-            });
-            controllers.length = 0;
-
-            throttle.clear(this, '_dispatchZoomAction');
-        },
-
-        /**
-         * @override
-         */
-        dispose: function () {
-            this.$superApply('dispose', arguments);
-            throttle.clear(this, '_dispatchZoomAction');
-        },
-
-        /**
-         * @private
-         */
-        _resetController: function (api) {
-            var controllers = this._controllers;
-            var targetInfo = this.getTargetInfo();
-
-            zrUtil.each(targetInfo.cartesians, function (item) {
-                // Init controller.
-                var key = 'cartesian' + item.coordIndex;
-                var controller = controllers[key];
-                if (!controller) {
-                    controller = controllers[key] = new RoamController(api.getZr());
-                    controller.enable();
-                    controller.on('pan', bind(this._onPan, this, controller, item));
-                    controller.on('zoom', bind(this._onZoom, this, controller, item));
-                }
-
-                controller.rect = item.model.coordinateSystem.getRect().clone();
-
+            // Reset controllers.
+            zrUtil.each(this.getTargetInfo().cartesians, function (coordInfo) {
+                var coordModel = coordInfo.model;
+                roams.register(
+                    api,
+                    {
+                        coordId: coordModel.id,
+                        coordType: coordModel.type,
+                        coordinateSystem: coordModel.coordinateSystem,
+                        dataZoomId: dataZoomModel.id,
+                        throttleRage: dataZoomModel.get('throttle', true),
+                        panGetRange: bind(this._onPan, this, coordInfo),
+                        zoomGetRange: bind(this._onZoom, this, coordInfo)
+                    }
+                );
             }, this);
 
             // TODO
@@ -31375,49 +31684,50 @@ define('echarts/component/dataZoom/InsideZoomView',['require','./DataZoomView','
         },
 
         /**
-         * @private
+         * @override
          */
-        _onPan: function (controller, coordInfo, dx, dy) {
-            var range = this._range = panCartesian(
-                [dx, dy], this._range, controller, coordInfo
-            );
+        remove: function () {
+            roams.unregister(this.api, this.dataZoomModel.id);
+            InsideZoomView.superApply(this, 'remove', arguments);
+            this._range = null;
+        },
 
-            if (range) {
-                this._dispatchZoomAction(range);
-            }
+        /**
+         * @override
+         */
+        dispose: function () {
+            roams.unregister(this.api, this.dataZoomModel.id);
+            InsideZoomView.superApply(this, 'dispose', arguments);
+            this._range = null;
         },
 
         /**
          * @private
          */
-        _onZoom: function (controller, coordInfo, scale, mouseX, mouseY) {
+        _onPan: function (coordInfo, controller, dx, dy) {
+            return (
+                this._range = panCartesian(
+                    [dx, dy], this._range, controller, coordInfo
+                )
+            );
+        },
+
+        /**
+         * @private
+         */
+        _onZoom: function (coordInfo, controller, scale, mouseX, mouseY) {
             var dataZoomModel = this.dataZoomModel;
 
             if (dataZoomModel.option.zoomLock) {
                 return;
             }
 
-            scale = 1 / scale;
-            var range = this._range = scaleCartesian(
-                scale, [mouseX, mouseY], this._range,
-                controller, coordInfo, dataZoomModel
+            return (
+                this._range = scaleCartesian(
+                    1 / scale, [mouseX, mouseY], this._range,
+                    controller, coordInfo, dataZoomModel
+                )
             );
-
-            this._dispatchZoomAction(range);
-        },
-
-        /**
-         * This action will be throttled.
-         * @private
-         */
-        _dispatchZoomAction: function (range) {
-            this.api.dispatchAction({
-                type: 'dataZoom',
-                from: this.uid,
-                dataZoomId: this.dataZoomModel.id,
-                start: range[0],
-                end: range[1]
-            });
         }
 
     });
@@ -31465,9 +31775,6 @@ define('echarts/component/dataZoom/InsideZoomView',['require','./DataZoomView','
         range[0] = (range[0] - percentPoint) * scale + percentPoint;
         range[1] = (range[1] - percentPoint) * scale + percentPoint;
 
-        // FIXME
-        // 改为基于绝对值的方式？
-
         return fixRange(range);
     }
 
@@ -31504,23 +31811,42 @@ define('echarts/component/dataZoom/InsideZoomView',['require','./DataZoomView','
 
         return range;
     }
+
+    return InsideZoomView;
 });
 /**
  * @file Data zoom processor
  */
-define('echarts/component/dataZoom/dataZoomProcessor',['require','../../echarts','../../util/number'],function (require) {
+define('echarts/component/dataZoom/dataZoomProcessor',['require','../../echarts'],function (require) {
 
     var echarts = require('../../echarts');
-    var numberUtil = require('../../util/number');
 
     echarts.registerProcessor('filter', function (ecModel, api) {
 
         ecModel.eachComponent('dataZoom', function (dataZoomModel) {
             // We calculate window and reset axis here but not in model
             // init stage and not after action dispatch handler, because
-            // those reset should be done after seriesData.restoreData.
+            // reset should be called after seriesData.restoreData.
             dataZoomModel.eachTargetAxis(resetSingleAxis);
 
+            // Caution: data zoom filtering is order sensitive when using
+            // percent range and no min/max/scale set on axis.
+            // For example, we have dataZoom definition:
+            // [
+            //      {xAxisIndex: 0, start: 30, end: 70},
+            //      {yAxisIndex: 0, start: 20, end: 80}
+            // ]
+            // In this case, [20, 80] of y-dataZoom should be based on data
+            // that have filtered by x-dataZoom using range of [30, 70],
+            // but should not be based on full raw data. Thus sliding
+            // x-dataZoom will change both ranges of xAxis and yAxis,
+            // while sliding y-dataZoom will only change the range of yAxis.
+            // So we should filter x-axis after reset x-axis immediately,
+            // and then reset y-axis and filter y-axis.
+            dataZoomModel.eachTargetAxis(filterSingleAxis);
+        });
+
+        ecModel.eachComponent('dataZoom', function (dataZoomModel) {
             // Fullfill all of the range props so that user
             // is able to get them from chart.getOption().
             var axisProxy = dataZoomModel.findRepresentativeAxisProxy();
@@ -31533,41 +31859,13 @@ define('echarts/component/dataZoom/dataZoomProcessor',['require','../../echarts'
                 endValue: valueRange[1]
             });
         });
-
-        ecModel.eachComponent('dataZoom', function (dataZoomModel) {
-            dataZoomModel.eachTargetAxis(filterSingleAxis);
-        });
     });
 
-    function resetSingleAxis(dimNames, axisIndex, dataZoomModel, ecModel) {
-        var dimName = dimNames.name;
-        var axisProxy = dataZoomModel.getAxisProxy(dimName, axisIndex);
-
-        axisProxy.reset(dataZoomModel);
-
-        var percentRange = axisProxy.getDataPercentWindow();
-        var valueRange = axisProxy.getDataValueWindow();
-        var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
-        var isFull = (percentRange[0] === 0 && percentRange[1] === 100);
-        var backup = axisProxy.getBackup();
-
-        // [0, 500]: guess axis extent.
-        var precision = numberUtil.getPixelPrecision(valueRange, [0, 500]);
-        // toFixed() digits argument must be between 0 and 20
-        var invalidPrecision = !(precision < 20 && precision >= 0);
-
-        axisModel.setNeedsCrossZero && axisModel.setNeedsCrossZero(
-            isFull ? !backup.scale : false
-        );
-        axisModel.setMin && axisModel.setMin(
-            (isFull || invalidPrecision) ? backup.min : +valueRange[0].toFixed(precision)
-        );
-        axisModel.setMax && axisModel.setMax(
-            (isFull || invalidPrecision) ? backup.max : +valueRange[1].toFixed(precision)
-        );
+    function resetSingleAxis(dimNames, axisIndex, dataZoomModel) {
+        dataZoomModel.getAxisProxy(dimNames.name, axisIndex).reset(dataZoomModel);
     }
 
-    function filterSingleAxis(dimNames, axisIndex, dataZoomModel, ecModel) {
+    function filterSingleAxis(dimNames, axisIndex, dataZoomModel) {
         dataZoomModel.getAxisProxy(dimNames.name, axisIndex).filterData(dataZoomModel);
     }
 
@@ -31656,7 +31954,7 @@ define('echarts/component/toolbox/ToolboxModel',['require','./featureManager','z
     var featureManager = require('./featureManager');
     var zrUtil = require('zrender/core/util');
 
-    require('../../echarts').extendComponentModel({
+    var ToolboxModel = require('../../echarts').extendComponentModel({
 
         type: 'toolbox',
 
@@ -31666,7 +31964,7 @@ define('echarts/component/toolbox/ToolboxModel',['require','./featureManager','z
         },
 
         mergeDefaultAndTheme: function (option) {
-            this.$superApply('mergeDefaultAndTheme', arguments);
+            ToolboxModel.superApply(this, 'mergeDefaultAndTheme', arguments);
 
             zrUtil.each(this.option.feature, function (featureOpt, featureName) {
                 var Feature = featureManager.get(featureName);
@@ -31719,6 +32017,8 @@ define('echarts/component/toolbox/ToolboxModel',['require','./featureManager','z
             // feature
         }
     });
+
+    return ToolboxModel;
 });
 define('echarts/component/toolbox/ToolboxView',['require','./featureManager','zrender/core/util','../../util/graphic','../../model/Model','../../data/DataDiffer','../helper/listComponent','zrender/contain/text','../../echarts'],function (require) {
 
@@ -31768,15 +32068,25 @@ define('echarts/component/toolbox/ToolboxView',['require','./featureManager','zr
                 var feature;
 
                 if (featureName && !oldName) { // Create
-                    var Feature = featureManager.get(featureName);
-                    if (!Feature) {
-                        return;
+                    if (isUserFeatureName(featureName)) {
+                        feature = {
+                            model: featureModel,
+                            onclick: featureModel.option.onclick,
+                            featureName: featureName
+                        };
                     }
-                    features[featureName] = feature = new Feature(featureModel);
+                    else {
+                        var Feature = featureManager.get(featureName);
+                        if (!Feature) {
+                            return;
+                        }
+                        feature = new Feature(featureModel);
+                    }
+                    features[featureName] = feature;
                 }
                 else {
                     feature = features[oldName];
-                    // If not exsits feature
+                    // If feature does not exsit.
                     if (!feature) {
                         return;
                     }
@@ -31837,18 +32147,28 @@ define('echarts/component/toolbox/ToolboxView',['require','./featureManager','zr
                 zrUtil.each(icons, function (icon, iconName) {
                     var normalStyle = iconStyleModel.getModel('normal').getItemStyle();
                     var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
-                    var path = graphic.makePath(
-                        icon, {
-                            style: normalStyle,
-                            hoverStyle: hoverStyle,
-                            rectHover: true
-                        }, {
-                            x: -itemSize / 2,
-                            y: -itemSize / 2,
-                            width: itemSize,
-                            height: itemSize
-                        }, 'center'
-                    );
+
+                    var style = {
+                        x: -itemSize / 2,
+                        y: -itemSize / 2,
+                        width: itemSize,
+                        height: itemSize
+                    };
+                    var path = icon.indexOf('image://') === 0
+                        ? (
+                            style.image = icon.slice(8),
+                            new graphic.Image({style: style})
+                        )
+                        : graphic.makePath(
+                            icon.replace('path://', ''),
+                            {
+                                style: normalStyle,
+                                hoverStyle: hoverStyle,
+                                rectHover: true
+                            },
+                            style,
+                            'center'
+                        );
 
                     graphic.setHoverStyle(path);
 
@@ -31927,6 +32247,11 @@ define('echarts/component/toolbox/ToolboxView',['require','./featureManager','zr
             });
         }
     });
+
+    function isUserFeatureName(featureName) {
+        return featureName.indexOf('my') === 0;
+    }
+
 });
 define('echarts/component/toolbox/feature/SaveAsImage',['require','zrender/core/env','../featureManager'],function (require) {
 
@@ -31938,8 +32263,7 @@ define('echarts/component/toolbox/feature/SaveAsImage',['require','zrender/core/
 
     SaveAsImage.defaultOption = {
         show: true,
-        icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6\
-            M29.2,45.1L29.2,0',
+        icon: 'M4.7,22.9L29.3,45.5L54.7,23.4M4.6,43.6L4.6,58L53.8,58L53.8,43.6M29.2,45.1L29.2,0',
         title: '保存为图片',
         type: 'png',
         // Default use option.backgroundColor
@@ -31981,9 +32305,10 @@ define('echarts/component/toolbox/feature/SaveAsImage',['require','zrender/core/
         // IE
         else {
             var lang = model.get('lang');
-            var html = '<body style="margin:0;">\
-                <img src="' + url + '" style="max-width:100%;" title="' + ((lang && lang[0]) || '') + '" />\
-            </body>';
+            var html = ''
+                + '<body style="margin:0;">'
+                + '<img src="' + url + '" style="max-width:100%;" title="' + ((lang && lang[0]) || '') + '" />'
+                + '</body>';
             var tab = window.open();
             tab.document.write(html);
         }
@@ -32011,7 +32336,7 @@ define('echarts/component/toolbox/feature/MagicType',['require','zrender/core/ut
         icon: {
             line: 'M4.1,28.9h7.1l9.3-22l7.4,38l9.7-19.7l3,12.8h14.9M4.1,58h51.4',
             bar: 'M6.7,22.9h10V48h-10V22.9zM24.9,13h10v35h-10V13zM43.2,2h10v46h-10V2zM3.1,58h53.7',
-            stack: 'M8.2,38.4l-8.4,4.1l30.6,15.3L60,42.5l-8.1-4.1l-21.5,11L8.2,38.4z M51.9,30l-8.1,4.2l-13.4,6.9l-13.9-6.9L8.2,30l-8.4,4.2l8.4,4.2l22.2,11l21.5-11l8.1-4.2L51.9,30z M51.9,21.7l-8.1,4.2L35.7,30l-5.3,2.8L24.9,30l-8.4-4.1l-8.3-4.2l-8.4,4.2L8.2,30l8.3,4.2l13.9,6.9l13.4-6.9l8.1-4.2l8.1-4.1L51.9,21.7zM30.4,2.2L-0.2,17.5l8.4,4.1l8.3,4.2l8.4,4.2l5.5,2.7l5.3-2.7l8.1-4.2l8.1-4.2l8.1-4.1L30.4,2.2z',
+            stack: 'M8.2,38.4l-8.4,4.1l30.6,15.3L60,42.5l-8.1-4.1l-21.5,11L8.2,38.4z M51.9,30l-8.1,4.2l-13.4,6.9l-13.9-6.9L8.2,30l-8.4,4.2l8.4,4.2l22.2,11l21.5-11l8.1-4.2L51.9,30z M51.9,21.7l-8.1,4.2L35.7,30l-5.3,2.8L24.9,30l-8.4-4.1l-8.3-4.2l-8.4,4.2L8.2,30l8.3,4.2l13.9,6.9l13.4-6.9l8.1-4.2l8.1-4.1L51.9,21.7zM30.4,2.2L-0.2,17.5l8.4,4.1l8.3,4.2l8.4,4.2l5.5,2.7l5.3-2.7l8.1-4.2l8.1-4.2l8.1-4.1L30.4,2.2z', // jshint ignore:line
             tiled: 'M2.3,2.2h22.8V25H2.3V2.2z M35,2.2h22.8V25H35V2.2zM2.3,35h22.8v22.8H2.3V35z M35,35h22.8v22.8H35V35z'
         },
         title: {
@@ -33630,6 +33955,16 @@ if (!require('../core/env').canvasSupported) {
         return (parseFloat(zlevel) || 0) * ZLEVEL_BASE + (parseFloat(z) || 0) * Z_BASE + z2;
     };
 
+    var parsePercent = function (value, maxValue) {
+        if (typeof value === 'string') {
+            if (value.lastIndexOf('%') >= 0) {
+                return parseFloat(value) / 100 * maxValue;
+            }
+            return parseFloat(value);
+        }
+        return value;
+    };
+
     /***************************************************
      * PATH
      **************************************************/
@@ -33975,7 +34310,7 @@ if (!require('../core/env').canvasSupported) {
             }
         }
         return str.join('');
-    }
+    };
 
     // Rewrite the original path method
     Path.prototype.brush = function (vmlRoot) {
@@ -34319,9 +34654,8 @@ if (!require('../core/env').canvasSupported) {
         var doc = vmlCore.doc;
         if (!textMeasureEl) {
             textMeasureEl = doc.createElement('div');
-            textMeasureEl.style.cssText = 'position:absolute;top:-20000px;left:0;\
-                padding:0;margin:0;border:none;white-space:pre;';
-
+            textMeasureEl.style.cssText = 'position:absolute;top:-20000px;left:0;'
+                + 'padding:0;margin:0;border:none;white-space:pre;';
             vmlCore.doc.body.appendChild(textMeasureEl);
         }
 
@@ -34367,13 +34701,14 @@ if (!require('../core/env').canvasSupported) {
             tmpRect.applyTransform(m);
             rect = tmpRect;
         }
+
         if (!fromTextEl) {
             var textPosition = style.textPosition;
             var distance = style.textDistance;
             // Text position represented by coord
             if (textPosition instanceof Array) {
-                x = rect.x + textPosition[0];
-                y = rect.y + textPosition[1];
+                x = rect.x + parsePercent(textPosition[0], rect.width);
+                y = rect.y + parsePercent(textPosition[1], rect.height);
 
                 align = align || 'left';
                 baseline = baseline || 'top';
@@ -34394,12 +34729,14 @@ if (!require('../core/env').canvasSupported) {
             x = rect.x;
             y = rect.y;
         }
+
         var fontSize = fontStyle.size;
         // 1.75 is an arbitrary number, as there is no info about the text baseline
+        var lineCount = (text + '').split('\n').length; // not precise.
         switch (baseline) {
             case 'hanging':
             case 'top':
-                y += fontSize / 1.75;
+                y += (fontSize / 1.75) * lineCount;
                 break;
             case 'middle':
                 break;
