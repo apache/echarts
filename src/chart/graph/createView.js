@@ -32,6 +32,7 @@ define(function (require) {
 
                 bbox.fromPoints(positions, min, max);
 
+                // FIXME If get view rect after data processed?
                 var viewRect = getViewRect(
                     seriesModel, api, (max[0] - min[0]) / (max[1] - min[1]) || 1
                 );

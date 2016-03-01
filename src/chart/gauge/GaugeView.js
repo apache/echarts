@@ -157,8 +157,12 @@ define(function (require) {
             var splitNumber = seriesModel.get('splitNumber');
             var subSplitNumber = tickModel.get('splitNumber');
 
-            var splitLineLen = splitLineModel.get('length');
-            var tickLen = tickModel.get('length');
+            var splitLineLen = parsePercent(
+                splitLineModel.get('length'), r
+            );
+            var tickLen = parsePercent(
+                tickModel.get('length'), r
+            );
 
             var angle = startAngle;
             var step = (endAngle - startAngle) / splitNumber;
@@ -313,7 +317,9 @@ define(function (require) {
                     shape: {
                         x: posInfo.cx,
                         y: posInfo.cy,
-                        width: pointerModel.get('width'),
+                        width: parsePercent(
+                            pointerModel.get('width'), posInfo.r
+                        ),
                         r: parsePercent(pointerModel.get('length'), posInfo.r)
                     },
                     style: itemModel.getModel('itemStyle.normal').getItemStyle()
