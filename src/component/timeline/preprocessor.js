@@ -61,7 +61,6 @@ define(function(require) {
         var itemStyle = opt.itemStyle || (opt.itemStyle = {});
 
         var itemStyleEmphasis = itemStyle.emphasis || (itemStyle.emphasis = {});
-        var itemStyleNormal = itemStyle.normal || (itemStyle.normal = {});
 
         // Transfer label out
         var label = opt.label || (opt.label || {});

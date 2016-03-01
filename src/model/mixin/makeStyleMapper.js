@@ -23,6 +23,6 @@ define(function (require) {
                 }
             }
             return style;
-        }
-    }
+        };
+    };
 });

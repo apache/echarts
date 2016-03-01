@@ -3,7 +3,6 @@ define(function (require) {
 
     var Polar = require('./Polar');
     var numberUtil = require('../../util/number');
-    var zrUtil = require('zrender/core/util');
 
     var axisHelper = require('../../coord/axisHelper');
     var niceScaleExtent = axisHelper.niceScaleExtent;

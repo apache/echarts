@@ -36,5 +36,5 @@ define(function (require) {
                 '南海诸岛', points, geoCoord
             ));
         }
-    }
+    };
 });

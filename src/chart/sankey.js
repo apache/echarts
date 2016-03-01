@@ -4,6 +4,6 @@ define(function (require) {
 
     require('./sankey/SankeySeries');
     require('./sankey/SankeyView');
-    echarts.registerLayout(require('./sankey/sankeyLayout')); 
-    echarts.registerVisualCoding('chart', require('./sankey/sankeyVisual'));   
-})
+    echarts.registerLayout(require('./sankey/sankeyLayout'));
+    echarts.registerVisualCoding('chart', require('./sankey/sankeyVisual'));
+});

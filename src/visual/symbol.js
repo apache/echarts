@@ -1,9 +1,5 @@
 define(function (require) {
 
-    function isSymbolNone(symbolType) {
-        return symbolType === 'none';
-    }
-
     return function (seriesType, defaultSymbolType, legendSymbol, ecModel, api) {
 
         // Encoding visual for all series include which is filtered for legend drawing

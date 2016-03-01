@@ -5,7 +5,6 @@
 
 define(function (require) {
 
-    var zrUtil = require('zrender/core/util');
     var number = {};
 
     var RADIAN_EPSILON = 1e-4;

@@ -68,4 +68,4 @@ define(function (require) {
     });
 
     return ToolboxModel;
-})
+});

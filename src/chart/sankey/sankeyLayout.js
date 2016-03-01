@@ -81,13 +81,16 @@ define(function (require) {
 
         while (remainNodes.length) {
             nextNode = [];
-            zrUtil.each(remainNodes, function (node) {
+
+            for (var i = 0, len = remainNodes.length; i < len; i++) {
+                var node = remainNodes[i];
                 node.setLayout({x: x}, true);
                 node.setLayout({dx: nodeWidth}, true);
-                zrUtil.each(node.outEdges, function (edge) {
-                    nextNode.push(edge.node2);
-                });
-            });
+
+                for (var j = 0, lenj = node.outEdges.length; j < lenj; j++) {
+                    nextNode.push(node.outEdges[j].node2);
+                }
+            }
             remainNodes = nextNode;
             ++x;
         }

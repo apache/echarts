@@ -207,9 +207,11 @@ define(function (require) {
             });
 
             for(var j = 0; j < layerSeries.length; ++j) {
-                layerSeries[j].indices.sort(function (index1, index2) {
-                    return data.get('time', index1) - data.get('time', index2);
-                });
+                layerSeries[j].indices.sort(comparer);
+            }
+
+            function comparer(index1, index2) {
+                return data.get('time', index1) - data.get('time', index2);
             }
 
             return layerSeries;

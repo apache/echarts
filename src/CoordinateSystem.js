@@ -39,7 +39,7 @@ define(function(require) {
 
     CoordinateSystemManager.get = function (type) {
         return coordinateSystemCreators[type];
-    }
+    };
 
     return CoordinateSystemManager;
 });
