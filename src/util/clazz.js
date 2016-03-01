@@ -48,7 +48,7 @@ define(function (require) {
     // then when method of class C is called, dead loop occured.
     function superCall(context, methodName) {
         var args = zrUtil.slice(arguments, 2);
-        return this.superClass.prototype[methodName].call(context, args);
+        return this.superClass.prototype[methodName].apply(context, args);
     }
 
     function superApply(context, methodName, args) {

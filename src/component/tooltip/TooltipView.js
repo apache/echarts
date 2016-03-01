@@ -1099,6 +1099,9 @@ define(function (require) {
         },
 
         dispose: function (ecModel, api) {
+            if (env.node) {
+                return;
+            }
             var zr = api.getZr();
             this._tooltipContent.hide();
 
