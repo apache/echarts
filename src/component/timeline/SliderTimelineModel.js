@@ -21,8 +21,9 @@ define(function(require) {
             orient: 'horizontal',              // 'vertical'
             inverse: false,
 
-            tooltip: false,                    // boolean or Object
-                                               // data item may also have tootip attr.
+            tooltip: {                          // boolean or Object
+                trigger: 'item'                 // data item may also have tootip attr.
+            },
 
             symbol: 'emptyCircle',
             symbolSize: 10,
