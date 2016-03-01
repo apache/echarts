@@ -48,7 +48,6 @@
                     graph.nodes.forEach(function (node) {
                         delete node.itemStyle;
                         node.value = node.symbolSize;
-                        // node.label.normal.show = node.symbolSize > 30;
                         node.label = {
                             normal: {
                                 show: node.symbolSize > 30

@@ -47,7 +47,11 @@
                         node.itemStyle = null;
                         node.symbolSize = 10;
                         node.value = node.symbolSize;
-                        node.label.normal.show = node.symbolSize > 30;
+                        node.label = {
+                            normal: {
+                                show: node.symbolSize > 30
+                            }
+                        };
                         node.category = node.attributes['modularity_class'];
                         node.x = node.y = null;
                     });

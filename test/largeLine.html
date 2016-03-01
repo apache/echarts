@@ -1,0 +1,124 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id="timing"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/bar',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/dataZoom',
+                'echarts/component/tooltip'
+            ], function (echarts) {
+                var myChart;
+                var lineCount = 2;
+                var pointCount = 10000;
+                var chartCount = 5;
+
+                var option = {
+                    tooltip : {
+                        trigger: 'axis',
+                        showContent: false,
+                        axisPointer: {
+                            animation: false
+                        }
+                    },
+                    legend: {
+                        data:[]
+                    },
+                    dataZoom: [{
+                        show: true,
+                        realtime: true,
+                        // showDataShadow: false,
+                        start: 50,
+                        end: 60
+                    }],
+                    xAxis : [
+                        {
+                            type : 'time'
+                        }
+                    ],
+                    yAxis : [
+                        {
+                            type : 'value'
+                        }
+                    ],
+                    series: [],
+                    animation: false
+                };
+
+                var lineStyle = {
+                    normal: {
+                        width: 2,
+                        opacity: 1
+                    }
+                };
+
+                var date = [];
+                var oneDay = 24 * 3600 * 1000;
+                var base = +new Date(1897, 9, 3);
+                for (var j = 0; j < pointCount; j++) {
+                    var now = new Date(base += oneDay);
+                    date.push([now.getFullYear(), now.getMonth() + 1, now.getDate()].join('-'));
+                }
+                for (var i = 0; i < lineCount; i++) {
+                    var y = Math.random() * 1000;
+                    var values = [];
+                    for (var j = 0; j < pointCount; j++) {
+                        y += Math.round(10 + Math.random() * (-10 - 10));
+                        values.push(
+                            [
+                                date[j],
+                                // Math.random() < 0.1 ? '-' : y
+                                y
+                            ]
+                        );
+                    }
+
+                  option.legend.data.push( 'line' + i );
+                  option.series.push({
+                    name: 'line' + i,
+                    type: 'line',
+                    sampling: 'average',
+                    hoverAnimation: false,
+                    showSymbol: false,
+                    data: values,
+                    lineStyle: lineStyle
+                  });
+                }
+
+                function refresh(isBtnRefresh){
+                    var start = new Date();
+                    for( var n = 0; n < chartCount; n++ ) {
+                        var el = document.createElement('div');
+                      el.innerHTML = '<h1>'+n+'</h1><div id="chart'+n+'" style="width: 860px; height: 320px"></div>';
+                      document.body.appendChild(el);
+
+                      myChart = echarts.init(document.getElementById('chart'+n));
+                      myChart.setOption(option, true);
+                    }
+                    var end = new Date();
+
+                    document.getElementById('timing').innerHTML = 'Graphs loaded in ' + ( end - start ) + ' ms.';
+                };
+
+                refresh();
+            });
+        </script>
+    </body>
+</html>
