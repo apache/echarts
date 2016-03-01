@@ -85,7 +85,9 @@ define(function (require) {
             switch (axisType) {
                 // Buildin scale
                 case 'category':
-                    return new OrdinalScale(model.getCategories());
+                    return new OrdinalScale(
+                        model.getCategories(), [Infinity, -Infinity]
+                    );
                 case 'value':
                     return new IntervalScale();
                 // Extended scale, like time and log
@@ -123,7 +125,7 @@ define(function (require) {
         var step = 1;
         if (labels.length > 40) {
             // Simple optimization for large amount of labels
-            step = Math.ceil(labels.length / 40);
+            step = Math.round(labels.length / 40);
         }
         for (var i = 0; i < tickCoords.length; i += step) {
             var tickCoord = tickCoords[i];
@@ -146,7 +148,9 @@ define(function (require) {
                 accumulatedLabelInterval = 0;
             }
         }
-
+        if (autoLabelInterval === 0 && step > 1) {
+            return step;
+        }
         return autoLabelInterval * step;
     };
 
