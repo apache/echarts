@@ -31,9 +31,13 @@ glob('../*.js', function (err, themePathList) {
         echarts.util.each(options, function (option) {
             var canvas = createCanvas();
             var chart = echarts.init(canvas, themeName);
+            var optionNeedFix = option;
+            if (option.options) {
+                optionNeedFix = option.options[0];
+            }
             canvasList.push(canvas);
-            option.animation = false;
-            option.textStyle = {
+            optionNeedFix.animation = false;
+            optionNeedFix.textStyle = {
                 fontFamily: 'Helvetica',
                 fontSize: 12
             };

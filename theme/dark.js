@@ -78,9 +78,6 @@
                 color: contrastColor
             }
         },
-        line: {
-            symbol: 'circle'
-        },
         toolbox: {
             iconStyle: {
                 normal: {
@@ -88,13 +85,47 @@
                 }
             }
         },
-        graph: {
-            color: colorPalette
+        timeline: {
+            lineStyle: {
+                color: contrastColor
+            },
+            itemStyle: {
+                normal: {
+                    color: colorPalette[1]
+                }
+            },
+            label: {
+                normal: {
+                    textStyle: {
+                        color: contrastColor
+                    }
+                }
+            },
+            controlStyle: {
+                normal: {
+                    color: contrastColor,
+                    borderColor: contrastColor
+                }
+            }
         },
         timeAxis: axisCommon(),
         logAxis: axisCommon(),
         valueAxis: axisCommon(),
-        categoryAxis: axisCommon()
+        categoryAxis: axisCommon(),
+
+        line: {
+            symbol: 'circle'
+        },
+        graph: {
+            color: colorPalette
+        },
+        gauge: {
+            title: {
+                textStyle: {
+                    color: contrastColor
+                }
+            }
+        }
     };
     theme.categoryAxis.splitLine.show = false;
     echarts.registerTheme('dark', theme);
