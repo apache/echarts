@@ -50,6 +50,7 @@ define(function (require) {
 
             item = [mlFrom, mlTo, { // Extra option for tooltip and label
                 type: mlType,
+                valueIndex: item.valueIndex,
                 // Force to use the value of calculated value.
                 value: value
             }];
@@ -164,8 +165,11 @@ define(function (require) {
 
             // Update visual and layout of from symbol and to symbol
             mlData.from.each(function (idx) {
-                updateDataVisualAndLayout(fromData, idx, true);
-                updateDataVisualAndLayout(toData, idx);
+                var lineModel = lineData.getItemModel(idx);
+                var mlType = lineModel.get('type');
+                var valueIndex = lineModel.get('valueIndex');
+                updateDataVisualAndLayout(fromData, idx, true, mlType, valueIndex);
+                updateDataVisualAndLayout(toData, idx, false, mlType, valueIndex);
             });
 
             // Update visual and layout of line
@@ -190,7 +194,7 @@ define(function (require) {
                 });
             });
 
-            function updateDataVisualAndLayout(data, idx, isFrom) {
+            function updateDataVisualAndLayout(data, idx, isFrom, mlType, valueIndex) {
                 var itemModel = data.getItemModel(idx);
 
                 var point;
@@ -202,17 +206,30 @@ define(function (require) {
                         numberUtil.parsePercent(yPx, api.getHeight())
                     ];
                 }
-                // Chart like bar may have there own marker positioning logic
-                else if (seriesModel.getMarkerPosition) {
-                    // Use the getMarkerPoisition
-                    point = seriesModel.getMarkerPosition(
-                        data.getValues(data.dimensions, idx)
-                    );
-                }
                 else {
-                    var x = data.get(dims[0], idx);
-                    var y = data.get(dims[1], idx);
-                    point = coordSys.dataToPoint([x, y]);
+                    // Chart like bar may have there own marker positioning logic
+                    if (seriesModel.getMarkerPosition) {
+                        // Use the getMarkerPoisition
+                        point = seriesModel.getMarkerPosition(
+                            data.getValues(data.dimensions, idx)
+                        );
+                    }
+                    else {
+                        var x = data.get(dims[0], idx);
+                        var y = data.get(dims[1], idx);
+                        point = coordSys.dataToPoint([x, y]);
+                    }
+                    // Expand min, max, average line to the edge of grid
+                    // FIXME Glue code
+                    if (mlType && coordSys.type === 'cartesian2d') {
+                        var mlOnAxis = valueIndex != null
+                            ? coordSys.getAxis(valueIndex === 1 ? 'x' : 'y')
+                            : coordSys.getAxesByScale('ordinal')[0];
+                        if (mlOnAxis && mlOnAxis.onBand) {
+                            point[mlOnAxis.dim === 'x' ? 0 : 1] =
+                                mlOnAxis.toGlobalCoord(mlOnAxis.getExtent()[isFrom ? 0 : 1]);
+                        }
+                    }
                 }
 
                 data.setItemLayout(idx, point);
