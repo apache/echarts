@@ -2,20 +2,29 @@ var glob = require('glob');
 var fsExtra = require('fs-extra');
 var esprima = require('esprima');
 
+function run(cb) {
+    glob('**/*.js', {
+        cwd: __dirname + '/../src/'
+    }, function (err, files) {
+        files.forEach(function (filePath) {
+            var code = parse(fsExtra.readFileSync(
+                __dirname + '/../src/' + filePath, 'utf-8'));
+            code = code.replace(/require\(([\'"])zrender\//g, 'require($1zrender/lib/');
+            fsExtra.outputFileSync(
+                __dirname + '/../lib/' + filePath,
+                code, 'utf-8');
+        });
 
-glob('**/*.js', {
-    cwd: __dirname + '/../src/'
-}, function (err, files) {
-    files.forEach(function (filePath) {
-        var code = parse(fsExtra.readFileSync(
-            __dirname + '/../src/' + filePath, 'utf-8'));
-        code = code.replace(/require\(([\'"])zrender\//g, 'require($1zrender/lib/');
-        fsExtra.outputFileSync(
-            __dirname + '/../lib/' + filePath,
-            code, 'utf-8');
+        cb && cb();
     });
-});
+}
 
+if (require.main === module) {
+    run();
+}
+else {
+    module.exports = run;
+}
 
 var MAGIC_DEPS = {
     'exports' : true,
@@ -118,14 +127,14 @@ function getFactory(args){
 
 
 function getBody(raw, factoryBody, useStrict){
-    var returnStatements = factoryBody.body.filter(function(node){
+    var returnStatement = factoryBody.body.filter(function(node){
         return node.type === 'ReturnStatement';
-    });
+    })[0];
 
     var body = '';
-    var bodyStart = useStrict? useStrict.expression.range[1] + 1 : factoryBody.range[0] + 1;
+    var bodyStart = useStrict ? useStrict.expression.range[1] + 1 : factoryBody.range[0] + 1;
 
-    if (returnStatements) {
+    if (returnStatement) {
         body += raw.substring( bodyStart, returnStatement.range[0] );
         // "return ".length === 7 so we add "6" to returnStatement start
         body += 'module.exports ='+ raw.substring( returnStatement.range[0] + 6, factoryBody.range[1] - 1 );
