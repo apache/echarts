@@ -94,6 +94,9 @@ define(function (require) {
      * @param {number} val
      */
     number.getPrecision = function (val) {
+        if (isNaN(val)) {
+            return 0;
+        }
         // It is much faster than methods converting number to string as follows
         //      var tmp = val.toString();
         //      return tmp.length - 1 - tmp.indexOf('.');

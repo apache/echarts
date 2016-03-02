@@ -296,7 +296,7 @@ define(function (require) {
     };
 
     /**
-     * Get value
+     * Get value. Return NaN if idx is out of range.
      * @param {string} dim Dim must be concrete name.
      * @param {number} idx
      * @param {boolean} stack
@@ -305,6 +305,11 @@ define(function (require) {
     listProto.get = function (dim, idx, stack) {
         var storage = this._storage;
         var dataIndex = this.indices[idx];
+
+        // If value not exists
+        if (dataIndex == null) {
+            return NaN;
+        }
 
         var value = storage[dim] && storage[dim][dataIndex];
         // FIXME ordinal data type is not stackable
