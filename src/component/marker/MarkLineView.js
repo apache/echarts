@@ -62,6 +62,9 @@ define(function (require) {
             zrUtil.extend({}, item[2])
         ];
 
+        // Avoid line data type is extended by from(to) data type
+        item[2].type = item[2].type || '';
+
         // Merge from option and to option into line option
         zrUtil.merge(item[2], item[0]);
         zrUtil.merge(item[2], item[1]);
