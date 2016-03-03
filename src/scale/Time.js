@@ -90,20 +90,13 @@ define(function (require) {
             var interval = level[2];
             // Same with interval scale if span is much larger than 1 year
             if (level[0] === 'year') {
-                var year = span / interval;
-                var yearInterval = Math.pow(10, Math.floor(Math.log(year / approxTickNum) / Math.LN10));
-                var err = approxTickNum / year * yearInterval;
-                // Filter ticks to get closer to the desired count.
-                if (err <= 0.15) {
-                    yearInterval *= 10;
-                }
-                else if (err <= 0.3) {
-                    yearInterval *= 5;
-                }
-                else if (err <= 0.75) {
-                    yearInterval *= 2;
-                }
-                interval *= yearInterval;
+                var yearSpan = span / interval;
+
+                // From "Nice Numbers for Graph Labels" of Graphic Gems
+                var niceYearSpan = numberUtil.nice(yearSpan, false);
+                var yearStep = numberUtil.nice(niceYearSpan / approxTickNum, true);
+
+                interval *= yearStep;
             }
 
             var niceExtent = [
