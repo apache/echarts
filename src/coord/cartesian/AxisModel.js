@@ -16,28 +16,75 @@ define(function(require) {
         axis: null,
 
         /**
-         * @public
-         * @param {boolean} needs Whether axis needs cross zero.
+         * @override
          */
-        setNeedsCrossZero: function (needs) {
-            this.option.scale = !needs;
+        init: function () {
+            AxisModel.superApply(this, 'init', arguments);
+            this._resetRange();
+        },
+
+        /**
+         * @override
+         */
+        mergeOption: function () {
+            AxisModel.superApply(this, 'mergeOption', arguments);
+            this._resetRange();
+        },
+
+        /**
+         * @override
+         */
+        restoreData: function () {
+            AxisModel.superApply(this, 'restoreData', arguments);
+            this._resetRange();
         },
 
         /**
          * @public
-         * @param {number} min
+         * @param {number} rangeStart
+         * @param {number} rangeEnd
          */
-        setMin: function (min) {
-            this.option.min = min;
+        setRange: function (rangeStart, rangeEnd) {
+            this.option.rangeStart = rangeStart;
+            this.option.rangeEnd = rangeEnd;
         },
 
         /**
          * @public
-         * @param {number} max
+         * @return {Array.<number|string|Date>}
          */
-        setMax: function (max) {
-            this.option.max = max;
+        getMin: function () {
+            var option = this.option;
+            return option.rangeStart != null ? option.rangeStart : option.min;
+        },
+
+        /**
+         * @public
+         * @return {Array.<number|string|Date>}
+         */
+        getMax: function () {
+            var option = this.option;
+            return option.rangeEnd != null ? option.rangeEnd : option.max;
+        },
+
+        /**
+         * @public
+         * @return {boolean}
+         */
+        getNeedCrossZero: function () {
+            var option = this.option;
+            return (option.rangeStart != null || option.rangeEnd != null)
+                ? false : !option.scale;
+        },
+
+        /**
+         * @private
+         */
+        _resetRange: function () {
+            // rangeStart and rangeEnd is readonly.
+            this.option.rangeStart = this.option.rangeEnd = null;
         }
+
     });
 
     function getAxisType(axisDim, option) {

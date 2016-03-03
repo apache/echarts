@@ -98,6 +98,10 @@ define(function (require) {
         // min: null,
         // 最大值，设置成 'dataMax' 则从数据中计算最大值
         // max: null,
+        // Readonly prop, specifies start value of the range when using data zoom.
+        // rangeStart: null
+        // Readonly prop, specifies end value of the range when using data zoom.
+        // rangeEnd: null
         // 脱离0值比例，放大聚焦到最终_min，_max区间
         // scale: false,
         // 分割段数，默认为5

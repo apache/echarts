@@ -22,9 +22,10 @@ define(function (require) {
             }
             return;
         }
-        var min = model.get('min');
-        var max = model.get('max');
-        var crossZero = !model.get('scale');
+        var min = model.getMin ? model.getMin() : model.get('min');
+        var max = model.getMax ? model.getMax() : model.get('max');
+        var crossZero = model.getNeedCrossZero
+            ? model.getNeedCrossZero() : !model.get('scale');
         var boundaryGap = model.get('boundaryGap');
         if (!zrUtil.isArray(boundaryGap)) {
             boundaryGap = [boundaryGap || 0, boundaryGap || 0];

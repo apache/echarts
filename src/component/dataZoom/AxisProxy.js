@@ -31,13 +31,6 @@ define(function(require) {
         this._axisIndex = axisIndex;
 
         /**
-         * {scale, min, max}
-         * @private
-         * @type {Object}
-         */
-        this._backup;
-
-        /**
          * @private
          * @type {Array.<number>}
          */
@@ -81,21 +74,6 @@ define(function(require) {
          */
         hostedBy: function (dataZoomModel) {
             return this._dataZoomModel === dataZoomModel;
-        },
-
-        /**
-         * @param {module: echarts/component/dataZoom/DataZoomModel} dataZoomModel
-         * @param {Object} option
-         */
-        backup: function (dataZoomModel, option) {
-            if (dataZoomModel === this._dataZoomModel) {
-                var axisModel = this.getAxisModel();
-                this._backup = {
-                    scale: axisModel.get('scale', true),
-                    min: axisModel.get('min', true),
-                    max: axisModel.get('max', true)
-                };
-            }
         },
 
         /**
@@ -282,9 +260,8 @@ define(function(require) {
         // In percent range is used and axis min/max/scale is set,
         // window should be based on min/max/0, but should not be
         // based on the extent of filtered data.
-        var backup = axisProxy._backup;
         dataExtent = dataExtent.slice();
-        fixExtendByAxis(dataExtent, backup, scale);
+        fixExtendByAxis(dataExtent, axisModel, scale);
 
         each(['startValue', 'endValue'], function (prop) {
             valueWindow.push(
@@ -327,16 +304,16 @@ define(function(require) {
         };
     }
 
-    function fixExtendByAxis(dataExtent, backup, scale) {
+    function fixExtendByAxis(dataExtent, axisModel, scale) {
         each(['min', 'max'], function (minMax, index) {
-            var axisMax = backup[minMax];
+            var axisMax = axisModel.get(minMax, true);
             // Consider 'dataMin', 'dataMax'
             if (axisMax != null && (axisMax + '').toLowerCase() !== 'data' + minMax) {
                 dataExtent[index] = scale.parse(axisMax);
             }
         });
 
-        if (!backup.scale) {
+        if (!axisModel.get('scale', true)) {
             dataExtent[0] > 0 && (dataExtent[0] = 0);
             dataExtent[1] < 0 && (dataExtent[1] = 0);
         }
@@ -347,11 +324,10 @@ define(function(require) {
     function setAxisModel(axisProxy, isRestore) {
         var axisModel = axisProxy.getAxisModel();
 
-        var backup = axisProxy._backup;
         var percentWindow = axisProxy._percentWindow;
         var valueWindow = axisProxy._valueWindow;
 
-        if (!backup) {
+        if (!percentWindow) {
             return;
         }
 
@@ -361,18 +337,11 @@ define(function(require) {
         // toFixed() digits argument must be between 0 and 20
         var invalidPrecision = !isRestore && !(precision < 20 && precision >= 0);
 
-        axisModel.setNeedsCrossZero && axisModel.setNeedsCrossZero(
-            (isRestore || isFull) ? !backup.scale : false
-        );
-        axisModel.setMin && axisModel.setMin(
-            (isRestore || isFull || invalidPrecision)
-                ? backup.min
-                : +valueWindow[0].toFixed(precision)
-        );
-        axisModel.setMax && axisModel.setMax(
-            (isRestore || isFull || invalidPrecision)
-                ? backup.max
-                : +valueWindow[1].toFixed(precision)
+        var useOrigin = isRestore || isFull || invalidPrecision;
+
+        axisModel.setRange && axisModel.setRange(
+            useOrigin ? null : +valueWindow[0].toFixed(precision),
+            useOrigin ? null : +valueWindow[1].toFixed(precision)
         );
     }
 

@@ -115,22 +115,6 @@ define(function(require) {
             this._resetTarget();
 
             this._giveAxisProxies();
-
-            this._backup();
-        },
-
-        /**
-         * @protected
-         */
-        restoreData: function () {
-            DataZoomModel.superApply(this, 'restoreData', arguments);
-
-            // If use dataZoom while dynamic setOption, axis setting should
-            // be restored before new option setting, otherwise axis status
-            // that is set by dataZoom will be recorded in _backup calling.
-            this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel) {
-                dataZoomModel.getAxisProxy(dimNames.name, axisIndex).restore(dataZoomModel);
-            });
         },
 
         /**
@@ -307,15 +291,6 @@ define(function(require) {
                 }
             }, this);
             return is;
-        },
-
-        /**
-         * @private
-         */
-        _backup: function () {
-            this.eachTargetAxis(function (dimNames, axisIndex, dataZoomModel, ecModel) {
-                this.getAxisProxy(dimNames.name, axisIndex).backup(dataZoomModel);
-            }, this);
         },
 
         /**
