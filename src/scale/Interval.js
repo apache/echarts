@@ -118,51 +118,37 @@ define(function (require) {
 
         /**
          * Update interval and extent of intervals for nice ticks
-         * Algorithm from d3.js
-         * @param {number} [approxTickNum = 10] Given approx tick number
+         *
+         * @param {number} [splitNumber = 5] Desired number of ticks
          */
-        niceTicks: function (approxTickNum) {
-            approxTickNum = approxTickNum || 10;
+        niceTicks: function (splitNumber) {
+            splitNumber = splitNumber || 5;
             var extent = this._extent;
             var span = extent[1] - extent[0];
             if (span === Infinity || span <= 0) {
                 return;
             }
 
-            // Figure out step quantity, for example 0.1, 1, 10, 100
-            var interval = Math.pow(10, Math.floor(Math.log(span / approxTickNum) / Math.LN10));
-            var err = approxTickNum / span * interval;
-
-            // Filter ticks to get closer to the desired count.
-            if (err <= 0.15) {
-                interval *= 10;
-            }
-            else if (err <= 0.3) {
-                interval *= 5;
-            }
-            else if (err <= 0.45) {
-                interval *= 3;
-            }
-            else if (err <= 0.75) {
-                interval *= 2;
-            }
+            // From "Nice Numbers for Graph Labels" of Graphic Gems
+            // var niceSpan = numberUtil.nice(span, false);
+            var step = numberUtil.nice(span / splitNumber, true);
 
             var niceExtent = [
-                numberUtil.round(mathCeil(extent[0] / interval) * interval),
-                numberUtil.round(mathFloor(extent[1] / interval) * interval)
+                numberUtil.round(Math.floor(extent[0] / step) * step),
+                numberUtil.round(Math.ceil(extent[1] / step) * step)
             ];
 
-            this._interval = interval;
+            this._interval = step;
             this._niceExtent = niceExtent;
         },
 
         /**
          * Nice extent.
-         * @param {number} [approxTickNum = 10] Given approx tick number
+         * @param {number} [splitNumber = 5] Given approx tick number
          * @param {boolean} [fixMin=false]
          * @param {boolean} [fixMax=false]
          */
-        niceExtent: function (approxTickNum, fixMin, fixMax) {
+        niceExtent: function (splitNumber, fixMin, fixMax) {
             var extent = this._extent;
             // If extent start and end are same, expand them
             if (extent[0] === extent[1]) {
@@ -182,7 +168,7 @@ define(function (require) {
                 extent[1] = 1;
             }
 
-            this.niceTicks(approxTickNum, fixMin, fixMax);
+            this.niceTicks(splitNumber);
 
             // var extent = this._extent;
             var interval = this._interval;

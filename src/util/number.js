@@ -161,5 +161,33 @@ define(function (require) {
             );
     };
 
+    // "Nice Numbers for Graph Labels" of Graphic Gems
+    /**
+     * find a “nice” number approximately equal to x. Round the number if round = true, take ceiling if round = false
+     * The primary observation is that the “nicest” numbers in decimal are 1, 2, and 5, and all power-of-ten multiples of these numbers.
+     * @param  {number} val
+     * @param  {boolean} round
+     * @return {number}
+     */
+    number.nice = function (val, round) {
+        var exp = Math.floor(Math.log(val) / Math.LN10);
+        var exp10 = Math.pow(10, exp);
+        var f = val / exp10; // between 1 and 10
+        var nf;
+        if (round) {
+            if (f < 1.5) { nf = 1; }
+            else if (f < 3) { nf = 2; }
+            else if (f < 7) { nf = 5; }
+            else { nf = 10; }
+        }
+        else {
+            if (f < 1) { nf = 1; }
+            else if (f < 2) { nf = 2; }
+            else if (f < 5) { nf = 5; }
+            else { nf = 10; }
+        }
+        return nf * exp10;
+    };
+
     return number;
 });

@@ -114,6 +114,9 @@ define(function(require) {
             }
         },
 
+        // Hooker after init or mergeOption
+        optionUpdated: function (ecModel) {},
+
         getDefaultOption: function () {
             if (!this.hasOwnProperty('__defaultOption')) {
                 var optList = [];
