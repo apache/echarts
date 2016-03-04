@@ -101,7 +101,8 @@ define(function (require) {
                     {
                         fill: node.getVisual('color')
                     },
-                    itemModel.getModel('itemStyle.normal').getItemStyle()
+                    itemModel.getModel('itemStyle.normal').getItemStyle(),
+					true
                 ));
 
                 graphic.setHoverStyle(rect, zrUtil.extend(
