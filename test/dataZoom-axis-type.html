@@ -201,10 +201,23 @@ chart.setOption({
                         + '<td>endValue:</td><td>' + encodeHTML(rawOpt.endValue) + '</td>'
                         + '</tr>';
                 });
+                var axisOpt = zrUtil.map(resultOpt.xAxis, function (rawOpt) {
+                    return ''
+                        + '<tr>'
+                        + '<td>min:</td><td>' + encodeHTML(rawOpt.min) + '</td>'
+                        + '<td>max:</td><td>' + encodeHTML(rawOpt.max) + '</td>'
+                        + '<td>scale:</td><td>' + encodeHTML(rawOpt.scale) + '</td>'
+                        + '<td>rangeStart:</td><td>' + encodeHTML(rawOpt.rangeStart) + '</td>'
+                        + '<td>rangeEnd:</td><td>' + encodeHTML(rawOpt.rangeEnd) + '</td>'
+                        + '</tr>';
+                });
 
                 el.lastChild.innerHTML = ''
                     + (isInit ? 'ON_INIT: ' : 'ON_EVENT: ') + '<br>'
-                    + '<table><tbody>' + dataZoomOpt.join('') + '</tbody></table>';
+                    + '<table><tbody>'
+                    + dataZoomOpt.join('')
+                    + axisOpt.join('')
+                    + '</tbody></table>';
             }
 
             function encodeHTML(source) {

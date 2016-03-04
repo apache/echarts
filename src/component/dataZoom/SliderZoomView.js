@@ -166,7 +166,9 @@ define(function (require) {
             // Default align by coordinate system rect.
             var positionInfo = this._orient === HORIZONTAL
                 ? {
-                    left: coordRect.x,
+                    // Why using 'right', because right should be used in vertical,
+                    // and it is better to be consistent for dealing with position param merge.
+                    right: ecSize.width - coordRect.x - coordRect.width,
                     top: (ecSize.height - DEFAULT_FILLER_SIZE - DEFAULT_LOCATION_EDGE_GAP),
                     width: coordRect.width,
                     height: DEFAULT_FILLER_SIZE
@@ -178,14 +180,13 @@ define(function (require) {
                     height: coordRect.height
                 };
 
-            layout.mergeLayoutParam(positionInfo, dataZoomModel.inputPositionParams);
-
             // Write back to option for chart.getOption(). (and may then
             // chart.setOption() again, where current location value is needed);
-            dataZoomModel.setLayoutParams(positionInfo);
+            // dataZoomModel.setLayoutParams(positionInfo);
+            dataZoomModel.setDefaultLayoutParams(positionInfo);
 
             var layoutRect = layout.getLayoutRect(
-                positionInfo,
+                dataZoomModel.option,
                 ecSize,
                 dataZoomModel.padding
             );
