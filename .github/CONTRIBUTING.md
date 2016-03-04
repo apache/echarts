@@ -14,7 +14,14 @@
 - 如何取得能运行的 `ECharts option` 
 
   一个参考方式：
-  在你的程序的 `chart.setOption(option); ` 前加入这句话 `console.log(JSON.stringify(option, null, 4));`
+  在你的程序的 
+  ```javascript 
+  chart.setOption(option); 
+  ``` 
+  前加入这句话 
+  ```javascript 
+  console.log(JSON.stringify(option, null, 4));
+  ```
   
   然后打开浏览器的调试工具（如 `Chrome Deverloper Tool`）的 `控制台(console)`，可以得到option输出。
 
