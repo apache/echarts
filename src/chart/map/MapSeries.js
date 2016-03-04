@@ -69,7 +69,9 @@ define(function (require) {
 
         mergeOption: function (newOption) {
             newOption = this._fillOption(newOption);
-            SeriesModel.prototype.mergeOption.call(this, newOption);
+
+            MapSeries.superCall(this, 'mergeOption', newOption);
+
             this.updateSelectedMap();
         },
 

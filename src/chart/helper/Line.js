@@ -85,14 +85,14 @@ define(function (require) {
             symbolFrom.attr('position', fromPos);
             // Rotate the arrow
             // FIXME Hard coded ?
-            if (isSymbolArrow(symbolTo)) {
-                symbolTo.attr('rotation', tangentRotation(fromPos, toPos));
+            if (isSymbolArrow(symbolFrom)) {
+                symbolFrom.attr('rotation', tangentRotation(toPos, fromPos));
             }
         }
         if (symbolTo) {
             symbolTo.attr('position', toPos);
-            if (isSymbolArrow(symbolFrom)) {
-                symbolFrom.attr('rotation', tangentRotation(toPos, fromPos));
+            if (isSymbolArrow(symbolTo)) {
+                symbolTo.attr('rotation', tangentRotation(fromPos, toPos));
             }
         }
 
@@ -199,7 +199,7 @@ define(function (require) {
             var fromSymbolType = fromData.getItemVisual(idx, 'symbol');
             if (this._fromSymbolType !== fromSymbolType) {
                 var symbolFrom = createSymbol('fromSymbol', fromData, idx);
-                this.remove(line.childOfName('fromSymbol'));
+                this.remove(this.childOfName('fromSymbol'));
                 this.add(symbolFrom);
             }
             this._fromSymbolType = fromSymbolType;
@@ -209,7 +209,7 @@ define(function (require) {
             // Symbol changed
             if (toSymbolType !== this._toSymbolType) {
                 var symbolTo = createSymbol('toSymbol', toData, idx);
-                this.remove(line.childOfName('toSymbol'));
+                this.remove(this.childOfName('toSymbol'));
                 this.add(symbolTo);
             }
             this._toSymbolType = toSymbolType;

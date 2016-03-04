@@ -38,13 +38,6 @@ define(function (require) {
         },
 
         /**
-         * @override
-         */
-        mergeOption: function (newOption) {
-            ThemeRiverSeries.superCall(this, 'mergeOption', newOption);
-        },
-
-        /**
          * If there is no value of a certain point in the time for some event,set it value to 0.
          *
          * @param {Array} data
