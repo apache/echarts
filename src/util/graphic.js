@@ -24,6 +24,8 @@ define(function(require) {
 
     graphic.Sector = require('zrender/graphic/shape/Sector');
 
+    graphic.Ring = require('zrender/graphic/shape/Ring');
+
     graphic.Polygon = require('zrender/graphic/shape/Polygon');
 
     graphic.Polyline = require('zrender/graphic/shape/Polyline');

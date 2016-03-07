@@ -1,21 +1,17 @@
 define(function (require) {
 
-    var SymbolDraw = require('../helper/SymbolDraw');
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
 
     return require('../../echarts').extendChartView({
         type: 'radar',
 
-        init: function () {
-            this._symbolDraw = new SymbolDraw();
-        },
-
         render: function (seriesModel, ecModel, api) {
             var polar = seriesModel.coordinateSystem;
             var group = this.group;
 
             var data = seriesModel.getData();
+            var oldData = this._data;
 
             var points = data.mapArray(data.getItemLayout, true);
             if (points.length < 1) {
@@ -23,79 +19,92 @@ define(function (require) {
             }
             points.push(points[0].slice());
 
-            var polygon = this._polygon || (this._polygon = new graphic.Polygon({
-                shape: {
-                    points: []
-                }
-            }));
-            var polyline = this._polyline || (this._polyline = new graphic.Polyline({
-                shape: {
-                    points: []
-                },
-                z2: 10
-            }));
-
-            var polylineShape = polyline.shape;
-            var polygonShape = polygon.shape;
-            function getInitialPoints() {
+            function getInitialPoints(points) {
                 return zrUtil.map(points, function (pt) {
                     return [polar.cx, polar.cy];
                 });
             }
-            var target = {
-                shape: {
-                    points: points
-                }
-            };
-            // Initialize or data changed
-            if (polylineShape.points.length !== points.length) {
-                polygonShape.points = getInitialPoints();
-                polylineShape.points = getInitialPoints();
-                graphic.initProps(polyline, target, seriesModel);
-                graphic.initProps(polygon, target, seriesModel);
-            }
-            else {
-                graphic.updateProps(polyline, target, seriesModel);
-                graphic.updateProps(polygon, target, seriesModel);
-            }
+            data.diff(oldData)
+                .add(function (idx) {
+                    var points = data.getItemLayout(idx);
+                    var polygon = new graphic.Polygon();
+                    var polyline = new graphic.Polyline();
+                    var target = {
+                        shape: {
+                            points: points
+                        }
+                    };
+                    polygon.shape.points = getInitialPoints(points);
+                    polyline.shape.points = getInitialPoints(points);
+                    graphic.initProps(polygon, target, seriesModel);
+                    graphic.initProps(polyline, target, seriesModel);
 
-            this._symbolDraw.updateData(data);
+                    var itemGroup = new graphic.Group();
+                    itemGroup.add(polyline);
+                    itemGroup.add(polygon);
 
-            polyline.setStyle(
-                zrUtil.extend(
-                    seriesModel.getModel('lineStyle.normal').getLineStyle(),
-                    {
-                        stroke: data.getVisual('color')
-                    }
-                )
-            );
+                    data.setItemGraphicEl(idx, itemGroup);
+                })
+                .update(function (newIdx, oldIdx) {
+                    var itemGroup = oldData.getItemGraphicEl(oldIdx);
+                    var polyline = itemGroup.childAt(0);
+                    var polygon = itemGroup.childAt(1);
+                    var target = {
+                        shape: {
+                            points: data.getItemLayout(newIdx)
+                        }
+                    };
+                    graphic.updateProps(polyline, target, seriesModel);
+                    graphic.updateProps(polygon, target, seriesModel);
 
-            var areaStyleModel = seriesModel.getModel('areaStyle.normal');
-            polygon.ignore = areaStyleModel.isEmpty();
-            graphic.setHoverStyle(
-                polyline,
-                seriesModel.getModel('lineStyle.emphasis').getLineStyle()
-            );
+                    data.setItemGraphicEl(newIdx, itemGroup);
+                })
+                .remove(function (idx) {
+                    group.remove(oldData.getItemGraphicEl(idx));
+                })
+                .execute();
 
-            if (!polygon.ignore) {
-                polygon.setStyle(
-                    zrUtil.defaults(
-                        areaStyleModel.getAreaStyle(),
+            data.eachItemGraphicEl(function (itemGroup, idx) {
+                var itemModel = data.getItemModel(idx);
+                var polyline = itemGroup.childAt(0);
+                var polygon = itemGroup.childAt(1);
+                group.add(itemGroup);
+
+                polyline.setStyle(
+                    zrUtil.extend(
+                        itemModel.getModel('lineStyle.normal').getLineStyle(),
                         {
-                            fill: data.getVisual('color'),
-                            opacity: 0.7
+                            stroke: data.getItemVisual(idx, 'color')
                         }
                     )
                 );
-                graphic.setHoverStyle(
-                    polygon,
-                    seriesModel.getModel('areaStyle.emphasis').getLineStyle()
-                );
-            }
 
-            group.add(polyline);
-            group.add(polygon);
-            group.add(this._symbolDraw.group);
+                graphic.setHoverStyle(
+                    polyline,
+                    itemModel.getModel('lineStyle.emphasis').getLineStyle()
+                );
+
+                var areaStyleModel = itemModel.getModel('areaStyle.normal');
+                polygon.ignore = areaStyleModel.isEmpty()
+                    && areaStyleModel.parentModel.isEmpty();
+
+                if (!polygon.ignore) {
+                    polygon.setStyle(
+                        zrUtil.defaults(
+                            areaStyleModel.getAreaStyle(),
+                            {
+                                fill: data.getItemVisual(idx, 'color'),
+                                opacity: 0.7
+                            }
+                        )
+                    );
+                    graphic.setHoverStyle(
+                        polygon,
+                        itemModel.getModel('areaStyle.emphasis').getAreaStyle()
+                    );
+                }
+            });
+
 
             this._data = data;
         }

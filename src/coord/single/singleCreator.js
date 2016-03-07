@@ -38,5 +38,4 @@ define(function (require) {
     }
 
     require('../../CoordinateSystem').register('single', {create: create});
-
 });
