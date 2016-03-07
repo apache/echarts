@@ -49,8 +49,6 @@ define(function (require) {
             }
 
             var selectMode = legendModel.get('selectedMode');
-            var itemWidth = legendModel.get('itemWidth');
-            var itemHeight = legendModel.get('itemHeight');
             var itemAlign = legendModel.get('align');
 
             if (itemAlign === 'auto') {
@@ -82,10 +80,6 @@ define(function (require) {
                 var data = seriesModel.getData();
                 var color = data.getVisual('color');
 
-                if (!legendModel.isSelected(seriesName)) {
-                    color = LEGEND_DISABLE_COLOR;
-                }
-
                 // If color is a callback function
                 if (typeof color === 'function') {
                     // Use the first data
@@ -99,7 +93,7 @@ define(function (require) {
                 var itemGroup = this._createItem(
                     seriesName, itemModel, legendModel,
                     legendSymbolType, symbolType,
-                    itemWidth, itemHeight, itemAlign, color,
+                    itemAlign, color,
                     selectMode
                 );
 
@@ -123,16 +117,12 @@ define(function (require) {
 
                         var color = data.getItemVisual(idx, 'color');
 
-                        if (!legendModel.isSelected(name)) {
-                            color = LEGEND_DISABLE_COLOR;
-                        }
-
                         var legendSymbolType = 'roundRect';
 
                         var itemGroup = this._createItem(
                             name, legendItemMap[name], legendModel,
                             legendSymbolType, null,
-                            itemWidth, itemHeight, itemAlign, color,
+                            itemAlign, color,
                             selectMode
                         );
 
@@ -155,9 +145,12 @@ define(function (require) {
         _createItem: function (
             name, itemModel, legendModel,
             legendSymbolType, symbolType,
-            itemWidth, itemHeight, itemAlign, color,
-            selectMode
+            itemAlign, color, selectMode
         ) {
+            var itemWidth = legendModel.get('itemWidth');
+            var itemHeight = legendModel.get('itemHeight');
+
+            var isSelected = legendModel.isSelected(name);
             var itemGroup = new graphic.Group();
 
             var textStyleModel = itemModel.getModel('textStyle');
@@ -166,7 +159,7 @@ define(function (require) {
             // Use user given icon first
             legendSymbolType = itemIcon || legendSymbolType;
             itemGroup.add(symbolCreator.createSymbol(
-                legendSymbolType, 0, 0, itemWidth, itemHeight, color
+                legendSymbolType, 0, 0, itemWidth, itemHeight, isSelected ? color : LEGEND_DISABLE_COLOR
             ));
 
             // Compose symbols
@@ -199,7 +192,7 @@ define(function (require) {
                     text: name,
                     x: textX,
                     y: itemHeight / 2,
-                    fill: textStyleModel.getTextColor(),
+                    fill: isSelected ? textStyleModel.getTextColor() : LEGEND_DISABLE_COLOR,
                     textFont: textStyleModel.getFont(),
                     textAlign: textAlign,
                     textBaseline: 'middle'
