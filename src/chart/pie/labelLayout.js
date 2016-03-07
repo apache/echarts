@@ -143,7 +143,8 @@ define(function (require) {
 
             var itemModel = data.getItemModel(idx);
             var labelModel = itemModel.getModel('label.normal');
-            var labelPosition = labelModel.get('position');
+            // Use position in normal or emphasis
+            var labelPosition = labelModel.get('position') || itemModel.get('label.emphasis.position');
 
             var labelLineModel = itemModel.getModel('labelLine.normal');
             var labelLineLen = labelLineModel.get('length');

@@ -96,10 +96,9 @@ define(function (require) {
 
     var piePieceProto = PiePiece.prototype;
 
-    function getLabelStyle(data, idx, state, labelModel) {
+    function getLabelStyle(data, idx, state, labelModel, labelPosition) {
         var textStyleModel = labelModel.getModel('textStyle');
-        var position = labelModel.get('position');
-        var isLabelInside = position === 'inside' || position === 'inner';
+        var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
         return {
             fill: textStyleModel.getTextColor()
                 || (isLabelInside ? '#fff' : data.getItemVisual(idx, 'color')),
@@ -229,8 +228,9 @@ define(function (require) {
         var labelHoverModel = itemModel.getModel('label.emphasis');
         var labelLineModel = itemModel.getModel('labelLine.normal');
         var labelLineHoverModel = itemModel.getModel('labelLine.emphasis');
+        var labelPosition = labelModel.get('position') || labelHoverModel.get('position');
 
-        labelText.setStyle(getLabelStyle(data, idx, 'normal', labelModel));
+        labelText.setStyle(getLabelStyle(data, idx, 'normal', labelModel, labelPosition));
 
         labelText.ignore = labelText.normalIgnore = !labelModel.get('show');
         labelText.hoverIgnore = !labelHoverModel.get('show');
@@ -244,7 +244,7 @@ define(function (require) {
         });
         labelLine.setStyle(labelLineModel.getModel('lineStyle').getLineStyle());
 
-        labelText.hoverStyle = getLabelStyle(data, idx, 'emphasis', labelHoverModel);
+        labelText.hoverStyle = getLabelStyle(data, idx, 'emphasis', labelHoverModel, labelPosition);
         labelLine.hoverStyle = labelLineHoverModel.getModel('lineStyle').getLineStyle();
 
         var smooth = labelLineModel.get('smooth');
