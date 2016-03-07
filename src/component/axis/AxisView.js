@@ -58,7 +58,7 @@ define(function (require) {
 
             var lineInterval = getInterval(splitLineModel, labelInterval);
 
-            lineColors = lineColors instanceof Array ? lineColors : [lineColors];
+            lineColors = zrUtil.isArray(lineColors) ? lineColors : [lineColors];
 
             var gridRect = gridModel.coordinateSystem.getRect();
             var isHorizontal = axis.isHorizontal();
@@ -108,13 +108,12 @@ define(function (require) {
 
             // Simple optimization
             // Batching the lines if color are the same
+            var lineStyle = lineStyleModel.getLineStyle();
             for (var i = 0; i < splitLines.length; i++) {
                 this.group.add(graphic.mergePath(splitLines[i], {
-                    style: {
-                        stroke: lineColors[i % lineColors.length],
-                        lineDash: lineStyleModel.getLineDash(),
-                        lineWidth: lineWidth
-                    },
+                    style: zrUtil.defaults({
+                        stroke: lineColors[i % lineColors.length]
+                    }, lineStyle),
                     silent: true
                 }));
             }
@@ -130,7 +129,8 @@ define(function (require) {
             var axis = axisModel.axis;
 
             var splitAreaModel = axisModel.getModel('splitArea');
-            var areaColors = splitAreaModel.get('areaStyle.color');
+            var areaStyleModel = splitAreaModel.getModel('areaStyle');
+            var areaColors = areaStyleModel.get('color');
 
             var gridRect = gridModel.coordinateSystem.getRect();
             var ticksCoords = axis.getTicksCoords();
@@ -143,7 +143,7 @@ define(function (require) {
 
             var areaInterval = getInterval(splitAreaModel, labelInterval);
 
-            areaColors = areaColors instanceof Array ? areaColors : [areaColors];
+            areaColors = zrUtil.isArray(areaColors) ? areaColors : [areaColors];
 
             for (var i = 1; i < ticksCoords.length; i++) {
                 if (ifIgnoreOnTick(axis, i, areaInterval)) {
@@ -187,11 +187,12 @@ define(function (require) {
 
             // Simple optimization
             // Batching the rects if color are the same
+            var areaStyle = areaStyleModel.getAreaStyle();
             for (var i = 0; i < splitAreaRects.length; i++) {
                 this.group.add(graphic.mergePath(splitAreaRects[i], {
-                    style: {
+                    style: zrUtil.defaults({
                         fill: areaColors[i % areaColors.length]
-                    },
+                    }, areaStyle),
                     silent: true
                 }));
             }
