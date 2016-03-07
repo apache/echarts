@@ -93,8 +93,8 @@ define(function (require) {
                 var yearSpan = span / interval;
 
                 // From "Nice Numbers for Graph Labels" of Graphic Gems
-                var niceYearSpan = numberUtil.nice(yearSpan, false);
-                var yearStep = numberUtil.nice(niceYearSpan / approxTickNum, true);
+                // var niceYearSpan = numberUtil.nice(yearSpan, false);
+                var yearStep = numberUtil.nice(yearSpan / approxTickNum, true);
 
                 interval *= yearStep;
             }

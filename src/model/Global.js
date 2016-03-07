@@ -748,7 +748,7 @@ define(function (require) {
         if (!ecModel._seriesIndices) {
             // FIXME
             // 验证和提示怎么写
-            throw new Error('Series is not initialized. Please depends sereis.');
+            throw new Error('Series has not been initialized yet.');
         }
     }
 
