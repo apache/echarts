@@ -5,6 +5,7 @@ define(function(require) {
     var SeriesModel = require('../../model/Series');
     var List = require('../../data/List');
     var completeDimensions = require('../../data/helper/completeDimensions');
+    var zrUtil = require('zrender/core/util');
 
     var RadarSeries = SeriesModel.extend({
 
@@ -32,6 +33,16 @@ define(function(require) {
             var list = new List(dimensions, this);
             list.initData(data);
             return list;
+        },
+
+        formatTooltip: function (dataIndex) {
+            var value = this.getRawValue(dataIndex);
+            var coordSys = this.coordinateSystem;
+            var indicatorAxes = coordSys.getIndicatorAxes();
+            return this._data.getName(dataIndex) + '<br />'
+                + zrUtil.map(indicatorAxes, function (axis, idx) {
+                    return axis.name + ':' + value[idx];
+                }).join('<br />');
         },
 
         defaultOption: {

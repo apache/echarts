@@ -19,6 +19,11 @@ define(function (require) {
         this.angle = 0;
 
         /**
+         * Indicator name
+         * @type {string}
+         */
+        this.name = '';
+        /**
          * @type {module:echarts/model/Model}
          */
         this.model;

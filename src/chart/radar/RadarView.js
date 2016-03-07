@@ -78,11 +78,7 @@ define(function (require) {
                         }
                     )
                 );
-
-                graphic.setHoverStyle(
-                    polyline,
-                    itemModel.getModel('lineStyle.emphasis').getLineStyle()
-                );
+                polyline.hoverStyle = itemModel.getModel('lineStyle.emphasis').getLineStyle();
 
                 var areaStyleModel = itemModel.getModel('areaStyle.normal');
                 polygon.ignore = areaStyleModel.isEmpty()
@@ -98,11 +94,9 @@ define(function (require) {
                             }
                         )
                     );
-                    graphic.setHoverStyle(
-                        polygon,
-                        itemModel.getModel('areaStyle.emphasis').getAreaStyle()
-                    );
+                    polygon.hoverStyle = itemModel.getModel('areaStyle.emphasis').getAreaStyle();
                 }
+                graphic.setHoverStyle(itemGroup);
             });
 
 

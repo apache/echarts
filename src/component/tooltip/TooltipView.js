@@ -363,7 +363,7 @@ define(function (require) {
                     var baseAxis;
                     var key;
 
-                    // Only cartesian2d and polar support axis trigger
+                    // Only cartesian2d, polar and single support axis trigger
                     if (coordSys.type === 'cartesian2d') {
                         // FIXME `axisPointer.axis` is not baseAxis
                         baseAxis = coordSys.getBaseAxis();

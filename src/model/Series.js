@@ -164,16 +164,16 @@ define(function(require) {
          * Default tooltip formatter
          *
          * @param {number} dataIndex
-         * @param {boolean} [mutipleSeries=false]
+         * @param {boolean} [multipleSeries=false]
          */
-        formatTooltip: function (dataIndex, mutipleSeries) {
+        formatTooltip: function (dataIndex, multipleSeries) {
             var data = this._data;
             var value = this.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
             var name = data.getName(dataIndex);
 
-            return !mutipleSeries
+            return !multipleSeries
                 ? (encodeHTML(this.name) + '<br />'
                     + (name
                         ? encodeHTML(name) + ' : ' + formattedValue

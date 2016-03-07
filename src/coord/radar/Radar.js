@@ -19,6 +19,7 @@ define(function (require) {
         this._indicatorAxes = zrUtil.map(radarModel.getIndicatorModels(), function (indicatorModel, idx) {
             var dim = 'indicator_' + idx;
             var indicatorAxis = new IndicatorAxis(dim, new IntervalScale());
+            indicatorAxis.name = indicatorModel.get('name');
             // Inject model and axis
             indicatorAxis.model = indicatorModel;
             indicatorModel.axis = indicatorAxis;
