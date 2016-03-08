@@ -133,9 +133,10 @@ define(function (require) {
             // var niceSpan = numberUtil.nice(span, false);
             var step = numberUtil.nice(span / splitNumber, true);
 
+            // Niced extent inside original extent
             var niceExtent = [
-                numberUtil.round(Math.floor(extent[0] / step) * step),
-                numberUtil.round(Math.ceil(extent[1] / step) * step)
+                numberUtil.round(mathCeil(extent[0] / step) * step),
+                numberUtil.round(mathFloor(extent[1] / step) * step)
             ];
 
             this._interval = step;
