@@ -48,10 +48,10 @@ define(function (require) {
                     indicatorOpt.name = '';
                 }
                 return zrUtil.extend(
-                    new Model(indicatorOpt),
+                    new Model(indicatorOpt, null, this.ecModel),
                     axisModelCommonMixin
                 );
-            });
+            }, this);
             this.getIndicatorModels = function () {
                 return indicatorModels;
             };

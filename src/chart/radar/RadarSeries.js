@@ -48,13 +48,18 @@ define(function(require) {
         defaultOption: {
             zlevel: 0,
             z: 2,
-            coordinateSystem: 'polar',
+            coordinateSystem: 'radar',
             legendHoverLink: true,
             radarIndex: 0,
             lineStyle: {
                 normal: {
                     width: 2,
                     type: 'solid'
+                }
+            },
+            label: {
+                normal: {
+                    position: 'top'
                 }
             },
             // areaStyle: {

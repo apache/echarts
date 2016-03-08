@@ -124,7 +124,9 @@ define(function (require) {
             indicatorAxis.scale.setExtent(Infinity, -Infinity);
         });
         ecModel.eachSeriesByType('radar', function (radarSeries, idx) {
-            if (ecModel.getComponent('radar', radarSeries.get('radarIndex')) !== radarModel) {
+            if (radarSeries.get('coordinateSystem') !== 'radar'
+                || ecModel.getComponent('radar', radarSeries.get('radarIndex')) !== radarModel
+            ) {
                 return;
             }
             var data = radarSeries.getData();
@@ -209,8 +211,10 @@ define(function (require) {
             radarModel.coordinateSystem = radar;
         });
         ecModel.eachSeriesByType('radar', function (radarSeries) {
-            // Inject coordinate system
-            radarSeries.coordinateSystem = radarList[radarSeries.get('radarIndex') || 0];
+            if (radarSeries.get('coordinateSystem') === 'radar') {
+                // Inject coordinate system
+                radarSeries.coordinateSystem = radarList[radarSeries.get('radarIndex') || 0];
+            }
         });
         return radarList;
     };
