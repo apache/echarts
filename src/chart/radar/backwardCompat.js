@@ -22,5 +22,10 @@ define(function (require) {
                 }
             });
         }
+        zrUtil.each(option.series, function (seriesOpt) {
+            if (seriesOpt.type === 'radar' && seriesOpt.polarIndex) {
+                seriesOpt.radarIndex = seriesOpt.polarIndex;
+            }
+        });
     };
 });
