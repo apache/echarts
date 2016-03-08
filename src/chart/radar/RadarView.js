@@ -147,6 +147,8 @@ define(function (require) {
                 var hoverAreaStyleModel = itemModel.getModel('areaStyle.emphasis');
                 var polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
                 var hoverPolygonIgnore = hoverAreaStyleModel.isEmpty() && hoverAreaStyleModel.parentModel.isEmpty();
+
+                hoverPolygonIgnore = hoverPolygonIgnore && polygonIgnore;
                 polygon.ignore = polygonIgnore;
 
                 polygon.setStyle(
