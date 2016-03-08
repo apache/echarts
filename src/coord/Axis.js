@@ -219,6 +219,8 @@ define(function (require) {
             var dataExtent = this.scale.getExtent();
 
             var len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
+            // Fix #2728, avoid NaN when only one data.
+            len === 0 && (len = 1);
 
             var size = Math.abs(axisExtent[1] - axisExtent[0]);
 
