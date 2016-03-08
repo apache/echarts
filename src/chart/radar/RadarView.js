@@ -2,6 +2,7 @@ define(function (require) {
 
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
+    var symbolUtil = require('../../util/symbol');
 
     return require('../../echarts').extendChartView({
         type: 'radar',
@@ -13,11 +14,9 @@ define(function (require) {
             var data = seriesModel.getData();
             var oldData = this._data;
 
-            var points = data.mapArray(data.getItemLayout, true);
-            if (points.length < 1) {
-                return;
+            function updateSymbols(oldPoints, newPoints, itemGroup) {
+
             }
-            points.push(points[0].slice());
 
             function getInitialPoints(points) {
                 return zrUtil.map(points, function (pt) {
@@ -98,7 +97,6 @@ define(function (require) {
                 }
                 graphic.setHoverStyle(itemGroup);
             });
-
 
             this._data = data;
         }

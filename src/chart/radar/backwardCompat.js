@@ -4,5 +4,23 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
 
     return function (option) {
+        var polarOptArr = option.polar;
+        if (polarOptArr) {
+            if (!zrUtil.isArray(polarOptArr)) {
+                polarOptArr = [polarOptArr];
+            }
+            zrUtil.each(polarOptArr, function (polarOpt) {
+                if (polarOpt.indicator) {
+                    if (polarOpt.type && !polarOpt.shape) {
+                        polarOpt.shape = polarOpt.type;
+                    }
+                    option.radar = option.radar || [];
+                    if (!zrUtil.isArray(option.radar)) {
+                        option.radar = [option.radar];
+                    }
+                    option.radar.push(polarOpt);
+                }
+            });
+        }
     };
 });
