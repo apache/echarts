@@ -523,8 +523,17 @@ define(function(require) {
         },
 
         remove: function (ecModel) {
+            var group = this.group;
+            var oldData = this._data;
             this._lineGroup.removeAll();
             this._symbolDraw.remove(true);
+            // Remove temporary created elements when highlighting
+            oldData && oldData.eachItemGraphicEl(function (el, idx) {
+                if (el.__temp) {
+                    group.remove(el);
+                    oldData.setItemGraphicEl(idx, null);
+                }
+            });
 
             this._polyline =
             this._polygon =
