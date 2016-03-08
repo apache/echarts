@@ -294,8 +294,9 @@ define(function(require) {
                     boundValue, dataExtent, percentExtent, true
                 );
             }
-            valueWindow[idx] = boundValue;
-            percentWindow[idx] = boundPercent;
+            // Avoid rounding error
+            valueWindow[idx] = numberUtil.round(boundValue);
+            percentWindow[idx] = numberUtil.round(boundPercent);
         });
 
         return {
