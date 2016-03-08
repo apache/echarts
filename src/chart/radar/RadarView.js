@@ -4,6 +4,12 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var symbolUtil = require('../../util/symbol');
 
+    function normalizeSymbolSize(symbolSize) {
+        if (!zrUtil.isArray(symbolSize)) {
+            symbolSize = [+symbolSize, +symbolSize];
+        }
+        return symbolSize;
+    }
     return require('../../echarts').extendChartView({
         type: 'radar',
 
@@ -14,8 +20,45 @@ define(function (require) {
             var data = seriesModel.getData();
             var oldData = this._data;
 
-            function updateSymbols(oldPoints, newPoints, itemGroup) {
+            function createSymbol(data, idx) {
+                var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
+                var color = data.getItemVisual(idx, 'color');
+                if (symbolType === 'none') {
+                    return;
+                }
+                var symbolPath = symbolUtil.createSymbol(
+                    symbolType, -0.5, -0.5, 1, 1, color
+                );
+                symbolPath.attr({
+                    style: {
+                        strokeNoScale: true
+                    },
+                    z2: 100,
+                    scale: normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'))
+                });
+                return symbolPath;
+            }
 
+            function updateSymbols(oldPoints, newPoints, symbolGroup, data, idx, isInit) {
+                // Simply rerender all
+                symbolGroup.removeAll();
+                for (var i = 0; i < newPoints.length; i++) {
+                    var symbolPath = createSymbol(data, idx);
+                    if (symbolPath) {
+                        if (oldPoints[i]) {
+                            symbolPath.attr('position', oldPoints[i]);
+                            graphic[isInit ? 'initProps' : 'updateProps'](
+                                symbolPath, {
+                                    position: newPoints[i]
+                                }, seriesModel
+                            );
+                        }
+                        else {
+                            symbolPath.attr('position', newPoints[i]);
+                        }
+                        symbolGroup.add(symbolPath);
+                    }
+                }
             }
 
             function getInitialPoints(points) {
@@ -39,8 +82,14 @@ define(function (require) {
                     graphic.initProps(polyline, target, seriesModel);
 
                     var itemGroup = new graphic.Group();
+                    var symbolGroup = new graphic.Group();
                     itemGroup.add(polyline);
                     itemGroup.add(polygon);
+                    itemGroup.add(symbolGroup);
+
+                    updateSymbols(
+                        polyline.shape.points, points, symbolGroup, data, idx, true
+                    );
 
                     data.setItemGraphicEl(idx, itemGroup);
                 })
@@ -48,11 +97,16 @@ define(function (require) {
                     var itemGroup = oldData.getItemGraphicEl(oldIdx);
                     var polyline = itemGroup.childAt(0);
                     var polygon = itemGroup.childAt(1);
+                    var symbolGroup = itemGroup.childAt(2);
                     var target = {
                         shape: {
                             points: data.getItemLayout(newIdx)
                         }
                     };
+                    updateSymbols(
+                        polyline.shape.points, target.shape.points, symbolGroup, data, newIdx, false
+                    );
+
                     graphic.updateProps(polyline, target, seriesModel);
                     graphic.updateProps(polygon, target, seriesModel);
 
@@ -67,6 +121,8 @@ define(function (require) {
                 var itemModel = data.getItemModel(idx);
                 var polyline = itemGroup.childAt(0);
                 var polygon = itemGroup.childAt(1);
+                var symbolGroup = itemGroup.childAt(2);
+
                 group.add(itemGroup);
 
                 polyline.setStyle(
@@ -80,21 +136,44 @@ define(function (require) {
                 polyline.hoverStyle = itemModel.getModel('lineStyle.emphasis').getLineStyle();
 
                 var areaStyleModel = itemModel.getModel('areaStyle.normal');
-                polygon.ignore = areaStyleModel.isEmpty()
-                    && areaStyleModel.parentModel.isEmpty();
+                var hoverAreaStyleModel = itemModel.getModel('areaStyle.emphasis');
+                var polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
+                var hoverPolygonIgnore = hoverAreaStyleModel.isEmpty() && hoverAreaStyleModel.parentModel.isEmpty();
+                polygon.ignore = polygonIgnore;
 
-                if (!polygon.ignore) {
-                    polygon.setStyle(
-                        zrUtil.defaults(
-                            areaStyleModel.getAreaStyle(),
-                            {
-                                fill: data.getItemVisual(idx, 'color'),
-                                opacity: 0.7
-                            }
-                        )
-                    );
-                    polygon.hoverStyle = itemModel.getModel('areaStyle.emphasis').getAreaStyle();
+
+                polygon.setStyle(
+                    zrUtil.defaults(
+                        areaStyleModel.getAreaStyle(),
+                        {
+                            fill: data.getItemVisual(idx, 'color'),
+                            opacity: 0.7
+                        }
+                    )
+                );
+                polygon.hoverStyle = hoverAreaStyleModel.getAreaStyle();
+
+                var itemStyle = itemModel.getModel('itemStyle.normal').getItemStyle(['color']);
+                var emphasisItemStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+                symbolGroup.eachChild(function (symbolPath) {
+                    symbolPath.setStyle(itemStyle);
+                    symbolPath.hoverStyle = emphasisItemStyle;
+                });
+
+                function onEmphasis() {
+                    polygon.attr('ignore', hoverPolygonIgnore);
                 }
+
+                function onNormal() {
+                    polygon.attr('ignore', polygonIgnore);
+                }
+
+                itemGroup.off('mouseover').off('mouseout').off('normal').off('emphasis');
+                itemGroup.on('emphasis', onEmphasis)
+                    .on('mouseover', onEmphasis)
+                    .on('normal', onNormal)
+                    .on('mouseout', onNormal);
+
                 graphic.setHoverStyle(itemGroup);
             });
 
