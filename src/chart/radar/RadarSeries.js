@@ -41,7 +41,7 @@ define(function(require) {
             var indicatorAxes = coordSys.getIndicatorAxes();
             return this._data.getName(dataIndex) + '<br />'
                 + zrUtil.map(indicatorAxes, function (axis, idx) {
-                    return axis.name + ':' + value[idx];
+                    return axis.name + ' : ' + value[idx];
                 }).join('<br />');
         },
 
