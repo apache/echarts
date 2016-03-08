@@ -151,7 +151,7 @@ define(function (require) {
         }
         // Force all the axis fixing the maxSplitNumber.
         zrUtil.each(indicatorAxes, function (indicatorAxis, idx) {
-            var dataExtent = indicatorAxis.getExtent();
+            var dataExtent = indicatorAxis.scale.getExtent();
             axisHelper.niceScaleExtent(indicatorAxis, indicatorAxis.model);
 
             var axisModel = indicatorAxis.model;
@@ -162,7 +162,7 @@ define(function (require) {
             if (fixedMin != null && fixedMax != null) {
                 // User set min, max, divide to get new interval
                 // FIXME precision
-                indicatorAxis.scale.setInterval(
+                scale.setInterval(
                     (fixedMax - fixedMin) / splitNumber
                 );
             }
@@ -171,24 +171,30 @@ define(function (require) {
                 // User set min, expand extent on the other side
                 do {
                     max = fixedMin + interval * splitNumber;
+                    scale.setExtent(+fixedMin, max);
+                    // Interval must been set after extent
+                    // FIXME
+                    scale.setInterval(interval);
+
                     interval = increaseInterval(interval);
                 } while (max < dataExtent[1] && isFinite(max) && isFinite(dataExtent[1]));
-                scale.setExtent(+fixedMin, max);
             }
             else if (fixedMax != null) {
                 var min;
                 // User set min, expand extent on the other side
                 do {
                     min = fixedMax - interval * splitNumber;
+                    scale.setExtent(min, +fixedMax);
+                    scale.setInterval(interval);
                     interval = increaseInterval(interval);
                 } while (min > dataExtent[0] && isFinite(min) && isFinite(dataExtent[0]));
-                scale.setExtent(min, +fixedMax);
             }
             else {
                 var nicedSplitNumber = scale.getTicks().length - 1;
                 if (nicedSplitNumber > splitNumber) {
                     interval = increaseInterval(interval);
                 }
+                scale.setInterval(interval);
                 scale.setExtent(
                     numberUtil.round(Math.floor(dataExtent[0] / interval) * interval),
                     numberUtil.round(Math.ceil(dataExtent[1] / interval) * interval)

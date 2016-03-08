@@ -164,7 +164,7 @@ define(function (require) {
                 }
             }
             // If there are no data and extent are [Infinity, -Infinity]
-            if (extent[1] === -Infinity && extent[0] === Infinity) {
+            if (!isFinite(extent[1] - extent[0])) {
                 extent[0] = 0;
                 extent[1] = 1;
             }
