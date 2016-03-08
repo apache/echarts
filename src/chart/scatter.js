@@ -12,4 +12,7 @@ define(function (require) {
     echarts.registerLayout(zrUtil.curry(
         require('../layout/points'), 'scatter'
     ));
+
+    // In case developer forget to include grid component
+    require('../component/grid');
 });

@@ -18,4 +18,7 @@ define(function (require) {
             data.setVisual('legendSymbol', 'roundRect');
         });
     });
+
+    // In case developer forget to include grid component
+    require('../component/grid');
 });
