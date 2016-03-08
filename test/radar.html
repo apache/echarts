@@ -23,71 +23,39 @@
 
                 var chart = echarts.init(document.getElementById('main'));
 
-                var xAxisData = [];
-                var data1 = [];
-                var data2 = [];
-                var data3 = [];
-
-                for (var i = 0; i < 10; i++) {
-                    xAxisData.push('类目' + i);
-                    data1.push((Math.random() * 2 + 1).toFixed(3));
-                    data3.push((Math.random() + 0.5).toFixed(3));
-                    data2.push((Math.random() + 0.5).toFixed(3));
-                }
-
                 chart.setOption({
+                    tooltip: {},
                     legend: {
-                        data: ['radar', 'radar2', 'radar3']
+                        data: ['预算分配（Allocated Budget）', '实际开销（Actual Spending）']
                     },
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: {
-                            type: 'shadow'
-                        }
-                    },
-                    polar: {},
-                    angleAxis: {
-                        data: xAxisData,
-                        boundaryGap: false
-                    },
-                    radiusAxis: {
+                    radar: {
+                        // shape: 'circle',
+                        indicator: [
+                           { text: '销售（sales）', max: 6500},
+                           { text: '管理（Administration）', max: 16000},
+                           { text: '信息技术（Information Techology）', max: 30000},
+                           { text: '客服（Customer Support）', max: 38000},
+                           { text: '研发（Development）', max: 52000},
+                           { text: '市场（Marketing）', max: 25000}
+                        ]
                     },
                     series: [{
-                        name: 'radar',
-                        stack: 'all',
+                        name: '预算 vs 开销（Budget vs spending）',
                         type: 'radar',
-                        symbolSize: 10,
-                        itemStyle: {
-                            normal: {
-                                areaStyle: {}
+                        // areaStyle: {normal: {}},
+                        data : [
+                            {
+                                value : [4300, 10000, 28000, 35000, 50000, 19000],
+                                name : '预算分配（Allocated Budget）'
+                            },
+                             {
+                                value : [5000, 14000, 28000, 31000, 42000, 21000],
+                                name : '实际开销（Actual Spending）'
                             }
-                        },
-                        data: data1
-                    }, {
-                        name: 'radar2',
-                        stack: 'all',
-                        type: 'radar',
-                        symbolSize: 10,
-                        itemStyle: {
-                            normal: {
-                                areaStyle: {}
-                            }
-                        },
-                        data: data2
-                    }, {
-                        name: 'radar3',
-                        stack: 'all',
-                        type: 'radar',
-                        symbolSize: 10,
-                        itemStyle: {
-                            normal: {
-                                areaStyle: {}
-                            }
-                        },
-                        data: data3
+                        ]
                     }]
                 });
-            })
+            });
 
         </script>
     </body>
