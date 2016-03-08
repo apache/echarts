@@ -210,7 +210,7 @@ define(function (require) {
                             y: unitY * (r - splitLineLen - 5) + cy,
                             fill: textStyleModel.getTextColor(),
                             textFont: textStyleModel.getFont(),
-                            textBaseline: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
+                            textVerticalAlign: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
                             textAlign: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
                         },
                         silent: true
@@ -357,7 +357,7 @@ define(function (require) {
                         fill: textStyleModel.getTextColor(),
                         textFont: textStyleModel.getFont(),
                         textAlign: 'center',
-                        textBaseline: 'middle'
+                        textVerticalAlign: 'middle'
                     }
                 });
                 this.group.add(text);

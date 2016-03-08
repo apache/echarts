@@ -58,7 +58,7 @@ define(function(require) {
                             x: itemAlign === 'right' ? -textGap : itemSize[0] + textGap,
                             y: itemSize[1] / 2,
                             text: item.piece.text,
-                            textBaseline: 'middle',
+                            textVerticalAlign: 'middle',
                             textAlign: itemAlign,
                             textFont: textFont,
                             fill: textFill
@@ -103,7 +103,7 @@ define(function(require) {
                 style: {
                     x: itemSize[0] / 2,
                     y: itemSize[1] / 2,
-                    textBaseline: 'middle',
+                    textVerticalAlign: 'middle',
                     textAlign: 'center',
                     text: text,
                     textFont: textStyleModel.getFont(),

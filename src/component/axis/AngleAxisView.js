@@ -128,7 +128,7 @@ define(function (require) {
                         fill: textStyleModel.getTextColor(),
                         text: labels[i],
                         textAlign: labelTextAlign,
-                        textBaseline: labelTextBaseline,
+                        textVerticalAlign: labelTextBaseline,
                         textFont: textStyleModel.getFont()
                     },
                     silent: true

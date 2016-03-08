@@ -87,7 +87,7 @@ define(function (require) {
                 linePoints: linePoints,
                 x: textX,
                 y: textY,
-                textBaseline: 'middle',
+                verticalAlign: 'middle',
                 textAlign: textAlign,
                 inside: isLabelInside
             };

@@ -423,7 +423,7 @@ define(function (require) {
                     style: {
                         text: labels[dataIndex],
                         textAlign: layoutInfo.labelAlign,
-                        textBaseline: layoutInfo.labelBaseline,
+                        textVerticalAlign: layoutInfo.labelBaseline,
                         textFont: itemTextStyleModel.getFont(),
                         fill: itemTextStyleModel.getTextColor()
                     },

@@ -136,7 +136,7 @@ define(function (require) {
                         : '',
                     textFont: textStyleModel.getFont(),
                     textAlign: labelModel.get('textAlign'),
-                    textBaseline: 'middle'
+                    textVerticalAlign: 'middle'
                 });
 
                 polygon.setStyle(zrUtil.extend({

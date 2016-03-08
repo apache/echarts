@@ -100,23 +100,23 @@ define(function (require) {
 
         var textPosition;
         var textAlign;
-        var textBaseline;
+        var textVerticalAlign;
         // End
         if (label.__position === 'end') {
             textPosition = [d[0] * 5 + toPos[0], d[1] * 5 + toPos[1]];
             textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
-            textBaseline = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
+            textVerticalAlign = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
         }
         // Start
         else {
             textPosition = [-d[0] * 5 + fromPos[0], -d[1] * 5 + fromPos[1]];
             textAlign = d[0] > 0.8 ? 'right' : (d[0] < -0.8 ? 'left' : 'center');
-            textBaseline = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
+            textVerticalAlign = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
         }
         label.attr({
             style: {
                 // Use the user specified text align and baseline first
-                textBaseline: label.__textBaseline || textBaseline,
+                textVerticalAlign: label.__verticalAlign || textVerticalAlign,
                 textAlign: label.__textAlign || textAlign
             },
             position: textPosition
@@ -263,7 +263,7 @@ define(function (require) {
             fill: textStyleHoverModel.getTextColor()
         };
         label.__textAlign = textStyleModel.get('align');
-        label.__textBaseline = textStyleModel.get('baseline');
+        label.__verticalAlign = textStyleModel.get('baseline');
         label.__position = labelModel.get('position');
 
         graphic.setHoverStyle(

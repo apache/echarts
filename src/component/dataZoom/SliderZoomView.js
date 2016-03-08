@@ -418,7 +418,7 @@ define(function (require) {
                     invisible: true,
                     style: {
                         x: 0, y: 0, text: '',
-                        textBaseline: 'middle',
+                        textVerticalAlign: 'middle',
                         textAlign: 'center',
                         fill: textStyleModel.getTextColor(),
                         textFont: textStyleModel.getFont()
@@ -559,7 +559,7 @@ define(function (require) {
                 handleLabels[handleIndex].setStyle({
                     x: textPoint[0],
                     y: textPoint[1],
-                    textBaseline: orient === HORIZONTAL ? 'middle' : direction,
+                    textVerticalAlign: orient === HORIZONTAL ? 'middle' : direction,
                     textAlign: orient === HORIZONTAL ? direction : 'center',
                     text: labelTexts[handleIndex]
                 });

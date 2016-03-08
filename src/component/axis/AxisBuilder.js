@@ -233,7 +233,7 @@ define(function (require) {
                     style: {
                         text: labels[i],
                         textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
-                        textBaseline: itemTextStyleModel.get('baseline', true) || labelLayout.textBaseline,
+                        textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.verticalAlign,
                         textFont: itemTextStyleModel.getFont(),
                         fill: itemTextStyleModel.getTextColor()
                     },
@@ -326,7 +326,7 @@ define(function (require) {
                     fill: textStyleModel.getTextColor()
                         || axisModel.get('axisLine.lineStyle.color'),
                     textAlign: labelLayout.textAlign,
-                    textBaseline: labelLayout.textBaseline
+                    textVerticalAlign: labelLayout.verticalAlign
                 },
                 position: pos,
                 rotation: labelLayout.rotation,
@@ -343,18 +343,18 @@ define(function (require) {
     function innerTextLayout(opt, textRotation, direction) {
         var rotationDiff = remRadian(textRotation - opt.rotation);
         var textAlign;
-        var textBaseline;
+        var verticalAlign;
 
         if (isRadianAroundZero(rotationDiff)) { // Label is parallel with axis line.
-            textBaseline = direction > 0 ? 'top' : 'bottom';
+            verticalAlign = direction > 0 ? 'top' : 'bottom';
             textAlign = 'center';
         }
         else if (isRadianAroundZero(rotationDiff - PI)) { // Label is inverse parallel with axis line.
-            textBaseline = direction > 0 ? 'bottom' : 'top';
+            verticalAlign = direction > 0 ? 'bottom' : 'top';
             textAlign = 'center';
         }
         else {
-            textBaseline = 'middle';
+            verticalAlign = 'middle';
 
             if (rotationDiff > 0 && rotationDiff < PI) {
                 textAlign = direction > 0 ? 'right' : 'left';
@@ -367,7 +367,7 @@ define(function (require) {
         return {
             rotation: rotationDiff,
             textAlign: textAlign,
-            textBaseline: textBaseline
+            verticalAlign: verticalAlign
         };
     }
 
@@ -377,21 +377,21 @@ define(function (require) {
     function endTextLayout(opt, textPosition, extent) {
         var rotationDiff = remRadian(-opt.rotation);
         var textAlign;
-        var textBaseline;
+        var verticalAlign;
         var inverse = extent[0] > extent[1];
         var onLeft = (textPosition === 'start' && !inverse)
             || (textPosition !== 'start' && inverse);
 
         if (isRadianAroundZero(rotationDiff - PI / 2)) {
-            textBaseline = onLeft ? 'bottom' : 'top';
+            verticalAlign = onLeft ? 'bottom' : 'top';
             textAlign = 'center';
         }
         else if (isRadianAroundZero(rotationDiff - PI * 1.5)) {
-            textBaseline = onLeft ? 'top' : 'bottom';
+            verticalAlign = onLeft ? 'top' : 'bottom';
             textAlign = 'center';
         }
         else {
-            textBaseline = 'middle';
+            verticalAlign = 'middle';
             if (rotationDiff < PI * 1.5 && rotationDiff > PI / 2) {
                 textAlign = onLeft ? 'left' : 'right';
             }
@@ -403,7 +403,7 @@ define(function (require) {
         return {
             rotation: rotationDiff,
             textAlign: textAlign,
-            textBaseline: textBaseline
+            verticalAlign: verticalAlign
         };
     }
 

@@ -255,7 +255,7 @@ define(function(require) {
             if (shape.symbolType === 'pin' && style.textPosition === 'inside') {
                 style.textPosition = ['50%', '40%'];
                 style.textAlign = 'center';
-                style.textBaseline = 'middle';
+                style.textVerticalAlign = 'middle';
             }
         },
 

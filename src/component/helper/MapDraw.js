@@ -187,7 +187,7 @@ define(function (require) {
                             fill: textStyleModel.getTextColor(),
                             textFont: textStyleModel.getFont(),
                             textAlign: 'center',
-                            textBaseline: 'middle'
+                            textVerticalAlign: 'middle'
                         },
                         hoverStyle: {
                             text: hoverShowLabel ? (hoverFormattedStr || region.name) : '',

@@ -786,7 +786,7 @@ define(function (require) {
                 text = this._crossText = new graphic.Text({
                     style: {
                         textAlign: 'left',
-                        textBaseline: 'bottom'
+                        textVerticalAlign: 'bottom'
                     }
                 });
                 this.group.add(text);

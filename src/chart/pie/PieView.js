@@ -215,8 +215,8 @@ define(function (require) {
         }, seriesModel);
         labelText.attr({
             style: {
+                textVerticalAlign: labelLayout.verticalAlign,
                 textAlign: labelLayout.textAlign,
-                textBaseline: labelLayout.textBaseline,
                 textFont: labelLayout.font
             },
             rotation: labelLayout.rotation,

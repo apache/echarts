@@ -191,7 +191,6 @@ define(function (require) {
 
                 textAlign = isLabelInside ? 'center' : (dx > 0 ? 'left' : 'right');
             }
-            var textBaseline = 'middle';
             var font = labelModel.getModel('textStyle').getFont();
 
             var labelRotate = labelModel.get('rotate')
@@ -199,7 +198,7 @@ define(function (require) {
             var text = seriesModel.getFormattedLabel(idx, 'normal')
                         || data.getName(idx);
             var textRect = textContain.getBoundingRect(
-                text, font, textAlign, textBaseline
+                text, font, textAlign, 'top'
             );
             hasLabelRotate = !!labelRotate;
             layout.label = {
@@ -210,7 +209,7 @@ define(function (require) {
                 length2: labelLineLen2,
                 linePoints: linePoints,
                 textAlign: textAlign,
-                textBaseline: textBaseline,
+                verticalAlign: 'middle',
                 font: font,
                 rotation: labelRotate
             };

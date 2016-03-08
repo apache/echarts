@@ -197,7 +197,7 @@ define(function (require) {
                     fill: isSelected ? textStyleModel.getTextColor() : LEGEND_DISABLE_COLOR,
                     textFont: textStyleModel.getFont(),
                     textAlign: textAlign,
-                    textBaseline: 'middle'
+                    textVerticalAlign: 'middle'
                 }
             });
             itemGroup.add(text);

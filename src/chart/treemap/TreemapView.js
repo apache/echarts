@@ -325,7 +325,7 @@
                         textPosition: labelModel.get('position'),
                         textFill: textStyleModel.getTextColor(),
                         textAlign: textStyleModel.get('align'),
-                        textBaseline: textStyleModel.get('baseline'),
+                        textVerticalAlign: textStyleModel.get('baseline'),
                         textFont: textStyleModel.getFont()
                     });
                     group.add(content);

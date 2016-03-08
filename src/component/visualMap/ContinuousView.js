@@ -136,7 +136,7 @@ define(function(require) {
                 style: {
                     x: position[0],
                     y: position[1],
-                    textBaseline: orient === 'horizontal' ? 'middle' : align,
+                    textVerticalAlign: orient === 'horizontal' ? 'middle' : align,
                     textAlign: orient === 'horizontal' ? align : 'center',
                     text: text,
                     textFont: textStyleModel.getFont(),
@@ -213,7 +213,7 @@ define(function(require) {
                 silent: true,
                 style: {
                     x: 0, y: 0, text: '',
-                    textBaseline: 'middle',
+                    textVerticalAlign: 'middle',
                     textFont: textStyleModel.getFont(),
                     fill: textStyleModel.getTextColor()
                 }

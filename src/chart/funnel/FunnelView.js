@@ -127,7 +127,7 @@ define(function (require) {
         labelText.attr({
             style: {
                 textAlign: labelLayout.textAlign,
-                textBaseline: labelLayout.textBaseline,
+                textVerticalAlign: labelLayout.verticalAlign,
                 textFont: labelLayout.font
             },
             rotation: labelLayout.rotation,
