@@ -156,6 +156,7 @@ define(function (require) {
             var textStyleModel = itemModel.getModel('textStyle');
 
             var itemIcon = itemModel.get('icon');
+
             // Use user given icon first
             legendSymbolType = itemIcon || legendSymbolType;
             itemGroup.add(symbolCreator.createSymbol(
@@ -171,7 +172,8 @@ define(function (require) {
                 var size = itemHeight * 0.8;
                 // Put symbol in the center
                 itemGroup.add(symbolCreator.createSymbol(
-                    symbolType, (itemWidth - size) / 2, (itemHeight - size) / 2, size, size, color
+                    symbolType, (itemWidth - size) / 2, (itemHeight - size) / 2, size, size,
+                    isSelected ? color : LEGEND_DISABLE_COLOR
                 ));
             }
 
