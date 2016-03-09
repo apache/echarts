@@ -28,6 +28,7 @@ define(function (require) {
             var nameTextStyle = this.get('name.textStyle');
             var showName = this.get('name.show');
             var nameFormatter = this.get('name.formatter');
+            var nameGap = this.get('nameGap');
             var indicatorModels = zrUtil.map(this.get('indicator') || [], function (indicatorOpt) {
                 // PENDING
                 if (indicatorOpt.max != null && indicatorOpt.max > 0) {
@@ -47,7 +48,7 @@ define(function (require) {
                     // Competitable with 2 and use text
                     name: indicatorOpt.text,
                     nameLocation: 'end',
-                    nameGap: 15,
+                    nameGap: nameGap,
                     // min: 0,
                     nameTextStyle: nameTextStyle
                 }, indicatorOpt);
