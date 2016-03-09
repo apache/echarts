@@ -28,6 +28,13 @@ define(function (require) {
             var nameTextStyle = this.get('name.textStyle');
             var showName = this.get('name.show');
             var indicatorModels = zrUtil.map(this.get('indicator') || [], function (indicatorOpt) {
+                // PENDING
+                if (indicatorOpt.max != null && indicatorOpt.max > 0) {
+                    indicatorOpt.min = 0;
+                }
+                else if (indicatorOpt.min != null && indicatorOpt.min < 0) {
+                    indicatorOpt.max = 0;
+                }
                 // Use same configuration
                 indicatorOpt = zrUtil.extend({
                     boundaryGap: boundaryGap,
@@ -40,9 +47,8 @@ define(function (require) {
                     name: indicatorOpt.text,
                     nameLocation: 'end',
                     nameGap: 15,
-                    nameTextStyle: nameTextStyle,
-                    // Default to set min 0
-                    min: 0
+                    // min: 0,
+                    nameTextStyle: nameTextStyle
                 }, indicatorOpt);
                 if (!showName) {
                     indicatorOpt.name = '';

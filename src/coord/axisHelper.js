@@ -11,16 +11,21 @@ define(function (require) {
     var textContain = require('zrender/contain/text');
     var axisHelper = {};
 
-    axisHelper.niceScaleExtent = function (axis, model) {
+    /**
+     * Get axis scale extent before niced.
+     */
+    axisHelper.getScaleExtent = function (axis, model) {
         var scale = axis.scale;
         var originalExtent = scale.getExtent();
         var span = originalExtent[1] - originalExtent[0];
         if (scale.type === 'ordinal') {
             // If series has no data, scale extent may be wrong
             if (!isFinite(span)) {
-                scale.setExtent(0, 0);
+                return [0, 0];
             }
-            return;
+            else {
+                return originalExtent;
+            }
         }
         var min = model.getMin ? model.getMin() : model.get('min');
         var max = model.getMax ? model.getMax() : model.get('max');
@@ -61,7 +66,15 @@ define(function (require) {
                 max = 0;
             }
         }
-        scale.setExtent(min, max);
+        return [min, max];
+    };
+
+    axisHelper.niceScaleExtent = function (axis, model) {
+        var scale = axis.scale;
+        var extent = axisHelper.getScaleExtent(axis, model);
+        var fixMin = model.get('min') != null;
+        var fixMax = model.get('max') != null;
+        scale.setExtent(extent[0], extent[1]);
         scale.niceExtent(model.get('splitNumber'), fixMin, fixMax);
 
         // If some one specified the min, max. And the default calculated interval

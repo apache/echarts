@@ -174,13 +174,19 @@ define(function (require) {
                     graphic.setText(symbolPath.style, labelModel, color);
                     symbolPath.setStyle({
                         text: labelModel.get('show') ? zrUtil.retrieve(
-                            seriesModel.getFormattedLabel(idx, 'normal'), defaultText
+                            seriesModel.getFormattedLabel(
+                                idx, 'normal', null, symbolPath.__dimIdx
+                            ),
+                            defaultText
                         ) : ''
                     });
 
                     graphic.setText(symbolPath.hoverStyle, labelHoverModel, color);
                     symbolPath.hoverStyle.text = labelHoverModel.get('show') ? zrUtil.retrieve(
-                        seriesModel.getFormattedLabel(idx, 'emphasis'), defaultText
+                        seriesModel.getFormattedLabel(
+                            idx, 'emphasis', null, symbolPath.__dimIdx
+                        ),
+                        defaultText
                     ) : '';
                 });
 

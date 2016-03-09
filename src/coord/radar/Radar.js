@@ -151,7 +151,7 @@ define(function (require) {
         }
         // Force all the axis fixing the maxSplitNumber.
         zrUtil.each(indicatorAxes, function (indicatorAxis, idx) {
-            var dataExtent = indicatorAxis.scale.getExtent();
+            var rawExtent = axisHelper.getScaleExtent(indicatorAxis, indicatorAxis.model);
             axisHelper.niceScaleExtent(indicatorAxis, indicatorAxis.model);
 
             var axisModel = indicatorAxis.model;
@@ -159,6 +159,7 @@ define(function (require) {
             var fixedMin = axisModel.get('min');
             var fixedMax = axisModel.get('max');
             var interval = scale.getInterval();
+
             if (fixedMin != null && fixedMax != null) {
                 // User set min, max, divide to get new interval
                 // FIXME precision
@@ -177,7 +178,7 @@ define(function (require) {
                     scale.setInterval(interval);
 
                     interval = increaseInterval(interval);
-                } while (max < dataExtent[1] && isFinite(max) && isFinite(dataExtent[1]));
+                } while (max < rawExtent[1] && isFinite(max) && isFinite(rawExtent[1]));
             }
             else if (fixedMax != null) {
                 var min;
@@ -187,18 +188,21 @@ define(function (require) {
                     scale.setExtent(min, +fixedMax);
                     scale.setInterval(interval);
                     interval = increaseInterval(interval);
-                } while (min > dataExtent[0] && isFinite(min) && isFinite(dataExtent[0]));
+                } while (min > rawExtent[0] && isFinite(min) && isFinite(rawExtent[0]));
             }
             else {
                 var nicedSplitNumber = scale.getTicks().length - 1;
                 if (nicedSplitNumber > splitNumber) {
                     interval = increaseInterval(interval);
                 }
-                scale.setInterval(interval);
+                // PENDING
+                var center = Math.round((rawExtent[0] + rawExtent[1]) / 2 / interval) * interval;
+                var halfSplitNumber = Math.round(splitNumber / 2);
                 scale.setExtent(
-                    numberUtil.round(Math.floor(dataExtent[0] / interval) * interval),
-                    numberUtil.round(Math.ceil(dataExtent[1] / interval) * interval)
+                    numberUtil.round(center - halfSplitNumber * interval),
+                    numberUtil.round(center + (splitNumber - halfSplitNumber) * interval)
                 );
+                scale.setInterval(interval);
             }
         });
     };
