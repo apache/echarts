@@ -208,6 +208,11 @@ define(function (require) {
             });
 
             this._data = data;
+        },
+
+        remove: function () {
+            this.group.removeAll();
+            this._data = null;
         }
     });
 });
