@@ -9,7 +9,8 @@ define(function (require) {
             if (!zrUtil.isArray(polarOptArr)) {
                 polarOptArr = [polarOptArr];
             }
-            zrUtil.each(polarOptArr, function (polarOpt) {
+            var polarNotRadar = [];
+            zrUtil.each(polarOptArr, function (polarOpt, idx) {
                 if (polarOpt.indicator) {
                     if (polarOpt.type && !polarOpt.shape) {
                         polarOpt.shape = polarOpt.type;
@@ -20,7 +21,11 @@ define(function (require) {
                     }
                     option.radar.push(polarOpt);
                 }
+                else {
+                    polarNotRadar.push(polarOpt);
+                }
             });
+            option.polar = polarNotRadar;
         }
         zrUtil.each(option.series, function (seriesOpt) {
             if (seriesOpt.type === 'radar' && seriesOpt.polarIndex) {
