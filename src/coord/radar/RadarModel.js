@@ -59,7 +59,9 @@ define(function (require) {
                     indicatorOpt.name = nameFormatter.replace('{value}', indicatorOpt.name);
                 }
                 else if (typeof nameFormatter === 'function') {
-                    indicatorOpt.name = nameFormatter(indicatorOpt.name);
+                    indicatorOpt.name = nameFormatter(
+                        indicatorOpt.name, indicatorOpt
+                    );
                 }
                 return zrUtil.extend(
                     new Model(indicatorOpt, null, this.ecModel),
