@@ -137,6 +137,19 @@ define(function (require) {
 
             var lineStyle = lineStyleModel.getLineStyle();
             var areaStyle = areaStyleModel.getAreaStyle();
+            // Add splitArea before splitLine
+            zrUtil.each(splitAreas, function (splitAreas, idx) {
+                this.group.add(graphic.mergePath(
+                    splitAreas, {
+                        style: zrUtil.defaults({
+                            stroke: 'none',
+                            fill: splitAreaColors[idx % splitAreaColors.length]
+                        }, areaStyle),
+                        silent: true
+                    }
+                ));
+            }, this);
+
             zrUtil.each(splitLines, function (splitLines, idx) {
                 this.group.add(graphic.mergePath(
                     splitLines, {
@@ -149,17 +162,6 @@ define(function (require) {
                 ));
             }, this);
 
-            zrUtil.each(splitAreas, function (splitAreas, idx) {
-                this.group.add(graphic.mergePath(
-                    splitAreas, {
-                        style: zrUtil.defaults({
-                            stroke: 'none',
-                            fill: splitAreaColors[idx % splitAreaColors.length]
-                        }, areaStyle),
-                        silent: true
-                    }
-                ));
-            }, this);
         }
     });
 });
