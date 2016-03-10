@@ -1,1 +1,340 @@
-(function(e,t){typeof define=="function"&&define.amd?define(["exports","echarts"],t):typeof exports=="object"&&typeof exports.nodeName!="string"?t(exports,require("echarts")):t({},e.echarts)})(this,function(e,t){var n,r;(function(){function t(e,t){if(!t)return e;if(e.indexOf(".")===0){var n=t.split("/"),r=e.split("/"),i=n.length-1,s=r.length,o=0,u=0;e:for(var a=0;a<s;a++)switch(r[a]){case"..":if(!(o<i))break e;o++,u++;break;case".":u++;break;default:break e}return n.length=i-o,r=r.slice(u),n.concat(r).join("/")}return e}function i(e){function r(r,i){if(typeof r=="string"){var u=n[r];return u||(u=o(t(r,e)),n[r]=u),u}r instanceof Array&&(i=i||function(){},i.apply(this,s(r,i,e)))}var n={};return r}function s(r,i,s){var u=[],a=e[s];for(var f=0,l=Math.min(r.length,i.length);f<l;f++){var c=t(r[f],s),h;switch(c){case"require":h=a&&a.require||n;break;case"exports":h=a.exports;break;case"module":h=a;break;default:h=o(c)}u.push(h)}return u}function o(t){var n=e[t];if(!n)throw new Error("No "+t);if(!n.defined){var r=n.factory,i=r.apply(this,s(n.deps||[],r,t));typeof i!="undefined"&&(n.exports=i),n.defined=1}return n.exports}var e={};r=function(t,n,r){if(arguments.length===2){r=n,n=[];if(typeof r!="function"){var s=r;r=function(){return s}}}e[t]={id:t,deps:n,factory:r,defined:0,exports:{},require:i(t)}},n=i("")})(),r("echarts",[],function(){return t}),r("extension/bmap/BMapCoordSys",["require","echarts"],function(e){function n(e,t){this._bmap=e,this.dimensions=["lng","lat"],this._mapOffset=[0,0],this._api=t}function i(){function e(e){this._root=e}return e.prototype=new BMap.Overlay,e.prototype.initialize=function(e){return e.getPanes().labelPane.appendChild(this._root),this._root},e.prototype.draw=function(){},e}var t=e("echarts");n.prototype.dimensions=["lng","lat"],n.prototype.setMapOffset=function(e){this._mapOffset=e},n.prototype.getBMap=function(){return this._bmap},n.prototype.dataToPoint=function(e){var t=new BMap.Point(e[0],e[1]),n=this._bmap.pointToOverlayPixel(t),r=this._mapOffset;return[n.x-r[0],n.y-r[1]]},n.prototype.pointToData=function(e){var t=this._mapOffset,e=this._bmap.overlayPixelToPoint({x:e[0]+t[0],y:e[1]+t[1]});return[e.lng,e.lat]},n.prototype.getViewRect=function(){var e=this._api;return new t.graphic.BoundingRect(0,0,e.getWidth(),e.getHeight())},n.prototype.getRoamTransform=function(){return t.matrix.create()};var r;return n.dimensions=n.prototype.dimensions,n.create=function(e,t){var s,o=t.getDom();e.eachComponent("bmap",function(e){var u=t.getZr().painter.getViewportRoot();if(typeof BMap=="undefined")throw new Error("BMap api is not loaded");r=r||i();if(s)throw new Error("Only one bmap component can exist");if(!e.__bmap){var a=o.querySelector(".ec-extension-bmap");a&&a.parentNode.removeChild(a),a=document.createElement("div"),a.style.cssText="width:100%;height:100%",o.insertBefore(a,u);var f=e.__bmap=new BMap.Map(a),l=new r(u);f.addOverlay(l)}var f=e.__bmap,c=e.get("center");if(c){var h=new BMap.Point(c[0],c[1]);f.centerAndZoom(h,e.get("zoom"))}s=new n(f,t),s.setMapOffset(e.__mapOffset||[0,0]),e.coordinateSystem=s}),e.eachSeries(function(e){e.get("coordinateSystem")==="bmap"&&(e.coordinateSystem=s)})},n}),r("extension/bmap/BMapModel",["require","echarts"],function(e){return e("echarts").extendComponentModel({type:"bmap",getBMap:function(){return this.__bmap},setCenterAndZoom:function(e,t){this.option.center=e,this.option.zoom=t},defaultOption:{center:null,zoom:1,mapStyle:{},roam:!1}})}),r("extension/bmap/BMapView",["require","echarts"],function(e){return e("echarts").extendComponentView({type:"bmap",render:function(e,t,n){function a(){if(r)return;n.dispatchAction({type:"bmapRoam"})}var r=!0,i=e.getBMap(),s=n.getZr().painter.getViewportRoot(),o=e.coordinateSystem,u=function(t,i){if(r)return;var u=s.parentNode.parentNode.parentNode,a=[-parseInt(u.style.left,10)||0,-parseInt(u.style.top,10)||0];s.style.left=a[0]+"px",s.style.top=a[1]+"px",o.setMapOffset(a),e.__mapOffset=a,n.dispatchAction({type:"bmapRoam"})};i.removeEventListener("moving",this._oldMoveHandler),i.removeEventListener("zoomend",this._oldZoomEndHandler),i.addEventListener("moving",u),i.addEventListener("zoomend",a),this._oldMoveHandler=u,this._oldZoomEndHandler=a;var f=e.get("roam");f&&f!=="scale"?i.enableDragging():i.disableDragging(),f&&f!=="move"?(i.enableScrollWheelZoom(),i.enableDoubleClickZoom(),i.enablePinchToZoom()):(i.disableScrollWheelZoom(),i.disableDoubleClickZoom(),i.disablePinchToZoom()),i.setMapStyle(e.get("mapStyle")),o.setMapOffset(e.__mapOffset||[0,0]),r=!1}})}),r("extension/bmap/bmap",["require","echarts","./BMapCoordSys","./BMapModel","./BMapView","echarts"],function(e){return e("echarts").registerCoordinateSystem("bmap",e("./BMapCoordSys")),e("./BMapModel"),e("./BMapView"),e("echarts").registerAction({type:"bmapRoam",event:"bmapRoam",update:"updateLayout"},function(e,t){t.eachComponent("bmap",function(e){var t=e.getBMap(),n=t.getCenter();e.setCenterAndZoom([n.lng,n.lat],t.getZoom())})}),{version:"1.0.0"}}),n("extension/bmap/bmap")});
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory(require("echarts"));
+	else if(typeof define === 'function' && define.amd)
+		define(["echarts"], factory);
+	else if(typeof exports === 'object')
+		exports["bmap"] = factory(require("echarts"));
+	else
+		root["echarts"] = root["echarts"] || {}, root["echarts"]["bmap"] = factory(root["echarts"]);
+})(this, function(__WEBPACK_EXTERNAL_MODULE_1__) {
+return /******/ (function(modules) { // webpackBootstrap
+/******/ 	// The module cache
+/******/ 	var installedModules = {};
+
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+
+/******/ 		// Check if module is in cache
+/******/ 		if(installedModules[moduleId])
+/******/ 			return installedModules[moduleId].exports;
+
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = installedModules[moduleId] = {
+/******/ 			exports: {},
+/******/ 			id: moduleId,
+/******/ 			loaded: false
+/******/ 		};
+
+/******/ 		// Execute the module function
+/******/ 		modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
+
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+
+
+/******/ 	// expose the modules object (__webpack_modules__)
+/******/ 	__webpack_require__.m = modules;
+
+/******/ 	// expose the module cache
+/******/ 	__webpack_require__.c = installedModules;
+
+/******/ 	// __webpack_public_path__
+/******/ 	__webpack_require__.p = "";
+
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(0);
+/******/ })
+/************************************************************************/
+/******/ ([
+/* 0 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/**
+	 * BMap component extension
+	 */
+	!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require) {
+
+	    __webpack_require__(1).registerCoordinateSystem(
+	        'bmap', __webpack_require__(2)
+	    );
+	    __webpack_require__(3);
+	    __webpack_require__(4);
+
+	    // Action
+	    __webpack_require__(1).registerAction({
+	        type: 'bmapRoam',
+	        event: 'bmapRoam',
+	        update: 'updateLayout'
+	    }, function (payload, ecModel) {
+	        ecModel.eachComponent('bmap', function (bMapModel) {
+	            var bmap = bMapModel.getBMap();
+	            var center = bmap.getCenter();
+	            bMapModel.setCenterAndZoom([center.lng, center.lat], bmap.getZoom());
+	        });
+	    });
+
+	    return {
+	        version: '1.0.0'
+	    };
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+/***/ },
+/* 1 */
+/***/ function(module, exports) {
+
+	module.exports = __WEBPACK_EXTERNAL_MODULE_1__;
+
+/***/ },
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require) {
+	    var echarts = __webpack_require__(1);
+
+	    function BMapCoordSys(bmap, api) {
+	        this._bmap = bmap;
+	        this.dimensions = ['lng', 'lat'];
+	        this._mapOffset = [0, 0];
+
+	        this._api = api;
+	    }
+
+	    BMapCoordSys.prototype.dimensions = ['lng', 'lat'];
+
+	    BMapCoordSys.prototype.setMapOffset = function (mapOffset) {
+	        this._mapOffset = mapOffset;
+	    };
+
+	    BMapCoordSys.prototype.getBMap = function () {
+	        return this._bmap;
+	    };
+
+	    BMapCoordSys.prototype.dataToPoint = function (data) {
+	        var point = new BMap.Point(data[0], data[1]);
+	        var px = this._bmap.pointToOverlayPixel(point);
+	        var mapOffset = this._mapOffset;
+	        return [px.x - mapOffset[0], px.y - mapOffset[1]];
+	    };
+
+	    BMapCoordSys.prototype.pointToData = function (pt) {
+	        var mapOffset = this._mapOffset;
+	        var pt = this._bmap.overlayPixelToPoint({
+	            x: pt[0] + mapOffset[0],
+	            y: pt[1] + mapOffset[1]
+	        });
+	        return [pt.lng, pt.lat];
+	    };
+
+	    BMapCoordSys.prototype.getViewRect = function () {
+	        var api = this._api;
+	        return new echarts.graphic.BoundingRect(0, 0, api.getWidth(), api.getHeight());
+	    };
+
+	    BMapCoordSys.prototype.getRoamTransform = function () {
+	        return echarts.matrix.create();
+	    };
+
+	    var Overlay;
+
+	    // For deciding which dimensions to use when creating list data
+	    BMapCoordSys.dimensions = BMapCoordSys.prototype.dimensions;
+
+	    function createOverlayCtor() {
+	        function Overlay(root) {
+	            this._root = root;
+	        }
+
+	        Overlay.prototype = new BMap.Overlay();
+	        /**
+	         * 初始化
+	         *
+	         * @param {BMap.Map} map
+	         * @override
+	         */
+	        Overlay.prototype.initialize = function (map) {
+	            map.getPanes().labelPane.appendChild(this._root);
+	            return this._root;
+	        };
+	        /**
+	         * @override
+	         */
+	        Overlay.prototype.draw = function () {};
+
+	        return Overlay;
+	    }
+
+	    BMapCoordSys.create = function (ecModel, api) {
+	        var bmapCoordSys;
+	        var root = api.getDom();
+
+	        // TODO Dispose
+	        ecModel.eachComponent('bmap', function (bmapModel) {
+	            var viewportRoot = api.getZr().painter.getViewportRoot();
+	            if (typeof BMap === 'undefined') {
+	                throw new Error('BMap api is not loaded');
+	            }
+	            Overlay = Overlay || createOverlayCtor();
+	            if (bmapCoordSys) {
+	                throw new Error('Only one bmap component can exist');
+	            }
+	            if (!bmapModel.__bmap) {
+	                var bmapRoot = root.querySelector('.ec-extension-bmap');
+	                // Not support IE8
+	                if (bmapRoot) {
+	                    bmapRoot.parentNode.removeChild(bmapRoot);
+	                }
+	                bmapRoot = document.createElement('div');
+	                bmapRoot.style.cssText = 'width:100%;height:100%';
+	                root.insertBefore(bmapRoot, viewportRoot);
+	                var bmap = bmapModel.__bmap = new BMap.Map(bmapRoot);
+
+	                var overlay = new Overlay(viewportRoot);
+	                bmap.addOverlay(overlay);
+	            }
+	            var bmap = bmapModel.__bmap;
+
+	            // Set bmap options
+	            var center = bmapModel.get('center');
+	            if (center) {
+	                var pt = new BMap.Point(center[0], center[1]);
+	                bmap.centerAndZoom(pt, bmapModel.get('zoom'));
+	            }
+
+	            bmapCoordSys = new BMapCoordSys(bmap, api);
+	            bmapCoordSys.setMapOffset(bmapModel.__mapOffset || [0, 0]);
+	            bmapModel.coordinateSystem = bmapCoordSys;
+	        });
+
+	        ecModel.eachSeries(function (seriesModel) {
+	            if (seriesModel.get('coordinateSystem') === 'bmap') {
+	                seriesModel.coordinateSystem = bmapCoordSys;
+	            }
+	        });
+	    };
+
+	    return BMapCoordSys;
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require) {
+
+	    return __webpack_require__(1).extendComponentModel({
+	        type: 'bmap',
+
+	        getBMap: function () {
+	            // __bmap is injected when creating BMapCoordSys
+	            return this.__bmap;
+	        },
+
+	        setCenterAndZoom: function (center, zoom) {
+	            this.option.center = center;
+	            this.option.zoom = zoom;
+	        },
+
+	        defaultOption: {
+	            center: null,
+
+	            zoom: 1,
+
+	            mapStyle: {},
+
+	            roam: false
+	        }
+	    });
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require) {
+
+	    return __webpack_require__(1).extendComponentView({
+	        type: 'bmap',
+
+	        render: function (bMapModel, ecModel, api) {
+	            var rendering = true;
+
+	            var bmap = bMapModel.getBMap();
+	            var viewportRoot = api.getZr().painter.getViewportRoot();
+	            var coordSys = bMapModel.coordinateSystem;
+	            var moveHandler = function (type, target) {
+	                if (rendering) {
+	                    return;
+	                }
+	                var offsetEl = viewportRoot.parentNode.parentNode.parentNode;
+	                var mapOffset = [
+	                    -parseInt(offsetEl.style.left, 10) || 0,
+	                    -parseInt(offsetEl.style.top, 10) || 0
+	                ];
+	                viewportRoot.style.left = mapOffset[0] + 'px';
+	                viewportRoot.style.top = mapOffset[1] + 'px';
+
+	                coordSys.setMapOffset(mapOffset);
+	                bMapModel.__mapOffset = mapOffset;
+
+	                api.dispatchAction({
+	                    type: 'bmapRoam'
+	                });
+	            };
+
+	            function zoomEndHandler() {
+	                if (rendering) {
+	                    return;
+	                }
+	                api.dispatchAction({
+	                    type: 'bmapRoam'
+	                });
+	            }
+
+	            bmap.removeEventListener('moving', this._oldMoveHandler);
+	            // FIXME
+	            // Moveend may be triggered by centerAndZoom method when creating coordSys next time
+	            // bmap.removeEventListener('moveend', this._oldMoveHandler);
+	            bmap.removeEventListener('zoomend', this._oldZoomEndHandler);
+	            bmap.addEventListener('moving', moveHandler);
+	            // bmap.addEventListener('moveend', moveHandler);
+	            bmap.addEventListener('zoomend', zoomEndHandler);
+
+	            this._oldMoveHandler = moveHandler;
+	            this._oldZoomEndHandler = zoomEndHandler;
+
+	            var roam = bMapModel.get('roam');
+	            if (roam && roam !== 'scale') {
+	                bmap.enableDragging();
+	            }
+	            else {
+	                bmap.disableDragging();
+	            }
+	            if (roam && roam !== 'move') {
+	                bmap.enableScrollWheelZoom();
+	                bmap.enableDoubleClickZoom();
+	                bmap.enablePinchToZoom();
+	            }
+	            else {
+	                bmap.disableScrollWheelZoom();
+	                bmap.disableDoubleClickZoom();
+	                bmap.disablePinchToZoom();
+	            }
+
+	            bmap.setMapStyle(bMapModel.get('mapStyle'));
+
+	            coordSys.setMapOffset(bMapModel.__mapOffset || [0, 0]);
+
+	            rendering = false;
+	        }
+	    });
+	}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+
+/***/ }
+/******/ ])
+});
+;
