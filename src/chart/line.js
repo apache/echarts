@@ -17,4 +17,7 @@ define(function (require) {
     echarts.registerProcessor('statistic', zrUtil.curry(
         require('../processor/dataSample'), 'line'
     ));
+
+    // In case developer forget to include grid component
+    require('../component/grid');
 });

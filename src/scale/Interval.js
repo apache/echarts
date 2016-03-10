@@ -125,8 +125,14 @@ define(function (require) {
             splitNumber = splitNumber || 5;
             var extent = this._extent;
             var span = extent[1] - extent[0];
-            if (span === Infinity || span <= 0) {
+            if (!isFinite(span)) {
                 return;
+            }
+            // User may set axis min 0 and data are all negative
+            // FIXME If it needs to reverse ?
+            if (span < 0) {
+                span = -span;
+                extent.reverse();
             }
 
             // From "Nice Numbers for Graph Labels" of Graphic Gems
@@ -163,8 +169,9 @@ define(function (require) {
                     extent[1] = 1;
                 }
             }
+            var span = extent[1] - extent[0];
             // If there are no data and extent are [Infinity, -Infinity]
-            if (extent[1] === -Infinity && extent[0] === Infinity) {
+            if (!isFinite(span)) {
                 extent[0] = 0;
                 extent[1] = 1;
             }

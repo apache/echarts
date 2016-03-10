@@ -27,7 +27,16 @@ define(function (require) {
             var axisLabel = this.get('axisLabel');
             var nameTextStyle = this.get('name.textStyle');
             var showName = this.get('name.show');
+            var nameFormatter = this.get('name.formatter');
+            var nameGap = this.get('nameGap');
             var indicatorModels = zrUtil.map(this.get('indicator') || [], function (indicatorOpt) {
+                // PENDING
+                if (indicatorOpt.max != null && indicatorOpt.max > 0) {
+                    indicatorOpt.min = 0;
+                }
+                else if (indicatorOpt.min != null && indicatorOpt.min < 0) {
+                    indicatorOpt.max = 0;
+                }
                 // Use same configuration
                 indicatorOpt = zrUtil.extend({
                     boundaryGap: boundaryGap,
@@ -39,19 +48,26 @@ define(function (require) {
                     // Competitable with 2 and use text
                     name: indicatorOpt.text,
                     nameLocation: 'end',
-                    nameGap: 15,
-                    nameTextStyle: nameTextStyle,
-                    // Default to set min 0
-                    min: 0
+                    nameGap: nameGap,
+                    // min: 0,
+                    nameTextStyle: nameTextStyle
                 }, indicatorOpt);
                 if (!showName) {
                     indicatorOpt.name = '';
                 }
+                if (typeof nameFormatter === 'string') {
+                    indicatorOpt.name = nameFormatter.replace('{value}', indicatorOpt.name);
+                }
+                else if (typeof nameFormatter === 'function') {
+                    indicatorOpt.name = nameFormatter(
+                        indicatorOpt.name, indicatorOpt
+                    );
+                }
                 return zrUtil.extend(
-                    new Model(indicatorOpt),
+                    new Model(indicatorOpt, null, this.ecModel),
                     axisModelCommonMixin
                 );
-            });
+            }, this);
             this.getIndicatorModels = function () {
                 return indicatorModels;
             };
@@ -86,7 +102,14 @@ define(function (require) {
             // Polygon or circle
             shape: 'polygon',
 
-            axisLine: valueAxisDefault.axisLine,
+            axisLine: zrUtil.merge(
+                {
+                    lineStyle: {
+                        color: '#bbb'
+                    }
+                },
+                valueAxisDefault.axisLine
+            ),
             axisLabel: defaultsShow(valueAxisDefault.axisLabel, false),
             axisTick: defaultsShow(valueAxisDefault.axisTick, false),
             splitLine: defaultsShow(valueAxisDefault.splitLine, true),

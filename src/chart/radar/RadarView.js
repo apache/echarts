@@ -42,9 +42,10 @@ define(function (require) {
             function updateSymbols(oldPoints, newPoints, symbolGroup, data, idx, isInit) {
                 // Simply rerender all
                 symbolGroup.removeAll();
-                for (var i = 0; i < newPoints.length; i++) {
+                for (var i = 0; i < newPoints.length - 1; i++) {
                     var symbolPath = createSymbol(data, idx);
                     if (symbolPath) {
+                        symbolPath.__dimIdx = i;
                         if (oldPoints[i]) {
                             symbolPath.attr('position', oldPoints[i]);
                             graphic[isInit ? 'initProps' : 'updateProps'](
@@ -69,6 +70,9 @@ define(function (require) {
             data.diff(oldData)
                 .add(function (idx) {
                     var points = data.getItemLayout(idx);
+                    if (!points) {
+                        return;
+                    }
                     var polygon = new graphic.Polygon();
                     var polyline = new graphic.Polyline();
                     var target = {
@@ -103,6 +107,9 @@ define(function (require) {
                             points: data.getItemLayout(newIdx)
                         }
                     };
+                    if (!target.shape.points) {
+                        return;
+                    }
                     updateSymbols(
                         polyline.shape.points, target.shape.points, symbolGroup, data, newIdx, false
                     );
@@ -122,6 +129,7 @@ define(function (require) {
                 var polyline = itemGroup.childAt(0);
                 var polygon = itemGroup.childAt(1);
                 var symbolGroup = itemGroup.childAt(2);
+                var color = data.getItemVisual(idx, 'color');
 
                 group.add(itemGroup);
 
@@ -129,7 +137,7 @@ define(function (require) {
                     zrUtil.extend(
                         itemModel.getModel('lineStyle.normal').getLineStyle(),
                         {
-                            stroke: data.getItemVisual(idx, 'color')
+                            stroke: color
                         }
                     )
                 );
@@ -139,14 +147,15 @@ define(function (require) {
                 var hoverAreaStyleModel = itemModel.getModel('areaStyle.emphasis');
                 var polygonIgnore = areaStyleModel.isEmpty() && areaStyleModel.parentModel.isEmpty();
                 var hoverPolygonIgnore = hoverAreaStyleModel.isEmpty() && hoverAreaStyleModel.parentModel.isEmpty();
-                polygon.ignore = polygonIgnore;
 
+                hoverPolygonIgnore = hoverPolygonIgnore && polygonIgnore;
+                polygon.ignore = polygonIgnore;
 
                 polygon.setStyle(
                     zrUtil.defaults(
                         areaStyleModel.getAreaStyle(),
                         {
-                            fill: data.getItemVisual(idx, 'color'),
+                            fill: color,
                             opacity: 0.7
                         }
                     )
@@ -154,10 +163,31 @@ define(function (require) {
                 polygon.hoverStyle = hoverAreaStyleModel.getAreaStyle();
 
                 var itemStyle = itemModel.getModel('itemStyle.normal').getItemStyle(['color']);
-                var emphasisItemStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+                var itemHoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+                var labelModel = itemModel.getModel('label.normal');
+                var labelHoverModel = itemModel.getModel('label.emphasis');
                 symbolGroup.eachChild(function (symbolPath) {
                     symbolPath.setStyle(itemStyle);
-                    symbolPath.hoverStyle = emphasisItemStyle;
+                    symbolPath.hoverStyle = zrUtil.clone(itemHoverStyle);
+
+                    var defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
+                    graphic.setText(symbolPath.style, labelModel, color);
+                    symbolPath.setStyle({
+                        text: labelModel.get('show') ? zrUtil.retrieve(
+                            seriesModel.getFormattedLabel(
+                                idx, 'normal', null, symbolPath.__dimIdx
+                            ),
+                            defaultText
+                        ) : ''
+                    });
+
+                    graphic.setText(symbolPath.hoverStyle, labelHoverModel, color);
+                    symbolPath.hoverStyle.text = labelHoverModel.get('show') ? zrUtil.retrieve(
+                        seriesModel.getFormattedLabel(
+                            idx, 'emphasis', null, symbolPath.__dimIdx
+                        ),
+                        defaultText
+                    ) : '';
                 });
 
                 function onEmphasis() {
@@ -178,6 +208,11 @@ define(function (require) {
             });
 
             this._data = data;
+        },
+
+        remove: function () {
+            this.group.removeAll();
+            this._data = null;
         }
     });
 });

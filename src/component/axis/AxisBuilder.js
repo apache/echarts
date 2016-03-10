@@ -175,6 +175,7 @@ define(function (require) {
 
             this.group.add(graphic.mergePath(tickLines, {
                 style: lineStyleModel.getLineStyle(),
+                z2: 2,
                 silent: true
             }));
         },

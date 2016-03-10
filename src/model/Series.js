@@ -73,6 +73,17 @@ define(function(require) {
             modelUtil.defaultEmphasis(
                 option.label, ['position', 'show', 'textStyle', 'distance', 'formatter']
             );
+
+            // Default data label emphasis `position` and `show`
+            // FIXME Tree structure data ?
+            var data = option.data || [];
+            for (var i = 0; i < data.length; i++) {
+                if (data[i] && data[i].label) {
+                    modelUtil.defaultEmphasis(
+                        data[i].label, ['position', 'show', 'textStyle', 'distance', 'formatter']
+                    );
+                }
+            }
         },
 
         mergeOption: function (newSeriesOption, ecModel) {

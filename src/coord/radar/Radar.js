@@ -124,7 +124,9 @@ define(function (require) {
             indicatorAxis.scale.setExtent(Infinity, -Infinity);
         });
         ecModel.eachSeriesByType('radar', function (radarSeries, idx) {
-            if (ecModel.getComponent('radar', radarSeries.get('radarIndex')) !== radarModel) {
+            if (radarSeries.get('coordinateSystem') !== 'radar'
+                || ecModel.getComponent('radar', radarSeries.get('radarIndex')) !== radarModel
+            ) {
                 return;
             }
             var data = radarSeries.getData();
@@ -149,7 +151,7 @@ define(function (require) {
         }
         // Force all the axis fixing the maxSplitNumber.
         zrUtil.each(indicatorAxes, function (indicatorAxis, idx) {
-            var dataExtent = indicatorAxis.getExtent();
+            var rawExtent = axisHelper.getScaleExtent(indicatorAxis, indicatorAxis.model);
             axisHelper.niceScaleExtent(indicatorAxis, indicatorAxis.model);
 
             var axisModel = indicatorAxis.model;
@@ -157,10 +159,11 @@ define(function (require) {
             var fixedMin = axisModel.get('min');
             var fixedMax = axisModel.get('max');
             var interval = scale.getInterval();
+
             if (fixedMin != null && fixedMax != null) {
                 // User set min, max, divide to get new interval
                 // FIXME precision
-                indicatorAxis.scale.setInterval(
+                scale.setInterval(
                     (fixedMax - fixedMin) / splitNumber
                 );
             }
@@ -169,28 +172,37 @@ define(function (require) {
                 // User set min, expand extent on the other side
                 do {
                     max = fixedMin + interval * splitNumber;
+                    scale.setExtent(+fixedMin, max);
+                    // Interval must been set after extent
+                    // FIXME
+                    scale.setInterval(interval);
+
                     interval = increaseInterval(interval);
-                } while (max < dataExtent[1] && isFinite(max) && isFinite(dataExtent[1]));
-                scale.setExtent(+fixedMin, max);
+                } while (max < rawExtent[1] && isFinite(max) && isFinite(rawExtent[1]));
             }
             else if (fixedMax != null) {
                 var min;
                 // User set min, expand extent on the other side
                 do {
                     min = fixedMax - interval * splitNumber;
+                    scale.setExtent(min, +fixedMax);
+                    scale.setInterval(interval);
                     interval = increaseInterval(interval);
-                } while (min > dataExtent[0] && isFinite(min) && isFinite(dataExtent[0]));
-                scale.setExtent(min, +fixedMax);
+                } while (min > rawExtent[0] && isFinite(min) && isFinite(rawExtent[0]));
             }
             else {
                 var nicedSplitNumber = scale.getTicks().length - 1;
                 if (nicedSplitNumber > splitNumber) {
                     interval = increaseInterval(interval);
                 }
+                // PENDING
+                var center = Math.round((rawExtent[0] + rawExtent[1]) / 2 / interval) * interval;
+                var halfSplitNumber = Math.round(splitNumber / 2);
                 scale.setExtent(
-                    numberUtil.round(Math.floor(dataExtent[0] / interval) * interval),
-                    numberUtil.round(Math.ceil(dataExtent[1] / interval) * interval)
+                    numberUtil.round(center - halfSplitNumber * interval),
+                    numberUtil.round(center + (splitNumber - halfSplitNumber) * interval)
                 );
+                scale.setInterval(interval);
             }
         });
     };
@@ -209,8 +221,10 @@ define(function (require) {
             radarModel.coordinateSystem = radar;
         });
         ecModel.eachSeriesByType('radar', function (radarSeries) {
-            // Inject coordinate system
-            radarSeries.coordinateSystem = radarList[radarSeries.get('radarIndex') || 0];
+            if (radarSeries.get('coordinateSystem') === 'radar') {
+                // Inject coordinate system
+                radarSeries.coordinateSystem = radarList[radarSeries.get('radarIndex') || 0];
+            }
         });
         return radarList;
     };

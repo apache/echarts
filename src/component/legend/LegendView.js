@@ -166,10 +166,13 @@ define(function (require) {
             // Compose symbols
             // PENDING
             if (!itemIcon && symbolType
-                && symbolType !== legendSymbolType
-                && symbolType != 'none'
+                // At least show one symbol, can't be all none
+                && ((symbolType !== legendSymbolType) || symbolType == 'none')
             ) {
                 var size = itemHeight * 0.8;
+                if (symbolType === 'none') {
+                    symbolType = 'circle';
+                }
                 // Put symbol in the center
                 itemGroup.add(symbolCreator.createSymbol(
                     symbolType, (itemWidth - size) / 2, (itemHeight - size) / 2, size, size,

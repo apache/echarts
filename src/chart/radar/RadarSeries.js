@@ -6,6 +6,7 @@ define(function(require) {
     var List = require('../../data/List');
     var completeDimensions = require('../../data/helper/completeDimensions');
     var zrUtil = require('zrender/core/util');
+    var formatUtil = require('../../util/format');
 
     var RadarSeries = SeriesModel.extend({
 
@@ -45,16 +46,41 @@ define(function(require) {
                 }).join('<br />');
         },
 
+        getFormattedLabel: function (dataIndex, status, formatter, indicatorIndex) {
+            status = status || 'normal';
+            var data = this.getData();
+            var itemModel = data.getItemModel(dataIndex);
+
+            var params = this.getDataParams(dataIndex);
+            if (formatter == null) {
+                formatter = itemModel.get(['label', status, 'formatter']);
+            }
+            // Get value of specified indicator
+            params.value = params.value[indicatorIndex || 0];
+            if (typeof formatter === 'function') {
+                params.status = status;
+                return formatter(params);
+            }
+            else if (typeof formatter === 'string') {
+                return formatUtil.formatTpl(formatter, params);
+            }
+        },
+
         defaultOption: {
             zlevel: 0,
             z: 2,
-            coordinateSystem: 'polar',
+            coordinateSystem: 'radar',
             legendHoverLink: true,
             radarIndex: 0,
             lineStyle: {
                 normal: {
                     width: 2,
                     type: 'solid'
+                }
+            },
+            label: {
+                normal: {
+                    position: 'top'
                 }
             },
             // areaStyle: {
