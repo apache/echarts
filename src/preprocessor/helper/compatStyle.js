@@ -38,7 +38,12 @@ define(function (require) {
     }
 
     return function (seriesOpt) {
+        if (!seriesOpt) {
+            return;
+        }
         compatItemStyle(seriesOpt);
+        compatItemStyle(seriesOpt.markPoint);
+        compatItemStyle(seriesOpt.markLine);
         var data = seriesOpt.data;
         if (data) {
             for (var i = 0; i < data.length; i++) {
