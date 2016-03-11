@@ -565,7 +565,9 @@ define(function (require) {
                         : zrUtil.merge(option[name], theme[name], false);
                 }
                 else {
-                    option[name] = theme[name];
+                    if (option[name] == null) {
+                        option[name] = theme[name];
+                    }
                 }
             }
         }
