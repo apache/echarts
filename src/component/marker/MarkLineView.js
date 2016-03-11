@@ -193,7 +193,7 @@ define(function (require) {
             // FIXME
             mlData.line.eachItemGraphicEl(function (el, idx) {
                 el.traverse(function (child) {
-                    child.hostModel = mlModel;
+                    child.tooltipFormatModel = mlModel;
                 });
             });
 

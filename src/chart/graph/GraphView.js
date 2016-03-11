@@ -56,7 +56,7 @@ define(function (require) {
                 var targetName = data.getName(edge.node2.dataIndex);
                 var html = sourceName + ' > ' + targetName;
                 if (params.value) {
-                    html += ':' + params.value;
+                    html += ' : ' + params.value;
                 }
                 return html;
             };
@@ -64,7 +64,7 @@ define(function (require) {
             lineDraw.updateData(edgeData, null, null);
             edgeData.eachItemGraphicEl(function (el) {
                 el.traverse(function (child) {
-                    child.hostModel = formatModel;
+                    child.tooltipFormatModel = formatModel;
                 });
             });
 
