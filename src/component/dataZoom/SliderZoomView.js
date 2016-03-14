@@ -162,7 +162,6 @@ define(function (require) {
             // auto-adapt according to target grid.
             var coordRect = this._findCoordRect();
             var ecSize = {width: api.getWidth(), height: api.getHeight()};
-
             // Default align by coordinate system rect.
             var positionInfo = this._orient === HORIZONTAL
                 ? {
@@ -180,13 +179,19 @@ define(function (require) {
                     height: coordRect.height
                 };
 
-            // Write back to option for chart.getOption(). (and may then
-            // chart.setOption() again, where current location value is needed);
-            // dataZoomModel.setLayoutParams(positionInfo);
-            dataZoomModel.setDefaultLayoutParams(positionInfo);
+            // Do not write back to option and replace value 'ph', because
+            // the 'ph' value should be recalculated when resize.
+            var layoutParams = layout.getLayoutParams(dataZoomModel.option);
+
+            // Replace the placeholder value.
+            zrUtil.each(['right', 'top', 'width', 'height'], function (name) {
+                if (layoutParams[name] === 'ph') {
+                    layoutParams[name] = positionInfo[name];
+                }
+            });
 
             var layoutRect = layout.getLayoutRect(
-                dataZoomModel.option,
+                layoutParams,
                 ecSize,
                 dataZoomModel.padding
             );

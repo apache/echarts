@@ -30,8 +30,8 @@ define(function(require) {
 
             backgroundColor: 'rgba(47,69,84,0)',    // Background of slider zoom component.
             dataBackgroundColor: '#ddd',            // Background of data shadow.
-            fillerColor: 'rgba(47,69,84,0.25)',     // Color of selected area.
-            handleColor: 'rgba(47,69,84,0.65)',     // Color of handle.
+            fillerColor: 'rgba(47,69,84,0.15)',     // Color of selected area.
+            handleColor: 'rgba(148,164,165,0.95)',     // Color of handle.
             handleSize: 10,
 
             labelPrecision: null,
@@ -43,18 +43,6 @@ define(function(require) {
             textStyle: {
                 color: '#333'
             }
-        },
-
-        /**
-         * @public
-         */
-        setDefaultLayoutParams: function (params) {
-            var option = this.option;
-            zrUtil.each(['right', 'top', 'width', 'height'], function (name) {
-                if (option[name] === 'ph') {
-                    option[name] = params[name];
-                };
-            });
         },
 
         /**
