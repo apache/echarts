@@ -260,6 +260,7 @@ define(function(require) {
                 dataIndex: rawDataIndex,
                 data: itemOpt,
                 value: rawValue,
+                color: data.getItemVisual(dataIndex, 'color'),
 
                 // Param name list for mapping `a`, `b`, `c`, `d`, `e`
                 $vars: ['seriesName', 'name', 'value']

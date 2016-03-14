@@ -69,9 +69,9 @@ define(function (require) {
             });
 
             // Save the original lineWidth
-            data.graph.eachEdge(function (edge) {
-                edge.__lineWidth = edge.getModel('lineStyle.normal').get('width');
-            });
+            // data.graph.eachEdge(function (edge) {
+            //     edge.__lineWidth = edge.getModel('lineStyle.normal').get('width');
+            // });
 
             var group = this.group;
             var groupNewProp = {
