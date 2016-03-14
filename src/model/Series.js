@@ -184,16 +184,16 @@ define(function(require) {
                 ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
             var name = data.getName(dataIndex);
             var color = data.getItemVisual(dataIndex, 'color');
-            var colorSpan = '<span style="display:inline-block;margin-right:5px;'
+            var colorEl = '<span style="display:inline-block;margin-right:5px;'
                 + 'border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
 
             return !multipleSeries
-                ? (encodeHTML(this.name) + '<br />' + colorSpan
+                ? (encodeHTML(this.name) + '<br />' + colorEl
                     + (name
                         ? encodeHTML(name) + ' : ' + formattedValue
                         : formattedValue)
                   )
-                : (colorSpan + encodeHTML(this.name) + ' : ' + formattedValue);
+                : (colorEl + encodeHTML(this.name) + ' : ' + formattedValue);
         },
 
         restoreData: function () {

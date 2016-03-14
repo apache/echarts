@@ -12,7 +12,7 @@ define(function (require) {
 
     var vendors = ['', '-webkit-', '-moz-', '-o-'];
 
-    var gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;';
+    var gCssText = 'position:absolute;display:block;border-style:solid;white-space:nowrap;z-index:9999999;';
 
     /**
      * @param {number} duration
