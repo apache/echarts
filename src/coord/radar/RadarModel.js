@@ -38,7 +38,7 @@ define(function (require) {
                     indicatorOpt.max = 0;
                 }
                 // Use same configuration
-                indicatorOpt = zrUtil.extend({
+                indicatorOpt = zrUtil.merge(zrUtil.clone(indicatorOpt), {
                     boundaryGap: boundaryGap,
                     splitNumber: splitNumber,
                     scale: scale,
@@ -51,7 +51,7 @@ define(function (require) {
                     nameGap: nameGap,
                     // min: 0,
                     nameTextStyle: nameTextStyle
-                }, indicatorOpt);
+                }, false);
                 if (!showName) {
                     indicatorOpt.name = '';
                 }
