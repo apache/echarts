@@ -127,6 +127,7 @@
                             textFont: textStyleModel.getFont()
                         }
                     ),
+                    z: 10,
                     onclick: zrUtil.bind(this._onSelect, this, item.node)
                 }));
 

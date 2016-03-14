@@ -55,6 +55,15 @@
                 <input type="radio" id="colorMapping-1" name="colorMapping" onclick="colorMappingChange('value');"/>
                 <label for="colorMapping-1">byValue</label>
             </span>
+            <span class="item">
+                <span class="item-title">leafDepth:</span>
+                <input type="radio" id="leafDepth-0" name="leafDepth" onclick="leafDepthChange(null);" checked="checked"/>
+                <label for="leafDepth-0">Not set</label>
+                <input type="radio" id="leafDepth-1" name="leafDepth" onclick="leafDepthChange(1);"/>
+                <label for="leafDepth-1">Set to 1</label>
+                <input type="radio" id="leafDepth-2" name="leafDepth" onclick="leafDepthChange(2);"/>
+                <label for="leafDepth-1">Set to 2</label>
+            </span>
         </div>
 
         <div id="main"></div>
@@ -90,6 +99,14 @@
                 chart.setOption({
                     series: [{
                         levels: levelOption
+                    }]
+                });
+            }
+
+            function leafDepthChange(value) {
+                chart.setOption({
+                    series: [{
+                        leafDepth: value
                     }]
                 });
             }

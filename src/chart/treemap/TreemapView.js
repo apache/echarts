@@ -84,21 +84,36 @@
             this.api = api;
             this.ecModel = ecModel;
 
+            var targetInfo = helper.retrieveTargetInfo(payload, seriesModel);
             var payloadType = payload && payload.type;
             var layoutInfo = seriesModel.layoutInfo;
             var isInit = !this._oldTree;
+            var thisStorage = this._storage;
+
+            // Mark new root when action is treemapRootToNode.
+            var reRoot = (payloadType === 'treemapRootToNode' && targetInfo && thisStorage)
+                ? {
+                    rootNodeGroup: thisStorage.nodeGroup[targetInfo.node.getRawIndex()],
+                    direction: payload.direction
+                }
+                : null;
 
             var containerGroup = this._giveContainerGroup(layoutInfo);
 
-            var renderResult = this._doRender(containerGroup, seriesModel);
+            var renderResult = this._doRender(containerGroup, seriesModel, reRoot);
 
-            (!isInit && (!payloadType || payloadType === 'treemapZoomToNode'))
-                ? this._doAnimation(containerGroup, renderResult, seriesModel)
+            (
+                !isInit && (
+                    !payloadType
+                    || payloadType === 'treemapZoomToNode'
+                    || payloadType === 'treemapRootToNode'
+                )
+            )
+                ? this._doAnimation(containerGroup, renderResult, seriesModel, reRoot)
                 : renderResult.renderFinally();
 
             this._resetController(api);
 
-            var targetInfo = helper.retrieveTargetInfo(payload, seriesModel);
             this._renderBreadcrumb(seriesModel, api, targetInfo);
         },
 
@@ -122,7 +137,7 @@
         /**
          * @private
          */
-        _doRender: function (containerGroup, seriesModel) {
+        _doRender: function (containerGroup, seriesModel, reRoot) {
             var thisTree = seriesModel.getData().tree;
             var oldTree = this._oldTree;
 
@@ -135,9 +150,11 @@
             var willDeleteEls = [];
             var renderNode = bind(
                 this._renderNode, this,
-                thisStorage, oldStorage, lastsForAnimation, willInvisibleEls, willVisibleEls
+                thisStorage, oldStorage, reRoot,
+                lastsForAnimation, willInvisibleEls, willVisibleEls
             );
             var viewRoot = seriesModel.getViewRoot();
+            var viewPath = helper.getPathToRoot(viewRoot);
 
             // Notice: when thisTree and oldTree are the same tree (see list.cloneShadow),
             // the oldTree is actually losted, so we can not find all of the old graphic
@@ -149,7 +166,7 @@
                 (oldTree && oldTree.root) ? [oldTree.root] : [],
                 containerGroup,
                 thisTree === oldTree || !oldTree,
-                viewRoot === thisTree.root
+                0
             );
 
             // Process all removing.
@@ -164,7 +181,7 @@
                 renderFinally: renderFinally
             };
 
-            function dualTravel(thisViewChildren, oldViewChildren, parentGroup, sameTree, inView) {
+            function dualTravel(thisViewChildren, oldViewChildren, parentGroup, sameTree, viewPathIndex) {
                 // When 'render' is triggered by action,
                 // 'this' and 'old' may be the same tree,
                 // we use rawIndex in that case.
@@ -194,10 +211,14 @@
                     var oldNode = oldIndex != null ? oldViewChildren[oldIndex] : null;
 
                     // Whether under viewRoot.
-                    var subInView = inView || thisNode === viewRoot;
-                    // If not under viewRoot, only remove.
-                    if (!subInView) {
-                        thisNode = null;
+                    if (!thisNode
+                        || isNaN(viewPathIndex)
+                        || (viewPathIndex < viewPath.length && viewPath[viewPathIndex] !== thisNode)
+                    ) {
+                        // Deleting nodes will be performed finally. This method just find
+                        // element from old storage, or create new element, set them to new
+                        // storage, and set styles.
+                        return;
                     }
 
                     var group = renderNode(thisNode, oldNode, parentGroup);
@@ -207,7 +228,7 @@
                         oldNode && oldNode.viewChildren || [],
                         group,
                         sameTree,
-                        subInView
+                        viewPathIndex + 1
                     );
                 }
             }
@@ -235,6 +256,7 @@
                     el.invisible = true;
                     // Setting invisible is for optimizing, so no need to set dirty,
                     // just mark as invisible.
+                    el.dirty();
                 });
                 each(willVisibleEls, function (el) {
                     el.invisible = false;
@@ -248,18 +270,12 @@
          * @private
          */
         _renderNode: function (
-            thisStorage, oldStorage, lastsForAnimation,
-            willInvisibleEls, willVisibleEls,
+            thisStorage, oldStorage, reRoot,
+            lastsForAnimation, willInvisibleEls, willVisibleEls,
             thisNode, oldNode, parentGroup
         ) {
             var thisRawIndex = thisNode && thisNode.getRawIndex();
             var oldRawIndex = oldNode && oldNode.getRawIndex();
-
-            // Deleting things will performed finally. This method just find element from
-            // old storage, or create new element, set them to new storage, and set styles.
-            if (!thisNode) {
-                return;
-            }
 
             var layout = thisNode.getLayout();
             var thisWidth = layout.width;
@@ -277,7 +293,7 @@
             group.__tmNodeHeight = thisHeight;
 
             // Background
-            var bg = giveGraphic('background', Rect);
+            var bg = giveGraphic('background', Rect, 0);
             if (bg) {
                 bg.setShape({x: 0, y: 0, width: thisWidth, height: thisHeight});
                 updateStyle(bg, {fill: thisNode.getVisual('borderColor', true)});
@@ -289,13 +305,13 @@
             // No children, render content.
             if (!thisViewChildren || !thisViewChildren.length) {
                 var borderWidth = layout.borderWidth;
-                var content = giveGraphic('content', Rect);
-
+                var content = giveGraphic('content', Rect, 3);
                 if (content) {
                     var contentWidth = Math.max(thisWidth - 2 * borderWidth, 0);
                     var contentHeight = Math.max(thisHeight - 2 * borderWidth, 0);
                     var labelModel = thisNode.getModel('label.normal');
                     var textStyleModel = thisNode.getModel('label.normal.textStyle');
+                    var hoverStyle = thisNode.getModel('itemStyle.emphasis').getItemStyle();
                     var text = thisNode.getModel().get('name');
                     var textRect = textStyleModel.getTextRect(text);
                     var showLabel = labelModel.get('show');
@@ -308,6 +324,8 @@
                             ? textStyleModel.ellipsis(text, contentWidth) : '';
                     }
 
+                    graphic.setHoverStyle(content, hoverStyle);
+
                     // For tooltip.
                     content.dataIndex = thisNode.dataIndex;
                     content.seriesIndex = this.seriesModel.seriesIndex;
@@ -319,6 +337,7 @@
                         width: contentWidth,
                         height: contentHeight
                     });
+
                     updateStyle(content, {
                         fill: thisNode.getVisual('color', true),
                         text: text,
@@ -334,7 +353,7 @@
 
             return group;
 
-            function giveGraphic(storageName, Ctor) {
+            function giveGraphic(storageName, Ctor, z) {
                 var element = oldRawIndex != null && oldStorage[storageName][oldRawIndex];
                 var lasts = lastsForAnimation[storageName];
 
@@ -345,7 +364,7 @@
                 }
                 // If invisible and no old element, do not create new element (for optimizing).
                 else if (!invisible) {
-                    element = new Ctor();
+                    element = new Ctor({z: z});
                     prepareAnimationWhenNoOld(lasts, element, storageName);
                 }
 
@@ -356,9 +375,9 @@
             function prepareAnimationWhenHasOld(lasts, element, storageName) {
                 var lastCfg = lasts[thisRawIndex] = {};
                 lastCfg.old = storageName === 'nodeGroup'
-                     ? element.position.slice()
-                     : zrUtil.extend({}, element.shape);
-             }
+                    ? element.position.slice()
+                    : zrUtil.extend({}, element.shape);
+            }
 
             // If a element is new, we need to find the animation start point carefully,
             // otherwise it will looks strange when 'zoomToNode'.
@@ -370,23 +389,25 @@
                     willVisibleEls.push(element);
                 }
                 else {
-                    var parentNode = thisNode.parentNode;
-                    var parentOldBg;
-                    var parentOldX = 0;
-                    var parentOldY = 0;
-                    // For convenient, get old bounding rect from background.
-                    if (parentNode && (
-                        parentOldBg = lastsForAnimation.background[parentNode.getRawIndex()]
-                    )) {
-                        parentOldX = parentOldBg.old.width;
-                        parentOldY = parentOldBg.old.height;
-                    }
-                    // When no parent old shape found, its parent is new too,
-                    // so we can just use {x:0, y:0}.
                     var lastCfg = lasts[thisRawIndex] = {};
-                    lastCfg.old = storageName === 'nodeGroup'
-                        ? [parentOldX, parentOldY]
-                        : {x: parentOldX, y: parentOldY, width: 0, height: 0};
+                    var parentNode = thisNode.parentNode;
+
+                    if (parentNode && (!reRoot || reRoot.direction === 'drilldown')) {
+                        var parentOldX = 0;
+                        var parentOldY = 0;
+                        // For convenience, get old bounding rect from background.
+                        var parentOldBg = lastsForAnimation.background[parentNode.getRawIndex()];
+
+                        if (parentOldBg && parentOldBg.old) {
+                            parentOldX = parentOldBg.old.width / 2; // Devided by 2 for reRoot effect.
+                            parentOldY = parentOldBg.old.height / 2;
+                        }
+                        // When no parent old shape found, its parent is new too,
+                        // so we can just use {x:0, y:0}.
+                        lastCfg.old = storageName === 'nodeGroup'
+                            ? [parentOldX, parentOldY]
+                            : {x: parentOldX, y: parentOldY, width: 0, height: 0};
+                    }
 
                     // Fade in, user can be aware that these nodes are new.
                     lastCfg.fadein = storageName !== 'nodeGroup';
@@ -414,56 +435,87 @@
         /**
          * @private
          */
-        _doAnimation: function (containerGroup, renderResult, seriesModel) {
+        _doAnimation: function (containerGroup, renderResult, seriesModel, reRoot) {
             if (!seriesModel.get('animation')) {
                 return;
             }
 
             var duration = seriesModel.get('animationDurationUpdate');
             var easing = seriesModel.get('animationEasing');
-
             var animationWrap = animationUtil.createWrap();
 
             // Make delete animations.
-            var viewRoot = this.seriesModel.getViewRoot();
-            var rootGroup = this._storage.nodeGroup[viewRoot.getRawIndex()];
-            rootGroup && rootGroup.traverse(function (el) {
-                var storageName;
-                if (el.invisible || !(storageName = el.__tmWillDelete)) {
-                    return;
-                }
-                var targetX = 0;
-                var targetY = 0;
-                var parent = el.parent; // Always has parent, and parent is nodeGroup.
-                if (!parent.__tmWillDelete) {
-                    // Let node animate to right-bottom corner, cooperating with fadeout,
-                    // which is perfect for user understanding.
-                    targetX = parent.__tmNodeWidth;
-                    targetY = parent.__tmNodeHeight;
-                }
-                var target = storageName === 'nodeGroup'
-                    ? {position: [targetX, targetY], style: {opacity: 0}}
-                    : {shape: {x: targetX, y: targetY, width: 0, height: 0}, style: {opacity: 0}};
-                animationWrap.add(el, target, duration, easing);
+            each(renderResult.willDeleteEls, function (store, storageName) {
+                each(store, function (el, rawIndex) {
+                    var storageName;
+
+                    if (el.invisible || !(storageName = el.__tmWillDelete)) {
+                        return;
+                    }
+
+                    var parent = el.parent; // Always has parent, and parent is nodeGroup.
+                    var target;
+
+                    if (reRoot && reRoot.direction === 'drilldown') {
+                        if (parent === reRoot.rootNodeGroup) {
+                            // Only 'content' will enter this branch, but not nodeGroup.
+                            target = {
+                                shape: {
+                                    x: 0, y: 0,
+                                    width: parent.__tmNodeWidth, height: parent.__tmNodeHeight
+                                }
+                            };
+                            el.z = 2;
+                        }
+                        else {
+                            target = {style: {opacity: 0}};
+                            el.z = 1;
+                        }
+                    }
+                    else {
+                        var targetX = 0;
+                        var targetY = 0;
+
+                        if (!parent.__tmWillDelete) {
+                            // Let node animate to right-bottom corner, cooperating with fadeout,
+                            // which is appropriate for user understanding.
+                            // Divided by 2 for reRoot rollup effect.
+                            targetX = parent.__tmNodeWidth / 2;
+                            targetY = parent.__tmNodeHeight / 2;
+                        }
+                        target = storageName === 'nodeGroup'
+                            ? {position: [targetX, targetY], style: {opacity: 0}}
+                            : {
+                                shape: {x: targetX, y: targetY, width: 0, height: 0},
+                                style: {opacity: 0}
+                            };
+                    }
+
+                    target && animationWrap.add(el, target, duration, easing);
+                });
             });
 
             // Make other animations
             each(this._storage, function (store, storageName) {
                 each(store, function (el, rawIndex) {
                     var last = renderResult.lastsForAnimation[storageName][rawIndex];
-                    var target;
+                    var target = {};
 
                     if (!last) {
                         return;
                     }
 
                     if (storageName === 'nodeGroup') {
-                        target = {position: el.position.slice()};
-                        el.position = last.old;
+                        if (last.old) {
+                            target.position = el.position.slice();
+                            el.position = last.old;
+                        }
                     }
                     else {
-                        target = {shape: zrUtil.extend({}, el.shape)};
-                        el.setShape(last.old);
+                        if (last.old) {
+                            target.shape = zrUtil.extend({}, el.shape);
+                            el.setShape(last.old);
+                        }
 
                         if (last.fadein) {
                             el.setStyle('opacity', 0);
@@ -631,12 +683,19 @@
 
                 var targetInfo = this.findTarget(e.offsetX, e.offsetY);
 
-                if (targetInfo) {
+                if (!targetInfo) {
+                    return;
+                }
+
+                var node = targetInfo.node;
+                if (node.getLayout().isLeafRoot) {
+                    this._rootToNode(targetInfo);
+                }
+                else {
                     if (nodeClick === 'zoomToNode') {
                         this._zoomToNode(targetInfo);
                     }
                     else if (nodeClick === 'link') {
-                        var node = targetInfo.node;
                         var itemModel = node.hostTree.data.getItemModel(node.dataIndex);
                         var link = itemModel.get('link', true);
                         var linkTarget = itemModel.get('target', true) || 'blank';
@@ -663,7 +722,11 @@
                 .render(seriesModel, api, targetInfo.node);
 
             function onSelect(node) {
-                this._zoomToNode({node: node});
+                if (this._state !== 'animating') {
+                    helper.aboveViewRoot(seriesModel.getViewRoot(), node)
+                        ? this._rootToNode({node: node})
+                        : this._zoomToNode({node: node});
+                }
             }
         },
 
@@ -688,6 +751,18 @@
         _zoomToNode: function (targetInfo) {
             this.api.dispatchAction({
                 type: 'treemapZoomToNode',
+                from: this.uid,
+                seriesId: this.seriesModel.id,
+                targetNode: targetInfo.node
+            });
+        },
+
+        /**
+         * @private
+         */
+        _rootToNode: function (targetInfo) {
+            this.api.dispatchAction({
+                type: 'treemapRootToNode',
                 from: this.uid,
                 seriesId: this.seriesModel.id,
                 targetNode: targetInfo.node
@@ -736,4 +811,5 @@
     function createStorage() {
         return {nodeGroup: [], background: [], content: []};
     }
+
 });
