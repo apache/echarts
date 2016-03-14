@@ -259,7 +259,7 @@ define(function (require) {
                     defaultText
                 )
                 : '',
-            textFont: textStyleModel.getFont(),
+            textFont: textStyleHoverModel.getFont(),
             fill: textStyleHoverModel.getTextColor()
         };
         label.__textAlign = textStyleModel.get('align');

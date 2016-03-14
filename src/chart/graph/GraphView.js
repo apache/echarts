@@ -51,17 +51,20 @@ define(function (require) {
             );
             formatModel.formatTooltip = function (dataIndex) {
                 var params = this.getDataParams(dataIndex);
-                var rawDataOpt = params.data;
-                var html = rawDataOpt.source + ' > ' + rawDataOpt.target;
+                var edge = data.graph.getEdgeByIndex(dataIndex);
+                var sourceName = data.getName(edge.node1.dataIndex);
+                var targetName = data.getName(edge.node2.dataIndex);
+                var html = sourceName + ' > ' + targetName;
                 if (params.value) {
-                    html += ':' + params.value;
+                    html += ' : ' + params.value;
                 }
                 return html;
             };
+
             lineDraw.updateData(edgeData, null, null);
             edgeData.eachItemGraphicEl(function (el) {
                 el.traverse(function (child) {
-                    child.hostModel = formatModel;
+                    child.tooltipFormatModel = formatModel;
                 });
             });
 

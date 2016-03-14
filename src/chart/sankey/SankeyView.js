@@ -124,7 +124,7 @@ define(function (require) {
                 var curve = new SankeyShape();
 
                 curve.dataIndex = edge.dataIndex;
-                curve.hostModel = formatModel;
+                curve.tooltipFormatModel = formatModel;
 
                 var lineStyleModel = edge.getModel('lineStyle.normal');
                 var curvature = lineStyleModel.get('curveness');
