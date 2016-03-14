@@ -183,14 +183,17 @@ define(function(require) {
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
             var name = data.getName(dataIndex);
+            var color = data.getItemVisual(dataIndex, 'color');
+            var colorSpan = '<span style="display:inline-block;margin-right:5px;'
+                + 'border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
 
             return !multipleSeries
-                ? (encodeHTML(this.name) + '<br />'
+                ? (encodeHTML(this.name) + '<br />' + colorSpan
                     + (name
                         ? encodeHTML(name) + ' : ' + formattedValue
                         : formattedValue)
                   )
-                : (encodeHTML(this.name) + ' : ' + formattedValue);
+                : (colorSpan + encodeHTML(this.name) + ' : ' + formattedValue);
         },
 
         restoreData: function () {
