@@ -619,11 +619,12 @@ define(function (require) {
 
             (updateMethod !== 'none' && !isHighlightOrDownplay)
                 && updateMethods[updateMethod].call(this, payload);
+
             if (!silent) {
                 // Follow the rule of action batch
                 if (batched) {
                     eventObj = {
-                        type: eventObjBatch[0].type,
+                        type: actionInfo.event || payload.type,
                         batch: eventObjBatch
                     };
                 }

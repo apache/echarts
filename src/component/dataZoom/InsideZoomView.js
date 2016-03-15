@@ -93,7 +93,7 @@ define(function (require) {
             var dataZoomModel = this.dataZoomModel;
 
             if (dataZoomModel.option.zoomLock) {
-                return;
+                return this._range;
             }
 
             return (
