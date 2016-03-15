@@ -59,18 +59,20 @@ define(function(require) {
                 record.dispatchAction = zrUtil.curry(dispatchAction, api);
             }
 
-            // Update.
-            if (record) {
-                throttle.createOrUpdate(
-                    record,
-                    'dispatchAction',
-                    dataZoomInfo.throttleRate,
-                    'fixRate'
-                );
+            // Consider resize, area should be always updated.
+            record.controller.rect = dataZoomInfo.coordinateSystem.getRect().clone();
 
-                !record.dataZoomInfos[theDataZoomId] && record.count++;
-                record.dataZoomInfos[theDataZoomId] = dataZoomInfo;
-            }
+            // Update throttle.
+            throttle.createOrUpdate(
+                record,
+                'dispatchAction',
+                dataZoomInfo.throttleRate,
+                'fixRate'
+            );
+
+            // Update reference of dataZoom.
+            !(record.dataZoomInfos[theDataZoomId]) && record.count++;
+            record.dataZoomInfos[theDataZoomId] = dataZoomInfo;
         },
 
         /**
@@ -124,7 +126,6 @@ define(function(require) {
         controller.enable();
         controller.on('pan', curry(onPan, newRecord));
         controller.on('zoom', curry(onZoom, newRecord));
-        controller.rect = dataZoomInfo.coordinateSystem.getRect().clone();
 
         return controller;
     }
