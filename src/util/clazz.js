@@ -80,7 +80,7 @@ define(function (require) {
 
                 if (!componentType.sub) {
                     if (storage[componentType.main]) {
-                        throw new Error(componentType.main + 'exists');
+                        throw new Error(componentType.main + 'exists.');
                     }
                     storage[componentType.main] = Clazz;
                 }
@@ -101,7 +101,7 @@ define(function (require) {
 
             if (throwWhenNotFound && !Clazz) {
                 throw new Error(
-                    'Component ' + componentTypeMain + '.' + (subType || '') + ' not exists'
+                    'Component ' + componentTypeMain + '.' + (subType || '') + ' not exists. Load it first.'
                 );
             }
 
