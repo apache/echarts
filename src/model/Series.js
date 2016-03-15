@@ -12,7 +12,7 @@ define(function(require) {
 
     var SeriesModel = ComponentModel.extend({
 
-        type: 'series',
+        type: 'series.__base__',
 
         /**
          * @readOnly
