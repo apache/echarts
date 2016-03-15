@@ -550,6 +550,7 @@ define(function (require) {
             cfg = name;
             name = 'default';
         }
+        this.hideLoading();
         var el = defaultLoadingEffect(this._api, cfg);
         var zr = this._zr;
         this._loadingFX = el;
