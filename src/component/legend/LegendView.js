@@ -25,7 +25,7 @@ define(function (require) {
     }
 
     function dispatchDownplayAction(seriesModel, dataName, api) {
-        seriesModel.get('legendHoverLink') &&api.dispatchAction({
+        seriesModel.get('legendHoverLink') && api.dispatchAction({
             type: 'downplay',
             seriesName: seriesModel.name,
             name: dataName
