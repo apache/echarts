@@ -206,10 +206,11 @@ define(function(require) {
 
             // Create hoverStyle on mouseover
             var hoverStyle = el.__hoverStl;
+            var lift = colorTool.lift;
             hoverStyle.fill = hoverStyle.fill
-                || (fill instanceof Gradient ? fill : colorTool.lift(fill, -0.1));
+                || (fill && (fill instanceof Gradient ? fill : lift(fill, -0.1)));
             hoverStyle.stroke = hoverStyle.stroke
-                || (stroke instanceof Gradient ? stroke : colorTool.lift(stroke, -0.1));
+                || (stroke && (stroke instanceof Gradient ? stroke : lift(stroke, -0.1)));
 
             var normalStyle = {};
             for (var name in hoverStyle) {
@@ -272,7 +273,7 @@ define(function(require) {
     function setElementHoverStl(el, hoverStl) {
         // If element has sepcified hoverStyle, then use it instead of given hoverStyle
         // Often used when item group has a label element and it's hoverStyle is different
-        el.__hoverStl = el.hoverStyle || hoverStl;
+        el.__hoverStl = el.hoverStyle || hoverStl || {};
         el.__hoverStlDirty = true;
     }
 
@@ -314,7 +315,6 @@ define(function(require) {
      * @param {Object} [hoverStyle]
      */
     graphic.setHoverStyle = function (el, hoverStyle) {
-        hoverStyle = hoverStyle || {};
         el.type === 'group'
             ? el.traverse(function (child) {
                 if (child.type !== 'group') {

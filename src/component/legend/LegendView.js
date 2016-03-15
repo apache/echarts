@@ -217,6 +217,8 @@ define(function (require) {
 
             this.group.add(itemGroup);
 
+            graphic.setHoverStyle(itemGroup);
+
             return itemGroup;
         }
     });
