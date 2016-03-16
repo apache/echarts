@@ -264,7 +264,7 @@ define(function (require) {
             coordDimsInfos = zrUtil.map(coordSys && coordSys.dimensions, function (coordDim) {
                 var info = seriesModel.getData().getDimensionInfo(
                     seriesModel.coordDimToDataDim(coordDim)[0]
-                );
+                ) || {}; // In map series data don't have lng and lat dimension. Fallback to same with coordSys
                 info.name = coordDim;
                 return info;
             });
