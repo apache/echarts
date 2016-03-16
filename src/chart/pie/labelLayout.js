@@ -38,42 +38,41 @@ define(function (require) {
             }
         }
 
-        // function changeX(list, isDownList, cx, cy, r, dir) {
-        //     var deltaX;
-        //     var deltaY;
-        //     var length;
-        //     var lastDeltaX = dir > 0
-        //         ? isDownList                // 右侧
-        //             ? Number.MAX_VALUE      // 下
-        //             : 0                     // 上
-        //         : isDownList                // 左侧
-        //             ? Number.MAX_VALUE      // 下
-        //             : 0;                    // 上
+        function changeX(list, isDownList, cx, cy, r, dir) {
+            var lastDeltaX = dir > 0
+                ? isDownList                // 右侧
+                    ? Number.MAX_VALUE      // 下
+                    : 0                     // 上
+                : isDownList                // 左侧
+                    ? Number.MAX_VALUE      // 下
+                    : 0;                    // 上
 
-        //     for (var i = 0, l = list.length; i < l; i++) {
-        //         deltaY = Math.abs(list[i].y - cy);
-        //         length = list[i].length;
-        //         deltaX = (deltaY < r + length)
-        //             ? Math.sqrt(
-        //                   (r + length + 20) * (r + length + 20)
-        //                   - Math.pow(list[i].y - cy, 2)
-        //               )
-        //             : Math.abs(
-        //                   list[i].x - cx
-        //               );
-        //         if (isDownList && deltaX >= lastDeltaX) {
-        //             // 右下，左下
-        //             deltaX = lastDeltaX - 10;
-        //         }
-        //         if (!isDownList && deltaX <= lastDeltaX) {
-        //             // 右上，左上
-        //             deltaX = lastDeltaX + 10;
-        //         }
+            for (var i = 0, l = list.length; i < l; i++) {
+                // Not change x for center label
+                if (list[i].position === 'center') {
+                    continue;
+                }
+                var deltaY = Math.abs(list[i].y - cy);
+                var length = list[i].length;
+                var deltaX = (deltaY < r + length)
+                    ? Math.sqrt(
+                          (r + length + 20) * (r + length + 20)
+                          - Math.pow(list[i].y - cy, 2)
+                      )
+                    : Math.abs(list[i].x - cx);
+                if (isDownList && deltaX >= lastDeltaX) {
+                    // 右下，左下
+                    deltaX = lastDeltaX - 10;
+                }
+                if (!isDownList && deltaX <= lastDeltaX) {
+                    // 右上，左上
+                    deltaX = lastDeltaX + 10;
+                }
 
-        //         list[i].x = cx + deltaX * dir;
-        //         lastDeltaX = deltaX;
-        //     }
-        // }
+                list[i].x = cx + deltaX * dir;
+                lastDeltaX = deltaX;
+            }
+        }
 
         var lastY = 0;
         var delta;
@@ -98,8 +97,8 @@ define(function (require) {
                 upList.push(list[i]);
             }
         }
-        // changeX(downList, true, cx, cy, r, dir);
-        // changeX(upList, false, cx, cy, r, dir);
+        changeX(downList, true, cx, cy, r, dir);
+        changeX(upList, false, cx, cy, r, dir);
     }
 
     function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight) {
@@ -120,6 +119,7 @@ define(function (require) {
         for (var i = 0; i < labelLayoutList.length; i++) {
             var linePoints = labelLayoutList[i].linePoints;
             if (linePoints) {
+                var dist = linePoints[1][0] - linePoints[2][0];
                 if (labelLayoutList[i].x < cx) {
                     linePoints[2][0] = labelLayoutList[i].x + 3;
                 }
@@ -127,6 +127,7 @@ define(function (require) {
                     linePoints[2][0] = labelLayoutList[i].x - 3;
                 }
                 linePoints[1][1] = linePoints[2][1] = labelLayoutList[i].y;
+                linePoints[1][0] = linePoints[2][0] + dist;
             }
         }
     }
@@ -162,13 +163,13 @@ define(function (require) {
             cx = layout.cx;
             cy = layout.cy;
 
+            var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
             if (labelPosition === 'center') {
                 textX = layout.cx;
                 textY = layout.cy;
                 textAlign = 'center';
             }
             else {
-                var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
                 var x1 = (isLabelInside ? layout.r / 2 * dx : layout.r * dx) + cx;
                 var y1 = (isLabelInside ? layout.r / 2 * dy : layout.r * dy) + cy;
 
@@ -204,6 +205,7 @@ define(function (require) {
             layout.label = {
                 x: textX,
                 y: textY,
+                position: labelPosition,
                 height: textRect.height,
                 length: labelLineLen,
                 length2: labelLineLen2,
@@ -214,7 +216,10 @@ define(function (require) {
                 rotation: labelRotate
             };
 
-            labelLayoutList.push(layout.label);
+            // Not layout the inside label
+            if (!isLabelInside) {
+                labelLayoutList.push(layout.label);
+            }
         });
         if (!hasLabelRotate && seriesModel.get('avoidLabelOverlap')) {
             avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight);

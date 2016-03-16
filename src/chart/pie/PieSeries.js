@@ -110,9 +110,9 @@ define(function(require) {
                 normal: {
                     show: true,
                     // 引导线两段中的第一段长度
-                    length: 20,
+                    length: 15,
                     // 引导线两段中的第二段长度
-                    length2: 5,
+                    length2: 15,
                     smooth: false,
                     lineStyle: {
                         // color: 各异,
