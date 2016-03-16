@@ -154,7 +154,7 @@ define(function (require) {
             return item.coord && item.coord[dimIndex];
         }
         else {
-            item.value;
+            return item.value;
         }
     };
 

@@ -149,29 +149,38 @@ define(function (require) {
      * @param {module:echarts/model/Model} mpModel
      */
     function createList(coordSys, seriesModel, mpModel) {
-        var coordDimsInfos = zrUtil.map(coordSys.dimensions, function (coordDim) {
-            var info = seriesModel.getData().getDimensionInfo(
-                seriesModel.coordDimToDataDim(coordDim)[0]
-            );
-            info.name = coordDim;
-            return info;
-        });
+        var coordDimsInfos;
+        if (coordSys) {
+            coordDimsInfos = zrUtil.map(coordSys && coordSys.dimensions, function (coordDim) {
+                var info = seriesModel.getData().getDimensionInfo(
+                    seriesModel.coordDimToDataDim(coordDim)[0]
+                );
+                info.name = coordDim;
+                return info;
+            });
+        }
+        else {
+            coordDimsInfos =[{
+                name: 'value',
+                type: 'float'
+            }];
+        }
 
         var mpData = new List(coordDimsInfos, mpModel);
-
+        var dataOpt = zrUtil.map(mpModel.get('data'), zrUtil.curry(
+                markerHelper.dataTransform, seriesModel
+            ));
         if (coordSys) {
-            mpData.initData(
-                zrUtil.filter(
-                    zrUtil.map(mpModel.get('data'), zrUtil.curry(
-                        markerHelper.dataTransform, seriesModel
-                    )),
-                    zrUtil.curry(markerHelper.dataFilter, coordSys)
-                ),
-                null,
-                markerHelper.dimValueGetter
+            dataOpt = zrUtil.filter(
+                dataOpt, zrUtil.curry(markerHelper.dataFilter, coordSys)
             );
         }
 
+        mpData.initData(dataOpt, null,
+            coordSys ? markerHelper.dimValueGetter : function (item) {
+                return item.value;
+            }
+        );
         return mpData;
     }
 

@@ -147,7 +147,6 @@ define(function (require) {
             this.group.add(lineDraw.group);
 
             var mlData = createList(coordSys, seriesModel, mlModel);
-            var dims = coordSys.dimensions;
 
             var fromData = mlData.from;
             var toData = mlData.to;
@@ -218,6 +217,7 @@ define(function (require) {
                         );
                     }
                     else {
+                        var dims = coordSys.dimensions;
                         var x = data.get(dims[0], idx);
                         var y = data.get(dims[1], idx);
                         point = coordSys.dataToPoint([x, y]);
@@ -259,40 +259,50 @@ define(function (require) {
      */
     function createList(coordSys, seriesModel, mlModel) {
 
-        var coordDimsInfos = zrUtil.map(coordSys.dimensions, function (coordDim) {
-            var info = seriesModel.getData().getDimensionInfo(
-                seriesModel.coordDimToDataDim(coordDim)[0]
-            );
-            info.name = coordDim;
-            return info;
-        });
+        var coordDimsInfos;
+        if (coordSys) {
+            coordDimsInfos = zrUtil.map(coordSys && coordSys.dimensions, function (coordDim) {
+                var info = seriesModel.getData().getDimensionInfo(
+                    seriesModel.coordDimToDataDim(coordDim)[0]
+                );
+                info.name = coordDim;
+                return info;
+            });
+        }
+        else {
+            coordDimsInfos =[{
+                name: 'value',
+                type: 'float'
+            }];
+        }
+
         var fromData = new List(coordDimsInfos, mlModel);
         var toData = new List(coordDimsInfos, mlModel);
         // No dimensions
         var lineData = new List([], mlModel);
 
+        var optData = zrUtil.map(mlModel.get('data'), zrUtil.curry(
+            markLineTransform, seriesModel, coordSys, mlModel
+        ));
         if (coordSys) {
-            var optData = zrUtil.filter(
-                zrUtil.map(mlModel.get('data'), zrUtil.curry(
-                    markLineTransform, seriesModel, coordSys, mlModel
-                )),
-                zrUtil.curry(markLineFilter, coordSys)
+            optData = zrUtil.filter(
+                optData, zrUtil.curry(markLineFilter, coordSys)
             );
-            fromData.initData(
-                zrUtil.map(optData, function (item) { return item[0]; }),
-                null,
-                markerHelper.dimValueGetter
-            );
-            toData.initData(
-                zrUtil.map(optData, function (item) { return item[1]; }),
-                null,
-                markerHelper.dimValueGetter
-            );
-            lineData.initData(
-                zrUtil.map(optData, function (item) { return item[2]; })
-            );
-
         }
+        var dimValueGetter = coordSys ? markerHelper.dimValueGetter : function (item) {
+            return item.value;
+        };
+        fromData.initData(
+            zrUtil.map(optData, function (item) { return item[0]; }),
+            null, dimValueGetter
+        );
+        toData.initData(
+            zrUtil.map(optData, function (item) { return item[1]; }),
+            null, dimValueGetter
+        );
+        lineData.initData(
+            zrUtil.map(optData, function (item) { return item[2]; })
+        );
         return {
             from: fromData,
             to: toData,

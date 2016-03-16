@@ -748,8 +748,6 @@ define(function (require) {
         // Components that use _seriesIndices should depends on series component,
         // which make sure that their initialization is after series.
         if (!ecModel._seriesIndices) {
-            // FIXME
-            // 验证和提示怎么写
             throw new Error('Series has not been initialized yet.');
         }
     }
