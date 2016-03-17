@@ -104,11 +104,14 @@ define(function(require) {
                 }
             ];
 
+            var isXAxisCateogry = xAxisType === 'category';
+
             completeDimensions(dimensions, data, ['x', 'y', 'z']);
 
             return {
                 dimensions: dimensions,
-                categoryAxisModel: xAxisType === 'category'
+                categoryIndex: isXAxisCateogry ? 0 : 1,
+                categoryAxisModel: isXAxisCateogry
                     ? xAxisModel
                     : (yAxisType === 'category' ? yAxisModel : null)
             };
@@ -143,12 +146,14 @@ define(function(require) {
                     stackable: isStackable(angleAxisType)
                 }
             ];
+            var isAngleAxisCateogry = angleAxisType === 'category';
 
             completeDimensions(dimensions, data, ['radius', 'angle', 'value']);
 
             return {
                 dimensions: dimensions,
-                categoryAxisModel: angleAxisType === 'category'
+                categoryIndex: isAngleAxisCateogry ? 1 : 0,
+                categoryAxisModel: isAngleAxisCateogry
                     ? angleAxisModel
                     : (radiusAxisType === 'category' ? radiusAxisModel : null)
             };
@@ -181,7 +186,7 @@ define(function(require) {
                 if (zrUtil.isArray(data[0]) && data[0].length > 1) {
                     nameList = [];
                     for (var i = 0; i < dataLen; i++) {
-                        nameList[i] = categories[data[i][0]];
+                        nameList[i] = categories[data[i][result.categoryIndex || 0]];
                     }
                 }
                 else {
