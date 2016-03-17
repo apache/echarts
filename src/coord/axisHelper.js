@@ -72,8 +72,8 @@ define(function (require) {
     axisHelper.niceScaleExtent = function (axis, model) {
         var scale = axis.scale;
         var extent = axisHelper.getScaleExtent(axis, model);
-        var fixMin = model.get('min') != null;
-        var fixMax = model.get('max') != null;
+        var fixMin = (model.getMin ? model.getMin() : model.get('min')) != null;
+        var fixMax = (model.getMax ? model.getMax() : model.get('max')) != null;
         scale.setExtent(extent[0], extent[1]);
         scale.niceExtent(model.get('splitNumber'), fixMin, fixMax);
 
