@@ -620,6 +620,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            cfg = name;
 	            name = 'default';
 	        }
+	        this.hideLoading();
 	        var el = defaultLoadingEffect(this._api, cfg);
 	        var zr = this._zr;
 	        this._loadingFX = el;
@@ -688,11 +689,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            (updateMethod !== 'none' && !isHighlightOrDownplay)
 	                && updateMethods[updateMethod].call(this, payload);
+
 	            if (!silent) {
 	                // Follow the rule of action batch
 	                if (batched) {
 	                    eventObj = {
-	                        type: eventObjBatch[0].type,
+	                        type: actionInfo.event || payload.type,
 	                        batch: eventObjBatch
 	                    };
 	                }
@@ -1032,9 +1034,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.1.3',
+	        version: '3.1.4',
 	        dependencies: {
-	            zrender: '3.0.4'
+	            zrender: '3.0.5'
 	        }
 	    };
 
@@ -1921,7 +1923,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        : zrUtil.merge(option[name], theme[name], false);
 	                }
 	                else {
-	                    option[name] = theme[name];
+	                    if (option[name] == null) {
+	                        option[name] = theme[name];
+	                    }
 	                }
 	            }
 	        }
@@ -2102,8 +2106,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // Components that use _seriesIndices should depends on series component,
 	        // which make sure that their initialization is after series.
 	        if (!ecModel._seriesIndices) {
-	            // FIXME
-	            // 验证和提示怎么写
 	            throw new Error('Series has not been initialized yet.');
 	        }
 	    }
@@ -2896,6 +2898,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                dataIndex: rawDataIndex,
 	                data: itemOpt,
 	                value: rawValue,
+	                color: data.getItemVisual(dataIndex, 'color'),
 
 	                // Param name list for mapping `a`, `b`, `c`, `d`, `e`
 	                $vars: ['seriesName', 'name', 'value']
@@ -3647,7 +3650,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                if (!componentType.sub) {
 	                    if (storage[componentType.main]) {
-	                        throw new Error(componentType.main + 'exists');
+	                        throw new Error(componentType.main + 'exists.');
 	                    }
 	                    storage[componentType.main] = Clazz;
 	                }
@@ -3668,7 +3671,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            if (throwWhenNotFound && !Clazz) {
 	                throw new Error(
-	                    'Component ' + componentTypeMain + '.' + (subType || '') + ' not exists'
+	                    'Component ' + componentTypeMain + '.' + (subType || '') + ' not exists. Load it first.'
 	                );
 	            }
 
@@ -6157,7 +6160,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var SeriesModel = ComponentModel.extend({
 
-	        type: 'series',
+	        type: 'series.__base__',
 
 	        /**
 	         * @readOnly
@@ -6328,14 +6331,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var formattedValue = zrUtil.isArray(value)
 	                ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
 	            var name = data.getName(dataIndex);
+	            var color = data.getItemVisual(dataIndex, 'color');
+	            var colorEl = '<span style="display:inline-block;margin-right:5px;'
+	                + 'border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
 
 	            return !multipleSeries
-	                ? (encodeHTML(this.name) + '<br />'
+	                ? (encodeHTML(this.name) + '<br />' + colorEl
 	                    + (name
 	                        ? encodeHTML(name) + ' : ' + formattedValue
 	                        : formattedValue)
 	                  )
-	                : (encodeHTML(this.name) + ' : ' + formattedValue);
+	                : (colorEl + encodeHTML(this.name) + ' : ' + formattedValue);
 	        },
 
 	        restoreData: function () {
@@ -9785,10 +9791,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            // Create hoverStyle on mouseover
 	            var hoverStyle = el.__hoverStl;
+	            var lift = colorTool.lift;
 	            hoverStyle.fill = hoverStyle.fill
-	                || (fill instanceof Gradient ? fill : colorTool.lift(fill, -0.1));
+	                || (fill && (fill instanceof Gradient ? fill : lift(fill, -0.1)));
 	            hoverStyle.stroke = hoverStyle.stroke
-	                || (stroke instanceof Gradient ? stroke : colorTool.lift(stroke, -0.1));
+	                || (stroke && (stroke instanceof Gradient ? stroke : lift(stroke, -0.1)));
 
 	            var normalStyle = {};
 	            for (var name in hoverStyle) {
@@ -9851,7 +9858,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    function setElementHoverStl(el, hoverStl) {
 	        // If element has sepcified hoverStyle, then use it instead of given hoverStyle
 	        // Often used when item group has a label element and it's hoverStyle is different
-	        el.__hoverStl = el.hoverStyle || hoverStl;
+	        el.__hoverStl = el.hoverStyle || hoverStl || {};
 	        el.__hoverStlDirty = true;
 	    }
 
@@ -9893,7 +9900,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {Object} [hoverStyle]
 	     */
 	    graphic.setHoverStyle = function (el, hoverStyle) {
-	        hoverStyle = hoverStyle || {};
 	        el.type === 'group'
 	            ? el.traverse(function (child) {
 	                if (child.type !== 'group') {
@@ -10672,6 +10678,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                Displayable.prototype.attrKV.call(this, key, value);
 	            }
 	        },
+
 	        /**
 	         * @param {Object|string} key
 	         * @param {*} value
@@ -12962,12 +12969,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	        else {
 	            var t = curve.quadraticExtremum(y0, y1, y2);
-	            if (t >=0 && t <= 1) {
+	            if (t >= 0 && t <= 1) {
 	                var w = 0;
 	                var y_ = curve.quadraticAt(y0, y1, y2, t);
 	                for (var i = 0; i < nRoots; i++) {
 	                    var x_ = curve.quadraticAt(x0, x1, x2, roots[i]);
-	                    if (x_ > x) {
+	                    if (x_ < x) {   // Quick reject
 	                        continue;
 	                    }
 	                    if (roots[i] < t) {
@@ -12981,7 +12988,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	            else {
 	                var x_ = curve.quadraticAt(x0, x1, x2, roots[0]);
-	                if (x_ > x) {
+	                if (x_ < x) {   // Quick reject
 	                    return 0;
 	                }
 	                return y2 < y0 ? 1 : -1;
@@ -13617,9 +13624,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @constructor
 	     * @param {Object} opts
 	     */
-	    var ZImage = function (opts) {
+	    function ZImage(opts) {
 	        Displayable.call(this, opts);
-	    };
+	    }
 
 	    ZImage.prototype = {
 
@@ -15022,7 +15029,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @type {string}
 	     */
-	    zrender.version = '3.0.4';
+	    zrender.version = '3.0.5';
 
 	    /**
 	     * @param {HTMLElement} dom
@@ -17091,7 +17098,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        }
 	                        prevElClipPaths = clipPaths;
 	                    }
-	                    // TODO Use events ?
 	                    el.beforeBrush && el.beforeBrush(ctx);
 	                    el.brush(ctx, false);
 	                    el.afterBrush && el.afterBrush(ctx);
@@ -18299,11 +18305,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            ];
 
+	            var isXAxisCateogry = xAxisType === 'category';
+
 	            completeDimensions(dimensions, data, ['x', 'y', 'z']);
 
 	            return {
 	                dimensions: dimensions,
-	                categoryAxisModel: xAxisType === 'category'
+	                categoryIndex: isXAxisCateogry ? 0 : 1,
+	                categoryAxisModel: isXAxisCateogry
 	                    ? xAxisModel
 	                    : (yAxisType === 'category' ? yAxisModel : null)
 	            };
@@ -18338,12 +18347,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    stackable: isStackable(angleAxisType)
 	                }
 	            ];
+	            var isAngleAxisCateogry = angleAxisType === 'category';
 
 	            completeDimensions(dimensions, data, ['radius', 'angle', 'value']);
 
 	            return {
 	                dimensions: dimensions,
-	                categoryAxisModel: angleAxisType === 'category'
+	                categoryIndex: isAngleAxisCateogry ? 1 : 0,
+	                categoryAxisModel: isAngleAxisCateogry
 	                    ? angleAxisModel
 	                    : (radiusAxisType === 'category' ? radiusAxisModel : null)
 	            };
@@ -18376,7 +18387,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                if (zrUtil.isArray(data[0]) && data[0].length > 1) {
 	                    nameList = [];
 	                    for (var i = 0; i < dataLen; i++) {
-	                        nameList[i] = categories[data[i][0]];
+	                        nameList[i] = categories[data[i][result.categoryIndex || 0]];
 	                    }
 	                }
 	                else {
@@ -22002,8 +22013,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    axisHelper.niceScaleExtent = function (axis, model) {
 	        var scale = axis.scale;
 	        var extent = axisHelper.getScaleExtent(axis, model);
-	        var fixMin = model.get('min') != null;
-	        var fixMax = model.get('max') != null;
+	        var fixMin = (model.getMin ? model.getMin() : model.get('min')) != null;
+	        var fixMax = (model.getMax ? model.getMax() : model.get('max')) != null;
 	        scale.setExtent(extent[0], extent[1]);
 	        scale.niceExtent(model.get('splitNumber'), fixMin, fixMax);
 
@@ -23445,6 +23456,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var dataExtent = this.scale.getExtent();
 
 	            var len = dataExtent[1] - dataExtent[0] + (this.onBand ? 1 : 0);
+	            // Fix #2728, avoid NaN when only one data.
+	            len === 0 && (len = 1);
 
 	            var size = Math.abs(axisExtent[1] - axisExtent[0]);
 
@@ -25345,9 +25358,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	                normal: {
 	                    show: true,
 	                    // 引导线两段中的第一段长度
-	                    length: 20,
+	                    length: 15,
 	                    // 引导线两段中的第二段长度
-	                    length2: 5,
+	                    length2: 15,
 	                    smooth: false,
 	                    lineStyle: {
 	                        // color: 各异,
@@ -26066,42 +26079,41 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }
 
-	        // function changeX(list, isDownList, cx, cy, r, dir) {
-	        //     var deltaX;
-	        //     var deltaY;
-	        //     var length;
-	        //     var lastDeltaX = dir > 0
-	        //         ? isDownList                // 右侧
-	        //             ? Number.MAX_VALUE      // 下
-	        //             : 0                     // 上
-	        //         : isDownList                // 左侧
-	        //             ? Number.MAX_VALUE      // 下
-	        //             : 0;                    // 上
+	        function changeX(list, isDownList, cx, cy, r, dir) {
+	            var lastDeltaX = dir > 0
+	                ? isDownList                // 右侧
+	                    ? Number.MAX_VALUE      // 下
+	                    : 0                     // 上
+	                : isDownList                // 左侧
+	                    ? Number.MAX_VALUE      // 下
+	                    : 0;                    // 上
 
-	        //     for (var i = 0, l = list.length; i < l; i++) {
-	        //         deltaY = Math.abs(list[i].y - cy);
-	        //         length = list[i].length;
-	        //         deltaX = (deltaY < r + length)
-	        //             ? Math.sqrt(
-	        //                   (r + length + 20) * (r + length + 20)
-	        //                   - Math.pow(list[i].y - cy, 2)
-	        //               )
-	        //             : Math.abs(
-	        //                   list[i].x - cx
-	        //               );
-	        //         if (isDownList && deltaX >= lastDeltaX) {
-	        //             // 右下，左下
-	        //             deltaX = lastDeltaX - 10;
-	        //         }
-	        //         if (!isDownList && deltaX <= lastDeltaX) {
-	        //             // 右上，左上
-	        //             deltaX = lastDeltaX + 10;
-	        //         }
+	            for (var i = 0, l = list.length; i < l; i++) {
+	                // Not change x for center label
+	                if (list[i].position === 'center') {
+	                    continue;
+	                }
+	                var deltaY = Math.abs(list[i].y - cy);
+	                var length = list[i].length;
+	                var deltaX = (deltaY < r + length)
+	                    ? Math.sqrt(
+	                          (r + length + 20) * (r + length + 20)
+	                          - Math.pow(list[i].y - cy, 2)
+	                      )
+	                    : Math.abs(list[i].x - cx);
+	                if (isDownList && deltaX >= lastDeltaX) {
+	                    // 右下，左下
+	                    deltaX = lastDeltaX - 10;
+	                }
+	                if (!isDownList && deltaX <= lastDeltaX) {
+	                    // 右上，左上
+	                    deltaX = lastDeltaX + 10;
+	                }
 
-	        //         list[i].x = cx + deltaX * dir;
-	        //         lastDeltaX = deltaX;
-	        //     }
-	        // }
+	                list[i].x = cx + deltaX * dir;
+	                lastDeltaX = deltaX;
+	            }
+	        }
 
 	        var lastY = 0;
 	        var delta;
@@ -26126,8 +26138,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                upList.push(list[i]);
 	            }
 	        }
-	        // changeX(downList, true, cx, cy, r, dir);
-	        // changeX(upList, false, cx, cy, r, dir);
+	        changeX(downList, true, cx, cy, r, dir);
+	        changeX(upList, false, cx, cy, r, dir);
 	    }
 
 	    function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight) {
@@ -26148,6 +26160,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        for (var i = 0; i < labelLayoutList.length; i++) {
 	            var linePoints = labelLayoutList[i].linePoints;
 	            if (linePoints) {
+	                var dist = linePoints[1][0] - linePoints[2][0];
 	                if (labelLayoutList[i].x < cx) {
 	                    linePoints[2][0] = labelLayoutList[i].x + 3;
 	                }
@@ -26155,6 +26168,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    linePoints[2][0] = labelLayoutList[i].x - 3;
 	                }
 	                linePoints[1][1] = linePoints[2][1] = labelLayoutList[i].y;
+	                linePoints[1][0] = linePoints[2][0] + dist;
 	            }
 	        }
 	    }
@@ -26190,13 +26204,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            cx = layout.cx;
 	            cy = layout.cy;
 
+	            var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
 	            if (labelPosition === 'center') {
 	                textX = layout.cx;
 	                textY = layout.cy;
 	                textAlign = 'center';
 	            }
 	            else {
-	                var isLabelInside = labelPosition === 'inside' || labelPosition === 'inner';
 	                var x1 = (isLabelInside ? layout.r / 2 * dx : layout.r * dx) + cx;
 	                var y1 = (isLabelInside ? layout.r / 2 * dy : layout.r * dy) + cy;
 
@@ -26232,6 +26246,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            layout.label = {
 	                x: textX,
 	                y: textY,
+	                position: labelPosition,
 	                height: textRect.height,
 	                length: labelLineLen,
 	                length2: labelLineLen2,
@@ -26242,7 +26257,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                rotation: labelRotate
 	            };
 
-	            labelLayoutList.push(layout.label);
+	            // Not layout the inside label
+	            if (!isLabelInside) {
+	                labelLayoutList.push(layout.label);
+	            }
 	        });
 	        if (!hasLabelRotate && seriesModel.get('avoidLabelOverlap')) {
 	            avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight);
