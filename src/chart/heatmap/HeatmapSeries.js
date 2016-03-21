@@ -28,7 +28,11 @@ define(function (require) {
 
             blurSize: 30,
 
-            pointSize: 20
+            pointSize: 20,
+
+            maxOpacity: 1,
+
+            minOpacity: 0
         }
     });
 });

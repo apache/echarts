@@ -21,7 +21,9 @@ define(function (require) {
 
         this.blurSize = 30;
         this.pointSize = 20;
-        this.opacity = 1;
+
+        this.maxOpacity = 1;
+        this.minOpacity = 0;
 
         this._gradientPixels = {};
     }
@@ -63,16 +65,22 @@ define(function (require) {
             var pixels = imageData.data;
             var offset = 0;
             var pixelLen = pixels.length;
+            var minOpacity = this.minOpacity;
+            var maxOpacity = this.maxOpacity;
+            var diffOpacity = maxOpacity - minOpacity;
+
             while(offset < pixelLen) {
                 var alpha = pixels[offset + 3] / 256;
                 var gradientOffset = Math.floor(alpha * (GRADIENT_LEVELS - 1)) * 4;
                 // Simple optimize to ignore the empty data
                 if (alpha > 0) {
                     var gradient = isInRange(alpha) ? gradientInRange : gradientOutOfRange;
+                    // Any alpha > 0 will be mapped to [minOpacity, maxOpacity]
+                    alpha > 0 && (alpha = alpha * diffOpacity + minOpacity);
                     pixels[offset++] = gradient[gradientOffset];
                     pixels[offset++] = gradient[gradientOffset + 1];
                     pixels[offset++] = gradient[gradientOffset + 2];
-                    pixels[offset++] *= this.opacity * gradient[gradientOffset + 3];
+                    pixels[offset++] = gradient[gradientOffset + 3] * alpha * 256;
                 }
                 else {
                     offset += 4;

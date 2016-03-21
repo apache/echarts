@@ -157,6 +157,8 @@ define(function (require) {
             var hmLayer = this._hmLayer || (this._hmLayer || new HeatmapLayer());
             hmLayer.blurSize = seriesModel.get('blurSize');
             hmLayer.pointSize = seriesModel.get('pointSize');
+            hmLayer.minOpacity = seriesModel.get('minOpacity');
+            hmLayer.maxOpacity = seriesModel.get('maxOpacity');
 
             var rect = geo.getViewRect().clone();
             var roamTransform = geo.getRoamTransform();
