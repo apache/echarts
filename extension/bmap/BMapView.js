@@ -68,9 +68,15 @@ define(function (require) {
                 bmap.disablePinchToZoom();
             }
 
-            bmap.setMapStyle(bMapModel.get('mapStyle'));
+            var originalStyle = bMapModel.__mapStyle;
 
-            coordSys.setMapOffset(bMapModel.__mapOffset || [0, 0]);
+            var newMapStyle = bMapModel.get('mapStyle') || {};
+            // FIXME, Not use JSON methods
+            var mapStyleStr = JSON.stringify(newMapStyle);
+            if (JSON.stringify(originalStyle) !== mapStyleStr) {
+                bmap.setMapStyle(newMapStyle);
+                bMapModel.__mapStyle = JSON.parse(mapStyleStr);
+            }
 
             rendering = false;
         }
