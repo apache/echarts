@@ -490,8 +490,14 @@ define(function (require) {
             var minDist = Number.MAX_VALUE;
             var nearestIdx = -1;
             for (var i = 0, len = this.count(); i < len; i++) {
-                var dist = Math.abs(this.get(dim, i, stack) - value);
-                if (dist <= minDist) {
+                var diff = value - this.get(dim, i, stack);
+                var dist = Math.abs(diff);
+                if (dist < minDist
+                    // For the case of two data are same on xAxis, which has sequence data.
+                    // Show the nearest index
+                    // https://github.com/ecomfe/echarts/issues/2869
+                    || (dist === minDist && diff > 0)
+                ) {
                     minDist = dist;
                     nearestIdx = i;
                 }
