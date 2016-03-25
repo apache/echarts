@@ -37,13 +37,17 @@ define(function (require) {
             }
 
             // Reset controllers.
-            zrUtil.each(this.getTargetInfo().cartesians, function (coordInfo) {
+            var coordInfoList = this.getTargetInfo().cartesians;
+            var allCoordIds = zrUtil.map(coordInfoList, function (coordInfo) {
+                return roams.generateCoordId(coordInfo.model);
+            });
+            zrUtil.each(coordInfoList, function (coordInfo) {
                 var coordModel = coordInfo.model;
                 roams.register(
                     api,
                     {
-                        coordId: coordModel.id,
-                        coordType: coordModel.type,
+                        coordId: roams.generateCoordId(coordModel),
+                        allCoordIds: allCoordIds,
                         coordinateSystem: coordModel.coordinateSystem,
                         dataZoomId: dataZoomModel.id,
                         throttleRage: dataZoomModel.get('throttle', true),

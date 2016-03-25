@@ -22,9 +22,9 @@ define(function(require) {
          * @public
          * @param {module:echarts/ExtensionAPI} api
          * @param {Object} dataZoomInfo
-         * @param {string} dataZoomInfo.coordType
          * @param {string} dataZoomInfo.coordId
          * @param {Object} dataZoomInfo.coordinateSystem
+         * @param {Array.<string>} dataZoomInfo.allCoordIds
          * @param {string} dataZoomInfo.dataZoomId
          * @param {number} dataZoomInfo.throttleRate
          * @param {Function} dataZoomInfo.panGetRange
@@ -33,12 +33,14 @@ define(function(require) {
         register: function (api, dataZoomInfo) {
             var store = giveStore(api);
             var theDataZoomId = dataZoomInfo.dataZoomId;
-            var theCoordId = dataZoomInfo.coordType + '\0_' + dataZoomInfo.coordId;
+            var theCoordId = dataZoomInfo.coordId;
 
             // Do clean when a dataZoom changes its target coordnate system.
             zrUtil.each(store, function (record, coordId) {
                 var dataZoomInfos = record.dataZoomInfos;
-                if (dataZoomInfos[theDataZoomId] && coordId !== theCoordId) {
+                if (dataZoomInfos[theDataZoomId]
+                    && zrUtil.indexOf(dataZoomInfo.allCoordIds, theCoordId) < 0
+                ) {
                     delete dataZoomInfos[theDataZoomId];
                     record.count--;
                 }
@@ -83,7 +85,7 @@ define(function(require) {
         unregister: function (api, dataZoomId) {
             var store = giveStore(api);
 
-            zrUtil.each(store, function (record, coordId) {
+            zrUtil.each(store, function (record) {
                 var dataZoomInfos = record.dataZoomInfos;
                 if (dataZoomInfos[dataZoomId]) {
                     delete dataZoomInfos[dataZoomId];
@@ -106,8 +108,14 @@ define(function(require) {
                 }
             }
             return true;
-        }
+        },
 
+        /**
+         * @public
+         */
+        generateCoordId: function (coordModel) {
+            return coordModel.type + '\0_' + coordModel.id;
+        }
     };
 
     /**
