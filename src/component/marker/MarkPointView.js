@@ -151,7 +151,7 @@ define(function (require) {
             // FIXME
             mpData.eachItemGraphicEl(function (el) {
                 el.traverse(function (child) {
-                    child.tooltipFormatModel = mpModel;
+                    child.dataModel = mpModel;
                 });
             });
 

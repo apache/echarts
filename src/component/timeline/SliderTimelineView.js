@@ -368,10 +368,10 @@ define(function (require) {
 
                 if (itemModel.get('tooltip')) {
                     el.dataIndex = dataIndex;
-                    el.tooltipFormatModel = tooltipHostModel;
+                    el.dataModel = tooltipHostModel;
                 }
                 else {
-                    el.dataIndex = el.tooltipFormatModel = null;
+                    el.dataIndex = el.dataModel = null;
                 }
 
             }, this);

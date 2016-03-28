@@ -64,7 +64,7 @@ define(function (require) {
             lineDraw.updateData(edgeData, null, null);
             edgeData.eachItemGraphicEl(function (el) {
                 el.traverse(function (child) {
-                    child.tooltipFormatModel = formatModel;
+                    child.dataModel = formatModel;
                 });
             });
 

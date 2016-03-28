@@ -412,12 +412,12 @@ define(function (require) {
 
             // Always show item tooltip if mouse is on the element with dataIndex
             if (el && el.dataIndex != null) {
-                // Use tooltipFormatModel in element if possible
+                // Use dataModel in element if possible
                 // Used when mouseover on a element like markPoint or edge
                 // In which case, the data is not main data in series.
-                var tooltipFormatModel = el.tooltipFormatModel || ecModel.getSeriesByIndex(el.seriesIndex);
+                var dataModel = el.dataModel || ecModel.getSeriesByIndex(el.seriesIndex);
                 var dataIndex = el.dataIndex;
-                var itemModel = tooltipFormatModel.getData().getItemModel(dataIndex);
+                var itemModel = dataModel.getData().getItemModel(dataIndex);
                 // Series or single data may use item trigger when global is axis trigger
                 if ((itemModel.get('tooltip.trigger') || globalTrigger) === 'axis') {
                     this._showAxisTooltip(tooltipModel, ecModel, e);
@@ -430,7 +430,7 @@ define(function (require) {
                     // Reset last hover and dispatch downplay action
                     this._resetLastHover();
 
-                    this._showItemTooltipContent(tooltipFormatModel, dataIndex, e);
+                    this._showItemTooltipContent(dataModel, dataIndex, e);
                 }
 
                 api.dispatchAction({
