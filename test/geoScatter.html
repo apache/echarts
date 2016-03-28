@@ -258,7 +258,13 @@
                         },
                         geo: {
                             map: 'china',
-                            roam: true
+                            roam: true,
+                            scaleLimit: [1, 2],
+                            roamDetail: {
+                                x: -200,
+                                y: -200,
+                                zoom: 1.5
+                            }
                         },
                         tooltip: {
                             trigger: 'axis',
