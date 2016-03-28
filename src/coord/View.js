@@ -121,7 +121,7 @@ define(function (require) {
             var zoomLimit = this.zoomLimit;
             if (zoomLimit) {
                 zoom = Math.max(
-                    Math.min(zoom, zoomLimit[1]), zoomLimit[0]
+                    Math.min(zoom, zoomLimit.max), zoomLimit.min
                 );
             }
 

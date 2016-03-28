@@ -99,8 +99,8 @@ define(function (require) {
                 newZoom *= zoomDelta;
                 if (zoomLimit) {
                     newZoom = Math.max(
-                        Math.min(zoomLimit[1], newZoom),
-                        zoomLimit[0]
+                        Math.min(zoomLimit.max, newZoom),
+                        zoomLimit.min
                     );
                 }
                 var zoomScale = newZoom / this.zoom;
@@ -140,9 +140,10 @@ define(function (require) {
         this.rect = rect;
 
         /**
-         * @type {Array.<number>}
+         * { min: 1, max: 2 }
+         * @type {Object}
          */
-        this.zoomLimit = null;
+        this.zoomLimit;
 
         /**
          * @type {number}

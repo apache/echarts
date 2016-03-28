@@ -6,7 +6,7 @@ define(function (require) {
      * Calculate pan and zoom which from roamDetail model
      * @param {module:echarts/model/Model} roamDetailModel
      * @param {Object} payload
-     * @param {Array.<number>} [zoomLimit]
+     * @param {Object} [zoomLimit]
      */
     roamHelper.calcPanAndZoom = function (
         roamDetailModel, payload, zoomLimit
@@ -27,8 +27,8 @@ define(function (require) {
         if (zoom != null) {
             if (zoomLimit) {
                 zoom = Math.max(
-                    Math.min(previousZoom * zoom, zoomLimit[1]),
-                    zoomLimit[0]
+                    Math.min(previousZoom * zoom, zoomLimit.max),
+                    zoomLimit.min
                 ) / previousZoom;
             }
             var fixX = (payload.originX - panX) * (zoom - 1);
