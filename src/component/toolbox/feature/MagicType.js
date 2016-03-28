@@ -112,6 +112,21 @@ define(function(require) {
                 zrUtil.defaults(newSeriesOpt, seriesModel.option);
                 newOption.series.push(newSeriesOpt);
             }
+            // Modify boundaryGap
+            var coordSys = seriesModel.coordinateSystem;
+            if (coordSys.type === 'cartesian2d') {
+                var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
+                if (categoryAxis) {
+                    var axisDim = categoryAxis.dim;
+                    var axisIndex = seriesModel.get(axisDim + 'AxisIndex');
+                    var axisKey = axisDim + 'Axis';
+                    newOption[axisKey] = newOption[axisKey] || [];
+                    for (var i = 0; i <= axisIndex; i++) {
+                        newOption[axisKey][axisIndex] = newOption[axisKey][axisIndex] || {};
+                    }
+                    newOption[axisKey][axisIndex].boundaryGap = type === 'bar' ? true : false;
+                }
+            }
         };
 
         zrUtil.each(radioTypes, function (radio) {
@@ -127,7 +142,7 @@ define(function(require) {
         ecModel.eachComponent(
             {
                 mainType: 'series',
-                query: {
+                query: seriesIndex == null ? null : {
                     seriesIndex: seriesIndex
                 }
             }, generateNewSeriesTypes
