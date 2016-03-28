@@ -89,6 +89,7 @@ define(function (require) {
         if (rect && rect.contain(zoomX, zoomY)) {
 
             var target = this.target;
+            var zoomLimit = this.zoomLimit;
 
             if (target) {
                 var pos = target.position;
@@ -96,10 +97,12 @@ define(function (require) {
 
                 var newZoom = this._zoom = this._zoom || 1;
                 newZoom *= zoomDelta;
-                // newZoom = Math.max(
-                //     Math.min(target.maxZoom, newZoom),
-                //     target.minZoom
-                // );
+                if (zoomLimit) {
+                    newZoom = Math.max(
+                        Math.min(zoomLimit[1], newZoom),
+                        zoomLimit[0]
+                    );
+                }
                 var zoomScale = newZoom / this._zoom;
                 this._zoom = newZoom;
                 // Keep the mouse center when scaling
@@ -135,6 +138,11 @@ define(function (require) {
          * @type {module:zrender/core/BoundingRect}
          */
         this.rect = rect;
+
+        /**
+         * @type {Array.<number>}
+         */
+        this.zoomLimit = null;
 
         /**
          * @type {module:zrender}

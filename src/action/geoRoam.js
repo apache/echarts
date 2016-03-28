@@ -31,7 +31,9 @@ define(function (require) {
                 }
 
                 var roamDetailModel = componentModel.getModel('roamDetail');
-                var res = roamHelper.calcPanAndZoom(roamDetailModel, payload);
+                var res = roamHelper.calcPanAndZoom(
+                    roamDetailModel, payload, componentModel.get('scaleLimit')
+                );
 
                 componentModel.setRoamPan
                     && componentModel.setRoamPan(res.x, res.y);

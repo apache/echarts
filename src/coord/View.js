@@ -26,6 +26,11 @@ define(function (require) {
          */
         this.name = name;
 
+        /**
+         * @type {Array.<number>}
+         */
+        this.zoomLimit;
+
         Transformable.call(this);
 
         this._roamTransform = new TransformDummy();
@@ -113,6 +118,13 @@ define(function (require) {
          * @param {number} zoom
          */
         setZoom: function (zoom) {
+            var zoomLimit = this.zoomLimit;
+            if (zoomLimit) {
+                zoom = Math.max(
+                    Math.min(zoom, zoomLimit[1]), zoomLimit[0]
+                );
+            }
+
             this._roamTransform.scale = [zoom, zoom];
 
             this._updateTransform();

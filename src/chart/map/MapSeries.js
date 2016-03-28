@@ -175,6 +175,8 @@ define(function (require) {
                 zoom: 1
             },
 
+            scaleLimit: null,
+
             label: {
                 normal: {
                     show: false,

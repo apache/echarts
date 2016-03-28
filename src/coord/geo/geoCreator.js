@@ -73,6 +73,7 @@ define(function (require) {
                     mapData && mapData.geoJson, mapData && mapData.specialAreas,
                     geoModel.get('nameMap')
                 );
+                geo.zoomLimit = geoModel.get('scaleLimit');
                 geoList.push(geo);
 
                 setGeoCoords(geo, geoModel);
@@ -119,6 +120,9 @@ define(function (require) {
                     mapData && mapData.geoJson, mapData && mapData.specialAreas,
                     zrUtil.mergeAll(nameMapList)
                 );
+                geo.zoomLimit = zrUtil.retrieve.apply(null, zrUtil.map(mapSeries, function (singleMapSeries) {
+                    return singleMapSeries.get('scaleLimit');
+                }));
                 geoList.push(geo);
 
                 // Inject resize method

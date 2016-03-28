@@ -227,6 +227,7 @@ define(function (require) {
         _updateController: function (mapOrGeoModel, ecModel, api) {
             var geo = mapOrGeoModel.coordinateSystem;
             var controller = this._controller;
+            controller.zoomLimit = mapOrGeoModel.get('scaleLimit');
             // roamType is will be set default true if it is null
             controller.enable(mapOrGeoModel.get('roam') || false);
             // FIXME mainType, subType 作为 component 的属性？
