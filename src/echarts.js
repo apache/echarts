@@ -830,7 +830,7 @@ define(function (require) {
     }
 
     var MOUSE_EVENT_NAMES = [
-        'click', 'dblclick', 'mouseover', 'mouseout', 'mousedown', 'mouseout', 'globalout'
+        'click', 'dblclick', 'mouseover', 'mouseout', 'mousedown', 'mouseup', 'globalout'
     ];
     /**
      * @private
