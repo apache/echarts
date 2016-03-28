@@ -273,6 +273,9 @@ define(function (require) {
     DataView.defaultOption = {
         show: true,
         readOnly: false,
+        optionToContent: null,
+        contentToOption: null,
+
         icon: 'M17.5,17.3H33 M17.5,17.3H33 M45.4,29.5h-28 M11.5,2v56H51V14.8L38.4,2H11.5z M38.4,2.2v12.7H51 M45.4,41.7h-28',
         title: '数据视图',
         lang: ['数据视图', '关闭', '刷新'],
@@ -301,16 +304,33 @@ define(function (require) {
         header.style.cssText = 'margin: 10px 20px;';
         header.style.color = model.get('textColor');
 
+        var viewMain = document.createElement('div');
         var textarea = document.createElement('textarea');
-        // Textarea style
-        textarea.style.cssText = 'display:block;width:100%;font-size:14px;line-height:1.6rem;font-family:Monaco,Consolas,Courier new,monospace';
-        textarea.readOnly = model.get('readOnly');
-        textarea.style.color = model.get('textColor');
-        textarea.style.borderColor = model.get('textareaBorderColor');
-        textarea.style.backgroundColor = model.get('textareaColor');
+        viewMain.style.cssText = 'display:block;width:100%;overflow:hidden;';
 
+        var optionToContent = model.get('optionToContent');
+        var contentToOption = model.get('contentToOption');
         var result = getContentFromModel(ecModel);
-        textarea.value = result.value;
+        if (typeof optionToContent === 'function') {
+            var htmlOrDom = optionToContent(api.getOption());
+            if (typeof htmlOrDom === 'string') {
+                viewMain.innerHTML = htmlOrDom;
+            }
+            else if (zrUtil.isDom(htmlOrDom)) {
+                viewMain.appendChild(htmlOrDom);
+            }
+        }
+        else {
+            // Use default textarea
+            viewMain.appendChild(textarea);
+            textarea.readOnly = model.get('readOnly');
+            textarea.style.cssText = 'width:100%;height:100%;font-family:monospace;font-size:14px;line-height:1.6rem;';
+            textarea.style.color = model.get('textColor');
+            textarea.style.borderColor = model.get('textareaBorderColor');
+            textarea.style.backgroundColor = model.get('textareaColor');
+            textarea.value = result.value;
+        }
+
         var blockMetaList = result.meta;
 
         var buttonContainer = document.createElement('div');
@@ -335,16 +355,23 @@ define(function (require) {
         eventTool.addEventListener(refreshButton, 'click', function () {
             var newOption;
             try {
-                newOption = parseContents(textarea.value, blockMetaList);
+                if (typeof contentToOption === 'function') {
+                    newOption = contentToOption(viewMain, api.getOption());
+                }
+                else {
+                    newOption = parseContents(textarea.value, blockMetaList);
+                }
             }
             catch (e) {
                 close();
                 throw new Error('Data view format error ' + e);
             }
-            api.dispatchAction({
-                type: 'changeDataView',
-                newOption: newOption
-            });
+            if (newOption) {
+                api.dispatchAction({
+                    type: 'changeDataView',
+                    newOption: newOption
+                });
+            }
 
             close();
         });
@@ -354,7 +381,7 @@ define(function (require) {
         refreshButton.style.cssText = buttonStyle;
         closeButton.style.cssText = buttonStyle;
 
-        buttonContainer.appendChild(refreshButton);
+        !model.get('readOnly') && buttonContainer.appendChild(refreshButton);
         buttonContainer.appendChild(closeButton);
 
         // http://stackoverflow.com/questions/6637341/use-tab-to-indent-in-textarea
@@ -377,10 +404,10 @@ define(function (require) {
         });
 
         root.appendChild(header);
-        root.appendChild(textarea);
+        root.appendChild(viewMain);
         root.appendChild(buttonContainer);
 
-        textarea.style.height = (container.clientHeight - 80) + 'px';
+        viewMain.style.height = (container.clientHeight - 80) + 'px';
 
         container.appendChild(root);
         this._dom = root;
