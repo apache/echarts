@@ -132,6 +132,7 @@ define(function(require) {
             this.itemSize;
 
             this.mergeDefaultAndTheme(option, ecModel);
+
             this.doMergeOption({}, true);
         },
 
@@ -148,6 +149,10 @@ define(function(require) {
          */
         doMergeOption: function (newOption, isInit) {
             var thisOption = this.option;
+
+            // Visual attributes merge is not supported, otherwise it
+            // brings overcomplicated merge logic. See #2853.
+            !isInit && replaceVisualOption(thisOption, newOption);
 
             // FIXME
             // necessary?
@@ -475,6 +480,20 @@ define(function(require) {
         getValueState: zrUtil.noop
 
     });
+
+    function replaceVisualOption(targetOption, sourceOption) {
+        zrUtil.each(
+            ['inRange', 'outOfRange', 'target', 'controller', 'color'],
+            function (key) {
+                if (sourceOption.hasOwnProperty(key)) {
+                    targetOption[key] = zrUtil.clone(sourceOption[key]);
+                }
+                else {
+                    delete targetOption[key];
+                }
+            }
+        );
+    }
 
     return VisualMapModel;
 
