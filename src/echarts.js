@@ -888,7 +888,7 @@ define(function (require) {
 
         this._zr.dispose();
 
-        instances[this.id] = null;
+        delete instances[this.id];
     };
 
     zrUtil.mixin(ECharts, Eventful);
