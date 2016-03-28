@@ -52,7 +52,7 @@ define(function(require) {
                     stack: seriesModel.get('stack'),
                     markPoint: seriesModel.get('markPoint'),
                     markLine: seriesModel.get('markLine')
-                }, model.get('option.line'));
+                }, model.get('option.line') || {}, true);
             }
         },
         'bar': function (seriesType, seriesId, seriesModel, model) {
@@ -65,23 +65,23 @@ define(function(require) {
                     stack: seriesModel.get('stack'),
                     markPoint: seriesModel.get('markPoint'),
                     markLine: seriesModel.get('markLine')
-                }, model.get('option.bar'));
+                }, model.get('option.bar') || {}, true);
             }
         },
         'stack': function (seriesType, seriesId, seriesModel, model) {
             if (seriesType === 'line' || seriesType === 'bar') {
-                return {
+                return zrUtil.merge({
                     id: seriesId,
                     stack: '__ec_magicType_stack__'
-                };
+                }, model.get('option.stack') || {}, true);
             }
         },
         'tiled': function (seriesType, seriesId, seriesModel, model) {
             if (seriesType === 'line' || seriesType === 'bar') {
-                return {
+                return zrUtil.merge({
                     id: seriesId,
                     stack: ''
-                };
+                }, model.get('option.tiled') || {}, true);
             }
         }
     };
@@ -127,7 +127,9 @@ define(function(require) {
         ecModel.eachComponent(
             {
                 mainType: 'series',
-                seriesIndex: seriesIndex
+                query: {
+                    seriesIndex: seriesIndex
+                }
             }, generateNewSeriesTypes
         );
         api.dispatchAction({
