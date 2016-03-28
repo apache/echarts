@@ -53,11 +53,12 @@ define(function (require) {
                     continue;
                 }
                 var deltaY = Math.abs(list[i].y - cy);
-                var length = list[i].length;
+                var length = list[i].len;
+                var length2 = list[i].len2;
                 var deltaX = (deltaY < r + length)
                     ? Math.sqrt(
-                          (r + length + 20) * (r + length + 20)
-                          - Math.pow(list[i].y - cy, 2)
+                          (r + length + length2) * (r + length + length2)
+                          - deltaY * deltaY
                       )
                     : Math.abs(list[i].x - cx);
                 if (isDownList && deltaX >= lastDeltaX) {
@@ -97,8 +98,8 @@ define(function (require) {
                 upList.push(list[i]);
             }
         }
-        changeX(downList, true, cx, cy, r, dir);
         changeX(upList, false, cx, cy, r, dir);
+        changeX(downList, true, cx, cy, r, dir);
     }
 
     function avoidOverlap(labelLayoutList, cx, cy, r, viewWidth, viewHeight) {
@@ -113,8 +114,8 @@ define(function (require) {
             }
         }
 
-        adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight);
         adjustSingleSide(rightList, cx, cy, r, 1, viewWidth, viewHeight);
+        adjustSingleSide(leftList, cx, cy, r, -1, viewWidth, viewHeight);
 
         for (var i = 0; i < labelLayoutList.length; i++) {
             var linePoints = labelLayoutList[i].linePoints;
@@ -173,15 +174,13 @@ define(function (require) {
                 var x1 = (isLabelInside ? layout.r / 2 * dx : layout.r * dx) + cx;
                 var y1 = (isLabelInside ? layout.r / 2 * dy : layout.r * dy) + cy;
 
-                // For roseType
-                labelLineLen += r - layout.r;
-
                 textX = x1 + dx * 3;
                 textY = y1 + dy * 3;
 
                 if (!isLabelInside) {
-                    var x2 = x1 + dx * labelLineLen;
-                    var y2 = y1 + dy * labelLineLen;
+                    // For roseType
+                    var x2 = x1 + dx * (labelLineLen + r - layout.r);
+                    var y2 = y1 + dy * (labelLineLen + r - layout.r);
                     var x3 = x2 + ((dx < 0 ? -1 : 1) * labelLineLen2);
                     var y3 = y2;
 
@@ -207,8 +206,8 @@ define(function (require) {
                 y: textY,
                 position: labelPosition,
                 height: textRect.height,
-                length: labelLineLen,
-                length2: labelLineLen2,
+                len: labelLineLen,
+                len2: labelLineLen2,
                 linePoints: linePoints,
                 textAlign: textAlign,
                 verticalAlign: 'middle',
