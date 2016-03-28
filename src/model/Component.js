@@ -147,10 +147,10 @@ define(function(require) {
 
             this.uid = componentUtil.getUID('componentModel');
 
-            this.setReadOnly([
-                'type', 'id', 'uid', 'name', 'mainType', 'subType',
-                'dependentModels', 'componentIndex'
-            ]);
+            // this.setReadOnly([
+            //     'type', 'id', 'uid', 'name', 'mainType', 'subType',
+            //     'dependentModels', 'componentIndex'
+            // ]);
         }
     );
 

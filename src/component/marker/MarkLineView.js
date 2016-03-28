@@ -77,6 +77,51 @@ define(function (require) {
             && markerHelper.dataFilter(coordSys, item[1]);
     }
 
+    function updateSingleMarkerEndLayout(
+        data, idx, isFrom, mlType, valueIndex, seriesModel, api
+    ) {
+        var coordSys = seriesModel.coordinateSystem;
+        var itemModel = data.getItemModel(idx);
+
+        var point;
+        var xPx = itemModel.get('x');
+        var yPx = itemModel.get('y');
+        if (xPx != null && yPx != null) {
+            point = [
+                numberUtil.parsePercent(xPx, api.getWidth()),
+                numberUtil.parsePercent(yPx, api.getHeight())
+            ];
+        }
+        else {
+            // Chart like bar may have there own marker positioning logic
+            if (seriesModel.getMarkerPosition) {
+                // Use the getMarkerPoisition
+                point = seriesModel.getMarkerPosition(
+                    data.getValues(data.dimensions, idx)
+                );
+            }
+            else {
+                var dims = coordSys.dimensions;
+                var x = data.get(dims[0], idx);
+                var y = data.get(dims[1], idx);
+                point = coordSys.dataToPoint([x, y]);
+            }
+            // Expand min, max, average line to the edge of grid
+            // FIXME Glue code
+            if (mlType && coordSys.type === 'cartesian2d') {
+                var mlOnAxis = valueIndex != null
+                    ? coordSys.getAxis(valueIndex === 1 ? 'x' : 'y')
+                    : coordSys.getAxesByScale('ordinal')[0];
+                if (mlOnAxis && mlOnAxis.onBand) {
+                    point[mlOnAxis.dim === 'x' ? 0 : 1] =
+                        mlOnAxis.toGlobalCoord(mlOnAxis.getExtent()[isFrom ? 0 : 1]);
+                }
+            }
+        }
+
+        data.setItemLayout(idx, point);
+    }
+
     var markLineFormatMixin = {
         formatTooltip: function (dataIndex) {
             var data = this._data;
@@ -134,6 +179,34 @@ define(function (require) {
             }
         },
 
+        updateLayout: function (markLineModel, ecModel, api) {
+            ecModel.eachSeries(function (seriesModel) {
+                var mlModel = seriesModel.markLineModel;
+                if (mlModel) {
+                    var mlData = mlModel.getData();
+                    var fromData = mlModel.__from;
+                    var toData = mlModel.__to;
+                    // Update visual and layout of from symbol and to symbol
+                    fromData.each(function (idx) {
+                        var lineModel = mlData.getItemModel(idx);
+                        var mlType = lineModel.get('type');
+                        var valueIndex = lineModel.get('valueIndex');
+                        updateSingleMarkerEndLayout(fromData, idx, true, mlType, valueIndex, seriesModel, api);
+                        updateSingleMarkerEndLayout(toData, idx, false, mlType, valueIndex, seriesModel, api);
+                    });
+                    // Update layout of line
+                    mlData.each(function (idx) {
+                        mlData.setItemLayout(idx, [
+                            fromData.getItemLayout(idx),
+                            toData.getItemLayout(idx)
+                        ]);
+                    });
+
+                    this._markLineMap[seriesModel.name].updateLayout();
+                }
+            }, this);
+        },
+
         _renderSeriesML: function (seriesModel, mlModel, ecModel, api) {
             var coordSys = seriesModel.coordinateSystem;
             var seriesName = seriesModel.name;
@@ -152,6 +225,8 @@ define(function (require) {
             var toData = mlData.to;
             var lineData = mlData.line;
 
+            mlModel.__from = fromData;
+            mlModel.__to = toData;
             // Line data for tooltip and formatter
             zrUtil.extend(mlModel, markLineFormatMixin);
             mlModel.setData(lineData);
@@ -199,43 +274,9 @@ define(function (require) {
             function updateDataVisualAndLayout(data, idx, isFrom, mlType, valueIndex) {
                 var itemModel = data.getItemModel(idx);
 
-                var point;
-                var xPx = itemModel.get('x');
-                var yPx = itemModel.get('y');
-                if (xPx != null && yPx != null) {
-                    point = [
-                        numberUtil.parsePercent(xPx, api.getWidth()),
-                        numberUtil.parsePercent(yPx, api.getHeight())
-                    ];
-                }
-                else {
-                    // Chart like bar may have there own marker positioning logic
-                    if (seriesModel.getMarkerPosition) {
-                        // Use the getMarkerPoisition
-                        point = seriesModel.getMarkerPosition(
-                            data.getValues(data.dimensions, idx)
-                        );
-                    }
-                    else {
-                        var dims = coordSys.dimensions;
-                        var x = data.get(dims[0], idx);
-                        var y = data.get(dims[1], idx);
-                        point = coordSys.dataToPoint([x, y]);
-                    }
-                    // Expand min, max, average line to the edge of grid
-                    // FIXME Glue code
-                    if (mlType && coordSys.type === 'cartesian2d') {
-                        var mlOnAxis = valueIndex != null
-                            ? coordSys.getAxis(valueIndex === 1 ? 'x' : 'y')
-                            : coordSys.getAxesByScale('ordinal')[0];
-                        if (mlOnAxis && mlOnAxis.onBand) {
-                            point[mlOnAxis.dim === 'x' ? 0 : 1] =
-                                mlOnAxis.toGlobalCoord(mlOnAxis.getExtent()[isFrom ? 0 : 1]);
-                        }
-                    }
-                }
-
-                data.setItemLayout(idx, point);
+                updateSingleMarkerEndLayout(
+                    data, idx, isFrom, mlType, valueIndex, seriesModel, api
+                );
 
                 data.setItemVisual(idx, {
                     symbolSize: itemModel.get('symbolSize')

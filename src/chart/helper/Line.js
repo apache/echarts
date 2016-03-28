@@ -276,8 +276,10 @@ define(function (require) {
         var linePath = this.childOfName('line');
         setLinePoints(linePath.shape, points);
         linePath.dirty(true);
-        fromData && fromData.getItemGraphicEl(idx).attr('position', points[0]);
-        toData && toData.getItemGraphicEl(idx).attr('position', points[1]);
+        // var fromEl = fromData && fromData.getItemGraphicEl(idx);
+        // var toEl = toData && toData.getItemGraphicEl(idx);
+        // fromEl && fromEl.attr('position', points[0]);
+        // toEl && toEl.attr('position', points[1]);
     };
 
     zrUtil.inherits(Line, graphic.Group);

@@ -13,6 +13,36 @@ define(function (require) {
 
     var markerHelper = require('./markerHelper');
 
+    function updateMarkerLayout(mpData, seriesModel, api) {
+        var coordSys = seriesModel.coordinateSystem;
+        mpData.each(function (idx) {
+            var itemModel = mpData.getItemModel(idx);
+            var point;
+            var xPx = itemModel.getShallow('x');
+            var yPx = itemModel.getShallow('y');
+            if (xPx != null && yPx != null) {
+                point = [
+                    numberUtil.parsePercent(xPx, api.getWidth()),
+                    numberUtil.parsePercent(yPx, api.getHeight())
+                ];
+            }
+            // Chart like bar may have there own marker positioning logic
+            else if (seriesModel.getMarkerPosition) {
+                // Use the getMarkerPoisition
+                point = seriesModel.getMarkerPosition(
+                    mpData.getValues(mpData.dimensions, idx)
+                );
+            }
+            else if (coordSys) {
+                var x = mpData.get(coordSys.dimensions[0], idx);
+                var y = mpData.get(coordSys.dimensions[1], idx);
+                point = coordSys.dataToPoint([x, y]);
+            }
+
+            mpData.setItemLayout(idx, point);
+        });
+    }
+
     // FIXME
     var markPointFormatMixin = {
         getRawDataArray: function () {
@@ -67,6 +97,16 @@ define(function (require) {
             }
         },
 
+        updateLayout: function (markPointModel, ecModel, api) {
+            ecModel.eachSeries(function (seriesModel) {
+                var mpModel = seriesModel.markPointModel;
+                if (mpModel) {
+                    updateMarkerLayout(mpModel.getData(), seriesModel, api);
+                    this._symbolDrawMap[seriesModel.name].updateLayout(mpModel);
+                }
+            }, this);
+        },
+
         _renderSeriesMP: function (seriesModel, mpModel, api) {
             var coordSys = seriesModel.coordinateSystem;
             var seriesName = seriesModel.name;
@@ -79,38 +119,15 @@ define(function (require) {
             }
 
             var mpData = createList(coordSys, seriesModel, mpModel);
-            var dims = coordSys && coordSys.dimensions;
 
             // FIXME
             zrUtil.mixin(mpModel, markPointFormatMixin);
             mpModel.setData(mpData);
 
+            updateMarkerLayout(mpModel.getData(), seriesModel, api);
+
             mpData.each(function (idx) {
                 var itemModel = mpData.getItemModel(idx);
-                var point;
-                var xPx = itemModel.getShallow('x');
-                var yPx = itemModel.getShallow('y');
-                if (xPx != null && yPx != null) {
-                    point = [
-                        numberUtil.parsePercent(xPx, api.getWidth()),
-                        numberUtil.parsePercent(yPx, api.getHeight())
-                    ];
-                }
-                // Chart like bar may have there own marker positioning logic
-                else if (seriesModel.getMarkerPosition) {
-                    // Use the getMarkerPoisition
-                    point = seriesModel.getMarkerPosition(
-                        mpData.getValues(mpData.dimensions, idx)
-                    );
-                }
-                else if (coordSys) {
-                    var x = mpData.get(dims[0], idx);
-                    var y = mpData.get(dims[1], idx);
-                    point = coordSys.dataToPoint([x, y]);
-                }
-
-                mpData.setItemLayout(idx, point);
-
                 var symbolSize = itemModel.getShallow('symbolSize');
                 if (typeof symbolSize === 'function') {
                     // FIXME 这里不兼容 ECharts 2.x，2.x 貌似参数是整个数据？
