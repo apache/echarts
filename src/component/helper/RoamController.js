@@ -95,7 +95,7 @@ define(function (require) {
                 var pos = target.position;
                 var scale = target.scale;
 
-                var newZoom = this._zoom = this._zoom || 1;
+                var newZoom = this.zoom = this.zoom || 1;
                 newZoom *= zoomDelta;
                 if (zoomLimit) {
                     newZoom = Math.max(
@@ -103,8 +103,8 @@ define(function (require) {
                         zoomLimit[0]
                     );
                 }
-                var zoomScale = newZoom / this._zoom;
-                this._zoom = newZoom;
+                var zoomScale = newZoom / this.zoom;
+                this.zoom = newZoom;
                 // Keep the mouse center when scaling
                 pos[0] -= (zoomX - pos[0]) * (zoomScale - 1);
                 pos[1] -= (zoomY - pos[1]) * (zoomScale - 1);
@@ -144,6 +144,10 @@ define(function (require) {
          */
         this.zoomLimit = null;
 
+        /**
+         * @type {number}
+         */
+        this.zoom;
         /**
          * @type {module:zrender}
          */
