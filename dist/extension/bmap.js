@@ -94,6 +94,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require) {
+
 	    var echarts = __webpack_require__(1);
 
 	    function BMapCoordSys(bmap, api) {
@@ -183,14 +184,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	                throw new Error('Only one bmap component can exist');
 	            }
 	            if (!bmapModel.__bmap) {
-	                var bmapRoot = root.querySelector('.ec-extension-bmap');
 	                // Not support IE8
+	                var bmapRoot = root.querySelector('.ec-extension-bmap');
 	                if (bmapRoot) {
-	                    bmapRoot.parentNode.removeChild(bmapRoot);
+	                    // Reset viewport left and top, which will be changed
+	                    // in moving handler in BMapView
+	                    viewportRoot.style.left = '0px';
+	                    viewportRoot.style.top = '0px';
+	                    root.removeChild(bmapRoot);
 	                }
 	                bmapRoot = document.createElement('div');
 	                bmapRoot.style.cssText = 'width:100%;height:100%';
-	                root.insertBefore(bmapRoot, viewportRoot);
+	                // Not support IE8
+	                bmapRoot.classList.add('ec-extension-bmap');
+	                root.appendChild(bmapRoot);
 	                var bmap = bmapModel.__bmap = new BMap.Map(bmapRoot);
 
 	                var overlay = new Overlay(viewportRoot);
@@ -199,10 +206,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var bmap = bmapModel.__bmap;
 
 	            // Set bmap options
+	            // centerAndZoom before layout and render
 	            var center = bmapModel.get('center');
-	            if (center) {
+	            var zoom = bmapModel.get('zoom');
+	            if (center && zoom) {
 	                var pt = new BMap.Point(center[0], center[1]);
-	                bmap.centerAndZoom(pt, bmapModel.get('zoom'));
+	                bmap.centerAndZoom(pt, zoom);
 	            }
 
 	            bmapCoordSys = new BMapCoordSys(bmap, api);
@@ -226,6 +235,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function (require) {
 
+	    function v2Equal(a, b) {
+	        return a && b && a[0] === b[0] && a[1] === b[1];
+	    }
+
 	    return __webpack_require__(1).extendComponentModel({
 	        type: 'bmap',
 
@@ -237,6 +250,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        setCenterAndZoom: function (center, zoom) {
 	            this.option.center = center;
 	            this.option.zoom = zoom;
+	        },
+
+	        centerOrZoomChanged: function (center, zoom) {
+	            var option = this.option;
+	            return !(v2Equal(center, option.center) && zoom === option.zoom);
 	        },
 
 	        defaultOption: {
@@ -325,9 +343,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	                bmap.disablePinchToZoom();
 	            }
 
-	            bmap.setMapStyle(bMapModel.get('mapStyle'));
+	            var originalStyle = bMapModel.__mapStyle;
 
-	            coordSys.setMapOffset(bMapModel.__mapOffset || [0, 0]);
+	            var newMapStyle = bMapModel.get('mapStyle') || {};
+	            // FIXME, Not use JSON methods
+	            var mapStyleStr = JSON.stringify(newMapStyle);
+	            if (JSON.stringify(originalStyle) !== mapStyleStr) {
+	                bmap.setMapStyle(newMapStyle);
+	                bMapModel.__mapStyle = JSON.parse(mapStyleStr);
+	            }
 
 	            rendering = false;
 	        }
