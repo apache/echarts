@@ -310,16 +310,12 @@ define(function (require) {
          * which is convenient for inner usage.
          *
          * @usage
-         * findComponents(
-         *     {mainType: 'dataZoom', query: {dataZoomId: 'abc'}},
-         *     function (model, index) {...}
+         * var result = findComponents(
+         *     {mainType: 'dataZoom', query: {dataZoomId: 'abc'}}
          * );
-         *
-         * findComponents(
-         *     {mainType: 'series', subType: 'pie', query: {seriesName: 'uio'}},
-         *     function (model, index) {...}
+         * var result = findComponents(
+         *     {mainType: 'series', subType: 'pie', query: {seriesName: 'uio'}}
          * );
-         *
          * var result = findComponents(
          *     {mainType: 'series'},
          *     function (model, index) {...}

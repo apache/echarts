@@ -166,6 +166,14 @@
                         }
                     ]
                 });
+
+
+                chart.on('axisAreaSelected', function (event) {
+
+                    var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
+                    console.log('北京: ', indices);
+
+                });
             });
 
         </script>
