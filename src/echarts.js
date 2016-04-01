@@ -704,7 +704,7 @@ define(function (require) {
                     : ChartView.getClass(classType.sub);
                 if (Clazz) {
                     view = new Clazz();
-                    view.init(ecModel, this._api);
+                    view.init(ecModel, this._api, viewId);
                     viewMap[viewId] = view;
                     viewList.push(view);
                     zr.add(view.group);

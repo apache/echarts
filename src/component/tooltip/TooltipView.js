@@ -166,15 +166,24 @@ define(function (require) {
 
         _axisPointers: {},
 
-        init: function (ecModel, api) {
+        // 获得tooltip的viewid，并根据该值生成tooltip的索引值，该值应该等于option中的索引值
+        init: function (ecModel, api, id) {
             if (env.node) {
                 return;
             }
             var tooltipContent = new TooltipContent(api.getDom(), api);
+            var tmpid = id.replace(/_tooltip|\0|\-/g,'');
+            tooltipContent.viewId = ('0'==tmpid)?0:parseInt(tmpid);
             this._tooltipContent = tooltipContent;
-
-            api.on('showTip', this._manuallyShowTip, this);
-            api.on('hideTip', this._manuallyHideTip, this);
+            
+            if (0 === tooltipContent.viewId) {
+                api.on('showTip', this._manuallyShowTip, this);
+                api.on('hideTip', this._manuallyHideTip, this);
+            } else {
+                // 针对0以外的tooltip关联Ex类事件，避免0的showTip事件中触发同类型事件，导致调用栈溢出
+                api.on('showTipEx', this._manuallyShowTip, this);
+                api.on('hideTipEx', this._manuallyHideTip, this);
+            }
         },
 
         render: function (tooltipModel, ecModel, api) {
@@ -252,15 +261,22 @@ define(function (require) {
 
             var zr = this._api.getZr();
             var tryShow = this._tryShow;
-            zr.off('click', tryShow);
-            zr.off('mousemove', tryShow);
-            zr.off('mouseout', this._hide);
-            if (tooltipModel.get('triggerOn') === 'click') {
-                zr.on('click', tryShow, this);
-            }
-            else {
-                zr.on('mousemove', tryShow, this);
-                zr.on('mouseout', this._hide, this);
+            if (0 === tooltipContent.viewId) {
+                zr.off('click', tryShow);
+                zr.off('mousemove', tryShow);
+                zr.off('mouseout', this._hide);
+                if (tooltipModel.get('triggerOn') === 'click') {
+                    zr.on('click', tryShow, this);
+                }
+                else {
+                    zr.on('mousemove', tryShow, this);
+                    zr.on('mouseout', this._hide, this);
+                }
+            } else {
+                // 手动触发的tooltip只需要响应mouseout事件
+                if (tooltipModel.get('triggerOn') !== 'click') {
+                    zr.on('mouseout', this._hide, this);
+                }
             }
 
         },
@@ -282,8 +298,10 @@ define(function (require) {
          *  TODO Batch
          */
         _manuallyShowTip: function (event) {
-            // From self
-            if (event.from === this.uid) {
+            // From self or other tooltips or tipIndex not for self
+            if ((event.from === this.uid)
+                || (event.fromModel && ('tooltip' === event.fromModel))
+                || ((0 !== this._tooltipContent.viewId) && (event.tipIndex !== this._tooltipContent.viewId))) {
                 return;
             }
 
@@ -398,13 +416,33 @@ define(function (require) {
         _tryShow: function (e) {
             var el = e.target;
             var tooltipModel = this._tooltipModel;
-            var globalTrigger = tooltipModel.get('trigger');
             var ecModel = this._ecModel;
             var api = this._api;
+            var i;
 
             if (!tooltipModel) {
                 return;
             }
+
+            // 根据触发来源设置globalTrigger的类型
+			var globalTrigger = 'axis';
+			if (el && el.dataIndex != null) {
+				var ss = tooltipModel.get('triggerAxis');
+				var is_axis = false;
+				if (ss instanceof Array) {
+					for (i in ss) {
+						if (el.seriesIndex == ss[i]) {
+							is_axis = true;
+							break;
+						}
+					}
+				} else {
+					is_axis = (el.seriesIndex == ss);
+				}
+				if (!is_axis) {
+					globalTrigger = 'item';
+				}
+			}
 
             // Save mouse x, mouse y. So we can try to keep showing the tip if chart is refreshed
             this._lastX = e.offsetX;
@@ -433,12 +471,16 @@ define(function (require) {
                     this._showItemTooltipContent(dataModel, dataIndex, e);
                 }
 
-                api.dispatchAction({
-                    type: 'showTip',
-                    from: this.uid,
-                    dataIndex: el.dataIndex,
-                    seriesIndex: el.seriesIndex
-                });
+				if (0 === this._tooltipContent.viewId) {
+	                api.dispatchAction({
+	                    type: 'showTip',
+	                    from: this.uid,
+	                    fromModel: 'tooltip',   // 需要区分是否来自同类型的tooltip，即使uid不同
+	                    viewId: this._tooltipContent.viewId,    // 需要对索引0及tipIndex检查
+	                    dataIndex: el.dataIndex,
+	                    seriesIndex: el.seriesIndex
+	                });
+	            }
             }
             else {
                 if (globalTrigger === 'item') {
@@ -451,10 +493,13 @@ define(function (require) {
 
                 // Action of cross pointer
                 // other pointer types will trigger action in _dispatchAndShowSeriesTooltipContent method
-                if (tooltipModel.get('axisPointer.type') === 'cross') {
+                // 仅索引0可以触发showTip事件
+                if ((tooltipModel.get('axisPointer.type') === 'cross') && (0 === this._tooltipContent.viewId)) {
                     api.dispatchAction({
                         type: 'showTip',
                         from: this.uid,
+                        fromModel: 'tooltip',
+                        viewId: this._tooltipContent.viewId,
                         x: e.offsetX,
                         y: e.offsetY
                     });
@@ -900,13 +945,17 @@ define(function (require) {
                 });
                 lastHover.payloadBatch = payloadBatch;
             }
-            // Dispatch showTip action
-            api.dispatchAction({
-                type: 'showTip',
-                dataIndex: payloadBatch[0].dataIndex,
-                seriesIndex: payloadBatch[0].seriesIndex,
-                from: this.uid
-            });
+            if (0 === this._tooltipContent.viewId) {
+	            // Dispatch showTip action
+	            api.dispatchAction({
+	                type: 'showTip',
+	                dataIndex: payloadBatch[0].dataIndex,
+	                seriesIndex: payloadBatch[0].seriesIndex,
+	                from: this.uid,
+	                fromModel: 'tooltip',
+	                viewId: this._tooltipContent.viewId
+	            });
+	        }
 
             if (baseAxis && rootTooltipModel.get('showContent')) {
 
@@ -1092,10 +1141,13 @@ define(function (require) {
                 this._tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
             }
 
-            this._api.dispatchAction({
-                type: 'hideTip',
-                from: this.uid
-            });
+            // 仅索引0可以触发hideTip
+			if (0 === this._tooltipContent.viewId) {
+	            this._api.dispatchAction({
+	                type: 'hideTip',
+	                from: this.uid
+	            });
+	        }
         },
 
         dispose: function (ecModel, api) {
@@ -1111,6 +1163,8 @@ define(function (require) {
 
             api.off('showTip', this._manuallyShowTip);
             api.off('hideTip', this._manuallyHideTip);
+            
+            api.off('showTipEx', this._manuallyShowTip);
         }
     });
 });
