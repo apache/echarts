@@ -166,7 +166,7 @@ define(function (require) {
 
         _axisPointers: {},
 
-        // »ñµÃtooltipµÄviewid£¬²¢¸ù¾İ¸ÃÖµÉú³ÉtooltipµÄË÷ÒıÖµ£¬¸ÃÖµÓ¦¸ÃµÈÓÚoptionÖĞµÄË÷ÒıÖµ
+        // è·å¾—tooltipçš„viewidï¼Œå¹¶æ ¹æ®è¯¥å€¼ç”Ÿæˆtooltipçš„ç´¢å¼•å€¼ï¼Œè¯¥å€¼åº”è¯¥ç­‰äºoptionä¸­çš„ç´¢å¼•å€¼
         init: function (ecModel, api, id) {
             if (env.node) {
                 return;
@@ -176,14 +176,8 @@ define(function (require) {
             tooltipContent.viewId = ('0'==tmpid)?0:parseInt(tmpid);
             this._tooltipContent = tooltipContent;
             
-            if (0 === tooltipContent.viewId) {
-                api.on('showTip', this._manuallyShowTip, this);
-                api.on('hideTip', this._manuallyHideTip, this);
-            } else {
-                // Õë¶Ô0ÒÔÍâµÄtooltip¹ØÁªExÀàÊÂ¼ş£¬±ÜÃâ0µÄshowTipÊÂ¼şÖĞ´¥·¢Í¬ÀàĞÍÊÂ¼ş£¬µ¼ÖÂµ÷ÓÃÕ»Òç³ö
-                api.on('showTipEx', this._manuallyShowTip, this);
-                api.on('hideTipEx', this._manuallyHideTip, this);
-            }
+            api.on('showTip', this._manuallyShowTip, this);
+            api.on('hideTip', this._manuallyHideTip, this);
         },
 
         render: function (tooltipModel, ecModel, api) {
@@ -273,7 +267,7 @@ define(function (require) {
                     zr.on('mouseout', this._hide, this);
                 }
             } else {
-                // ÊÖ¶¯´¥·¢µÄtooltipÖ»ĞèÒªÏìÓ¦mouseoutÊÂ¼ş
+                // æ‰‹åŠ¨è§¦å‘çš„tooltipåªéœ€è¦å“åº”mouseoutäº‹ä»¶
                 if (tooltipModel.get('triggerOn') !== 'click') {
                     zr.on('mouseout', this._hide, this);
                 }
@@ -300,8 +294,9 @@ define(function (require) {
         _manuallyShowTip: function (event) {
             // From self or other tooltips or tipIndex not for self
             if ((event.from === this.uid)
-                || (event.fromModel && ('tooltip' === event.fromModel))
-                || ((0 !== this._tooltipContent.viewId) && (event.tipIndex !== this._tooltipContent.viewId))) {
+                || (undefined !== event.fromTipIndex)
+                || ((undefined !== event.tipIndex) && (event.tipIndex !== this._tooltipContent.viewId))
+                || ((0 == event.tipIndex) && (0 != this._tooltipContent.viewId))) {
                 return;
             }
 
@@ -424,23 +419,26 @@ define(function (require) {
                 return;
             }
 
-            // ¸ù¾İ´¥·¢À´Ô´ÉèÖÃglobalTriggerµÄÀàĞÍ
-			var globalTrigger = 'axis';
-			if (el && el.dataIndex != null) {
-				var ss = tooltipModel.get('triggerAxis');
-				var is_axis = false;
-				if (ss instanceof Array) {
-					for (i in ss) {
-						if (el.seriesIndex == ss[i]) {
-							is_axis = true;
-							break;
+            // æ ¹æ®è§¦å‘æ¥æºè®¾ç½®globalTriggerçš„ç±»å‹
+            var globalTrigger = tooltipModel.get('trigger');
+            if ('auto' === globalTrigger) {
+				globalTrigger = 'axis';
+				if (el && el.dataIndex != null) {
+					var ss = tooltipModel.get('triggerAxis');
+					var is_axis = false;
+					if (ss instanceof Array) {
+						for (i in ss) {
+							if (el.seriesIndex == ss[i]) {
+								is_axis = true;
+								break;
+							}
 						}
+					} else {
+						is_axis = (el.seriesIndex == ss);
 					}
-				} else {
-					is_axis = (el.seriesIndex == ss);
-				}
-				if (!is_axis) {
-					globalTrigger = 'item';
+					if (!is_axis) {
+						globalTrigger = 'item';
+					}
 				}
 			}
 
@@ -471,16 +469,13 @@ define(function (require) {
                     this._showItemTooltipContent(dataModel, dataIndex, e);
                 }
 
-				if (0 === this._tooltipContent.viewId) {
-	                api.dispatchAction({
-	                    type: 'showTip',
-	                    from: this.uid,
-	                    fromModel: 'tooltip',   // ĞèÒªÇø·ÖÊÇ·ñÀ´×ÔÍ¬ÀàĞÍµÄtooltip£¬¼´Ê¹uid²»Í¬
-	                    viewId: this._tooltipContent.viewId,    // ĞèÒª¶ÔË÷Òı0¼°tipIndex¼ì²é
-	                    dataIndex: el.dataIndex,
-	                    seriesIndex: el.seriesIndex
-	                });
-	            }
+                api.dispatchAction({
+                    type: 'showTip',
+                    from: this.uid,
+                    fromTipIndex: this._tooltipContent.viewId,
+                    dataIndex: el.dataIndex,
+                    seriesIndex: el.seriesIndex
+                });
             }
             else {
                 if (globalTrigger === 'item') {
@@ -493,13 +488,11 @@ define(function (require) {
 
                 // Action of cross pointer
                 // other pointer types will trigger action in _dispatchAndShowSeriesTooltipContent method
-                // ½öË÷Òı0¿ÉÒÔ´¥·¢showTipÊÂ¼ş
-                if ((tooltipModel.get('axisPointer.type') === 'cross') && (0 === this._tooltipContent.viewId)) {
+                if (tooltipModel.get('axisPointer.type') === 'cross') {
                     api.dispatchAction({
                         type: 'showTip',
                         from: this.uid,
-                        fromModel: 'tooltip',
-                        viewId: this._tooltipContent.viewId,
+	                    fromTipIndex: this._tooltipContent.viewId,
                         x: e.offsetX,
                         y: e.offsetY
                     });
@@ -945,17 +938,14 @@ define(function (require) {
                 });
                 lastHover.payloadBatch = payloadBatch;
             }
-            if (0 === this._tooltipContent.viewId) {
-	            // Dispatch showTip action
-	            api.dispatchAction({
-	                type: 'showTip',
-	                dataIndex: payloadBatch[0].dataIndex,
-	                seriesIndex: payloadBatch[0].seriesIndex,
-	                from: this.uid,
-	                fromModel: 'tooltip',
-	                viewId: this._tooltipContent.viewId
-	            });
-	        }
+            // Dispatch showTip action
+            api.dispatchAction({
+                type: 'showTip',
+                dataIndex: payloadBatch[0].dataIndex,
+                seriesIndex: payloadBatch[0].seriesIndex,
+                from: this.uid,
+                fromTipIndex: this._tooltipContent.viewId,
+            });
 
             if (baseAxis && rootTooltipModel.get('showContent')) {
 
@@ -1141,7 +1131,7 @@ define(function (require) {
                 this._tooltipContent.hideLater(this._tooltipModel.get('hideDelay'));
             }
 
-            // ½öË÷Òı0¿ÉÒÔ´¥·¢hideTip
+            // ä»…ç´¢å¼•0å¯ä»¥è§¦å‘hideTip
 			if (0 === this._tooltipContent.viewId) {
 	            this._api.dispatchAction({
 	                type: 'hideTip',
@@ -1163,8 +1153,6 @@ define(function (require) {
 
             api.off('showTip', this._manuallyShowTip);
             api.off('hideTip', this._manuallyHideTip);
-            
-            api.off('showTipEx', this._manuallyShowTip);
         }
     });
 });

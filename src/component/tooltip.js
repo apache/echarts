@@ -23,29 +23,11 @@ define(function (require) {
         // noop
         function () {}
     );
-    require('../echarts').registerAction(
-        {
-            type: 'showTipEx',
-            event: 'showTipEx',
-            update: 'none'
-        },
-        // noop
-        function () {}
-    );
     // Hide tip action
     require('../echarts').registerAction(
         {
             type: 'hideTip',
             event: 'hideTip',
-            update: 'none'
-        },
-        // noop
-        function () {}
-    );
-    require('../echarts').registerAction(
-        {
-            type: 'hideTipEx',
-            event: 'hideTipEx',
             update: 'none'
         },
         // noop
