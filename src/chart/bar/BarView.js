@@ -140,7 +140,7 @@ define(function (require) {
                 var layout = data.getItemLayout(idx);
                 var itemStyleModel = itemModel.getModel('itemStyle.normal');
 
-                var hoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+                var hoverStyle = itemModel.getModel('itemStyle.emphasis').getBarItemStyle();
 
                 rect.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
 
