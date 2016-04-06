@@ -171,8 +171,8 @@ define(function (require) {
                 textAlign = 'center';
             }
             else {
-                var x1 = (isLabelInside ? layout.r / 2 * dx : layout.r * dx) + cx;
-                var y1 = (isLabelInside ? layout.r / 2 * dy : layout.r * dy) + cy;
+                var x1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dx : layout.r * dx) + cx;
+                var y1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dy : layout.r * dy) + cy;
 
                 textX = x1 + dx * 3;
                 textY = y1 + dy * 3;
