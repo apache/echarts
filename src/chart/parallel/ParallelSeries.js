@@ -38,6 +38,27 @@ define(function(require) {
             return list;
         },
 
+        /**
+         * User can get data raw indices on 'axisAreaSelected' event received.
+         *
+         * @public
+         * @param {string} activeState 'active' or 'inactive' or 'normal'
+         * @return {Array.<number>} Raw indices
+         */
+        getRawIndicesByActiveState: function (activeState) {
+            var coordSys = this.coordinateSystem;
+            var data = this.getData();
+            var indices = [];
+
+            coordSys.eachActiveState(data, function (theActiveState, dataIndex) {
+                if (activeState === theActiveState) {
+                    indices.push(data.getRawIndex(dataIndex));
+                }
+            });
+
+            return indices;
+        },
+
         defaultOption: {
             zlevel: 0,                  // 一级层叠
             z: 2,                       // 二级层叠

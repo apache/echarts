@@ -114,7 +114,7 @@ define(function(require) {
             }
             // Modify boundaryGap
             var coordSys = seriesModel.coordinateSystem;
-            if (coordSys.type === 'cartesian2d') {
+            if (coordSys && coordSys.type === 'cartesian2d' && (type === 'line' || type === 'bar')) {
                 var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
                 if (categoryAxis) {
                     var axisDim = categoryAxis.dim;
