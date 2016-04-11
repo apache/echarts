@@ -541,6 +541,29 @@
                 });
             }
 
+            function makeSinglePie() {
+                var chart = makeChart();
+                chart.setOption({
+                    legend: {
+                        data:['直接访问']
+                    },
+                    tooltip: {
+
+                    },
+                    series: [{
+                        name: 'pie',
+                        type: 'pie',
+                        selectedMode: 'single',
+                        hoverAnimation: false,
+                        selectedOffset: 30,
+                        clockwise: true,
+                        data:[
+                            {value:335, name:'直接访问'}
+                        ]
+                    }]
+                });
+            }
+
             function makeScatter() {
                 var chart = makeChart();
                 var data1 = [];
@@ -808,6 +831,9 @@
             setTimeout(function () {
                 makePie();
             }, 1500);
+            setTimeout(function () {
+                makeSinglePie();
+            }, 1800);
             setTimeout(function () {
                 makeScatter();
             }, 2000);

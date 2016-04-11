@@ -1046,9 +1046,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.1.5',
+	        version: '3.1.6',
 	        dependencies: {
-	            zrender: '3.0.6'
+	            zrender: '3.0.7'
 	        }
 	    };
 
@@ -1680,16 +1680,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * which is convenient for inner usage.
 	         *
 	         * @usage
-	         * findComponents(
-	         *     {mainType: 'dataZoom', query: {dataZoomId: 'abc'}},
-	         *     function (model, index) {...}
+	         * var result = findComponents(
+	         *     {mainType: 'dataZoom', query: {dataZoomId: 'abc'}}
 	         * );
-	         *
-	         * findComponents(
-	         *     {mainType: 'series', subType: 'pie', query: {seriesName: 'uio'}},
-	         *     function (model, index) {...}
+	         * var result = findComponents(
+	         *     {mainType: 'series', subType: 'pie', query: {seriesName: 'uio'}}
 	         * );
-	         *
 	         * var result = findComponents(
 	         *     {mainType: 'series'},
 	         *     function (model, index) {...}
@@ -2130,6 +2126,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
+	 * @module zrender/core/util
 	 */
 
 	    var Gradient = __webpack_require__(4);
@@ -2184,6 +2181,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
+	     * @memberOf module:zrender/core/util
 	     * @param {*} target
 	     * @param {*} source
 	     * @param {boolean} [overwrite=false]
@@ -2239,6 +2237,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @param {*} target
 	     * @param {*} source
+	     * @memberOf module:zrender/core/util
 	     */
 	    function extend(target, source) {
 	        for (var key in source) {
@@ -2253,6 +2252,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {*} target
 	     * @param {*} source
 	     * @param {boolen} [overlay=false]
+	     * @memberOf module:zrender/core/util
 	     */
 	    function defaults(target, source, overlay) {
 	        for (var key in source) {
@@ -2281,6 +2281,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    /**
 	     * 查询数组中元素的index
+	     * @memberOf module:zrender/core/util
 	     */
 	    function indexOf(array, value) {
 	        if (array) {
@@ -2299,6 +2300,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * 构造类继承关系
 	     *
+	     * @memberOf module:zrender/core/util
 	     * @param {Function} clazz 源类
 	     * @param {Function} baseClazz 基类
 	     */
@@ -2316,6 +2318,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
+	     * @memberOf module:zrender/core/util
 	     * @param {Object|Function} target
 	     * @param {Object|Function} sorce
 	     * @param {boolean} overlay
@@ -2342,7 +2345,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    /**
 	     * 数组或对象遍历
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {Object|Array} obj
 	     * @param {Function} cb
 	     * @param {*} [context]
@@ -2370,7 +2373,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    /**
 	     * 数组映射
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {Array} obj
 	     * @param {Function} cb
 	     * @param {*} [context]
@@ -2393,7 +2396,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {Array} obj
 	     * @param {Function} cb
 	     * @param {Object} [memo]
@@ -2417,7 +2420,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    /**
 	     * 数组过滤
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {Array} obj
 	     * @param {Function} cb
 	     * @param {*} [context]
@@ -2443,7 +2446,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    /**
 	     * 数组项查找
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {Array} obj
 	     * @param {Function} cb
 	     * @param {*} [context]
@@ -2461,7 +2464,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {Function} func
 	     * @param {*} context
 	     * @return {Function}
@@ -2474,9 +2477,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {Function} func
-	     * @param {...}
 	     * @return {Function}
 	     */
 	    function curry(func) {
@@ -2487,7 +2489,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {*} value
 	     * @return {boolean}
 	     */
@@ -2496,7 +2498,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {*} value
 	     * @return {boolean}
 	     */
@@ -2505,7 +2507,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {*} value
 	     * @return {boolean}
 	     */
@@ -2514,7 +2516,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {*} value
 	     * @return {boolean}
 	     */
@@ -2526,7 +2528,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {*} value
 	     * @return {boolean}
 	     */
@@ -2536,7 +2538,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {*} value
 	     * @return {boolean}
 	     */
@@ -2547,7 +2549,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    /**
 	     * If value1 is not null, then return value1, otherwise judget rest of values.
-	     * @param  {*...} values
+	     * @memberOf module:zrender/core/util
 	     * @return {*} Final value
 	     */
 	    function retrieve(values) {
@@ -2559,7 +2561,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
-	     * @memberOf module:zrender/tool/util
+	     * @memberOf module:zrender/core/util
 	     * @param {Array} arr
 	     * @param {number} startIndex
 	     * @param {number} endIndex
@@ -2570,6 +2572,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 
 	    /**
+	     * @memberOf module:zrender/core/util
 	     * @param {boolean} condition
 	     * @param {string} message
 	     */
@@ -15062,9 +15065,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @type {string}
 	     */
-	    zrender.version = '3.0.6';
+	    zrender.version = '3.0.7';
 
 	    /**
+	     * Initializing a zrender instance
 	     * @param {HTMLElement} dom
 	     * @param {Object} opts
 	     * @param {string} [opts.renderer='canvas'] 'canvas' or 'svg'
@@ -15096,8 +15100,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    /**
-	     * 获取zrender实例
-	     * @param {string} id ZRender对象索引
+	     * Get zrender instance by id
+	     * @param {string} id zrender instance id
 	     * @return {module:zrender/ZRender}
 	     */
 	    zrender.getInstance = function (id) {
@@ -15229,14 +15233,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 
 	        /**
-	         * 修改指定zlevel的绘制配置项
-	         *
+	         * Change configuration of layer
 	         * @param {string} zLevel
-	         * @param {Object} config 配置对象
-	         * @param {string} [config.clearColor=0] 每次清空画布的颜色
-	         * @param {string} [config.motionBlur=false] 是否开启动态模糊
-	         * @param {number} [config.lastFrameAlpha=0.7]
-	         *                 在开启动态模糊的时候使用，与上一帧混合的alpha值，值越大尾迹越明显
+	         * @param {Object} config
+	         * @param {string} [config.clearColor=0] Clear color
+	         * @param {string} [config.motionBlur=false] If enable motion blur
+	         * @param {number} [config.lastFrameAlpha=0.7] Motion blur factor. Larger value cause longer trailer
 	        */
 	        configLayer: function (zLevel, config) {
 	            this.painter.configLayer(zLevel, config);
@@ -15244,7 +15246,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 
 	        /**
-	         * 视图更新
+	         * Repaint the canvas immediately
 	         */
 	        refreshImmediately: function () {
 	            // Clear needsRefresh ahead to avoid something wrong happens in refresh
@@ -15258,14 +15260,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 
 	        /**
-	         * 标记视图在浏览器下一帧需要绘制
+	         * Mark and repaint the canvas in the next frame of browser
 	         */
 	        refresh: function() {
 	            this._needsRefresh = true;
 	        },
 
 	        /**
-	         * 调整视图大小
+	         * Resize the canvas.
+	         * Should be invoked when container size is changed
 	         */
 	        resize: function() {
 	            this.painter.resize();
@@ -15273,38 +15276,39 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 
 	        /**
-	         * 停止所有动画
+	         * Stop and clear all animation immediately
 	         */
 	        clearAnimation: function () {
 	            this.animation.clear();
 	        },
 
 	        /**
-	         * 获取视图宽度
+	         * Get container width
 	         */
 	        getWidth: function() {
 	            return this.painter.getWidth();
 	        },
 
 	        /**
-	         * 获取视图高度
+	         * Get container height
 	         */
 	        getHeight: function() {
 	            return this.painter.getHeight();
 	        },
 
 	        /**
-	         * 图像导出
+	         * Export the canvas as Base64 URL
 	         * @param {string} type
-	         * @param {string} [backgroundColor='#fff'] 背景色
-	         * @return {string} 图片的Base64 url
+	         * @param {string} [backgroundColor='#fff']
+	         * @return {string} Base64 URL
 	         */
 	        toDataURL: function(type, backgroundColor, args) {
 	            return this.painter.toDataURL(type, backgroundColor, args);
 	        },
 
 	        /**
-	         * 将常规shape转成image shape
+	         * Converting a path to image.
+	         * It has much better performance of drawing image rather than drawing a vector path.
 	         * @param {module:zrender/graphic/Path} e
 	         * @param {number} width
 	         * @param {number} height
@@ -15315,7 +15319,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 
 	        /**
-	         * 设置默认的cursor style
+	         * Set default cursor
 	         * @param {string} cursorStyle 例如 crosshair
 	         */
 	        setDefaultCursorStyle: function (cursorStyle) {
@@ -15323,31 +15327,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 
 	        /**
-	         * 事件绑定
+	         * Bind event
 	         *
-	         * @param {string} eventName 事件名称
-	         * @param {Function} eventHandler 响应函数
-	         * @param {Object} [context] 响应函数
+	         * @param {string} eventName Event name
+	         * @param {Function} eventHandler Handler function
+	         * @param {Object} [context] Context object
 	         */
 	        on: function(eventName, eventHandler, context) {
 	            this.handler && this.handler.on(eventName, eventHandler, context);
 	        },
 
 	        /**
-	         * 事件解绑定，参数为空则解绑所有自定义事件
-	         *
-	         * @param {string} eventName 事件名称
-	         * @param {Function} eventHandler 响应函数
+	         * Unbind event
+	         * @param {string} eventName Event name
+	         * @param {Function} [eventHandler] Handler function
 	         */
 	        off: function(eventName, eventHandler) {
 	            this.handler && this.handler.off(eventName, eventHandler);
 	        },
 
 	        /**
-	         * 事件触发
+	         * Trigger event manually
 	         *
-	         * @param {string} eventName 事件名称，resize，hover，drag，etc
-	         * @param {event=} event event dom事件对象
+	         * @param {string} eventName Event name
+	         * @param {event=} event Event object
 	         */
 	        trigger: function (eventName, event) {
 	            this.handler && this.handler.trigger(eventName, event);
@@ -15355,7 +15358,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	        /**
-	         * 清除当前ZRender下所有类图的数据和显示，clear后MVC和已绑定事件均还存在在，ZRender可用
+	         * Clear all objects and the canvas.
 	         */
 	        clear: function () {
 	            this.storage.delRoot();
@@ -15363,7 +15366,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 
 	        /**
-	         * 释放当前ZR实例（删除包括dom，数据、显示和事件绑定），dispose后ZR不可用
+	         * Dispose self.
 	         */
 	        dispose: function () {
 	            this.animation.stop();
@@ -15506,7 +15509,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 	/**
-	 * Handler控制模块
+	 * Handler
 	 * @module zrender/Handler
 	 * @author Kener (@Kener-林峰, kener.linfeng@gmail.com)
 	 *         errorrik (errorrik@gmail.com)
@@ -24929,7 +24932,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var layout = data.getItemLayout(idx);
 	                var itemStyleModel = itemModel.getModel('itemStyle.normal');
 
-	                var hoverStyle = itemModel.getModel('itemStyle.emphasis').getItemStyle();
+	                var hoverStyle = itemModel.getModel('itemStyle.emphasis').getBarItemStyle();
 
 	                rect.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
 
@@ -25010,6 +25013,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        getBarItemStyle: __webpack_require__(11)(
 	            [
 	                ['fill', 'color'],
+	                ['stroke', 'borderColor'],
+	                ['lineWidth', 'borderWidth'],
+	                // Compatitable with 2
 	                ['stroke', 'barBorderColor'],
 	                ['lineWidth', 'barBorderWidth'],
 	                ['opacity'],
@@ -26251,8 +26257,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                textAlign = 'center';
 	            }
 	            else {
-	                var x1 = (isLabelInside ? layout.r / 2 * dx : layout.r * dx) + cx;
-	                var y1 = (isLabelInside ? layout.r / 2 * dy : layout.r * dy) + cy;
+	                var x1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dx : layout.r * dx) + cx;
+	                var y1 = (isLabelInside ? (layout.r + layout.r0) / 2 * dy : layout.r * dy) + cy;
 
 	                textX = x1 + dx * 3;
 	                textY = y1 + dy * 3;
@@ -34219,7 +34225,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	            // Modify boundaryGap
 	            var coordSys = seriesModel.coordinateSystem;
-	            if (coordSys.type === 'cartesian2d') {
+	            if (coordSys && coordSys.type === 'cartesian2d' && (type === 'line' || type === 'bar')) {
 	                var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
 	                if (categoryAxis) {
 	                    var axisDim = categoryAxis.dim;
@@ -35688,7 +35694,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var y1 = cy + sin(endAngle) * ry;
 
 	                    var type = clockwise ? ' wa ' : ' at ';
-
+	                    // IE won't render arches drawn counter clockwise if x0 == x1.
+	                    if (Math.abs(x0 - x1) < 1e-10 && clockwise) {
+	                        // Offset x0 by 1/80 of a pixel. Use something
+	                        // that can be represented in binary
+	                        x0 += 270 / Z;
+	                    }
 	                    str.push(
 	                        type,
 	                        round(((cx - rx) * sx + x) * Z - Z2), comma,
