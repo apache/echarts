@@ -137,6 +137,7 @@ define(function (require) {
             data.eachItemGraphicEl(function (rect, idx) {
                 var itemModel = data.getItemModel(idx);
                 var color = data.getItemVisual(idx, 'color');
+                var opacity = data.getItemVisual(idx, 'opacity');
                 var layout = data.getItemLayout(idx);
                 var itemStyleModel = itemModel.getModel('itemStyle.normal');
 
@@ -146,7 +147,8 @@ define(function (require) {
 
                 rect.setStyle(zrUtil.defaults(
                     {
-                        fill: color
+                        fill: color,
+                        opacity: opacity
                     },
                     itemStyleModel.getBarItemStyle()
                 ));

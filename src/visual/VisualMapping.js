@@ -19,6 +19,7 @@ define(function (require) {
         }
         return linearMap(val, domain, range, clamp);
     }
+
     /**
      * @param {Object} option
      * @param {string} [option.type] See visualHandlers.
@@ -187,6 +188,25 @@ define(function (require) {
         colorAlpha: makePartialColorVisualHandler(function (color, value) {
             return zrColor.modifyAlpha(color, value);
         }),
+
+        opacity: {
+            applyVisual: function (value, getter, setter) {
+                setter('opacity', this.mapValueToVisual(value));
+            },
+
+            mapValueToVisual: function (value) {
+                var normalized = this._normalizeData(value);
+                var result = this._getSpecifiedVisual(value);
+                var visual = this.option.visual;
+
+                if (result == null) {
+                    result = isCategory(this)
+                        ? getVisualForCategory(this, visual, normalized)
+                        : linearMapArray(normalized, [0, 1], visual, true);
+                }
+                return result;
+            }
+        },
 
         symbol: {
             applyVisual: function (value, getter, setter) {
@@ -453,21 +473,6 @@ define(function (require) {
     };
 
     /**
-     * 'color', 'colorSaturation', 'colorAlpha', ... are in the same visualCluster named 'color'.
-     * Other visuals are in the cluster named as the same as theirselves.
-     *
-     * @public
-     * @param {string} visualType
-     * @param {string} visualCluster
-     * @return {boolean}
-     */
-    VisualMapping.isInVisualCluster = function (visualType, visualCluster) {
-        return visualCluster === 'color'
-            ? !!(visualType && visualType.indexOf(visualCluster) === 0)
-            : visualType === visualCluster;
-    };
-
-    /**
      * @public
      * @param {Object} obj
      * @return {Oject} new object containers visual values.
@@ -518,6 +523,34 @@ define(function (require) {
         });
 
         return visualTypes;
+    };
+
+    /**
+     * 'color', 'colorSaturation', 'colorAlpha', ... are depends on 'color'.
+     * Other visuals are only depends on themself.
+     *
+     * @public
+     * @param {string} visualType1
+     * @param {string} visualType2
+     * @return {boolean}
+     */
+    VisualMapping.dependsOn = function (visualType1, visualType2) {
+        return visualType2 === 'color'
+            ? !!(visualType1 && visualType1.indexOf(visualType2) === 0)
+            : visualType1 === visualType2;
+    };
+
+    /**
+     * Clone a opacity visual mapping to color alpha color mapping.
+     *
+     * @public
+     * @param {module:echarts/visual/VisualMapping} opacityMapping
+     * @return {module:echarts/visual/VisualMapping} alphaMapping
+     */
+    VisualMapping.cloneOpacityToAlpha = function (opacityMapping) {
+        var alphaMapping = new VisualMapping({
+
+        });
     };
 
     /**

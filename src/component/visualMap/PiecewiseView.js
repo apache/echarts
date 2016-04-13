@@ -160,12 +160,10 @@ define(function(require) {
                 }
             }
 
-            var visualObj = this.getControllerVisual(representValue);
-
             group.add(symbolCreators.createSymbol(
-                visualObj.symbol,
+                this.getControllerVisual(representValue, 'symbol'),
                 shapeParam[0], shapeParam[1], shapeParam[2], shapeParam[3],
-                visualObj.color
+                this.getControllerVisual(representValue, 'color')
             ));
         },
 

@@ -302,8 +302,12 @@ define(function(require) {
 
             function doReset(baseAttr, visualMappings) {
                 each(this.stateList, function (state) {
-                    var mappings = visualMappings[state] || (visualMappings[state] = {});
+
+                    var mappings = visualMappings[state] || (
+                        visualMappings[state] = createMappings()
+                    );
                     var visaulOption = this.option[baseAttr][state] || {};
+
                     each(visaulOption, function (visualData, visualType) {
                         if (!VisualMapping.isValidType(visualType)) {
                             return;
@@ -315,8 +319,25 @@ define(function(require) {
                         };
                         fillVisualOption && fillVisualOption.call(this, mappingOption, state);
                         mappings[visualType] = new VisualMapping(mappingOption);
+
+                        // Prepare a alpha for opacity, for some case that opacity
+                        // is not supported, such as rendering using gradient color.
+                        if (baseAttr === 'controller' && visualType === 'opacity') {
+                            mappingOption = zrUtil.clone(mappingOption);
+                            mappingOption.type = 'colorAlpha';
+                            mappings.__hidden.__alphaForOpacity = new VisualMapping(mappingOption);
+                        }
                     }, this);
                 }, this);
+            }
+
+            function createMappings() {
+                var Creater = function () {};
+                // Make sure hidden fields will not be visited by
+                // object iteration (with hasOwnProperty checking).
+                Creater.prototype.__hidden = Creater.prototype;
+                var obj = new Creater();
+                return obj;
             }
         },
 

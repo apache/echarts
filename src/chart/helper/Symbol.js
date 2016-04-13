@@ -148,6 +148,7 @@ define(function (require) {
         var itemModel = data.getItemModel(idx);
         var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
         var color = data.getItemVisual(idx, 'color');
+        var elStyle = symbolPath.style;
 
         var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
@@ -163,16 +164,19 @@ define(function (require) {
         symbolPath.setColor(color);
 
         zrUtil.extend(
-            symbolPath.style,
+            elStyle,
             // Color must be excluded.
             // Because symbol provide setColor individually to set fill and stroke
             normalItemStyleModel.getItemStyle(['color'])
         );
 
+        var opacity = data.getItemVisual(idx, 'opacity');
+        if (opacity != null) {
+            elStyle.opacity = opacity;
+        }
+
         var labelModel = itemModel.getModel(normalLabelAccessPath);
         var hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
-
-        var elStyle = symbolPath.style;
 
         // Get last value dim
         var dimensions = data.dimensions.slice();

@@ -98,43 +98,25 @@
                                 return val[2] * 2;
                             },
                             data: data1
-                        },
-                        {
-                            name: 'scatter2',
-                            type: 'scatter',
-                            itemStyle: {
-                                normal: {
-                                    opacity: 0.8,
-                                    shadowBlur: 10,
-                                    shadowOffsetX: 0,
-                                    shadowOffsetY: 0,
-                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                                }
-                            },
-                            symbolSize: function (val) {
-                                return val[2] * 2;
-                            },
-                            data: data2
-                        },
-                        {
-                            name: 'scatter3',
-                            type: 'scatter',
-                            itemStyle: {
-                                normal: {
-                                    opacity: 0.8,
-                                    shadowBlur: 10,
-                                    shadowOffsetX: 0,
-                                    shadowOffsetY: 0,
-                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                                }
-                            },
-                            symbolSize: function (val) {
-                                return val[2] * 2;
-                            },
-                            data: data3
                         }
                     ]
                 });
+
+
+
+
+                chart.setOption({
+                    visualMap: {
+                        inRange: {
+                            color: ["green", "red"]
+                        }
+                    }
+                });
+
+
+
+
+
             })
 
         </script>

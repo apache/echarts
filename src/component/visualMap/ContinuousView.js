@@ -313,10 +313,16 @@ define(function(require) {
             );
 
             shapes.inRange
-                .setStyle('fill', visualInRange.barColor)
+                .setStyle({
+                    fill: visualInRange.barColor,
+                    opacity: visualInRange.opacity
+                })
                 .setShape('points', visualInRange.barPoints);
             shapes.outOfRange
-                .setStyle('fill', visualOutOfRange.barColor)
+                .setStyle({
+                    fill: visualOutOfRange.barColor,
+                    opacity: visualOutOfRange.opacity
+                })
                 .setShape('points', visualOutOfRange.barPoints);
 
             this._useHandle && each([0, 1], function (handleIndex) {
@@ -344,11 +350,15 @@ define(function(require) {
          * @private
          */
         _createBarVisual: function (dataInterval, dataExtent, handleEnds, forceState) {
-            var colorStops = this.getControllerVisual(dataInterval, forceState, 'color').color;
+            var opts = {
+                forceState: forceState,
+                convertOpacityToAlpha: true
+            };
+            var colorStops = this.getControllerVisual(dataInterval, 'color', opts);
 
             var symbolSizes = [
-                this.getControllerVisual(dataInterval[0], forceState, 'symbolSize').symbolSize,
-                this.getControllerVisual(dataInterval[1], forceState, 'symbolSize').symbolSize
+                this.getControllerVisual(dataInterval[0], 'symbolSize', opts),
+                this.getControllerVisual(dataInterval[1], 'symbolSize', opts)
             ];
             var barPoints = this._createBarPoints(handleEnds, symbolSizes);
 
