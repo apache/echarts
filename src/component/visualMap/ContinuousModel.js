@@ -19,7 +19,7 @@ define(function(require) {
          * @protected
          */
         defaultOption: {
-            handlePosition: 'auto',     // 'auto', 'left', 'right', 'top', 'bottom'
+            align: 'auto',     // 'auto', 'left', 'right', 'top', 'bottom'
             calculable: false,         // 是否值域漫游，启用后无视splitNumber和pieces，线性渐变
             range: [-Infinity, Infinity], // 当前选中范围
             hoverLink: true,
