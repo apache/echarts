@@ -79,7 +79,7 @@ define(function (require) {
      */
     number.round = function (x) {
         // PENDING
-        return +(+x).toFixed(14);
+        return +(+x).toFixed(10);
     };
 
     number.asc = function (arr) {
