@@ -1,0 +1,104 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="info"></div>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoomInside',
+                'echarts/component/toolbox'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'));
+
+                chart.setOption({
+                  "title": {
+                    "text": ""
+                  },
+                  "tooltip": {
+                    "trigger": "axis"
+                  },
+                  "legend": {
+                    "data": [
+                      "PV维度订阅转化率"
+                    ]
+                  },
+                  "toolbox": {
+                    "show": true,
+                    "feature": {
+                      "dataZoom": {},
+                      "dataView": {
+                        "readOnly": true
+                      },
+                      "restore": {},
+                      "saveAsImage": {}
+                    }
+                  },
+                  "calculable": true,
+                  "xAxis": [
+                    {
+                      "type": "category",
+                      "boundaryGap": false,
+                      "data": [
+                        "20160401",
+                        "20160402",
+                        "20160403",
+                        "20160404",
+                        "20160405",
+                        "20160406",
+                        "20160407",
+                        "20160408",
+                        "20160409",
+                        "20160410"
+                      ]
+                    }
+                  ],
+                  "yAxis": [
+                    {
+                      "type": "value",
+                      "axisLabel": {
+                        "formatter": "{value}%"
+                      }
+                    }
+                  ],
+                  "series": [
+                    {
+                      "type": "line",
+                      "name": "PV维度订阅转化率",
+                      "data": [
+                        46.646153846153844,
+                        48.75454799888049,
+                        49.122247047558254,
+                        47.80918727915194,
+                        50.140845070422536,
+                        51.89201877934272,
+                        52.307692307692314,
+                        48.93327280980481,
+                        46.012832263978005,
+                        42.89077212806026
+                      ]
+                    }
+                  ]
+                });
+            });
+
+        </script>
+    </body>
+</html>
