@@ -401,7 +401,6 @@ define(function (require) {
                 // FIXME
                 // if (isOrdinal && typeof value === 'string') {
                 //     value = zrUtil.indexOf(dimData, value);
-                //     console.log(value);
                 // }
                 value < min && (min = value);
                 value > max && (max = value);

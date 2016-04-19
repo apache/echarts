@@ -41,6 +41,7 @@ define(function(require) {
             dimensions = completeDimensions(dimensions, data, dimensions.concat(['value']));
         }
         var categoryAxisModel = result && result.categoryAxisModel;
+        var categories;
 
         var categoryDimIndex = dimensions[0].type === 'ordinal'
             ? 0 : (dimensions[1].type === 'ordinal' ? 1 : -1);
@@ -57,8 +58,21 @@ define(function(require) {
                     : converDataValue(getDataItemValue(itemOpt), dimensions[dimIndex]);
             }
             : function (itemOpt, dimName, dataIndex, dimIndex) {
-                var val = getDataItemValue(itemOpt);
-                return converDataValue(val && val[dimIndex], dimensions[dimIndex]);
+                var value = getDataItemValue(itemOpt);
+                var val = converDataValue(value && value[dimIndex], dimensions[dimIndex]);
+                if (categoryDimIndex === dimIndex) {
+                    // If given value is a category string
+                    if (typeof val === 'string') {
+                        // Lazy get categories
+                        categories = categories || categoryAxisModel.getCategories();
+                        val = zrUtil.indexOf(categories, val);
+                        if (val < 0 && !isNaN(val)) {
+                            // In case some one write '1', '2' istead of 1, 2
+                            val = +val;
+                        }
+                    }
+                }
+                return val;
             };
 
         list.initData(data, nameList, dimValueGetter);
