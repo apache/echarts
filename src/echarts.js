@@ -848,6 +848,10 @@ define(function (require) {
                     params.type = eveName;
                     this.trigger(eveName, params);
                 }
+                // If element has custom eventData of components
+                else if (el && el.eventData) {
+                    this.trigger(eveName, el.eventData);
+                }
             }, this);
         }, this);
 
