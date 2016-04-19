@@ -74,7 +74,7 @@ define(function(require) {
             inverse: false,
             orient: 'vertical',        // 'horizontal' ¦ 'vertical'
 
-            seriesIndex: null,          // 所控制的series indices，默认所有有value的series.
+            seriesIndex: null,        // 所控制的series indices，默认所有有value的series.
             backgroundColor: 'rgba(0,0,0,0)',
             borderColor: '#ccc',       // 值域边框颜色
             contentColor: '#5793f3',
@@ -97,11 +97,6 @@ define(function(require) {
          * @protected
          */
         init: function (option, parentModel, ecModel) {
-            /**
-             * @private
-             * @type {boolean}
-             */
-            this._autoSeriesIndex = false;
 
             /**
              * @private
@@ -241,12 +236,11 @@ define(function(require) {
          */
         resetTargetSeries: function (newOption, isInit) {
             var thisOption = this.option;
-            var autoSeriesIndex = this._autoSeriesIndex =
-                (isInit ? thisOption : newOption).seriesIndex == null;
-            thisOption.seriesIndex = autoSeriesIndex
+            var allSeriesIndex = thisOption.seriesIndex == null;
+            thisOption.seriesIndex = allSeriesIndex
                 ? [] : modelUtil.normalizeToArray(thisOption.seriesIndex);
 
-            autoSeriesIndex && this.ecModel.eachSeries(function (seriesModel, index) {
+            allSeriesIndex && this.ecModel.eachSeries(function (seriesModel, index) {
                 var data = seriesModel.getData();
                 // FIXME
                 // 只考虑了list，还没有考虑map等。
