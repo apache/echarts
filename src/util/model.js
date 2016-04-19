@@ -254,6 +254,8 @@ define(function(require) {
             var itemOpt = rawDataArray && rawDataArray[rawDataIndex];
 
             return {
+                componentType: 'series',
+                seriesType: this.subType,
                 seriesIndex: seriesIndex,
                 seriesName: seriesName,
                 name: name,
