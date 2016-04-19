@@ -818,6 +818,8 @@ define(function (require) {
             chartView.__alive = true;
             chartView.render(seriesModel, ecModel, api, payload);
 
+            chartView.group.silent = !!seriesModel.get('silent');
+
             updateZ(seriesModel, chartView);
         }, this);
 
