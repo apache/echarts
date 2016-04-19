@@ -313,7 +313,11 @@ define(function (require) {
                     var coordSys = seriesModel.coordinateSystem;
                     if (coordSys && coordSys.dataToPoint) {
                         var point = coordSys.dataToPoint(
-                            data.getValues(coordSys.dimensions, dataIndex, true)
+                            data.getValues(
+                                zrUtil.map(coordSys.dimensions, function (dim) {
+                                    return seriesModel.coordDimToDataDim(dim)[0];
+                                }), dataIndex, true
+                            )
                         );
                         cx = point && point[0];
                         cy = point && point[1];
