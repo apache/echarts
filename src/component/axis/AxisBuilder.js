@@ -232,12 +232,14 @@ define(function (require) {
                         categoryData[i].textStyle, textStyleModel, axisModel.ecModel
                     );
                 }
+                var textColor = itemTextStyleModel.getTextColor();
 
                 var tickCoord = axis.dataToCoord(ticks[i]);
                 var pos = [
                     tickCoord,
                     opt.labelOffset + opt.labelDirection * labelMargin
                 ];
+                var labelBeforeFormat = axis.scale.getLabel(ticks[i]);
 
                 var textEl = new graphic.Text({
                     style: {
@@ -245,7 +247,7 @@ define(function (require) {
                         textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
                         textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.verticalAlign,
                         textFont: itemTextStyleModel.getFont(),
-                        fill: itemTextStyleModel.getTextColor()
+                        fill: typeof textColor === 'function' ? textColor(labelBeforeFormat) : textColor
                     },
                     position: pos,
                     rotation: labelLayout.rotation,
@@ -255,7 +257,7 @@ define(function (require) {
                 // Pack data for mouse event
                 textEl.eventData = makeAxisEventDataBase(axisModel);
                 textEl.eventData.targetType = 'axisLabel';
-                textEl.eventData.value = axis.scale.getLabel(ticks[i]);
+                textEl.eventData.value = labelBeforeFormat;
 
                 textEls.push(textEl);
                 this.group.add(textEl);
