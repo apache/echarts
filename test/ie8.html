@@ -822,6 +822,36 @@
                 });
             }
 
+            function makeDataZoom() {
+                var chart = makeChart();
+                var data = [];
+                var categoryData = [];
+                var y = Math.random() * 1000;
+                for (var i = 0; i < 50; i++) {
+                    categoryData.push('C' + i);
+                    data.push(y);
+                    y += 100 * Math.random() - 50;
+                }
+                chart.setOption({
+                    xAxis: {
+                        data: categoryData
+                    },
+                    yAxis: {},
+                    dataZoom: [{
+                        start: 0,
+                        end: 30
+                    }],
+                    series: [
+                        {
+                            type: 'line',
+                            animation: false,
+                            data: data
+                            // smooth: true
+                        }
+                    ]
+                });
+            }
+
             setTimeout(function () {
                 makeLine();
             }, 500);
@@ -843,6 +873,7 @@
             setTimeout(function () {
                 makeFunnel();
             }, 3000);
+            makeDataZoom();
         </script>
     </body>
 </html>
