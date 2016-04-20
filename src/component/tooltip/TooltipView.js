@@ -251,20 +251,32 @@ define(function (require) {
             }
 
             var zr = this._api.getZr();
-            var tryShow = this._tryShow;
-            zr.off('click', tryShow);
-            zr.off('mousemove', tryShow);
+            zr.off('click', this._tryShow);
+            zr.off('mousemove', this._mousemove);
             zr.off('mouseout', this._hide);
             zr.off('globalout', this._hide);
             if (tooltipModel.get('triggerOn') === 'click') {
-                zr.on('click', tryShow, this);
+                zr.on('click', this._tryShow, this);
             }
             else {
-                zr.on('mousemove', tryShow, this);
+                zr.on('mousemove', this._mousemove, this);
                 zr.on('mouseout', this._hide, this);
                 zr.on('globalout', this._hide, this);
             }
+        },
 
+        _mousemove: function (e) {
+            var showDelay = this._tooltipModel.get('showDelay');
+            var self = this;
+            clearTimeout(this._showTimeout);
+            if (showDelay > 0) {
+                this._showTimeout = setTimeout(function () {
+                    self._tryShow(e);
+                }, showDelay);
+            }
+            else {
+                this._tryShow(e);
+            }
         },
 
         /**
@@ -1092,6 +1104,8 @@ define(function (require) {
         },
 
         _hide: function () {
+            clearTimeout(this._showTimeout);
+
             this._hideAxisPointer();
             this._resetLastHover();
             if (!this._alwaysShowContent) {
@@ -1114,7 +1128,7 @@ define(function (require) {
             this._tooltipContent.hide();
 
             zr.off('click', this._tryShow);
-            zr.off('mousemove', this._tryShow);
+            zr.off('mousemove', this._mousemove);
             zr.off('mouseout', this._hide);
             zr.off('globalout', this._hide);
 

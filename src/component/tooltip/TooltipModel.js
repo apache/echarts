@@ -29,6 +29,8 @@ define(function (require) {
             // 内容格式器：{string}（Template） ¦ {Function}
             // formatter: null
 
+            showDelay: 0,
+
             // 隐藏延迟，单位ms
             hideDelay: 100,
 
