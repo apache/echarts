@@ -68,14 +68,17 @@ define(function (require) {
                 points: layout.points
             });
             polygon.setStyle({ opacity : 0 });
-            graphic.updateProps(polygon, {
+            graphic.initProps(polygon, {
                 style: {
                     opacity: opacity
                 }
             }, seriesModel);
         }
         else {
-            graphic.initProps(polygon, {
+            graphic.updateProps(polygon, {
+                style: {
+                    opacity: opacity
+                },
                 shape: {
                     points: layout.points
                 }
@@ -91,7 +94,7 @@ define(function (require) {
                 {
                     fill: visualColor
                 },
-                itemStyleModel.getModel('normal').getItemStyle()
+                itemStyleModel.getModel('normal').getItemStyle(['opacity'])
             )
         );
         polygon.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();

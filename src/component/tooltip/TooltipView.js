@@ -255,12 +255,14 @@ define(function (require) {
             zr.off('click', tryShow);
             zr.off('mousemove', tryShow);
             zr.off('mouseout', this._hide);
+            zr.off('globalout', this._hide);
             if (tooltipModel.get('triggerOn') === 'click') {
                 zr.on('click', tryShow, this);
             }
             else {
                 zr.on('mousemove', tryShow, this);
                 zr.on('mouseout', this._hide, this);
+                zr.on('globalout', this._hide, this);
             }
 
         },
@@ -313,7 +315,11 @@ define(function (require) {
                     var coordSys = seriesModel.coordinateSystem;
                     if (coordSys && coordSys.dataToPoint) {
                         var point = coordSys.dataToPoint(
-                            data.getValues(coordSys.dimensions, dataIndex, true)
+                            data.getValues(
+                                zrUtil.map(coordSys.dimensions, function (dim) {
+                                    return seriesModel.coordDimToDataDim(dim)[0];
+                                }), dataIndex, true
+                            )
                         );
                         cx = point && point[0];
                         cy = point && point[1];
@@ -1096,6 +1102,8 @@ define(function (require) {
                 type: 'hideTip',
                 from: this.uid
             });
+
+            this._lastX = this._lastY = null;
         },
 
         dispose: function (ecModel, api) {
@@ -1108,6 +1116,7 @@ define(function (require) {
             zr.off('click', this._tryShow);
             zr.off('mousemove', this._tryShow);
             zr.off('mouseout', this._hide);
+            zr.off('globalout', this._hide);
 
             api.off('showTip', this._manuallyShowTip);
             api.off('hideTip', this._manuallyHideTip);

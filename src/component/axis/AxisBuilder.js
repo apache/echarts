@@ -9,6 +9,14 @@ define(function (require) {
 
     var PI = Math.PI;
 
+    function makeAxisEventDataBase(axisModel) {
+        var eventData = {
+            componentType: axisModel.mainType
+        };
+        eventData[axisModel.mainType + 'Index'] = axisModel.componentIndex;
+        return eventData;
+    }
+
     /**
      * A final axis is translated and rotated from a "standard axis".
      * So opt.position and opt.rotation is required.
@@ -45,7 +53,7 @@ define(function (require) {
      * @param {number} [opt.labelInterval] Default label interval when label
      *                                     interval from model is null or 'auto'.
      * @param {number} [opt.strokeContainThreshold] Default label interval when label
-     * @param {number} [opt.silent=true]
+     * @param {number} [opt.axisLineSilent=true] If axis line is silent
      */
     var AxisBuilder = function (axisModel, opt) {
 
@@ -125,7 +133,7 @@ define(function (require) {
                     axisModel.getModel('axisLine.lineStyle').getLineStyle()
                 ),
                 strokeContainThreshold: opt.strokeContainThreshold,
-                silent: !!opt.silent,
+                silent: !!opt.axisLineSilent,
                 z2: 1
             }));
         },
@@ -212,6 +220,7 @@ define(function (require) {
             var categoryData = axisModel.get('data');
 
             var textEls = [];
+            var isSilent = axisModel.get('silent');
             for (var i = 0; i < ticks.length; i++) {
                 if (ifIgnoreOnTick(axis, i, opt.labelInterval)) {
                      continue;
@@ -223,12 +232,14 @@ define(function (require) {
                         categoryData[i].textStyle, textStyleModel, axisModel.ecModel
                     );
                 }
+                var textColor = itemTextStyleModel.getTextColor();
 
                 var tickCoord = axis.dataToCoord(ticks[i]);
                 var pos = [
                     tickCoord,
                     opt.labelOffset + opt.labelDirection * labelMargin
                 ];
+                var labelBeforeFormat = axis.scale.getLabel(ticks[i]);
 
                 var textEl = new graphic.Text({
                     style: {
@@ -236,13 +247,18 @@ define(function (require) {
                         textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
                         textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.verticalAlign,
                         textFont: itemTextStyleModel.getFont(),
-                        fill: itemTextStyleModel.getTextColor()
+                        fill: typeof textColor === 'function' ? textColor(labelBeforeFormat) : textColor
                     },
                     position: pos,
                     rotation: labelLayout.rotation,
-                    silent: true,
+                    silent: isSilent,
                     z2: 10
                 });
+                // Pack data for mouse event
+                textEl.eventData = makeAxisEventDataBase(axisModel);
+                textEl.eventData.targetType = 'axisLabel';
+                textEl.eventData.value = labelBeforeFormat;
+
                 textEls.push(textEl);
                 this.group.add(textEl);
             }
@@ -320,7 +336,7 @@ define(function (require) {
                 labelLayout = endTextLayout(opt, nameLocation, extent);
             }
 
-            this.group.add(new graphic.Text({
+            var textEl = new graphic.Text({
                 style: {
                     text: name,
                     textFont: textStyleModel.getFont(),
@@ -331,9 +347,15 @@ define(function (require) {
                 },
                 position: pos,
                 rotation: labelLayout.rotation,
-                silent: true,
+                silent: axisModel.get('silent'),
                 z2: 1
-            }));
+            });
+
+            textEl.eventData = makeAxisEventDataBase(axisModel);
+            textEl.eventData.targetType = 'axisName';
+            textEl.eventData.name = name;
+
+            this.group.add(textEl);
         }
 
     };

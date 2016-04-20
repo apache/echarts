@@ -111,6 +111,8 @@
                     tooltip: {},
                     xAxis: {
                         data: xAxisData,
+                        name: '横轴',
+                        silent: false,
                         axisLine: {
                             onZero: true
                         },
@@ -154,10 +156,10 @@
                     }]
                 });
 
-                // chart.on('click', function (params) {
-                //     console.log(params);
-                // });
-                //
+                chart.on('click', function (params) {
+                    console.log(params);
+                });
+
                 window.onresize = chart.resize;
             });
         </script>
