@@ -888,6 +888,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            chartView.__alive = true;
 	            chartView.render(seriesModel, ecModel, api, payload);
 
+	            chartView.group.silent = !!seriesModel.get('silent');
+
 	            updateZ(seriesModel, chartView);
 	        }, this);
 
@@ -917,6 +919,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    params.event = e;
 	                    params.type = eveName;
 	                    this.trigger(eveName, params);
+	                }
+	                // If element has custom eventData of components
+	                else if (el && el.eventData) {
+	                    this.trigger(eveName, el.eventData);
 	                }
 	            }, this);
 	        }, this);
@@ -1034,9 +1040,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.1.6',
+	        version: '3.1.7',
 	        dependencies: {
-	            zrender: '3.0.7'
+	            zrender: '3.0.8'
 	        }
 	    };
 
@@ -2895,6 +2901,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var itemOpt = rawDataArray && rawDataArray[rawDataIndex];
 
 	            return {
+	                componentType: 'series',
+	                seriesType: this.subType,
 	                seriesIndex: seriesIndex,
 	                seriesName: seriesName,
 	                name: name,
@@ -3294,7 +3302,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    number.round = function (x) {
 	        // PENDING
-	        return +(+x).toFixed(12);
+	        return +(+x).toFixed(10);
 	    };
 
 	    number.asc = function (arr) {
@@ -6467,6 +6475,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * @type {string}
 	         */
 	        type: 'group',
+
+	        /**
+	         * 所有子孙元素是否响应鼠标事件
+	         * @name module:/zrender/container/Group#silent
+	         * @type {boolean}
+	         * @default false
+	         */
+	        silent: false,
 
 	        /**
 	         * @return {Array.<module:zrender/Element>}
@@ -15053,7 +15069,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @type {string}
 	     */
-	    zrender.version = '3.0.7';
+	    zrender.version = '3.0.8';
 
 	    /**
 	     * Initializing a zrender instance
@@ -15960,13 +15976,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    function isHover(displayable, x, y) {
 	        if (displayable[displayable.rectHover ? 'rectContain' : 'contain'](x, y)) {
-	            var p = displayable.parent;
-	            while (p) {
-	                if (p.clipPath && !p.clipPath.contain(x, y))  {
-	                    // Clipped by parents
+	            var el = displayable;
+	            while (el) {
+	                // If ancestor is silent or clipped by ancestor
+	                if (el.silent || (el.clipPath && !el.clipPath.contain(x, y)))  {
 	                    return false;
 	                }
-	                p = p.parent;
+	                el = el.parent;
 	            }
 	            return true;
 	        }
@@ -18266,6 +18282,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            dimensions = completeDimensions(dimensions, data, dimensions.concat(['value']));
 	        }
 	        var categoryAxisModel = result && result.categoryAxisModel;
+	        var categories;
 
 	        var categoryDimIndex = dimensions[0].type === 'ordinal'
 	            ? 0 : (dimensions[1].type === 'ordinal' ? 1 : -1);
@@ -18282,8 +18299,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    : converDataValue(getDataItemValue(itemOpt), dimensions[dimIndex]);
 	            }
 	            : function (itemOpt, dimName, dataIndex, dimIndex) {
-	                var val = getDataItemValue(itemOpt);
-	                return converDataValue(val && val[dimIndex], dimensions[dimIndex]);
+	                var value = getDataItemValue(itemOpt);
+	                var val = converDataValue(value && value[dimIndex], dimensions[dimIndex]);
+	                if (categoryDimIndex === dimIndex) {
+	                    // If given value is a category string
+	                    if (typeof val === 'string') {
+	                        // Lazy get categories
+	                        categories = categories || categoryAxisModel.getCategories();
+	                        val = zrUtil.indexOf(categories, val);
+	                        if (val < 0 && !isNaN(val)) {
+	                            // In case some one write '1', '2' istead of 1, 2
+	                            val = +val;
+	                        }
+	                    }
+	                }
+	                return val;
 	            };
 
 	        list.initData(data, nameList, dimValueGetter);
@@ -18834,7 +18864,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                // FIXME
 	                // if (isOrdinal && typeof value === 'string') {
 	                //     value = zrUtil.indexOf(dimData, value);
-	                //     console.log(value);
 	                // }
 	                value < min && (min = value);
 	                value > max && (max = value);
@@ -20470,6 +20499,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var itemModel = data.getItemModel(idx);
 	        var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
 	        var color = data.getItemVisual(idx, 'color');
+	        var elStyle = symbolPath.style;
 
 	        var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
@@ -20485,16 +20515,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	        symbolPath.setColor(color);
 
 	        zrUtil.extend(
-	            symbolPath.style,
+	            elStyle,
 	            // Color must be excluded.
 	            // Because symbol provide setColor individually to set fill and stroke
 	            normalItemStyleModel.getItemStyle(['color'])
 	        );
 
+	        var opacity = data.getItemVisual(idx, 'opacity');
+	        if (opacity != null) {
+	            elStyle.opacity = opacity;
+	        }
+
 	        var labelModel = itemModel.getModel(normalLabelAccessPath);
 	        var hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
-
-	        var elStyle = symbolPath.style;
 
 	        // Get last value dim
 	        var dimensions = data.dimensions.slice();
@@ -21468,6 +21501,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                frame[i] < min && (min = frame[i]);
 	            }
 	            return min;
+	        },
+	        // TODO
+	        // Median
+	        nearest: function (frame) {
+	            return frame[0];
 	        }
 	    };
 
@@ -23767,6 +23805,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        nameTextStyle: {},
 	        // 文字与轴线距离
 	        nameGap: 15,
+	        // 是否能触发鼠标事件
+	        silent: true,
 	        // 坐标轴线
 	        axisLine: {
 	            // 默认显示，属性show控制显示与否
@@ -24227,6 +24267,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var PI = Math.PI;
 
+	    function makeAxisEventDataBase(axisModel) {
+	        var eventData = {
+	            componentType: axisModel.mainType
+	        };
+	        eventData[axisModel.mainType + 'Index'] = axisModel.componentIndex;
+	        return eventData;
+	    }
+
 	    /**
 	     * A final axis is translated and rotated from a "standard axis".
 	     * So opt.position and opt.rotation is required.
@@ -24263,7 +24311,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {number} [opt.labelInterval] Default label interval when label
 	     *                                     interval from model is null or 'auto'.
 	     * @param {number} [opt.strokeContainThreshold] Default label interval when label
-	     * @param {number} [opt.silent=true]
+	     * @param {number} [opt.axisLineSilent=true] If axis line is silent
 	     */
 	    var AxisBuilder = function (axisModel, opt) {
 
@@ -24343,7 +24391,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    axisModel.getModel('axisLine.lineStyle').getLineStyle()
 	                ),
 	                strokeContainThreshold: opt.strokeContainThreshold,
-	                silent: !!opt.silent,
+	                silent: !!opt.axisLineSilent,
 	                z2: 1
 	            }));
 	        },
@@ -24430,6 +24478,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var categoryData = axisModel.get('data');
 
 	            var textEls = [];
+	            var isSilent = axisModel.get('silent');
 	            for (var i = 0; i < ticks.length; i++) {
 	                if (ifIgnoreOnTick(axis, i, opt.labelInterval)) {
 	                     continue;
@@ -24441,12 +24490,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        categoryData[i].textStyle, textStyleModel, axisModel.ecModel
 	                    );
 	                }
+	                var textColor = itemTextStyleModel.getTextColor();
 
 	                var tickCoord = axis.dataToCoord(ticks[i]);
 	                var pos = [
 	                    tickCoord,
 	                    opt.labelOffset + opt.labelDirection * labelMargin
 	                ];
+	                var labelBeforeFormat = axis.scale.getLabel(ticks[i]);
 
 	                var textEl = new graphic.Text({
 	                    style: {
@@ -24454,13 +24505,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
 	                        textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.verticalAlign,
 	                        textFont: itemTextStyleModel.getFont(),
-	                        fill: itemTextStyleModel.getTextColor()
+	                        fill: typeof textColor === 'function' ? textColor(labelBeforeFormat) : textColor
 	                    },
 	                    position: pos,
 	                    rotation: labelLayout.rotation,
-	                    silent: true,
+	                    silent: isSilent,
 	                    z2: 10
 	                });
+	                // Pack data for mouse event
+	                textEl.eventData = makeAxisEventDataBase(axisModel);
+	                textEl.eventData.targetType = 'axisLabel';
+	                textEl.eventData.value = labelBeforeFormat;
+
 	                textEls.push(textEl);
 	                this.group.add(textEl);
 	            }
@@ -24538,7 +24594,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                labelLayout = endTextLayout(opt, nameLocation, extent);
 	            }
 
-	            this.group.add(new graphic.Text({
+	            var textEl = new graphic.Text({
 	                style: {
 	                    text: name,
 	                    textFont: textStyleModel.getFont(),
@@ -24549,9 +24605,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	                },
 	                position: pos,
 	                rotation: labelLayout.rotation,
-	                silent: true,
+	                silent: axisModel.get('silent'),
 	                z2: 1
-	            }));
+	            });
+
+	            textEl.eventData = makeAxisEventDataBase(axisModel);
+	            textEl.eventData.targetType = 'axisName';
+	            textEl.eventData.name = name;
+
+	            this.group.add(textEl);
 	        }
 
 	    };
@@ -24917,6 +24979,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            data.eachItemGraphicEl(function (rect, idx) {
 	                var itemModel = data.getItemModel(idx);
 	                var color = data.getItemVisual(idx, 'color');
+	                var opacity = data.getItemVisual(idx, 'opacity');
 	                var layout = data.getItemLayout(idx);
 	                var itemStyleModel = itemModel.getModel('itemStyle.normal');
 
@@ -24926,7 +24989,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                rect.setStyle(zrUtil.defaults(
 	                    {
-	                        fill: color
+	                        fill: color,
+	                        opacity: opacity
 	                    },
 	                    itemStyleModel.getBarItemStyle()
 	                ));
