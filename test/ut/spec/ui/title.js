@@ -2,37 +2,28 @@ describe('title', function() {
 
     var uiHelper = window.uiHelper;
 
-    // canvas comparing strategy, 'stack' or 'content'
-    // see ../../core/uiHelper.js for more detail
-    var STRATEGY = 'stack';
+    var suites = [{
+        name: 'show',
+        cases: [{
+            name: 'should display given title by default',
+            option: {
+                series: [],
+                title: {
+                    text: 'test title'
+                }
+            }
+        }, {
+            name: 'should hide title when show is false',
+            option: {
+                series: [],
+                title: {
+                    text: 'hidden title',
+                    display: false
+                }
+            }
+        }]
+    }];
 
-    describe('title-show', function() {
-        it('should display given title by default', function(done) {
-            uiHelper.expectEqualCanvas(STRATEGY, function(echarts) {
-                return uiHelper.getRenderedCanvas(echarts, function(myChart) {
-                    myChart.setOption({
-                        series: [],
-                        title: {
-                            text: 'test title'
-                        }
-                    });
-                });
-            }, done);
-        });
-
-        it('should hide title when show is false', function(done) {
-            uiHelper.expectEqualCanvas(STRATEGY, function(echarts) {
-                return uiHelper.getRenderedCanvas(echarts, function(myChart) {
-                    myChart.setOption({
-                        series: [],
-                        title: {
-                            text: 'hidden title',
-                            display: false
-                        }
-                    });
-                });
-            }, done);
-        });
-    });
+    uiHelper.testOptionSpec('title', suites);
 
 });
