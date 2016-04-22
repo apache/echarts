@@ -2,7 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var geoProps = [
-        'x', 'y', 'x2', 'y2', 'width', 'height', 'map', 'roam', 'roamDetail', 'label', 'itemStyle'
+        'x', 'y', 'x2', 'y2', 'width', 'height', 'map', 'roam', 'center', 'zoom', 'label', 'itemStyle'
     ];
 
     var geoCoordsMap = {};

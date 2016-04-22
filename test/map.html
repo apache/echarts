@@ -23,7 +23,8 @@
                 'echarts/chart/map',
                 'echarts/component/title',
                 'echarts/component/legend',
-                'echarts/component/visualMap'
+                'echarts/component/visualMap',
+                'echarts/component/markPoint'
             ], function (echarts) {
 
                 require(['map/js/china'], function () {
@@ -69,6 +70,14 @@
                                 map: 'china',
                                 itemStyle: itemStyle,
                                 showLegendSymbol: true,
+                                zoom: 10,
+                                roam: true,
+                                center: [115.97, 29.71],
+                                markPoint: {
+                                    data: [{
+                                        coord: [115.97, 29.71]
+                                    }]
+                                },
                                 label: {
                                     normal: {
                                         show: true

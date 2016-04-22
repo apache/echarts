@@ -87,26 +87,6 @@ define(function (require) {
             return option;
         },
 
-        /**
-         * @param {number} zoom
-         */
-        setRoamZoom: function (zoom) {
-            var roamDetail = this.option.roamDetail;
-            roamDetail && (roamDetail.zoom = zoom);
-        },
-
-        /**
-         * @param {number} x
-         * @param {number} y
-         */
-        setRoamPan: function (x, y) {
-            var roamDetail = this.option.roamDetail;
-            if (roamDetail) {
-                roamDetail.x = x;
-                roamDetail.y = y;
-            }
-        },
-
         getRawValue: function (dataIndex) {
             // Use value stored in data instead because it is calculated from multiple series
             // FIXME Provide all value of multiple series ?

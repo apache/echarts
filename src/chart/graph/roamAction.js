@@ -23,17 +23,13 @@ define(function (require) {
         ecModel.eachComponent({mainType: 'series', query: payload}, function (seriesModel) {
             var coordSys = seriesModel.coordinateSystem;
 
-            var roamDetailModel = seriesModel.getModel('roamDetail');
-            var res = roamHelper.calcPanAndZoom(roamDetailModel, payload);
+            var res = roamHelper.updateCenterAndZoom(coordSys, payload);
 
-            seriesModel.setRoamPan
-                && seriesModel.setRoamPan(res.x, res.y);
+            seriesModel.setCenter
+                && seriesModel.setCenter(res.center);
 
-            seriesModel.setRoamZoom
-                && seriesModel.setRoamZoom(res.zoom);
-
-            coordSys && coordSys.setPan(res.x, res.y);
-            coordSys && coordSys.setZoom(res.zoom);
+            seriesModel.setZoom
+                && seriesModel.setZoom(res.zoom);
         });
     });
 });
