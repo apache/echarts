@@ -4,6 +4,8 @@
 
     // canvas comparing strategy, 'stack' or 'content'
     var STRATEGY = 'stack';
+    // always display images even if no error
+    var ALWAYS_SHOW_IMAGE = false;
 
     // dom for failed cases
     var failedDom = document.createElement('div');
@@ -21,7 +23,7 @@
         window.require(['oldEcharts', 'newEcharts'], function (oldE, newE) {
             var oldImg = doTest(oldE).toDataURL();
             var newImg = doTest(newE).toDataURL();
-            if (oldImg !== newImg) {
+            if (ALWAYS_SHOW_IMAGE || oldImg !== newImg) {
                 that.addFailedCases(title, oldImg, newImg);
             }
             expect(oldImg).toEqual(newImg);
@@ -43,13 +45,14 @@
             var newCanvas = doTest(newE);
             var oldImg = oldCanvas.toDataURL();
             var newImg = newCanvas.toDataURL();
-            if (oldImg !== newImg) {
+            if (ALWAYS_SHOW_IMAGE || oldImg !== newImg) {
                 that.addFailedCases(title, oldImg, newImg);
             }
             var oldCtx = oldCanvas.getContext('2d');
             var newCtx = newCanvas.getContext('2d');
             // hash of canvas operation stack, provided by canteen
             // https://github.com/platfora/Canteen
+            // console.log(oldCtx.hash());
             expect(oldCtx.hash()).toEqual(newCtx.hash());
             done();
         });
@@ -80,8 +83,8 @@
     helper.getRenderedCanvas = function(echarts, operations) {
         // init canvas with echarts
         var canvas = document.createElement('canvas');
-        canvas.width = 800;
-        canvas.height = 600;
+        canvas.width = 400;
+        canvas.height = 300;
         var myChart = echarts.init(canvas);
 
         // user defined operations
@@ -113,12 +116,13 @@
      * @param  {object[]} suites    arrary of suites
      */
     helper.testOptionSpec = function(specName, suites) {
+        var that = this;
         for (var sid = 0, slen = suites.length; sid < slen; ++sid) {
             (function(suiteName, cases) {
-                describe('show', function() {
+                describe(suiteName, function() {
                     for (var cid = 0, clen = cases.length; cid < clen; ++cid) {var name = specName + ' - ' + suiteName + ': '
                             + cases[cid].name;
-                        uiHelper.testOption(name, cases[cid].option);
+                        that.testOption(name, cases[cid].option);
                     }
                 });
             })(suites[sid].name, suites[sid].cases);
@@ -150,7 +154,6 @@
 
         // diff image
         var diff = imagediff.diff(oldImg, newImg);
-        console.log(diff);
         var canvas = document.createElement('canvas');
         canvas.width = oldImg.width;
         canvas.height = oldImg.height;
