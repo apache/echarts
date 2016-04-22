@@ -161,7 +161,7 @@ define(function (require) {
             hmLayer.maxOpacity = seriesModel.get('maxOpacity');
 
             var rect = geo.getViewRect().clone();
-            var roamTransform = geo.getRoamTransform();
+            var roamTransform = geo.getRoamTransform().transform;
             rect.applyTransform(roamTransform);
 
             // Clamp on viewport

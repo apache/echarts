@@ -93,24 +93,12 @@ define(function (require) {
             });
         },
 
-        /**
-         * @param {number} zoom
-         */
-        setRoamZoom: function (zoom) {
-            var roamDetail = this.option.roamDetail;
-            roamDetail && (roamDetail.zoom = zoom);
+        setZoom: function (zoom) {
+            this.option.zoom = zoom;
         },
 
-        /**
-         * @param {number} x
-         * @param {number} y
-         */
-        setRoamPan: function (x, y) {
-            var roamDetail = this.option.roamDetail;
-            if (roamDetail) {
-                roamDetail.x = x;
-                roamDetail.y = y;
-            }
+        setCenter: function (center) {
+            this.option.center = center;
         },
 
         defaultOption: {
@@ -151,12 +139,11 @@ define(function (require) {
             draggable: false,
 
             roam: false,
-            roamDetail: {
-                x: 0,
-                y: 0,
-                zoom: 1
-            },
 
+            // Default on center of graph
+            center: null,
+
+            zoom: 1,
             // Symbol size scale ratio in roam
             nodeScaleRatio: 0.6,
 

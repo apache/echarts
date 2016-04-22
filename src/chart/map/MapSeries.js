@@ -87,26 +87,6 @@ define(function (require) {
             return option;
         },
 
-        /**
-         * @param {number} zoom
-         */
-        setRoamZoom: function (zoom) {
-            var roamDetail = this.option.roamDetail;
-            roamDetail && (roamDetail.zoom = zoom);
-        },
-
-        /**
-         * @param {number} x
-         * @param {number} y
-         */
-        setRoamPan: function (x, y) {
-            var roamDetail = this.option.roamDetail;
-            if (roamDetail) {
-                roamDetail.x = x;
-                roamDetail.y = y;
-            }
-        },
-
         getRawValue: function (dataIndex) {
             // Use value stored in data instead because it is calculated from multiple series
             // FIXME Provide all value of multiple series ?
@@ -168,12 +148,11 @@ define(function (require) {
             // 是否开启缩放及漫游模式
             // roam: false,
 
-            // 在 roam 开启的时候使用
-            roamDetail: {
-                x: 0,
-                y: 0,
-                zoom: 1
-            },
+            // Default on center of map
+            center: null,
+
+            zoom: 1,
+
 
             scaleLimit: null,
 
@@ -204,6 +183,14 @@ define(function (require) {
                     areaColor: 'rgba(255,215, 0, 0.8)'
                 }
             }
+        },
+
+        setZoom: function (zoom) {
+            this.option.zoom = zoom;
+        },
+
+        setCenter: function (center) {
+            this.option.center = center;
         }
     });
 

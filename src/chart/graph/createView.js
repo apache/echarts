@@ -58,9 +58,8 @@ define(function (require) {
                 );
 
                 // Update roam info
-                var roamDetailModel = seriesModel.getModel('roamDetail');
-                viewCoordSys.setPan(roamDetailModel.get('x') || 0, roamDetailModel.get('y') || 0);
-                viewCoordSys.setZoom(roamDetailModel.get('zoom') || 1);
+                viewCoordSys.setCenter(seriesModel.get('center'));
+                viewCoordSys.setZoom(seriesModel.get('zoom'));
             }
         });
         return viewList;
