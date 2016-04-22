@@ -28,14 +28,8 @@ define(function (require) {
 
         this.setViewRect(viewRect.x, viewRect.y, viewRect.width, viewRect.height);
 
-        var roamDetailModel = geoModel.getModel('roamDetail');
-
-        var panX = roamDetailModel.get('x') || 0;
-        var panY = roamDetailModel.get('y') || 0;
-        var zoom = roamDetailModel.get('zoom') || 1;
-
-        this.setPan(panX, panY);
-        this.setZoom(zoom);
+        this.setCenter(geoModel.get('center'));
+        this.setZoom(geoModel.get('zoom'));
     }
 
     /**

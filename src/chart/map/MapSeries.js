@@ -168,12 +168,11 @@ define(function (require) {
             // 是否开启缩放及漫游模式
             // roam: false,
 
-            // 在 roam 开启的时候使用
-            roamDetail: {
-                x: 0,
-                y: 0,
-                zoom: 1
-            },
+            // Default on center of map
+            center: null,
+
+            zoom: 1,
+
 
             scaleLimit: null,
 
@@ -204,6 +203,14 @@ define(function (require) {
                     areaColor: 'rgba(255,215, 0, 0.8)'
                 }
             }
+        },
+
+        setZoom: function (zoom) {
+            this.option.zoom = zoom;
+        },
+
+        setCenter: function (center) {
+            this.option.center = center;
         }
     });
 
