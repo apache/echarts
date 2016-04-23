@@ -19,7 +19,7 @@
             }
         }
         return target;
-    }
+    };
 
     /**
      * @public
@@ -128,7 +128,7 @@
         context.require = null;
 
         // Import esl.
-        helper.loadScript('esl.js', 'esl', function () {
+        helper.loadScript('../esl.js', 'esl', function () {
             helper.loadScript('config.js', 'config', function () {
                 then();
             });
@@ -159,6 +159,87 @@
                 });
             });
         }
+    };
+
+    /**
+     * Usage:
+     * var testCase = helper.chartBeforeAndAfter([
+     *     'echarts/component/grid',
+     *     'echarts/chart/line',
+     *     'echarts/chart/pie',
+     *     'echarts/chart/bar',
+     *     'echarts/component/toolbox',
+     *     'echarts/component/dataZoom'
+     * ])
+     *
+     * testCase('test_case_1', function (chart, echarts) {
+     *     // Real test case.
+     * });
+     *
+     * testCase('test_case_2', function (chart, echarts) {
+     *     // Real test case.
+     * });
+     *
+     * testCase('test_case_2', testCaseSpecifiedPackages, function (chart, echarts) {
+     *     // Real test case.
+     * });
+     *
+     *
+     * @public
+     * @params {Array.<string>} packages Like:
+     * @return {Function} testCase function wrap.
+     */
+    helper.chartBeforeAndAfter = function (packages) {
+
+        packages = packages.slice();
+        packages.unshift('echarts');
+
+        var el;
+        var chart;
+
+        window.beforeEach(function (done) {
+            window.jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+
+            el = document.createElement('div');
+            document.body.appendChild(el);
+
+            helper.resetPackageLoader(done);
+        });
+
+        window.afterEach(function (done) {
+            if (el) {
+                document.body.removeChild(el);
+            }
+            if (chart) {
+                chart.dispose();
+            }
+            done();
+        });
+
+        var testCase = function (name, testCaseSpecifiedPackages, doTest) {
+            if (typeof testCaseSpecifiedPackages === 'function') {
+                doTest = testCaseSpecifiedPackages;
+                testCaseSpecifiedPackages = null;
+            }
+
+            if (testCaseSpecifiedPackages) {
+                testCaseSpecifiedPackages = testCaseSpecifiedPackages.slice();
+                testCaseSpecifiedPackages.unshift('echarts');
+            }
+
+            window.it(name, function (done) {
+                window.require(
+                    testCaseSpecifiedPackages || packages,
+                    function (echarts) {
+                        chart = echarts.init(el, null, {renderer: 'canvas'});
+                        doTest(chart, echarts);
+                        done();
+                    }
+                );
+            });
+        };
+
+        return testCase;
     };
 
 })(window);

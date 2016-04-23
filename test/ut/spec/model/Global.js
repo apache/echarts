@@ -1,46 +1,15 @@
 describe('modelAndOptionMapping', function() {
 
     var utHelper = window.utHelper;
-    var el;
-    var chart;
 
-    beforeEach(function (done) {
-        window.jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
-
-        if (el) {
-            document.body.removeChild(el);
-        }
-        if (chart) {
-            chart.dispose();
-        }
-
-        el = document.createElement('div');
-        document.body.appendChild(el);
-
-        utHelper.resetPackageLoader(done);
-    });
-
-    function testCase(name, doTest) {
-        it(name, function (done) {
-            window.require(
-                [
-                    'echarts',
-                    'echarts/component/grid',
-                    'echarts/chart/line',
-                    'echarts/chart/pie',
-                    'echarts/chart/bar',
-                    'echarts/component/toolbox',
-                    'echarts/component/dataZoom'
-                ],
-                function (echarts) {
-                    chart = echarts.init(el, null, {renderer: 'canvas'});
-                    doTest(chart, echarts);
-                    done();
-                }
-            );
-        });
-    }
-    function xtestCase() {} // jshint ignore:line
+    var testCase = utHelper.chartBeforeAndAfter([
+        'echarts/component/grid',
+        'echarts/chart/line',
+        'echarts/chart/pie',
+        'echarts/chart/bar',
+        'echarts/component/toolbox',
+        'echarts/component/dataZoom'
+    ]);
 
     function getData0(chart, seriesIndex) {
         return getSeries(chart, seriesIndex).getData().get('y', 0);
@@ -85,14 +54,14 @@ describe('modelAndOptionMapping', function() {
         return origins;
     }
 
-    function modelEqualsToOrigin(idxList, origins, boolResult) {
+    function modelEqualsToOrigin(chart, idxList, origins, boolResult) {
         for (var i = 0; i < idxList.length; i++) {
             var idx = idxList[i];
             expect(origins[idx].model === getSeries(chart, idx)).toEqual(boolResult);
         }
     }
 
-    function viewEqualsToOrigin(idxList, origins, boolResult) {
+    function viewEqualsToOrigin(chart, idxList, origins, boolResult) {
         for (var i = 0; i < idxList.length; i++) {
             var idx = idxList[i];
             expect(
@@ -122,8 +91,8 @@ describe('modelAndOptionMapping', function() {
             chart.setOption(option, true);
             expect(countChartViews(chart)).toEqual(3);
             expect(countSeries(chart)).toEqual(3);
-            modelEqualsToOrigin([0, 1, 2], origins, false);
-            viewEqualsToOrigin([0, 1, 2], origins, true);
+            modelEqualsToOrigin(chart, [0, 1, 2], origins, false);
+            viewEqualsToOrigin(chart, [0, 1, 2], origins, true);
         });
 
         testCase('sameTypeMergeFull', function (chart, echarts) {
@@ -153,8 +122,8 @@ describe('modelAndOptionMapping', function() {
             expect(getData0(chart, 0)).toEqual(111);
             expect(getData0(chart, 1)).toEqual(222);
             expect(getData0(chart, 2)).toEqual(333);
-            viewEqualsToOrigin([0, 1, 2], origins, true);
-            modelEqualsToOrigin([0, 1, 2], origins, true);
+            viewEqualsToOrigin(chart, [0, 1, 2], origins, true);
+            modelEqualsToOrigin(chart, [0, 1, 2], origins, true);
         });
 
         testCase('sameTypeMergePartial', function (chart, echarts) {
@@ -182,8 +151,8 @@ describe('modelAndOptionMapping', function() {
             expect(getData0(chart, 0)).toEqual(22222);
             expect(getData0(chart, 1)).toEqual(22);
             expect(getData0(chart, 2)).toEqual(33);
-            viewEqualsToOrigin([0, 1, 2], origins, true);
-            modelEqualsToOrigin([0, 1, 2], origins, true);
+            viewEqualsToOrigin(chart, [0, 1, 2], origins, true);
+            modelEqualsToOrigin(chart, [0, 1, 2], origins, true);
         });
 
         testCase('differentTypeMerge', function (chart, echarts) {
@@ -214,10 +183,10 @@ describe('modelAndOptionMapping', function() {
             expect(getData0(chart, 1)).toEqual(222);
             expect(getData0(chart, 2)).toEqual(333);
             expect(getSeries(chart, 1).type === 'series.bar').toEqual(true);
-            modelEqualsToOrigin([0, 2], origins, true);
-            modelEqualsToOrigin([1], origins, false);
-            viewEqualsToOrigin([0, 2], origins, true);
-            viewEqualsToOrigin([1], origins, false);
+            modelEqualsToOrigin(chart, [0, 2], origins, true);
+            modelEqualsToOrigin(chart, [1], origins, false);
+            viewEqualsToOrigin(chart, [0, 2], origins, true);
+            viewEqualsToOrigin(chart, [1], origins, false);
         });
 
     });
@@ -255,8 +224,8 @@ describe('modelAndOptionMapping', function() {
             expect(countChartViews(chart)).toEqual(5);
             expect(countSeries(chart)).toEqual(5);
 
-            modelEqualsToOrigin([0, 1, 2, 3, 4], origins, false);
-            viewEqualsToOrigin([0, 1, 2, 3, 4], origins, true);
+            modelEqualsToOrigin(chart, [0, 1, 2, 3, 4], origins, false);
+            viewEqualsToOrigin(chart, [0, 1, 2, 3, 4], origins, true);
         });
 
         testCase('sameTypeMerge', function (chart, echarts) {
@@ -278,8 +247,8 @@ describe('modelAndOptionMapping', function() {
             expect(countChartViews(chart)).toEqual(5);
             expect(countSeries(chart)).toEqual(5);
 
-            modelEqualsToOrigin([0, 1, 2, 3, 4], origins, true);
-            viewEqualsToOrigin([0, 1, 2, 3, 4], origins, true);
+            modelEqualsToOrigin(chart, [0, 1, 2, 3, 4], origins, true);
+            viewEqualsToOrigin(chart, [0, 1, 2, 3, 4], origins, true);
         });
 
         testCase('differentTypeNotMerge', function (chart, echarts) {
@@ -312,9 +281,9 @@ describe('modelAndOptionMapping', function() {
             expect(countChartViews(chart)).toEqual(5);
             expect(countSeries(chart)).toEqual(5);
 
-            modelEqualsToOrigin([0, 1, 2, 3, 4], origins, false);
-            viewEqualsToOrigin([0, 2, 4], origins, true);
-            viewEqualsToOrigin([1, 3], origins, false);
+            modelEqualsToOrigin(chart, [0, 1, 2, 3, 4], origins, false);
+            viewEqualsToOrigin(chart, [0, 2, 4], origins, true);
+            viewEqualsToOrigin(chart, [1, 3], origins, false);
         });
 
         testCase('differentTypeMergeFull', function (chart, echarts) {
@@ -345,10 +314,10 @@ describe('modelAndOptionMapping', function() {
             expect(countChartViews(chart)).toEqual(5);
             expect(countSeries(chart)).toEqual(5);
 
-            modelEqualsToOrigin([0, 2, 4], origins, true);
-            modelEqualsToOrigin([1, 3], origins, false);
-            viewEqualsToOrigin([0, 2, 4], origins, true);
-            viewEqualsToOrigin([1, 3], origins, false);
+            modelEqualsToOrigin(chart, [0, 2, 4], origins, true);
+            modelEqualsToOrigin(chart, [1, 3], origins, false);
+            viewEqualsToOrigin(chart, [0, 2, 4], origins, true);
+            viewEqualsToOrigin(chart, [1, 3], origins, false);
         });
 
         testCase('differentTypeMergePartial1', function (chart, echarts) {
@@ -382,10 +351,10 @@ describe('modelAndOptionMapping', function() {
             expect(getData0(chart, 2)).toEqual(33);
             expect(getData0(chart, 3)).toEqual(444);
             expect(getData0(chart, 4)).toEqual(55);
-            modelEqualsToOrigin([0, 1, 2, 4], origins, true);
-            modelEqualsToOrigin([3], origins, false);
-            viewEqualsToOrigin([0, 1, 2, 4], origins, true);
-            viewEqualsToOrigin([3], origins, false);
+            modelEqualsToOrigin(chart, [0, 1, 2, 4], origins, true);
+            modelEqualsToOrigin(chart, [3], origins, false);
+            viewEqualsToOrigin(chart, [0, 1, 2, 4], origins, true);
+            viewEqualsToOrigin(chart, [3], origins, false);
         });
 
         testCase('differentTypeMergePartial2', function (chart, echarts) {
@@ -431,7 +400,7 @@ describe('modelAndOptionMapping', function() {
 
             var option2 = {
                 series: [
-                    {type: 'bar', data: [444], id: 40},
+                    {type: 'bar', data: [444], id: 40}
                 ]
             };
             chart.setOption(option2);
@@ -503,8 +472,8 @@ describe('modelAndOptionMapping', function() {
             expect(countChartViews(chart)).toEqual(5);
             expect(countSeries(chart)).toEqual(5);
 
-            modelEqualsToOrigin([0, 1, 2, 3, 4], origins, false);
-            viewEqualsToOrigin([0, 1, 2, 3, 4], origins, true);
+            modelEqualsToOrigin(chart, [0, 1, 2, 3, 4], origins, false);
+            viewEqualsToOrigin(chart, [0, 1, 2, 3, 4], origins, true);
         });
 
         testCase('sameTypeMerge', function (chart, echarts) {
@@ -526,8 +495,8 @@ describe('modelAndOptionMapping', function() {
             expect(countChartViews(chart)).toEqual(5);
             expect(countSeries(chart)).toEqual(5);
 
-            modelEqualsToOrigin([0, 1, 2, 3, 4], origins, true);
-            viewEqualsToOrigin([0, 1, 2, 3, 4], origins, true);
+            modelEqualsToOrigin(chart, [0, 1, 2, 3, 4], origins, true);
+            viewEqualsToOrigin(chart, [0, 1, 2, 3, 4], origins, true);
         });
 
         testCase('differentTypeNotMerge', function (chart, echarts) {
@@ -560,9 +529,9 @@ describe('modelAndOptionMapping', function() {
             expect(countChartViews(chart)).toEqual(5);
             expect(countSeries(chart)).toEqual(5);
 
-            modelEqualsToOrigin([0, 1, 2, 3, 4], origins, false);
-            viewEqualsToOrigin([0, 2, 4], origins, true);
-            viewEqualsToOrigin([1, 3], origins, false);
+            modelEqualsToOrigin(chart, [0, 1, 2, 3, 4], origins, false);
+            viewEqualsToOrigin(chart, [0, 2, 4], origins, true);
+            viewEqualsToOrigin(chart, [1, 3], origins, false);
         });
 
         testCase('differentTypeMergePartialOneMapTwo', function (chart, echarts) {
@@ -597,10 +566,10 @@ describe('modelAndOptionMapping', function() {
             expect(getData0(chart, 3)).toEqual(44);
             expect(getData0(chart, 4)).toEqual(55);
             expect(getData0(chart, 5)).toEqual(444);
-            modelEqualsToOrigin([0, 2, 3, 4], origins, true);
-            modelEqualsToOrigin([1], origins, false);
-            viewEqualsToOrigin([0, 2, 3, 4], origins, true);
-            viewEqualsToOrigin([1], origins, false);
+            modelEqualsToOrigin(chart, [0, 2, 3, 4], origins, true);
+            modelEqualsToOrigin(chart, [1], origins, false);
+            viewEqualsToOrigin(chart, [0, 2, 3, 4], origins, true);
+            viewEqualsToOrigin(chart, [1], origins, false);
         });
 
         testCase('differentTypeMergePartialTwoMapOne', function (chart, echarts) {
