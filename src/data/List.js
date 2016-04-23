@@ -794,7 +794,7 @@ define(function (require) {
     listProto.getItemModel = function (idx) {
         var hostModel = this.hostModel;
         idx = this.indices[idx];
-        return new Model(this._rawData[idx], hostModel, hostModel.ecModel);
+        return new Model(this._rawData[idx], hostModel, hostModel && hostModel.ecModel);
     };
 
     /**

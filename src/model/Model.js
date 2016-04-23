@@ -10,8 +10,8 @@ define(function (require) {
      * @alias module:echarts/model/Model
      * @constructor
      * @param {Object} option
-     * @param {module:echarts/model/Model} parentModel
-     * @param {module:echarts/model/Global} ecModel
+     * @param {module:echarts/model/Model} [parentModel]
+     * @param {module:echarts/model/Global} [ecModel]
      * @param {Object} extraOpt
      */
     function Model(option, parentModel, ecModel, extraOpt) {
