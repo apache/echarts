@@ -81,8 +81,7 @@ define(function (require) {
 
             var map = echarts.getMap(option.map);
             var geoJson = map && map.geoJson;
-            geoJson && option.data
-                && (option.data = fillData(option.data, geoJson));
+            geoJson && (option.data = fillData((option.data || []), geoJson));
 
             return option;
         },
