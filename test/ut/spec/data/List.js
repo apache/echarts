@@ -2,20 +2,9 @@ describe('List', function () {
 
     var utHelper = window.utHelper;
 
-    beforeEach(function (done) {
-        utHelper.resetPackageLoader(done);
-    });
+    var testCase = utHelper.prepare(['echarts/data/List']);
 
     describe('Data Manipulation', function () {
-
-        function testCase(name, doTest) {
-            it(name, function (done) {
-                window.require(['echarts/data/List'], function () {
-                    doTest.apply(null, arguments);
-                    done();
-                });
-            });
-        }
 
         testCase('initData 1d', function (List) {
             var list = new List(['x', 'y']);

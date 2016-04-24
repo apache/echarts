@@ -2,21 +2,9 @@ describe('Component', function() {
 
     var utHelper = window.utHelper;
 
-    beforeEach(function (done) {
-        utHelper.resetPackageLoader(done);
-    });
+    var testCase = utHelper.prepare(['echarts/model/Component']);
 
     describe('topologicalTravel', function () {
-
-        function testCase(name, doTest) {
-            it(name, function (done) {
-                window.require(['echarts/model/Component'], function () {
-                    doTest.apply(null, arguments);
-                    done();
-                });
-            });
-        }
-        function xtestCase() {} // jshint ignore:line
 
         testCase('topologicalTravel_base', function (ComponentModel) {
             ComponentModel.extend({type: 'm1', dependencies: ['a1', 'a2']});

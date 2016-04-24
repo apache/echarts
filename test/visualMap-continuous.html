@@ -1,0 +1,267 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <link rel="stylesheet" href="reset.css" />
+    </head>
+    <body>
+        <style>
+            .split {
+                height: 40px;
+                background: #ddd;
+            }
+            .main {
+                height: 80%;
+            }
+        </style>
+
+        <div id="main1" class="main"></div>
+        <div class="split"></div>
+        <div id="main2" class="main"></div>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/bar',
+                'echarts/component/grid',
+                'echarts/component/visualMapContinuous'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main1'), null, {
+                    renderer: 'canvas'
+                });
+
+                var data0 = [];
+
+                var MAX_DIM1 = 100;
+
+                var itemStyle = {
+                    normal: {
+                        opacity: 0.8,
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                    }
+                };
+
+                var last = 60;
+                var lastDelta = 20;
+                for (var i = 0; i < MAX_DIM1; i++) {
+                    lastDelta += (Math.random() - 0.5) * 15;
+                    data0.push([
+                        i,
+                        last += lastDelta
+                    ]);
+                }
+
+                chart.setOption({
+                    grid: {
+                        top: 100,
+                        bottom: 100
+                    },
+                    xAxis: {
+                        type: 'value',
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    visualMap: [
+                        {
+                            show: true,
+                            left: 'center',
+                            bottom: 20,
+                            orient: 'horizontal',
+                            itemWidth: 20,
+                            itemHeight: 200,
+                            min: 0,
+                            max: MAX_DIM1,
+                            calculable: true,
+                            range: [5, 95],
+                            dimension: 0,
+                            inRange: {
+                                // color: ['#fff', '#fff'],
+                                colorHue: [
+                                    0, 300
+                                ],
+                                colorLightness: [0.35, 0.35],
+                                colorSaturation: [1, 1]
+                            },
+                            outOfRange: {
+                                color: ['#eee', '#eee']
+                            }
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'bar',
+                            type: 'bar',
+                            barMaxWidth: 10,
+                            itemStyle: itemStyle,
+                            data: data0
+                        }
+                    ]
+                });
+            })
+        </script>
+
+
+
+
+
+
+
+<!--
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/visualMapContinuous'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main2'), null, {
+                    renderer: 'canvas'
+                });
+
+                var data0 = [];
+                var data1 = [];
+
+                var MAX_DIM2 = 300;
+                var MAX_DIM3 = 20000;
+
+                var itemStyle = {
+                    normal: {
+                        opacity: 0.8,
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowOffsetY: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)'
+                    }
+                };
+
+                for (var i = 0; i < 60; i++) {
+                    data0.push(genDataItem());
+                    data1.push(genDataItem());
+                }
+
+                function genDataItem() {
+                    return [
+                        Math.random() * 5,
+                        Math.random() * 4,
+                        Math.random() * MAX_DIM2,
+                        Math.random() * MAX_DIM3
+                    ];
+                }
+
+                chart.setOption({
+                    color: ['#555', '#555'],
+                    legend: {
+                        top: 20,
+                        data: ['scatter0', 'scatter1']
+                    },
+                    grid: {
+                        top: 100,
+                        bottom: 60,
+                        left: 150
+                    },
+                    xAxis: {
+                        type: 'value',
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    visualMap: [
+                        {
+                            show: true,
+                            top: 'center',
+                            left: 30,
+                            itemHeight: 400,
+                            min: 0,
+                            max: MAX_DIM2,
+                            calculable: true,
+                            dimension: 2,
+                            range: [15, 278],
+                            inRange: {
+                                color: ['blue', 'orange', 'yellow']
+                            },
+                            outOfRange: {
+                                color: ['#ddd', '#ddd']
+                            }
+                        },
+                        {
+                            show: false,
+                            min: 0,
+                            max: MAX_DIM3,
+                            dimension: 3,
+                            inRange: {
+                                symbolSize: [3, 40]
+                            },
+                            outOfRange: {
+                                symbolSize: [3, 40]
+                            }
+                        }
+                    ],
+                    series: [
+                        {
+                            name: 'scatter0',
+                            type: 'scatter',
+                            symbol: 'circle',
+                            itemStyle: itemStyle,
+                            data: data0
+                        },
+                        {
+                            name: 'scatter1',
+                            type: 'scatter',
+                            symbol: 'diamond',
+                            itemStyle: itemStyle,
+                            data: data1
+                        }
+                    ]
+                });
+            })
+        </script>
+
+
+
+
+ -->
+
+
+
+
+
+
+
+
+
+
+
+
+    </body>
+</html>
