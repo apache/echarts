@@ -354,7 +354,7 @@ define(function(require) {
                 forceState: forceState,
                 convertOpacityToAlpha: true
             };
-            var colorStops = this.getControllerVisual(dataInterval, 'color', opts);
+            var colorStops = this._makeColorGradient(dataInterval, opts);
 
             var symbolSizes = [
                 this.getControllerVisual(dataInterval[0], 'symbolSize', opts),
@@ -370,6 +370,41 @@ define(function(require) {
                     colorStops[colorStops.length - 1].color
                 ]
             };
+        },
+
+        /**
+         * @private
+         */
+        _makeColorGradient: function (dataInterval, opts) {
+            // Considering colorHue, which is not linear, so we have to sample
+            // to calculate gradient color stops, but not only caculate head
+            // and tail.
+            var sampleNumber = 100; // Arbitrary value.
+            var colorStops = [];
+            var step = (dataInterval[1] - dataInterval[0]) / sampleNumber;
+
+            colorStops.push({
+                color: this.getControllerVisual(dataInterval[0], 'color', opts),
+                offset: 0
+            });
+
+            for (var i = 1; i < sampleNumber; i++) {
+                var currValue = dataInterval[0] + step * i;
+                if (currValue > dataInterval[1]) {
+                    break;
+                }
+                colorStops.push({
+                    color: this.getControllerVisual(currValue, 'color', opts),
+                    offset: i / sampleNumber
+                });
+            }
+
+            colorStops.push({
+                color: this.getControllerVisual(dataInterval[1], 'color', opts),
+                offset: 1
+            });
+
+            return colorStops;
         },
 
         /**

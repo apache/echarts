@@ -84,7 +84,7 @@ define(function (require) {
 
         /**
          * @protected
-         * @param {(number|Array)} targetValue
+         * @param {number} targetValue
          * @param {string=} visualCluster Only can be 'color' 'opacity' 'symbol' 'symbolSize'
          * @param {Object} [opts]
          * @param {string=} [opts.forceState] Specify state, instead of using getValueState method.
@@ -96,14 +96,6 @@ define(function (require) {
 
             var forceState = opts.forceState;
             var visualMapModel = this.visualMapModel;
-            var targetIsArray = zrUtil.isArray(targetValue);
-
-            // targetValue is array when caculate gradient color,
-            // where forceState is required.
-            if (targetIsArray && (!forceState || visualCluster !== 'color')) {
-                throw new Error(targetValue);
-            }
-
             var visualObj = {};
 
             // Default values.
@@ -112,12 +104,7 @@ define(function (require) {
             }
             if (visualCluster === 'color') {
                 var defaultColor = visualMapModel.get('contentColor');
-                visualObj.color = targetIsArray
-                    ? [
-                        {color: defaultColor, offset: 0},
-                        {color: defaultColor, offset: 1}
-                    ]
-                    : defaultColor;
+                visualObj.color = defaultColor;
             }
 
             function getter(key) {
