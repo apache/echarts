@@ -81,8 +81,7 @@ define(function (require) {
 
             var map = echarts.getMap(option.map);
             var geoJson = map && map.geoJson;
-            geoJson && option.data
-                && (option.data = fillData(option.data, geoJson));
+            geoJson && (option.data = fillData((option.data || []), geoJson));
 
             return option;
         },
@@ -157,17 +156,8 @@ define(function (require) {
             scaleLimit: null,
 
             label: {
-                normal: {
-                    show: false,
-                    textStyle: {
-                        color: '#000'
-                    }
-                },
                 emphasis: {
-                    show: false,
-                    textStyle: {
-                        color: '#000'
-                    }
+                    show: true
                 }
             },
             // scaleLimit: null,
