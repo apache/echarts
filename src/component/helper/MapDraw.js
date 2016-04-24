@@ -78,7 +78,7 @@ define(function (require) {
 
         constructor: MapDraw,
 
-        draw: function (mapOrGeoModel, ecModel, api, fromView) {
+        draw: function (mapOrGeoModel, ecModel, api, fromView, payload) {
 
             // geoModel has no data
             var data = mapOrGeoModel.getData && mapOrGeoModel.getData();
@@ -89,8 +89,18 @@ define(function (require) {
             group.removeAll();
 
             var scale = geo.scale;
-            group.position = geo.position.slice();
-            group.scale = scale.slice();
+            var groupNewProp = {
+                position: geo.position,
+                scale: scale
+            };
+
+            // No animation when first draw or in action
+            if (!group.childAt(0) || payload) {
+                group.attr(groupNewProp);
+            }
+            else {
+                graphic.updateProps(group, groupNewProp, mapOrGeoModel);
+            }
 
             var itemStyleModel;
             var hoverItemStyleModel;
