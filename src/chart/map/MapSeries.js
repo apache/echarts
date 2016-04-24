@@ -157,17 +157,8 @@ define(function (require) {
             scaleLimit: null,
 
             label: {
-                normal: {
-                    show: false,
-                    textStyle: {
-                        color: '#000'
-                    }
-                },
                 emphasis: {
-                    show: false,
-                    textStyle: {
-                        color: '#000'
-                    }
+                    show: true
                 }
             },
             // scaleLimit: null,

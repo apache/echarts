@@ -30,7 +30,8 @@ define(function (require) {
                     zoomLimit.min
                 ) / previousZoom;
             }
-            // var roamTransform = view.getRoamTransform();
+
+            // Zoom on given point(originX, originY)
             view.scale[0] *= zoom;
             view.scale[1] *= zoom;
             var position = view.position;
