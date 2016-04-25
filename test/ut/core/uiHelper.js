@@ -39,14 +39,13 @@
      * @param  {function} done   done callback provided by jasmine
      */
     helper.expectEqualCanvasStack = function(title, doTest, done) {
-        var that = this;
         window.require(['oldEcharts', 'newEcharts'], function (oldE, newE) {
             var oldCanvas = doTest(oldE);
             var newCanvas = doTest(newE);
             var oldImg = oldCanvas.toDataURL();
             var newImg = newCanvas.toDataURL();
             if (ALWAYS_SHOW_IMAGE || oldImg !== newImg) {
-                that.addFailedCases(title, oldImg, newImg);
+                helper.addFailedCases(title, oldImg, newImg);
             }
             var oldCtx = oldCanvas.getContext('2d');
             var newCtx = newCanvas.getContext('2d');
@@ -74,6 +73,72 @@
         }
     };
 
+    var optionCompareHelper = function(isExpectEqual,
+                                       title,
+                                       option1,
+                                       option2) {
+
+        it(title, function(done) {
+            window.require(['newEcharts'], function (ec) {
+                var canvas1 = helper.getRenderedCanvas(ec, function(myChart) {
+                    myChart.setOption(option1);
+                });
+                var canvas2 = helper.getRenderedCanvas(ec, function(myChart) {
+                    myChart.setOption(option2);
+                });
+                var ctx1 = canvas1.getContext('2d');
+                var ctx2 = canvas2.getContext('2d');
+                var img1 = canvas1.toDataURL();
+                var img2 = canvas2.toDataURL();
+
+                var compare1 = compare2 = null;
+                if (STRATEGY === 'content') {
+                    compare1 = img1;
+                    compare2 = img2;
+                } else if (STRATEGY === 'stack') {
+                    compare1 = ctx1.hash()
+                    compare2 = ctx2.hash();
+                } else {
+                    console.error('Invalid equal canvas strategy!');
+                }
+
+                if (isExpectEqual) {
+                    expect(compare1).toEqual(compare2);
+                } else {
+                    expect(compare1).not.toEqual(compare2);
+                }
+
+                if (ALWAYS_SHOW_IMAGE || img1 === img2 ^ isExpectEqual) {
+                    helper.addFailedCases(title, img1, img2);
+                }
+
+                done();
+            });
+        });
+    };
+
+    /**
+     * expect two options have the same canvas for new echarts
+     * @param  {string}   title   title of test case
+     * @param  {object}   option1 one echarts option
+     * @param  {object}   option2 the other echarts option
+     * @param  {function} done    callback for jasmine
+     */
+    helper.expectEqualOption = function(title, option1, option2) {
+        optionCompareHelper(true, title, option1, option2);
+    };
+
+    /**
+     * expect two options have different canvas for new echarts
+     * @param  {string}   title   title of test case
+     * @param  {object}   option1 one echarts option
+     * @param  {object}   option2 the other echarts option
+     * @param  {function} done    callback for jasmine
+     */
+    helper.expectNotEqualOption = function(title, option1, option2) {
+        optionCompareHelper(false, title, option1, option2);
+    };
+
     /**
      * get rendered canvas with echarts and operations
      * @param  {object}   echarts    echarts
@@ -99,14 +164,20 @@
      * @param  {object} option    echarts option
      */
     helper.testOption = function(name, option) {
-        var that = this;
+        var doTest = function(ec) {
+            var canvas = helper.getRenderedCanvas(ec, function(myChart) {
+                myChart.setOption(option);
+            });
+            return canvas;
+        };
         it(name, function(done) {
-            that.expectEqualCanvas(name, function(ec) {
-                var canvas = that.getRenderedCanvas(ec, function(myChart) {
-                    myChart.setOption(option);
-                });
-                return canvas;
-            }, done);
+            if (STRATEGY === 'content') {
+                helper.expectEqualCanvasContent(name, doTest, done);
+            } else if (STRATEGY === 'stack') {
+                helper.expectEqualCanvasStack(name, doTest, done);
+            } else {
+                console.error('Invalid equal canvas strategy!');
+            }
         });
     }
 
@@ -116,13 +187,21 @@
      * @param  {object[]} suites    arrary of suites
      */
     helper.testOptionSpec = function(specName, suites) {
-        var that = this;
         for (var sid = 0, slen = suites.length; sid < slen; ++sid) {
             (function(suiteName, cases) {
                 describe(suiteName, function() {
-                    for (var cid = 0, clen = cases.length; cid < clen; ++cid) {var name = specName + ' - ' + suiteName + ': '
+                    for (var cid = 0, clen = cases.length; cid < clen; ++cid) {
+                        var name = specName + ' - ' + suiteName + ': '
                             + cases[cid].name;
-                        that.testOption(name, cases[cid].option);
+                        if (cases[cid].test === 'equalOption') {
+                            helper.expectEqualOption(name, cases[cid].option1,
+                                cases[cid].option2);
+                        } else if (cases[cid].test === 'notEqualOption') {
+                            helper.expectNotEqualOption(name, cases[cid].option1,
+                                cases[cid].option2);
+                        } else {
+                            helper.testOption(name, cases[cid].option);
+                        }
                     }
                 });
             })(suites[sid].name, suites[sid].cases);

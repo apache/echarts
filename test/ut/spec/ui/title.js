@@ -76,6 +76,41 @@ describe('title', function() {
                 }
             }
         }]
+    }, {
+        name: 'padding',
+        cases: [{
+            name: 'should display padding 5px as default',
+            test: 'equalOption',
+            option1: {
+                series: [],
+                title: {
+                    text: 'this is title with 5px padding'
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'this is title with 5px padding',
+                    padding: 5
+                }
+            }
+        }, {
+            name: 'should display one-value padding',
+            test: 'notEqualOption',
+            option1: {
+                series: [],
+                title: {
+                    text: 'compare padding with 5px and 20px'
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'compare padding with 5px and 20px',
+                    padding: 50
+                }
+            }
+        }]
     }];
 
     uiHelper.testOptionSpec('title', suites);
