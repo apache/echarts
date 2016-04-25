@@ -95,20 +95,61 @@ describe('title.subtextStyle', function() {
                     }
                 }
             }
+        }, {
+            name: 'should display italic not as normal',
+            test: 'notEqualOption',
+            option1: {
+                series: [],
+                title: {
+                    subtext: 'italic vs. normal',
+                    subtextStyle: {
+                        fontStyle: 'italic'
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    subtext: 'italic vs. normal',
+                    subtextStyle: {
+                        fontStyle: 'normal'
+                    }
+                }
+            }
+        }, {
+            name: 'should display oblique not as normal',
+            test: 'notEqualOption',
+            option1: {
+                series: [],
+                title: {
+                    subtext: 'oblique vs. normal',
+                    subtextStyle: {
+                        fontStyle: 'oblique'
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    subtext: 'oblique vs. normal',
+                    subtextStyle: {
+                        fontStyle: 'normal'
+                    }
+                }
+            }
         }]
     }, {
         name: 'subtextStyle.fontWeight',
         cases: [{
             name: 'should display default normal font weight',
-            option: {
+            test: 'equalOption',
+            option1: {
                 series: [],
                 title: {
                     subtext: 'normal font'
                 }
-            }
-        }, {
-            name: 'should display normal font weight',
-            option: {
+            },
+            option2: {
                 series: [],
                 title: {
                     subtext: 'normal font',
@@ -119,45 +160,85 @@ describe('title.subtextStyle', function() {
             }
         }, {
             name: 'should display bold font weight',
-            option: {
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
-                    subtext: 'bold font',
+                    subtext: 'bold font vs. normal font',
                     subtextStyle: {
                         fontStyle: 'bold'
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    subtext: 'bold font vs. normal font',
+                    subtextStyle: {
+                        fontStyle: 'normal'
                     }
                 }
             }
         }, {
             name: 'should display bolder font weight',
-            option: {
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
-                    subtext: 'bolder font',
+                    subtext: 'bolder font vs. normal font',
                     subtextStyle: {
                         fontStyle: 'bolder'
                     }
                 }
-            }
-        }, {
-            name: 'should display lighter font weight',
-            option: {
+            },
+            option2: {
                 series: [],
                 title: {
-                    subtext: 'lighter font',
+                    subtext: 'bolder font vs. normal font',
                     subtextStyle: {
-                        fontStyle: 'lighter'
+                        fontStyle: 'normal'
                     }
                 }
             }
         }, {
-            name: 'should display font weight as number',
-            option: {
+            name: 'should display light font weight',
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
-                    subtext: 'font weight at 100',
+                    subtext: 'light font vs. normal font',
+                    subtextStyle: {
+                        fontStyle: 'light'
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    subtext: 'light font vs. normal font',
+                    subtextStyle: {
+                        fontStyle: 'normal'
+                    }
+                }
+            }
+        }, {
+            name: 'should display numbering font weight',
+            test: 'notEqualOption',
+            option1: {
+                series: [],
+                title: {
+                    subtext: '100 font vs. normal font',
                     subtextStyle: {
                         fontStyle: '100'
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    subtext: '100 font vs. normal font',
+                    subtextStyle: {
+                        fontStyle: 'normal'
                     }
                 }
             }
@@ -165,30 +246,67 @@ describe('title.subtextStyle', function() {
     }, {
         name: 'subtextStyle.fontFamily',
         cases: [{
-            name: 'should display default fontSize at 12',
-            option: {
+            name: 'should display default fontFamily as sans-serif',
+            test: 'equalOption',
+            option1: {
                 series: [],
                 title: {
-                    subtext: 'default font size, should be 12',
-                    subtextStyle: {
-                        fontSize: undefined
-                    }
+                    subtext: 'sans-serif'
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    subtext: 'sans-serif',
+                    fontFamily: 'sans-serif'
                 }
             }
         }, {
-            name: 'should display normal fontSize',
-            option: {
+            name: 'should display default fontFamily as Arial',
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
-                    subtext: 'font size at 12',
+                    subtext: 'Arial vs. sans-serif',
                     subtextStyle: {
-                        fontSize: 12
+                        fontFamily: 'Arial'
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    subtext: 'Arial vs. sans-serif',
+                    subtextStyle: {
+                        fontFamily: 'sans-serif'
+                    }
+                }
+            }
+        }]
+    }, {
+        name: 'textStyle.fontSize',
+        cases: [{
+            name: 'should display default fontSize at 18',
+            test: 'equalOption',
+            option1: {
+                series: [],
+                title: {
+                    subtext: 'default font size, should be 18'
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    subtext: 'default font size, should be 18',
+                    subtextStyle: {
+                        fontSize: 18
                     }
                 }
             }
         }, {
             name: 'should display larger fontSize',
-            option: {
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
                     subtext: 'larger font size, 30',
@@ -196,15 +314,34 @@ describe('title.subtextStyle', function() {
                         fontSize: 30
                     }
                 }
+            },
+            option2: {
+                series: [],
+                title: {
+                    subtext: 'larger font size, 30',
+                    subtextStyle: {
+                        fontSize: 18
+                    }
+                }
             }
         }, {
             name: 'should display smaller fontSize',
-            option: {
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
-                    subtext: 'smaller font size, 10',
+                    subtext: 'smaller font size, 12',
                     subtextStyle: {
-                        fontSize: 10
+                        fontSize: 12
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    subtext: 'smaller font size, 12',
+                    subtextStyle: {
+                        fontSize: 18
                     }
                 }
             }

@@ -100,14 +100,84 @@ describe('title', function() {
             option1: {
                 series: [],
                 title: {
-                    text: 'compare padding with 5px and 20px'
+                    text: 'should display one-value padding'
                 }
             },
             option2: {
                 series: [],
                 title: {
-                    text: 'compare padding with 5px and 20px',
+                    text: 'should display one-value padding',
                     padding: 50
+                }
+            }
+        }, {
+            name: 'should display two-value padding',
+            test: 'notEqualOption',
+            option1: {
+                series: [],
+                title: {
+                    text: 'display two-value padding'
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'display two-value padding',
+                    padding: [20, 50]
+                }
+            }
+        }, {
+            name: 'should display four-value padding',
+            test: 'notEqualOption',
+            option1: {
+                series: [],
+                title: {
+                    text: 'compare padding with 10, 30, 50, 70'
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'compare padding with 10, 30, 50, 70',
+                    padding: [10, 30, 50, 70]
+                }
+            }
+        }, {
+            name: 'should display four-value and two-value padding accordingly',
+            test: 'equalOption',
+            option1: {
+                series: [],
+                title: {
+                    text: 'compare padding with 20, 50 and 20, 50, 20, 50',
+                    padding: [20, 50]
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'compare padding with 20, 50 and 20, 50, 20, 50',
+                    padding: [20, 50, 20, 50]
+                }
+            }
+        }]
+    }, {
+        name: 'itemGap',
+        cases: [{
+            name: 'should have default itemGap as 5px',
+            test: 'equalOption',
+            option1: {
+                series: [],
+                title: {
+                    text: 'title',
+                    subtext: 'subtext'
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'title',
+                    subtext: 'subtext',
+                    itemGap: 5
                 }
             }
         }]

@@ -95,20 +95,61 @@ describe('title.textStyle', function() {
                     }
                 }
             }
+        }, {
+            name: 'should display italic not as normal',
+            test: 'notEqualOption',
+            option1: {
+                series: [],
+                title: {
+                    text: 'italic vs. normal',
+                    textStyle: {
+                        fontStyle: 'italic'
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'italic vs. normal',
+                    textStyle: {
+                        fontStyle: 'normal'
+                    }
+                }
+            }
+        }, {
+            name: 'should display oblique not as normal',
+            test: 'notEqualOption',
+            option1: {
+                series: [],
+                title: {
+                    text: 'oblique vs. normal',
+                    textStyle: {
+                        fontStyle: 'oblique'
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'oblique vs. normal',
+                    textStyle: {
+                        fontStyle: 'normal'
+                    }
+                }
+            }
         }]
     }, {
         name: 'textStyle.fontWeight',
         cases: [{
             name: 'should display default normal font weight',
-            option: {
+            test: 'equalOption',
+            option1: {
                 series: [],
                 title: {
                     text: 'normal font'
                 }
-            }
-        }, {
-            name: 'should display normal font weight',
-            option: {
+            },
+            option2: {
                 series: [],
                 title: {
                     text: 'normal font',
@@ -119,45 +160,85 @@ describe('title.textStyle', function() {
             }
         }, {
             name: 'should display bold font weight',
-            option: {
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
-                    text: 'bold font',
+                    text: 'bold font vs. normal font',
                     textStyle: {
                         fontStyle: 'bold'
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'bold font vs. normal font',
+                    textStyle: {
+                        fontStyle: 'normal'
                     }
                 }
             }
         }, {
             name: 'should display bolder font weight',
-            option: {
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
-                    text: 'bolder font',
+                    text: 'bolder font vs. normal font',
                     textStyle: {
                         fontStyle: 'bolder'
                     }
                 }
-            }
-        }, {
-            name: 'should display lighter font weight',
-            option: {
+            },
+            option2: {
                 series: [],
                 title: {
-                    text: 'lighter font',
+                    text: 'bolder font vs. normal font',
                     textStyle: {
-                        fontStyle: 'lighter'
+                        fontStyle: 'normal'
                     }
                 }
             }
         }, {
-            name: 'should display font weight as number',
-            option: {
+            name: 'should display light font weight',
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
-                    text: 'font weight at 100',
+                    text: 'light font vs. normal font',
+                    textStyle: {
+                        fontStyle: 'light'
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'light font vs. normal font',
+                    textStyle: {
+                        fontStyle: 'normal'
+                    }
+                }
+            }
+        }, {
+            name: 'should display numbering font weight',
+            test: 'notEqualOption',
+            option1: {
+                series: [],
+                title: {
+                    text: '100 font vs. normal font',
                     textStyle: {
                         fontStyle: '100'
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: '100 font vs. normal font',
+                    textStyle: {
+                        fontStyle: 'normal'
                     }
                 }
             }
@@ -166,35 +247,37 @@ describe('title.textStyle', function() {
         name: 'textStyle.fontFamily',
         cases: [{
             name: 'should display default fontFamily as sans-serif',
-            option: {
+            test: 'equalOption',
+            option1: {
                 series: [],
                 title: {
-                    text: 'sans-serif',
-                    textStyle: {
-                        fontFamily: undefined
-                    }
+                    text: 'sans-serif'
                 }
-            }
-        }, {
-            name: 'should display fontFamily as sans-serif',
-            option: {
+            },
+            option2: {
                 series: [],
                 title: {
                     text: 'sans-serif',
-                    textStyle: {
-                        fontFamily: 'sans-serif'
-                    }
+                    fontFamily: 'sans-serif'
                 }
             }
         }, {
             name: 'should display default fontFamily as Arial',
-            option: {
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
-                    text: 'Arial',
+                    text: 'Arial vs. sans-serif',
                     textStyle: {
                         fontFamily: 'Arial'
                     }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'Arial vs. sans-serif',
+                    fontFamily: 'sans-serif'
                 }
             }
         }]
@@ -202,18 +285,17 @@ describe('title.textStyle', function() {
         name: 'textStyle.fontSize',
         cases: [{
             name: 'should display default fontSize at 18',
-            option: {
+            test: 'equalOption',
+            option1: {
                 series: [],
                 title: {
                     text: 'default font size, should be 18'
                 }
-            }
-        }, {
-            name: 'should display normal fontSize',
-            option: {
+            },
+            option2: {
                 series: [],
                 title: {
-                    text: 'font size at 18',
+                    text: 'default font size, should be 18',
                     textStyle: {
                         fontSize: 18
                     }
@@ -221,7 +303,8 @@ describe('title.textStyle', function() {
             }
         }, {
             name: 'should display larger fontSize',
-            option: {
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
                     text: 'larger font size, 30',
@@ -229,15 +312,34 @@ describe('title.textStyle', function() {
                         fontSize: 30
                     }
                 }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'larger font size, 30',
+                    textStyle: {
+                        fontSize: 18
+                    }
+                }
             }
         }, {
             name: 'should display smaller fontSize',
-            option: {
+            test: 'notEqualOption',
+            option1: {
                 series: [],
                 title: {
                     text: 'smaller font size, 12',
                     textStyle: {
                         fontSize: 12
+                    }
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'smaller font size, 12',
+                    textStyle: {
+                        fontSize: 18
                     }
                 }
             }

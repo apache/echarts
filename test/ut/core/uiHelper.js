@@ -5,7 +5,7 @@
     // canvas comparing strategy, 'stack' or 'content'
     var STRATEGY = 'stack';
     // always display images even if no error
-    var ALWAYS_SHOW_IMAGE = true;
+    var ALWAYS_SHOW_IMAGE = false;
 
     // dom for failed cases
     var failedDom = document.createElement('div');
@@ -108,8 +108,11 @@
                     expect(compare1).not.toEqual(compare2);
                 }
 
-                if (ALWAYS_SHOW_IMAGE || img1 === img2 ^ isExpectEqual) {
+                if (ALWAYS_SHOW_IMAGE || (compare1 === compare2) ^ isExpectEqual) {
                     helper.addFailedCases(title, img1, img2);
+                    console.log(title);
+                    console.log(JSON.stringify(ctx1.stack()));
+                    console.log(JSON.stringify(ctx2.stack()));
                 }
 
                 done();
