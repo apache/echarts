@@ -5,7 +5,7 @@
     // canvas comparing strategy, 'stack' or 'content'
     var STRATEGY = 'stack';
     // always display images even if no error
-    var ALWAYS_SHOW_IMAGE = false;
+    var ALWAYS_SHOW_IMAGE = true;
 
     // dom for failed cases
     var failedDom = document.createElement('div');
