@@ -29,6 +29,10 @@ define(function(require) {
         // If data is undefined
         data = data || [];
 
+        if (!zrUtil.isArray(data)) {
+            throw new Error('Invalid data.');
+        }
+
         var coordSysName = seriesModel.get('coordinateSystem');
         var creator = creators[coordSysName];
         var registeredCoordSys = CoordinateSystem.get(coordSysName);
