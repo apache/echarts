@@ -209,6 +209,10 @@ define(function (require) {
     listProto.initData = function (data, nameList, dimValueGetter) {
         data = data || [];
 
+        if (!zrUtil.isArray(data)) {
+            throw new Error('Invalid data.');
+        }
+
         this._rawData = data;
 
         // Clear
