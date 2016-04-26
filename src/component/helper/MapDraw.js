@@ -86,7 +86,6 @@ define(function (require) {
             var geo = mapOrGeoModel.coordinateSystem;
 
             var group = this.group;
-            group.removeAll();
 
             var scale = geo.scale;
             var groupNewProp = {
@@ -101,6 +100,8 @@ define(function (require) {
             else {
                 graphic.updateProps(group, groupNewProp, mapOrGeoModel);
             }
+
+            group.removeAll();
 
             var itemStyleModel;
             var hoverItemStyleModel;
