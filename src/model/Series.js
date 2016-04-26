@@ -126,14 +126,6 @@ define(function(require) {
         },
 
         /**
-         * Get raw data array given by user
-         * @return {Array.<Object>}
-         */
-        getRawDataArray: function () {
-            return this.option.data;
-        },
-
-        /**
          * Coord dimension to data dimension.
          *
          * By default the result is the same as dimensions of series data.

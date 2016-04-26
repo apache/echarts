@@ -133,10 +133,6 @@ define(function (require) {
                 + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
         },
 
-        getRawDataArray: function () {
-            return this.option.data;
-        },
-
         getData: function () {
             return this._data;
         },

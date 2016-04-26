@@ -182,9 +182,8 @@ define(function(require) {
      * @param {string} [opt.seriesIndex]
      * @param {Object} [opt.name]
      * @param {module:echarts/data/List} data
-     * @param {Array.<Object>} rawData
      */
-    modelUtil.createDataFormatModel = function (opt, data, rawData) {
+    modelUtil.createDataFormatModel = function (opt, data) {
         var model = new Model();
         zrUtil.mixin(model, modelUtil.dataFormatMixin);
         model.seriesIndex = opt.seriesIndex;
@@ -192,9 +191,6 @@ define(function(require) {
 
         model.getData = function () {
             return data;
-        };
-        model.getRawDataArray = function () {
-            return rawData;
         };
         return model;
     };
@@ -248,10 +244,7 @@ define(function(require) {
             var rawValue = this.getRawValue(dataIndex);
             var rawDataIndex = data.getRawIndex(dataIndex);
             var name = data.getName(dataIndex, true);
-
-            // Data may not exists in the option given by user
-            var rawDataArray = this.getRawDataArray();
-            var itemOpt = rawDataArray && rawDataArray[rawDataIndex];
+            var itemOpt = data.getRawDataItem(dataIndex);
 
             return {
                 componentType: 'series',

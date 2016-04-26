@@ -104,6 +104,10 @@
                         layout: 'none'
                     };
 
+                    chart.on('click', function (params) {
+                        console.log(params, params.data);
+                    });
+
                     var gui = new dat.GUI();
                     gui.add(config, 'layout', ['none', 'circular'])
                         .onChange(function (value) {

@@ -124,6 +124,10 @@
                         data: data3
                     }]
                 });
+
+                chart.on('click', function (params) {
+                    console.log(params.data);
+                });
             })
 
         </script>
