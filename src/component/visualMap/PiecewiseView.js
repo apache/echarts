@@ -50,9 +50,16 @@ define(function(require) {
                 var itemGroup = new graphic.Group();
                 itemGroup.onclick = zrUtil.bind(this._onItemClick, this, item.piece);
 
-                this._createItemSymbol(itemGroup, item.piece, [0, 0, itemSize[0], itemSize[1]]);
+                var representValue = this._getRepresentValue(item.piece);
+
+                this._createItemSymbol(
+                    itemGroup, representValue, [0, 0, itemSize[0], itemSize[1]]
+                );
 
                 if (showLabel) {
+
+                    var visualState = this.visualMapModel.getValueState(representValue);
+
                     itemGroup.add(new graphic.Text({
                         style: {
                             x: itemAlign === 'right' ? -textGap : itemSize[0] + textGap,
@@ -61,7 +68,8 @@ define(function(require) {
                             textVerticalAlign: 'middle',
                             textAlign: itemAlign,
                             textFont: textFont,
-                            fill: textFill
+                            fill: textFill,
+                            opacity: visualState === 'outOfRange' ? 0.5 : 1
                         }
                     }));
                 }
@@ -145,7 +153,7 @@ define(function(require) {
         /**
          * @private
          */
-        _createItemSymbol: function (group, piece, shapeParam) {
+        _getRepresentValue: function (piece) {
             var representValue;
             if (this.visualMapModel.isCategory()) {
                 representValue = piece.value;
@@ -159,7 +167,13 @@ define(function(require) {
                     representValue = (pieceInterval[0] + pieceInterval[1]) / 2;
                 }
             }
+            return representValue;
+        },
 
+        /**
+         * @private
+         */
+        _createItemSymbol: function (group, representValue, shapeParam) {
             group.add(symbolCreators.createSymbol(
                 this.getControllerVisual(representValue, 'symbol'),
                 shapeParam[0], shapeParam[1], shapeParam[2], shapeParam[3],
