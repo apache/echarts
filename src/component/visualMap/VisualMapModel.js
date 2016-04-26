@@ -392,9 +392,24 @@ define(function(require) {
                 if (optExist && !optAbsent) {
                     optAbsent = base[stateAbsent] = {};
                     each(optExist, function (visualData, visualType) {
+                        if (!VisualMapping.isValidType(visualType)) {
+                            return;
+                        }
+
                         var defa = visualDefault.get(visualType, 'inactive', isCategory);
-                        if (VisualMapping.isValidType(visualType) && defa) {
+
+                        if (defa) {
                             optAbsent[visualType] = defa;
+
+                            // Compatibable with ec2:
+                            // Only inactive color to rgba(0,0,0,0) can not
+                            // make label transparent, so use opacity also.
+                            if (visualType === 'color'
+                                && !optAbsent.hasOwnProperty('opacity')
+                                && !optAbsent.hasOwnProperty('colorAlpha')
+                            ) {
+                                optAbsent.opacity = [0, 0];
+                            }
                         }
                     });
                 }

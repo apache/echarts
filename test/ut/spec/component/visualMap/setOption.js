@@ -175,7 +175,22 @@ describe('vsiaulMap_setOption', function() {
         expect(option.visualMap[0].controller.outOfRange.symbol).toEqual(['diamond']);
     });
 
+    testCase.createChart()('setOpacityWhenUseColor', function () {
+        this.chart.setOption({
+            xAxis: {},
+            yAxis: {},
+            series: [{type: 'scatter', data: [[12, 223]]}],
+            visualMap: {
+                inRange: {
+                    color: ['red', 'blue', 'yellow']
+                }
+            }
+        });
 
+        var option = this.chart.getOption();
+
+        expect(!!option.visualMap[0].outOfRange.opacity).toEqual(true);
+    });
 
 
 });

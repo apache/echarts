@@ -49,6 +49,11 @@ define(function (require) {
             inactive: [0, 0]
         },
 
+        opacity: {
+            active: [0.3, 1],
+            inactive: [0, 0]
+        },
+
         symbol: {
             active: ['circle', 'roundRect', 'diamond'],
             inactive: ['none']

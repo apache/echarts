@@ -114,6 +114,7 @@ define(function (require) {
                 var visual = isCategory(this)
                     ? this.option.visual
                     : zrUtil.map(this.option.visual, zrColor.parse);
+
                 return zrUtil.bind(
                     isCategory(this)
                     ? function (value, isNormalized) {
