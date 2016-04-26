@@ -38,6 +38,8 @@ define(function(require) {
 
     graphic.Arc = require('zrender/graphic/shape/Arc');
 
+    graphic.CompoundPath = require('zrender/graphic/CompoundPath');
+
     graphic.LinearGradient = require('zrender/graphic/LinearGradient');
 
     graphic.RadialGradient = require('zrender/graphic/RadialGradient');
