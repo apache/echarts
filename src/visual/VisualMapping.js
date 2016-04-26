@@ -36,12 +36,19 @@ define(function (require) {
      *                                            (like: {cate1: '#222', none: '#fff'})
      *                                            or primary types (which represents
      *                                            defualt category visual), otherwise visual
-     *                                            can only be array.
+     *                                            can be array or primary (which will be
+     *                                            normalized to array).
      *
      */
     var VisualMapping = function (option) {
         var mappingMethod = option.mappingMethod;
         var visualType = option.type;
+
+        /**
+         * @readOnly
+         * @type {Object}
+         */
+        var thisOption = this.option = zrUtil.clone(option);
 
         /**
          * @readOnly
@@ -54,12 +61,6 @@ define(function (require) {
          * @type {string}
          */
         this.mappingMethod = mappingMethod;
-
-        /**
-         * @readOnly
-         * @type {Object}
-         */
-        var thisOption = this.option = zrUtil.clone(option);
 
         /**
          * @private
@@ -78,10 +79,18 @@ define(function (require) {
         zrUtil.extend(this, visualHandlers[visualType]);
 
         if (mappingMethod === 'piecewise') {
+            normalizeVisualRange(thisOption);
             preprocessForPiecewise(thisOption);
         }
-        if (mappingMethod === 'category') {
-            preprocessForCategory(thisOption);
+        else if (mappingMethod === 'category') {
+            thisOption.categories
+                ? preprocessForSpecifiedCategory(thisOption)
+                // categories is ordinal when thisOption.categories not specified,
+                // which need no more preprocess except normalize visual.
+                : normalizeVisualRange(thisOption, true);
+        }
+        else {
+            normalizeVisualRange(thisOption);
         }
     };
 
@@ -237,27 +246,18 @@ define(function (require) {
 
         zrUtil.each(pieceList, function (piece, index) {
             piece.originIndex = index;
-            if (piece.visual) {
+            // piece.visual is "result visual value" but not
+            // a visual range, so it does not need to be normalized.
+            if (piece.visual != null) {
                 thisOption.hasSpecialVisual = true;
             }
         });
     }
 
-    function preprocessForCategory(thisOption) {
+    function preprocessForSpecifiedCategory(thisOption) {
         // Hash categories.
         var categories = thisOption.categories;
         var visual = thisOption.visual;
-        var isVisualArray = zrUtil.isArray(visual);
-
-        if (!categories) {
-            if (!isVisualArray) {
-                // visual should be array when no categories.
-                throw new Error();
-            }
-            else {
-                return;
-            }
-        }
 
         var categoryMap = thisOption.categoryMap = {};
         each(categories, function (cate, index) {
@@ -265,7 +265,7 @@ define(function (require) {
         });
 
         // Process visual map input.
-        if (!isVisualArray) {
+        if (!zrUtil.isArray(visual)) {
             var visualArr = [];
 
             if (zrUtil.isObject(visual)) {
@@ -289,6 +289,32 @@ define(function (require) {
                 categories.pop();
             }
         }
+    }
+
+    function normalizeVisualRange(thisOption, isCategory) {
+        var visual = thisOption.visual;
+        var visualArr = [];
+
+        if (zrUtil.isObject(visual)) {
+            each(visual, function (v) {
+                visualArr.push(v);
+            });
+        }
+        else if (visual != null) {
+            visualArr.push(visual);
+        }
+
+        var doNotNeedPair = {'color': 1, 'symbol': 1};
+
+        if (!isCategory
+            && visualArr.length === 1
+            && !(thisOption.type in doNotNeedPair)
+        ) {
+            // Do not care visualArr.length === 0, which is illegal.
+            visualArr[1] = visualArr[0];
+        }
+
+        thisOption.visual = visualArr;
     }
 
     function makePartialColorVisualHandler(applyValue) {
