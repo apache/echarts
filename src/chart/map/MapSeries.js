@@ -152,12 +152,20 @@ define(function (require) {
 
             zoom: 1,
 
-
             scaleLimit: null,
 
             label: {
+                normal: {
+                    show: false,
+                    textStyle: {
+                        color: '#000'
+                    }
+                },
                 emphasis: {
-                    show: true
+                    show: true,
+                    textStyle: {
+                        color: 'rgb(100,0,0)'
+                    }
                 }
             },
             // scaleLimit: null,
