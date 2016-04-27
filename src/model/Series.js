@@ -74,26 +74,34 @@ define(function(require) {
                 option.label, ['position', 'show', 'textStyle', 'distance', 'formatter']
             );
 
+            if (option.data) {
+                this._fillDataTextStyle(option.data);
+            }
+        },
+
+        mergeOption: function (newSeriesOption, ecModel) {
+            newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
+            if (newSeriesOption.data) {
+                this._fillDataTextStyle(newSeriesOption.data);
+            }
+            var data = this.getInitialData(newSeriesOption, ecModel);
+            // TODO Merge data?
+            if (data) {
+                this._data = data;
+                this._dataBeforeProcessed = data.cloneShallow();
+            }
+        },
+
+        _fillDataTextStyle: function (data) {
             // Default data label emphasis `position` and `show`
             // FIXME Tree structure data ?
-            var data = option.data || [];
+            // FIXME Performance ?
             for (var i = 0; i < data.length; i++) {
                 if (data[i] && data[i].label) {
                     modelUtil.defaultEmphasis(
                         data[i].label, ['position', 'show', 'textStyle', 'distance', 'formatter']
                     );
                 }
-            }
-        },
-
-        mergeOption: function (newSeriesOption, ecModel) {
-            newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
-
-            var data = this.getInitialData(newSeriesOption, ecModel);
-            // TODO Merge data?
-            if (data) {
-                this._data = data;
-                this._dataBeforeProcessed = data.cloneShallow();
             }
         },
 
@@ -123,14 +131,6 @@ define(function(require) {
          */
         getRawData: function () {
             return this._dataBeforeProcessed;
-        },
-
-        /**
-         * Get raw data array given by user
-         * @return {Array.<Object>}
-         */
-        getRawDataArray: function () {
-            return this.option.data;
         },
 
         /**

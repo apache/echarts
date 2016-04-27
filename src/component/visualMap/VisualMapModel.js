@@ -392,9 +392,24 @@ define(function(require) {
                 if (optExist && !optAbsent) {
                     optAbsent = base[stateAbsent] = {};
                     each(optExist, function (visualData, visualType) {
+                        if (!VisualMapping.isValidType(visualType)) {
+                            return;
+                        }
+
                         var defa = visualDefault.get(visualType, 'inactive', isCategory);
-                        if (VisualMapping.isValidType(visualType) && defa) {
+
+                        if (defa != null) {
                             optAbsent[visualType] = defa;
+
+                            // Compatibable with ec2:
+                            // Only inactive color to rgba(0,0,0,0) can not
+                            // make label transparent, so use opacity also.
+                            if (visualType === 'color'
+                                && !optAbsent.hasOwnProperty('opacity')
+                                && !optAbsent.hasOwnProperty('colorAlpha')
+                            ) {
+                                optAbsent.opacity = [0, 0];
+                            }
                         }
                     });
                 }
@@ -412,7 +427,8 @@ define(function(require) {
                     var itemSize = this.itemSize;
                     var visuals = controller[state];
 
-                    // Set inactive color for controller if no other color attr (like colorAlpha) specified.
+                    // Set inactive color for controller if no other color
+                    // attr (like colorAlpha) specified.
                     if (!visuals) {
                         visuals = controller[state] = {
                             color: isCategory ? inactiveColor : [inactiveColor]
@@ -420,12 +436,12 @@ define(function(require) {
                     }
 
                     // Consistent symbol and symbolSize if not specified.
-                    if (!visuals.symbol) {
+                    if (visuals.symbol == null) {
                         visuals.symbol = symbolExists
                             && zrUtil.clone(symbolExists)
                             || (isCategory ? 'roundRect' : ['roundRect']);
                     }
-                    if (!visuals.symbolSize) {
+                    if (visuals.symbolSize == null) {
                         visuals.symbolSize = symbolSizeExists
                             && zrUtil.clone(symbolSizeExists)
                             || (isCategory ? itemSize[0] : [itemSize[0], itemSize[0]]);
@@ -439,7 +455,7 @@ define(function(require) {
                     // Normalize symbolSize
                     var symbolSize = visuals.symbolSize;
 
-                    if (symbolSize) {
+                    if (symbolSize != null) {
                         var max = -Infinity;
                         // symbolSize can be object when categories defined.
                         eachVisual(symbolSize, function (value) {

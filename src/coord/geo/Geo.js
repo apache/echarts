@@ -54,6 +54,20 @@ define(function (require) {
         dimensions: ['lng', 'lat'],
 
         /**
+         * If contain given lng,lat coord
+         * @param {Array.<number>}
+         * @readOnly
+         */
+        containCoord: function (coord) {
+            var regions = this.regions;
+            for (var i = 0; i < regions.length; i++) {
+                if (regions[i].contain(coord)) {
+                    return true;
+                }
+            }
+            return false;
+        },
+        /**
          * @param {Object} geoJson
          * @param {Object} [specialAreas]
          *        Specify the positioned areas by left, top, width, height
@@ -131,6 +145,15 @@ define(function (require) {
          */
         getRegion: function (name) {
             return this._regionsMap[name];
+        },
+
+        getRegionByCoord: function (coord) {
+            var regions = this.regions;
+            for (var i = 0; i < regions.length; i++) {
+                if (regions[i].contain(coord)) {
+                    return regions[i];
+                }
+            }
         },
 
         /**

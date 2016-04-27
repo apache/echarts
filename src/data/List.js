@@ -521,6 +521,15 @@ define(function (require) {
     };
 
     /**
+     * Get raw data item
+     * @param {number} idx
+     * @return {number}
+     */
+    listProto.getRawDataItem = function (idx) {
+        return (this._rawData || [])[this.getRawIndex(idx)];
+    };
+
+    /**
      * @param {number} idx
      * @param {boolean} [notDefaultIdx=false]
      * @return {string}

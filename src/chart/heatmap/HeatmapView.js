@@ -115,7 +115,8 @@ define(function (require) {
                         height: height
                     },
                     style: {
-                        fill: data.getItemVisual(idx, 'color')
+                        fill: data.getItemVisual(idx, 'color'),
+                        opacity: data.getItemVisual(idx, 'opacity')
                     }
                 });
                 var style = itemModel.getModel('itemStyle.normal').getItemStyle(['color']);

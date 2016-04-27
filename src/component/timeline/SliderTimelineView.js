@@ -381,9 +381,7 @@ define(function (require) {
          * @private
          */
         _prepareTooltipHostModel: function (data, timelineModel) {
-            var tooltipHostModel = modelUtil.createDataFormatModel(
-                {}, data, timelineModel.get('data')
-            );
+            var tooltipHostModel = modelUtil.createDataFormatModel({}, data);
             var me = this;
 
             tooltipHostModel.formatTooltip = function (dataIndex) {

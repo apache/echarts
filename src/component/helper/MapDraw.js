@@ -86,7 +86,6 @@ define(function (require) {
             var geo = mapOrGeoModel.coordinateSystem;
 
             var group = this.group;
-            group.removeAll();
 
             var scale = geo.scale;
             var groupNewProp = {
@@ -101,6 +100,8 @@ define(function (require) {
             else {
                 graphic.updateProps(group, groupNewProp, mapOrGeoModel);
             }
+
+            group.removeAll();
 
             var itemStyleModel;
             var hoverItemStyleModel;
@@ -128,6 +129,12 @@ define(function (require) {
             zrUtil.each(geo.regions, function (region) {
 
                 var regionGroup = new graphic.Group();
+                var compoundPath = new graphic.CompoundPath({
+                    shape: {
+                        paths: []
+                    }
+                });
+                regionGroup.add(compoundPath);
                 var dataIdx;
                 // Use the itemStyle in data if has data
                 if (data) {
@@ -162,18 +169,15 @@ define(function (require) {
                     var polygon = new graphic.Polygon({
                         shape: {
                             points: contour
-                        },
-                        style: {
-                            strokeNoScale: true
-                        },
-                        culling: true
+                        }
                     });
 
-                    polygon.setStyle(itemStyle);
-
-                    regionGroup.add(polygon);
+                    compoundPath.shape.paths.push(polygon);
                 });
 
+                compoundPath.setStyle(itemStyle);
+                compoundPath.style.strokeNoScale = true;
+                compoundPath.culling = true;
                 // Label
                 var showLabel = labelModel.get('show');
                 var hoverShowLabel = hoverLabelModel.get('show');

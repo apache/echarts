@@ -65,7 +65,6 @@ define(function (require) {
     }
 
     function mousewheel(e) {
-        eventTool.stop(e.event);
         // Convenience:
         // Mac and VM Windows on Mac: scroll up: zoom out.
         // Windows: scroll up: zoom in.
@@ -78,7 +77,6 @@ define(function (require) {
             return;
         }
 
-        eventTool.stop(e.event);
         var zoomDelta = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
         zoom.call(this, e, zoomDelta, e.pinchX, e.pinchY);
     }
@@ -87,6 +85,10 @@ define(function (require) {
         var rect = this.rect;
 
         if (rect && rect.contain(zoomX, zoomY)) {
+            // When mouse is out of roamController.rect,
+            // default befavoius should be be disabled, otherwise
+            // page sliding is disabled, contrary to expectation.
+            eventTool.stop(e.event);
 
             var target = this.target;
             var zoomLimit = this.zoomLimit;

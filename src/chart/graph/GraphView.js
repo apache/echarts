@@ -46,9 +46,7 @@ define(function (require) {
 
             var edgeData = data.graph.edgeData;
             var rawOption = seriesModel.option;
-            var formatModel = modelUtil.createDataFormatModel(
-                seriesModel, edgeData, rawOption.edges || rawOption.links
-            );
+            var formatModel = modelUtil.createDataFormatModel(seriesModel, edgeData);
             formatModel.formatTooltip = function (dataIndex) {
                 var params = this.getDataParams(dataIndex);
                 var edge = data.graph.getEdgeByIndex(dataIndex);
