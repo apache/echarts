@@ -181,6 +181,252 @@ describe('title', function() {
                 }
             }
         }]
+    }, {
+        name: 'left',
+        cases: [{
+            name: 'should display left position',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    left: 50
+                }
+            }
+        }, {
+            name: 'should display at 20%',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    left: '20%'
+                }
+            }
+        }, {
+            name: 'should display at center',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    left: 'center'
+                }
+            }
+        }, {
+            name: 'should display at right',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    left: 'right'
+                }
+            }
+        }]
+    }, {
+        name: 'top',
+        cases: [{
+            name: 'should display top position',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    top: 50
+                }
+            }
+        }, {
+            name: 'should display at 20%',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    top: '20%'
+                }
+            }
+        }, {
+            name: 'should display at middle',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    top: 'middle'
+                }
+            }
+        }, {
+            name: 'should display at bottom',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    top: 'bottom'
+                }
+            }
+        }]
+    }, {
+        name: 'right',
+        cases: [{
+            name: 'should display right position',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    right: 50
+                }
+            }
+        }]
+    }, {
+        name: 'bottom',
+        cases: [{
+            name: 'should display bottom position',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    bottom: 50
+                }
+            }
+        }]
+    }, {
+        name: 'left and right',
+        cases: [{
+            name: 'are both set',
+            test: 'equalOption',
+            option1: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    left: 50,
+                    right: 50
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    left: 50
+                }
+            }
+        }]
+    }, {
+        name: 'top and bottom',
+        cases: [{
+            name: 'are both set',
+            test: 'equalOption',
+            option1: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    top: 50,
+                    bottom: 50
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    bottom: 50
+                }
+            }
+        }]
+    }, {
+        name: 'backgroundColor',
+        cases: [{
+            name: 'should show specific background color',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    backgroundColor: 'rgba(255, 100, 0, 0.2)'
+                }
+            }
+        }]
+    }, {
+        name: 'borderColor',
+        cases: [{
+            name: 'should show specific border color at default border width',
+            test: 'equalOption',
+            option1: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    borderColor: '#f00'
+                }
+            },
+            option2: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    borderColor: '#f00',
+                    borderWidth: 1
+                }
+            }
+        }, {
+            name: 'should display larger border width',
+            option: {
+                series: [],
+                title: {
+                    text: 'this is title',
+                    borderWidth: 15
+                }
+            }
+        }]
+    }, {
+        name: 'shadowBlur and shadowColor',
+        cases: [{
+            name: 'should display shadow blur',
+            option: {
+                series: [],
+                title: {
+                    backgroundColor: 'green',
+                    text: 'this is title',
+                    shadowColor: 'red',
+                    shadowBlur: 5
+                }
+            }
+        }]
+    }, {
+        name: 'shadowOffsetX',
+        cases: [{
+            name: 'should display shadow blur',
+            option: {
+                series: [],
+                title: {
+                    backgroundColor: 'green',
+                    text: 'this is title',
+                    shadowColor: 'red',
+                    shadowBlur: 5,
+                    shadowOffsetX: 10
+                }
+            }
+        }]
+    }, {
+        name: 'shadowOffsetY',
+        cases: [{
+            name: 'should display shadow blur',
+            option: {
+                series: [],
+                title: {
+                    backgroundColor: 'green',
+                    text: 'this is title',
+                    shadowColor: 'red',
+                    shadowBlur: 5,
+                    shadowOffsetY: 10
+                }
+            }
+        }]
+    }, {
+        name: 'shadowOffsetX and shadowOffsetY',
+        cases: [{
+            name: 'should display shadow blur',
+            option: {
+                series: [],
+                title: {
+                    backgroundColor: 'green',
+                    text: 'this is title',
+                    shadowColor: 'red',
+                    shadowBlur: 5,
+                    shadowOffsetX: 10,
+                    shadowOffsetY: 10
+                }
+            }
+        }]
     }];
 
     uiHelper.testOptionSpec('title', suites);

@@ -110,9 +110,9 @@
 
                 if (ALWAYS_SHOW_IMAGE || (compare1 === compare2) ^ isExpectEqual) {
                     helper.addFailedCases(title, img1, img2);
-                    console.log(title);
-                    console.log(JSON.stringify(ctx1.stack()));
-                    console.log(JSON.stringify(ctx2.stack()));
+                    // console.log(title);
+                    // console.log(JSON.stringify(ctx1.stack()));
+                    // console.log(JSON.stringify(ctx2.stack()));
                 }
 
                 done();
