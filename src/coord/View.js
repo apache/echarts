@@ -204,6 +204,9 @@ define(function (require) {
                 this.invTransform = this.invTransform || [];
                 matrix.invert(this.invTransform, this.transform);
             }
+            else {
+                this.invTransform = null;
+            }
             this.decomposeTransform();
         },
 
