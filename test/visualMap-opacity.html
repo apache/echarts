@@ -29,6 +29,8 @@
         <div class="main" id="main4"></div>
         <div class="label">Opacity in heatmap (inactive color default using opacity)</div>
         <div class="main" id="main5"></div>
+        <div class="label">Opacity in pie (label color and label line color specified)</div>
+        <div class="main" id="main6"></div>
 
 
 
@@ -573,8 +575,7 @@
 
 
 
-        <!-- OPACITY SCATTER -->
-
+        <!-- OPACITY HEATMAP -->
 
         <script type="text/javascript">
 
@@ -661,6 +662,73 @@
 
 
 
+
+
+
+        <!-- OPACITY HEATMAP -->
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/pie',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip'
+            ], function (echarts) {
+
+                var main = document.getElementById('main6');
+                if (!main) {
+                    return;
+                }
+                var chart = echarts.init(main);
+
+                chart.setOption({
+                    legend: {
+                        data:['直接访问','邮件营销','联盟广告','视频广告','搜索引擎']
+                    },
+                    tooltip: {},
+                    visualMap: {
+                        type: 'continuous',
+                        top: 'middle',
+                        min: 0,
+                        max: 700,
+                        dimension: 1,
+                        calculable: true,
+                        inRange: {
+                            color: ['yellow', 'green']
+                        }
+                    },
+                    series: [{
+                        name: 'pie',
+                        type: 'pie',
+                        selectedMode: 'single',
+                        selectedOffset: 30,
+                        clockwise: true,
+                        label: {
+                            normal: {
+                                textStyle: {
+                                    color: '#333'
+                                }
+                            }
+                        },
+                        labelLine: {
+                            normal: {
+                                lineStyle: {
+                                    color: '#333'
+                                }
+                            }
+                        },
+                        data:[
+                            {value: [335, 632], name:'直接访问'},
+                            {value: [310, 434], name:'邮件营销'},
+                            {value: [234, 233], name:'联盟广告'},
+                            {value: [135, 544], name:'视频广告'},
+                            {value: [1548, 381], name:'搜索引擎'}
+                        ]
+                    }]
+                });
+            });
+        </script>
 
     </body>
 </html>
