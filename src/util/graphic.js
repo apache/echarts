@@ -198,10 +198,7 @@ define(function(require) {
     /**
      * @private
      */
-    function doSingleEnterHover(el) {
-        if (el.__isHover) {
-            return;
-        }
+    function cacheElementStl(el) {
         if (el.__hoverStlDirty) {
             var stroke = el.style.stroke;
             var fill = el.style.fill;
@@ -225,6 +222,18 @@ define(function(require) {
 
             el.__hoverStlDirty = false;
         }
+    }
+
+    /**
+     * @private
+     */
+    function doSingleEnterHover(el) {
+        if (el.__isHover) {
+            return;
+        }
+
+        cacheElementStl(el);
+
         el.setStyle(el.__hoverStl);
         el.z2 += 1;
 
@@ -277,6 +286,10 @@ define(function(require) {
         // Often used when item group has a label element and it's hoverStyle is different
         el.__hoverStl = el.hoverStyle || hoverStl || {};
         el.__hoverStlDirty = true;
+
+        if (el.__isHover) {
+            cacheElementStl(el);
+        }
     }
 
     /**
