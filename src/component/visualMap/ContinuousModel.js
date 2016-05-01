@@ -1,4 +1,3 @@
-
 /**
  * @file Data zoom model
  */
@@ -19,13 +18,14 @@ define(function(require) {
          * @protected
          */
         defaultOption: {
-            align: 'auto',     // 'auto', 'left', 'right', 'top', 'bottom'
-            calculable: false,         // 是否值域漫游，启用后无视splitNumber和pieces，线性渐变
-            range: [-Infinity, Infinity], // 当前选中范围
-            hoverLink: true,
-            realtime: true,
-            itemWidth: null,            // 值域图形宽度
-            itemHeight: null            // 值域图形高度
+            align: 'auto',          // 'auto', 'left', 'right', 'top', 'bottom'
+            calculable: false,      // This prop effect default component type determine,
+                                    // See echarts/component/visualMap/typeDefaulter.
+            range: [-Infinity, Infinity], // selected range
+            realtime: true,         // Whether realtime update.
+            itemHeight: null,       // The length of the range control edge.
+            itemWidth: null,        // The length of the other side.
+            hoverLink: true         // Enable hover highlight.
         },
 
         /**
@@ -129,6 +129,28 @@ define(function(require) {
                 (range[0] <= dataExtent[0] || range[0] <= value)
                 && (range[1] >= dataExtent[1] || value <= range[1])
             ) ? 'inRange' : 'outOfRange';
+        },
+
+        /**
+         * @public
+         * @params {Array.<number>} range target value: range[0] <= value && value <= range[1]
+         * @return {Array.<Object>} [{seriesId, dataIndices: <Array.<number>>}, ...]
+         */
+        findTargetDataIndices: function (range) {
+            var result = [];
+
+            this.eachTargetSeries(function (seriesModel) {
+                var dataIndices = [];
+                var data = seriesModel.getData();
+
+                data.each(this.getDataDimension(data), function (value, dataIndex) {
+                    range[0] <= value && value <= range[1] && dataIndices.push(dataIndex);
+                }, true, this);
+
+                result.push({seriesId: seriesModel.id, dataIndices: dataIndices});
+            }, this);
+
+            return result;
         }
 
     });

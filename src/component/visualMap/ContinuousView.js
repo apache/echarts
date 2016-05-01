@@ -5,10 +5,15 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
     var sliderMove = require('../helper/sliderMove');
-    var linearMap = numberUtil.linearMap;
     var LinearGradient = require('zrender/graphic/LinearGradient');
     var helper = require('./helper');
+
+    var linearMap = numberUtil.linearMap;
+    var convertDataIndicesToBatch = helper.convertDataIndicesToBatch;
     var each = zrUtil.each;
+
+    // Arbitrary value
+    var HOVER_LINK_RANGE = 6;
 
     // Notice:
     // Any "interval" should be by the order of [low, high].
@@ -53,6 +58,11 @@ define(function(require) {
              * @private
              */
             this._useHandle;
+
+            /**
+             * @private
+             */
+            this._hoverLinkDataIndices = [];
         },
 
         /**
@@ -97,6 +107,9 @@ define(function(require) {
 
             // Real update view
             this._updateView();
+
+            this._enableHoverLinkToSeries();
+            this._enableHoverLinkFromSeries();
 
             this.positionGroup(thisGroup);
         },
@@ -170,7 +183,6 @@ define(function(require) {
 
             // Handle
             if (useHandle) {
-                shapes.handleGroups = [];
                 shapes.handleThumbs = [];
                 shapes.handleLabels = [];
                 shapes.handleLabelPoints = [];
@@ -179,8 +191,7 @@ define(function(require) {
                 this._createHandle(barGroup, 1, itemSize, textSize, orient, itemAlign);
             }
 
-            // Indicator
-            // FIXME
+            this._createIndicator(barGroup, itemSize, textSize, orient);
 
             targetGroup.add(barGroup);
         },
@@ -189,45 +200,76 @@ define(function(require) {
          * @private
          */
         _createHandle: function (barGroup, handleIndex, itemSize, textSize, orient) {
-            var handleGroup = new graphic.Group({position: [itemSize[0], 0]});
             var handleThumb = createPolygon(
                 createHandlePoints(handleIndex, textSize),
                 zrUtil.bind(this._modifyHandle, this, handleIndex),
                 'move'
             );
-            handleGroup.add(handleThumb);
+            handleThumb.position[0] = itemSize[0];
+            barGroup.add(handleThumb);
 
-            // For text locating. Text is always horizontal layout
-            // but should not be effected by transform.
-            var handleLabelPoint = {
-                x: orient === 'horizontal'
-                    ? textSize / 2
-                    : textSize * 1.5,
-                y: orient === 'horizontal'
-                    ? (handleIndex === 0 ? -(textSize * 1.5) : (textSize * 1.5))
-                    : (handleIndex === 0 ? -textSize / 2 : textSize / 2)
-            };
-
+            // Text is always horizontal layout but should not be effected by
+            // transform (orient/inverse). So label is built separately but not
+            // use zrender/graphic/helper/RectText, and is located based on view
+            // group (according to handleLabelPoint) but not barGroup.
             var textStyleModel = this.visualMapModel.textStyleModel;
             var handleLabel = new graphic.Text({
                 silent: true,
                 style: {
                     x: 0, y: 0, text: '',
-                    textVerticalAlign: 'middle',
                     textFont: textStyleModel.getFont(),
                     fill: textStyleModel.getTextColor()
                 }
             });
+            this.group.add(handleLabel);
 
-            this.group.add(handleLabel); // Text do not transform
+            var handleLabelPoint = [
+                orient === 'horizontal'
+                    ? textSize / 2
+                    : textSize * 1.5,
+                orient === 'horizontal'
+                    ? (handleIndex === 0 ? -(textSize * 1.5) : (textSize * 1.5))
+                    : (handleIndex === 0 ? -textSize / 2 : textSize / 2)
+            ];
 
             var shapes = this._shapes;
             shapes.handleThumbs[handleIndex] = handleThumb;
-            shapes.handleGroups[handleIndex] = handleGroup;
             shapes.handleLabelPoints[handleIndex] = handleLabelPoint;
             shapes.handleLabels[handleIndex] = handleLabel;
+        },
 
-            barGroup.add(handleGroup);
+        /**
+         * @private
+         */
+        _createIndicator: function (barGroup, itemSize, textSize, orient) {
+            var indicator = createPolygon(
+                createIndicatorPoints(), null, 'move'
+            );
+            indicator.position[0] = itemSize[0];
+            indicator.attr({invisible: true, silent: true});
+            barGroup.add(indicator);
+
+            var textStyleModel = this.visualMapModel.textStyleModel;
+            var indicatorLabel = new graphic.Text({
+                silent: true,
+                invisible: true,
+                style: {
+                    x: 0, y: 0, text: '',
+                    textFont: textStyleModel.getFont(),
+                    fill: textStyleModel.getTextColor()
+                }
+            });
+            this.group.add(indicatorLabel);
+
+            var indicatorLabelPoint = [
+                orient === 'horizontal' ? textSize / 2 : textSize * 1.5,
+                0
+            ];
+
+            var shapes = this._shapes;
+            shapes.indicator = indicator;
+            shapes.indicatorLabel = indicatorLabel;
+            shapes.indicatorLabelPoint = indicatorLabelPoint;
         },
 
         /**
@@ -261,8 +303,8 @@ define(function(require) {
             var sizeExtent = [0, visualMapModel.itemSize[1]];
 
             this._handleEnds = [
-                linearMap(dataInterval[0], dataExtent, sizeExtent,true),
-                linearMap(dataInterval[1], dataExtent, sizeExtent,true)
+                linearMap(dataInterval[0], dataExtent, sizeExtent, true),
+                linearMap(dataInterval[1], dataExtent, sizeExtent, true)
             ];
         },
 
@@ -300,13 +342,12 @@ define(function(require) {
             var visualMapModel = this.visualMapModel;
             var dataExtent = visualMapModel.getExtent();
             var shapes = this._shapes;
-            var dataInterval = this._dataInterval;
 
             var outOfRangeHandleEnds = [0, visualMapModel.itemSize[1]];
             var inRangeHandleEnds = forSketch ? outOfRangeHandleEnds : this._handleEnds;
 
             var visualInRange = this._createBarVisual(
-                dataInterval, dataExtent, inRangeHandleEnds, 'inRange'
+                this._dataInterval, dataExtent, inRangeHandleEnds, 'inRange'
             );
             var visualOutOfRange = this._createBarVisual(
                 dataExtent, dataExtent, outOfRangeHandleEnds, 'outOfRange'
@@ -325,25 +366,7 @@ define(function(require) {
                 })
                 .setShape('points', visualOutOfRange.barPoints);
 
-            this._useHandle && each([0, 1], function (handleIndex) {
-
-                shapes.handleThumbs[handleIndex].setStyle(
-                    'fill', visualInRange.handlesColor[handleIndex]
-                );
-
-                shapes.handleLabels[handleIndex].setStyle({
-                    text: visualMapModel.formatValueText(dataInterval[handleIndex]),
-                    textAlign: this._applyTransform(
-                        this._orient === 'horizontal'
-                            ? (handleIndex === 0 ? 'bottom' : 'top')
-                            : 'left',
-                        shapes.barGroup
-                    )
-                });
-
-            }, this);
-
-            this._updateHandlePosition(inRangeHandleEnds);
+            this._updateHandle(inRangeHandleEnds, visualInRange);
         },
 
         /**
@@ -442,26 +465,37 @@ define(function(require) {
         /**
          * @private
          */
-        _updateHandlePosition: function (handleEnds) {
+        _updateHandle: function (handleEnds, visualInRange) {
             if (!this._useHandle) {
                 return;
             }
 
             var shapes = this._shapes;
+            var visualMapModel = this.visualMapModel;
+            var handleThumbs = shapes.handleThumbs;
+            var handleLabels = shapes.handleLabels;
 
             each([0, 1], function (handleIndex) {
-                var handleGroup = shapes.handleGroups[handleIndex];
-                handleGroup.position[1] = handleEnds[handleIndex];
+                var handleThumb = handleThumbs[handleIndex];
+                handleThumb.setStyle('fill', visualInRange.handlesColor[handleIndex]);
+                handleThumb.position[1] = handleEnds[handleIndex];
 
                 // Update handle label position.
-                var labelPoint = shapes.handleLabelPoints[handleIndex];
                 var textPoint = graphic.applyTransform(
-                    [labelPoint.x, labelPoint.y],
-                    graphic.getTransform(handleGroup, this.group)
+                    shapes.handleLabelPoints[handleIndex],
+                    graphic.getTransform(handleThumb, this.group)
                 );
-
-                shapes.handleLabels[handleIndex].setStyle({
-                    x: textPoint[0], y: textPoint[1]
+                handleLabels[handleIndex].setStyle({
+                    x: textPoint[0],
+                    y: textPoint[1],
+                    text: visualMapModel.formatValueText(this._dataInterval[handleIndex]),
+                    textVerticalAlign: 'middle',
+                    textAlign: this._applyTransform(
+                        this._orient === 'horizontal'
+                            ? (handleIndex === 0 ? 'bottom' : 'top')
+                            : 'left',
+                        shapes.barGroup
+                    )
                 });
             }, this);
         },
@@ -469,13 +503,177 @@ define(function(require) {
         /**
          * @private
          */
-        _applyTransform: function (vertex, element, inverse) {
-            var transform = graphic.getTransform(element, this.group);
+        _updateIndicator: function (value, isRange) {
+            var visualMapModel = this.visualMapModel;
+            var dataExtent = visualMapModel.getExtent();
+            var sizeExtent = [0, visualMapModel.itemSize[1]];
+            var pos = linearMap(value, dataExtent, sizeExtent, true);
+
+            var shapes = this._shapes;
+            var indicator = shapes.indicator;
+            if (!indicator) {
+                return;
+            }
+
+            indicator.position[1] = pos;
+            indicator.attr('invisible', false);
+
+            var opts = {convertOpacityToAlpha: true};
+            var color = this.getControllerVisual(value, 'color', opts);
+            indicator.setStyle('fill', color);
+
+            // Update handle label position.
+            var textPoint = graphic.applyTransform(
+                shapes.indicatorLabelPoint,
+                graphic.getTransform(indicator, this.group)
+            );
+
+            var indicatorLabel = shapes.indicatorLabel;
+            indicatorLabel.attr('invisible', false);
+            var align = this._applyTransform('left', shapes.barGroup);
+            var orient = this._orient;
+            indicatorLabel.setStyle({
+                text: (isRange ? '≈' : '') + visualMapModel.formatValueText(value),
+                textVerticalAlign: orient === 'horizontal' ? align : 'middle',
+                textAlign: orient === 'horizontal' ? 'center' : align,
+                x: textPoint[0],
+                y: textPoint[1]
+            });
+        },
+
+        /**
+         * @private
+         */
+        _enableHoverLinkToSeries: function () {
+            this._shapes.barGroup
+                .on('mousemove', zrUtil.bind(onMouseOver, this))
+                .on('mouseout', zrUtil.bind(this._clearHoverLinkToSeries, this));
+
+            function onMouseOver(e) {
+                var visualMapModel = this.visualMapModel;
+
+                if (!visualMapModel.option.hoverLink) {
+                    return;
+                }
+
+                var pos = this._applyTransform(
+                    [e.offsetX, e.offsetY], this._shapes.barGroup, true, true
+                )[1];
+                var hoverRange = [pos - HOVER_LINK_RANGE / 2, pos + HOVER_LINK_RANGE / 2];
+
+                var sizeExtent = [0, visualMapModel.itemSize[1]];
+                var dataExtent = visualMapModel.getExtent();
+                var valueRange = [
+                    linearMap(hoverRange[0], sizeExtent, dataExtent, true),
+                    linearMap(hoverRange[1], sizeExtent, dataExtent, true)
+                ];
+
+                this._updateIndicator((valueRange[0] + valueRange[1]) / 2, true);
+
+                var oldBatch = convertDataIndicesToBatch(this._hoverLinkDataIndices);
+                this._hoverLinkDataIndices = visualMapModel.findTargetDataIndices(valueRange);
+                var newBatch = convertDataIndicesToBatch(this._hoverLinkDataIndices);
+                var resultBatches = helper.removeDuplicateBatch(oldBatch, newBatch);
+
+                this.api.dispatchAction({type: 'downplay', batch: resultBatches[0]});
+                this.api.dispatchAction({type: 'highlight', batch: resultBatches[1]});
+            }
+        },
+
+        /**
+         * @private
+         */
+        _enableHoverLinkFromSeries: function () {
+            var zr = this.api.getZr();
+
+            if (this.visualMapModel.option.hoverLink) {
+                zr.on('mouseover', this._hoverLinkFromSeriesMouseOver, this);
+                zr.on('mouseout', this._hideIndicator, this);
+            }
+            else {
+                this._clearHoverLinkFromSeries();
+            }
+        },
+
+        /**
+         * @private
+         */
+        _hoverLinkFromSeriesMouseOver: function (e) {
+            var el = e.target;
+
+            if (!el || el.dataIndex == null) {
+                return;
+            }
+
+            var dataModel = el.dataModel || this.ecModel.getSeriesByIndex(el.seriesIndex);
+            var data = dataModel.getData();
+            var dim = data.getDimension(this.visualMapModel.getDataDimension(data));
+            var value = data.get(dim, el.dataIndex, true);
+
+            this._updateIndicator(value);
+        },
+
+        /**
+         * @private
+         */
+        _hideIndicator: function () {
+            var shapes = this._shapes;
+            shapes.indicator.attr('invisible', true);
+            shapes.indicatorLabel.attr('invisible', true);
+        },
+
+        /**
+         * @private
+         */
+        _clearHoverLinkToSeries: function () {
+            this._hideIndicator();
+
+            var indices = this._hoverLinkDataIndices;
+
+            this.api.dispatchAction({
+                type: 'downplay',
+                batch: convertDataIndicesToBatch(indices)
+            });
+
+            indices.length = 0;
+        },
+
+        /**
+         * @private
+         */
+        _clearHoverLinkFromSeries: function () {
+            this._hideIndicator();
+
+            var zr = this.api.getZr();
+            zr.off('mouseover', this._hoverLinkFromSeriesMouseOver);
+            zr.off('mouseout', this._hideIndicator);
+        },
+
+        /**
+         * @private
+         */
+        _applyTransform: function (vertex, element, inverse, global) {
+            var transform = graphic.getTransform(element, global ? null : this.group);
 
             return graphic[
-                zrUtil.isArray(vertex)
-                    ? 'applyTransform' : 'transformDirection'
+                zrUtil.isArray(vertex) ? 'applyTransform' : 'transformDirection'
             ](vertex, transform, inverse);
+        },
+
+        /**
+         * @override
+         */
+        dispose: function () {
+            this._clearHoverLinkFromSeries();
+            this._clearHoverLinkToSeries();
+        },
+
+        /**
+         * @override
+         */
+        remove: function () {
+            this._clearHoverLinkFromSeries();
+            this._clearHoverLinkToSeries();
         }
 
     });
@@ -493,6 +691,10 @@ define(function(require) {
         return handleIndex === 0
             ? [[0, 0], [textSize, 0], [textSize, -textSize]]
             : [[0, 0], [textSize, 0], [textSize, textSize]];
+    }
+
+    function createIndicatorPoints() {
+        return [[0, 0], [5, -5], [5, 5]];
     }
 
     return ContinuousVisualMapView;

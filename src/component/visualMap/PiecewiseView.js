@@ -34,7 +34,7 @@ define(function(require) {
 
             showEndsText && this._renderEndsText(thisGroup, viewData.endsText[0], itemSize);
 
-            zrUtil.each(viewData.pieceList, renderItem, this);
+            zrUtil.each(viewData.viewPieceList, renderItem, this);
 
             showEndsText && this._renderEndsText(thisGroup, viewData.endsText[1], itemSize);
 
@@ -47,24 +47,27 @@ define(function(require) {
             this.positionGroup(thisGroup);
 
             function renderItem(item) {
-                var itemGroup = new graphic.Group();
-                itemGroup.onclick = zrUtil.bind(this._onItemClick, this, item.piece);
+                var piece = item.piece;
 
-                var representValue = this._getRepresentValue(item.piece);
+                var itemGroup = new graphic.Group();
+                itemGroup.onclick = zrUtil.bind(this._onItemClick, this, piece);
+
+                this._enableHoverLink(itemGroup, item.indexInModelPieceList);
+
+                var representValue = this._getRepresentValue(piece);
 
                 this._createItemSymbol(
                     itemGroup, representValue, [0, 0, itemSize[0], itemSize[1]]
                 );
 
                 if (showLabel) {
-
                     var visualState = this.visualMapModel.getValueState(representValue);
 
                     itemGroup.add(new graphic.Text({
                         style: {
                             x: itemAlign === 'right' ? -textGap : itemSize[0] + textGap,
                             y: itemSize[1] / 2,
-                            text: item.piece.text,
+                            text: piece.text,
                             textVerticalAlign: 'middle',
                             textAlign: itemAlign,
                             textFont: textFont,
@@ -81,9 +84,30 @@ define(function(require) {
         /**
          * @private
          */
+        _enableHoverLink: function (itemGroup, pieceIndex) {
+            itemGroup
+                .on('mouseover', zrUtil.bind(onHoverLink, this, 'highlight'))
+                .on('mouseout', zrUtil.bind(onHoverLink, this, 'downplay'));
+
+            function onHoverLink(method) {
+                var visualMapModel = this.visualMapModel;
+
+                visualMapModel.option.hoverLink && this.api.dispatchAction({
+                    type: method,
+                    batch: helper.convertDataIndicesToBatch(
+                        visualMapModel.findTargetDataIndices(pieceIndex)
+                    )
+                });
+            }
+        },
+
+        /**
+         * @private
+         */
         _getItemAlign: function () {
             var visualMapModel = this.visualMapModel;
             var modelOption = visualMapModel.option;
+
             if (modelOption.orient === 'vertical') {
                 return helper.getItemAlign(
                     visualMapModel, this.api, visualMapModel.itemSize
@@ -105,8 +129,10 @@ define(function(require) {
             if (!text) {
                 return;
             }
+
             var itemGroup = new graphic.Group();
             var textStyleModel = this.visualMapModel.textStyleModel;
+
             itemGroup.add(new graphic.Text({
                 style: {
                     x: itemSize[0] / 2,
@@ -129,8 +155,8 @@ define(function(require) {
         _getViewData: function () {
             var visualMapModel = this.visualMapModel;
 
-            var pieceList = zrUtil.map(visualMapModel.getPieceList(), function (piece, index) {
-                return {piece: piece, index: index};
+            var viewPieceList = zrUtil.map(visualMapModel.getPieceList(), function (piece, index) {
+                return {piece: piece, indexInModelPieceList: index};
             });
             var endsText = visualMapModel.get('text');
 
@@ -138,16 +164,16 @@ define(function(require) {
             var orient = visualMapModel.get('orient');
             var inverse = visualMapModel.get('inverse');
 
-            // Order of pieceList is always [low, ..., high]
+            // Order of model pieceList is always [low, ..., high]
             if (orient === 'horizontal' ? inverse : !inverse) {
-                pieceList.reverse();
+                viewPieceList.reverse();
             }
             // Origin order of endsText is [high, low]
             else if (endsText) {
                 endsText = endsText.slice().reverse();
             }
 
-            return {pieceList: pieceList, endsText: endsText};
+            return {viewPieceList: viewPieceList, endsText: endsText};
         },
 
         /**

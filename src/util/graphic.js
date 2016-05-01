@@ -398,7 +398,7 @@ define(function(require) {
      * in coordinate of its ancestor (param ancestor)
      *
      * @param {module:zrender/mixin/Transformable} target
-     * @param {module:zrender/mixin/Transformable} ancestor
+     * @param {module:zrender/mixin/Transformable} [ancestor]
      */
     graphic.getTransform = function (target, ancestor) {
         var mat = matrix.identity([]);

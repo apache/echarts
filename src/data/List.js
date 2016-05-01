@@ -183,6 +183,7 @@ define(function (require) {
      * @param {string|number} dim
      *        Dimension can be concrete names like x, y, z, lng, lat, angle, radius
      *        Or a ordinal number. For example getDimensionInfo(0) will return 'x' or 'lng' or 'radius'
+     * @return {string} Concrete dim name.
      */
     listProto.getDimension = function (dim) {
         if (!isNaN(dim)) {
@@ -480,7 +481,7 @@ define(function (require) {
 
     /**
      * Retreive the index of nearest value
-     * @param {string>} dim
+     * @param {string} dim
      * @param {number} value
      * @param {boolean} stack If given value is after stacked
      * @return {number}

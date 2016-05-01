@@ -113,6 +113,7 @@ define(function (require) {
         symbolPath.draggable = draggable;
         symbolPath.cursor = draggable ? 'move' : 'pointer';
     };
+
     /**
      * Update symbol properties
      * @param  {module:echarts/data/List} data

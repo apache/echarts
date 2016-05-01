@@ -37,16 +37,24 @@ define(function(require) {
                                         // When categories: {'cate1': false, 'cate3': true}
                                         // When selected === false, means all unselected.
             align: 'auto',              // 'auto', 'left', 'right'
-            itemWidth: 20,              // 值域图形宽度
-            itemHeight: 14,             // 值域图形高度
+            itemWidth: 20,              // When put the controller vertically, it is the length of
+                                        // horizontal side of each item. Otherwise, vertical side.
+            itemHeight: 14,             // When put the controller vertically, it is the length of
+                                        // vertical side of each item. Otherwise, horizontal side.
             itemSymbol: 'roundRect',
-            pieceList: null,            // 值顺序：由高到低, item can be:
-                                        // {min, max, value, color, colorSaturation, colorAlpha, symbol, symbolSize}
-            categories: null,           // 描述 category 数据。如：['some1', 'some2', 'some3']，设置后，min max失效。
-            splitNumber: 5,             // 分割段数，默认为5，为0时为线性渐变 (continous)
-            selectedMode: 'multiple',
-            itemGap: 10                 // 各个item之间的间隔，单位px，默认为10，
-                                        // 横向布局时为水平间隔，纵向布局时为纵向间隔
+            pieceList: null,            // Each item is Object, with some of those attrs:
+                                        // {min, max, value, color, colorSaturation, colorAlpha, opacity,
+                                        // symbol, symbolSize}, which customize the range or visual
+                                        // coding of the certain piece. Besides, see "Order Rule".
+            categories: null,           // category names, like: ['some1', 'some2', 'some3'].
+                                        // Attr min/max are ignored when categories set. See "Order Rule"
+            splitNumber: 5,             // If set to 5, auto split five pieces equally.
+                                        // If set to 0 and component type not set, component type will be
+                                        // determined as "continuous". (It is less reasonable but for ec2
+                                        // compatibility, see echarts/component/visualMap/typeDefaulter)
+            selectedMode: 'multiple',   // Can be 'multiple' or 'single'.
+            itemGap: 10,                // The gap between two items, in px.
+            hoverLink: true             // Enable hover highlight.
         },
 
         /**
@@ -169,14 +177,37 @@ define(function(require) {
          * @override
          */
         getValueState: function (value) {
-            var pieceList = this._pieceList;
-            var index = VisualMapping.findPieceIndex(value, pieceList);
+            var index = VisualMapping.findPieceIndex(value, this._pieceList);
 
             return index != null
-                ? (this.option.selected[this.getSelectedMapKey(pieceList[index])]
+                ? (this.option.selected[this.getSelectedMapKey(this._pieceList[index])]
                     ? 'inRange' : 'outOfRange'
                 )
                 : 'outOfRange';
+        },
+
+        /**
+         * @public
+         * @params {number} pieceIndex piece index in visualMapModel.getPieceList()
+         * @return {Array.<Object>} [{seriesId, dataIndices: <Array.<number>>}, ...]
+         */
+        findTargetDataIndices: function (pieceIndex) {
+            var result = [];
+
+            this.eachTargetSeries(function (seriesModel) {
+                var dataIndices = [];
+                var data = seriesModel.getData();
+
+                data.each(this.getDataDimension(data), function (value, dataIndex) {
+                    // Should always base on model pieceList, because it is order sensitive.
+                    var pIdx = VisualMapping.findPieceIndex(value, this._pieceList);
+                    pIdx === pieceIndex && dataIndices.push(dataIndex);
+                }, true, this);
+
+                result.push({seriesId: seriesModel.id, dataIndices: dataIndices});
+            }, this);
+
+            return result;
         }
 
     });
