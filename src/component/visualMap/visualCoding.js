@@ -44,7 +44,7 @@ define(function (require) {
                     var type = visualTypes[i];
                     mappings[type] && mappings[type].applyVisual(value, getVisual, setVisual);
                 }
-            });
+            }, true);
         });
     }
 

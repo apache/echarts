@@ -11,9 +11,12 @@ define(function(require) {
     var linearMap = numberUtil.linearMap;
     var convertDataIndicesToBatch = helper.convertDataIndicesToBatch;
     var each = zrUtil.each;
+    var mathMin = Math.min;
+    var mathMax = Math.max;
 
     // Arbitrary value
     var HOVER_LINK_RANGE = 6;
+    var HOVER_LINK_OUT = 6;
 
     // Notice:
     // Any "interval" should be by the order of [low, high].
@@ -242,9 +245,7 @@ define(function(require) {
          * @private
          */
         _createIndicator: function (barGroup, itemSize, textSize, orient) {
-            var indicator = createPolygon(
-                createIndicatorPoints(), null, 'move'
-            );
+            var indicator = createPolygon([[0, 0]], null, 'move');
             indicator.position[0] = itemSize[0];
             indicator.attr({invisible: true, silent: true});
             barGroup.add(indicator);
@@ -262,7 +263,7 @@ define(function(require) {
             this.group.add(indicatorLabel);
 
             var indicatorLabelPoint = [
-                orient === 'horizontal' ? textSize / 2 : textSize * 1.5,
+                orient === 'horizontal' ? textSize / 2 : HOVER_LINK_OUT + 3,
                 0
             ];
 
@@ -503,10 +504,11 @@ define(function(require) {
         /**
          * @private
          */
-        _updateIndicator: function (value, isRange) {
+        _showIndicator: function (value, isRange) {
             var visualMapModel = this.visualMapModel;
             var dataExtent = visualMapModel.getExtent();
-            var sizeExtent = [0, visualMapModel.itemSize[1]];
+            var itemSize = visualMapModel.itemSize;
+            var sizeExtent = [0, itemSize[1]];
             var pos = linearMap(value, dataExtent, sizeExtent, true);
 
             var shapes = this._shapes;
@@ -517,6 +519,7 @@ define(function(require) {
 
             indicator.position[1] = pos;
             indicator.attr('invisible', false);
+            indicator.setShape('points', createIndicatorPoints(isRange, pos, itemSize[1]));
 
             var opts = {convertOpacityToAlpha: true};
             var color = this.getControllerVisual(value, 'color', opts);
@@ -551,6 +554,7 @@ define(function(require) {
 
             function onMouseOver(e) {
                 var visualMapModel = this.visualMapModel;
+                var itemSize = visualMapModel.itemSize;
 
                 if (!visualMapModel.option.hoverLink) {
                     return;
@@ -558,17 +562,20 @@ define(function(require) {
 
                 var pos = this._applyTransform(
                     [e.offsetX, e.offsetY], this._shapes.barGroup, true, true
-                )[1];
-                var hoverRange = [pos - HOVER_LINK_RANGE / 2, pos + HOVER_LINK_RANGE / 2];
-
-                var sizeExtent = [0, visualMapModel.itemSize[1]];
+                );
+                var hoverRange = [pos[1] - HOVER_LINK_RANGE / 2, pos[1] + HOVER_LINK_RANGE / 2];
+                var sizeExtent = [0, itemSize[1]];
                 var dataExtent = visualMapModel.getExtent();
                 var valueRange = [
                     linearMap(hoverRange[0], sizeExtent, dataExtent, true),
                     linearMap(hoverRange[1], sizeExtent, dataExtent, true)
                 ];
 
-                this._updateIndicator((valueRange[0] + valueRange[1]) / 2, true);
+                // Do not show indicator when mouse is over handle,
+                // otherwise labels overlap, especially when dragging.
+                if (0 <= pos[0] && pos[0] <= itemSize[0]) {
+                    this._showIndicator((valueRange[0] + valueRange[1]) / 2, true);
+                }
 
                 var oldBatch = convertDataIndicesToBatch(this._hoverLinkDataIndices);
                 this._hoverLinkDataIndices = visualMapModel.findTargetDataIndices(valueRange);
@@ -610,7 +617,7 @@ define(function(require) {
             var dim = data.getDimension(this.visualMapModel.getDataDimension(data));
             var value = data.get(dim, el.dataIndex, true);
 
-            this._updateIndicator(value);
+            this._showIndicator(value);
         },
 
         /**
@@ -693,8 +700,16 @@ define(function(require) {
             : [[0, 0], [textSize, 0], [textSize, textSize]];
     }
 
-    function createIndicatorPoints() {
-        return [[0, 0], [5, -5], [5, 5]];
+    function createIndicatorPoints(isRange, pos, extentMax) {
+        return isRange
+            ? [ // indicate range
+                [0, -mathMin(HOVER_LINK_RANGE, mathMax(pos, 0))],
+                [HOVER_LINK_OUT, 0],
+                [0, mathMin(HOVER_LINK_RANGE, mathMax(extentMax - pos, 0))]
+            ]
+            : [ // indicate single value
+                [0, 0], [5, -5], [5, 5]
+            ];
     }
 
     return ContinuousVisualMapView;
