@@ -123,14 +123,16 @@ define(function (require) {
          * @param {number} zoom
          */
         setZoom: function (zoom) {
-            if (!zoom) {
-                return;
-            }
+            zoom = zoom || 1;
+
             var zoomLimit = this.zoomLimit;
             if (zoomLimit) {
-                zoom = Math.max(
-                    Math.min(zoom, zoomLimit.max), zoomLimit.min
-                );
+                if (zoomLimit.max != null) {
+                    zoom = Math.min(zoomLimit.max, zoom);
+                }
+                if (zoomLimit.min != null) {
+                    zoom = Math.max(zoomLimit.min, zoom);
+                }
             }
             this._zoom = zoom;
 

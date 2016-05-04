@@ -100,9 +100,11 @@ define(function (require) {
                 var newZoom = this.zoom = this.zoom || 1;
                 newZoom *= zoomDelta;
                 if (zoomLimit) {
+                    var zoomMin = zoomLimit.min || 0;
+                    var zoomMax = zoomLimit.max || Infinity;
                     newZoom = Math.max(
-                        Math.min(zoomLimit.max, newZoom),
-                        zoomLimit.min
+                        Math.min(zoomMax, newZoom),
+                        zoomMin
                     );
                 }
                 var zoomScale = newZoom / this.zoom;

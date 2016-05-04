@@ -25,9 +25,11 @@ define(function (require) {
         }
         if (zoom != null) {
             if (zoomLimit) {
+                var zoomMin = zoomLimit.min || 0;
+                var zoomMax = zoomLimit.max || Infinity;
                 zoom = Math.max(
-                    Math.min(previousZoom * zoom, zoomLimit.max),
-                    zoomLimit.min
+                    Math.min(previousZoom * zoom, zoomMax),
+                    zoomMin
                 ) / previousZoom;
             }
 
