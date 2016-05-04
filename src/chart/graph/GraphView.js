@@ -137,8 +137,10 @@ define(function (require) {
         _updateController: function (seriesModel, coordSys, api) {
             var controller = this._controller;
             controller.rect = coordSys.getViewRect();
-
             controller.enable(seriesModel.get('roam'));
+            controller.zoomLimit = seriesModel.get('scaleLimit');
+            // Update zoom from model
+            controller.zoom = coordSys.getZoom();
 
             controller
                 .off('pan')

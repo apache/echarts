@@ -49,6 +49,7 @@ define(function (require) {
                 var viewHeight = viewRect.height;
 
                 viewCoordSys = seriesModel.coordinateSystem = new View();
+                viewCoordSys.zoomLimit = seriesModel.get('scaleLimit');
 
                 viewCoordSys.setBoundingRect(
                     min[0], min[1], bbWidth, bbHeight

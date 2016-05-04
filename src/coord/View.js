@@ -27,7 +27,7 @@ define(function (require) {
         this.name = name;
 
         /**
-         * @type {Array.<number>}
+         * @type {Object}
          */
         this.zoomLimit;
 
