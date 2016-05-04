@@ -45,7 +45,6 @@ define(function (require) {
             symbolDraw.updateData(data);
 
             var edgeData = data.graph.edgeData;
-            var rawOption = seriesModel.option;
             var formatModel = modelUtil.createDataFormatModel(seriesModel, edgeData);
             formatModel.formatTooltip = function (dataIndex) {
                 var params = this.getDataParams(dataIndex);
@@ -99,22 +98,26 @@ define(function (require) {
             // Update draggable
             data.eachItemGraphicEl(function (el, idx) {
                 var draggable = data.getItemModel(idx).get('draggable');
-                if (draggable && forceLayout) {
+                if (draggable) {
                     el.on('drag', function () {
-                        forceLayout.warmUp();
-                        !this._layouting
-                            && this._startForceLayoutIteration(forceLayout, layoutAnimation);
-                        forceLayout.setFixed(idx);
-                        // Write position back to layout
-                        data.setItemLayout(idx, el.position);
+                        if (forceLayout) {
+                            forceLayout.warmUp();
+                            !this._layouting
+                                && this._startForceLayoutIteration(forceLayout, layoutAnimation);
+                            forceLayout.setFixed(idx);
+                            // Write position back to layout
+                            data.setItemLayout(idx, el.position);
+                        }
                     }, this).on('dragend', function () {
-                        forceLayout.setUnfixed(idx);
+                        if (forceLayout) {
+                            forceLayout.setUnfixed(idx);
+                        }
                     }, this);
                 }
                 else {
                     el.off('drag');
                 }
-                el.setDraggable(draggable);
+                el.setDraggable(draggable && forceLayout);
             }, this);
 
             this._firstRender = false;
