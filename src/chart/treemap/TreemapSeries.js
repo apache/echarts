@@ -76,10 +76,8 @@ define(function(require) {
             label: {
                 normal: {
                     show: true,
-                    position: ['50%', '50%'], // Can be 5, '5%' or position stirng like 'insideTopLeft', ...
+                    position: 'inside', // Can be [5, '5%'] or position stirng like 'insideTopLeft', ...
                     textStyle: {
-                        align: 'center',
-                        baseline: 'middle',
                         color: '#fff',
                         ellipsis: true
                     }
