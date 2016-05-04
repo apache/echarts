@@ -625,8 +625,8 @@ define(function(require) {
          */
         _hideIndicator: function () {
             var shapes = this._shapes;
-            shapes.indicator.attr('invisible', true);
-            shapes.indicatorLabel.attr('invisible', true);
+            shapes.indicator && shapes.indicator.attr('invisible', true);
+            shapes.indicatorLabel && shapes.indicatorLabel.attr('invisible', true);
         },
 
         /**

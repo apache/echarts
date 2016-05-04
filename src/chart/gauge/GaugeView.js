@@ -314,17 +314,16 @@ define(function (require) {
                 var itemModel = data.getItemModel(idx);
                 var pointerModel = itemModel.getModel('pointer');
 
-                pointer.attr({
-                    shape: {
-                        x: posInfo.cx,
-                        y: posInfo.cy,
-                        width: parsePercent(
-                            pointerModel.get('width'), posInfo.r
-                        ),
-                        r: parsePercent(pointerModel.get('length'), posInfo.r)
-                    },
-                    style: itemModel.getModel('itemStyle.normal').getItemStyle()
+                pointer.setShape({
+                    x: posInfo.cx,
+                    y: posInfo.cy,
+                    width: parsePercent(
+                        pointerModel.get('width'), posInfo.r
+                    ),
+                    r: parsePercent(pointerModel.get('length'), posInfo.r)
                 });
+
+                pointer.useStyle(itemModel.getModel('itemStyle.normal').getItemStyle());
 
                 if (pointer.style.fill === 'auto') {
                     pointer.setStyle('fill', getColor(

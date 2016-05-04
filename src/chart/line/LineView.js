@@ -292,10 +292,11 @@ define(function(require) {
                 }
             }
 
-            polyline.setStyle(zrUtil.defaults(
+            polyline.useStyle(zrUtil.defaults(
                 // Use color in lineStyle first
                 lineStyleModel.getLineStyle(),
                 {
+                    fill: 'none',
                     stroke: data.getVisual('color'),
                     lineJoin: 'bevel'
                 }
@@ -312,11 +313,11 @@ define(function(require) {
                 var stackedOn = data.stackedOn;
                 var stackedOnSmooth = 0;
 
-                polygon.style.opacity = 0.7;
-                polygon.setStyle(zrUtil.defaults(
+                polygon.useStyle(zrUtil.defaults(
                     areaStyleModel.getAreaStyle(),
                     {
                         fill: data.getVisual('color'),
+                        opacity: 0.7,
                         lineJoin: 'bevel'
                     }
                 ));
