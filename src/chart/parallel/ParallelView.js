@@ -47,6 +47,7 @@ define(function (require) {
                     child.useStyle(zrUtil.extend(
                         lineStyleModel.getLineStyle(),
                         {
+                            fill: null,
                             stroke: data.getItemVisual(idx, 'color'),
                             opacity: data.getItemVisual(idx, 'opacity')
                         }

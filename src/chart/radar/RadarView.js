@@ -137,6 +137,7 @@ define(function (require) {
                     zrUtil.extend(
                         itemModel.getModel('lineStyle.normal').getLineStyle(),
                         {
+                            fill: 'none',
                             stroke: color
                         }
                     )
