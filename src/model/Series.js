@@ -70,6 +70,7 @@ define(function(require) {
             zrUtil.merge(option, this.getDefaultOption());
 
             // Default label emphasis `position` and `show`
+            // FIXME Set label in merge
             modelUtil.defaultEmphasis(
                 option.label, ['position', 'show', 'textStyle', 'distance', 'formatter']
             );

@@ -33,29 +33,12 @@ define(function(require) {
 
             label: {
                 normal: {
-                    // show: false,
                     position: 'top'
-                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-                    //           'inside'|'left'|'right'|'top'|'bottom'
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                 }
-                // emphasis: {
-                    // show: false,
-                    // position: 'top'
-                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-                    //           'inside'|'left'|'right'|'top'|'bottom'
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
-                // }
             },
             // itemStyle: {
-            //     normal: {
-            //         // color: 各异
-            //     },
-            //     emphasis: {
-            //         // color: 各异,
-            //     }
+            //     normal: {},
+            //     emphasis: {}
             // },
             lineStyle: {
                 normal: {
@@ -63,24 +46,27 @@ define(function(require) {
                     type: 'solid'
                 }
             },
-            // areaStyle: {
-            // },
-            // smooth: false,
-            // smoothMonotone: null,
+            // areaStyle: {},
+
+            smooth: false,
+            smoothMonotone: null,
             // 拐点图形类型
             symbol: 'emptyCircle',
             // 拐点图形大小
             symbolSize: 4,
             // 拐点图形旋转控制
-            // symbolRotate: null,
+            symbolRotate: null,
 
             // 是否显示 symbol, 只有在 tooltip hover 的时候显示
             showSymbol: true,
             // 标志图形默认只有主轴显示（随主轴标签间隔隐藏策略）
-            // showAllSymbol: false
-            //
-            // 大数据过滤，'average', 'max', 'min', 'sum'
-            // sampling: 'none'
+            showAllSymbol: false,
+
+            // 是否连接断点
+            connectNulls: false,
+
+            // 数据过滤，'average', 'max', 'min', 'sum'
+            sampling: 'none',
 
             animationEasing: 'linear'
         }

@@ -306,7 +306,8 @@ define(function(require) {
             smooth = getSmooth(seriesModel.get('smooth'));
             polyline.setShape({
                 smooth: smooth,
-                smoothMonotone: seriesModel.get('smoothMonotone')
+                smoothMonotone: seriesModel.get('smoothMonotone'),
+                connectNulls: seriesModel.get('connectNulls')
             });
 
             if (polygon) {
@@ -330,7 +331,8 @@ define(function(require) {
                 polygon.setShape({
                     smooth: smooth,
                     stackedOnSmooth: stackedOnSmooth,
-                    smoothMonotone: seriesModel.get('smoothMonotone')
+                    smoothMonotone: seriesModel.get('smoothMonotone'),
+                    connectNulls: seriesModel.get('connectNulls')
                 });
             }
 
