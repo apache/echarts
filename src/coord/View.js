@@ -218,6 +218,16 @@ define(function (require) {
         },
 
         /**
+         * Get view rect after roam transform
+         * @return {module:zrender/core/BoundingRect}
+         */
+        getViewRectAfterRoam: function () {
+            var rect = this._viewRect.clone();
+            rect.applyTransform(this.transform);
+            return rect;
+        },
+
+        /**
          * Convert a single (lon, lat) data item to (x, y) point.
          * @param {Array.<number>} data
          * @return {Array.<number>}
