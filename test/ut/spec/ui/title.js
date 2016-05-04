@@ -321,7 +321,7 @@ describe('title', function() {
                 series: [],
                 title: {
                     text: 'this is title',
-                    bottom: 50
+                    top: 50
                 }
             }
         }]

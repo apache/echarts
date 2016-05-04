@@ -3,9 +3,9 @@
     var helper = context.uiHelper = {};
 
     // canvas comparing strategy, 'stack' or 'content'
-    var STRATEGY = 'stack';
+    var STRATEGY = 'content';
     // always display images even if no error
-    var ALWAYS_SHOW_IMAGE = false;
+    var ALWAYS_SHOW_IMAGE = true;
 
     // dom for failed cases
     var failedDom = document.createElement('div');
@@ -81,10 +81,10 @@
         it(title, function(done) {
             window.require(['newEcharts'], function (ec) {
                 var canvas1 = helper.getRenderedCanvas(ec, function(myChart) {
-                    myChart.setOption(option1);
+                    myChart.setOption(helper.preprocessOption(option1));
                 });
                 var canvas2 = helper.getRenderedCanvas(ec, function(myChart) {
-                    myChart.setOption(option2);
+                    myChart.setOption(helper.preprocessOption(option2));
                 });
                 var ctx1 = canvas1.getContext('2d');
                 var ctx2 = canvas2.getContext('2d');
@@ -169,7 +169,7 @@
     helper.testOption = function(name, option) {
         var doTest = function(ec) {
             var canvas = helper.getRenderedCanvas(ec, function(myChart) {
-                myChart.setOption(option);
+                myChart.setOption(helper.preprocessOption(option));
             });
             return canvas;
         };
@@ -182,6 +182,18 @@
                 console.error('Invalid equal canvas strategy!');
             }
         });
+    }
+
+    /**
+     * preprocess option and set default values
+     * @param  {object} option echarts option
+     * @return {object}        processed option
+     */
+    helper.preprocessOption = function(option) {
+        if (typeof option.animation === 'undefined') {
+            option.animation = false;
+        }
+        return option;
     }
 
     /**
