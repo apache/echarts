@@ -46,9 +46,6 @@ define(function (require) {
         );
 
         symbolPath.attr({
-            style: {
-                strokeNoScale: true
-            },
             z2: 100,
             culling: true,
             scale: [0, 0]
@@ -149,6 +146,11 @@ define(function (require) {
         var itemModel = data.getItemModel(idx);
         var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
         var color = data.getItemVisual(idx, 'color');
+
+        // Reset style
+        symbolPath.useStyle({
+            strokeNoScale: true
+        });
         var elStyle = symbolPath.style;
 
         var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();

@@ -44,7 +44,7 @@ define(function (require) {
                 var itemModel = data.getItemModel(idx);
                 var lineStyleModel = itemModel.getModel('lineStyle.normal');
                 elGroup.eachChild(function (child) {
-                    child.setStyle(zrUtil.extend(
+                    child.useStyle(zrUtil.extend(
                         lineStyleModel.getLineStyle(),
                         {
                             stroke: data.getItemVisual(idx, 'color'),

@@ -63,6 +63,10 @@ define(function (require) {
         var layout = data.getItemLayout(idx);
         var opacity = data.getItemModel(idx).get(opacityAccessPath);
         opacity = opacity == null ? 1 : opacity;
+
+        // Reset style
+        polygon.useStyle({});
+
         if (firstCreate) {
             polygon.setShape({
                 points: layout.points

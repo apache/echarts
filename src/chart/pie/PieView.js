@@ -138,7 +138,7 @@ define(function (require) {
         var itemStyleModel = itemModel.getModel('itemStyle');
         var visualColor = data.getItemVisual(idx, 'color');
 
-        sector.setStyle(
+        sector.useStyle(
             zrUtil.defaults(
                 {
                     fill: visualColor

@@ -234,8 +234,9 @@ define(function (require) {
             // Use name
             defaultText = lineData.getName(idx);
         }
-        line.setStyle(zrUtil.extend(
+        line.useStyle(zrUtil.extend(
             {
+                fill: 'none',
                 stroke: lineData.getItemVisual(idx, 'color')
             },
             itemModel.getModel('lineStyle.normal').getLineStyle()

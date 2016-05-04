@@ -145,7 +145,7 @@ define(function (require) {
 
                 rect.setShape('r', itemStyleModel.get('barBorderRadius') || 0);
 
-                rect.setStyle(zrUtil.defaults(
+                rect.useStyle(zrUtil.defaults(
                     {
                         fill: color,
                         opacity: opacity

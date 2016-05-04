@@ -138,7 +138,7 @@ define(function (require) {
                     hoverStl.text = seriesModel.getFormattedLabel(idx, 'emphasis') || defaultText;
                 }
 
-                rect.setStyle(style);
+                rect.useStyle(style);
 
                 graphic.setHoverStyle(rect, hoverStl);
 
