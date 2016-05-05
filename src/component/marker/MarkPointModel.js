@@ -38,6 +38,7 @@ define(function (require) {
                         }
                         zrUtil.each(markPointOpt.data, fillLabel);
                         var opt = {
+                            mainType: 'markPoint',
                             // Use the same series index and name
                             seriesIndex: seriesModel.seriesIndex,
                             name: seriesModel.name,
