@@ -58,6 +58,19 @@ define(function (require) {
         }
     }
 
+    function labelBeforeBrush() {
+        // Ignore scale
+        var m = this.transform;
+        if (m) {
+            var sx = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+            var sy = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+            m[0] /= sx;
+            m[1] /= sx;
+            m[2] /= sy;
+            m[3] /= sy;
+        }
+    }
+
     // function isSymbolArrow(symbol) {
     //     return symbol.type === 'symbol' && symbol.shape.symbolType === 'arrow';
     // }
@@ -72,6 +85,7 @@ define(function (require) {
         var symbolFrom = lineGroup.childOfName('fromSymbol');
         var symbolTo = lineGroup.childOfName('toSymbol');
         var label = lineGroup.childOfName('label');
+
         var fromPos = line.pointAt(0);
         var toPos = line.pointAt(line.shape.percent);
 
@@ -80,17 +94,17 @@ define(function (require) {
 
         if (symbolFrom) {
             symbolFrom.attr('position', fromPos);
-            // Rotate the arrow
-            // FIXME Hard coded ?
-            // if (isSymbolArrow(symbolFrom)) {
-            symbolFrom.attr('rotation', tangentRotation(toPos, fromPos));
-            // }
+            var tangent = line.tangentAt(0);
+            symbolFrom.attr('rotation', -Math.PI / 2 - Math.atan2(
+                tangent[1], tangent[0]
+            ));
         }
         if (symbolTo) {
             symbolTo.attr('position', toPos);
-            // if (isSymbolArrow(symbolTo)) {
-            symbolTo.attr('rotation', tangentRotation(fromPos, toPos));
-            // }
+            var tangent = line.tangentAt(0);
+            symbolTo.attr('rotation', -Math.PI / 2 - Math.atan2(
+                tangent[1], tangent[0]
+            ));
         }
 
         label.attr('position', toPos);
@@ -98,25 +112,35 @@ define(function (require) {
         var textPosition;
         var textAlign;
         var textVerticalAlign;
+
+        var distance = 5;
+        var parentNode = this.parent;
+        while (parentNode) {
+            if (parentNode.scale) {
+                distance /= parentNode.scale[0];
+            }
+            parentNode = parentNode.parent;
+        }
         // End
         if (label.__position === 'end') {
-            textPosition = [d[0] * 5 + toPos[0], d[1] * 5 + toPos[1]];
+            textPosition = [d[0] * distance + toPos[0], d[1] * distance + toPos[1]];
             textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
             textVerticalAlign = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
         }
         // Middle
         else if (label.__position === 'middle') {
-            var n = [d[1], -d[0]];
+            var halfPercent = line.shape.percent / 2;
+            var tangent = line.tangentAt(halfPercent);
+            var n = [tangent[1], -tangent[0]];
+            var cp = line.pointAt(halfPercent);
             if (n[1] > 0) {
                 n[0] = -n[0];
                 n[1] = -n[1];
             }
-            textPosition = [(toPos[0] + fromPos[0]) / 2 + n[0] * 5, (toPos[1] + fromPos[1]) / 2 + n[1] * 5];
+            textPosition = [cp[0] + n[0] * distance, cp[1] + n[1] * distance];
             textAlign = 'center';
             textVerticalAlign = 'bottom';
-            var rotation = -Math.atan2(
-                toPos[1] - fromPos[1], toPos[0] - fromPos[0]
-            );
+            var rotation = -Math.atan2(tangent[1], tangent[0]);
             if (toPos[0] < fromPos[0]) {
                 rotation = Math.PI + rotation;
             }
@@ -124,7 +148,7 @@ define(function (require) {
         }
         // Start
         else {
-            textPosition = [-d[0] * 5 + fromPos[0], -d[1] * 5 + fromPos[1]];
+            textPosition = [-d[0] * distance + fromPos[0], -d[1] * distance + fromPos[1]];
             textAlign = d[0] > 0.8 ? 'right' : (d[0] < -0.8 ? 'left' : 'center');
             textVerticalAlign = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
         }
@@ -136,12 +160,6 @@ define(function (require) {
             },
             position: textPosition
         });
-    }
-
-    function tangentRotation(p1, p2) {
-        return -Math.PI / 2 - Math.atan2(
-            p2[1] - p1[1], p2[0] - p1[0]
-        );
     }
 
     /**
@@ -259,6 +277,7 @@ define(function (require) {
         ));
 
         var label = this.childOfName('label');
+        label.beforeBrush = labelBeforeBrush;
         label.setStyle({
             text: labelModel.get('show')
                 ? zrUtil.retrieve(
@@ -267,7 +286,7 @@ define(function (require) {
                 )
                 : '',
             textFont: textStyleModel.getFont(),
-            fill: textStyleModel.getTextColor() || lineData.getItemVisual(idx, 'color')
+            fill: textStyleModel.getTextColor() || lineData.getItemVisual(idx, 'color') || '#000'
         });
         label.hoverStyle = {
             text: labelHoverModel.get('show')
@@ -293,10 +312,6 @@ define(function (require) {
         var linePath = this.childOfName('line');
         setLinePoints(linePath.shape, points);
         linePath.dirty(true);
-        // var fromEl = fromData && fromData.getItemGraphicEl(idx);
-        // var toEl = toData && toData.getItemGraphicEl(idx);
-        // fromEl && fromEl.attr('position', points[0]);
-        // toEl && toEl.attr('position', points[1]);
     };
 
     zrUtil.inherits(Line, graphic.Group);
