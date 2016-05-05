@@ -58,9 +58,9 @@ define(function (require) {
         }
     }
 
-    function isSymbolArrow(symbol) {
-        return symbol.type === 'symbol' && symbol.shape.symbolType === 'arrow';
-    }
+    // function isSymbolArrow(symbol) {
+    //     return symbol.type === 'symbol' && symbol.shape.symbolType === 'arrow';
+    // }
 
     function updateSymbolBeforeLineUpdate () {
         var lineGroup = this;
@@ -82,15 +82,15 @@ define(function (require) {
             symbolFrom.attr('position', fromPos);
             // Rotate the arrow
             // FIXME Hard coded ?
-            if (isSymbolArrow(symbolFrom)) {
-                symbolFrom.attr('rotation', tangentRotation(toPos, fromPos));
-            }
+            // if (isSymbolArrow(symbolFrom)) {
+            symbolFrom.attr('rotation', tangentRotation(toPos, fromPos));
+            // }
         }
         if (symbolTo) {
             symbolTo.attr('position', toPos);
-            if (isSymbolArrow(symbolTo)) {
-                symbolTo.attr('rotation', tangentRotation(fromPos, toPos));
-            }
+            // if (isSymbolArrow(symbolTo)) {
+            symbolTo.attr('rotation', tangentRotation(fromPos, toPos));
+            // }
         }
 
         label.attr('position', toPos);
@@ -103,6 +103,24 @@ define(function (require) {
             textPosition = [d[0] * 5 + toPos[0], d[1] * 5 + toPos[1]];
             textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
             textVerticalAlign = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
+        }
+        // Middle
+        else if (label.__position === 'middle') {
+            var n = [d[1], -d[0]];
+            if (n[1] > 0) {
+                n[0] = -n[0];
+                n[1] = -n[1];
+            }
+            textPosition = [(toPos[0] + fromPos[0]) / 2 + n[0] * 5, (toPos[1] + fromPos[1]) / 2 + n[1] * 5];
+            textAlign = 'center';
+            textVerticalAlign = 'bottom';
+            var rotation = -Math.atan2(
+                toPos[1] - fromPos[1], toPos[0] - fromPos[0]
+            );
+            if (toPos[0] < fromPos[0]) {
+                rotation = Math.PI + rotation;
+            }
+            label.attr('rotation', rotation);
         }
         // Start
         else {

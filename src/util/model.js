@@ -176,6 +176,8 @@ define(function(require) {
         }
     };
 
+    modelUtil.LABEL_OPTIONS = ['position', 'show', 'textStyle', 'distance', 'formatter'];
+
     /**
      * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
      * @param {Object} opt
