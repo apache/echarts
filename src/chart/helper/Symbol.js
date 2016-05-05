@@ -75,7 +75,6 @@ define(function (require) {
     /**
      * Get scale(aka, current symbol size).
      * Including the change caused by animation
-     * @param {Array.<number>} toLastFrame
      */
     symbolProto.getScale = function () {
         return this.childAt(0).scale;

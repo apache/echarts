@@ -81,7 +81,7 @@ define(function (require) {
         // `yAxis` to specify the coord on each dimension
 
         // parseFloat first because item.x and item.y can be percent string like '20%'
-        if ((isNaN(parseFloat(item.x)) || isNaN(parseFloat(item.y)))
+        if (item && (isNaN(parseFloat(item.x)) || isNaN(parseFloat(item.y)))
             && !zrUtil.isArray(item.coord)
             && coordSys
         ) {
@@ -155,9 +155,7 @@ define(function (require) {
         if (dimIndex < 2) {
             return item.coord && item.coord[dimIndex];
         }
-        else {
-            return item.value;
-        }
+        return item.value;
     };
 
     var numCalculate = function (data, valueDataDim, mlType) {

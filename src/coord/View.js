@@ -27,7 +27,7 @@ define(function (require) {
         this.name = name;
 
         /**
-         * @type {Array.<number>}
+         * @type {Object}
          */
         this.zoomLimit;
 
@@ -82,6 +82,8 @@ define(function (require) {
          * @param {number} height
          */
         setViewRect: function (x, y, width, height) {
+            width = width;
+            height = height;
             this.transformTo(x, y, width, height);
             this._viewRect = new BoundingRect(x, y, width, height);
         },
@@ -123,14 +125,16 @@ define(function (require) {
          * @param {number} zoom
          */
         setZoom: function (zoom) {
-            if (!zoom) {
-                return;
-            }
+            zoom = zoom || 1;
+
             var zoomLimit = this.zoomLimit;
             if (zoomLimit) {
-                zoom = Math.max(
-                    Math.min(zoom, zoomLimit.max), zoomLimit.min
-                );
+                if (zoomLimit.max != null) {
+                    zoom = Math.min(zoomLimit.max, zoom);
+                }
+                if (zoomLimit.min != null) {
+                    zoom = Math.max(zoomLimit.min, zoom);
+                }
             }
             this._zoom = zoom;
 
@@ -222,7 +226,7 @@ define(function (require) {
          * @return {module:zrender/core/BoundingRect}
          */
         getViewRectAfterRoam: function () {
-            var rect = this._viewRect.clone();
+            var rect = this.getBoundingRect().clone();
             rect.applyTransform(this.transform);
             return rect;
         },

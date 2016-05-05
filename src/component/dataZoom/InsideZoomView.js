@@ -158,7 +158,7 @@ define(function (require) {
 
     function getDirectionInfo(xy, axisModel, controller) {
         var axis = axisModel.axis;
-        var rect = controller.rect;
+        var rect = controller.rectProvider();
         var ret = {};
 
         if (axis.dim === 'x') {

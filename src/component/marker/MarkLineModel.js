@@ -1,17 +1,20 @@
 define(function (require) {
 
-    // Default enable markLine
-    // var globalDefault = require('../../model/globalDefault');
     var modelUtil = require('../../util/model');
+    var zrUtil = require('zrender/core/util');
 
-    // // Force to load markLine component
-    // globalDefault.markLine = {};
+    function fillLabel(opt) {
+        modelUtil.defaultEmphasis(
+            opt.label,
+            modelUtil.LABEL_OPTIONS
+        );
+    }
 
     var MarkLineModel = require('../../echarts').extendComponentModel({
 
         type: 'markLine',
 
-        dependencies: ['series', 'grid', 'polar'],
+        dependencies: ['series', 'grid', 'polar', 'geo'],
         /**
          * @overrite
          */
@@ -32,11 +35,17 @@ define(function (require) {
                     if (!mlModel) {
                         if (isInit) {
                             // Default label emphasis `position` and `show`
-                            modelUtil.defaultEmphasis(
-                                markLineOpt.label,
-                                ['position', 'show', 'textStyle', 'distance', 'formatter']
-                            );
+                            fillLabel(markLineOpt);
                         }
+                        zrUtil.each(markLineOpt.data, function (item) {
+                            if (item instanceof Array) {
+                                fillLabel(item[0]);
+                                fillLabel(item[1]);
+                            }
+                            else {
+                                fillLabel(item);
+                            }
+                        });
                         var opt = {
                             // Use the same series index and name
                             seriesIndex: seriesModel.seriesIndex,

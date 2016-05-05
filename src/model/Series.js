@@ -70,9 +70,8 @@ define(function(require) {
             zrUtil.merge(option, this.getDefaultOption());
 
             // Default label emphasis `position` and `show`
-            modelUtil.defaultEmphasis(
-                option.label, ['position', 'show', 'textStyle', 'distance', 'formatter']
-            );
+            // FIXME Set label in merge
+            modelUtil.defaultEmphasis(option.label, modelUtil.LABEL_OPTIONS);
 
             if (option.data) {
                 this._fillDataTextStyle(option.data);
@@ -98,9 +97,7 @@ define(function(require) {
             // FIXME Performance ?
             for (var i = 0; i < data.length; i++) {
                 if (data[i] && data[i].label) {
-                    modelUtil.defaultEmphasis(
-                        data[i].label, ['position', 'show', 'textStyle', 'distance', 'formatter']
-                    );
+                    modelUtil.defaultEmphasis(data[i].label, modelUtil.LABEL_OPTIONS);
                 }
             }
         },

@@ -1,10 +1,14 @@
 define(function (require) {
-    // Default enable markPoint
-    // var globalDefault = require('../../model/globalDefault');
-    var modelUtil = require('../../util/model');
-    // // Force to load markPoint component
-    // globalDefault.markPoint = {};
 
+    var modelUtil = require('../../util/model');
+    var zrUtil = require('zrender/core/util');
+
+    function fillLabel(opt) {
+        modelUtil.defaultEmphasis(
+            opt.label,
+            modelUtil.LABEL_OPTIONS
+        );
+    }
     var MarkPointModel = require('../../echarts').extendComponentModel({
 
         type: 'markPoint',
@@ -30,11 +34,9 @@ define(function (require) {
                     if (!mpModel) {
                         if (isInit) {
                             // Default label emphasis `position` and `show`
-                            modelUtil.defaultEmphasis(
-                                markPointOpt.label,
-                                ['position', 'show', 'textStyle', 'distance', 'formatter']
-                            );
+                            fillLabel(markPointOpt);
                         }
+                        zrUtil.each(markPointOpt.data, fillLabel);
                         var opt = {
                             // Use the same series index and name
                             seriesIndex: seriesModel.seriesIndex,
