@@ -280,7 +280,9 @@ define(function (require) {
                     }
                 }, this);
 
-            controller.rect = geo.getViewRect();
+            controller.rectProvider = function () {
+                return geo.getViewRectAfterRoam();
+            };
         }
     };
 

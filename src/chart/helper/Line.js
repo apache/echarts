@@ -36,10 +36,7 @@ define(function (require) {
 
     function createLine(points) {
         var line = new LinePath({
-            name: 'line',
-            style: {
-                strokeNoScale: true
-            }
+            name: 'line'
         });
         setLinePoints(line.shape, points);
         return line;
@@ -236,6 +233,7 @@ define(function (require) {
         }
         line.useStyle(zrUtil.extend(
             {
+                strokeNoScale: true,
                 fill: 'none',
                 stroke: lineData.getItemVisual(idx, 'color')
             },

@@ -16,7 +16,7 @@ define(function (require) {
 
         var x = e.offsetX;
         var y = e.offsetY;
-        var rect = this.rect;
+        var rect = this.rectProvider && this.rectProvider();
         if (rect && rect.contain(x, y)) {
             this._x = x;
             this._y = y;
@@ -82,10 +82,10 @@ define(function (require) {
     }
 
     function zoom(e, zoomDelta, zoomX, zoomY) {
-        var rect = this.rect;
+        var rect = this.rectProvider && this.rectProvider();
 
         if (rect && rect.contain(zoomX, zoomY)) {
-            // When mouse is out of roamController.rect,
+            // When mouse is out of roamController rect,
             // default befavoius should be be disabled, otherwise
             // page sliding is disabled, contrary to expectation.
             eventTool.stop(e.event);
@@ -129,9 +129,9 @@ define(function (require) {
      *
      * @param {module:zrender/zrender~ZRender} zr
      * @param {module:zrender/Element} target
-     * @param {module:zrender/core/BoundingRect} rect
+     * @param {Function} rectProvider
      */
-    function RoamController(zr, target, rect) {
+    function RoamController(zr, target, rectProvider) {
 
         /**
          * @type {module:zrender/Element}
@@ -139,9 +139,9 @@ define(function (require) {
         this.target = target;
 
         /**
-         * @type {module:zrender/core/BoundingRect}
+         * @type {Function}
          */
-        this.rect = rect;
+        this.rectProvider = rectProvider;
 
         /**
          * { min: 1, max: 2 }

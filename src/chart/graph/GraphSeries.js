@@ -147,9 +147,6 @@ define(function (require) {
             // Symbol size scale ratio in roam
             nodeScaleRatio: 0.6,
 
-            // Line width scale ratio in roam
-            // edgeScaleRatio: 0.1,
-
             // categories: [],
 
             // data: []

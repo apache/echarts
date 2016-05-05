@@ -83,11 +83,10 @@ define(function (require) {
             }
 
             this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
-            // this._edgeScaleRatio = seriesModel.get('edgeScaleRatio');
 
             this._updateNodeAndLinkScale();
 
-            this._updateController(seriesModel, coordSys, api);
+            this._updateController(seriesModel, api);
 
             clearTimeout(this._layoutTimeout);
             var forceLayout = seriesModel.forceLayout;
@@ -137,13 +136,18 @@ define(function (require) {
             })();
         },
 
-        _updateController: function (seriesModel, coordSys, api) {
+        _updateController: function (seriesModel, api) {
             var controller = this._controller;
-            controller.rect = coordSys.getViewRect();
+            var group = this.group;
+            controller.rectProvider = function () {
+                var rect = group.getBoundingRect();
+                rect.applyTransform(group.transform);
+                return rect;
+            };
             controller.enable(seriesModel.get('roam'));
             controller.zoomLimit = seriesModel.get('scaleLimit');
             // Update zoom from model
-            controller.zoom = coordSys.getZoom();
+            controller.zoom = seriesModel.coordinateSystem.getZoom();
 
             controller
                 .off('pan')
@@ -171,32 +175,25 @@ define(function (require) {
         _updateNodeAndLinkScale: function () {
             var seriesModel = this._model;
             var data = seriesModel.getData();
+            var coordSys = seriesModel.coordinateSystem;
 
-            var group = this.group;
             var nodeScaleRatio = this._nodeScaleRatio;
-            // var edgeScaleRatio = this._edgeScaleRatio;
 
-            // Assume scale aspect is 1
-            var groupScale = group.scale[0];
+            var groupScale = this.group.scale;
+            var groupZoom = (groupScale && groupScale[0]) || 1;
+            // Scale node when zoom changes
+            var roamZoom = coordSys.getZoom();
 
-            var nodeScale = (groupScale - 1) * nodeScaleRatio + 1;
-            // var edgeScale = (groupScale - 1) * edgeScaleRatio + 1;
+            var nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
             var invScale = [
-                nodeScale / groupScale,
-                nodeScale / groupScale
+                // nodeScale / roamZoom / (groupZoom / roamZoom)
+                nodeScale / groupZoom,
+                nodeScale / groupZoom
             ];
 
             data.eachItemGraphicEl(function (el, idx) {
                 el.attr('scale', invScale);
             });
-            // data.graph.eachEdge(function (edge) {
-            //     var lineGroup = edge.getGraphicEl();
-            //     // FIXME
-            //     lineGroup.childOfName('line').setStyle(
-            //         'lineWidth',
-            //         edge.__lineWidth * edgeScale / groupScale
-            //     );
-            // });
         },
 
         updateLayout: function (seriesModel, ecModel) {

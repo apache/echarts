@@ -82,6 +82,8 @@ define(function (require) {
          * @param {number} height
          */
         setViewRect: function (x, y, width, height) {
+            width = width;
+            height = height;
             this.transformTo(x, y, width, height);
             this._viewRect = new BoundingRect(x, y, width, height);
         },
@@ -224,7 +226,7 @@ define(function (require) {
          * @return {module:zrender/core/BoundingRect}
          */
         getViewRectAfterRoam: function () {
-            var rect = this._viewRect.clone();
+            var rect = this.getBoundingRect().clone();
             rect.applyTransform(this.transform);
             return rect;
         },

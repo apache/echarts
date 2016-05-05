@@ -555,7 +555,10 @@
                 controller.on('zoom', bind(this._onZoom, this));
             }
 
-            controller.rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
+            var rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
+            controller.rectProvider = function () {
+                return rect;
+            };
         },
 
         /**
