@@ -45,8 +45,8 @@ define(function (require) {
             symbolDraw.updateData(data);
 
             var edgeData = seriesModel.getEdgeData();
-            var formatModel = modelUtil.createDataFormatModel(seriesModel, edgeData);
-            formatModel.formatTooltip = function (dataIndex) {
+            var edgeDataModel = modelUtil.createDataFormatModel(edgeData, seriesModel);
+            edgeDataModel.formatTooltip = function (dataIndex) {
                 var params = this.getDataParams(dataIndex);
                 var edge = data.graph.getEdgeByIndex(dataIndex);
                 var sourceName = data.getName(edge.node1.dataIndex);
@@ -61,7 +61,7 @@ define(function (require) {
             lineDraw.updateData(edgeData, null, null);
             edgeData.eachItemGraphicEl(function (el) {
                 el.traverse(function (child) {
-                    child.dataModel = formatModel;
+                    child.dataModel = edgeDataModel;
                 });
             });
 
