@@ -180,9 +180,11 @@ define(function(require) {
 
     /**
      * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
-     * @param {Object} opt
+     * @param {(Object|module:echarts/model/Series)} opt
      * @param {string} [opt.seriesIndex]
      * @param {Object} [opt.name]
+     * @param {Object} [opt.mainType]
+     * @param {Object} [opt.subType]
      * @param {module:echarts/data/List} data
      */
     modelUtil.createDataFormatModel = function (opt, data) {
@@ -190,6 +192,8 @@ define(function(require) {
         zrUtil.mixin(model, modelUtil.dataFormatMixin);
         model.seriesIndex = opt.seriesIndex;
         model.name = opt.name || '';
+        model.mainType = opt.mainType;
+        model.subType = opt.subType;
 
         model.getData = function () {
             return data;
@@ -249,8 +253,9 @@ define(function(require) {
             var itemOpt = data.getRawDataItem(dataIndex);
 
             return {
-                componentType: 'series',
-                seriesType: this.subType,
+                componentType: this.mainType,
+                componentSubType: this.subType,
+                seriesType: this.mainType === 'series' ? this.subType : null,
                 seriesIndex: seriesIndex,
                 seriesName: seriesName,
                 name: name,

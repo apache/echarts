@@ -47,6 +47,7 @@ define(function (require) {
                             }
                         });
                         var opt = {
+                            mainType: 'markLine',
                             // Use the same series index and name
                             seriesIndex: seriesModel.seriesIndex,
                             name: seriesModel.name,
