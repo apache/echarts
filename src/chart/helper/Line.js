@@ -5,6 +5,7 @@ define(function (require) {
 
     var symbolUtil = require('../../util/symbol');
     var vector = require('zrender/core/vector');
+    var matrix = require('zrender/core/matrix');
     var LinePath = require('./LinePath');
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
@@ -62,7 +63,7 @@ define(function (require) {
         }
     }
 
-    function labelBeforeBrush() {
+    function lineAfterUpdate() {
         // Ignore scale
         var m = this.transform;
         if (m) {
@@ -72,6 +73,8 @@ define(function (require) {
             m[1] /= sx;
             m[2] /= sy;
             m[3] /= sy;
+
+            matrix.invert(this.invTransform, m);
         }
     }
 
@@ -265,7 +268,7 @@ define(function (require) {
         ));
 
         var label = this.childOfName('label');
-        label.beforeBrush = labelBeforeBrush;
+        label.afterUpdate = lineAfterUpdate;
         label.setStyle({
             text: labelModel.get('show')
                 ? zrUtil.retrieve(

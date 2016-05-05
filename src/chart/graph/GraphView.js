@@ -44,7 +44,7 @@ define(function (require) {
 
             symbolDraw.updateData(data);
 
-            var edgeData = data.graph.edgeData;
+            var edgeData = seriesModel.getEdgeData();
             var formatModel = modelUtil.createDataFormatModel(seriesModel, edgeData);
             formatModel.formatTooltip = function (dataIndex) {
                 var params = this.getDataParams(dataIndex);
@@ -64,11 +64,6 @@ define(function (require) {
                     child.dataModel = formatModel;
                 });
             });
-
-            // Save the original lineWidth
-            // data.graph.eachEdge(function (edge) {
-            //     edge.__lineWidth = edge.getModel('lineStyle.normal').get('width');
-            // });
 
             var group = this.group;
             var groupNewProp = {
@@ -186,7 +181,6 @@ define(function (require) {
 
             var nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
             var invScale = [
-                // nodeScale / roamZoom / (groupZoom / roamZoom)
                 nodeScale / groupZoom,
                 nodeScale / groupZoom
             ];
