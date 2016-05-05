@@ -10,15 +10,19 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
 
+    var SYMBOL_CATEGORIES = ['fromSymbol', 'toSymbol'];
+    function makeSymbolTypeKey(symbolCategory) {
+        return '_' + symbolCategory + 'Type';
+    }
     /**
      * @inner
      */
-    function createSymbol(name, data, idx) {
-        var color = data.getItemVisual(idx, 'color');
-        var symbolType = data.getItemVisual(idx, 'symbol');
-        var symbolSize = data.getItemVisual(idx, 'symbolSize');
+    function createSymbol(name, lineData, idx) {
+        var color = lineData.getItemVisual(idx, 'color');
+        var symbolType = lineData.getItemVisual(idx, name);
+        var symbolSize = lineData.getItemVisual(idx, name + 'Size');
 
-        if (symbolType === 'none') {
+        if (!symbolType || symbolType === 'none') {
             return;
         }
 
@@ -101,7 +105,7 @@ define(function (require) {
         }
         if (symbolTo) {
             symbolTo.attr('position', toPos);
-            var tangent = line.tangentAt(0);
+            var tangent = line.tangentAt(1);
             symbolTo.attr('rotation', -Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
             ));
@@ -167,10 +171,10 @@ define(function (require) {
      * @extends {module:zrender/graphic/Group}
      * @alias {module:echarts/chart/helper/Line}
      */
-    function Line(lineData, fromData, toData, idx) {
+    function Line(lineData, idx) {
         graphic.Group.call(this);
 
-        this._createLine(lineData, fromData, toData, idx);
+        this._createLine(lineData, idx);
     }
 
     var lineProto = Line.prototype;
@@ -178,7 +182,7 @@ define(function (require) {
     // Update symbol position and rotation
     lineProto.beforeUpdate = updateSymbolBeforeLineUpdate;
 
-    lineProto._createLine = function (lineData, fromData, toData, idx) {
+    lineProto._createLine = function (lineData, idx) {
         var seriesModel = lineData.hostModel;
         var linePoints = lineData.getItemLayout(idx);
 
@@ -197,26 +201,19 @@ define(function (require) {
         });
         this.add(label);
 
-        if (fromData) {
-            var symbolFrom = createSymbol('fromSymbol', fromData, idx);
+        zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
+            var symbol = createSymbol(symbolCategory, lineData, idx);
             // symbols must added after line to make sure
             // it will be updated after line#update.
             // Or symbol position and rotation update in line#beforeUpdate will be one frame slow
-            this.add(symbolFrom);
+            this.add(symbol);
+            this[makeSymbolTypeKey(symbolCategory)] = lineData.getItemVisual(idx, symbolCategory);
+        }, this);
 
-            this._fromSymbolType = fromData.getItemVisual(idx, 'symbol');
-        }
-        if (toData) {
-            var symbolTo = createSymbol('toSymbol', toData, idx);
-            this.add(symbolTo);
-
-            this._toSymbolType = toData.getItemVisual(idx, 'symbol');
-        }
-
-        this._updateCommonStl(lineData, fromData, toData, idx);
+        this._updateCommonStl(lineData, idx);
     };
 
-    lineProto.updateData = function (lineData, fromData, toData, idx) {
+    lineProto.updateData = function (lineData, idx) {
         var seriesModel = lineData.hostModel;
 
         var line = this.childOfName('line');
@@ -227,31 +224,22 @@ define(function (require) {
         setLinePoints(target.shape, linePoints);
         graphic.updateProps(line, target, seriesModel);
 
-        // Symbol changed
-        if (fromData) {
-            var fromSymbolType = fromData.getItemVisual(idx, 'symbol');
-            if (this._fromSymbolType !== fromSymbolType) {
-                var symbolFrom = createSymbol('fromSymbol', fromData, idx);
-                this.remove(this.childOfName('fromSymbol'));
-                this.add(symbolFrom);
-            }
-            this._fromSymbolType = fromSymbolType;
-        }
-        if (toData) {
-            var toSymbolType = toData.getItemVisual(idx, 'symbol');
+        zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
+            var symbolType = lineData.getItemVisual(idx, symbolCategory);
+            var key = makeSymbolTypeKey(symbolCategory);
             // Symbol changed
-            if (toSymbolType !== this._toSymbolType) {
-                var symbolTo = createSymbol('toSymbol', toData, idx);
-                this.remove(this.childOfName('toSymbol'));
-                this.add(symbolTo);
+            if (this[key] !== symbolType) {
+                var symbol = createSymbol(symbolCategory, lineData, idx);
+                this.remove(this.childOfName(symbolCategory));
+                this.add(symbol);
             }
-            this._toSymbolType = toSymbolType;
-        }
+            this[key] = symbolType;
+        }, this);
 
-        this._updateCommonStl(lineData, fromData, toData, idx);
+        this._updateCommonStl(lineData, idx);
     };
 
-    lineProto._updateCommonStl = function (lineData, fromData, toData, idx) {
+    lineProto._updateCommonStl = function (lineData, idx) {
         var seriesModel = lineData.hostModel;
 
         var line = this.childOfName('line');
@@ -307,7 +295,7 @@ define(function (require) {
         );
     };
 
-    lineProto.updateLayout = function (lineData, fromData, toData, idx) {
+    lineProto.updateLayout = function (lineData, idx) {
         var points = lineData.getItemLayout(idx);
         var linePath = this.childOfName('line');
         setLinePoints(linePath.shape, points);
