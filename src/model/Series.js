@@ -133,7 +133,7 @@ define(function(require) {
          * Coord dimension to data dimension.
          *
          * By default the result is the same as dimensions of series data.
-         * But some series dimensions are different from coord dimensions (i.e.
+         * But in some series data dimensions are different from coord dimensions (i.e.
          * candlestick and boxplot). Override this method to handle those cases.
          *
          * Coord dimension to data dimension can be one-to-many

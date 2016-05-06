@@ -63,26 +63,36 @@ define(function (require) {
         }
     }
 
-    function lineAfterUpdate() {
+    // function lineAfterUpdate() {
         // Ignore scale
-        var m = this.transform;
-        if (m) {
-            var sx = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
-            var sy = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
-            m[0] /= sx;
-            m[1] /= sx;
-            m[2] /= sy;
-            m[3] /= sy;
+        // var m = this.transform;
+        // if (m) {
+        //     var sx = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
+        //     var sy = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
+        //     m[0] /= sx;
+        //     m[1] /= sx;
+        //     m[2] /= sy;
+        //     m[3] /= sy;
 
-            matrix.invert(this.invTransform, m);
-        }
-    }
+        //     matrix.invert(this.invTransform, m);
+        // }
+    // }
 
     // function isSymbolArrow(symbol) {
     //     return symbol.type === 'symbol' && symbol.shape.symbolType === 'arrow';
     // }
 
-    function updateSymbolBeforeLineUpdate () {
+    function updateSymbolAndLabelBeforeLineUpdate () {
+        var invScale = 1;
+        var parentNode = this.parent;
+        while (parentNode) {
+            if (parentNode.scale) {
+                invScale /= parentNode.scale[0];
+            }
+            parentNode = parentNode.parent;
+        }
+
+
         var lineGroup = this;
         var line = lineGroup.childOfName('line');
         // If line not changed
@@ -105,6 +115,7 @@ define(function (require) {
             symbolFrom.attr('rotation', -Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
             ));
+            symbolFrom.attr('scale', [invScale, invScale]);
         }
         if (symbolTo) {
             symbolTo.attr('position', toPos);
@@ -112,6 +123,7 @@ define(function (require) {
             symbolTo.attr('rotation', -Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
             ));
+            symbolTo.attr('scale', [invScale, invScale]);
         }
 
         label.attr('position', toPos);
@@ -120,14 +132,7 @@ define(function (require) {
         var textAlign;
         var textVerticalAlign;
 
-        var distance = 5;
-        var parentNode = this.parent;
-        while (parentNode) {
-            if (parentNode.scale) {
-                distance /= parentNode.scale[0];
-            }
-            parentNode = parentNode.parent;
-        }
+        var distance = 5 * invScale;
         // End
         if (label.__position === 'end') {
             textPosition = [d[0] * distance + toPos[0], d[1] * distance + toPos[1]];
@@ -165,7 +170,8 @@ define(function (require) {
                 textVerticalAlign: label.__verticalAlign || textVerticalAlign,
                 textAlign: label.__textAlign || textAlign
             },
-            position: textPosition
+            position: textPosition,
+            scale: [invScale, invScale]
         });
     }
 
@@ -183,7 +189,7 @@ define(function (require) {
     var lineProto = Line.prototype;
 
     // Update symbol position and rotation
-    lineProto.beforeUpdate = updateSymbolBeforeLineUpdate;
+    lineProto.beforeUpdate = updateSymbolAndLabelBeforeLineUpdate;
 
     lineProto._createLine = function (lineData, idx) {
         var seriesModel = lineData.hostModel;
@@ -266,9 +272,10 @@ define(function (require) {
             },
             itemModel.getModel('lineStyle.normal').getLineStyle()
         ));
+        line.hoverStyle = itemModel.getModel('lineStyle.emphasis').getLineStyle();
         var defaultColor = lineData.getItemVisual(idx, 'color') || '#000';
         var label = this.childOfName('label');
-        label.afterUpdate = lineAfterUpdate;
+        // label.afterUpdate = lineAfterUpdate;
         label.setStyle({
             text: labelModel.get('show')
                 ? zrUtil.retrieve(
@@ -293,9 +300,7 @@ define(function (require) {
         label.__verticalAlign = textStyleModel.get('baseline');
         label.__position = labelModel.get('position');
 
-        graphic.setHoverStyle(
-            this, itemModel.getModel('lineStyle.emphasis').getLineStyle()
-        );
+        graphic.setHoverStyle(this);
     };
 
     lineProto.updateLayout = function (lineData, idx) {
