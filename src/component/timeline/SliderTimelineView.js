@@ -382,7 +382,7 @@ define(function (require) {
          */
         _prepareTooltipHostModel: function (data, timelineModel) {
             var tooltipHostModel = modelUtil.createDataFormatModel(
-                {mainType: 'timeline', subType: 'slider'}, data
+                data, { mainType: 'timeline', subType: 'slider' }
             );
             var me = this;
 
