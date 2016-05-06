@@ -27,7 +27,7 @@ define(function (require) {
                         if (typeof category === 'string') {
                             category = categoryNameIdxMap[category];
                         }
-                        if (data.getItemVisual(idx, 'color', true)) {
+                        if (!data.getItemVisual(idx, 'color', true)) {
                             data.setItemVisual(
                                 idx, 'color',
                                 categoriesData.getItemVisual(category, 'color')
