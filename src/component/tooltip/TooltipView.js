@@ -124,8 +124,8 @@ define(function (require) {
         var rect = el && el.getBoundingRect().clone();
         el && rect.applyTransform(el.transform);
         if (typeof positionExpr === 'function') {
-            // Callback of position can be an array or a string specify the positiont
-            positionExpr = positionExpr([x, y], params, rect);
+            // Callback of position can be an array or a string specify the position
+            positionExpr = positionExpr([x, y], params, content.el, rect);
         }
 
         if (zrUtil.isArray(positionExpr)) {
