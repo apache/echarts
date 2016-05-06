@@ -31,12 +31,14 @@ define(function (require) {
         'stackedOn', '_nameList', '_idList', '_rawData'
     ];
 
-    var transferImmuProperties = function (a, b, wrappedMethod) {
-        zrUtil.each(IMMUTABLE_PROPERTIES.concat(wrappedMethod || []), function (propName) {
+    var transferImmuProperties = function (a, b) {
+        zrUtil.each(IMMUTABLE_PROPERTIES.concat(b.__wrappedMethods || []), function (propName) {
             if (b.hasOwnProperty(propName)) {
                 a[propName] = b[propName];
             }
         });
+
+        a.__wrappedMethods = b.__wrappedMethods;
     };
 
     /**
@@ -527,7 +529,7 @@ define(function (require) {
      * @return {number}
      */
     listProto.getRawDataItem = function (idx) {
-        return (this._rawData || [])[this.getRawIndex(idx)];
+        return this._rawData[this.getRawIndex(idx)];
     };
 
     /**
@@ -689,7 +691,7 @@ define(function (require) {
             original.hostModel
         );
         // FIXME If needs stackedOn, value may already been stacked
-        transferImmuProperties(list, original, original._wrappedMethods);
+        transferImmuProperties(list, original);
 
         var storage = list._storage = {};
         var originalStorage = original._storage;
@@ -1006,7 +1008,7 @@ define(function (require) {
         // FIXME
         list._storage = this._storage;
 
-        transferImmuProperties(list, this, this._wrappedMethods);
+        transferImmuProperties(list, this);
 
         list.indices = this.indices.slice();
 
@@ -1023,8 +1025,8 @@ define(function (require) {
         if (typeof originalMethod !== 'function') {
             return;
         }
-        this._wrappedMethods = this._wrappedMethods || [];
-        this._wrappedMethods.push(methodName);
+        this.__wrappedMethods = this.__wrappedMethods || [];
+        this.__wrappedMethods.push(methodName);
         this[methodName] = function () {
             var res = originalMethod.apply(this, arguments);
             return injectFunction.call(this, res);
