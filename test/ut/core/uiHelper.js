@@ -3,7 +3,7 @@
     var helper = context.uiHelper = {};
 
     // canvas comparing strategy, 'stack' or 'content'
-    var STRATEGY = 'content';
+    var STRATEGY = 'stack';
     // always display images even if no error
     var ALWAYS_SHOW_IMAGE = true;
 

@@ -345,12 +345,21 @@ describe('legend', function() {
     }, {
         name: 'width',
         cases: [{
-            name: 'should be at given width',
-            option: {
+            name: 'should display in seperate lines',
+            test: 'notEqualOption',
+            option1: {
                 series: [{
-                    name: 'this is a long title',
+                    name: 'this is a',
                     type: 'line',
-                    data: [1, 2, 4]
+                    data: []
+                }, {
+                    name: 'this is b',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is c',
+                    type: 'line',
+                    data: []
                 }],
                 xAxis : [{
                     type : 'category',
@@ -360,8 +369,213 @@ describe('legend', function() {
                     type : 'value'
                 }],
                 legend: {
-                    data: ['this is a long title'],
-                    width: 20
+                    data: ['this is a', 'this is b',
+                        'this is c'],
+                    width: 200
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'this is a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is b',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is c',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis : [{
+                    type : 'category',
+                    data : ['x','y','z']
+                }],
+                yAxis : [{
+                    type : 'value'
+                }],
+                legend: {
+                    data: ['this is a', 'this is b',
+                        'this is c']
+                }
+            }
+        }]
+    }, {
+        name: 'hight',
+        cases: [{
+            name: 'should display in seperate lines',
+            test: 'notEqualOption',
+            option1: {
+                series: [{
+                    name: 'this is a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is b',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is c',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis : [{
+                    type : 'category',
+                    data : ['x','y','z']
+                }],
+                yAxis : [{
+                    type : 'value'
+                }],
+                legend: {
+                    data: ['this is a', 'this is b',
+                        'this is c'],
+                    height: 50,
+                    orient: 'vertical'
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'this is a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is b',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is c',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis : [{
+                    type : 'category',
+                    data : ['x','y','z']
+                }],
+                yAxis : [{
+                    type : 'value'
+                }],
+                legend: {
+                    data: ['this is a', 'this is b',
+                        'this is c'],
+                    orient: 'vertical'
+                }
+            }
+        }]
+    }, {
+        name: 'orient',
+        cases: [{
+            name: 'should display horizontally',
+            option: {
+                series: [{
+                    name: 'this is a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is b',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is c',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis : [{
+                    type : 'category',
+                    data : ['x','y','z']
+                }],
+                yAxis : [{
+                    type : 'value'
+                }],
+                legend: {
+                    data: ['this is a', 'this is b',
+                        'this is c'],
+                    orient: 'horizontal'
+                }
+            }
+        }, {
+            name: 'should display vertically',
+            option: {
+                series: [{
+                    name: 'this is a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is b',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is c',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis : [{
+                    type : 'category',
+                    data : ['x','y','z']
+                }],
+                yAxis : [{
+                    type : 'value'
+                }],
+                legend: {
+                    data: ['this is a', 'this is b',
+                        'this is c'],
+                    orient: 'vertical'
+                }
+            }
+        }, {
+            name: 'should display different with horizontal and vertical',
+            test: 'notEqualOption',
+            option1: {
+                series: [{
+                    name: 'this is a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is b',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is c',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis : [{
+                    type : 'category',
+                    data : ['x','y','z']
+                }],
+                yAxis : [{
+                    type : 'value'
+                }],
+                legend: {
+                    data: ['this is a', 'this is b',
+                        'this is c'],
+                    orient: 'vertical'
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'this is a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is b',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is c',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis : [{
+                    type : 'category',
+                    data : ['x','y','z']
+                }],
+                yAxis : [{
+                    type : 'value'
+                }],
+                legend: {
+                    data: ['this is a', 'this is b',
+                        'this is c']
                 }
             }
         }]
