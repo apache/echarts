@@ -5,7 +5,7 @@ define(function (require) {
 
     var symbolUtil = require('../../util/symbol');
     var vector = require('zrender/core/vector');
-    var matrix = require('zrender/core/matrix');
+    // var matrix = require('zrender/core/matrix');
     var LinePath = require('./LinePath');
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
@@ -83,6 +83,15 @@ define(function (require) {
     // }
 
     function updateSymbolAndLabelBeforeLineUpdate () {
+        var lineGroup = this;
+        var symbolFrom = lineGroup.childOfName('fromSymbol');
+        var symbolTo = lineGroup.childOfName('toSymbol');
+        var label = lineGroup.childOfName('label');
+        // Quick reject
+        if (!symbolFrom && !symbolTo && label.ignore) {
+            return;
+        }
+
         var invScale = 1;
         var parentNode = this.parent;
         while (parentNode) {
@@ -92,16 +101,12 @@ define(function (require) {
             parentNode = parentNode.parent;
         }
 
-
-        var lineGroup = this;
         var line = lineGroup.childOfName('line');
         // If line not changed
+        // FIXME Parent scale changed
         if (!this.__dirty && !line.__dirty) {
             return;
         }
-        var symbolFrom = lineGroup.childOfName('fromSymbol');
-        var symbolTo = lineGroup.childOfName('toSymbol');
-        var label = lineGroup.childOfName('label');
 
         var fromPos = line.pointAt(0);
         var toPos = line.pointAt(line.shape.percent);
@@ -126,53 +131,55 @@ define(function (require) {
             symbolTo.attr('scale', [invScale, invScale]);
         }
 
-        label.attr('position', toPos);
+        if (!label.ignore) {
+            label.attr('position', toPos);
 
-        var textPosition;
-        var textAlign;
-        var textVerticalAlign;
+            var textPosition;
+            var textAlign;
+            var textVerticalAlign;
 
-        var distance = 5 * invScale;
-        // End
-        if (label.__position === 'end') {
-            textPosition = [d[0] * distance + toPos[0], d[1] * distance + toPos[1]];
-            textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
-            textVerticalAlign = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
-        }
-        // Middle
-        else if (label.__position === 'middle') {
-            var halfPercent = line.shape.percent / 2;
-            var tangent = line.tangentAt(halfPercent);
-            var n = [tangent[1], -tangent[0]];
-            var cp = line.pointAt(halfPercent);
-            if (n[1] > 0) {
-                n[0] = -n[0];
-                n[1] = -n[1];
+            var distance = 5 * invScale;
+            // End
+            if (label.__position === 'end') {
+                textPosition = [d[0] * distance + toPos[0], d[1] * distance + toPos[1]];
+                textAlign = d[0] > 0.8 ? 'left' : (d[0] < -0.8 ? 'right' : 'center');
+                textVerticalAlign = d[1] > 0.8 ? 'top' : (d[1] < -0.8 ? 'bottom' : 'middle');
             }
-            textPosition = [cp[0] + n[0] * distance, cp[1] + n[1] * distance];
-            textAlign = 'center';
-            textVerticalAlign = 'bottom';
-            var rotation = -Math.atan2(tangent[1], tangent[0]);
-            if (toPos[0] < fromPos[0]) {
-                rotation = Math.PI + rotation;
+            // Middle
+            else if (label.__position === 'middle') {
+                var halfPercent = line.shape.percent / 2;
+                var tangent = line.tangentAt(halfPercent);
+                var n = [tangent[1], -tangent[0]];
+                var cp = line.pointAt(halfPercent);
+                if (n[1] > 0) {
+                    n[0] = -n[0];
+                    n[1] = -n[1];
+                }
+                textPosition = [cp[0] + n[0] * distance, cp[1] + n[1] * distance];
+                textAlign = 'center';
+                textVerticalAlign = 'bottom';
+                var rotation = -Math.atan2(tangent[1], tangent[0]);
+                if (toPos[0] < fromPos[0]) {
+                    rotation = Math.PI + rotation;
+                }
+                label.attr('rotation', rotation);
             }
-            label.attr('rotation', rotation);
+            // Start
+            else {
+                textPosition = [-d[0] * distance + fromPos[0], -d[1] * distance + fromPos[1]];
+                textAlign = d[0] > 0.8 ? 'right' : (d[0] < -0.8 ? 'left' : 'center');
+                textVerticalAlign = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
+            }
+            label.attr({
+                style: {
+                    // Use the user specified text align and baseline first
+                    textVerticalAlign: label.__verticalAlign || textVerticalAlign,
+                    textAlign: label.__textAlign || textAlign
+                },
+                position: textPosition,
+                scale: [invScale, invScale]
+            });
         }
-        // Start
-        else {
-            textPosition = [-d[0] * distance + fromPos[0], -d[1] * distance + fromPos[1]];
-            textAlign = d[0] > 0.8 ? 'right' : (d[0] < -0.8 ? 'left' : 'center');
-            textVerticalAlign = d[1] > 0.8 ? 'bottom' : (d[1] < -0.8 ? 'top' : 'middle');
-        }
-        label.attr({
-            style: {
-                // Use the user specified text align and baseline first
-                textVerticalAlign: label.__verticalAlign || textVerticalAlign,
-                textAlign: label.__textAlign || textAlign
-            },
-            position: textPosition,
-            scale: [invScale, invScale]
-        });
     }
 
     /**
@@ -299,6 +306,8 @@ define(function (require) {
         label.__textAlign = textStyleModel.get('align');
         label.__verticalAlign = textStyleModel.get('baseline');
         label.__position = labelModel.get('position');
+
+        label.ignore = !label.style.text && !label.hoverStyle.text;
 
         graphic.setHoverStyle(this);
     };
