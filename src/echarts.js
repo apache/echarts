@@ -367,6 +367,7 @@ define(function (require) {
                 return;
             }
 
+            // Fixme First time update ?
             ecModel.restoreData();
 
             // TODO

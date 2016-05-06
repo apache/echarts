@@ -45,23 +45,11 @@ define(function (require) {
             symbolDraw.updateData(data);
 
             var edgeData = seriesModel.getEdgeData();
-            var edgeDataModel = modelUtil.createDataFormatModel(edgeData, seriesModel);
-            edgeDataModel.formatTooltip = function (dataIndex) {
-                var params = this.getDataParams(dataIndex);
-                var edge = data.graph.getEdgeByIndex(dataIndex);
-                var sourceName = data.getName(edge.node1.dataIndex);
-                var targetName = data.getName(edge.node2.dataIndex);
-                var html = sourceName + ' > ' + targetName;
-                if (params.value) {
-                    html += ' : ' + params.value;
-                }
-                return html;
-            };
 
-            lineDraw.updateData(edgeData, null, null);
+            lineDraw.updateData(edgeData);
             edgeData.eachItemGraphicEl(function (el) {
                 el.traverse(function (child) {
-                    child.dataModel = edgeDataModel;
+                    child.dataModel = seriesModel.getEdgeDataModel();
                 });
             });
 

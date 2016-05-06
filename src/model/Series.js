@@ -70,19 +70,16 @@ define(function(require) {
             zrUtil.merge(option, this.getDefaultOption());
 
             // Default label emphasis `position` and `show`
-            // FIXME Set label in merge
+            // FIXME Set label in mergeOption
             modelUtil.defaultEmphasis(option.label, modelUtil.LABEL_OPTIONS);
 
-            if (option.data) {
-                this._fillDataTextStyle(option.data);
-            }
+            this.fillDataTextStyle(option.data);
         },
 
         mergeOption: function (newSeriesOption, ecModel) {
             newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
-            if (newSeriesOption.data) {
-                this._fillDataTextStyle(newSeriesOption.data);
-            }
+            this.fillDataTextStyle(newSeriesOption.data);
+
             var data = this.getInitialData(newSeriesOption, ecModel);
             // TODO Merge data?
             if (data) {
@@ -91,13 +88,15 @@ define(function(require) {
             }
         },
 
-        _fillDataTextStyle: function (data) {
+        fillDataTextStyle: function (data) {
             // Default data label emphasis `position` and `show`
             // FIXME Tree structure data ?
             // FIXME Performance ?
-            for (var i = 0; i < data.length; i++) {
-                if (data[i] && data[i].label) {
-                    modelUtil.defaultEmphasis(data[i].label, modelUtil.LABEL_OPTIONS);
+            if (data) {
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i] && data[i].label) {
+                        modelUtil.defaultEmphasis(data[i].label, modelUtil.LABEL_OPTIONS);
+                    }
                 }
             }
         },

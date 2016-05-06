@@ -46,15 +46,13 @@ define(function(require) {
                 }).join('<br />');
         },
 
-        getFormattedLabel: function (dataIndex, status, formatter, indicatorIndex) {
+        getFormattedLabel: function (dataIndex, status, otherData, indicatorIndex) {
             status = status || 'normal';
-            var data = this.getData();
+            var data = otherData || this.getData();
             var itemModel = data.getItemModel(dataIndex);
 
-            var params = this.getDataParams(dataIndex);
-            if (formatter == null) {
-                formatter = itemModel.get(['label', status, 'formatter']);
-            }
+            var params = this.getDataParams(dataIndex, otherData);
+            var formatter = itemModel.get(['label', status, 'formatter']);
             // Get value of specified indicator
             params.value = params.value[indicatorIndex || 0];
             if (typeof formatter === 'function') {

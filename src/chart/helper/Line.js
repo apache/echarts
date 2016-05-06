@@ -266,28 +266,28 @@ define(function (require) {
             },
             itemModel.getModel('lineStyle.normal').getLineStyle()
         ));
-
+        var defaultColor = lineData.getItemVisual(idx, 'color') || '#000';
         var label = this.childOfName('label');
         label.afterUpdate = lineAfterUpdate;
         label.setStyle({
             text: labelModel.get('show')
                 ? zrUtil.retrieve(
-                    seriesModel.getFormattedLabel(idx, 'normal'),
+                    seriesModel.getFormattedLabel(idx, 'normal', lineData),
                     defaultText
                 )
                 : '',
             textFont: textStyleModel.getFont(),
-            fill: textStyleModel.getTextColor() || lineData.getItemVisual(idx, 'color') || '#000'
+            fill: textStyleModel.getTextColor() || defaultColor
         });
         label.hoverStyle = {
             text: labelHoverModel.get('show')
                 ? zrUtil.retrieve(
-                    seriesModel.getFormattedLabel(idx, 'emphasis'),
+                    seriesModel.getFormattedLabel(idx, 'emphasis', lineData),
                     defaultText
                 )
                 : '',
             textFont: textStyleHoverModel.getFont(),
-            fill: textStyleHoverModel.getTextColor()
+            fill: textStyleHoverModel.getTextColor() || defaultColor
         };
         label.__textAlign = textStyleModel.get('align');
         label.__verticalAlign = textStyleModel.get('baseline');
