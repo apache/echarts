@@ -124,8 +124,8 @@ define(function (require) {
         var rect = el && el.getBoundingRect().clone();
         el && rect.applyTransform(el.transform);
         if (typeof positionExpr === 'function') {
-            // Callback of position can be an array or a string specify the positiont
-            positionExpr = positionExpr([x, y], params, rect);
+            // Callback of position can be an array or a string specify the position
+            positionExpr = positionExpr([x, y], params, content.el, rect);
         }
 
         if (zrUtil.isArray(positionExpr)) {
@@ -570,6 +570,10 @@ define(function (require) {
                 }
             }, this);
 
+            if (!this._tooltipModel.get('show')) {
+                this._hideAxisPointer();
+            }
+
             if (allNotShow) {
                 this._hide();
             }
@@ -858,7 +862,7 @@ define(function (require) {
                 ? (isShadow ? 'Sector' : (axisType === 'radius' ? 'Circle' : 'Line'))
                 : (isShadow ? 'Rect' : 'Line');
 
-           isShadow ? (style.stroke = null) : (style.fill = null);
+            isShadow ? (style.stroke = null) : (style.fill = null);
 
             var el = axisPointers[coordSysName][axisType] = new graphic[elementType]({
                 style: style,
@@ -926,7 +930,7 @@ define(function (require) {
                 from: this.uid
             });
 
-            if (baseAxis && rootTooltipModel.get('showContent')) {
+            if (baseAxis && rootTooltipModel.get('showContent') && rootTooltipModel.get('show')) {
 
                 var formatter = rootTooltipModel.get('formatter');
                 var positionExpr = rootTooltipModel.get('position');
@@ -1017,7 +1021,7 @@ define(function (require) {
                 tooltipModel.parentModel = this._tooltipModel;
             }
 
-            if (tooltipModel.get('showContent')) {
+            if (tooltipModel.get('showContent') && tooltipModel.get('show')) {
                 var formatter = tooltipModel.get('formatter');
                 var positionExpr = tooltipModel.get('position');
                 var params = seriesModel.getDataParams(dataIndex);

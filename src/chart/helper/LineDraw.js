@@ -19,10 +19,8 @@ define(function (require) {
 
     /**
      * @param {module:echarts/data/List} lineData
-     * @param {module:echarts/data/List} [fromData]
-     * @param {module:echarts/data/List} [toData]
      */
-    lineDrawProto.updateData = function (lineData, fromData, toData) {
+    lineDrawProto.updateData = function (lineData) {
 
         var oldLineData = this._lineData;
         var group = this.group;
@@ -30,7 +28,7 @@ define(function (require) {
 
         lineData.diff(oldLineData)
             .add(function (idx) {
-                var lineGroup = new LineCtor(lineData, fromData, toData, idx);
+                var lineGroup = new LineCtor(lineData, idx);
 
                 lineData.setItemGraphicEl(idx, lineGroup);
 
@@ -38,7 +36,7 @@ define(function (require) {
             })
             .update(function (newIdx, oldIdx) {
                 var lineGroup = oldLineData.getItemGraphicEl(oldIdx);
-                lineGroup.updateData(lineData, fromData, toData, newIdx);
+                lineGroup.updateData(lineData, newIdx);
 
                 lineData.setItemGraphicEl(newIdx, lineGroup);
 
@@ -50,14 +48,12 @@ define(function (require) {
             .execute();
 
         this._lineData = lineData;
-        this._fromData = fromData;
-        this._toData = toData;
     };
 
     lineDrawProto.updateLayout = function () {
         var lineData = this._lineData;
         lineData.eachItemGraphicEl(function (el, idx) {
-            el.updateLayout(lineData, this._fromData, this._toData, idx);
+            el.updateLayout(lineData, idx);
         }, this);
     };
 

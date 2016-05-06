@@ -367,6 +367,7 @@ define(function (require) {
                 return;
             }
 
+            // Fixme First time update ?
             ecModel.restoreData();
 
             // TODO
@@ -838,9 +839,8 @@ define(function (require) {
      * @private
      */
     echartsProto._initEvents = function () {
-        var zr = this._zr;
         each(MOUSE_EVENT_NAMES, function (eveName) {
-            zr.on(eveName, function (e) {
+            this._zr.on(eveName, function (e) {
                 var ecModel = this.getModel();
                 var el = e.target;
                 if (el && el.dataIndex != null) {

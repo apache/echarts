@@ -321,6 +321,10 @@ var option = {
                 chart.on('legendSelected', function () {
                 });
 
+                chart.on('click', function (params) {
+                    console.log(params);
+                });
+
                 window.onresize = chart.resize;
             });
         </script>

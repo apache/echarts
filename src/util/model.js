@@ -176,18 +176,24 @@ define(function(require) {
         }
     };
 
+    modelUtil.LABEL_OPTIONS = ['position', 'show', 'textStyle', 'distance', 'formatter'];
+
     /**
      * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
+     * @param {module:echarts/data/List} data
      * @param {Object} opt
      * @param {string} [opt.seriesIndex]
      * @param {Object} [opt.name]
-     * @param {module:echarts/data/List} data
+     * @param {Object} [opt.mainType]
+     * @param {Object} [opt.subType]
      */
-    modelUtil.createDataFormatModel = function (opt, data) {
+    modelUtil.createDataFormatModel = function (data, opt) {
         var model = new Model();
         zrUtil.mixin(model, modelUtil.dataFormatMixin);
         model.seriesIndex = opt.seriesIndex;
         model.name = opt.name || '';
+        model.mainType = opt.mainType;
+        model.subType = opt.subType;
 
         model.getData = function () {
             return data;
@@ -233,10 +239,11 @@ define(function(require) {
         /**
          * Get params for formatter
          * @param {number} dataIndex
+         * @param {module:echarts/data/List} [otherData]
          * @return {Object}
          */
-        getDataParams: function (dataIndex) {
-            var data = this.getData();
+        getDataParams: function (dataIndex, otherData) {
+            var data = otherData || this.getData();
 
             var seriesIndex = this.seriesIndex;
             var seriesName = this.name;
@@ -247,8 +254,9 @@ define(function(require) {
             var itemOpt = data.getRawDataItem(dataIndex);
 
             return {
-                componentType: 'series',
-                seriesType: this.subType,
+                componentType: this.mainType,
+                componentSubType: this.subType,
+                seriesType: this.mainType === 'series' ? this.subType : null,
                 seriesIndex: seriesIndex,
                 seriesName: seriesName,
                 name: name,
@@ -266,18 +274,16 @@ define(function(require) {
          * Format label
          * @param {number} dataIndex
          * @param {string} [status='normal'] 'normal' or 'emphasis'
-         * @param {Function|string} [formatter] Default use the `itemStyle[status].label.formatter`
+         * @param {module:echarts/data/List} [otherData]
          * @return {string}
          */
-        getFormattedLabel: function (dataIndex, status, formatter) {
+        getFormattedLabel: function (dataIndex, status, otherData) {
             status = status || 'normal';
-            var data = this.getData();
+            var data = otherData || this.getData();
             var itemModel = data.getItemModel(dataIndex);
 
-            var params = this.getDataParams(dataIndex);
-            if (formatter == null) {
-                formatter = itemModel.get(['label', status, 'formatter']);
-            }
+            var params = this.getDataParams(dataIndex, otherData);
+            var formatter = itemModel.get(['label', status, 'formatter']);
 
             if (typeof formatter === 'function') {
                 params.status = status;
@@ -291,12 +297,13 @@ define(function(require) {
         /**
          * Get raw value in option
          * @param {number} idx
+         * @param {module:echarts/data/List} [otherData]
          * @return {Object}
          */
-        getRawValue: function (idx) {
-            var itemModel = this.getData().getItemModel(idx);
-            if (itemModel && itemModel.option != null) {
-                var dataItem = itemModel.option;
+        getRawValue: function (idx, otherData) {
+            var data = otherData || this.getData();
+            var dataItem = data.getRawDataItem(idx);
+            if (dataItem != null) {
                 return (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem))
                     ? dataItem.value : dataItem;
             }

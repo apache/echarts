@@ -195,6 +195,14 @@ define(function(require) {
             : (doubledPosition + (positiveOrNegative ? 1 : -1)) / 2;
     };
 
+    function hasFillOrStroke(fillOrStroke) {
+        return fillOrStroke != null && fillOrStroke != 'none';
+    }
+
+    function liftColor(color) {
+        return color instanceof Gradient ? color : colorTool.lift(color, -0.1);
+    }
+
     /**
      * @private
      */
@@ -205,11 +213,10 @@ define(function(require) {
 
             // Create hoverStyle on mouseover
             var hoverStyle = el.__hoverStl;
-            var lift = colorTool.lift;
             hoverStyle.fill = hoverStyle.fill
-                || (fill && (fill instanceof Gradient ? fill : lift(fill, -0.1)));
+                || (hasFillOrStroke(fill) ? liftColor(fill) : null);
             hoverStyle.stroke = hoverStyle.stroke
-                || (stroke && (stroke instanceof Gradient ? stroke : lift(stroke, -0.1)));
+                || (hasFillOrStroke(stroke) ? liftColor(stroke) : null);
 
             var normalStyle = {};
             for (var name in hoverStyle) {

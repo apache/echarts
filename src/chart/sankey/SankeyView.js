@@ -54,8 +54,7 @@ define(function (require) {
             group.position = [layoutInfo.x, layoutInfo.y];
 
             var edgeData = graph.edgeData;
-            var rawOption = seriesModel.option;
-            var formatModel = modelUtil.createDataFormatModel(seriesModel, edgeData);
+            var formatModel = modelUtil.createDataFormatModel(edgeData, seriesModel);
 
             formatModel.formatTooltip = function (dataIndex) {
                 var params = this.getDataParams(dataIndex);

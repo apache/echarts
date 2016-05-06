@@ -4,6 +4,8 @@ define(function (require) {
 
     var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../../util/model');
+    var Model = require('../../model/Model');
 
     var createGraphFromNodeEdge = require('../helper/createGraphFromNodeEdge');
 
@@ -19,24 +21,37 @@ define(function (require) {
                 return this._categoriesData;
             };
 
+            this.fillDataTextStyle(option.edges || option.links);
+
             this._updateCategoriesData();
+            this._updateEdgeDataModel();
         },
 
         mergeOption: function (option) {
             GraphSeries.superApply(this, 'mergeOption', arguments);
 
+            this.fillDataTextStyle(option.edges || option.links);
+
             this._updateCategoriesData();
+            this._updateEdgeDataModel();
+        },
+
+        mergeDefaultAndTheme: function (option) {
+            GraphSeries.superApply(this, 'mergeDefaultAndTheme', arguments);
+            modelUtil.defaultEmphasis(option.edgeLabel, modelUtil.LABEL_OPTIONS);
         },
 
         getInitialData: function (option, ecModel) {
             var edges = option.edges || option.links;
             var nodes = option.data || option.nodes;
+
             if (nodes && edges) {
                 var graph = createGraphFromNodeEdge(nodes, edges, this, true);
-                var list = graph.data;
+                var nodeData = graph.data;
+                var edgeData = graph.edgeData;
                 var self = this;
-                // Overwrite list.getItemModel to
-                list.wrapMethod('getItemModel', function (model) {
+                // Overwrite nodeData.getItemModel to
+                nodeData.wrapMethod('getItemModel', function (model) {
                     var categoriesModels = self._categoriesModels;
                     var categoryIdx = model.getShallow('category');
                     var categoryModel = categoriesModels[categoryIdx];
@@ -46,7 +61,29 @@ define(function (require) {
                     }
                     return model;
                 });
-                return list;
+
+                var edgeLabelModel = this.getModel('edgeLabel');
+                var wrappedGetEdgeModel = function (path, parentModel) {
+                    var pathArr = (path || '').split('.');
+                    if (pathArr[0] === 'label') {
+                        parentModel = parentModel
+                            || edgeLabelModel.getModel(pathArr.slice(1));
+                    }
+                    var model = Model.prototype.getModel.call(this, pathArr, parentModel);
+                    model.getModel = wrappedGetEdgeModel;
+                    return model;
+                };
+                edgeData.wrapMethod('getItemModel', function (model) {
+                    // FIXME Wrap get method ?
+                    model.getModel = wrappedGetEdgeModel;
+                    return model;
+                });
+
+                // Set edge data again to ensure the backup data has the wrapped method
+                // FIXME
+                graph.setEdgeData(edgeData);
+
+                return nodeData;
             }
         },
 
@@ -69,11 +106,34 @@ define(function (require) {
             return this.getGraph().edgeData;
         },
 
+        getEdgeDataModel: function () {
+            return this._edgeDataModel;
+        },
+
         /**
          * @return {module:echarts/data/List}
          */
         getCategoriesData: function () {
             return this._categoriesData;
+        },
+
+        _updateEdgeDataModel: function () {
+            var graph = this.getGraph();
+            var edgeData = this.getEdgeData();
+            var data = this.getData();
+            this._edgeDataModel = modelUtil.createDataFormatModel(edgeData, this);
+            this._edgeDataModel.formatTooltip = function (dataIndex) {
+                var params = this.getDataParams(dataIndex);
+                var edge = graph.getEdgeByIndex(dataIndex);
+                var sourceName = data.getName(edge.node1.dataIndex);
+                var targetName = data.getName(edge.node2.dataIndex);
+                var html = sourceName + ' > ' + targetName;
+                if (params.value) {
+                    html += ' : ' + params.value;
+                }
+                return html;
+            };
+
         },
 
         _updateCategoriesData: function () {
@@ -136,6 +196,13 @@ define(function (require) {
             symbol: 'circle',
             symbolSize: 10,
 
+            edgeSymbol: ['none', 'none'],
+            edgeSymbolSize: 10,
+            edgeLabel: {
+                normal: {},
+                emphasis: {}
+            },
+
             draggable: false,
 
             roam: false,
@@ -146,9 +213,6 @@ define(function (require) {
             zoom: 1,
             // Symbol size scale ratio in roam
             nodeScaleRatio: 0.6,
-
-            // Line width scale ratio in roam
-            // edgeScaleRatio: 0.1,
 
             // categories: [],
 
@@ -162,7 +226,8 @@ define(function (require) {
 
             label: {
                 normal: {
-                    show: false
+                    show: false,
+                    formatter: '{b}'
                 },
                 emphasis: {
                     show: true

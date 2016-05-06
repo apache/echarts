@@ -44,6 +44,24 @@
                 data = splitData(rawData);
 
                 update();
+
+                chart.on('click', function (info) {
+                    console.log(info);
+                    if (info.data && info.data.length === 4) {
+                        alert([
+                            'clicked on: ',
+                            'DATA: ' + info.name,
+                            'OPEN: ' + info.data[0],
+                            'CLOSE: ' + info.data[1],
+                            'LOWEST: ' + info.data[2],
+                            'HIGHEST: ' + info.data[3]
+                        ].join('\n'));
+                    }
+                    else if (info.data && info.data.length === 2) {
+                        // Markpoint
+                        alert('mark point');
+                    }
+                });
             })
 
             function splitData(rawData) {
