@@ -29,8 +29,7 @@ define(function (require) {
             }
         }
 
-        // Assume the segment is monotone through Bisection method
-
+        // Assume the segment is monotone，Find root through Bisection method
         // At most 32 iteration
         for (var i = 0; i < 32; i++) {
             // var prev = t - interval;

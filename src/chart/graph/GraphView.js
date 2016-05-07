@@ -109,7 +109,7 @@ define(function (require) {
             var self = this;
             (function step() {
                 forceLayout.step(function (stopped) {
-                    self.updateLayout();
+                    self.updateLayout(self._model);
                     (self._layouting = !stopped) && (
                         layoutAnimation
                             ? (self._layoutTimeout = setTimeout(step, 16))
@@ -158,6 +158,18 @@ define(function (require) {
         _updateNodeAndLinkScale: function () {
             var seriesModel = this._model;
             var data = seriesModel.getData();
+
+            var nodeScale = this._getNodeGlobalScale(seriesModel);
+            var invScale = [nodeScale, nodeScale];
+
+            data.eachItemGraphicEl(function (el, idx) {
+                el.attr('scale', invScale);
+            });
+
+            adjustEdge(seriesModel.getGraph(), nodeScale);
+        },
+
+        _getNodeGlobalScale: function (seriesModel) {
             var coordSys = seriesModel.coordinateSystem;
 
             var nodeScaleRatio = this._nodeScaleRatio;
@@ -166,23 +178,16 @@ define(function (require) {
             var groupZoom = (groupScale && groupScale[0]) || 1;
             // Scale node when zoom changes
             var roamZoom = coordSys.getZoom();
-
             var nodeScale = (roamZoom - 1) * nodeScaleRatio + 1;
-            var invScale = [
-                nodeScale / groupZoom,
-                nodeScale / groupZoom
-            ];
 
-            data.eachItemGraphicEl(function (el, idx) {
-                el.attr('scale', invScale);
-            });
-
-            adjustEdge(seriesModel.getGraph(), nodeScale / groupZoom);
+            return nodeScale / groupZoom;
         },
 
-        updateLayout: function (seriesModel, ecModel) {
+        updateLayout: function (seriesModel) {
             this._symbolDraw.updateLayout();
             this._lineDraw.updateLayout();
+
+            adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
         },
 
         remove: function (ecModel, api) {
