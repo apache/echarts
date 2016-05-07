@@ -199,7 +199,9 @@ define(function (require) {
             edgeSymbol: ['none', 'none'],
             edgeSymbolSize: 10,
             edgeLabel: {
-                normal: {},
+                normal: {
+                    position: 'middle'
+                },
                 emphasis: {}
             },
 

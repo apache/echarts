@@ -5,8 +5,8 @@ define(function (require) {
     var LineDraw = require('../helper/LineDraw');
     var RoamController = require('../../component/helper/RoamController');
 
-    var modelUtil = require('../../util/model');
     var graphic = require('../../util/graphic');
+    var adjustEdge = require('./adjustEdge');
 
     require('../../echarts').extendChartView({
 
@@ -176,6 +176,8 @@ define(function (require) {
             data.eachItemGraphicEl(function (el, idx) {
                 el.attr('scale', invScale);
             });
+
+            adjustEdge(seriesModel.getGraph(), nodeScale / groupZoom);
         },
 
         updateLayout: function (seriesModel, ecModel) {

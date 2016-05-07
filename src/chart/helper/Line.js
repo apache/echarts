@@ -319,6 +319,12 @@ define(function (require) {
         linePath.dirty(true);
     };
 
+    lineProto.setLinePoints = function (points) {
+        var linePath = this.childOfName('line');
+        setLinePoints(linePath.shape, points);
+        linePath.dirty();
+    };
+
     zrUtil.inherits(Line, graphic.Group);
 
     return Line;

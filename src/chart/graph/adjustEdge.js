@@ -72,40 +72,64 @@ define(function (require) {
         return t;
     }
     // Adjust edge to avoid
-    return function (seriesModel) {
-        var graph = seriesModel.getGraph();
+    return function (graph, scale) {
         var tmp0 = [];
         var quadraticSubdivide = curveTool.quadraticSubdivide;
-        var pts = [];
-        // TODO With scale
+        var pts = [[], [], []];
+        var pts2 = [[], []];
+        var v = [];
+        scale /= 2;
+
         graph.eachEdge(function (edge) {
             var linePoints = edge.getLayout();
-            pts[0] = linePoints[0].slice();
-            pts[1] = linePoints[2].slice();
-            pts[2] = linePoints[1].slice();
+            var line = edge.getGraphicEl();
             var fromSymbol = edge.getVisual('fromSymbol');
             var toSymbol = edge.getVisual('toSymbol');
-            if (fromSymbol && fromSymbol != 'none') {
-                var t = intersectCurveCircle(pts, linePoints[0], edge.node1.getVisual('symbolSize') / 2);
-                // Subdivide and get the second
-                quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
-                pts[0][0] = tmp0[3];
-                pts[1][0] = tmp0[4];
-                quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
-                pts[0][1] = tmp0[3];
-                pts[1][1] = tmp0[4];
+            // Quadratic curve
+            if (linePoints[2] != null) {
+                vec2.copy(pts[0], linePoints[0]);
+                vec2.copy(pts[1], linePoints[2]);
+                vec2.copy(pts[2], linePoints[1]);
+                if (fromSymbol && fromSymbol != 'none') {
+                    var t = intersectCurveCircle(pts, linePoints[0], edge.node1.getVisual('symbolSize') * scale);
+                    // Subdivide and get the second
+                    quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
+                    pts[0][0] = tmp0[3];
+                    pts[1][0] = tmp0[4];
+                    quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
+                    pts[0][1] = tmp0[3];
+                    pts[1][1] = tmp0[4];
+                }
+                if (toSymbol && toSymbol != 'none') {
+                    var t = intersectCurveCircle(pts, linePoints[1], edge.node2.getVisual('symbolSize') * scale);
+                    // Subdivide and get the first
+                    quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
+                    pts[1][0] = tmp0[1];
+                    pts[2][0] = tmp0[2];
+                    quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
+                    pts[1][1] = tmp0[1];
+                    pts[2][1] = tmp0[2];
+                }
+                var tmp = pts[1];
+                pts[1] = pts[2];
+                pts[2] = tmp;
+                line.setLinePoints(pts);
             }
-            if (toSymbol && toSymbol != 'none') {
-                var t = intersectCurveCircle(pts, linePoints[1], edge.node2.getVisual('symbolSize') / 2);
-                // Subdivide and get the first
-                quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
-                pts[1][0] = tmp0[1];
-                pts[2][0] = tmp0[2];
-                quadraticSubdivide(pts[0][1], pts[1][1], pts[2][1], t, tmp0);
-                pts[1][1] = tmp0[1];
-                pts[2][1] = tmp0[2];
+            // Line
+            else {
+                vec2.copy(pts2[0], linePoints[0]);
+                vec2.copy(pts2[1], linePoints[1]);
+
+                vec2.sub(v, pts2[1], pts2[0]);
+                vec2.normalize(v, v);
+                if (fromSymbol && fromSymbol != 'none') {
+                    vec2.scaleAndAdd(pts2[0], pts2[0], v, edge.node1.getVisual('symbolSize') * scale);
+                }
+                if (toSymbol && toSymbol != 'none') {
+                    vec2.scaleAndAdd(pts2[1], pts2[1], v, -edge.node2.getVisual('symbolSize') * scale);
+                }
+                line.setLinePoints(pts2);
             }
-            edge.setLayout([pts[0], pts[2], pts[1]]);
         });
     };
 });
