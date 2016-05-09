@@ -5,7 +5,7 @@ define(function (require) {
     var SeriesModel = require('../../model/Series');
     var createGraphFromNodeEdge = require('../helper/createGraphFromNodeEdge');
 
-    return SeriesModel.extend({
+    var SankeySeries = SeriesModel.extend({
 
         type: 'series.sankey',
 
@@ -32,6 +32,22 @@ define(function (require) {
          */
         getEdgeData: function() {
             return this.getGraph().edgeData;
+        },
+
+        /**
+         * @override
+         */
+        formatTooltip: function (dataIndex, multipleSeries, dataType) {
+            if (dataType === 'edge') {
+                var params = this.getDataParams(dataIndex, dataType);
+                var rawDataOpt = params.data;
+                var html = rawDataOpt.source + ' -- ' + rawDataOpt.target;
+                if (params.value) {
+                    html += ' : ' + params.value;
+                }
+                return html;
+            }
+            // dataType === 'node' or empty do not show tooltip by default.
         },
 
         defaultOption: {
@@ -102,4 +118,5 @@ define(function (require) {
 
     });
 
+    return SankeySeries;
 });

@@ -94,6 +94,16 @@ define(function (require) {
         this.hostModel = hostModel;
 
         /**
+         * @type {module:echarts/model/Model}
+         */
+        this.dataType;
+
+        /**
+         * @type {boolean}
+         */
+        this.silent = false;
+
+        /**
          * Indices stores the indices of data subset after filtered.
          * This data subset will be used in chart.
          * @type {Array.<number>}
@@ -658,6 +668,8 @@ define(function (require) {
         // Reset data extent
         this._extent = {};
 
+        !this.silent && this.__onChange();
+
         return this;
     };
 
@@ -753,6 +765,8 @@ define(function (require) {
             }
         }, stack, context);
 
+        !this.silent && this.__onTransfer(list);
+
         return list;
     };
 
@@ -798,6 +812,9 @@ define(function (require) {
             dimStore[idx] = value;
             indices.push(idx);
         }
+
+        !this.silent && this.__onTransfer(list);
+
         return list;
     };
 
@@ -955,6 +972,7 @@ define(function (require) {
     var setItemDataAndSeriesIndex = function (child) {
         child.seriesIndex = this.seriesIndex;
         child.dataIndex = this.dataIndex;
+        child.dataType = this.dataType;
     };
     /**
      * Set graphic element relative to data. It can be set as null
@@ -968,6 +986,7 @@ define(function (require) {
             // Add data index and series index for indexing the data by element
             // Useful in tooltip
             el.dataIndex = idx;
+            el.dataType = this.dataType;
             el.seriesIndex = hostModel && hostModel.seriesIndex;
             if (el.type === 'group') {
                 el.traverse(setItemDataAndSeriesIndex, el);
@@ -1012,6 +1031,8 @@ define(function (require) {
 
         list.indices = this.indices.slice();
 
+        !this.silent && this.__onTransfer(list);
+
         return list;
     };
 
@@ -1029,9 +1050,11 @@ define(function (require) {
         this.__wrappedMethods.push(methodName);
         this[methodName] = function () {
             var res = originalMethod.apply(this, arguments);
-            return injectFunction.call(this, res);
+            return injectFunction.apply(this, [res].concat(zrUtil.slice(arguments)));
         };
     };
+
+    listProto.__onTransfer = listProto.__onChange = zrUtil.noop;
 
     return List;
 });

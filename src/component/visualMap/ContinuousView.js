@@ -613,7 +613,7 @@ define(function(require) {
             }
 
             var dataModel = el.dataModel || this.ecModel.getSeriesByIndex(el.seriesIndex);
-            var data = dataModel.getData();
+            var data = dataModel.getData(el.dataType);
             var dim = data.getDimension(this.visualMapModel.getDataDimension(data));
             var value = data.get(dim, el.dataIndex, true);
 

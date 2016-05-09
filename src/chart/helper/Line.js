@@ -286,7 +286,7 @@ define(function (require) {
         label.setStyle({
             text: labelModel.get('show')
                 ? zrUtil.retrieve(
-                    seriesModel.getFormattedLabel(idx, 'normal', lineData),
+                    seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
                     defaultText
                 )
                 : '',
@@ -296,7 +296,7 @@ define(function (require) {
         label.hoverStyle = {
             text: labelHoverModel.get('show')
                 ? zrUtil.retrieve(
-                    seriesModel.getFormattedLabel(idx, 'emphasis', lineData),
+                    seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
                     defaultText
                 )
                 : '',

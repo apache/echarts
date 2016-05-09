@@ -24,7 +24,6 @@ define(function (require) {
             this.fillDataTextStyle(option.edges || option.links);
 
             this._updateCategoriesData();
-            this._updateEdgeDataModel();
         },
 
         mergeOption: function (option) {
@@ -33,7 +32,6 @@ define(function (require) {
             this.fillDataTextStyle(option.edges || option.links);
 
             this._updateCategoriesData();
-            this._updateEdgeDataModel();
         },
 
         mergeDefaultAndTheme: function (option) {
@@ -44,12 +42,13 @@ define(function (require) {
         getInitialData: function (option, ecModel) {
             var edges = option.edges || option.links || [];
             var nodes = option.data || option.nodes || [];
+            var self = this;
 
             if (nodes && edges) {
-                var graph = createGraphFromNodeEdge(nodes, edges, this, true);
-                var nodeData = graph.data;
-                var edgeData = graph.edgeData;
-                var self = this;
+                return createGraphFromNodeEdge(nodes, edges, this, true, beforeLink).data;
+            }
+
+            function beforeLink(nodeData, edgeData) {
                 // Overwrite nodeData.getItemModel to
                 nodeData.wrapMethod('getItemModel', function (model) {
                     var categoriesModels = self._categoriesModels;
@@ -62,7 +61,7 @@ define(function (require) {
                     return model;
                 });
 
-                var edgeLabelModel = this.getModel('edgeLabel');
+                var edgeLabelModel = self.getModel('edgeLabel');
                 var wrappedGetEdgeModel = function (path, parentModel) {
                     var pathArr = (path || '').split('.');
                     if (pathArr[0] === 'label') {
@@ -78,18 +77,7 @@ define(function (require) {
                     model.getModel = wrappedGetEdgeModel;
                     return model;
                 });
-
-                // Set edge data again to ensure the backup data has the wrapped method
-                // FIXME
-                graph.setEdgeData(edgeData);
-
-                return nodeData;
             }
-        },
-
-        restoreData: function () {
-            GraphSeries.superApply(this, 'restoreData', arguments);
-            this.getGraph().restoreData();
         },
 
         /**
@@ -106,10 +94,6 @@ define(function (require) {
             return this.getGraph().edgeData;
         },
 
-        getEdgeDataModel: function () {
-            return this._edgeDataModel;
-        },
-
         /**
          * @return {module:echarts/data/List}
          */
@@ -117,23 +101,25 @@ define(function (require) {
             return this._categoriesData;
         },
 
-        _updateEdgeDataModel: function () {
-            var graph = this.getGraph();
-            var edgeData = this.getEdgeData();
-            var data = this.getData();
-            this._edgeDataModel = modelUtil.createDataFormatModel(edgeData, this);
-            this._edgeDataModel.formatTooltip = function (dataIndex) {
-                var params = this.getDataParams(dataIndex);
-                var edge = graph.getEdgeByIndex(dataIndex);
-                var sourceName = data.getName(edge.node1.dataIndex);
-                var targetName = data.getName(edge.node2.dataIndex);
+        /**
+         * @override
+         */
+        formatTooltip: function (dataIndex, multipleSeries, dataType) {
+            if (dataType === 'edge') {
+                var nodeData = this.getData();
+                var params = this.getDataParams(dataIndex, dataType);
+                var edge = nodeData.graph.getEdgeByIndex(dataIndex);
+                var sourceName = nodeData.getName(edge.node1.dataIndex);
+                var targetName = nodeData.getName(edge.node2.dataIndex);
                 var html = sourceName + ' > ' + targetName;
                 if (params.value) {
                     html += ' : ' + params.value;
                 }
                 return html;
-            };
-
+            }
+            else { // dataType === 'node' or empty
+                return GraphSeries.superApply(this, 'formatTooltip', arguments);
+            }
         },
 
         _updateCategoriesData: function () {

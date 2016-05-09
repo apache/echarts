@@ -4,8 +4,6 @@ define(function(require) {
     var nubmerUtil = require('./number');
     var zrUtil = require('zrender/core/util');
 
-    var Model = require('../model/Model');
-
     var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
 
     var modelUtil = {};
@@ -179,29 +177,6 @@ define(function(require) {
     modelUtil.LABEL_OPTIONS = ['position', 'show', 'textStyle', 'distance', 'formatter'];
 
     /**
-     * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
-     * @param {module:echarts/data/List} data
-     * @param {Object} opt
-     * @param {string} [opt.seriesIndex]
-     * @param {Object} [opt.name]
-     * @param {Object} [opt.mainType]
-     * @param {Object} [opt.subType]
-     */
-    modelUtil.createDataFormatModel = function (data, opt) {
-        var model = new Model();
-        zrUtil.mixin(model, modelUtil.dataFormatMixin);
-        model.seriesIndex = opt.seriesIndex;
-        model.name = opt.name || '';
-        model.mainType = opt.mainType;
-        model.subType = opt.subType;
-
-        model.getData = function () {
-            return data;
-        };
-        return model;
-    };
-
-    /**
      * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
      * This helper method retieves value from data.
      * @param {string|number|Date|Array|Object} dataItem
@@ -239,16 +214,16 @@ define(function(require) {
         /**
          * Get params for formatter
          * @param {number} dataIndex
-         * @param {module:echarts/data/List} [otherData]
+         * @param {string} [dataType]
          * @return {Object}
          */
-        getDataParams: function (dataIndex, otherData) {
-            var data = otherData || this.getData();
+        getDataParams: function (dataIndex, dataType) {
+            var data = this.getData(dataType);
 
             var seriesIndex = this.seriesIndex;
             var seriesName = this.name;
 
-            var rawValue = this.getRawValue(dataIndex);
+            var rawValue = this.getRawValue(dataIndex, dataType);
             var rawDataIndex = data.getRawIndex(dataIndex);
             var name = data.getName(dataIndex, true);
             var itemOpt = data.getRawDataItem(dataIndex);
@@ -262,6 +237,7 @@ define(function(require) {
                 name: name,
                 dataIndex: rawDataIndex,
                 data: itemOpt,
+                dataType: dataType,
                 value: rawValue,
                 color: data.getItemVisual(dataIndex, 'color'),
 
@@ -274,15 +250,20 @@ define(function(require) {
          * Format label
          * @param {number} dataIndex
          * @param {string} [status='normal'] 'normal' or 'emphasis'
-         * @param {module:echarts/data/List} [otherData]
+         * @param {string} [dataType]
+         * @param {number} [dimIndex]
          * @return {string}
          */
-        getFormattedLabel: function (dataIndex, status, otherData) {
+        getFormattedLabel: function (dataIndex, status, dataType, dimIndex) {
             status = status || 'normal';
-            var data = otherData || this.getData();
+            var data = this.getData(dataType);
             var itemModel = data.getItemModel(dataIndex);
 
-            var params = this.getDataParams(dataIndex, otherData);
+            var params = this.getDataParams(dataIndex, dataType);
+            if (dimIndex != null && zrUtil.isArray(params.value)) {
+                params.value = params.value[dimIndex];
+            }
+
             var formatter = itemModel.get(['label', status, 'formatter']);
 
             if (typeof formatter === 'function') {
@@ -297,17 +278,26 @@ define(function(require) {
         /**
          * Get raw value in option
          * @param {number} idx
-         * @param {module:echarts/data/List} [otherData]
+         * @param {string} [dataType]
          * @return {Object}
          */
-        getRawValue: function (idx, otherData) {
-            var data = otherData || this.getData();
+        getRawValue: function (idx, dataType) {
+            var data = this.getData(dataType);
             var dataItem = data.getRawDataItem(idx);
             if (dataItem != null) {
                 return (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem))
                     ? dataItem.value : dataItem;
             }
-        }
+        },
+
+        /**
+         * Should be implemented.
+         * @param {number} dataIndex
+         * @param {boolean} [multipleSeries=false]
+         * @param {number} [dataType]
+         * @return {string} tooltip string
+         */
+        formatTooltip: zrUtil.noop
     };
 
     /**

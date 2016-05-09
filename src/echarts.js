@@ -845,7 +845,7 @@ define(function (require) {
                 var el = e.target;
                 if (el && el.dataIndex != null) {
                     var dataModel = el.dataModel || ecModel.getSeriesByIndex(el.seriesIndex);
-                    var params = dataModel && dataModel.getDataParams(el.dataIndex) || {};
+                    var params = dataModel && dataModel.getDataParams(el.dataIndex, el.dataType) || {};
                     params.event = e;
                     params.type = eveName;
                     this.trigger(eveName, params);

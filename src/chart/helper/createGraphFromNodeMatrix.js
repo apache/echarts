@@ -76,9 +76,14 @@ define(function (require) {
 
         edgeData.initData(links);
 
-        graph.setEdgeData(edgeData);
+        linkList({
+            mainData: nodeData,
+            struct: graph,
+            structAttr: 'graph',
+            datas: {node: nodeData, edge: edgeData},
+            datasAttr: {node: 'data', edge: 'edgeData'}
+        });
 
-        linkList.linkToGraph(nodeData, graph);
         // Update dataIndex of nodes and edges because invalid edge may be removed
         graph.update();
 

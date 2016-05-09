@@ -8,7 +8,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var Model = require('../model/Model');
     var List = require('./List');
-    var linkListHelper = require('./helper/linkList');
+    var linkList = require('./helper/linkList');
     var completeDimensions = require('./helper/completeDimensions');
 
     /**
@@ -433,7 +433,11 @@ define(function(require) {
         var list = new List(dimensions, hostModel);
         list.initData(listData);
 
-        linkListHelper.linkToTree(list, tree);
+        linkList({
+            mainData: list,
+            struct: tree,
+            structAttr: 'tree'
+        });
 
         return tree;
     };

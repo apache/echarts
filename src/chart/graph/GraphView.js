@@ -61,13 +61,7 @@ define(function (require) {
             symbolDraw.updateData(data);
 
             var edgeData = seriesModel.getEdgeData();
-
             lineDraw.updateData(edgeData);
-            edgeData.eachItemGraphicEl(function (el) {
-                el.traverse(function (child) {
-                    child.dataModel = seriesModel.getEdgeDataModel();
-                });
-            });
 
             this._updateNodeAndLinkScale();
 

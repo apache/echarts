@@ -51,9 +51,11 @@ define(function(require) {
              */
             this._dataBeforeProcessed = this.getInitialData(option, ecModel);
 
-            // When using module:echarts/data/Tree or module:echarts/data/Graph,
-            // cloneShallow will cause this._data.graph.data pointing to new data list.
-            // Wo we make this._dataBeforeProcessed first, and then make this._data.
+            // If we reverse the order (make this._data firstly, and then make
+            // this._dataBeforeProcessed by cloneShallow), cloneShallow will
+            // cause this._data.graph.data !== this._data when using
+            // module:echarts/data/Graph or module:echarts/data/Tree.
+            // See module:echarts/data/helper/linkList
             this._data = this._dataBeforeProcessed.cloneShallow();
         },
 
@@ -108,10 +110,11 @@ define(function(require) {
         getInitialData: function () {},
 
         /**
+         * @param {string} [dataType]
          * @return {module:echarts/data/List}
          */
-        getData: function () {
-            return this._data;
+        getData: function (dataType) {
+            return dataType == null ? this._data : this._data.getLinkedData(dataType);
         },
 
         /**
@@ -172,8 +175,9 @@ define(function(require) {
          *
          * @param {number} dataIndex
          * @param {boolean} [multipleSeries=false]
+         * @param {number} [dataType]
          */
-        formatTooltip: function (dataIndex, multipleSeries) {
+        formatTooltip: function (dataIndex, multipleSeries, dataType) {
             var data = this._data;
             var value = this.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
@@ -194,7 +198,9 @@ define(function(require) {
 
         restoreData: function () {
             this._data = this._dataBeforeProcessed.cloneShallow();
-        }
+        },
+
+        getAxisTooltipDataIndex: null
     });
 
     zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);

@@ -448,7 +448,7 @@ define(function (require) {
                     // Reset last hover and dispatch downplay action
                     this._resetLastHover();
 
-                    this._showItemTooltipContent(dataModel, dataIndex, e);
+                    this._showItemTooltipContent(dataModel, dataIndex, el.dataType, e);
                 }
 
                 api.dispatchAction({
@@ -496,7 +496,7 @@ define(function (require) {
                 if (el && el.dataIndex != null) {
                     var seriesModel = ecModel.getSeriesByIndex(el.seriesIndex);
                     var dataIndex = el.dataIndex;
-                    this._showItemTooltipContent(seriesModel, dataIndex, e);
+                    this._showItemTooltipContent(seriesModel, dataIndex, el.dataType, e);
                 }
             }
 
@@ -999,9 +999,10 @@ define(function (require) {
          * Show tooltip on item
          * @param {module:echarts/model/Series} seriesModel
          * @param {number} dataIndex
+         * @param {string} dataType
          * @param {Object} e
          */
-        _showItemTooltipContent: function (seriesModel, dataIndex, e) {
+        _showItemTooltipContent: function (seriesModel, dataIndex, dataType, e) {
             // FIXME Graph data
             var api = this._api;
             var data = seriesModel.getData();
@@ -1027,7 +1028,7 @@ define(function (require) {
                 var params = seriesModel.getDataParams(dataIndex);
                 var html;
                 if (!formatter) {
-                    html = seriesModel.formatTooltip(dataIndex);
+                    html = seriesModel.formatTooltip(dataIndex, false, dataType);
                 }
                 else {
                     if (typeof formatter === 'string') {

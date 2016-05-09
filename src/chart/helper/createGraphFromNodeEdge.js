@@ -8,7 +8,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var createListFromArray = require('./createListFromArray');
 
-    return function (nodes, edges, hostModel, directed) {
+    return function (nodes, edges, hostModel, directed, beforeLink) {
         var graph = new Graph(directed);
         for (var i = 0; i < nodes.length; i++) {
             graph.addNode(zrUtil.retrieve(
@@ -50,9 +50,16 @@ define(function (require) {
         var edgeData = new List(['value'], hostModel);
         edgeData.initData(validEdges, linkNameList);
 
-        graph.setEdgeData(edgeData);
+        beforeLink && beforeLink(nodeData, edgeData);
 
-        linkList.linkToGraph(nodeData, graph);
+        linkList({
+            mainData: nodeData,
+            struct: graph,
+            structAttr: 'graph',
+            datas: {node: nodeData, edge: edgeData},
+            datasAttr: {node: 'data', edge: 'edgeData'}
+        });
+
         // Update dataIndex of nodes and edges because invalid edge may be removed
         graph.update();
 
