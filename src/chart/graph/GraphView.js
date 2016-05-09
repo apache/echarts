@@ -36,22 +36,11 @@ define(function (require) {
                 return;
             }
 
-            var data = seriesModel.getData();
             this._model = seriesModel;
+            this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
 
             var symbolDraw = this._symbolDraw;
             var lineDraw = this._lineDraw;
-
-            symbolDraw.updateData(data);
-
-            var edgeData = seriesModel.getEdgeData();
-
-            lineDraw.updateData(edgeData);
-            edgeData.eachItemGraphicEl(function (el) {
-                el.traverse(function (child) {
-                    child.dataModel = seriesModel.getEdgeDataModel();
-                });
-            });
 
             var group = this.group;
             var groupNewProp = {
@@ -64,8 +53,21 @@ define(function (require) {
             else {
                 graphic.updateProps(group, groupNewProp, seriesModel);
             }
+            // Fix edge contact point with node
+            adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
 
-            this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
+
+            var data = seriesModel.getData();
+            symbolDraw.updateData(data);
+
+            var edgeData = seriesModel.getEdgeData();
+
+            lineDraw.updateData(edgeData);
+            edgeData.eachItemGraphicEl(function (el) {
+                el.traverse(function (child) {
+                    child.dataModel = seriesModel.getEdgeDataModel();
+                });
+            });
 
             this._updateNodeAndLinkScale();
 
@@ -151,8 +153,10 @@ define(function (require) {
                         originX: mouseX,
                         originY: mouseY
                     });
-                })
-                .on('zoom', this._updateNodeAndLinkScale, this);
+                    this._updateNodeAndLinkScale();
+                    adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
+                    this._lineDraw.updateLayout();
+                }, this);
         },
 
         _updateNodeAndLinkScale: function () {
@@ -165,8 +169,6 @@ define(function (require) {
             data.eachItemGraphicEl(function (el, idx) {
                 el.attr('scale', invScale);
             });
-
-            adjustEdge(seriesModel.getGraph(), nodeScale);
         },
 
         _getNodeGlobalScale: function (seriesModel) {

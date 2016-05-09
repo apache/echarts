@@ -81,16 +81,26 @@ define(function (require) {
 
         graph.eachEdge(function (edge) {
             var linePoints = edge.getLayout();
-            var line = edge.getGraphicEl();
             var fromSymbol = edge.getVisual('fromSymbol');
             var toSymbol = edge.getVisual('toSymbol');
+
+            if (!linePoints.__original) {
+                linePoints.__original = [
+                    linePoints[0].slice(),
+                    linePoints[1].slice()
+                ];
+                if (linePoints[2]) {
+                    linePoints.__original.push(linePoints[2].slice());
+                }
+            }
+            var originalPoints = linePoints.__original;
             // Quadratic curve
             if (linePoints[2] != null) {
-                vec2.copy(pts[0], linePoints[0]);
-                vec2.copy(pts[1], linePoints[2]);
-                vec2.copy(pts[2], linePoints[1]);
+                vec2.copy(pts[0], originalPoints[0]);
+                vec2.copy(pts[1], originalPoints[2]);
+                vec2.copy(pts[2], originalPoints[1]);
                 if (fromSymbol && fromSymbol != 'none') {
-                    var t = intersectCurveCircle(pts, linePoints[0], edge.node1.getVisual('symbolSize') * scale);
+                    var t = intersectCurveCircle(pts, originalPoints[0], edge.node1.getVisual('symbolSize') * scale);
                     // Subdivide and get the second
                     quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
                     pts[0][0] = tmp0[3];
@@ -100,7 +110,7 @@ define(function (require) {
                     pts[1][1] = tmp0[4];
                 }
                 if (toSymbol && toSymbol != 'none') {
-                    var t = intersectCurveCircle(pts, linePoints[1], edge.node2.getVisual('symbolSize') * scale);
+                    var t = intersectCurveCircle(pts, originalPoints[1], edge.node2.getVisual('symbolSize') * scale);
                     // Subdivide and get the first
                     quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
                     pts[1][0] = tmp0[1];
@@ -109,15 +119,15 @@ define(function (require) {
                     pts[1][1] = tmp0[1];
                     pts[2][1] = tmp0[2];
                 }
-                var tmp = pts[1];
-                pts[1] = pts[2];
-                pts[2] = tmp;
-                line.setLinePoints(pts);
+                // Copy back to layout
+                vec2.copy(linePoints[0], pts[0]);
+                vec2.copy(linePoints[1], pts[2]);
+                vec2.copy(linePoints[2], pts[1]);
             }
             // Line
             else {
-                vec2.copy(pts2[0], linePoints[0]);
-                vec2.copy(pts2[1], linePoints[1]);
+                vec2.copy(pts2[0], originalPoints[0]);
+                vec2.copy(pts2[1], originalPoints[1]);
 
                 vec2.sub(v, pts2[1], pts2[0]);
                 vec2.normalize(v, v);
@@ -127,7 +137,8 @@ define(function (require) {
                 if (toSymbol && toSymbol != 'none') {
                     vec2.scaleAndAdd(pts2[1], pts2[1], v, -edge.node2.getVisual('symbolSize') * scale);
                 }
-                line.setLinePoints(pts2);
+                vec2.copy(linePoints[0], pts2[0]);
+                vec2.copy(linePoints[1], pts2[1]);
             }
         });
     };

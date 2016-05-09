@@ -13,8 +13,8 @@ define(function (require) {
 
         graph.eachEdge(function (edge) {
             var curveness = edge.getModel().get('lineStyle.normal.curveness') || 0;
-            var p1 = edge.node1.getLayout();
-            var p2 = edge.node2.getLayout();
+            var p1 = edge.node1.getLayout().slice();
+            var p2 = edge.node2.getLayout().slice();
             var points = [p1, p2];
             if (curveness > 0) {
                 points.push([
