@@ -57,7 +57,7 @@ define(function (require) {
 
         graphic.initProps(symbolPath, {
             scale: size
-        }, seriesModel);
+        }, seriesModel, idx);
 
         this._symbolType = symbolType;
 
@@ -126,7 +126,7 @@ define(function (require) {
             var symbolPath = this.childAt(0);
             graphic.updateProps(symbolPath, {
                 scale: symbolSize
-            }, seriesModel);
+            }, seriesModel, idx);
         }
         this._updateCommon(data, idx, symbolSize);
 
@@ -250,7 +250,7 @@ define(function (require) {
         symbolPath.style.text = '';
         graphic.updateProps(symbolPath, {
             scale: [0, 0]
-        }, this._seriesModel, cb);
+        }, this._seriesModel, this.dataIndex, cb);
     };
 
     zrUtil.inherits(Symbol, graphic.Group);

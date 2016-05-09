@@ -371,15 +371,25 @@ define(function(require) {
         });
     };
 
-    function animateOrSetProps(isUpdate, el, props, animatableModel, cb) {
+    function animateOrSetProps(isUpdate, el, props, animatableModel, dataIndex, cb) {
+        if (typeof dataIndex === 'function') {
+            cb = dataIndex;
+            dataIndex = null;
+        }
+
         var postfix = isUpdate ? 'Update' : '';
         var duration = animatableModel
             && animatableModel.getShallow('animationDuration' + postfix);
         var animationEasing = animatableModel
             && animatableModel.getShallow('animationEasing' + postfix);
+        var animationDelay = animatableModel
+            && animatableModel.getShallow('animationDelay' + postfix);
+        if (typeof animationDelay === 'function') {
+            animationDelay = animationDelay(dataIndex);
+        }
 
         animatableModel && animatableModel.getShallow('animation')
-            ? el.animateTo(props, duration, animationEasing, cb)
+            ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb)
             : (el.attr(props), cb && cb());
     }
     /**
@@ -387,7 +397,16 @@ define(function(require) {
      * @param {module:zrender/Element} el
      * @param {Object} props
      * @param {module:echarts/model/Model} [animatableModel]
-     * @param {Function} cb
+     * @param {number} [dataIndex]
+     * @param {Function} [cb]
+     * @example
+     *     graphic.updateProps(el, {
+     *         position: [100, 100]
+     *     }, seriesModel, dataIndex, function () { console.log('Animation done!'); });
+     *     // Or
+     *     graphic.updateProps(el, {
+     *         position: [100, 100]
+     *     }, seriesModel, function () { console.log('Animation done!'); });
      */
     graphic.updateProps = zrUtil.curry(animateOrSetProps, true);
 

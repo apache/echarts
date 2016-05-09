@@ -62,7 +62,7 @@ define(function (require) {
                     animateTarget[animateProperty] = layout[animateProperty];
                     graphic[isUpdate? 'updateProps' : 'initProps'](rect, {
                         shape: animateTarget
-                    }, seriesModel);
+                    }, seriesModel, dataIndex);
                 }
                 return rect;
             }
@@ -97,7 +97,7 @@ define(function (require) {
 
                     graphic.updateProps(rect, {
                         shape: layout
-                    }, seriesModel);
+                    }, seriesModel, newIndex);
 
                     data.setItemGraphicEl(newIndex, rect);
 
@@ -113,7 +113,7 @@ define(function (require) {
                             shape: {
                                 width: 0
                             }
-                        }, seriesModel, function () {
+                        }, seriesModel, idx, function () {
                             group.remove(rect);
                         });
                     }
@@ -201,7 +201,7 @@ define(function (require) {
                             shape: {
                                 width: 0
                             }
-                        }, ecModel, function () {
+                        }, ecModel, el.dataIndex, function () {
                             group.remove(el);
                         });
                     });
