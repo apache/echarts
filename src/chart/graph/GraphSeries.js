@@ -42,8 +42,8 @@ define(function (require) {
         },
 
         getInitialData: function (option, ecModel) {
-            var edges = option.edges || option.links;
-            var nodes = option.data || option.nodes;
+            var edges = option.edges || option.links || [];
+            var nodes = option.data || option.nodes || [];
 
             if (nodes && edges) {
                 var graph = createGraphFromNodeEdge(nodes, edges, this, true);
@@ -169,6 +169,12 @@ define(function (require) {
                     '#dd4444', '#fd9c35', '#cd4870'],
 
             coordinateSystem: 'view',
+
+            // Default option for all coordinate systems
+            xAxisIndex: 0,
+            yAxisIndex: 0,
+            polarIndex: 0,
+            geoIndex: 0,
 
             legendHoverLink: true,
 

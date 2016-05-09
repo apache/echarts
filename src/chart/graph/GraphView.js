@@ -32,9 +32,9 @@ define(function (require) {
         render: function (seriesModel, ecModel, api) {
             var coordSys = seriesModel.coordinateSystem;
             // Only support view and geo coordinate system
-            if (coordSys.type !== 'geo' && coordSys.type !== 'view') {
-                return;
-            }
+            // if (coordSys.type !== 'geo' && coordSys.type !== 'view') {
+            //     return;
+            // }
 
             this._model = seriesModel;
             this._nodeScaleRatio = seriesModel.get('nodeScaleRatio');
@@ -129,6 +129,10 @@ define(function (require) {
                 rect.applyTransform(group.transform);
                 return rect;
             };
+            if (seriesModel.coordinateSystem.type !== 'view') {
+                controller.disable();
+                return;
+            }
             controller.enable(seriesModel.get('roam'));
             controller.zoomLimit = seriesModel.get('scaleLimit');
             // Update zoom from model
@@ -173,6 +177,9 @@ define(function (require) {
 
         _getNodeGlobalScale: function (seriesModel) {
             var coordSys = seriesModel.coordinateSystem;
+            if (coordSys.type !== 'view') {
+                return 1;
+            }
 
             var nodeScaleRatio = this._nodeScaleRatio;
 

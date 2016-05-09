@@ -4,7 +4,6 @@
         <script src="esl.js"></script>
         <script src="config.js"></script>
         <script src="lib/jquery.min.js"></script>
-        <script src="lib/dat.gui.min.js"></script>
     </head>
     <body>
         <style>
@@ -19,19 +18,14 @@
 
             require([
                 'echarts',
-
-                'extension/dataTool/gexf',
-
                 'echarts/chart/graph',
-
                 'echarts/component/title',
                 'echarts/component/legend',
-                'echarts/component/geo',
                 'echarts/component/tooltip',
-                'echarts/component/visualMap',
+                'zrender/vml/vml',
 
                 'theme/vintage'
-            ], function (echarts, gexf) {
+            ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'), 'vintage');
 
@@ -45,7 +39,13 @@
                             layout: 'none',
                             symbolSize: 50,
                             roam: true,
-                            edgeSymbol: ['none', 'arrow'],
+                            label: {
+                                normal: {
+                                    show: true
+                                }
+                            },
+                            edgeSymbol: ['circle', 'arrow'],
+                            edgeSymbolSize: [4, 10],
                             edgeLabel: {
                                 normal: {
                                     textStyle: {
@@ -72,9 +72,9 @@
                             }],
                             // links: [],
                             links: [{
-                                source: '节点1',
-                                target: '节点2',
-                                symbolSize: 20,
+                                source: 0,
+                                target: 1,
+                                symbolSize: [5, 20],
                                 label: {
                                     normal: {
                                         show: true
