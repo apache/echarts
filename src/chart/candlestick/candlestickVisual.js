@@ -19,9 +19,7 @@ define(function (require) {
             if (!ecModel.isSeriesFiltered(seriesModel)) {
                 data.each(function (idx) {
                     var itemModel = data.getItemModel(idx);
-                    var openVal = data.get('open', idx);
-                    var closeVal = data.get('close', idx);
-                    var sign = openVal > closeVal ? -1 : openVal < closeVal ? 1 : 0;
+                    var sign = data.getItemLayout(idx).sign;
 
                     data.setItemVisual(
                         idx,

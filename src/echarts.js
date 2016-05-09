@@ -384,9 +384,9 @@ define(function (require) {
 
             coordSysMgr.update(ecModel, api);
 
-            doVisualCoding.call(this, ecModel, payload);
-
             doLayout.call(this, ecModel, payload);
+
+            doVisualCoding.call(this, ecModel, payload);
 
             doRender.call(this, ecModel, payload);
 
@@ -429,9 +429,9 @@ define(function (require) {
                 return;
             }
 
-            doVisualCoding.call(this, ecModel, payload);
-
             doLayout.call(this, ecModel, payload);
+
+            doVisualCoding.call(this, ecModel, payload);
 
             invokeUpdateMethod.call(this, 'updateView', ecModel, payload);
         },
