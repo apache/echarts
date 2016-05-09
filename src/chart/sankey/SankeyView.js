@@ -94,7 +94,7 @@ define(function (require) {
                     }
                 });
 
-                rect.useStyle(zrUtil.defaults(
+                rect.setStyle(zrUtil.defaults(
                     {
                         fill: node.getVisual('color')
                     },
