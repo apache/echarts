@@ -214,7 +214,7 @@ define(function(require) {
                     if (filterMode === 'empty') {
                         seriesModel.setData(
                             seriesData.map(dim, function (value) {
-                                return !isInWindow(value) ? NaN : value;
+                                return value;
                             })
                         );
                     }

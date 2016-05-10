@@ -54,7 +54,13 @@ define(function (require) {
         if (extent[1] === extent[0]) {
             return 0.5;
         }
-        return (val - extent[0]) / (extent[1] - extent[0]);
+        if (val > extent[1]) {
+            return 1;
+        } else if (val < extent[0]) {
+            return 0;
+        } else {
+            return (val - extent[0]) / (extent[1] - extent[0]);
+        }
     };
 
     /**
