@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Jasmine Spec Runner v2.3.4</title>
+
+    <link rel="shortcut icon" type="image/png" href="lib/jasmine-2.3.4/jasmine_favicon.png">
+    <link rel="stylesheet" href="lib/jasmine-2.3.4/jasmine.css">
+
+    <style type="text/css">
+    #failed-panel {
+        margin-top: 20px;
+    }
+
+    #failed-panel img {
+        width: 33.3%;
+        display: inline-block;
+    }
+    </style>
+
+    <script src="lib/jasmine-2.3.4/jasmine.js"></script>
+    <script src="lib/jasmine-2.3.4/jasmine-html.js"></script>
+    <script src="lib/jasmine-2.3.4/boot.js"></script>
+
+    <script src="lib/canteen.js"></script>
+    <script src="lib/imagediff.js"></script>
+
+    <script src="../esl.js"></script>
+    <script src="spec/ui/config.js"></script>
+    <script src="core/uiHelper.js"></script>
+
+    <!-- <script src="spec/ui/title.js"></script>
+    <script src="spec/ui/title.subtextStyle.js"></script>
+    <script src="spec/ui/title.textStyle.js"></script> -->
+
+    <script src="spec/ui/legend.js"></script>
+</head>
+
+<body>
+
+</body>
+
+</html>

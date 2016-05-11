@@ -14,6 +14,7 @@ define(function (require) {
         require('../visual/symbol'), 'graph', 'circle', null
     ));
     echarts.registerVisualCoding('chart', require('./graph/categoryVisual'));
+    echarts.registerVisualCoding('chart', require('./graph/edgeVisual'));
 
     echarts.registerLayout(require('./graph/simpleLayout'));
     echarts.registerLayout(require('./graph/circularLayout'));

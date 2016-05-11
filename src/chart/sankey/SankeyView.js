@@ -1,7 +1,6 @@
 define(function (require) {
 
     var graphic = require('../../util/graphic');
-    var modelUtil = require('../../util/model');
     var zrUtil = require('zrender/core/util');
 
     var SankeyShape = graphic.extendShape({
@@ -53,22 +52,6 @@ define(function (require) {
 
             group.position = [layoutInfo.x, layoutInfo.y];
 
-            var edgeData = graph.edgeData;
-            var rawOption = seriesModel.option;
-            var formatModel = modelUtil.createDataFormatModel(
-                seriesModel, edgeData, rawOption.edges || rawOption.links
-            );
-
-            formatModel.formatTooltip = function (dataIndex) {
-                var params = this.getDataParams(dataIndex);
-                var rawDataOpt = params.data;
-                var html = rawDataOpt.source + ' -- ' + rawDataOpt.target;
-                if (params.value) {
-                    html += ':' + params.value;
-                }
-                return html;
-            };
-
             // generate a rect  for each node
             graph.eachNode(function (node) {
                 var layout = node.getLayout();
@@ -116,6 +99,10 @@ define(function (require) {
                     }
                 ));
 
+                rect.dataIndex = node.dataIndex;
+                rect.seriesIndex = seriesModel.seriesIndex;
+                rect.dataType = 'node';
+
                 group.add(rect);
             });
 
@@ -124,7 +111,8 @@ define(function (require) {
                 var curve = new SankeyShape();
 
                 curve.dataIndex = edge.dataIndex;
-                curve.dataModel = formatModel;
+                curve.seriesIndex = seriesModel.seriesIndex;
+                curve.dataType = 'edge';
 
                 var lineStyleModel = edge.getModel('lineStyle.normal');
                 var curvature = lineStyleModel.get('curveness');
@@ -160,7 +148,7 @@ define(function (require) {
                 group.add(curve);
 
             });
-            if (!this._data) {
+            if (!this._data && seriesModel.get('animation')) {
                 group.setClipPath(createGridClipShape(group.getBoundingRect(), seriesModel, function () {
                     group.removeClipPath();
                 }));

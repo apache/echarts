@@ -5,7 +5,6 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var Model = require('../../model/Model');
     var formatUtil = require('../../util/format');
-    var helper = require('./helper');
     var encodeHTML = formatUtil.encodeHTML;
     var addCommas = formatUtil.addCommas;
 
@@ -76,10 +75,8 @@ define(function(require) {
             label: {
                 normal: {
                     show: true,
-                    position: ['50%', '50%'], // Can be 5, '5%' or position stirng like 'insideTopLeft', ...
+                    position: 'inside', // Can be [5, '5%'] or position stirng like 'insideTopLeft', ...
                     textStyle: {
-                        align: 'center',
-                        baseline: 'middle',
                         color: '#fff',
                         ellipsis: true
                     }

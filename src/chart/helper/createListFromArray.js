@@ -29,6 +29,10 @@ define(function(require) {
         // If data is undefined
         data = data || [];
 
+        if (!zrUtil.isArray(data)) {
+            throw new Error('Invalid data.');
+        }
+
         var coordSysName = seriesModel.get('coordinateSystem');
         var creator = creators[coordSysName];
         var registeredCoordSys = CoordinateSystem.get(coordSysName);
@@ -41,6 +45,7 @@ define(function(require) {
             dimensions = completeDimensions(dimensions, data, dimensions.concat(['value']));
         }
         var categoryAxisModel = result && result.categoryAxisModel;
+        var categories;
 
         var categoryDimIndex = dimensions[0].type === 'ordinal'
             ? 0 : (dimensions[1].type === 'ordinal' ? 1 : -1);
@@ -57,8 +62,21 @@ define(function(require) {
                     : converDataValue(getDataItemValue(itemOpt), dimensions[dimIndex]);
             }
             : function (itemOpt, dimName, dataIndex, dimIndex) {
-                var val = getDataItemValue(itemOpt);
-                return converDataValue(val && val[dimIndex], dimensions[dimIndex]);
+                var value = getDataItemValue(itemOpt);
+                var val = converDataValue(value && value[dimIndex], dimensions[dimIndex]);
+                if (categoryDimIndex === dimIndex) {
+                    // If given value is a category string
+                    if (typeof val === 'string') {
+                        // Lazy get categories
+                        categories = categories || categoryAxisModel.getCategories();
+                        val = zrUtil.indexOf(categories, val);
+                        if (val < 0 && !isNaN(val)) {
+                            // In case some one write '1', '2' istead of 1, 2
+                            val = +val;
+                        }
+                    }
+                }
+                return val;
             };
 
         list.initData(data, nameList, dimValueGetter);
@@ -87,6 +105,10 @@ define(function(require) {
         cartesian2d: function (data, seriesModel, ecModel) {
             var xAxisModel = ecModel.getComponent('xAxis', seriesModel.get('xAxisIndex'));
             var yAxisModel = ecModel.getComponent('yAxis', seriesModel.get('yAxisIndex'));
+            if (!xAxisModel || !yAxisModel) {
+                throw new Error('Axis option not found');
+            }
+
             var xAxisType = xAxisModel.get('type');
             var yAxisType = yAxisModel.get('type');
 
@@ -130,6 +152,10 @@ define(function(require) {
             var radiusAxisModel = ecModel.findComponents({
                 mainType: 'radiusAxis', filter: axisFinder
             })[0];
+
+            if (!angleAxisModel || !radiusAxisModel) {
+                throw new Error('Axis option not found');
+            }
 
             var radiusAxisType = radiusAxisModel.get('type');
             var angleAxisType = angleAxisModel.get('type');

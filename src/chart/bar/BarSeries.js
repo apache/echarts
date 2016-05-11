@@ -53,14 +53,6 @@ define(function(require) {
             // label: {
             //     normal: {
             //         show: false
-            //         formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-
-            //         // 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-            //         //           'inside' | 'insideleft' | 'insideTop' | 'insideRight' | 'insideBottom' |
-            //         //           'outside' |'left' | 'right'|'top'|'bottom'
-            //         position:
-
-            //         textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
             //     }
             // },
             itemStyle: {

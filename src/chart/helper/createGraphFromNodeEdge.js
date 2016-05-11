@@ -4,9 +4,11 @@ define(function (require) {
     var Graph = require('../../data/Graph');
     var linkList = require('../../data/helper/linkList');
     var completeDimensions = require('../../data/helper/completeDimensions');
+    var CoordinateSystem = require('../../CoordinateSystem');
     var zrUtil = require('zrender/core/util');
+    var createListFromArray = require('./createListFromArray');
 
-    return function (nodes, edges, hostModel, directed) {
+    return function (nodes, edges, hostModel, directed, beforeLink) {
         var graph = new Graph(directed);
         for (var i = 0; i < nodes.length; i++) {
             graph.addNode(zrUtil.retrieve(
@@ -19,25 +21,45 @@ define(function (require) {
         var validEdges = [];
         for (var i = 0; i < edges.length; i++) {
             var link = edges[i];
+            var source = link.source;
+            var target = link.target;
             // addEdge may fail when source or target not exists
-            if (graph.addEdge(link.source, link.target, i)) {
+            if (graph.addEdge(source, target, i)) {
                 validEdges.push(link);
-                linkNameList.push(zrUtil.retrieve(link.id, link.source + ' - ' + link.target));
+                linkNameList.push(zrUtil.retrieve(link.id, source + ' > ' + target));
             }
         }
 
-        // FIXME
-        var dimensionNames = completeDimensions(['value'], nodes);
+        var coordSys = hostModel.get('coordinateSystem');
+        var nodeData;
+        if (coordSys === 'cartesian2d' || coordSys === 'polar') {
+            nodeData = createListFromArray(nodes, hostModel, hostModel.ecModel);
+        }
+        else {
+            // FIXME
+            var coordSysCtor = CoordinateSystem.get(coordSys);
+            // FIXME
+            var dimensionNames = completeDimensions(
+                ((coordSysCtor && coordSysCtor.type !== 'view') ? (coordSysCtor.dimensions || []) : []).concat(['value']),
+                nodes
+            );
+            nodeData = new List(dimensionNames, hostModel);
+            nodeData.initData(nodes);
+        }
 
-        var nodeData = new List(dimensionNames, hostModel);
         var edgeData = new List(['value'], hostModel);
-
-        nodeData.initData(nodes);
         edgeData.initData(validEdges, linkNameList);
 
-        graph.setEdgeData(edgeData);
+        beforeLink && beforeLink(nodeData, edgeData);
 
-        linkList.linkToGraph(nodeData, graph);
+        linkList({
+            mainData: nodeData,
+            struct: graph,
+            structAttr: 'graph',
+            datas: {node: nodeData, edge: edgeData},
+            datasAttr: {node: 'data', edge: 'edgeData'}
+        });
+
         // Update dataIndex of nodes and edges because invalid edge may be removed
         graph.update();
 

@@ -133,10 +133,6 @@ define(function (require) {
                 + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
         },
 
-        getRawDataArray: function () {
-            return this.option.data;
-        },
-
         getData: function () {
             return this._data;
         },
@@ -259,9 +255,16 @@ define(function (require) {
                     fromData.getItemLayout(idx),
                     toData.getItemLayout(idx)
                 ]);
+
+                lineData.setItemVisual(idx, {
+                    'fromSymbolSize': fromData.getItemVisual(idx, 'symbolSize'),
+                    'fromSymbol': fromData.getItemVisual(idx, 'symbol'),
+                    'toSymbolSize': toData.getItemVisual(idx, 'symbolSize'),
+                    'toSymbol': toData.getItemVisual(idx, 'symbol')
+                });
             });
 
-            lineDraw.updateData(lineData, fromData, toData);
+            lineDraw.updateData(lineData);
 
             // Set host model for tooltip
             // FIXME
@@ -279,12 +282,9 @@ define(function (require) {
                 );
 
                 data.setItemVisual(idx, {
-                    symbolSize: itemModel.get('symbolSize')
-                        || symbolSize[isFrom ? 0 : 1],
-                    symbol: itemModel.get('symbol', true)
-                        || symbolType[isFrom ? 0 : 1],
-                    color: itemModel.get('itemStyle.normal.color')
-                        || seriesData.getVisual('color')
+                    symbolSize: itemModel.get('symbolSize') || symbolSize[isFrom ? 0 : 1],
+                    symbol: itemModel.get('symbol', true) || symbolType[isFrom ? 0 : 1],
+                    color: itemModel.get('itemStyle.normal.color') || seriesData.getVisual('color')
                 });
             }
 

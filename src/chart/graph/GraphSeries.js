@@ -4,6 +4,8 @@ define(function (require) {
 
     var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../../util/model');
+    var Model = require('../../model/Model');
 
     var createGraphFromNodeEdge = require('../helper/createGraphFromNodeEdge');
 
@@ -19,24 +21,36 @@ define(function (require) {
                 return this._categoriesData;
             };
 
+            this.fillDataTextStyle(option.edges || option.links);
+
             this._updateCategoriesData();
         },
 
         mergeOption: function (option) {
             GraphSeries.superApply(this, 'mergeOption', arguments);
 
+            this.fillDataTextStyle(option.edges || option.links);
+
             this._updateCategoriesData();
         },
 
+        mergeDefaultAndTheme: function (option) {
+            GraphSeries.superApply(this, 'mergeDefaultAndTheme', arguments);
+            modelUtil.defaultEmphasis(option.edgeLabel, modelUtil.LABEL_OPTIONS);
+        },
+
         getInitialData: function (option, ecModel) {
-            var edges = option.edges || option.links;
-            var nodes = option.data || option.nodes;
+            var edges = option.edges || option.links || [];
+            var nodes = option.data || option.nodes || [];
+            var self = this;
+
             if (nodes && edges) {
-                var graph = createGraphFromNodeEdge(nodes, edges, this, true);
-                var list = graph.data;
-                var self = this;
-                // Overwrite list.getItemModel to
-                list.wrapMethod('getItemModel', function (model) {
+                return createGraphFromNodeEdge(nodes, edges, this, true, beforeLink).data;
+            }
+
+            function beforeLink(nodeData, edgeData) {
+                // Overwrite nodeData.getItemModel to
+                nodeData.wrapMethod('getItemModel', function (model) {
                     var categoriesModels = self._categoriesModels;
                     var categoryIdx = model.getShallow('category');
                     var categoryModel = categoriesModels[categoryIdx];
@@ -46,13 +60,24 @@ define(function (require) {
                     }
                     return model;
                 });
-                return list;
-            }
-        },
 
-        restoreData: function () {
-            GraphSeries.superApply(this, 'restoreData', arguments);
-            this.getGraph().restoreData();
+                var edgeLabelModel = self.getModel('edgeLabel');
+                var wrappedGetEdgeModel = function (path, parentModel) {
+                    var pathArr = (path || '').split('.');
+                    if (pathArr[0] === 'label') {
+                        parentModel = parentModel
+                            || edgeLabelModel.getModel(pathArr.slice(1));
+                    }
+                    var model = Model.prototype.getModel.call(this, pathArr, parentModel);
+                    model.getModel = wrappedGetEdgeModel;
+                    return model;
+                };
+                edgeData.wrapMethod('getItemModel', function (model) {
+                    // FIXME Wrap get method ?
+                    model.getModel = wrappedGetEdgeModel;
+                    return model;
+                });
+            }
         },
 
         /**
@@ -76,6 +101,27 @@ define(function (require) {
             return this._categoriesData;
         },
 
+        /**
+         * @override
+         */
+        formatTooltip: function (dataIndex, multipleSeries, dataType) {
+            if (dataType === 'edge') {
+                var nodeData = this.getData();
+                var params = this.getDataParams(dataIndex, dataType);
+                var edge = nodeData.graph.getEdgeByIndex(dataIndex);
+                var sourceName = nodeData.getName(edge.node1.dataIndex);
+                var targetName = nodeData.getName(edge.node2.dataIndex);
+                var html = sourceName + ' > ' + targetName;
+                if (params.value) {
+                    html += ' : ' + params.value;
+                }
+                return html;
+            }
+            else { // dataType === 'node' or empty
+                return GraphSeries.superApply(this, 'formatTooltip', arguments);
+            }
+        },
+
         _updateCategoriesData: function () {
             var categories = zrUtil.map(this.option.categories || [], function (category) {
                 // Data must has value
@@ -93,24 +139,12 @@ define(function (require) {
             });
         },
 
-        /**
-         * @param {number} zoom
-         */
-        setRoamZoom: function (zoom) {
-            var roamDetail = this.option.roamDetail;
-            roamDetail && (roamDetail.zoom = zoom);
+        setZoom: function (zoom) {
+            this.option.zoom = zoom;
         },
 
-        /**
-         * @param {number} x
-         * @param {number} y
-         */
-        setRoamPan: function (x, y) {
-            var roamDetail = this.option.roamDetail;
-            if (roamDetail) {
-                roamDetail.x = x;
-                roamDetail.y = y;
-            }
+        setCenter: function (center) {
+            this.option.center = center;
         },
 
         defaultOption: {
@@ -121,6 +155,12 @@ define(function (require) {
                     '#dd4444', '#fd9c35', '#cd4870'],
 
             coordinateSystem: 'view',
+
+            // Default option for all coordinate systems
+            xAxisIndex: 0,
+            yAxisIndex: 0,
+            polarIndex: 0,
+            geoIndex: 0,
 
             legendHoverLink: true,
 
@@ -148,20 +188,25 @@ define(function (require) {
             symbol: 'circle',
             symbolSize: 10,
 
+            edgeSymbol: ['none', 'none'],
+            edgeSymbolSize: 10,
+            edgeLabel: {
+                normal: {
+                    position: 'middle'
+                },
+                emphasis: {}
+            },
+
             draggable: false,
 
             roam: false,
-            roamDetail: {
-                x: 0,
-                y: 0,
-                zoom: 1
-            },
 
+            // Default on center of graph
+            center: null,
+
+            zoom: 1,
             // Symbol size scale ratio in roam
             nodeScaleRatio: 0.6,
-
-            // Line width scale ratio in roam
-            // edgeScaleRatio: 0.1,
 
             // categories: [],
 
@@ -175,7 +220,8 @@ define(function (require) {
 
             label: {
                 normal: {
-                    show: false
+                    show: false,
+                    formatter: '{b}'
                 },
                 emphasis: {
                     show: true

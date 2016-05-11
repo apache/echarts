@@ -9,6 +9,151 @@
     var nativeSlice = Array.prototype.slice;
 
     /**
+     * Usage:
+     * var testCase = helper.prepare([
+     *     'echarts/chart/line',
+     *     'echarts/component/grid',
+     *     'echarts/component/toolbox'
+     * ])
+     *
+     * testCase('test_case_1', function (grid, line, toolbox) {
+     *     // Real test case.
+     *     // this.echarts can be visited.
+     * });
+     *
+     * testCase.requireId(['echarts/model/Component'])('test_case_2', function (Component) {
+     *     // Real test case.
+     *     // this.echarts can be visited.
+     * });
+     *
+     * testCase.createChart()(function(grid, line, toolbox) {
+     *     // this.echarts can be visited.
+     *     // this.chart can be visited.
+     *     // this.charts[0] can be visited, this.charts[0] === this.chart
+     *     // this.el can be visited.
+     *     // this.els[0] can be visited, this.els[0] === this.el
+     * });
+     *
+     * testCase.createChart(2)(function(grid, line, toolbox) {
+     *     // this.echarts can be visited.
+     *     // this.chart can be visited.
+     *     // this.charts[0] can be visited, this.charts[0] === this.chart
+     *     // this.charts[1] can be visited.
+     *     // this.el can be visited.
+     *     // this.els[0] can be visited, this.els[0] === this.el
+     *     // this.els[1] can be visited.
+     * });
+     *
+     *
+     * @public
+     * @params {Array.<string>} [requireId] Like:
+     * @return {Function} testCase function wrap.
+     */
+    helper.prepare = function (requireId) {
+
+        window.beforeEach(function (done) {
+            window.jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;
+            done();
+        });
+
+        return wrapTestCaseFn(genContext({requireId: requireId}));
+
+
+        function wrapTestCaseFn(context) {
+
+            var testCase = function (name, doTest) {
+
+                var requireId = context.requireId;
+                if (!(requireId instanceof Array)) {
+                    requireId = requireId != null ? [] : [requireId];
+                }
+                requireId = ['echarts'].concat(requireId);
+
+                window.it(name, function (done) {
+                    helper.resetPackageLoader(onLoaderReset);
+
+                    function onLoaderReset() {
+                        window.require(requireId, onModuleLoaded);
+                    }
+
+                    function onModuleLoaded(echarts) {
+                        var createResult = createChart(context, echarts);
+
+                        var userScope = {
+                            echarts: echarts,
+                            chart: createResult.charts[0],
+                            charts: createResult.charts.slice(),
+                            el: createResult.els[0],
+                            els: createResult.els.slice()
+                        };
+                        doTest.apply(
+                            userScope,
+                            Array.prototype.slice.call(arguments, 1)
+                        );
+
+                        removeChart(createResult);
+
+                        done();
+                    }
+                });
+            };
+
+            testCase.requireId = function (requireId) {
+                return wrapTestCaseFn(genContext({requireId: requireId}, context));
+            };
+
+            testCase.createChart = function (chartCount) {
+                chartCount == null && (chartCount = 1);
+                return wrapTestCaseFn(genContext({chartCount: chartCount}, context));
+            };
+
+            return testCase;
+        }
+
+        function genContext(props, originalContext) {
+            var context = {};
+            if (originalContext) {
+                for (var key in originalContext) {
+                    if (originalContext.hasOwnProperty(key)) {
+                        context[key] = originalContext[key];
+                    }
+                }
+            }
+            if (props) {
+                for (var key in props) {
+                    if (props.hasOwnProperty(key)) {
+                        context[key] = props[key];
+                    }
+                }
+            }
+            return context;
+        }
+
+        function createChart(context, echarts) {
+            var els = [];
+            var charts = [];
+            for (var i = 0; i < context.chartCount || 0; i++) {
+                var el = document.createElement('div');
+                document.body.appendChild(el);
+                els.push(el);
+                charts.push(echarts.init(el, null, {renderer: 'canvas'}));
+            }
+            return {charts: charts, els: els};
+        }
+
+        function removeChart(createResult) {
+            for (var i = 0; i < createResult.charts.length; i++) {
+                var chart = createResult.charts[i];
+                chart && chart.dispose();
+            }
+            for (var i = 0; i < createResult.els.length; i++) {
+                var el = createResult.els[i];
+                el && document.body.removeChild(el);
+            }
+        }
+    };
+
+    /**
      * @param {*} target
      * @param {*} source
      */
@@ -19,7 +164,7 @@
             }
         }
         return target;
-    }
+    };
 
     /**
      * @public
@@ -128,7 +273,7 @@
         context.require = null;
 
         // Import esl.
-        helper.loadScript('esl.js', 'esl', function () {
+        helper.loadScript('../esl.js', 'esl', function () {
             helper.loadScript('config.js', 'config', function () {
                 then();
             });
@@ -160,5 +305,6 @@
             });
         }
     };
+
 
 })(window);

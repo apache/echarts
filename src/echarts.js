@@ -367,6 +367,7 @@ define(function (require) {
                 return;
             }
 
+            // Fixme First time update ?
             ecModel.restoreData();
 
             // TODO
@@ -818,6 +819,8 @@ define(function (require) {
             chartView.__alive = true;
             chartView.render(seriesModel, ecModel, api, payload);
 
+            chartView.group.silent = !!seriesModel.get('silent');
+
             updateZ(seriesModel, chartView);
         }, this);
 
@@ -836,17 +839,20 @@ define(function (require) {
      * @private
      */
     echartsProto._initEvents = function () {
-        var zr = this._zr;
         each(MOUSE_EVENT_NAMES, function (eveName) {
-            zr.on(eveName, function (e) {
+            this._zr.on(eveName, function (e) {
                 var ecModel = this.getModel();
                 var el = e.target;
                 if (el && el.dataIndex != null) {
                     var dataModel = el.dataModel || ecModel.getSeriesByIndex(el.seriesIndex);
-                    var params = dataModel && dataModel.getDataParams(el.dataIndex) || {};
+                    var params = dataModel && dataModel.getDataParams(el.dataIndex, el.dataType) || {};
                     params.event = e;
                     params.type = eveName;
                     this.trigger(eveName, params);
+                }
+                // If element has custom eventData of components
+                else if (el && el.eventData) {
+                    this.trigger(eveName, el.eventData);
                 }
             }, this);
         }, this);
@@ -964,9 +970,9 @@ define(function (require) {
         /**
          * @type {number}
          */
-        version: '3.1.5',
+        version: '3.1.8',
         dependencies: {
-            zrender: '3.0.6'
+            zrender: '3.0.9'
         }
     };
 
@@ -986,6 +992,8 @@ define(function (require) {
             chart._messageCenter.on(eventType, function (event) {
                 if (connectedGroups[chart.group] && chart[STATUS_KEY] !== STATUS_PENDING) {
                     var action = chart.makeActionFromEvent(event);
+                    // 删除 fromTipIndex 以通过 _manuallyShowTip() 的检查
+                    action.fromTipIndex = undefined;
                     var otherCharts = [];
                     for (var id in instances) {
                         var otherChart = instances[id];

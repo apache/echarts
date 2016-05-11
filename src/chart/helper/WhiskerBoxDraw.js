@@ -126,12 +126,12 @@ define(function (require) {
         updateMethod(
             this.childAt(this.bodyIndex),
             {shape: {points: itemLayout.bodyEnds}},
-            seriesModel
+            seriesModel, idx
         );
         updateMethod(
             this.childAt(this.whiskerIndex),
             {shape: makeWhiskerEndsShape(itemLayout.whiskerEnds)},
-            seriesModel
+            seriesModel, idx
         );
 
         this.styleUpdater.call(null, this, data, idx);

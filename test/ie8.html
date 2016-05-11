@@ -208,7 +208,7 @@
                         trigger: 'axis',
                         showDelay : 0,
                         formatter : function (params) {
-                            if (params.value.length > 1) {
+                            if (params.value && params.value.length > 1) {
                                 return params.seriesName + ' :<br/>'
                                    + params.value[0] + 'cm '
                                    + params.value[1] + 'kg ';
@@ -531,11 +531,34 @@
                         selectedOffset: 30,
                         clockwise: true,
                         data:[
-                            {value:335, name:'直接访问'},
+                            {value:0, name:'直接访问'},
                             {value:310, name:'邮件营销'},
                             {value:234, name:'联盟广告'},
                             {value:135, name:'视频广告'},
                             {value:1548, name:'搜索引擎'}
+                        ]
+                    }]
+                });
+            }
+
+            function makeSinglePie() {
+                var chart = makeChart();
+                chart.setOption({
+                    legend: {
+                        data:['直接访问']
+                    },
+                    tooltip: {
+
+                    },
+                    series: [{
+                        name: 'pie',
+                        type: 'pie',
+                        selectedMode: 'single',
+                        hoverAnimation: false,
+                        selectedOffset: 30,
+                        clockwise: true,
+                        data:[
+                            {value:335, name:'直接访问'}
                         ]
                     }]
                 });
@@ -799,6 +822,129 @@
                 });
             }
 
+            function makeDataZoom() {
+                var chart = makeChart();
+                var data = [];
+                var categoryData = [];
+                var y = Math.random() * 1000;
+                for (var i = 0; i < 50; i++) {
+                    categoryData.push('C' + i);
+                    data.push(y);
+                    y += 100 * Math.random() - 50;
+                }
+                chart.setOption({
+                    xAxis: {
+                        data: categoryData
+                    },
+                    yAxis: {},
+                    dataZoom: [{
+                        start: 0,
+                        end: 30
+                    }],
+                    series: [
+                        {
+                            type: 'line',
+                            animation: false,
+                            data: data
+                            // smooth: true
+                        }
+                    ]
+                });
+            }
+
+            function makeGraph() {
+                var chart = makeChart();
+                chart.setOption({
+                    tooltip: {},
+                    animationDurationUpdate: 1500,
+                    animationEasingUpdate: 'quinticInOut',
+                    series : [
+                        {
+                            type: 'graph',
+                            layout: 'none',
+                            symbolSize: 50,
+                            roam: true,
+                            label: {
+                                normal: {
+                                    show: true
+                                }
+                            },
+                            edgeSymbol: ['circle', 'arrow'],
+                            edgeSymbolSize: [4, 10],
+                            edgeLabel: {
+                                normal: {
+                                    textStyle: {
+                                        fontSize: 20
+                                    }
+                                }
+                            },
+                            data: [{
+                                name: '节点1',
+                                x: 300,
+                                y: 300
+                            }, {
+                                name: '节点2',
+                                x: 800,
+                                y: 300
+                            }, {
+                                name: '节点3',
+                                x: 550,
+                                y: 100
+                            }, {
+                                name: '节点4',
+                                x: 550,
+                                y: 500
+                            }],
+                            // links: [],
+                            links: [{
+                                source: '节点1',
+                                target: '节点2',
+                                symbolSize: [5, 20],
+                                label: {
+                                    normal: {
+                                        show: true
+                                    }
+                                },
+                                lineStyle: {
+                                    normal: {
+                                        width: 5,
+                                        curveness: 0.2
+                                    }
+                                }
+                            }, {
+                                source: '节点2',
+                                target: '节点1',
+                                label: {
+                                    normal: {
+                                        show: true
+                                    }
+                                },
+                                lineStyle: {
+                                    normal: { curveness: 0.2 }
+                                }
+                            }, {
+                                source: '节点1',
+                                target: '节点3'
+                            }, {
+                                source: '节点2',
+                                target: '节点3'
+                            }, {
+                                source: '节点2',
+                                target: '节点4'
+                            }, {
+                                source: '节点1',
+                                target: '节点4'
+                            }],
+                            lineStyle: {
+                                normal: {
+                                    curveness: 0
+                                }
+                            }
+                        }
+                    ]
+                });
+            }
+
             setTimeout(function () {
                 makeLine();
             }, 500);
@@ -809,6 +955,9 @@
                 makePie();
             }, 1500);
             setTimeout(function () {
+                makeSinglePie();
+            }, 1800);
+            setTimeout(function () {
                 makeScatter();
             }, 2000);
             setTimeout(function () {
@@ -817,6 +966,12 @@
             setTimeout(function () {
                 makeFunnel();
             }, 3000);
+            setTimeout(function () {
+                makeDataZoom();
+            }, 3500);
+            setTimeout(function () {
+                makeGraph();
+            }, 3500);
         </script>
     </body>
 </html>

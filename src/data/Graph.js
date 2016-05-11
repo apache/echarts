@@ -79,6 +79,8 @@ define(function(require) {
      * @param {number} [dataIndex]
      */
     graphProto.addNode = function (id, dataIndex) {
+        id = id || ('' + dataIndex);
+
         var nodesMap = this._nodesMap;
 
         if (nodesMap[id]) {
@@ -114,14 +116,22 @@ define(function(require) {
 
     /**
      * Add a new edge
-     * @param {string|module:echarts/data/Graph.Node} n1
-     * @param {string|module:echarts/data/Graph.Node} n2
+     * @param {number|string|module:echarts/data/Graph.Node} n1
+     * @param {number|string|module:echarts/data/Graph.Node} n2
      * @param {number} [dataIndex=-1]
      * @return {module:echarts/data/Graph.Edge}
      */
     graphProto.addEdge = function (n1, n2, dataIndex) {
         var nodesMap = this._nodesMap;
         var edgesMap = this._edgesMap;
+
+        // PNEDING
+        if (typeof n1 === 'number') {
+            n1 = this.nodes[n1];
+        }
+        if (typeof n2 === 'number') {
+            n2 = this.nodes[n2];
+        }
 
         if (!(n1 instanceof Node)) {
             n1 = nodesMap[n1];
@@ -293,10 +303,12 @@ define(function(require) {
             nodes[data.getRawIndex(i)].dataIndex = i;
         }
 
+        edgeData.silent = true;
         edgeData.filterSelf(function (idx) {
             var edge = edges[edgeData.getRawIndex(idx)];
             return edge.node1.dataIndex >= 0 && edge.node2.dataIndex >= 0;
         });
+        edgeData.silent = false;
 
         // Update edge
         for (var i = 0, len = edges.length; i < len; i++) {
@@ -305,19 +317,6 @@ define(function(require) {
         for (var i = 0, len = edgeData.count(); i < len; i++) {
             edges[edgeData.getRawIndex(i)].dataIndex = i;
         }
-    };
-
-    /**
-     * Set edge data
-     * @param {module:echarts/data/List} edgeData
-     */
-    graphProto.setEdgeData = function (edgeData) {
-        this.edgeData = edgeData;
-        this._edgeDataSaved = edgeData.cloneShallow();
-    };
-
-    graphProto.restoreData = function () {
-        this.edgeData = this._edgeDataSaved.cloneShallow();
     };
 
     /**

@@ -78,7 +78,7 @@ define(function (require) {
 
         constructor: MapDraw,
 
-        draw: function (mapOrGeoModel, ecModel, api, fromView) {
+        draw: function (mapOrGeoModel, ecModel, api, fromView, payload) {
 
             // geoModel has no data
             var data = mapOrGeoModel.getData && mapOrGeoModel.getData();
@@ -86,11 +86,22 @@ define(function (require) {
             var geo = mapOrGeoModel.coordinateSystem;
 
             var group = this.group;
-            group.removeAll();
 
             var scale = geo.scale;
-            group.position = geo.position.slice();
-            group.scale = scale.slice();
+            var groupNewProp = {
+                position: geo.position,
+                scale: scale
+            };
+
+            // No animation when first draw or in action
+            if (!group.childAt(0) || payload) {
+                group.attr(groupNewProp);
+            }
+            else {
+                graphic.updateProps(group, groupNewProp, mapOrGeoModel);
+            }
+
+            group.removeAll();
 
             var itemStyleModel;
             var hoverItemStyleModel;
@@ -118,6 +129,12 @@ define(function (require) {
             zrUtil.each(geo.regions, function (region) {
 
                 var regionGroup = new graphic.Group();
+                var compoundPath = new graphic.CompoundPath({
+                    shape: {
+                        paths: []
+                    }
+                });
+                regionGroup.add(compoundPath);
                 var dataIdx;
                 // Use the itemStyle in data if has data
                 if (data) {
@@ -152,18 +169,15 @@ define(function (require) {
                     var polygon = new graphic.Polygon({
                         shape: {
                             points: contour
-                        },
-                        style: {
-                            strokeNoScale: true
-                        },
-                        culling: true
+                        }
                     });
 
-                    polygon.setStyle(itemStyle);
-
-                    regionGroup.add(polygon);
+                    compoundPath.shape.paths.push(polygon);
                 });
 
+                compoundPath.setStyle(itemStyle);
+                compoundPath.style.strokeNoScale = true;
+                compoundPath.culling = true;
                 // Label
                 var showLabel = labelModel.get('show');
                 var hoverShowLabel = hoverLabelModel.get('show');
@@ -229,7 +243,7 @@ define(function (require) {
             var controller = this._controller;
             controller.zoomLimit = mapOrGeoModel.get('scaleLimit');
             // Update zoom from model
-            controller.zoom = mapOrGeoModel.get('roamDetail.zoom');
+            controller.zoom = geo.getZoom();
             // roamType is will be set default true if it is null
             controller.enable(mapOrGeoModel.get('roam') || false);
             // FIXME mainType, subType 作为 component 的属性？
@@ -266,7 +280,9 @@ define(function (require) {
                     }
                 }, this);
 
-            controller.rect = geo.getViewRect();
+            controller.rectProvider = function () {
+                return geo.getViewRectAfterRoam();
+            };
         }
     };
 

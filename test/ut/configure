@@ -1,0 +1,10 @@
+if [ "$#" -eq 1 ]; then
+    # use specific version
+    old=$1
+else
+    # use last release
+    old=$(git rev-list --tags --max-count=1)
+fi
+mkdir -p tmp
+cp ../../dist/echarts.js "tmp/newEcharts.js"
+git show $old:dist/echarts.js > 'tmp/oldEcharts.js'

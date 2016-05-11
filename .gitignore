@@ -168,3 +168,4 @@ map/tool
 theme/thumb
 /lib
 todo
+**/*.log

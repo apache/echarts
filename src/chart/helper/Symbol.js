@@ -46,9 +46,6 @@ define(function (require) {
         );
 
         symbolPath.attr({
-            style: {
-                strokeNoScale: true
-            },
             z2: 100,
             culling: true,
             scale: [0, 0]
@@ -60,7 +57,7 @@ define(function (require) {
 
         graphic.initProps(symbolPath, {
             scale: size
-        }, seriesModel);
+        }, seriesModel, idx);
 
         this._symbolType = symbolType;
 
@@ -78,7 +75,6 @@ define(function (require) {
     /**
      * Get scale(aka, current symbol size).
      * Including the change caused by animation
-     * @param {Array.<number>} toLastFrame
      */
     symbolProto.getScale = function () {
         return this.childAt(0).scale;
@@ -113,6 +109,7 @@ define(function (require) {
         symbolPath.draggable = draggable;
         symbolPath.cursor = draggable ? 'move' : 'pointer';
     };
+
     /**
      * Update symbol properties
      * @param  {module:echarts/data/List} data
@@ -129,7 +126,7 @@ define(function (require) {
             var symbolPath = this.childAt(0);
             graphic.updateProps(symbolPath, {
                 scale: symbolSize
-            }, seriesModel);
+            }, seriesModel, idx);
         }
         this._updateCommon(data, idx, symbolSize);
 
@@ -149,6 +146,12 @@ define(function (require) {
         var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
         var color = data.getItemVisual(idx, 'color');
 
+        // Reset style
+        symbolPath.useStyle({
+            strokeNoScale: true
+        });
+        var elStyle = symbolPath.style;
+
         var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
         symbolPath.rotation = itemModel.getShallow('symbolRotate') * Math.PI / 180 || 0;
@@ -163,16 +166,19 @@ define(function (require) {
         symbolPath.setColor(color);
 
         zrUtil.extend(
-            symbolPath.style,
+            elStyle,
             // Color must be excluded.
             // Because symbol provide setColor individually to set fill and stroke
             normalItemStyleModel.getItemStyle(['color'])
         );
 
+        var opacity = data.getItemVisual(idx, 'opacity');
+        if (opacity != null) {
+            elStyle.opacity = opacity;
+        }
+
         var labelModel = itemModel.getModel(normalLabelAccessPath);
         var hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
-
-        var elStyle = symbolPath.style;
 
         // Get last value dim
         var dimensions = data.dimensions.slice();
@@ -244,7 +250,7 @@ define(function (require) {
         symbolPath.style.text = '';
         graphic.updateProps(symbolPath, {
             scale: [0, 0]
-        }, this._seriesModel, cb);
+        }, this._seriesModel, this.dataIndex, cb);
     };
 
     zrUtil.inherits(Symbol, graphic.Group);

@@ -3,14 +3,9 @@
         <meta charset="utf-8">
         <script src="esl.js"></script>
         <script src="config.js"></script>
+        <link rel="stylesheet" href="reset.css" />
     </head>
     <body>
-        <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
-            }
-        </style>
         <div id="main"></div>
         <script>
 
@@ -30,17 +25,48 @@
                             name:'矩形树图',
                             type:'treemap',
                             label: {
-                                show: true,
-                                formatter: "{b}"
-                            },
-                            itemStyle: {
                                 normal: {
-                                    borderWidth: 1,
-                                    borderColor: 'black'
+                                    // show: false,
+                                    position: 'insideRight'
+                                    // position: ['100%', 10],
+                                    // textStyle: {
+                                    //     align: 'right'
+                                    // }
                                 },
                                 emphasis: {
+                                    show: true
                                 }
                             },
+                            breadcrumb: {
+                            },
+                            levels: [
+                                {
+                                    itemStyle: {
+                                        normal: {
+                                            borderWidth: 15,
+                                            gapWidth: 30,
+                                            borderColor: '#999'
+                                        }
+                                    }
+                                },
+                                {
+                                    itemStyle: {
+                                        normal: {
+                                            borderWidth: 15,
+                                            gapWidth: 40,
+                                            borderColor: '#333'
+                                        }
+                                    }
+                                },
+                                {
+                                    itemStyle: {
+                                        normal: {
+                                            borderWidth: 10,
+                                            borderColor: '#555570'
+                                        }
+                                    }
+                                }
+                            ],
                             data:[
                                 {
                                     name: '三星',
@@ -49,154 +75,38 @@
                                 {
                                     name: '小米',
                                     value: 4,
-                                    // children: [
-                                    //     {
-                                    //         name: '三星1',
-                                    //         value: 12
-                                    //     },
-                                        // {
-                                        //     name: '小米1',
-                                        //     value: 4
-                                        // },
-                                        // {
-                                        //     name: '苹果1',
-                                        //     value: 4
-                                        // },
-                                        // {
-                                        //     name: '华为1',
-                                        //     value: 2
-                                        // },
-                                        // {
-                                        //     name: '联想1',
-                                        //     value: 2,
-                                        //     children: [
-                                        //         {
-                                        //             name: '三星1',
-                                        //             value: 12
-                                        //         },
-                                        //         {
-                                        //             name: '联想1',
-                                        //             value: 2
-                                        //         },
-                                        //         {
-                                        //             name: '魅族1',
-                                        //             value: .09
-                                        //         },
-                                        //         {
-                                        //             name: '中兴1',
-                                        //             value: .003
-                                        //         }
-                                        //     ]
-                                        // },
-                                    //     {
-                                    //         name: '魅族1',
-                                    //         value: .09
-                                    //     },
-                                    //     {
-                                    //         name: '中兴1',
-                                    //         value: .003
-                                    //     }
-                                    // ]
-                                },
-                                // {
-                                //     name: '苹果',
-                                //     value: 4
-                                // },
-                                // {
-                                //     name: '华为',
-                                //     value: 2
-                                // },
-                                // {
-                                //     name: '联想',
-                                //     value: 2
-                                // },
-                                // {
-                                //     name: '魅族',
-                                //     value: 1,
-                                //     children: [
-                                //         {
-                                //             name: '三星1',
-                                //             value: 6
-                                //         },
-                                //         {
-                                //             name: '小米1',
-                                //             value: 4
-                                //         },
-                                //         {
-                                //             name: '苹果1',
-                                //             value: 4
-                                //         },
-                                //         {
-                                //             name: '华为1',
-                                //             value: 2
-                                //         },
-                                //         {
-                                //             name: '联想1',
-                                //             value: 2
-                                //         },
-                                //         {
-                                //             name: '魅族1',
-                                //             value: .09
-                                //         },
-                                //         {
-                                //             name: '中兴1',
-                                //             value: .01
-                                //         }
-                                //     ]
-                                // },
-                                {
-                                    name: '中兴',
-                                    value: .1,
                                     children: [
                                         {
-                                            name: '中兴',
-                                            value: .1
+                                            name: '小米0',
+                                            value: 10,
+                                            children: [
+                                                {
+                                                    name: '小尺',
+                                                    value: 400
+                                                },
+                                                {
+                                                    name: '小寸',
+                                                    value: 200
+                                                },
+                                                {
+                                                    name: '小光年',
+                                                    value: 100
+                                                }
+                                            ]
                                         },
                                         {
-                                            name: '中兴',
-                                            value: .1
+                                            name: '小米1',
+                                            value: 4
                                         },
                                         {
-                                            name: '中兴',
-                                            value: .1
-                                        },
-                                        {
-                                            name: '中兴',
-                                            value: .1
-                                        },
-                                        {
-                                            name: '中兴',
-                                            value: .1
-                                        },
-                                        {
-                                            name: '中兴',
-                                            value: .1
-                                        },
-                                        {
-                                            name: '中兴',
-                                            value: .1
-                                        },
-                                        {
-                                            name: '中兴',
-                                            value: .1
-                                        },
-                                        {
-                                            name: '中兴',
-                                            value: .1
-                                        },
-                                        {
-                                            name: '中兴',
-                                            value: .1
-                                        },
-                                        {
-                                            name: '中兴',
-                                            value: .1
-                                        },
-                                        {
-                                            name: '中兴',
-                                            value: .1,
+                                            name: '小米2',
+                                            value: 4
                                         }
                                     ]
+                                },
+                                {
+                                    name: '中兴',
+                                    value: 1
                                 }
                             ]
                         }

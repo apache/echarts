@@ -114,8 +114,6 @@ define(function(require) {
             }
             // Modify boundaryGap
             var coordSys = seriesModel.coordinateSystem;
-            // when there are pies or other subcharts in the instance, coordSys will be null here
-            if (!coordSys) return;
             if (coordSys && coordSys.type === 'cartesian2d' && (type === 'line' || type === 'bar')) {
                 var categoryAxis = coordSys.getAxesByScale('ordinal')[0];
                 if (categoryAxis) {

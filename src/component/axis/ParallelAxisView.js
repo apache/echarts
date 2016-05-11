@@ -44,7 +44,7 @@ define(function (require) {
                 {
                     strokeContainThreshold: areaWidth,
                     // lineWidth === 0 or no value.
-                    silent: !(areaWidth > 0) // jshint ignore:line
+                    axisLineSilent: !(areaWidth > 0) // jshint ignore:line
                 },
                 axisLayout
             );

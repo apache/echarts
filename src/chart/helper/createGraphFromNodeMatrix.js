@@ -4,7 +4,9 @@ define(function (require) {
     var Graph = require('../../data/Graph');
     var linkList = require('../../data/helper/linkList');
     var completeDimensions = require('../../data/helper/completeDimensions');
+    var CoordinateSystem = require('../../CoordinateSystem');
     var zrUtil = require('zrender/core/util');
+    var createListFromArray = require('./createListFromArray');
 
     /**
      * 从邻接矩阵生成
@@ -54,18 +56,34 @@ define(function (require) {
             }
         }
 
-        // FIXME
-        var dimensionNames = completeDimensions(['value'], nodes);
-
-        var nodeData = new List(dimensionNames, hostModel);
+        var coordSys = hostModel.get('coordinateSystem');
+        var nodeData;
+        if (coordSys === 'cartesian2d' || coordSys === 'polar') {
+            nodeData = createListFromArray(nodes, hostModel, hostModel.ecModel);
+        }
+        else {
+            // FIXME
+            var coordSysCtor = CoordinateSystem.get(coordSys);
+            // FIXME
+            var dimensionNames = completeDimensions(
+                ((coordSysCtor && coordSysCtor.type !== 'view') ? (coordSysCtor.dimensions || []) : []).concat(['value']),
+                nodes
+            );
+            nodeData = new List(dimensionNames, hostModel);
+            nodeData.initData(nodes);
+        }
         var edgeData = new List(['value'], hostModel);
 
-        nodeData.initData(nodes);
         edgeData.initData(links);
 
-        graph.setEdgeData(edgeData);
+        linkList({
+            mainData: nodeData,
+            struct: graph,
+            structAttr: 'graph',
+            datas: {node: nodeData, edge: edgeData},
+            datasAttr: {node: 'data', edge: 'edgeData'}
+        });
 
-        linkList.linkToGraph(nodeData, graph);
         // Update dataIndex of nodes and edges because invalid edge may be removed
         graph.update();
 

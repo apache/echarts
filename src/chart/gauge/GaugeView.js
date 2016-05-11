@@ -69,7 +69,9 @@ define(function (require) {
             var axisLineWidth = lineStyleModel.get('width');
 
             for (var i = 0; i < colorList.length; i++) {
-                var endAngle = startAngle + angleRangeSpan * colorList[i][0];
+                // Clamp
+                var percent = Math.min(Math.max(colorList[i][0], 0), 1);
+                var endAngle = startAngle + angleRangeSpan * percent;
                 var sector = new graphic.Sector({
                     shape: {
                         startAngle: prevEndAngle,
@@ -261,7 +263,6 @@ define(function (require) {
             seriesModel, ecModel, api, getColor, posInfo,
             startAngle, endAngle, clockwise
         ) {
-            var linearMap = numberUtil.linearMap;
             var valueExtent = [+seriesModel.get('min'), +seriesModel.get('max')];
             var angleExtent = [startAngle, endAngle];
 
@@ -284,7 +285,7 @@ define(function (require) {
 
                     graphic.updateProps(pointer, {
                         shape: {
-                            angle: linearMap(data.get('value', idx), valueExtent, angleExtent)
+                            angle: numberUtil.linearMap(data.get('value', idx), valueExtent, angleExtent, true)
                         }
                     }, seriesModel);
 
@@ -296,7 +297,7 @@ define(function (require) {
 
                     graphic.updateProps(pointer, {
                         shape: {
-                            angle: linearMap(data.get('value', newIdx), valueExtent, angleExtent)
+                            angle: numberUtil.linearMap(data.get('value', newIdx), valueExtent, angleExtent, true)
                         }
                     }, seriesModel);
 
@@ -313,17 +314,16 @@ define(function (require) {
                 var itemModel = data.getItemModel(idx);
                 var pointerModel = itemModel.getModel('pointer');
 
-                pointer.attr({
-                    shape: {
-                        x: posInfo.cx,
-                        y: posInfo.cy,
-                        width: parsePercent(
-                            pointerModel.get('width'), posInfo.r
-                        ),
-                        r: parsePercent(pointerModel.get('length'), posInfo.r)
-                    },
-                    style: itemModel.getModel('itemStyle.normal').getItemStyle()
+                pointer.setShape({
+                    x: posInfo.cx,
+                    y: posInfo.cy,
+                    width: parsePercent(
+                        pointerModel.get('width'), posInfo.r
+                    ),
+                    r: parsePercent(pointerModel.get('length'), posInfo.r)
                 });
+
+                pointer.useStyle(itemModel.getModel('itemStyle.normal').getItemStyle());
 
                 if (pointer.style.fill === 'auto') {
                     pointer.setStyle('fill', getColor(
@@ -396,7 +396,9 @@ define(function (require) {
                     }
                 });
                 if (rect.style.textFill === 'auto') {
-                    rect.setStyle('textFill', getColor((value - minVal) / (maxVal - minVal)));
+                    rect.setStyle('textFill', getColor(
+                        numberUtil.linearMap(value, [minVal, maxVal], [0, 1], true)
+                    ));
                 }
                 rect.setStyle(detailModel.getItemStyle(['color']));
                 this.group.add(rect);

@@ -57,6 +57,7 @@
                         label: {
                             position: 'outside'
                         },
+                        barBorderWidth: 1,
                         shadowBlur: 10,
                         shadowOffsetX: 0,
                         shadowOffsetY: 0,
@@ -110,6 +111,8 @@
                     tooltip: {},
                     xAxis: {
                         data: xAxisData,
+                        name: '横轴',
+                        silent: false,
                         axisLine: {
                             onZero: true
                         },
@@ -153,10 +156,10 @@
                     }]
                 });
 
-                // chart.on('click', function (params) {
-                //     console.log(params);
-                // });
-                //
+                chart.on('click', function (params) {
+                    console.log(params);
+                });
+
                 window.onresize = chart.resize;
             });
         </script>

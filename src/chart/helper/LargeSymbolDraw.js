@@ -81,7 +81,7 @@ define(function (require) {
         // Use symbolProxy setColor method
         symbolEl.setColor = symbolEl.symbolProxy.setColor;
 
-        symbolEl.setStyle(
+        symbolEl.useStyle(
             seriesModel.getModel('itemStyle.normal').getItemStyle(['color'])
         );
 

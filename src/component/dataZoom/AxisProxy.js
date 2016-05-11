@@ -294,9 +294,13 @@ define(function(require) {
                     boundValue, dataExtent, percentExtent, true
                 );
             }
-            // Avoid rounding error
-            valueWindow[idx] = numberUtil.round(boundValue);
-            percentWindow[idx] = numberUtil.round(boundPercent);
+            // Avoid rounding error.
+            // And make sure the window is larger than the original
+            function round(val) {
+                return Math[idx === 0 ? 'floor' : 'ceil'](val * 1e12) / 1e12;
+            }
+            valueWindow[idx] = round(boundValue);
+            percentWindow[idx] = round(boundPercent);
         });
 
         return {

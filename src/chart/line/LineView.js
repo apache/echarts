@@ -94,21 +94,22 @@ define(function(require) {
         var yExtent = getAxisExtentWithGap(cartesian.getAxis('y'));
         var isHorizontal = cartesian.getBaseAxis().isHorizontal();
 
-        var x = xExtent[0];
-        var y = yExtent[0];
-        var width = xExtent[1] - x;
-        var height = yExtent[1] - y;
-        // Expand clip shape to avoid line value exceeds axis
-        if (!seriesModel.get('clipOverflow')) {
-            if (isHorizontal) {
-                y -= height;
-                height *= 3;
-            }
-            else {
-                x -= width;
-                width *= 3;
-            }
+        var x = Math.min(xExtent[0], xExtent[1]);
+        var y = Math.min(yExtent[0], yExtent[1]);
+        var width = Math.max(xExtent[0], xExtent[1]) - x;
+        var height = Math.max(yExtent[0], yExtent[1]) - y;
+        var lineWidth = seriesModel.get('lineStyle.normal.width') || 2;
+        // Expand clip shape to avoid clipping when line value exceeds axis
+        var expandSize = seriesModel.get('clipOverflow') ? lineWidth / 2 : Math.max(width, height);
+        if (isHorizontal) {
+            y -= expandSize;
+            height += expandSize * 2;
         }
+        else {
+            x -= expandSize;
+            width += expandSize * 2;
+        }
+
         var clipPath = new graphic.Rect({
             shape: {
                 x: x,
@@ -292,10 +293,11 @@ define(function(require) {
                 }
             }
 
-            polyline.setStyle(zrUtil.defaults(
+            polyline.useStyle(zrUtil.defaults(
                 // Use color in lineStyle first
                 lineStyleModel.getLineStyle(),
                 {
+                    fill: 'none',
                     stroke: data.getVisual('color'),
                     lineJoin: 'bevel'
                 }
@@ -305,18 +307,19 @@ define(function(require) {
             smooth = getSmooth(seriesModel.get('smooth'));
             polyline.setShape({
                 smooth: smooth,
-                smoothMonotone: seriesModel.get('smoothMonotone')
+                smoothMonotone: seriesModel.get('smoothMonotone'),
+                connectNulls: seriesModel.get('connectNulls')
             });
 
             if (polygon) {
                 var stackedOn = data.stackedOn;
                 var stackedOnSmooth = 0;
 
-                polygon.style.opacity = 0.7;
-                polygon.setStyle(zrUtil.defaults(
+                polygon.useStyle(zrUtil.defaults(
                     areaStyleModel.getAreaStyle(),
                     {
                         fill: data.getVisual('color'),
+                        opacity: 0.7,
                         lineJoin: 'bevel'
                     }
                 ));
@@ -329,7 +332,8 @@ define(function(require) {
                 polygon.setShape({
                     smooth: smooth,
                     stackedOnSmooth: stackedOnSmooth,
-                    smoothMonotone: seriesModel.get('smoothMonotone')
+                    smoothMonotone: seriesModel.get('smoothMonotone'),
+                    connectNulls: seriesModel.get('connectNulls')
                 });
             }
 

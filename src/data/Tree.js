@@ -8,16 +8,15 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var Model = require('../model/Model');
     var List = require('./List');
-    var linkListHelper = require('./helper/linkList');
+    var linkList = require('./helper/linkList');
     var completeDimensions = require('./helper/completeDimensions');
 
     /**
      * @constructor module:echarts/data/Tree~TreeNode
      * @param {string} name
-     * @param {number} [dataIndex=-1]
      * @param {module:echarts/data/Tree} hostTree
      */
-    var TreeNode = function (name, dataIndex, hostTree) {
+    var TreeNode = function (name, hostTree) {
         /**
          * @type {string}
          */
@@ -54,7 +53,7 @@ define(function(require) {
          * @type {Object}
          * @readOnly
          */
-        this.dataIndex = dataIndex == null ? -1 : dataIndex;
+        this.dataIndex = -1;
 
         /**
          * @type {Array.<module:echarts/data/Tree~TreeNode>}
@@ -414,10 +413,12 @@ define(function(require) {
         function buildHierarchy(dataNode, parentNode) {
             listData.push(dataNode);
 
-            var node = new TreeNode(dataNode.name, listData.length - 1, tree);
+            var node = new TreeNode(dataNode.name, tree);
             parentNode
                 ? addChild(node, parentNode)
                 : (tree.root = node);
+
+            tree._nodes.push(node);
 
             var children = dataNode.children;
             if (children) {
@@ -433,7 +434,13 @@ define(function(require) {
         var list = new List(dimensions, hostModel);
         list.initData(listData);
 
-        linkListHelper.linkToTree(list, tree);
+        linkList({
+            mainData: list,
+            struct: tree,
+            structAttr: 'tree'
+        });
+
+        tree.update();
 
         return tree;
     };
@@ -452,8 +459,6 @@ define(function(require) {
 
         children.push(child);
         child.parentNode = node;
-
-        node.hostTree._nodes.push(child);
     }
 
     return Tree;

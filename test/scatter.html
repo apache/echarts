@@ -96,7 +96,11 @@
                         type: 'scatter',
                         label: {
                             emphasis: {
-                                show: true
+                                show: true,
+                                position: 'top',
+                                formatter: function (params) {
+                                    return params.value;
+                                }
                             }
                         },
                         symbolSize: function (val) {
@@ -122,7 +126,17 @@
                             return val[2] * 40;
                         },
                         data: data3
-                    }]
+                    }],
+                    animationDelay: function (idx) {
+                        return idx * 20;
+                    },
+                    animationDelayUpdate: function (idx) {
+                        return idx * 20;
+                    }
+                });
+
+                chart.on('click', function (params) {
+                    console.log(params.data);
                 });
             })
 

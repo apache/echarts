@@ -49,7 +49,7 @@ define(function (require) {
 
         init: function (option) {
 
-            option = this._fillOption(option);
+            option = this._fillOption(option, option.map);
             this.option = option;
 
             MapSeries.superApply(this, 'init', arguments);
@@ -68,43 +68,24 @@ define(function (require) {
         },
 
         mergeOption: function (newOption) {
-            newOption = this._fillOption(newOption);
+            if (newOption.data) {
+                newOption = this._fillOption(newOption, this.option.map);
+            }
 
             MapSeries.superCall(this, 'mergeOption', newOption);
 
             this.updateSelectedMap();
         },
 
-        _fillOption: function (option) {
+        _fillOption: function (option, mapName) {
             // Shallow clone
             option = zrUtil.extend({}, option);
 
-            var map = echarts.getMap(option.mapType);
+            var map = echarts.getMap(mapName);
             var geoJson = map && map.geoJson;
-            geoJson && option.data
-                && (option.data = fillData(option.data, geoJson));
+            geoJson && (option.data = fillData((option.data || []), geoJson));
 
             return option;
-        },
-
-        /**
-         * @param {number} zoom
-         */
-        setRoamZoom: function (zoom) {
-            var roamDetail = this.option.roamDetail;
-            roamDetail && (roamDetail.zoom = zoom);
-        },
-
-        /**
-         * @param {number} x
-         * @param {number} y
-         */
-        setRoamPan: function (x, y) {
-            var roamDetail = this.option.roamDetail;
-            if (roamDetail) {
-                roamDetail.x = x;
-                roamDetail.y = y;
-            }
         },
 
         getRawValue: function (dataIndex) {
@@ -168,12 +149,10 @@ define(function (require) {
             // 是否开启缩放及漫游模式
             // roam: false,
 
-            // 在 roam 开启的时候使用
-            roamDetail: {
-                x: 0,
-                y: 0,
-                zoom: 1
-            },
+            // Default on center of map
+            center: null,
+
+            zoom: 1,
 
             scaleLimit: null,
 
@@ -185,9 +164,9 @@ define(function (require) {
                     }
                 },
                 emphasis: {
-                    show: false,
+                    show: true,
                     textStyle: {
-                        color: '#000'
+                        color: 'rgb(100,0,0)'
                     }
                 }
             },
@@ -204,6 +183,14 @@ define(function (require) {
                     areaColor: 'rgba(255,215, 0, 0.8)'
                 }
             }
+        },
+
+        setZoom: function (zoom) {
+            this.option.zoom = zoom;
+        },
+
+        setCenter: function (center) {
+            this.option.center = center;
         }
     });
 

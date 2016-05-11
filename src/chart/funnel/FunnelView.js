@@ -63,23 +63,30 @@ define(function (require) {
         var layout = data.getItemLayout(idx);
         var opacity = data.getItemModel(idx).get(opacityAccessPath);
         opacity = opacity == null ? 1 : opacity;
+
+        // Reset style
+        polygon.useStyle({});
+
         if (firstCreate) {
             polygon.setShape({
                 points: layout.points
             });
             polygon.setStyle({ opacity : 0 });
-            graphic.updateProps(polygon, {
+            graphic.initProps(polygon, {
                 style: {
                     opacity: opacity
                 }
-            }, seriesModel);
+            }, seriesModel, idx);
         }
         else {
-            graphic.initProps(polygon, {
+            graphic.updateProps(polygon, {
+                style: {
+                    opacity: opacity
+                },
                 shape: {
                     points: layout.points
                 }
-            }, seriesModel);
+            }, seriesModel, idx);
         }
 
         // Update common style
@@ -91,7 +98,7 @@ define(function (require) {
                 {
                     fill: visualColor
                 },
-                itemStyleModel.getModel('normal').getItemStyle()
+                itemStyleModel.getModel('normal').getItemStyle(['opacity'])
             )
         );
         polygon.hoverStyle = itemStyleModel.getModel('emphasis').getItemStyle();
@@ -116,14 +123,14 @@ define(function (require) {
             shape: {
                 points: labelLayout.linePoints || labelLayout.linePoints
             }
-        }, seriesModel);
+        }, seriesModel, idx);
 
         graphic.updateProps(labelText, {
             style: {
                 x: labelLayout.x,
                 y: labelLayout.y
             }
-        }, seriesModel);
+        }, seriesModel, idx);
         labelText.attr({
             style: {
                 textAlign: labelLayout.textAlign,

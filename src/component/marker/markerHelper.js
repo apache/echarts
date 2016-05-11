@@ -79,7 +79,9 @@ define(function (require) {
         // 1. If not specify the position with pixel directly
         // 2. If `coord` is not a data array. Which uses `xAxis`,
         // `yAxis` to specify the coord on each dimension
-        if ((isNaN(item.x) || isNaN(item.y))
+
+        // parseFloat first because item.x and item.y can be percent string like '20%'
+        if (item && (isNaN(parseFloat(item.x)) || isNaN(parseFloat(item.y)))
             && !zrUtil.isArray(item.coord)
             && coordSys
         ) {
@@ -153,9 +155,7 @@ define(function (require) {
         if (dimIndex < 2) {
             return item.coord && item.coord[dimIndex];
         }
-        else {
-            return item.value;
-        }
+        return item.value;
     };
 
     var numCalculate = function (data, valueDataDim, mlType) {

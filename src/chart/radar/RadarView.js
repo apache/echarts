@@ -51,7 +51,7 @@ define(function (require) {
                             graphic[isInit ? 'initProps' : 'updateProps'](
                                 symbolPath, {
                                     position: newPoints[i]
-                                }, seriesModel
+                                }, seriesModel, idx
                             );
                         }
                         else {
@@ -82,8 +82,8 @@ define(function (require) {
                     };
                     polygon.shape.points = getInitialPoints(points);
                     polyline.shape.points = getInitialPoints(points);
-                    graphic.initProps(polygon, target, seriesModel);
-                    graphic.initProps(polyline, target, seriesModel);
+                    graphic.initProps(polygon, target, seriesModel, idx);
+                    graphic.initProps(polyline, target, seriesModel, idx);
 
                     var itemGroup = new graphic.Group();
                     var symbolGroup = new graphic.Group();
@@ -133,10 +133,11 @@ define(function (require) {
 
                 group.add(itemGroup);
 
-                polyline.setStyle(
+                polyline.useStyle(
                     zrUtil.extend(
                         itemModel.getModel('lineStyle.normal').getLineStyle(),
                         {
+                            fill: 'none',
                             stroke: color
                         }
                     )
@@ -151,7 +152,7 @@ define(function (require) {
                 hoverPolygonIgnore = hoverPolygonIgnore && polygonIgnore;
                 polygon.ignore = polygonIgnore;
 
-                polygon.setStyle(
+                polygon.useStyle(
                     zrUtil.defaults(
                         areaStyleModel.getAreaStyle(),
                         {
@@ -167,7 +168,7 @@ define(function (require) {
                 var labelModel = itemModel.getModel('label.normal');
                 var labelHoverModel = itemModel.getModel('label.emphasis');
                 symbolGroup.eachChild(function (symbolPath) {
-                    symbolPath.setStyle(itemStyle);
+                    symbolPath.useStyle(itemStyle);
                     symbolPath.hoverStyle = zrUtil.clone(itemHoverStyle);
 
                     var defaultText = data.get(data.dimensions[symbolPath.__dimIdx], idx);
