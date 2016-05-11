@@ -83,6 +83,10 @@
                     ]);
                 }
 
+                chart.on('click', function (params) {
+                    console.log(params);
+                });
+
                 chart.setOption({
                     color: ['#bcd3bb', '#928ea8', '#edc1a5'],
                     legend: {
