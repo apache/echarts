@@ -63,10 +63,10 @@ define(function (require) {
         }
         else {
             // FIXME
-            var coordSysCtor = CoordinateSystem.get();
+            var coordSysCtor = CoordinateSystem.get(coordSys);
             // FIXME
             var dimensionNames = completeDimensions(
-                (coordSysCtor && coordSysCtor.type !== 'view' ? [] : (coordSysCtor.dimensions || [])).concat(['value']),
+                ((coordSysCtor && coordSysCtor.type !== 'view') ? (coordSysCtor.dimensions || []) : []).concat(['value']),
                 nodes
             );
             nodeData = new List(dimensionNames, hostModel);
