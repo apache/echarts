@@ -3,7 +3,6 @@ define(function (require) {
     var Group = require('zrender/container/Group');
     var componentUtil = require('../util/component');
     var clazzUtil = require('../util/clazz');
-    var zrUtil = require('zrender/core/util');
 
     function Chart() {
 

@@ -6,7 +6,6 @@ define(function(require) {
     var List = require('../../data/List');
     var completeDimensions = require('../../data/helper/completeDimensions');
     var zrUtil = require('zrender/core/util');
-    var formatUtil = require('../../util/format');
 
     var RadarSeries = SeriesModel.extend({
 
