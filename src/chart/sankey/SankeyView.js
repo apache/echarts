@@ -150,7 +150,10 @@ define(function (require) {
             });
             if (!this._data) {
                 group.setClipPath(createGridClipShape(group.getBoundingRect(), seriesModel, function () {
-                    group.removeClipPath();
+                    // Remove clip path in next tick in case animation is disabled
+                    setTimeout(function () {
+                        group.removeClipPath();
+                    });
                 }));
             }
             this._data = seriesModel.getData();
