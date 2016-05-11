@@ -1076,7 +1076,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.1.8',
+	        version: '3.1.9',
 	        dependencies: {
 	            zrender: '3.0.9'
 	        }
@@ -20765,9 +20765,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var color = data.getItemVisual(idx, 'color');
 
 	        // Reset style
-	        symbolPath.useStyle({
-	            strokeNoScale: true
-	        });
+	        if (symbolPath.type !== 'image') {
+	            symbolPath.useStyle({
+	                strokeNoScale: true
+	            });
+	        }
 	        var elStyle = symbolPath.style;
 
 	        var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
@@ -34930,15 +34932,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var lineDraw = this._lineDraw;
 
 	            var group = this.group;
-	            var groupNewProp = {
-	                position: coordSys.position,
-	                scale: coordSys.scale
-	            };
-	            if (this._firstRender) {
-	                group.attr(groupNewProp);
-	            }
-	            else {
-	                graphic.updateProps(group, groupNewProp, seriesModel);
+
+	            if (coordSys.type === 'view') {
+	                var groupNewProp = {
+	                    position: coordSys.position,
+	                    scale: coordSys.scale
+	                };
+	                if (this._firstRender) {
+	                    group.attr(groupNewProp);
+	                }
+	                else {
+	                    graphic.updateProps(group, groupNewProp, seriesModel);
+	                }
 	            }
 	            // Fix edge contact point with node
 	            adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
