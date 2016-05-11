@@ -283,7 +283,7 @@ define(function(require) {
 
         var dataZoomOpts = option.dataZoom || (option.dataZoom = []);
         if (!zrUtil.isArray(dataZoomOpts)) {
-            dataZoomOpts = [dataZoomOpts];
+            option.dataZoom = dataZoomOpts = [dataZoomOpts];
         }
 
         var toolboxOpt = option.toolbox;
