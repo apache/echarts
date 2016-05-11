@@ -43,15 +43,18 @@ define(function (require) {
             var lineDraw = this._lineDraw;
 
             var group = this.group;
-            var groupNewProp = {
-                position: coordSys.position,
-                scale: coordSys.scale
-            };
-            if (this._firstRender) {
-                group.attr(groupNewProp);
-            }
-            else {
-                graphic.updateProps(group, groupNewProp, seriesModel);
+
+            if (coordSys.type === 'view') {
+                var groupNewProp = {
+                    position: coordSys.position,
+                    scale: coordSys.scale
+                };
+                if (this._firstRender) {
+                    group.attr(groupNewProp);
+                }
+                else {
+                    graphic.updateProps(group, groupNewProp, seriesModel);
+                }
             }
             // Fix edge contact point with node
             adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
