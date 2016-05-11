@@ -147,9 +147,11 @@ define(function (require) {
         var color = data.getItemVisual(idx, 'color');
 
         // Reset style
-        symbolPath.useStyle({
-            strokeNoScale: true
-        });
+        if (symbolPath.type !== 'image') {
+            symbolPath.useStyle({
+                strokeNoScale: true
+            });
+        }
         var elStyle = symbolPath.style;
 
         var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
