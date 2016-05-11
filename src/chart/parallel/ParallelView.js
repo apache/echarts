@@ -104,7 +104,7 @@ define(function (require) {
                                 shape: {
                                     points: pointPair
                                 }
-                            }, seriesModel);
+                            }, seriesModel, newDataIndex);
                         }
                     }
                 );

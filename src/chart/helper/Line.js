@@ -208,7 +208,7 @@ define(function (require) {
             shape: {
                 percent: 1
             }
-        }, seriesModel);
+        }, seriesModel, idx);
 
         this.add(line);
 
@@ -238,7 +238,7 @@ define(function (require) {
             shape: {}
         };
         setLinePoints(target.shape, linePoints);
-        graphic.updateProps(line, target, seriesModel);
+        graphic.updateProps(line, target, seriesModel, idx);
 
         zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
             var symbolType = lineData.getItemVisual(idx, symbolCategory);

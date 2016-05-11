@@ -51,7 +51,7 @@ define(function (require) {
                             graphic[isInit ? 'initProps' : 'updateProps'](
                                 symbolPath, {
                                     position: newPoints[i]
-                                }, seriesModel
+                                }, seriesModel, idx
                             );
                         }
                         else {
@@ -82,8 +82,8 @@ define(function (require) {
                     };
                     polygon.shape.points = getInitialPoints(points);
                     polyline.shape.points = getInitialPoints(points);
-                    graphic.initProps(polygon, target, seriesModel);
-                    graphic.initProps(polyline, target, seriesModel);
+                    graphic.initProps(polygon, target, seriesModel, idx);
+                    graphic.initProps(polyline, target, seriesModel, idx);
 
                     var itemGroup = new graphic.Group();
                     var symbolGroup = new graphic.Group();

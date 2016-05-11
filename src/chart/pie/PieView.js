@@ -126,12 +126,12 @@ define(function (require) {
                 shape: {
                     endAngle: layout.endAngle
                 }
-            }, seriesModel);
+            }, seriesModel, idx);
         }
         else {
             graphic.updateProps(sector, {
                 shape: sectorShape
-            }, seriesModel);
+            }, seriesModel, idx);
         }
 
         // Update common style
@@ -206,14 +206,14 @@ define(function (require) {
                     [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y], [labelLayout.x, labelLayout.y]
                 ]
             }
-        }, seriesModel);
+        }, seriesModel, idx);
 
         graphic.updateProps(labelText, {
             style: {
                 x: labelLayout.x,
                 y: labelLayout.y
             }
-        }, seriesModel);
+        }, seriesModel, idx);
         labelText.attr({
             style: {
                 textVerticalAlign: labelLayout.verticalAlign,
