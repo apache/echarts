@@ -970,9 +970,9 @@ define(function (require) {
         /**
          * @type {number}
          */
-        version: '3.1.7',
+        version: '3.1.8',
         dependencies: {
-            zrender: '3.0.8'
+            zrender: '3.0.9'
         }
     };
 

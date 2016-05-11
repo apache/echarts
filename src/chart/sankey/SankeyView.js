@@ -148,12 +148,9 @@ define(function (require) {
                 group.add(curve);
 
             });
-            if (!this._data) {
+            if (!this._data && seriesModel.get('animation')) {
                 group.setClipPath(createGridClipShape(group.getBoundingRect(), seriesModel, function () {
-                    // Remove clip path in next tick in case animation is disabled
-                    setTimeout(function () {
-                        group.removeClipPath();
-                    });
+                    group.removeClipPath();
                 }));
             }
             this._data = seriesModel.getData();
