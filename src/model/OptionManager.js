@@ -115,7 +115,7 @@ define(function (require) {
          * @private
          * @type {Object}
          */
-        this._newOptionBackup;
+        this._newBaseOption;
     }
 
     // timeline.notMerge is not supported in ec3. Firstly there is rearly
@@ -145,27 +145,31 @@ define(function (require) {
             // 如果 timeline options 或者 media 中设置了某个属性，而baseOption中没有设置，则进行警告。
 
             var oldOptionBackup = this._optionBackup;
-            var newOptionBackup = this._newOptionBackup = parseRawOption.call(
+            var newParsedOption = parseRawOption.call(
                 this, rawOption, optionPreprocessorFuncs
             );
+            this._newBaseOption = newParsedOption.baseOption;
 
             // For setOption at second time (using merge mode);
             if (oldOptionBackup) {
                 // Only baseOption can be merged.
-                mergeOption(oldOptionBackup.baseOption, newOptionBackup.baseOption);
+                mergeOption(oldOptionBackup.baseOption, newParsedOption.baseOption);
 
-                if (newOptionBackup.timelineOptions.length) {
-                    oldOptionBackup.timelineOptions = newOptionBackup.timelineOptions;
+                // For simplicity, timeline options and media options do not support merge,
+                // that is, if you `setOption` twice and both has timeline options, the latter
+                // timeline opitons will not be merged to the formers, but just substitude them.
+                if (newParsedOption.timelineOptions.length) {
+                    oldOptionBackup.timelineOptions = newParsedOption.timelineOptions;
                 }
-                if (newOptionBackup.mediaList.length) {
-                    oldOptionBackup.mediaList = newOptionBackup.mediaList;
+                if (newParsedOption.mediaList.length) {
+                    oldOptionBackup.mediaList = newParsedOption.mediaList;
                 }
-                if (newOptionBackup.mediaDefault) {
-                    oldOptionBackup.mediaDefault = newOptionBackup.mediaDefault;
+                if (newParsedOption.mediaDefault) {
+                    oldOptionBackup.mediaDefault = newParsedOption.mediaDefault;
                 }
             }
             else {
-                this._optionBackup = newOptionBackup;
+                this._optionBackup = newParsedOption;
             }
         },
 
@@ -174,12 +178,9 @@ define(function (require) {
          * @return {Object}
          */
         mountOption: function (isRecreate) {
-            var optionBackup = isRecreate
-                // this._optionBackup can be only used when recreate.
-                // In other cases we use model.mergeOption to handle merge.
-                ? this._optionBackup : this._newOptionBackup;
+            var optionBackup = this._optionBackup;
 
-            // FIXME
+            // TODO
             // 如果没有reset功能则不clone。
 
             this._timelineOptions = map(optionBackup.timelineOptions, clone);
@@ -187,7 +188,14 @@ define(function (require) {
             this._mediaDefault = clone(optionBackup.mediaDefault);
             this._currentMediaIndices = [];
 
-            return clone(optionBackup.baseOption);
+            return clone(isRecreate
+                // this._optionBackup.baseOption, which is created at the first `setOption`
+                // called, and is merged into every new option by inner method `mergeOption`
+                // each time `setOption` called, can be only used in `isRecreate`, because
+                // its reliability is under suspicion. In other cases option merge is
+                // proformed by `model.mergeOption`.
+                ? optionBackup.baseOption : this._newBaseOption
+            );
         },
 
         /**
@@ -276,6 +284,7 @@ define(function (require) {
             baseOption = baseOption || {};
             timelineOptions = (rawOption.options || []).slice();
         }
+
         // For media query
         if (rawOption.media) {
             baseOption = baseOption || {};

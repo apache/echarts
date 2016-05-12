@@ -189,7 +189,7 @@ describe('vsiaulMap_setOption', function() {
 
         var option = this.chart.getOption();
 
-        expect(!!option.visualMap[0].outOfRange.opacity).toEqual(true);
+        expect(!!option.visualMap[0].target.outOfRange.opacity).toEqual(true);
     });
 
     testCase.createChart(2)('normalizeVisualRange', function () {
@@ -204,12 +204,12 @@ describe('vsiaulMap_setOption', function() {
                 {type: 'piecewise', inRange: {opacity: 0.4}},
                 {type: 'piecewise', inRange: {symbol: 'diamond'}},
                 {type: 'piecewise', inRange: {color: 'red'}, categories: ['a', 'b']},
-                {type: 'piecewise', inRange: {color: {a: 'red'}}, categories: ['a', 'b']}
-                {type: 'piecewise', inRange: {opacity: 0.4}, categories: ['a', 'b']},
+                {type: 'piecewise', inRange: {color: {a: 'red'}}, categories: ['a', 'b']},
+                {type: 'piecewise', inRange: {opacity: 0.4}, categories: ['a', 'b']}
             ]
         });
 
-        var ecModel = this.chart[0].getModel();
+        var ecModel = this.charts[0].getModel();
 
         function getVisual(idx, visualType) {
             return ecModel.getComponent('visualMap', idx)
