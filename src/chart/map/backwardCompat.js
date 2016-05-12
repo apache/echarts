@@ -61,6 +61,9 @@ define(function (require) {
                     if (!option.geo) {
                         option.geo = [];
                     }
+                    else if (!zrUtil.isArray(option.geo)) {
+                        option.geo = [option.geo];
+                    }
 
                     // Use same geo if multiple map series has same map type
                     var geoOpt = newCreatedGeoOptMap[seriesOpt.map];
