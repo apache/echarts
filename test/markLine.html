@@ -50,7 +50,7 @@
                     xAxis: {
                         // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
                         data: xAxisData,
-                        boundaryGap: false,
+                        boundaryGap: true,
                         // inverse: true,
                         splitArea: {
                             show: true
@@ -73,7 +73,22 @@
                                 name: '平均值',
                                 type: 'average',
                                 valueIndex: 1
-                            }]
+                            }, {
+                                name: '指定值',
+                                yAxis: 1
+                            }, [{
+                                name: '标签位置为中间',
+                                type: 'min',
+                                label: {
+                                    normal: {
+                                        formatter: '{b}',
+                                        position: 'middle'
+                                    }
+                                }
+                            }, {
+                                name: '标签位置为中间',
+                                type: 'max'
+                            }]]
                         }
                     }, {
                         name: 'line2',
@@ -87,6 +102,9 @@
                                 name: '平均值',
                                 type: 'average',
                                 valueIndex: 0
+                            }, {
+                                name: '指定值',
+                                xAxis: 3
                             }]
                         }
                     }]

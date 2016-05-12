@@ -19,34 +19,50 @@ define(function (require) {
         var mlType = item.type;
 
         if (!zrUtil.isArray(item)
-            && (mlType === 'min' || mlType === 'max' || mlType === 'average')
+            && (
+                mlType === 'min' || mlType === 'max' || mlType === 'average'
+                // In case
+                // data: [{
+                //   yAxis: 10
+                // }]
+                || (item.xAxis != null || item.yAxis != null)
+            )
         ) {
-            var axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
+            var valueAxis;
+            var valueDataDim;
+            var value;
 
-            var baseAxisKey = axisInfo.baseAxis.dim + 'Axis';
-            var valueAxisKey = axisInfo.valueAxis.dim + 'Axis';
-            var baseScaleExtent = axisInfo.baseAxis.scale.getExtent();
+            if (item.yAxis != null || item.xAxis != null) {
+                valueDataDim = item.yAxis != null ? 'y' : 'x';
+                valueAxis = coordSys.getAxis(valueDataDim);
+
+                value = zrUtil.retrieve(item.yAxis, item.xAxis);
+            }
+            else {
+                var axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
+                valueDataDim = axisInfo.valueDataDim;
+                valueAxis = axisInfo.valueAxis;
+                value = markerHelper.numCalculate(data, valueDataDim, mlType);
+            }
+            var valueIndex = valueDataDim === 'x' ? 0 : 1;
+            var baseIndex = 1 - valueIndex;
 
             var mlFrom = zrUtil.clone(item);
             var mlTo = {};
 
             mlFrom.type = null;
 
-            // FIXME Polar should use circle
-            mlFrom[baseAxisKey] = baseScaleExtent[0];
-            mlTo[baseAxisKey] = baseScaleExtent[1];
-
-            var value = markerHelper.numCalculate(data, axisInfo.valueDataDim, mlType);
-
-            // Round if axis is cateogry
-            value = axisInfo.valueAxis.coordToData(axisInfo.valueAxis.dataToCoord(value));
+            mlFrom.coord = [];
+            mlTo.coord = [];
+            mlFrom.coord[baseIndex] = -Infinity;
+            mlTo.coord[baseIndex] = Infinity;
 
             var precision = mlModel.get('precision');
             if (precision >= 0) {
                 value = +value.toFixed(precision);
             }
 
-            mlFrom[valueAxisKey] = mlTo[valueAxisKey] = value;
+            mlFrom.coord[valueIndex] = mlTo.coord[valueIndex] = value;
 
             item = [mlFrom, mlTo, { // Extra option for tooltip and label
                 type: mlType,
@@ -72,7 +88,35 @@ define(function (require) {
         return item;
     };
 
+    function isInifinity(val) {
+        return !isNaN(val) && !isFinite(val);
+    }
+
+    // If a markLine has one dim
+    function ifMarkLineHasOnlyDim(dimIndex, fromCoord, toCoord, coordSys) {
+        var otherDimIndex = 1 - dimIndex;
+        var dimName = coordSys.dimensions[dimIndex];
+        return isInifinity(fromCoord[otherDimIndex]) && isInifinity(toCoord[otherDimIndex])
+            && fromCoord[dimIndex] === toCoord[dimIndex] && coordSys.getAxis(dimName).containData(fromCoord[dimIndex]);
+    }
+
     function markLineFilter(coordSys, item) {
+        if (coordSys.type === 'cartesian2d') {
+            var fromCoord = item[0].coord;
+            var toCoord = item[1].coord;
+            // In case
+            // {
+            //  markLine: {
+            //    data: [{ yAxis: 2 }]
+            //  }
+            // }
+            if (
+                ifMarkLineHasOnlyDim(1, fromCoord, toCoord, coordSys)
+                || ifMarkLineHasOnlyDim(0, fromCoord, toCoord, coordSys)
+            ) {
+                return true;
+            }
+        }
         return markerHelper.dataFilter(coordSys, item[0])
             && markerHelper.dataFilter(coordSys, item[1]);
     }
@@ -106,15 +150,24 @@ define(function (require) {
                 var y = data.get(dims[1], idx);
                 point = coordSys.dataToPoint([x, y]);
             }
-            // Expand min, max, average line to the edge of grid
-            // FIXME Glue code
-            if (mlType && coordSys.type === 'cartesian2d') {
-                var mlOnAxis = valueIndex != null
-                    ? coordSys.getAxis(valueIndex === 1 ? 'x' : 'y')
-                    : coordSys.getAxesByScale('ordinal')[0];
-                if (mlOnAxis && mlOnAxis.onBand) {
-                    point[mlOnAxis.dim === 'x' ? 0 : 1] =
-                        mlOnAxis.toGlobalCoord(mlOnAxis.getExtent()[isFrom ? 0 : 1]);
+            // Expand line to the edge of grid if value on one axis is Inifnity
+            // In case
+            //  markLine: {
+            //    data: [{
+            //      yAxis: 2
+            //      // or
+            //      type: 'average'
+            //    }]
+            //  }
+            if (coordSys.type === 'cartesian2d') {
+                var xAxis = coordSys.getAxis('x');
+                var yAxis = coordSys.getAxis('y');
+                var dims = coordSys.dimensions;
+                if (isInifinity(data.get(dims[0], idx))) {
+                    point[0] = xAxis.toGlobalCoord(xAxis.getExtent()[isFrom ? 0 : 1]);
+                }
+                else if (isInifinity(data.get(dims[1], idx))) {
+                    point[1] = yAxis.toGlobalCoord(yAxis.getExtent()[isFrom ? 0 : 1]);
                 }
             }
         }
