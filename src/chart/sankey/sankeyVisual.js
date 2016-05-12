@@ -24,8 +24,14 @@ define(function (require) {
 
                 var mapValueToColor = mapping.mapValueToVisual(node.getLayout().value);
                 node.setVisual('color', mapValueToColor);
+                // If set itemStyle.normal.color
+                var itemModel = node.getModel();
+                var customColor = itemModel.get('itemStyle.normal.color');
+                if (customColor != null) {
+                    node.setVisual('color', customColor);
+                }
             });
 
-        }) ;   
-    };  
+        }) ;
+    };
 });

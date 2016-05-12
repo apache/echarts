@@ -45,6 +45,8 @@ define(function (require) {
             var graph = seriesModel.getGraph();
             var group = this.group;
             var layoutInfo = seriesModel.layoutInfo;
+            var nodeData = seriesModel.getData();
+            var edgeData = seriesModel.getData('edge');
 
             this._model = seriesModel;
 
@@ -99,11 +101,11 @@ define(function (require) {
                     }
                 ));
 
-                rect.dataIndex = node.dataIndex;
-                rect.seriesIndex = seriesModel.seriesIndex;
-                rect.dataType = 'node';
-
                 group.add(rect);
+
+                nodeData.setItemGraphicEl(node.dataIndex, rect);
+
+                rect.dataType = 'node';
             });
 
             // generate a bezire Curve for each edge
@@ -147,6 +149,7 @@ define(function (require) {
 
                 group.add(curve);
 
+                edgeData.setItemGraphicEl(edge.dataIndex, curve);
             });
             if (!this._data && seriesModel.get('animation')) {
                 group.setClipPath(createGridClipShape(group.getBoundingRect(), seriesModel, function () {
