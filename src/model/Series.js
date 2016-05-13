@@ -187,8 +187,14 @@ define(function(require) {
             var colorEl = '<span style="display:inline-block;margin-right:5px;'
                 + 'border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
 
+            var seriesName = this.name;
+            // FIXME
+            if (seriesName === '\0-') {
+                // Not show '-'
+                seriesName = '';
+            }
             return !multipleSeries
-                ? (encodeHTML(this.name) + '<br />' + colorEl
+                ? ((seriesName && encodeHTML(seriesName) + '<br />') + colorEl
                     + (name
                         ? encodeHTML(name) + ' : ' + formattedValue
                         : formattedValue)
