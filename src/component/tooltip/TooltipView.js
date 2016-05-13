@@ -1005,7 +1005,7 @@ define(function (require) {
         _showItemTooltipContent: function (seriesModel, dataIndex, dataType, e) {
             // FIXME Graph data
             var api = this._api;
-            var data = seriesModel.getData();
+            var data = seriesModel.getData(dataType);
             var itemModel = data.getItemModel(dataIndex);
 
             var rootTooltipModel = this._tooltipModel;
@@ -1025,7 +1025,7 @@ define(function (require) {
             if (tooltipModel.get('showContent') && tooltipModel.get('show')) {
                 var formatter = tooltipModel.get('formatter');
                 var positionExpr = tooltipModel.get('position');
-                var params = seriesModel.getDataParams(dataIndex);
+                var params = seriesModel.getDataParams(dataIndex, dataType);
                 var html;
                 if (!formatter) {
                     html = seriesModel.formatTooltip(dataIndex, false, dataType);
