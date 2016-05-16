@@ -203,9 +203,10 @@ define(function(require) {
          * @private
          */
         _createHandle: function (barGroup, handleIndex, itemSize, textSize, orient) {
+            var modifyHandle = zrUtil.bind(this._modifyHandle, this, handleIndex);
             var handleThumb = createPolygon(
                 createHandlePoints(handleIndex, textSize),
-                zrUtil.bind(this._modifyHandle, this, handleIndex),
+                modifyHandle,
                 'move'
             );
             handleThumb.position[0] = itemSize[0];
@@ -217,7 +218,8 @@ define(function(require) {
             // group (according to handleLabelPoint) but not barGroup.
             var textStyleModel = this.visualMapModel.textStyleModel;
             var handleLabel = new graphic.Text({
-                silent: true,
+                draggable: true,
+                drift: modifyHandle,
                 style: {
                     x: 0, y: 0, text: '',
                     textFont: textStyleModel.getFont(),
