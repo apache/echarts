@@ -254,7 +254,7 @@ define(function(require) {
         },
 
         /**
-         * @public
+         * Get item visual
          */
         getVisual: function (key, ignoreParent) {
             return this.hostTree.data.getItemVisual(this.dataIndex, key, ignoreParent);
@@ -379,6 +379,13 @@ define(function(require) {
             for (var i = 0, len = data.count(); i < len; i++) {
                 nodes[data.getRawIndex(i)].dataIndex = i;
             }
+        },
+
+        /**
+         * Clear all layouts
+         */
+        clearLayouts: function () {
+            this.data.clearItemLayouts();
         }
     };
 

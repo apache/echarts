@@ -911,7 +911,7 @@ define(function (require) {
      */
     listProto.getItemLayout = function (idx) {
         return this._itemLayouts[idx];
-    },
+    };
 
     /**
      * Set layout of single data item
@@ -923,7 +923,14 @@ define(function (require) {
         this._itemLayouts[idx] = merge
             ? zrUtil.extend(this._itemLayouts[idx] || {}, layout)
             : layout;
-    },
+    };
+
+    /**
+     * Clear all layout of single data item
+     */
+    listProto.clearItemLayouts = function () {
+        this._itemLayouts.length = 0;
+    };
 
     /**
      * Get visual property of single data item
@@ -939,7 +946,7 @@ define(function (require) {
             return this.getVisual(key);
         }
         return val;
-    },
+    };
 
     /**
      * Set visual property of single data item

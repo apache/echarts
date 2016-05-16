@@ -48,6 +48,7 @@ define(function (require) {
             var rootRect = (payloadType === 'treemapRender' || payloadType === 'treemapMove')
                 ? payload.rootRect : null;
             var viewRoot = seriesModel.getViewRoot();
+            var viewAbovePath = helper.getPathToRoot(viewRoot);
 
             if (payloadType !== 'treemapMove') {
                 var rootSize = payloadType === 'treemapZoomToNode'
@@ -68,6 +69,14 @@ define(function (require) {
                     leafDepth: seriesOption.leafDepth
                 };
 
+                // layout should be cleared because using updateView but not update.
+                viewRoot.hostTree.clearLayouts();
+
+                // TODO
+                // optimize: if out of view clip, do not layout.
+                // But take care that if do not render node out of view clip,
+                // how to calculate start po
+
                 viewRoot.setLayout({
                     x: 0, y: 0,
                     width: rootSize[0], height: rootSize[1],
@@ -75,6 +84,12 @@ define(function (require) {
                 });
 
                 squarify(viewRoot, options, false, 0);
+
+                // Supplement layout (dataExtent).
+                zrUtil.each(viewAbovePath, function (node, index) {
+                    var childValue = (viewAbovePath[index + 1] || viewRoot).getValue();
+                    node.setLayout({dataExtent: [childValue, childValue]});
+                });
             }
 
             // Set root position
@@ -92,7 +107,9 @@ define(function (require) {
                 seriesModel.getData().tree.root,
                 // Transform to base element coordinate system.
                 new BoundingRect(-layoutInfo.x, -layoutInfo.y, ecWidth, ecHeight),
-                helper.getPathToRoot(viewRoot)
+                viewAbovePath,
+                viewRoot,
+                0
             );
 
         });
@@ -477,8 +494,10 @@ define(function (require) {
         var node = targetNode;
         while (node) {
             var nodeLayout = node.getLayout();
-            targetCenter[0] += nodeLayout.x;
-            targetCenter[1] += nodeLayout.y;
+            if (nodeLayout) {
+                targetCenter[0] += nodeLayout.x;
+                targetCenter[1] += nodeLayout.y;
+            }
             node = node.parentNode;
         }
 
@@ -488,27 +507,41 @@ define(function (require) {
         };
     }
 
-    // Mark invisible nodes for prunning when visual coding and rendering.
-    // Prunning depends on layout and root position, so we have to do it after them.
-    function prunning(node, clipRect, viewPath) {
+    // Mark nodes visible for prunning when visual coding and rendering.
+    // Prunning depends on layout and root position, so we have to do it after layout.
+    function prunning(node, clipRect, viewAbovePath, viewRoot, depth) {
         var nodeLayout = node.getLayout();
+        var nodeInViewAbovePath = viewAbovePath[depth];
+        var isAboveViewRoot = nodeInViewAbovePath && nodeInViewAbovePath === node;
+
+        if (
+            (nodeInViewAbovePath && !isAboveViewRoot)
+            || (depth === viewAbovePath.length && node !== viewRoot)
+        ) {
+            return;
+        }
 
         node.setLayout({
-            invisible: nodeLayout
-                ? !clipRect.intersect(nodeLayout)
-                : !helper.aboveViewRootByViewPath(viewPath, node)
+            // isInView means: viewRoot sub tree + viewAbovePath
+            isInView: true,
+            // invisible only means: outside view clip so that the node can not
+            // see but still layout for animation preparation but not render.
+            invisible: !isAboveViewRoot && !clipRect.intersect(nodeLayout),
+            isAboveViewRoot: isAboveViewRoot
         }, true);
 
         var viewChildren = node.viewChildren || [];
         for (var i = 0, len = viewChildren.length; i < len; i++) {
             // Transform to child coordinate.
-            var childClipRect = new BoundingRect(
-                clipRect.x - nodeLayout.x,
-                clipRect.y - nodeLayout.y,
-                clipRect.width,
-                clipRect.height
-            );
-            prunning(viewChildren[i], childClipRect, viewPath);
+            var childClipRect = isAboveViewRoot
+                ? clipRect
+                : new BoundingRect(
+                    clipRect.x - nodeLayout.x,
+                    clipRect.y - nodeLayout.y,
+                    clipRect.width,
+                    clipRect.height
+                );
+            prunning(viewChildren[i], childClipRect, viewAbovePath, viewRoot, depth + 1);
         }
     }
 

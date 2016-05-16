@@ -89,7 +89,8 @@ define(function (require) {
                 // which need no more preprocess except normalize visual.
                 : normalizeVisualRange(thisOption, true);
         }
-        else {
+        else { // mappingMethod === 'linear'
+            zrUtil.assert(thisOption.dataExtent);
             normalizeVisualRange(thisOption);
         }
     };

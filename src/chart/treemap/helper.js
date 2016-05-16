@@ -24,27 +24,20 @@ define(function (require) {
             }
         },
 
+        // Not includes the given node at the last item.
         getPathToRoot: function (node) {
             var path = [];
             while (node) {
-                path.push(node);
                 node = node.parentNode;
+                node && path.push(node);
             }
             return path.reverse();
         },
 
         aboveViewRoot: function (viewRoot, node) {
             var viewPath = helper.getPathToRoot(viewRoot);
-            return helper.aboveViewRootByViewPath(viewPath, node);
-        },
-
-        // viewPath should obtained from getPathToRoot(viewRoot)
-        aboveViewRootByViewPath: function (viewPath, node) {
-            var index = zrUtil.indexOf(viewPath, node);
-            // The last one is viewRoot
-            return index >= 0 && index !== viewPath.length - 1;
+            return zrUtil.indexOf(viewPath, node) >= 0;
         }
-
     };
 
     return helper;

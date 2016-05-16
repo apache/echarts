@@ -77,18 +77,68 @@
                     name: 'option',
                     type: 'treemap',
                     visibleMin: 300,
+                    // animationDurationUpdate: 2000,
                     data: data.children,
+                    // data: [
+                    //     {
+                    //         name: 'a',
+                    //         value: 4,
+                    //         children: [
+                    //             {
+                    //                 name: 'a1',
+                    //                 value: 11,
+                    //                 chidren: [
+                    //                     {
+                    //                         name: 'a11',
+                    //                         value: 111
+                    //                     }
+                    //                 ]
+                    //             }
+                    //         ]
+                    //     },
+                    //     {
+                    //         name: 'b',
+                    //         value: 6,
+                    //         children: [
+                    //             {
+                    //                 name: 'b1',
+                    //                 value: 15,
+                    //                 chidren: [
+                    //                     {
+                    //                         name: 'b11',
+                    //                         value: 120
+                    //                     }
+                    //                 ]
+                    //             }
+                    //         ]
+                    //     }
+                    // ],
                     leafDepth: 1,
                     nodeClick: 'link',
                     itemStyle: {
-                        normal: {
-                            // gapWidth: 1
-                            // borderWidth: 1
-                        }
+                        // normal: {
+                        //     gapWidth: 1,
+                        //     borderWidth: 1
+                        // }
                     },
                     levels: [
-                        {},
                         {
+                            itemStyle: {
+                                normal: {
+                                    borderColor: '#333',
+                                    borderWidth: 4,
+                                    gapWidth: 2
+                                }
+                            }
+                        },
+                        {
+                            itemStyle: {
+                                normal: {
+                                    borderColor: '#aaa',
+                                    gapWidth: 2,
+                                    borderWidth: 2
+                                }
+                            },
                             colorSaturation: [0.2, 0.7]
                         }
                     ]
