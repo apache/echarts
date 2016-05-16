@@ -78,41 +78,61 @@
                     type: 'treemap',
                     visibleMin: 300,
                     // animationDurationUpdate: 2000,
-                    data: data.children,
-                    // data: [
-                    //     {
-                    //         name: 'a',
-                    //         value: 4,
-                    //         children: [
-                    //             {
-                    //                 name: 'a1',
-                    //                 value: 11,
-                    //                 chidren: [
-                    //                     {
-                    //                         name: 'a11',
-                    //                         value: 111
-                    //                     }
-                    //                 ]
-                    //             }
-                    //         ]
-                    //     },
-                    //     {
-                    //         name: 'b',
-                    //         value: 6,
-                    //         children: [
-                    //             {
-                    //                 name: 'b1',
-                    //                 value: 15,
-                    //                 chidren: [
-                    //                     {
-                    //                         name: 'b11',
-                    //                         value: 120
-                    //                     }
-                    //                 ]
-                    //             }
-                    //         ]
-                    //     }
-                    // ],
+                    // data: data.children,
+                    data: [
+                        {
+                            name: 'a',
+                            value: 10,
+                            children: [
+                                {
+                                    name: 'a1',
+                                    value: 11,
+                                    children: [
+                                        {
+                                            name: 'a11',
+                                            value: 111,
+                                        },
+                                        {
+                                            name: 'a111',
+                                            value: 1111
+                                        },
+                                        {
+                                            name: 'a112',
+                                            value: 1111
+                                        },
+                                        {
+                                            name: 'a113',
+                                            value: 111
+                                        },
+                                        {
+                                            name: 'a114',
+                                            value: 111
+                                        },
+                                        {
+                                            name: 'a115',
+                                            value: 1100
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            name: 'b',
+                            value: 6,
+                            children: [
+                                {
+                                    name: 'b1',
+                                    value: 15,
+                                    chidren: [
+                                        {
+                                            name: 'b11',
+                                            value: 120
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ],
                     leafDepth: 1,
                     nodeClick: 'link',
                     itemStyle: {
