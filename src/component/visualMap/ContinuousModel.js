@@ -21,7 +21,9 @@ define(function(require) {
             align: 'auto',          // 'auto', 'left', 'right', 'top', 'bottom'
             calculable: false,      // This prop effect default component type determine,
                                     // See echarts/component/visualMap/typeDefaulter.
-            range: [-Infinity, Infinity], // selected range
+            range: null,            // selected range. In default case `range` is [min, max]
+                                    // and can auto change along with modification of min max,
+                                    // util use specifid a range.
             realtime: true,         // Whether realtime update.
             itemHeight: null,       // The length of the range control edge.
             itemWidth: null,        // The length of the other side.
@@ -65,11 +67,20 @@ define(function(require) {
         _resetRange: function () {
             var dataExtent = this.getExtent();
             var range = this.option.range;
-            if (range[0] > range[1]) {
-                range.reverse();
+
+            if (!range || range.auto) {
+                // `range` should always be array (so we dont use other
+                // value like 'auto') for user-friend. (consider getOption).
+                dataExtent.auto = 1;
+                this.option.range = dataExtent;
             }
-            range[0] = Math.max(range[0], dataExtent[0]);
-            range[1] = Math.min(range[1], dataExtent[1]);
+            else if (zrUtil.isArray(range)) {
+                if (range[0] > range[1]) {
+                    range.reverse();
+                }
+                range[0] = Math.max(range[0], dataExtent[0]);
+                range[1] = Math.min(range[1], dataExtent[1]);
+            }
         },
 
         /**
