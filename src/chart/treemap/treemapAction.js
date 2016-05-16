@@ -21,21 +21,24 @@ define(function(require) {
     echarts.registerAction(
         {type: 'treemapRootToNode', update: 'updateView'},
         function (payload, ecModel) {
+
             ecModel.eachComponent(
                 {mainType: 'series', subType: 'treemap', query: payload},
-                function (model, index) {
-                    var targetInfo = helper.retrieveTargetInfo(payload, model);
-
-                    if (targetInfo) {
-                        var originViewRoot = model.getViewRoot();
-                        if (originViewRoot) {
-                            payload.direction = helper.aboveViewRoot(originViewRoot, targetInfo.node)
-                                ? 'rollUp' : 'drillDown';
-                        }
-                        model.resetViewRoot(targetInfo.node);
-                    }
-                }
+                handleRootToNode
             );
+
+            function handleRootToNode(model, index) {
+                var targetInfo = helper.retrieveTargetInfo(payload, model);
+
+                if (targetInfo) {
+                    var originViewRoot = model.getViewRoot();
+                    if (originViewRoot) {
+                        payload.direction = helper.aboveViewRoot(originViewRoot, targetInfo.node)
+                            ? 'rollUp' : 'drillDown';
+                    }
+                    model.resetViewRoot(targetInfo.node);
+                }
+            }
         }
     );
 

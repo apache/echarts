@@ -1,15 +1,17 @@
 define(function (require) {
 
-    var mathMax = Math.max;
-    var mathMin = Math.min;
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
     var layout = require('../../util/layout');
     var helper = require('./helper');
-    var parsePercent = numberUtil.parsePercent;
-    var retrieveValue = zrUtil.retrieve;
     var BoundingRect = require('zrender/core/BoundingRect');
     var helper = require('./helper');
+
+    var mathMax = Math.max;
+    var mathMin = Math.min;
+    var parsePercent = numberUtil.parsePercent;
+    var retrieveValue = zrUtil.retrieve;
+    var each = zrUtil.each;
 
     /**
      * @public
@@ -87,7 +89,7 @@ define(function (require) {
                 squarify(viewRoot, options, false, 0);
                 // Supplement layout.
                 var viewRootLayout = viewRoot.getLayout();
-                zrUtil.each(viewAbovePath, function (node, index) {
+                each(viewAbovePath, function (node, index) {
                     var childValue = (viewAbovePath[index + 1] || viewRoot).getValue();
                     node.setLayout(zrUtil.extend(
                         {dataExtent: [childValue, childValue], borderWidth: 0},
@@ -105,7 +107,6 @@ define(function (require) {
 
             seriesModel.setLayoutInfo(layoutInfo);
 
-            // Optimize
             // FIXME
             // 现在没有clip功能，暂时取ec高宽。
             prunning(
@@ -339,7 +340,7 @@ define(function (require) {
         // Other dimension.
         else {
             var dataExtent = [Infinity, -Infinity];
-            zrUtil.each(children, function (child) {
+            each(children, function (child) {
                 var value = child.getValue(dimension);
                 value < dataExtent[0] && (dataExtent[0] = value);
                 value > dataExtent[1] && (dataExtent[1] = value);
@@ -532,19 +533,17 @@ define(function (require) {
             isAboveViewRoot: isAboveViewRoot
         }, true);
 
-        var viewChildren = node.viewChildren || [];
-        for (var i = 0, len = viewChildren.length; i < len; i++) {
-            // Transform to child coordinate.
-            var childClipRect = isAboveViewRoot
-                ? clipRect
-                : new BoundingRect(
-                    clipRect.x - nodeLayout.x,
-                    clipRect.y - nodeLayout.y,
-                    clipRect.width,
-                    clipRect.height
-                );
-            prunning(viewChildren[i], childClipRect, viewAbovePath, viewRoot, depth + 1);
-        }
+        // Transform to child coordinate.
+        var childClipRect = new BoundingRect(
+            clipRect.x - nodeLayout.x,
+            clipRect.y - nodeLayout.y,
+            clipRect.width,
+            clipRect.height
+        );
+
+        each(node.viewChildren || [], function (child) {
+            prunning(child, childClipRect, viewAbovePath, viewRoot, depth + 1);
+        });
     }
 
     return update;
