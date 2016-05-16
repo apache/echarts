@@ -161,6 +161,15 @@ define(function (require) {
             );
     };
 
+    /**
+     * Quantity of a number. e.g. 0.1, 1, 10, 100
+     * @param  {number} val
+     * @return {number}
+     */
+    number.quantity = function (val) {
+        return Math.pow(10, Math.floor(Math.log(val) / Math.LN10));
+    };
+
     // "Nice Numbers for Graph Labels" of Graphic Gems
     /**
      * find a “nice” number approximately equal to x. Round the number if round = true, take ceiling if round = false
@@ -170,8 +179,7 @@ define(function (require) {
      * @return {number}
      */
     number.nice = function (val, round) {
-        var exp = Math.floor(Math.log(val) / Math.LN10);
-        var exp10 = Math.pow(10, exp);
+        var exp10 = number.quantity(val);
         var f = val / exp10; // between 1 and 10
         var nf;
         if (round) {
