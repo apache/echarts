@@ -1,4 +1,5 @@
 define(function (require) {
+    var vec2 = require('zrender/core/vector');
     return function (seriesModel) {
         var coordSys = seriesModel.coordinateSystem;
         if (coordSys && coordSys.type !== 'view') {
@@ -34,8 +35,8 @@ define(function (require) {
 
         graph.eachEdge(function (edge) {
             var curveness = edge.getModel().get('lineStyle.normal.curveness') || 0;
-            var p1 = edge.node1.getLayout().slice();
-            var p2 = edge.node2.getLayout().slice();
+            var p1 = vec2.clone(edge.node1.getLayout());
+            var p2 = vec2.clone(edge.node2.getLayout());
             var cp1;
             var x12 = (p1[0] + p2[0]) / 2;
             var y12 = (p1[1] + p2[1]) / 2;

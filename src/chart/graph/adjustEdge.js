@@ -86,11 +86,11 @@ define(function (require) {
 
             if (!linePoints.__original) {
                 linePoints.__original = [
-                    linePoints[0].slice(),
-                    linePoints[1].slice()
+                    vec2.clone(linePoints[0]),
+                    vec2.clone(linePoints[1])
                 ];
                 if (linePoints[2]) {
-                    linePoints.__original.push(linePoints[2].slice());
+                    linePoints.__original.push(vec2.clone(linePoints[2]));
                 }
             }
             var originalPoints = linePoints.__original;
