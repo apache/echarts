@@ -15,7 +15,10 @@ define(function (require) {
 
     var mathCeil = Math.ceil;
     var mathFloor = Math.floor;
-    var ONE_DAY = 3600000 * 24;
+    var ONE_SECOND = 1000;
+    var ONE_MINUTE = ONE_SECOND * 60;
+    var ONE_HOUR = ONE_MINUTE * 60;
+    var ONE_DAY = ONE_HOUR * 24;
 
     // FIXME 公用？
     var bisect = function (a, x, lo, hi) {
@@ -63,7 +66,7 @@ define(function (require) {
                 extent[0] = extent[1] - ONE_DAY;
             }
 
-            this.niceTicks(approxTickNum, fixMin, fixMax);
+            this.niceTicks(approxTickNum);
 
             // var extent = this._extent;
             var interval = this._interval;
@@ -125,20 +128,20 @@ define(function (require) {
     // Steps from d3
     var scaleLevels = [
         // Format       step    interval
-        ['hh:mm:ss',    1,      1000],           // 1s
-        ['hh:mm:ss',    5,      1000 * 5],       // 5s
-        ['hh:mm:ss',    10,     1000 * 10],      // 10s
-        ['hh:mm:ss',    15,     1000 * 15],      // 15s
-        ['hh:mm:ss',    30,     1000 * 30],      // 30s
-        ['hh:mm\nMM-dd',1,      60000],          // 1m
-        ['hh:mm\nMM-dd',5,      60000 * 5],      // 5m
-        ['hh:mm\nMM-dd',10,     60000 * 10],     // 10m
-        ['hh:mm\nMM-dd',15,     60000 * 15],     // 15m
-        ['hh:mm\nMM-dd',30,     60000 * 30],     // 30m
-        ['hh:mm\nMM-dd',1,      3600000],        // 1h
-        ['hh:mm\nMM-dd',2,      3600000 * 2],    // 2h
-        ['hh:mm\nMM-dd',6,      3600000 * 6],    // 6h
-        ['hh:mm\nMM-dd',12,     3600000 * 12],   // 12h
+        ['hh:mm:ss',    1,      ONE_SECOND],           // 1s
+        ['hh:mm:ss',    5,      ONE_SECOND * 5],       // 5s
+        ['hh:mm:ss',    10,     ONE_SECOND * 10],      // 10s
+        ['hh:mm:ss',    15,     ONE_SECOND * 15],      // 15s
+        ['hh:mm:ss',    30,     ONE_SECOND * 30],      // 30s
+        ['hh:mm\nMM-dd',1,      ONE_MINUTE],          // 1m
+        ['hh:mm\nMM-dd',5,      ONE_MINUTE * 5],      // 5m
+        ['hh:mm\nMM-dd',10,     ONE_MINUTE * 10],     // 10m
+        ['hh:mm\nMM-dd',15,     ONE_MINUTE * 15],     // 15m
+        ['hh:mm\nMM-dd',30,     ONE_MINUTE * 30],     // 30m
+        ['hh:mm\nMM-dd',1,      ONE_HOUR],        // 1h
+        ['hh:mm\nMM-dd',2,      ONE_HOUR * 2],    // 2h
+        ['hh:mm\nMM-dd',6,      ONE_HOUR * 6],    // 6h
+        ['hh:mm\nMM-dd',12,     ONE_HOUR * 12],   // 12h
         ['MM-dd\nyyyy', 1,      ONE_DAY],   // 1d
         ['week',        7,      ONE_DAY * 7],        // 7d
         ['month',       1,      ONE_DAY * 31],       // 1M
