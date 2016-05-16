@@ -27,7 +27,7 @@ define(function (require) {
 
                     api.dispatchAction({
                         type: 'mapToggleSelect',
-                        seriesIndex: mapOrGeoModel.seriesIndex,
+                        seriesId: mapOrGeoModel.id,
                         name: name,
                         from: fromView.uid
                     });
@@ -246,28 +246,30 @@ define(function (require) {
             controller.zoom = geo.getZoom();
             // roamType is will be set default true if it is null
             controller.enable(mapOrGeoModel.get('roam') || false);
-            // FIXME mainType, subType 作为 component 的属性？
-            var mainType = mapOrGeoModel.type.split('.')[0];
+            var mainType = mapOrGeoModel.mainType;
+
+            function makeActionBase() {
+                var action = {
+                    type: 'geoRoam',
+                    componentType: mainType
+                };
+                action[mainType + 'Id'] = mapOrGeoModel.id;
+                return action;
+            }
             controller.off('pan')
                 .on('pan', function (dx, dy) {
-                    api.dispatchAction({
-                        type: 'geoRoam',
-                        component: mainType,
-                        name: mapOrGeoModel.name,
+                    api.dispatchAction(zrUtil.extend(makeActionBase(), {
                         dx: dx,
                         dy: dy
-                    });
+                    }));
                 });
             controller.off('zoom')
                 .on('zoom', function (zoom, mouseX, mouseY) {
-                    api.dispatchAction({
-                        type: 'geoRoam',
-                        component: mainType,
-                        name: mapOrGeoModel.name,
+                    api.dispatchAction(zrUtil.extend(makeActionBase(), {
                         zoom: zoom,
                         originX: mouseX,
                         originY: mouseY
-                    });
+                    }));
 
                     if (this._updateGroup) {
                         var group = this.group;

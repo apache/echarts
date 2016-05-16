@@ -7,8 +7,7 @@ define(function (require) {
 
     /**
      * @payload
-     * @property {string} [component=series]
-     * @property {string} name Component name
+     * @property {string} [componentType=series]
      * @property {number} [dx]
      * @property {number} [dy]
      * @property {number} [zoom]
@@ -20,10 +19,11 @@ define(function (require) {
         event: 'geoRoam',
         update: 'updateLayout'
     }, function (payload, ecModel) {
-        var componentType = payload.component || 'series';
+        var componentType = payload.componentType || 'series';
 
-        ecModel.eachComponent(componentType, function (componentModel) {
-            if (componentModel.name === payload.name) {
+        ecModel.eachComponent(
+            { mainType: componentType, query: payload },
+            function (componentModel) {
                 var geo = componentModel.coordinateSystem;
                 if (geo.type !== 'geo') {
                     return;
@@ -48,6 +48,6 @@ define(function (require) {
                     });
                 }
             }
-        });
+        );
     });
 });
