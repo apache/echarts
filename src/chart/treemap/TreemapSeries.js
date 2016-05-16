@@ -35,6 +35,8 @@ define(function(require) {
             squareRatio: 0.5 * (1 + Math.sqrt(5)), // golden ratio
             leafDepth: null,                    // Nodes on depth from root are regarded as leaves.
                                                 // Count from zero (zero represents only view root).
+            drillDownIcon: '▶',                 // Use html character temporarily because it is complicated
+                                                // to align specialized icon. ▷▶❒❐▼✚
             visualDimension: 0,                 // Can be 0, 1, 2, 3.
             zoomToNodeRatio: 0.32 * 0.32,       // Be effective when using zoomToNode. Specify the proportion of the
                                                 // target node area in the view area.
@@ -255,7 +257,6 @@ define(function(require) {
 
         /**
          * @param {module:echarts/data/Tree~Node} [viewRoot]
-         * @return {string} direction 'drilldown' or 'rollup'
          */
         resetViewRoot: function (viewRoot) {
             viewRoot

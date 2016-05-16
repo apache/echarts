@@ -18,11 +18,8 @@
     var PATH_LABEL_NORMAL = ['label', 'normal'];
     var PATH_LABEL_EMPHASIS = ['label', 'emphasis'];
     var Z_BASE = 10; // Should bigger than every z.
-    var Z_BG = 0;
-    var Z_CONTENT = 4;
-    var Z_REROOT_DILLDOWN_ROOT_CONTENT = 3;
-    var Z_REROOT_DILLDOWN_OTHERS_CONTENT = 2;
-    var Z_REROOT_DILLDOWN_OTHERS = 1;
+    var Z_BG = 1;
+    var Z_CONTENT = 2;
 
     return require('../../echarts').extendChartView({
 
@@ -273,29 +270,24 @@
                     var parent = el.parent; // Always has parent, and parent is nodeGroup.
                     var target;
 
-                    if (reRoot && reRoot.direction === 'drilldown') {
-                        if (parent === reRoot.rootNodeGroup) {
-                            // Only 'content' will enter this branch, because
-                            // background and nodeGroup will not be deleted.
-                            target = {
+                    if (reRoot && reRoot.direction === 'drillDown') {
+                        target = parent === reRoot.rootNodeGroup
+                            // This is the content element of view root.
+                            // Only `content` will enter this branch, because
+                            // `background` and `nodeGroup` will not be deleted.
+                            ? {
                                 shape: {
                                     x: 0,
                                     y: 0,
                                     width: parent.__tmNodeWidth,
                                     height: parent.__tmNodeHeight
+                                },
+                                style: {
+                                    opacity: 0
                                 }
-                            };
-                            el.z = calculateZ(el.__tmDepth, Z_REROOT_DILLDOWN_ROOT_CONTENT);
-                        }
-                        else {
-                            target = {style: {opacity: 0}};
-                            el.z = calculateZ(
-                                el.__tmDepth,
-                                el.__tmStorageName === 'content'
-                                    ? Z_REROOT_DILLDOWN_OTHERS_CONTENT
-                                    : Z_REROOT_DILLDOWN_OTHERS
-                            );
-                        }
+                            }
+                            // Others.
+                            : {style: {opacity: 0}};
                     }
                     else {
                         var targetX = 0;
@@ -304,7 +296,7 @@
                         if (!parent.__tmWillDelete) {
                             // Let node animate to right-bottom corner, cooperating with fadeout,
                             // which is appropriate for user understanding.
-                            // Divided by 2 for reRoot rollup effect.
+                            // Divided by 2 for reRoot rolling up effect.
                             targetX = parent.__tmNodeWidth / 2;
                             targetY = parent.__tmNodeHeight / 2;
                         }
@@ -409,13 +401,13 @@
                 && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
             ) {
                 // These param must not be cached.
-                var viewRoot = this.seriesModel.getViewRoot();
+                var root = this.seriesModel.getData().tree.root;
 
-                if (!viewRoot) {
+                if (!root) {
                     return;
                 }
 
-                var rootLayout = viewRoot.getLayout();
+                var rootLayout = root.getLayout();
 
                 if (!rootLayout) {
                     return;
@@ -441,13 +433,13 @@
 
             if (this._state !== 'animating') {
                 // These param must not be cached.
-                var viewRoot = this.seriesModel.getViewRoot();
+                var root = this.seriesModel.getData().tree.root;
 
-                if (!viewRoot) {
+                if (!root) {
                     return;
                 }
 
-                var rootLayout = viewRoot.getLayout();
+                var rootLayout = root.getLayout();
 
                 if (!rootLayout) {
                     return;
@@ -662,15 +654,15 @@
             return;
         }
 
-        var layout = thisNode.getLayout();
+        var thisLayout = thisNode.getLayout();
 
-        if (!layout || !layout.isInView) {
+        if (!thisLayout || !thisLayout.isInView) {
             return;
         }
 
-        var thisWidth = layout.width;
-        var thisHeight = layout.height;
-        var invisible = layout.invisible;
+        var thisWidth = thisLayout.width;
+        var thisHeight = thisLayout.height;
+        var thisInvisible = thisLayout.invisible;
 
         var thisRawIndex = thisNode.getRawIndex();
         var oldRawIndex = oldNode && oldNode.getRawIndex();
@@ -684,11 +676,11 @@
 
         parentGroup.add(group);
         // x,y are not set when el is above view root.
-        group.position = [layout.x || 0, layout.y || 0];
+        group.position = [thisLayout.x || 0, thisLayout.y || 0];
         group.__tmNodeWidth = thisWidth;
         group.__tmNodeHeight = thisHeight;
 
-        if (layout.isAboveViewRoot) {
+        if (thisLayout.isAboveViewRoot) {
             return group;
         }
 
@@ -707,7 +699,7 @@
         // No children, render content.
         if (!thisViewChildren || !thisViewChildren.length) {
             var content = giveGraphic('content', Rect, depth, Z_CONTENT);
-            content && renderContent(layout, group, thisNode, thisWidth, thisHeight);
+            content && renderContent(group);
         }
 
         return group;
@@ -716,12 +708,12 @@
         // | Procedures in renderNode |
         // ----------------------------
 
-        function renderContent(layout, group, thisNode, thisWidth, thisHeight) {
+        function renderContent(group) {
             // For tooltip.
             content.dataIndex = thisNode.dataIndex;
             content.seriesIndex = seriesModel.seriesIndex;
 
-            var borderWidth = layout.borderWidth;
+            var borderWidth = thisLayout.borderWidth;
             var contentWidth = Math.max(thisWidth - 2 * borderWidth, 0);
             var contentHeight = Math.max(thisHeight - 2 * borderWidth, 0);
 
@@ -748,7 +740,7 @@
         }
 
         function updateStyle(element, cb) {
-            if (!invisible) {
+            if (!thisInvisible) {
                 // If invisible, do not set visual, otherwise the element will
                 // change immediately before animation. We think it is OK to
                 // remain its origin color when moving out of the view window.
@@ -768,6 +760,10 @@
         function prepareText(normalStyle, emphasisStyle, visualColor, contentWidth, contentHeight) {
             var nodeModel = thisNode.getModel();
             var text = nodeModel.get('name');
+            if (thisLayout.isLeafRoot) {
+                var iconChar = seriesModel.get('drillDownIcon', true);
+                text += iconChar ? '  ' + iconChar : '';
+            }
 
             setText(
                 text, normalStyle, nodeModel, PATH_LABEL_NORMAL,
@@ -814,7 +810,7 @@
                 prepareAnimationWhenHasOld(lasts, element, storageName);
             }
             // If invisible and no old element, do not create new element (for optimizing).
-            else if (!invisible) {
+            else if (!thisInvisible) {
                 element = new Ctor({z: calculateZ(depth, z)});
                 element.__tmDepth = depth;
                 element.__tmStorageName = storageName;
@@ -838,20 +834,22 @@
             var lastCfg = lasts[thisRawIndex] = {};
             var parentNode = thisNode.parentNode;
 
-            if (parentNode && (!reRoot || reRoot.direction === 'drilldown')) {
+            if (parentNode && (!reRoot || reRoot.direction === 'drillDown')) {
                 var parentOldX = 0;
                 var parentOldY = 0;
+
+                // New nodes appear from right-bottom corner in 'zoomToNode' animation.
                 // For convenience, get old bounding rect from background.
                 var parentOldBg = lastsForAnimation.background[parentNode.getRawIndex()];
-
-                if (parentOldBg && parentOldBg.old) {
-                    parentOldX = parentOldBg.old.width / 2; // Devided by 2 for reRoot effect.
-                    parentOldY = parentOldBg.old.height / 2;
+                if (!reRoot && parentOldBg && parentOldBg.old) {
+                    parentOldX = parentOldBg.old.width;
+                    parentOldY = parentOldBg.old.height;
                 }
+
                 // When no parent old shape found, its parent is new too,
                 // so we can just use {x:0, y:0}.
                 lastCfg.old = storageName === 'nodeGroup'
-                    ? [parentOldX, parentOldY]
+                    ? [0, parentOldY]
                     : {x: parentOldX, y: parentOldY, width: 0, height: 0};
             }
 
@@ -861,7 +859,7 @@
     }
 
     // We can not set all backgroud with the same z, Because the behaviour of
-    // drilldown and rollup differ background creation sequence from tree
+    // drill down and roll up differ background creation sequence from tree
     // hierarchy sequence, which cause that lowser background element overlap
     // upper ones. So we calculate z based on depth.
     // Moreover, we try to shrink down z interval to [0, 1] to avoid that

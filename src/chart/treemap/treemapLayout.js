@@ -77,23 +77,28 @@ define(function (require) {
                 // But take care that if do not render node out of view clip,
                 // how to calculate start po
 
-                viewRoot.setLayout({
+                var viewRootLayout = {
                     x: 0, y: 0,
                     width: rootSize[0], height: rootSize[1],
                     area: rootSize[0] * rootSize[1]
-                });
+                };
+                viewRoot.setLayout(viewRootLayout);
 
                 squarify(viewRoot, options, false, 0);
-
-                // Supplement layout (dataExtent).
+                // Supplement layout.
+                var viewRootLayout = viewRoot.getLayout();
                 zrUtil.each(viewAbovePath, function (node, index) {
                     var childValue = (viewAbovePath[index + 1] || viewRoot).getValue();
-                    node.setLayout({dataExtent: [childValue, childValue]});
+                    node.setLayout(zrUtil.extend(
+                        {dataExtent: [childValue, childValue], borderWidth: 0},
+                        viewRootLayout
+                    ));
                 });
             }
 
-            // Set root position
-            viewRoot.setLayout(
+            var treeRoot = seriesModel.getData().tree.root;
+
+            treeRoot.setLayout(
                 calculateRootPosition(layoutInfo, rootRect, targetInfo),
                 true
             );
@@ -104,14 +109,13 @@ define(function (require) {
             // FIXME
             // 现在没有clip功能，暂时取ec高宽。
             prunning(
-                seriesModel.getData().tree.root,
+                treeRoot,
                 // Transform to base element coordinate system.
                 new BoundingRect(-layoutInfo.x, -layoutInfo.y, ecWidth, ecHeight),
                 viewAbovePath,
                 viewRoot,
                 0
             );
-
         });
     }
 
@@ -494,10 +498,8 @@ define(function (require) {
         var node = targetNode;
         while (node) {
             var nodeLayout = node.getLayout();
-            if (nodeLayout) {
-                targetCenter[0] += nodeLayout.x;
-                targetCenter[1] += nodeLayout.y;
-            }
+            targetCenter[0] += nodeLayout.x;
+            targetCenter[1] += nodeLayout.y;
             node = node.parentNode;
         }
 

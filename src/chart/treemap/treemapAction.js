@@ -30,7 +30,7 @@ define(function(require) {
                         var originViewRoot = model.getViewRoot();
                         if (originViewRoot) {
                             payload.direction = helper.aboveViewRoot(originViewRoot, targetInfo.node)
-                                ? 'rollup' : 'drilldown';
+                                ? 'rollUp' : 'drillDown';
                         }
                         model.resetViewRoot(targetInfo.node);
                     }
