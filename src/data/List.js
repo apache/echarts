@@ -99,11 +99,6 @@ define(function (require) {
         this.dataType;
 
         /**
-         * @type {boolean}
-         */
-        this.silent = false;
-
-        /**
          * Indices stores the indices of data subset after filtered.
          * This data subset will be used in chart.
          * @type {Array.<number>}
@@ -668,8 +663,6 @@ define(function (require) {
         // Reset data extent
         this._extent = {};
 
-        !this.silent && this.__onChange();
-
         return this;
     };
 
@@ -765,8 +758,6 @@ define(function (require) {
             }
         }, stack, context);
 
-        !this.silent && this.__onTransfer(list);
-
         return list;
     };
 
@@ -812,8 +803,6 @@ define(function (require) {
             dimStore[idx] = value;
             indices.push(idx);
         }
-
-        !this.silent && this.__onTransfer(list);
 
         return list;
     };
@@ -1038,8 +1027,6 @@ define(function (require) {
 
         list.indices = this.indices.slice();
 
-        !this.silent && this.__onTransfer(list);
-
         return list;
     };
 
@@ -1061,7 +1048,11 @@ define(function (require) {
         };
     };
 
-    listProto.__onTransfer = listProto.__onChange = zrUtil.noop;
+    // Methods that create a new list based on this list should be listed here.
+    // Notice that those method should `RETURN` the new list.
+    listProto.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
+    // Methods that change indices of this list should be listed here.
+    listProto.CHANGABLE_METHODS = ['filterSelf'];
 
     return List;
 });

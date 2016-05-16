@@ -41,45 +41,54 @@ define(function (require) {
 
         // Porxy data original methods.
         each(datas, function (data) {
-            each(injections, function (injection, methodName) {
-                data.wrapMethod(methodName, zrUtil.curry(injection, opt));
+            each(mainData.TRANSFERABLE_METHODS, function (methodName) {
+                data.wrapMethod(methodName, zrUtil.curry(transferInjection, opt));
             });
+
+        });
+
+        // Beyond transfer, additional features should be added to `cloneShallow`.
+        mainData.wrapMethod('cloneShallow', zrUtil.curry(cloneShallowInjection, opt));
+
+        // Only mainData trigger change, because struct.update may trigger
+        // another changable methods, which may bring about dead lock.
+        each(mainData.CHANGABLE_METHODS, function (methodName) {
+            mainData.wrapMethod(methodName, zrUtil.curry(changeInjection, opt));
         });
 
         // Make sure datas contains mainData.
         zrUtil.assert(datas[mainData.dataType] === mainData);
     }
 
-    var injections = {
-
-        __onTransfer: function (opt, res, newData) {
-            if (isMainData(this)) {
-                // Transfer datas to new main data.
-                var datas = zrUtil.extend({}, this[DATAS]);
-                datas[this.dataType] = newData;
-                linkAll(newData, datas, opt);
-            }
-            else {
-                // Modify the reference in main data to point newData.
-                linkSingle(newData, this.dataType, this[MAIN_DATA], opt);
-            }
-        },
-
-        __onChange: function (opt) {
-            opt.struct && opt.struct.update(this);
-        },
-
-        cloneShallow: function (opt, newData) {
-            // cloneShallow, which brings about some fragilities, may be inappropriate
-            // to be exposed as an API. So for implementation simplicity we can make
-            // the restriction that cloneShallow of not-mainData should not be invoked
-            // outside, but only be invoked here.
-            isMainData(this) && each(newData[DATAS], function (data, dataType) {
-                data !== newData && linkSingle(data.cloneShallow(), dataType, newData, opt);
-            });
-            return newData;
+    function transferInjection(opt, res) {
+        if (isMainData(this)) {
+            // Transfer datas to new main data.
+            var datas = zrUtil.extend({}, this[DATAS]);
+            datas[this.dataType] = res;
+            linkAll(res, datas, opt);
         }
-    };
+        else {
+            // Modify the reference in main data to point newData.
+            linkSingle(res, this.dataType, this[MAIN_DATA], opt);
+        }
+        return res;
+    }
+
+    function changeInjection(opt, res) {
+        opt.struct && opt.struct.update(this);
+        return res;
+    }
+
+    function cloneShallowInjection(opt, res) {
+        // cloneShallow, which brings about some fragilities, may be inappropriate
+        // to be exposed as an API. So for implementation simplicity we can make
+        // the restriction that cloneShallow of not-mainData should not be invoked
+        // outside, but only be invoked here.
+        each(res[DATAS], function (data, dataType) {
+            data !== res && linkSingle(data.cloneShallow(), dataType, res, opt);
+        });
+        return res;
+    }
 
     /**
      * Supplement method to List.
