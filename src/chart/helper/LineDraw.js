@@ -6,6 +6,13 @@ define(function (require) {
     var graphic = require('../../util/graphic');
     var LineGroup = require('./Line');
 
+
+    function isPointNaN(pt) {
+        return isNaN(pt[0]) || isNaN(pt[1]);
+    }
+    function lineNeedsDraw(pts) {
+        return !isPointNaN(pts[0]) && !isPointNaN(pts[1]);
+    }
     /**
      * @alias module:echarts/component/marker/LineDraw
      * @constructor
@@ -28,6 +35,9 @@ define(function (require) {
 
         lineData.diff(oldLineData)
             .add(function (idx) {
+                if (!lineNeedsDraw(lineData.getItemLayout(idx))) {
+                    return;
+                }
                 var lineGroup = new LineCtor(lineData, idx);
 
                 lineData.setItemGraphicEl(idx, lineGroup);
@@ -36,7 +46,17 @@ define(function (require) {
             })
             .update(function (newIdx, oldIdx) {
                 var lineGroup = oldLineData.getItemGraphicEl(oldIdx);
-                lineGroup.updateData(lineData, newIdx);
+                if (!lineNeedsDraw(lineData.getItemLayout(newIdx))) {
+                    group.remove(lineGroup);
+                    return;
+                }
+
+                if (!lineGroup) {
+                    lineGroup = new LineCtor(lineData, newIdx);
+                }
+                else {
+                    lineGroup.updateData(lineData, newIdx);
+                }
 
                 lineData.setItemGraphicEl(newIdx, lineGroup);
 
