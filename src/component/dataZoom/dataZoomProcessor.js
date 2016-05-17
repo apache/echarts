@@ -36,6 +36,7 @@ define(function (require) {
             var axisProxy = dataZoomModel.findRepresentativeAxisProxy();
             var percentRange = axisProxy.getDataPercentWindow();
             var valueRange = axisProxy.getDataValueWindow();
+
             dataZoomModel.setRawRange({
                 start: percentRange[0],
                 end: percentRange[1],

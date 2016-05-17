@@ -23,6 +23,7 @@
                 'echarts/component/title',
                 'echarts/component/legend',
                 'echarts/component/tooltip',
+                'echarts/component/toolbox',
                 'zrender/vml/vml',
 
                 'theme/vintage'
@@ -51,6 +52,11 @@
                     },
                     yAxis: {
                         type : 'value'
+                    },
+                    toolbox: {
+                        feature: {
+                            dataZoom: {}
+                        }
                     },
                     series: [
                         {
