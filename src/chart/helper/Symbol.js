@@ -184,16 +184,15 @@ define(function (require) {
 
         // Get last value dim
         var dimensions = data.dimensions.slice();
-        var valueDim = dimensions.pop();
+        var valueDim;
         var dataType;
-        while (
-            ((dataType = data.getDimensionInfo(valueDim).type) === 'ordinal')
-            || (dataType === 'time')
-        ) {
-            valueDim = dimensions.pop();
-        }
+        while (dimensions.length && (
+            valueDim = dimensions.pop(),
+            dataType = data.getDimensionInfo(valueDim).type,
+            dataType === 'ordinal' || dataType === 'time'
+        )) {} // jshint ignore:line
 
-        if (labelModel.get('show')) {
+        if (valueDim != null && labelModel.get('show')) {
             graphic.setText(elStyle, labelModel, color);
             elStyle.text = zrUtil.retrieve(
                 seriesModel.getFormattedLabel(idx, 'normal'),
@@ -204,7 +203,7 @@ define(function (require) {
             elStyle.text = '';
         }
 
-        if (hoverLabelModel.getShallow('show')) {
+        if (valueDim != null && hoverLabelModel.getShallow('show')) {
             graphic.setText(hoverStyle, hoverLabelModel, color);
             hoverStyle.text = zrUtil.retrieve(
                 seriesModel.getFormattedLabel(idx, 'emphasis'),
