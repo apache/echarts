@@ -156,7 +156,7 @@ define(function (require) {
 
         var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
-        symbolPath.rotation = itemModel.getShallow('symbolRotate') * Math.PI / 180 || 0;
+        symbolPath.rotation = (itemModel.getShallow('symbolRotate') || 0) * Math.PI / 180 || 0;
 
         var symbolOffset = itemModel.getShallow('symbolOffset');
         if (symbolOffset) {
