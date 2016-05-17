@@ -248,6 +248,11 @@ define(function (require) {
 
     symbolProto.fadeOut = function (cb) {
         var symbolPath = this.childAt(0);
+        // Avoid trigger hoverAnimation when fading
+        symbolPath.off('mouseover')
+            .off('mouseout')
+            .off('emphasis')
+            .off('normal');
         // Not show text when animating
         symbolPath.style.text = '';
         graphic.updateProps(symbolPath, {

@@ -173,6 +173,7 @@ define(function (require) {
     };
 
     effectSymbolProto.fadeOut = function (cb) {
+        this.off('mouseover').off('mouseout').off('emphasis').off('normal');
         cb && cb();
     };
 
