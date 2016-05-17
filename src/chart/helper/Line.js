@@ -108,8 +108,9 @@ define(function (require) {
             return;
         }
 
+        var percent = line.shape.percent;
         var fromPos = line.pointAt(0);
-        var toPos = line.pointAt(line.shape.percent);
+        var toPos = line.pointAt(percent);
 
         var d = vector.sub([], toPos, fromPos);
         vector.normalize(d, d);
@@ -120,7 +121,7 @@ define(function (require) {
             symbolFrom.attr('rotation', -Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
             ));
-            symbolFrom.attr('scale', [invScale, invScale]);
+            symbolFrom.attr('scale', [invScale * percent, invScale * percent]);
         }
         if (symbolTo) {
             symbolTo.attr('position', toPos);
@@ -128,7 +129,7 @@ define(function (require) {
             symbolTo.attr('rotation', -Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
             ));
-            symbolTo.attr('scale', [invScale, invScale]);
+            symbolTo.attr('scale', [invScale * percent, invScale * percent]);
         }
 
         if (!label.ignore) {
@@ -147,7 +148,7 @@ define(function (require) {
             }
             // Middle
             else if (label.__position === 'middle') {
-                var halfPercent = line.shape.percent / 2;
+                var halfPercent = percent / 2;
                 var tangent = line.tangentAt(halfPercent);
                 var n = [tangent[1], -tangent[0]];
                 var cp = line.pointAt(halfPercent);
