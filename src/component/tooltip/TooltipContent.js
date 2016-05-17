@@ -9,6 +9,7 @@ define(function (require) {
     var formatUtil = require('../../util/format');
     var each = zrUtil.each;
     var toCamelCase = formatUtil.toCamelCase;
+    var env = require('zrender/core/env');
 
     var vendors = ['', '-webkit-', '-moz-', '-o-'];
 
@@ -75,12 +76,16 @@ define(function (require) {
             cssText.push(assembleTransition(transitionDuration));
 
         if (backgroundColor) {
-            // for ie
-            cssText.push(
-                'background-Color:' + zrColor.toHex(backgroundColor)
-            );
-            cssText.push('filter:alpha(opacity=70)');
-            cssText.push('background-Color:' + backgroundColor);
+            if (env.canvasSupported) {
+                cssText.push('background-Color:' + backgroundColor);
+            }
+            else {
+                // for ie
+                cssText.push(
+                    'background-Color:#' + zrColor.toHex(backgroundColor)
+                );
+                cssText.push('filter:alpha(opacity=70)');
+            }
         }
 
         // Border style
