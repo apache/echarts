@@ -4,16 +4,39 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <script src="esl.js"></script>
         <script src="config.js"></script>
+        <link ref="stylesheet" href="reset.css" />
     </head>
     <body>
         <style>
-            html, body, #main {
-                width: 100%;
-                height: 100%;
+            .split {
+                line-height: 60px;
+                height: 60px;
+                background: #ddd;
+                text-align: center;
+                font-weight: bold;
+                font-size: 20px;
+            }
+            .main {
+                height: 80%;
             }
         </style>
         <div id="info"></div>
         <div id="main"></div>
+
+        <div class="split">Check toolbox dataZoom normal</div>
+        <div id="main1" class="main"></div>
+        <div class="split">y max min should not be excluded, dataZoom label should be accurately right</div>
+        <div id="main2" class="main"></div>
+        <div class="split">y max min should not be excluded, dataZoom label should be accurately right</div>
+        <div id="main3" class="main"></div>
+
+
+
+
+
+
+
+
         <script>
 
             require([
@@ -26,7 +49,11 @@
                 'echarts/component/toolbox'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'));
+                var main = document.getElementById('main1');
+                if (!main) {
+                    return;
+                }
+                var chart = echarts.init(main);
 
                 chart.setOption({
                   "title": {
@@ -100,5 +127,225 @@
             });
 
         </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom'
+            ], function (echarts) {
+
+                var main = document.getElementById('main2');
+                if (!main) {
+                    return;
+                }
+                var chart = echarts.init(main);
+
+                var option = {
+                    "title": {
+                        "text": "1个月数据",
+                        "left": "center"
+                    },
+                    "tooltip": {
+                        "trigger": "axis"
+                    },
+                    "dataZoom": [
+                        {
+                            "show": true,
+                            "yAxisIndex": 0,
+                            "filterMode": "empty",
+                            "width": 12,
+                            "handleSize": 8,
+                            labelPrecision: 7,
+                            "showDataShadow": false,
+                            "right": 42
+                        }
+                    ],
+                    "legend": [
+                        {
+                            "data": [
+                                "重量"
+                            ],
+                            "top": 36,
+                            "left": "center"
+                        }
+                    ],
+                    "grid": [
+                        {
+                            "left": 80,
+                            "top": 90,
+                            "right": 58,
+                            "height": 350
+                        }
+                    ],
+                    "xAxis": [
+                        {
+                            "boundaryGap": false,
+                            "data": [
+                                "2016-02-17",
+                                "2016-02-18",
+                                "2016-02-19",
+                                "2016-02-20",
+                                "2016-02-21",
+                                "2016-02-22",
+                                "2016-02-23",
+                                "2016-02-24",
+                                "2016-02-25",
+                                "2016-02-26",
+                                "2016-02-27",
+                                "2016-02-28",
+                                "2016-02-29",
+                                "2016-03-01",
+                                "2016-03-02",
+                                "2016-03-03",
+                                "2016-03-04"
+                            ]
+                        }
+                    ],
+                    "yAxis": [
+                        {
+                            "name": "重量(g)"
+                        }
+                    ],
+                    "series": [
+                        {
+                            "type": "line",
+                            "data": [
+                                "241.68",
+                                "12703.10",
+                                "17724.90",
+                                "17722.60",
+                                "12326.70",
+                                "12703.10",
+                                "17724.90",
+                                // "17755.13984",
+                                "17722.60",
+                                "12326.70",
+                                "-290.01",
+                                "-12736.80",
+                                "-12361.40",
+                                "-0.00",
+                                "-290.01",
+                                "-12736.80",
+                                "-8525.49",
+                                "-15918.30"
+                            ],
+                            "name": "重量"
+                        }
+                    ]
+                };
+
+                chart.setOption(option);
+            });
+
+        </script>
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom'
+            ], function (echarts) {
+
+                var main = document.getElementById('main3');
+                if (!main) {
+                    return;
+                }
+                var chart = echarts.init(main);
+
+                option = {
+                    "title": {
+                        "text": "1个月温度",
+                        "left": "center"
+                    },
+                    "tooltip": {
+                        "trigger": "axis"
+                    },
+                    "dataZoom": [
+                        {
+                            "show": true,
+                            "yAxisIndex": 0,
+                            //endValue:83.57,
+                            "filterMode": "empty",
+                            labelPrecision: 4,
+                            "showDataShadow": false
+                        }
+                    ],
+                    "legend": [
+                        {
+                            "data": [
+                                "温度"
+                            ],
+                            "top": 31,
+                            "left": "center"
+                        }
+                    ],
+                    "grid": {},
+                    "xAxis": [
+                        {
+                            "data": [
+                                "2015-12-08",
+                                "2015-12-09",
+                                "2015-12-10",
+                                "2015-12-11",
+                                "2015-12-12"
+                            ]
+                        }
+                    ],
+                    "yAxis": [
+                        {
+                            "name": "温度(℃)"
+                        }
+                    ],
+                    "series": [
+                        {
+                            "type": "line",
+                            "data": [
+                                "83.56",
+                                "83.39",
+                                "55.10",
+                                "-5.47",
+                                "-62.83"
+                            ],
+                            "name": "温度"
+                        }
+                    ]
+                };
+
+                chart.setOption(option);
+            });
+
+
+        </script>
+
+
+
+
+
     </body>
 </html>

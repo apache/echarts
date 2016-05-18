@@ -23,19 +23,48 @@ define(function (require) {
      * @return {(number|Array.<number>}
      */
     number.linearMap = function (val, domain, range, clamp) {
+        var subDomain = domain[1] - domain[0];
+        var subRange = range[1] - range[0];
 
-        var sub = domain[1] - domain[0];
-
-        if (sub === 0) {
-            return (range[0] + range[1]) / 2;
+        if (subDomain === 0) {
+            return subRange === 0
+                ? range[0]
+                : (range[0] + range[1]) / 2;
         }
-        var t = (val - domain[0]) / sub;
 
+        // Avoid accuracy problem in edge, such as
+        // 146.39 - 62.83 === 83.55999999999999.
+        // See echarts/test/ut/spec/util/number.js#linearMap#accuracyError
+        // It is a little verbose for efficiency considering this method
+        // is a hotspot.
         if (clamp) {
-            t = Math.min(Math.max(t, 0), 1);
+            if (subDomain > 0) {
+                if (val <= domain[0]) {
+                    return range[0];
+                }
+                else if (val >= domain[1]) {
+                    return range[1];
+                }
+            }
+            else {
+                if (val >= domain[0]) {
+                    return range[0];
+                }
+                else if (val <= domain[1]) {
+                    return range[1];
+                }
+            }
+        }
+        else {
+            if (val === domain[0]) {
+                return range[0];
+            }
+            if (val === domain[1]) {
+                return range[1];
+            }
         }
 
-        return t * (range[1] - range[0]) + range[0];
+        return (val - domain[0]) / subDomain * subRange + range[0];
     };
 
     /**
