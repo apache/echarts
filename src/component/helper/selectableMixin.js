@@ -11,11 +11,10 @@ define(function (require) {
 
     return {
 
-        updateSelectedMap: function () {
-            var option = this.option;
-            this._dataOptMap = zrUtil.reduce(option.data, function (dataOptMap, dataOpt) {
-                dataOptMap[dataOpt.name] = dataOpt;
-                return dataOptMap;
+        updateSelectedMap: function (targetList) {
+            this._selectTargetMap = zrUtil.reduce(targetList || [], function (targetMap, target) {
+                targetMap[target.name] = target;
+                return targetMap;
             }, {});
         },
         /**
@@ -23,35 +22,35 @@ define(function (require) {
          */
         // PENGING If selectedMode is null ?
         select: function (name) {
-            var dataOptMap = this._dataOptMap;
-            var dataOpt = dataOptMap[name];
+            var targetMap = this._selectTargetMap;
+            var target = targetMap[name];
             var selectedMode = this.get('selectedMode');
             if (selectedMode === 'single') {
-                zrUtil.each(dataOptMap, function (dataOpt) {
-                    dataOpt.selected = false;
+                zrUtil.each(targetMap, function (target) {
+                    target.selected = false;
                 });
             }
-            dataOpt && (dataOpt.selected = true);
+            target && (target.selected = true);
         },
 
         /**
          * @param {string} name
          */
         unSelect: function (name) {
-            var dataOpt = this._dataOptMap[name];
+            var target = this._selectTargetMap[name];
             // var selectedMode = this.get('selectedMode');
-            // selectedMode !== 'single' && dataOpt && (dataOpt.selected = false);
-            dataOpt && (dataOpt.selected = false);
+            // selectedMode !== 'single' && target && (target.selected = false);
+            target && (target.selected = false);
         },
 
         /**
          * @param {string} name
          */
         toggleSelected: function (name) {
-            var dataOpt = this._dataOptMap[name];
-            if (dataOpt != null) {
-                this[dataOpt.selected ? 'unSelect' : 'select'](name);
-                return dataOpt.selected;
+            var target = this._selectTargetMap[name];
+            if (target != null) {
+                this[target.selected ? 'unSelect' : 'select'](name);
+                return target.selected;
             }
         },
 
@@ -59,8 +58,8 @@ define(function (require) {
          * @param {string} name
          */
         isSelected: function (name) {
-            var dataOpt = this._dataOptMap[name];
-            return dataOpt && dataOpt.selected;
+            var target = this._selectTargetMap[name];
+            return target && target.selected;
         }
     };
 });

@@ -63,25 +63,6 @@ define(function (require) {
         }
     }
 
-    // function lineAfterUpdate() {
-        // Ignore scale
-        // var m = this.transform;
-        // if (m) {
-        //     var sx = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
-        //     var sy = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
-        //     m[0] /= sx;
-        //     m[1] /= sx;
-        //     m[2] /= sy;
-        //     m[3] /= sy;
-
-        //     matrix.invert(this.invTransform, m);
-        // }
-    // }
-
-    // function isSymbolArrow(symbol) {
-    //     return symbol.type === 'symbol' && symbol.shape.symbolType === 'arrow';
-    // }
-
     function updateSymbolAndLabelBeforeLineUpdate () {
         var lineGroup = this;
         var symbolFrom = lineGroup.childOfName('fromSymbol');

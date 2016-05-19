@@ -1,7 +1,5 @@
 define(function (require) {
 
-    require('./GeoModel');
-
     var Geo = require('./Geo');
 
     var layout = require('../../util/layout');
@@ -170,6 +168,36 @@ define(function (require) {
          */
         getMap: function (mapName) {
             return mapDataStores[mapName];
+        },
+
+        /**
+         * Fill given regions array
+         * @param  {Array.<Object>} originRegionArr
+         * @param  {string} mapName
+         * @return {Array}
+         */
+        getFilledRegions: function (originRegionArr, mapName) {
+            // Not use the original
+            var regionsArr = (originRegionArr || []).slice();
+
+            var map = geoCreator.getMap(mapName);
+            var geoJson = map && map.geoJson;
+
+            var dataNameMap = {};
+            var features = geoJson.features;
+            for (var i = 0; i < regionsArr.length; i++) {
+                dataNameMap[regionsArr[i].name] = regionsArr[i];
+            }
+
+            for (var i = 0; i < features.length; i++) {
+                var name = features[i].properties.name;
+                if (!dataNameMap[name]) {
+                    regionsArr.push({
+                        name: name
+                    });
+                }
+            }
+            return regionsArr;
         }
     };
 
@@ -184,4 +212,6 @@ define(function (require) {
     echarts.loadMap = function () {};
 
     echarts.registerCoordinateSystem('geo', geoCreator);
+
+    return geoCreator;
 });

@@ -1,0 +1,46 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'));
+
+                chart.setOption({
+                    xAxis: {
+                        data: ['类目1', '类目2', '类目3', '类目4', '类目5']
+                    },
+                    yAxis: {
+                        minInterval: 1
+                    },
+                    series: [{
+                        name: 'line',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        data: [0, 0, 0, 0, 0]
+                    }]
+                });
+            });
+
+        </script>
+    </body>
+</html>

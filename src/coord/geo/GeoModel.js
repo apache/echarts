@@ -3,8 +3,14 @@ define(function (require) {
     'use strict';
     var modelUtil = require('../../util/model');
     var ComponentModel = require('../../model/Component');
+    var Model = require('../../model/Model');
+    var zrUtil = require('zrender/core/util');
 
-    ComponentModel.extend({
+    var selectableMixin = require('../../component/helper/selectableMixin');
+
+    var geoCreator = require('./geoCreator');
+
+    var GeoModel = ComponentModel.extend({
 
         type: 'geo',
 
@@ -20,6 +26,22 @@ define(function (require) {
             modelUtil.defaultEmphasis(
                 option.label, ['position', 'show', 'textStyle', 'distance', 'formatter']
             );
+        },
+
+        optionUpdated: function () {
+            var option = this.option;
+            var self = this;
+
+            option.regions = geoCreator.getFilledRegions(option.regions, option.map);
+
+            this._optionModelMap = zrUtil.reduce(option.regions || [], function (obj, regionOpt) {
+                if (regionOpt.name) {
+                    obj[regionOpt.name] = new Model(regionOpt, self);
+                }
+                return obj;
+            }, {});
+
+            this.updateSelectedMap(option.regions);
         },
 
         defaultOption: {
@@ -50,6 +72,8 @@ define(function (require) {
 
             scaleLimit: null,
 
+            // selectedMode: false
+
             label: {
                 normal: {
                     show: false,
@@ -75,7 +99,18 @@ define(function (require) {
                 emphasis: {                 // 也是选中样式
                     color: 'rgba(255,215,0,0.8)'
                 }
-            }
+            },
+
+            regions: []
+        },
+
+        /**
+         * Get model of region
+         * @param  {string} name
+         * @return {module:echarts/model/Model}
+         */
+        getRegionModel: function (name) {
+            return this._optionModelMap[name];
         },
 
         /**
@@ -106,4 +141,8 @@ define(function (require) {
             this.option.center = center;
         }
     });
+
+    zrUtil.mixin(GeoModel, selectableMixin);
+
+    return GeoModel;
 });

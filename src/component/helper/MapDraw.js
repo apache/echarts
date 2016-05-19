@@ -17,30 +17,38 @@ define(function (require) {
         return itemStyle;
     }
 
-    function updateMapSelectHandler(mapOrGeoModel, data, group, api, fromView) {
+    function updateMapSelectHandler(mapOrGeoModel, group, api, fromView) {
         group.off('click');
         mapOrGeoModel.get('selectedMode')
             && group.on('click', function (e) {
-                var dataIndex = e.target.dataIndex;
-                if (dataIndex != null) {
-                    var name = data.getName(dataIndex);
-
-                    api.dispatchAction({
-                        type: 'mapToggleSelect',
-                        seriesId: mapOrGeoModel.id,
-                        name: name,
-                        from: fromView.uid
-                    });
-
-                    updateMapSelected(mapOrGeoModel, data, api);
+                var el = e.target;
+                while (!el.__region) {
+                    el = el.parent;
                 }
+                if (!el) {
+                    return;
+                }
+
+                var region = el.__region;
+                var action = {
+                    type: (mapOrGeoModel.mainType === 'geo' ? 'geo' : 'map') + 'ToggleSelect',
+                    name: region.name,
+                    from: fromView.uid
+                };
+                action[mapOrGeoModel.mainType + 'Id'] = mapOrGeoModel.id;
+
+                api.dispatchAction(action);
+
+                updateMapSelected(mapOrGeoModel, group);
             });
     }
 
-    function updateMapSelected(mapOrGeoModel, data) {
-        data.eachItemGraphicEl(function (el, idx) {
-            var name = data.getName(idx);
-            el.trigger(mapOrGeoModel.isSelected(name) ? 'emphasis' : 'normal');
+    function updateMapSelected(mapOrGeoModel, group) {
+        // FIXME
+        group.eachChild(function (otherRegionEl) {
+            if (otherRegionEl.__region) {
+                otherRegionEl.trigger(mapOrGeoModel.isSelected(otherRegionEl.__region.name) ? 'emphasis' : 'normal');
+            }
         });
     }
 
@@ -103,28 +111,10 @@ define(function (require) {
 
             group.removeAll();
 
-            var itemStyleModel;
-            var hoverItemStyleModel;
-            var itemStyle;
-            var hoverItemStyle;
-
-            var labelModel;
-            var hoverLabelModel;
-
             var itemStyleAccessPath = ['itemStyle', 'normal'];
             var hoverItemStyleAccessPath = ['itemStyle', 'emphasis'];
             var labelAccessPath = ['label', 'normal'];
             var hoverLabelAccessPath = ['label', 'emphasis'];
-            if (!data) {
-                itemStyleModel = mapOrGeoModel.getModel(itemStyleAccessPath);
-                hoverItemStyleModel = mapOrGeoModel.getModel(hoverItemStyleAccessPath);
-
-                itemStyle = getFixedItemStyle(itemStyleModel, scale);
-                hoverItemStyle = getFixedItemStyle(hoverItemStyleModel, scale);
-
-                labelModel = mapOrGeoModel.getModel(labelAccessPath);
-                hoverLabelModel = mapOrGeoModel.getModel(hoverLabelAccessPath);
-            }
 
             zrUtil.each(geo.regions, function (region) {
 
@@ -135,32 +125,31 @@ define(function (require) {
                     }
                 });
                 regionGroup.add(compoundPath);
+
+                var regionModel = mapOrGeoModel.getRegionModel(region.name) || mapOrGeoModel;
+
+                var itemStyleModel = regionModel.getModel(itemStyleAccessPath);
+                var hoverItemStyleModel = regionModel.getModel(hoverItemStyleAccessPath);
+                var itemStyle = getFixedItemStyle(itemStyleModel, scale);
+                var hoverItemStyle = getFixedItemStyle(hoverItemStyleModel, scale);
+
+                var labelModel = regionModel.getModel(labelAccessPath);
+                var hoverLabelModel = regionModel.getModel(hoverLabelAccessPath);
+
                 var dataIdx;
                 // Use the itemStyle in data if has data
                 if (data) {
-                    // FIXME If dataIdx < 0
                     dataIdx = data.indexOfName(region.name);
-                    var itemModel = data.getItemModel(dataIdx);
-
                     // Only visual color of each item will be used. It can be encoded by dataRange
                     // But visual color of series is used in symbol drawing
                     //
                     // Visual color for each series is for the symbol draw
                     var visualColor = data.getItemVisual(dataIdx, 'color', true);
-
-                    itemStyleModel = itemModel.getModel(itemStyleAccessPath);
-                    hoverItemStyleModel = itemModel.getModel(hoverItemStyleAccessPath);
-
-                    itemStyle = getFixedItemStyle(itemStyleModel, scale);
-                    hoverItemStyle = getFixedItemStyle(hoverItemStyleModel, scale);
-
-                    labelModel = itemModel.getModel(labelAccessPath);
-                    hoverLabelModel = itemModel.getModel(hoverLabelAccessPath);
-
                     if (visualColor) {
                         itemStyle.fill = visualColor;
                     }
                 }
+
                 var textStyleModel = labelModel.getModel('textStyle');
                 var hoverTextStyleModel = hoverLabelModel.getModel('textStyle');
 
@@ -219,7 +208,21 @@ define(function (require) {
 
                 // setItemGraphicEl, setHoverStyle after all polygons and labels
                 // are added to the rigionGroup
-                data && data.setItemGraphicEl(dataIdx, regionGroup);
+                if (data) {
+                    data.setItemGraphicEl(dataIdx, regionGroup);
+                }
+                else {
+                    var regionModel = mapOrGeoModel.getRegionModel(region.name);
+                    // Package custom mouse event for geo component
+                    compoundPath.eventData = {
+                        componentType: 'geo',
+                        geoIndex: mapOrGeoModel.componentIndex,
+                        name: region.name,
+                        region: (regionModel && regionModel.option) || {}
+                    };
+                }
+
+                regionGroup.__region = region;
 
                 graphic.setHoverStyle(regionGroup, hoverItemStyle);
 
@@ -228,9 +231,9 @@ define(function (require) {
 
             this._updateController(mapOrGeoModel, ecModel, api);
 
-            data && updateMapSelectHandler(mapOrGeoModel, data, group, api, fromView);
+            updateMapSelectHandler(mapOrGeoModel, group, api, fromView);
 
-            data && updateMapSelected(mapOrGeoModel, data);
+            updateMapSelected(mapOrGeoModel, group);
         },
 
         remove: function () {

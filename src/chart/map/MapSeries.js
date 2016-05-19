@@ -1,7 +1,6 @@
 define(function (require) {
 
     var List = require('../../data/List');
-    var echarts = require('../../echarts');
     var SeriesModel = require('../../model/Series');
     var zrUtil = require('zrender/core/util');
     var completeDimensions = require('../../data/helper/completeDimensions');
@@ -10,26 +9,9 @@ define(function (require) {
     var encodeHTML = formatUtil.encodeHTML;
     var addCommas = formatUtil.addCommas;
 
-    var dataSelectableMixin = require('../helper/dataSelectableMixin');
+    var dataSelectableMixin = require('../../component/helper/selectableMixin');
 
-    function fillData(dataOpt, geoJson) {
-        var dataNameMap = {};
-        var features = geoJson.features;
-        for (var i = 0; i < dataOpt.length; i++) {
-            dataNameMap[dataOpt[i].name] = dataOpt[i];
-        }
-
-        for (var i = 0; i < features.length; i++) {
-            var name = features[i].properties.name;
-            if (!dataNameMap[name]) {
-                dataOpt.push({
-                    value: NaN,
-                    name: name
-                });
-            }
-        }
-        return dataOpt;
-    }
+    var geoCreator = require('../../coord/geo/geoCreator');
 
     var MapSeries = SeriesModel.extend({
 
@@ -54,7 +36,7 @@ define(function (require) {
 
             MapSeries.superApply(this, 'init', arguments);
 
-            this.updateSelectedMap();
+            this.updateSelectedMap(option.data);
         },
 
         getInitialData: function (option) {
@@ -74,16 +56,14 @@ define(function (require) {
 
             MapSeries.superCall(this, 'mergeOption', newOption);
 
-            this.updateSelectedMap();
+            this.updateSelectedMap(this.option.data);
         },
 
         _fillOption: function (option, mapName) {
             // Shallow clone
             option = zrUtil.extend({}, option);
 
-            var map = echarts.getMap(mapName);
-            var geoJson = map && map.geoJson;
-            geoJson && (option.data = fillData((option.data || []), geoJson));
+            option.data = geoCreator.getFilledRegions(option.data, mapName);
 
             return option;
         },
@@ -92,6 +72,16 @@ define(function (require) {
             // Use value stored in data instead because it is calculated from multiple series
             // FIXME Provide all value of multiple series ?
             return this._data.get('value', dataIndex);
+        },
+
+        /**
+         * Get model of region
+         * @param  {string} name
+         * @return {module:echarts/model/Model}
+         */
+        getRegionModel: function (regionName) {
+            var data = this.getData();
+            return data.getItemModel(data.indexOfName(regionName));
         },
 
         /**

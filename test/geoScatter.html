@@ -256,19 +256,37 @@
                         legend: {
                             data: ['scatter', 'scatter2']
                         },
-                        geo: {
+                        geo: [{
                             map: 'china',
                             roam: true,
+                            left: 10,
+                            width: 300,
+                            // zoom: 1.5,
                             scaleLimit: {
-                                min: 1,
+                                min: 1.5,
                                 max: 2
                             },
-                            roamDetail: {
-                                x: -200,
-                                y: -200,
-                                zoom: 1.5
-                            }
-                        },
+                            regions: [{
+                                name: '新疆',
+                                label: {
+                                    normal: {
+                                        show: true
+                                    }
+                                },
+                                itemStyle: {
+                                    normal: {
+                                        areaColor: '#aaa'
+                                    }
+                                }
+                            }]
+                        }, {
+                            map: 'china',
+                            roam: true,
+                            selectedMode: 'single',
+                            left: null,
+                            right: 10,
+                            width: 300
+                        }],
                         tooltip: {
                             trigger: 'axis',
                             axisPointer: {
@@ -292,6 +310,10 @@
                             },
                             data: data2
                         }]
+                    });
+
+                    chart.on('click', function (param) {
+                        console.log(param);
                     });
                 });
             });

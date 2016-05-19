@@ -7,7 +7,7 @@ define(function(require) {
     var modelUtil = require('../../util/model');
     var completeDimensions = require('../../data/helper/completeDimensions');
 
-    var dataSelectableMixin = require('../helper/dataSelectableMixin');
+    var dataSelectableMixin = require('../../component/helper/selectableMixin');
 
     var PieSeries = require('../../echarts').extendSeriesModel({
 
@@ -23,7 +23,7 @@ define(function(require) {
                 return this._dataBeforeProcessed;
             };
 
-            this.updateSelectedMap();
+            this.updateSelectedMap(option.data);
 
             this._defaultLabelLine(option);
         },
@@ -31,7 +31,7 @@ define(function(require) {
         // Overwrite
         mergeOption: function (newOption) {
             PieSeries.superCall(this, 'mergeOption', newOption);
-            this.updateSelectedMap();
+            this.updateSelectedMap(this.option.data);
         },
 
         getInitialData: function (option, ecModel) {

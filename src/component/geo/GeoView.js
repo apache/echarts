@@ -16,8 +16,20 @@ define(function (require) {
         },
 
         render: function (geoModel, ecModel, api, payload) {
-            geoModel.get('show') &&
-                this._mapDraw.draw(geoModel, ecModel, api, this, payload);
+            // Not render if it is an toggleSelect action from self
+            if (payload && payload.type === 'geoToggleSelect'
+                && payload.from === this.uid
+            ) {
+                return;
+            }
+
+            var mapDraw = this._mapDraw;
+            if (geoModel.get('show')) {
+                mapDraw.draw(geoModel, ecModel, api, this, payload);
+            }
+            else {
+                this._mapDraw.group.removeAll();
+            }
         }
     });
 });
