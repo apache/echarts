@@ -63,8 +63,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	__webpack_require__(128);
 	__webpack_require__(133);
 	__webpack_require__(142);
-	__webpack_require__(272);
-	__webpack_require__(266);
+	__webpack_require__(271);
+	__webpack_require__(265);
 
 	__webpack_require__(107);
 	__webpack_require__(289);
@@ -1052,9 +1052,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.1.9',
+	        version: '3.1.10',
 	        dependencies: {
-	            zrender: '3.0.9'
+	            zrender: '3.1.0'
 	        }
 	    };
 
@@ -3248,19 +3248,48 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @return {(number|Array.<number>}
 	     */
 	    number.linearMap = function (val, domain, range, clamp) {
+	        var subDomain = domain[1] - domain[0];
+	        var subRange = range[1] - range[0];
 
-	        var sub = domain[1] - domain[0];
-
-	        if (sub === 0) {
-	            return (range[0] + range[1]) / 2;
+	        if (subDomain === 0) {
+	            return subRange === 0
+	                ? range[0]
+	                : (range[0] + range[1]) / 2;
 	        }
-	        var t = (val - domain[0]) / sub;
 
+	        // Avoid accuracy problem in edge, such as
+	        // 146.39 - 62.83 === 83.55999999999999.
+	        // See echarts/test/ut/spec/util/number.js#linearMap#accuracyError
+	        // It is a little verbose for efficiency considering this method
+	        // is a hotspot.
 	        if (clamp) {
-	            t = Math.min(Math.max(t, 0), 1);
+	            if (subDomain > 0) {
+	                if (val <= domain[0]) {
+	                    return range[0];
+	                }
+	                else if (val >= domain[1]) {
+	                    return range[1];
+	                }
+	            }
+	            else {
+	                if (val >= domain[0]) {
+	                    return range[0];
+	                }
+	                else if (val <= domain[1]) {
+	                    return range[1];
+	                }
+	            }
+	        }
+	        else {
+	            if (val === domain[0]) {
+	                return range[0];
+	            }
+	            if (val === domain[1]) {
+	                return range[1];
+	            }
 	        }
 
-	        return t * (range[1] - range[0]) + range[0];
+	        return (val - domain[0]) / subDomain * subRange + range[0];
 	    };
 
 	    /**
@@ -3386,6 +3415,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	            );
 	    };
 
+	    /**
+	     * Quantity of a number. e.g. 0.1, 1, 10, 100
+	     * @param  {number} val
+	     * @return {number}
+	     */
+	    number.quantity = function (val) {
+	        return Math.pow(10, Math.floor(Math.log(val) / Math.LN10));
+	    };
+
 	    // "Nice Numbers for Graph Labels" of Graphic Gems
 	    /**
 	     * find a “nice” number approximately equal to x. Round the number if round = true, take ceiling if round = false
@@ -3395,8 +3433,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @return {number}
 	     */
 	    number.nice = function (val, round) {
-	        var exp = Math.floor(Math.log(val) / Math.LN10);
-	        var exp10 = Math.pow(10, exp);
+	        var exp10 = number.quantity(val);
 	        var f = val / exp10; // between 1 and 10
 	        var nf;
 	        if (round) {
@@ -3954,7 +3991,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        for (var i = 0, l = textLines.length; i < l; i++) {
 	            // measureText 可以被覆盖以兼容不支持 Canvas 的环境
-	            width =  Math.max(textContain.measureText(textLines[i], textFont).width, width);
+	            width = Math.max(textContain.measureText(textLines[i], textFont).width, width);
 	        }
 
 	        if (textWidthCacheCounter > TEXT_CACHE_MAX) {
@@ -5850,7 +5887,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * @private
 	         * @type {Object}
 	         */
-	        this._newOptionBackup;
+	        this._newBaseOption;
 	    }
 
 	    // timeline.notMerge is not supported in ec3. Firstly there is rearly
@@ -5880,27 +5917,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // 如果 timeline options 或者 media 中设置了某个属性，而baseOption中没有设置，则进行警告。
 
 	            var oldOptionBackup = this._optionBackup;
-	            var newOptionBackup = this._newOptionBackup = parseRawOption.call(
+	            var newParsedOption = parseRawOption.call(
 	                this, rawOption, optionPreprocessorFuncs
 	            );
+	            this._newBaseOption = newParsedOption.baseOption;
 
 	            // For setOption at second time (using merge mode);
 	            if (oldOptionBackup) {
 	                // Only baseOption can be merged.
-	                mergeOption(oldOptionBackup.baseOption, newOptionBackup.baseOption);
+	                mergeOption(oldOptionBackup.baseOption, newParsedOption.baseOption);
 
-	                if (newOptionBackup.timelineOptions.length) {
-	                    oldOptionBackup.timelineOptions = newOptionBackup.timelineOptions;
+	                // For simplicity, timeline options and media options do not support merge,
+	                // that is, if you `setOption` twice and both has timeline options, the latter
+	                // timeline opitons will not be merged to the formers, but just substitude them.
+	                if (newParsedOption.timelineOptions.length) {
+	                    oldOptionBackup.timelineOptions = newParsedOption.timelineOptions;
 	                }
-	                if (newOptionBackup.mediaList.length) {
-	                    oldOptionBackup.mediaList = newOptionBackup.mediaList;
+	                if (newParsedOption.mediaList.length) {
+	                    oldOptionBackup.mediaList = newParsedOption.mediaList;
 	                }
-	                if (newOptionBackup.mediaDefault) {
-	                    oldOptionBackup.mediaDefault = newOptionBackup.mediaDefault;
+	                if (newParsedOption.mediaDefault) {
+	                    oldOptionBackup.mediaDefault = newParsedOption.mediaDefault;
 	                }
 	            }
 	            else {
-	                this._optionBackup = newOptionBackup;
+	                this._optionBackup = newParsedOption;
 	            }
 	        },
 
@@ -5909,12 +5950,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * @return {Object}
 	         */
 	        mountOption: function (isRecreate) {
-	            var optionBackup = isRecreate
-	                // this._optionBackup can be only used when recreate.
-	                // In other cases we use model.mergeOption to handle merge.
-	                ? this._optionBackup : this._newOptionBackup;
+	            var optionBackup = this._optionBackup;
 
-	            // FIXME
+	            // TODO
 	            // 如果没有reset功能则不clone。
 
 	            this._timelineOptions = map(optionBackup.timelineOptions, clone);
@@ -5922,7 +5960,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            this._mediaDefault = clone(optionBackup.mediaDefault);
 	            this._currentMediaIndices = [];
 
-	            return clone(optionBackup.baseOption);
+	            return clone(isRecreate
+	                // this._optionBackup.baseOption, which is created at the first `setOption`
+	                // called, and is merged into every new option by inner method `mergeOption`
+	                // each time `setOption` called, can be only used in `isRecreate`, because
+	                // its reliability is under suspicion. In other cases option merge is
+	                // proformed by `model.mergeOption`.
+	                ? optionBackup.baseOption : this._newBaseOption
+	            );
 	        },
 
 	        /**
@@ -6011,6 +6056,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            baseOption = baseOption || {};
 	            timelineOptions = (rawOption.options || []).slice();
 	        }
+
 	        // For media query
 	        if (rawOption.media) {
 	            baseOption = baseOption || {};
@@ -6352,8 +6398,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var colorEl = '<span style="display:inline-block;margin-right:5px;'
 	                + 'border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
 
+	            var seriesName = this.name;
+	            // FIXME
+	            if (seriesName === '\0-') {
+	                // Not show '-'
+	                seriesName = '';
+	            }
 	            return !multipleSeries
-	                ? (encodeHTML(this.name) + '<br />' + colorEl
+	                ? ((seriesName && encodeHTML(seriesName) + '<br />') + colorEl
 	                    + (name
 	                        ? encodeHTML(name) + ' : ' + formattedValue
 	                        : formattedValue)
@@ -7905,24 +7957,41 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 
+	    // arr0 is source array, arr1 is target array.
+	    // Do some preprocess to avoid error happened when interpolating from arr0 to arr1
 	    function fillArr(arr0, arr1, arrDim) {
 	        var arr0Len = arr0.length;
 	        var arr1Len = arr1.length;
-	        if (arr0Len === arr1Len) {
-	            return;
+	        if (arr0Len !== arr1Len) {
+	            // FIXME Not work for TypedArray
+	            var isPreviousLarger = arr0Len > arr1Len;
+	            if (isPreviousLarger) {
+	                // Cut the previous
+	                arr0.length = arr1Len;
+	            }
+	            else {
+	                // Fill the previous
+	                for (var i = arr0Len; i < arr1Len; i++) {
+	                    arr0.push(
+	                        arrDim === 1 ? arr1[i] : arraySlice.call(arr1[i])
+	                    );
+	                }
+	            }
 	        }
-	        // FIXME Not work for TypedArray
-	        var isPreviousLarger = arr0Len > arr1Len;
-	        if (isPreviousLarger) {
-	            // Cut the previous
-	            arr0.length = arr1Len;
-	        }
-	        else {
-	            // Fill the previous
-	            for (var i = arr0Len; i < arr1Len; i++) {
-	                arr0.push(
-	                    arrDim === 1 ? arr1[i] : arraySlice.call(arr1[i])
-	                );
+	        // Handling NaN value
+	        var len2 = arr0[0] && arr0[0].length;
+	        for (var i = 0; i < arr0.length; i++) {
+	            if (arrDim === 1) {
+	                if (isNaN(arr0[i])) {
+	                    arr0[i] = arr1[i];
+	                }
+	            }
+	            else {
+	                for (var j = 0; j < len2; j++) {
+	                    if (isNaN(arr0[i][j])) {
+	                        arr0[i][j] = arr1[i][j];
+	                    }
+	                }
 	            }
 	        }
 	    }
@@ -8104,14 +8173,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return;
 	        }
 
-	        if (isValueArray) {
-	            var lastValue = kfValues[trackLen - 1];
-	            // Polyfill array
-	            for (var i = 0; i < trackLen - 1; i++) {
+	        var lastValue = kfValues[trackLen - 1];
+	        // Polyfill array and NaN value
+	        for (var i = 0; i < trackLen - 1; i++) {
+	            if (isValueArray) {
 	                fillArr(kfValues[i], lastValue, arrDim);
 	            }
-	            fillArr(getter(animator._target, propName), lastValue, arrDim);
+	            else {
+	                if (isNaN(kfValues[i]) && !isNaN(lastValue) && !isValueString && !isValueColor) {
+	                    kfValues[i] = lastValue;
+	                }
+	            }
 	        }
+	        isValueArray && fillArr(getter(animator._target, propName), lastValue, arrDim);
 
 	        // Cache the key of last frame to speed up when
 	        // animation playback is sequency
@@ -11441,6 +11515,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	                y = rect.y + parsePercent(textPosition[1], rect.height);
 	                align = align || 'left';
 	                baseline = baseline || 'top';
+
+	                if (verticalAlign) {
+	                    switch (verticalAlign) {
+	                        case 'middle':
+	                            y -= textRect.height / 2 - textRect.lineHeight / 2;
+	                            break;
+	                        case 'bottom':
+	                            y -= textRect.height - textRect.lineHeight / 2;
+	                            break;
+	                        default:
+	                            y += textRect.lineHeight / 2;
+	                    }
+	                    // Force bseline to be middle
+	                    baseline = 'middle';
+	                }
 	            }
 	            else {
 	                var res = textContain.adjustTextPositionOnRect(
@@ -11454,22 +11543,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 
 	            ctx.textAlign = align;
-	            if (verticalAlign) {
-	                switch (verticalAlign) {
-	                    case 'middle':
-	                        y -= textRect.height / 2;
-	                        break;
-	                    case 'bottom':
-	                        y -= textRect.height;
-	                        break;
-	                    // 'top'
-	                }
-	                // Ignore baseline
-	                ctx.textBaseline = 'top';
-	            }
-	            else {
-	                ctx.textBaseline = baseline;
-	            }
+	            ctx.textBaseline = baseline;
 
 	            var textFill = style.textFill;
 	            var textStroke = style.textStroke;
@@ -13829,6 +13903,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var style = this.style;
 	            var src = style.image;
 	            var image;
+
 	            // style.image is a url string
 	            if (typeof src === 'string') {
 	                image = this._image;
@@ -14294,15 +14369,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        text, ctx.font, style.textAlign, 'top'
 	                    );
 	                    // Ignore textBaseline
-	                    ctx.textBaseline = 'top';
+	                    ctx.textBaseline = 'middle';
 	                    switch (style.textVerticalAlign) {
 	                        case 'middle':
-	                            y -= rect.height / 2;
+	                            y -= rect.height / 2 - rect.lineHeight / 2;
 	                            break;
 	                        case 'bottom':
-	                            y -= rect.height;
+	                            y -= rect.height - rect.lineHeight / 2;
 	                            break;
-	                        // 'top'
+	                        default:
+	                            y += rect.lineHeight / 2;
 	                    }
 	                }
 	                else {
@@ -15262,7 +15338,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @type {string}
 	     */
-	    zrender.version = '3.0.9';
+	    zrender.version = '3.1.0';
 
 	    /**
 	     * Initializing a zrender instance
@@ -18762,11 +18838,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.dataType;
 
 	        /**
-	         * @type {boolean}
-	         */
-	        this.silent = false;
-
-	        /**
 	         * Indices stores the indices of data subset after filtered.
 	         * This data subset will be used in chart.
 	         * @type {Array.<number>}
@@ -19331,8 +19402,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // Reset data extent
 	        this._extent = {};
 
-	        !this.silent && this.__onChange();
-
 	        return this;
 	    };
 
@@ -19428,8 +19497,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }, stack, context);
 
-	        !this.silent && this.__onTransfer(list);
-
 	        return list;
 	    };
 
@@ -19475,8 +19542,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            dimStore[idx] = value;
 	            indices.push(idx);
 	        }
-
-	        !this.silent && this.__onTransfer(list);
 
 	        return list;
 	    };
@@ -19574,7 +19639,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     */
 	    listProto.getItemLayout = function (idx) {
 	        return this._itemLayouts[idx];
-	    },
+	    };
 
 	    /**
 	     * Set layout of single data item
@@ -19586,7 +19651,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this._itemLayouts[idx] = merge
 	            ? zrUtil.extend(this._itemLayouts[idx] || {}, layout)
 	            : layout;
-	    },
+	    };
+
+	    /**
+	     * Clear all layout of single data item
+	     */
+	    listProto.clearItemLayouts = function () {
+	        this._itemLayouts.length = 0;
+	    };
 
 	    /**
 	     * Get visual property of single data item
@@ -19602,7 +19674,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return this.getVisual(key);
 	        }
 	        return val;
-	    },
+	    };
 
 	    /**
 	     * Set visual property of single data item
@@ -19694,8 +19766,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        list.indices = this.indices.slice();
 
-	        !this.silent && this.__onTransfer(list);
-
 	        return list;
 	    };
 
@@ -19717,7 +19787,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        };
 	    };
 
-	    listProto.__onTransfer = listProto.__onChange = zrUtil.noop;
+	    // Methods that create a new list based on this list should be listed here.
+	    // Notice that those method should `RETURN` the new list.
+	    listProto.TRANSFERABLE_METHODS = ['cloneShallow', 'downSample', 'map'];
+	    // Methods that change indices of this list should be listed here.
+	    listProto.CHANGABLE_METHODS = ['filterSelf'];
 
 	    module.exports = List;
 
@@ -20750,7 +20824,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var hoverStyle = itemModel.getModel(emphasisStyleAccessPath).getItemStyle();
 
-	        symbolPath.rotation = itemModel.getShallow('symbolRotate') * Math.PI / 180 || 0;
+	        symbolPath.rotation = (itemModel.getShallow('symbolRotate') || 0) * Math.PI / 180 || 0;
 
 	        var symbolOffset = itemModel.getShallow('symbolOffset');
 	        if (symbolOffset) {
@@ -20778,16 +20852,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // Get last value dim
 	        var dimensions = data.dimensions.slice();
-	        var valueDim = dimensions.pop();
+	        var valueDim;
 	        var dataType;
-	        while (
-	            ((dataType = data.getDimensionInfo(valueDim).type) === 'ordinal')
-	            || (dataType === 'time')
-	        ) {
-	            valueDim = dimensions.pop();
-	        }
+	        while (dimensions.length && (
+	            valueDim = dimensions.pop(),
+	            dataType = data.getDimensionInfo(valueDim).type,
+	            dataType === 'ordinal' || dataType === 'time'
+	        )) {} // jshint ignore:line
 
-	        if (labelModel.get('show')) {
+	        if (valueDim != null && labelModel.get('show')) {
 	            graphic.setText(elStyle, labelModel, color);
 	            elStyle.text = zrUtil.retrieve(
 	                seriesModel.getFormattedLabel(idx, 'normal'),
@@ -20798,7 +20871,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            elStyle.text = '';
 	        }
 
-	        if (hoverLabelModel.getShallow('show')) {
+	        if (valueDim != null && hoverLabelModel.getShallow('show')) {
 	            graphic.setText(hoverStyle, hoverLabelModel, color);
 	            hoverStyle.text = zrUtil.retrieve(
 	                seriesModel.getFormattedLabel(idx, 'emphasis'),
@@ -20842,6 +20915,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    symbolProto.fadeOut = function (cb) {
 	        var symbolPath = this.childAt(0);
+	        // Avoid trigger hoverAnimation when fading
+	        symbolPath.off('mouseover')
+	            .off('mouseout')
+	            .off('emphasis')
+	            .off('normal');
 	        // Not show text when animating
 	        symbolPath.style.text = '';
 	        graphic.updateProps(symbolPath, {
@@ -22355,7 +22433,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            max = originalExtent[1] + boundaryGap[1] * span;
 	            fixMax = false;
 	        }
-	        // TODO Only one data
 	        if (min === 'dataMin') {
 	            min = originalExtent[0];
 	        }
@@ -22381,8 +22458,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var extent = axisHelper.getScaleExtent(axis, model);
 	        var fixMin = (model.getMin ? model.getMin() : model.get('min')) != null;
 	        var fixMax = (model.getMax ? model.getMax() : model.get('max')) != null;
+	        var splitNumber = model.get('splitNumber');
 	        scale.setExtent(extent[0], extent[1]);
-	        scale.niceExtent(model.get('splitNumber'), fixMin, fixMax);
+	        scale.niceExtent(splitNumber, fixMin, fixMax);
+
+	        // Use minInterval to constraint the calculated interval.
+	        // If calculated interval is less than minInterval. increase the interval quantity until
+	        // it is larger than minInterval.
+	        // For example:
+	        //  minInterval is 1, calculated interval is 0.2, so increase it to be 1. In this way we can get
+	        //  an integer axis.
+	        var minInterval = model.get('minInterval');
+	        if (isFinite(minInterval) && !fixMin && !fixMax && scale.type === 'interval') {
+	            var interval = scale.getInterval();
+	            var intervalScale = Math.max(Math.abs(interval), minInterval) / interval;
+	            // while (interval < minInterval) {
+	            //     var quantity = numberUtil.quantity(interval);
+	            //     interval = quantity * 10;
+	            //     scaleQuantity *= 10;
+	            // }
+	            extent = scale.getExtent();
+	            scale.setExtent(intervalScale * extent[0], extent[1] * intervalScale);
+	            scale.niceExtent(splitNumber);
+	        }
 
 	        // If some one specified the min, max. And the default calculated interval
 	        // is not good enough. He can specify the interval. It is often appeared
@@ -22964,7 +23062,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var mathCeil = Math.ceil;
 	    var mathFloor = Math.floor;
-	    var ONE_DAY = 3600000 * 24;
+	    var ONE_SECOND = 1000;
+	    var ONE_MINUTE = ONE_SECOND * 60;
+	    var ONE_HOUR = ONE_MINUTE * 60;
+	    var ONE_DAY = ONE_HOUR * 24;
 
 	    // FIXME 公用？
 	    var bisect = function (a, x, lo, hi) {
@@ -23012,7 +23113,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                extent[0] = extent[1] - ONE_DAY;
 	            }
 
-	            this.niceTicks(approxTickNum, fixMin, fixMax);
+	            this.niceTicks(approxTickNum);
 
 	            // var extent = this._extent;
 	            var interval = this._interval;
@@ -23074,20 +23175,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // Steps from d3
 	    var scaleLevels = [
 	        // Format       step    interval
-	        ['hh:mm:ss',    1,      1000],           // 1s
-	        ['hh:mm:ss',    5,      1000 * 5],       // 5s
-	        ['hh:mm:ss',    10,     1000 * 10],      // 10s
-	        ['hh:mm:ss',    15,     1000 * 15],      // 15s
-	        ['hh:mm:ss',    30,     1000 * 30],      // 30s
-	        ['hh:mm\nMM-dd',1,      60000],          // 1m
-	        ['hh:mm\nMM-dd',5,      60000 * 5],      // 5m
-	        ['hh:mm\nMM-dd',10,     60000 * 10],     // 10m
-	        ['hh:mm\nMM-dd',15,     60000 * 15],     // 15m
-	        ['hh:mm\nMM-dd',30,     60000 * 30],     // 30m
-	        ['hh:mm\nMM-dd',1,      3600000],        // 1h
-	        ['hh:mm\nMM-dd',2,      3600000 * 2],    // 2h
-	        ['hh:mm\nMM-dd',6,      3600000 * 6],    // 6h
-	        ['hh:mm\nMM-dd',12,     3600000 * 12],   // 12h
+	        ['hh:mm:ss',    1,      ONE_SECOND],           // 1s
+	        ['hh:mm:ss',    5,      ONE_SECOND * 5],       // 5s
+	        ['hh:mm:ss',    10,     ONE_SECOND * 10],      // 10s
+	        ['hh:mm:ss',    15,     ONE_SECOND * 15],      // 15s
+	        ['hh:mm:ss',    30,     ONE_SECOND * 30],      // 30s
+	        ['hh:mm\nMM-dd',1,      ONE_MINUTE],          // 1m
+	        ['hh:mm\nMM-dd',5,      ONE_MINUTE * 5],      // 5m
+	        ['hh:mm\nMM-dd',10,     ONE_MINUTE * 10],     // 10m
+	        ['hh:mm\nMM-dd',15,     ONE_MINUTE * 15],     // 15m
+	        ['hh:mm\nMM-dd',30,     ONE_MINUTE * 30],     // 30m
+	        ['hh:mm\nMM-dd',1,      ONE_HOUR],        // 1h
+	        ['hh:mm\nMM-dd',2,      ONE_HOUR * 2],    // 2h
+	        ['hh:mm\nMM-dd',6,      ONE_HOUR * 6],    // 6h
+	        ['hh:mm\nMM-dd',12,     ONE_HOUR * 12],   // 12h
 	        ['MM-dd\nyyyy', 1,      ONE_DAY],   // 1d
 	        ['week',        7,      ONE_DAY * 7],        // 7d
 	        ['month',       1,      ONE_DAY * 31],       // 1M
@@ -24195,6 +24296,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // scale: false,
 	        // 分割段数，默认为5
 	        splitNumber: 5
+	        // Minimum interval
+	        // minInterval: null
 	    }, defaultOption);
 
 	    // FIXME
@@ -25658,7 +25761,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                return this._dataBeforeProcessed;
 	            };
 
-	            this.updateSelectedMap();
+	            this.updateSelectedMap(option.data);
 
 	            this._defaultLabelLine(option);
 	        },
@@ -25666,7 +25769,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // Overwrite
 	        mergeOption: function (newOption) {
 	            PieSeries.superCall(this, 'mergeOption', newOption);
-	            this.updateSelectedMap();
+	            this.updateSelectedMap(this.option.data);
 	        },
 
 	        getInitialData: function (option, ecModel) {
@@ -25797,11 +25900,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    module.exports = {
 
-	        updateSelectedMap: function () {
-	            var option = this.option;
-	            this._dataOptMap = zrUtil.reduce(option.data, function (dataOptMap, dataOpt) {
-	                dataOptMap[dataOpt.name] = dataOpt;
-	                return dataOptMap;
+	        updateSelectedMap: function (targetList) {
+	            this._selectTargetMap = zrUtil.reduce(targetList || [], function (targetMap, target) {
+	                targetMap[target.name] = target;
+	                return targetMap;
 	            }, {});
 	        },
 	        /**
@@ -25809,35 +25911,35 @@ return /******/ (function(modules) { // webpackBootstrap
 	         */
 	        // PENGING If selectedMode is null ?
 	        select: function (name) {
-	            var dataOptMap = this._dataOptMap;
-	            var dataOpt = dataOptMap[name];
+	            var targetMap = this._selectTargetMap;
+	            var target = targetMap[name];
 	            var selectedMode = this.get('selectedMode');
 	            if (selectedMode === 'single') {
-	                zrUtil.each(dataOptMap, function (dataOpt) {
-	                    dataOpt.selected = false;
+	                zrUtil.each(targetMap, function (target) {
+	                    target.selected = false;
 	                });
 	            }
-	            dataOpt && (dataOpt.selected = true);
+	            target && (target.selected = true);
 	        },
 
 	        /**
 	         * @param {string} name
 	         */
 	        unSelect: function (name) {
-	            var dataOpt = this._dataOptMap[name];
+	            var target = this._selectTargetMap[name];
 	            // var selectedMode = this.get('selectedMode');
-	            // selectedMode !== 'single' && dataOpt && (dataOpt.selected = false);
-	            dataOpt && (dataOpt.selected = false);
+	            // selectedMode !== 'single' && target && (target.selected = false);
+	            target && (target.selected = false);
 	        },
 
 	        /**
 	         * @param {string} name
 	         */
 	        toggleSelected: function (name) {
-	            var dataOpt = this._dataOptMap[name];
-	            if (dataOpt != null) {
-	                this[dataOpt.selected ? 'unSelect' : 'select'](name);
-	                return dataOpt.selected;
+	            var target = this._selectTargetMap[name];
+	            if (target != null) {
+	                this[target.selected ? 'unSelect' : 'select'](name);
+	                return target.selected;
 	            }
 	        },
 
@@ -25845,8 +25947,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * @param {string} name
 	         */
 	        isSelected: function (name) {
-	            var dataOpt = this._dataOptMap[name];
-	            return dataOpt && dataOpt.selected;
+	            var target = this._selectTargetMap[name];
+	            return target && target.selected;
 	        }
 	    };
 
@@ -26949,7 +27051,16 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 157 */,
 /* 158 */,
 /* 159 */,
-/* 160 */
+/* 160 */,
+/* 161 */,
+/* 162 */,
+/* 163 */,
+/* 164 */,
+/* 165 */,
+/* 166 */,
+/* 167 */,
+/* 168 */,
+/* 169 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -26961,7 +27072,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var Eventful = __webpack_require__(32);
 	    var zrUtil = __webpack_require__(3);
 	    var eventTool = __webpack_require__(81);
-	    var interactionMutex = __webpack_require__(161);
+	    var interactionMutex = __webpack_require__(170);
 
 	    function mousedown(e) {
 	        if (e.target && e.target.draggable) {
@@ -27175,7 +27286,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 161 */
+/* 170 */
 /***/ function(module, exports) {
 
 	
@@ -27205,15 +27316,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 162 */,
-/* 163 */,
-/* 164 */,
-/* 165 */,
-/* 166 */,
-/* 167 */,
-/* 168 */,
-/* 169 */,
-/* 170 */,
 /* 171 */,
 /* 172 */,
 /* 173 */,
@@ -27237,8 +27339,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 191 */,
 /* 192 */,
 /* 193 */,
-/* 194 */,
-/* 195 */
+/* 194 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -27247,8 +27348,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	    var graphic = __webpack_require__(42);
-	    var LineGroup = __webpack_require__(196);
+	    var LineGroup = __webpack_require__(195);
 
+
+	    function isPointNaN(pt) {
+	        return isNaN(pt[0]) || isNaN(pt[1]);
+	    }
+	    function lineNeedsDraw(pts) {
+	        return !isPointNaN(pts[0]) && !isPointNaN(pts[1]);
+	    }
 	    /**
 	     * @alias module:echarts/component/marker/LineDraw
 	     * @constructor
@@ -27271,6 +27379,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        lineData.diff(oldLineData)
 	            .add(function (idx) {
+	                if (!lineNeedsDraw(lineData.getItemLayout(idx))) {
+	                    return;
+	                }
 	                var lineGroup = new LineCtor(lineData, idx);
 
 	                lineData.setItemGraphicEl(idx, lineGroup);
@@ -27279,7 +27390,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	            })
 	            .update(function (newIdx, oldIdx) {
 	                var lineGroup = oldLineData.getItemGraphicEl(oldIdx);
-	                lineGroup.updateData(lineData, newIdx);
+	                if (!lineNeedsDraw(lineData.getItemLayout(newIdx))) {
+	                    group.remove(lineGroup);
+	                    return;
+	                }
+
+	                if (!lineGroup) {
+	                    lineGroup = new LineCtor(lineData, newIdx);
+	                }
+	                else {
+	                    lineGroup.updateData(lineData, newIdx);
+	                }
 
 	                lineData.setItemGraphicEl(newIdx, lineGroup);
 
@@ -27308,7 +27429,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 196 */
+/* 195 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -27319,7 +27440,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var symbolUtil = __webpack_require__(101);
 	    var vector = __webpack_require__(16);
 	    // var matrix = require('zrender/lib/core/matrix');
-	    var LinePath = __webpack_require__(197);
+	    var LinePath = __webpack_require__(196);
 	    var graphic = __webpack_require__(42);
 	    var zrUtil = __webpack_require__(3);
 	    var numberUtil = __webpack_require__(7);
@@ -27376,25 +27497,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    }
 
-	    // function lineAfterUpdate() {
-	        // Ignore scale
-	        // var m = this.transform;
-	        // if (m) {
-	        //     var sx = Math.sqrt(m[0] * m[0] + m[1] * m[1]);
-	        //     var sy = Math.sqrt(m[2] * m[2] + m[3] * m[3]);
-	        //     m[0] /= sx;
-	        //     m[1] /= sx;
-	        //     m[2] /= sy;
-	        //     m[3] /= sy;
-
-	        //     matrix.invert(this.invTransform, m);
-	        // }
-	    // }
-
-	    // function isSymbolArrow(symbol) {
-	    //     return symbol.type === 'symbol' && symbol.shape.symbolType === 'arrow';
-	    // }
-
 	    function updateSymbolAndLabelBeforeLineUpdate () {
 	        var lineGroup = this;
 	        var symbolFrom = lineGroup.childOfName('fromSymbol');
@@ -27421,8 +27523,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return;
 	        }
 
+	        var percent = line.shape.percent;
 	        var fromPos = line.pointAt(0);
-	        var toPos = line.pointAt(line.shape.percent);
+	        var toPos = line.pointAt(percent);
 
 	        var d = vector.sub([], toPos, fromPos);
 	        vector.normalize(d, d);
@@ -27430,10 +27533,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (symbolFrom) {
 	            symbolFrom.attr('position', fromPos);
 	            var tangent = line.tangentAt(0);
-	            symbolFrom.attr('rotation', -Math.PI / 2 - Math.atan2(
+	            symbolFrom.attr('rotation', Math.PI / 2 - Math.atan2(
 	                tangent[1], tangent[0]
 	            ));
-	            symbolFrom.attr('scale', [invScale, invScale]);
+	            symbolFrom.attr('scale', [invScale * percent, invScale * percent]);
 	        }
 	        if (symbolTo) {
 	            symbolTo.attr('position', toPos);
@@ -27441,7 +27544,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            symbolTo.attr('rotation', -Math.PI / 2 - Math.atan2(
 	                tangent[1], tangent[0]
 	            ));
-	            symbolTo.attr('scale', [invScale, invScale]);
+	            symbolTo.attr('scale', [invScale * percent, invScale * percent]);
 	        }
 
 	        if (!label.ignore) {
@@ -27460,7 +27563,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	            // Middle
 	            else if (label.__position === 'middle') {
-	                var halfPercent = line.shape.percent / 2;
+	                var halfPercent = percent / 2;
 	                var tangent = line.tangentAt(halfPercent);
 	                var n = [tangent[1], -tangent[0]];
 	                var cp = line.pointAt(halfPercent);
@@ -27644,7 +27747,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 197 */
+/* 196 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -27701,6 +27804,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 197 */,
 /* 198 */,
 /* 199 */,
 /* 200 */,
@@ -27731,8 +27835,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 225 */,
 /* 226 */,
 /* 227 */,
-/* 228 */,
-/* 229 */
+/* 228 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -28110,6 +28213,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 229 */,
 /* 230 */,
 /* 231 */,
 /* 232 */,
@@ -28145,8 +28249,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 262 */,
 /* 263 */,
 /* 264 */,
-/* 265 */,
-/* 266 */
+/* 265 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -28154,17 +28257,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 
+	    __webpack_require__(266);
 	    __webpack_require__(267);
 	    __webpack_require__(268);
-	    __webpack_require__(269);
 
 	    var echarts = __webpack_require__(1);
 	    // Series Filter
-	    echarts.registerProcessor('filter', __webpack_require__(271));
+	    echarts.registerProcessor('filter', __webpack_require__(270));
 
 
 /***/ },
-/* 267 */
+/* 266 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -28348,7 +28451,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 268 */
+/* 267 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -28435,7 +28538,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 269 */
+/* 268 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -28443,7 +28546,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var zrUtil = __webpack_require__(3);
 	    var symbolCreator = __webpack_require__(101);
 	    var graphic = __webpack_require__(42);
-	    var listComponentHelper = __webpack_require__(270);
+	    var listComponentHelper = __webpack_require__(269);
 
 	    var curry = zrUtil.curry;
 
@@ -28670,7 +28773,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 270 */
+/* 269 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -28740,7 +28843,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 271 */
+/* 270 */
 /***/ function(module, exports) {
 
 	
@@ -28764,15 +28867,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 272 */
+/* 271 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// FIXME Better way to pack data in graphic element
 
 
-	    __webpack_require__(273);
+	    __webpack_require__(272);
 
-	    __webpack_require__(274);
+	    __webpack_require__(273);
 
 	    // Show tip action
 	    /**
@@ -28805,7 +28908,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 273 */
+/* 272 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
@@ -28914,12 +29017,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 274 */
+/* 273 */
 /***/ function(module, exports, __webpack_require__) {
 
 	
 
-	    var TooltipContent = __webpack_require__(275);
+	    var TooltipContent = __webpack_require__(274);
 	    var graphic = __webpack_require__(42);
 	    var zrUtil = __webpack_require__(3);
 	    var formatUtil = __webpack_require__(6);
@@ -29924,7 +30027,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        _showItemTooltipContent: function (seriesModel, dataIndex, dataType, e) {
 	            // FIXME Graph data
 	            var api = this._api;
-	            var data = seriesModel.getData();
+	            var data = seriesModel.getData(dataType);
 	            var itemModel = data.getItemModel(dataIndex);
 
 	            var rootTooltipModel = this._tooltipModel;
@@ -29944,7 +30047,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            if (tooltipModel.get('showContent') && tooltipModel.get('show')) {
 	                var formatter = tooltipModel.get('formatter');
 	                var positionExpr = tooltipModel.get('position');
-	                var params = seriesModel.getDataParams(dataIndex);
+	                var params = seriesModel.getDataParams(dataIndex, dataType);
 	                var html;
 	                if (!formatter) {
 	                    html = seriesModel.formatTooltip(dataIndex, false, dataType);
@@ -30063,7 +30166,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
-/* 275 */
+/* 274 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/**
@@ -30077,6 +30180,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var formatUtil = __webpack_require__(6);
 	    var each = zrUtil.each;
 	    var toCamelCase = formatUtil.toCamelCase;
+	    var env = __webpack_require__(79);
 
 	    var vendors = ['', '-webkit-', '-moz-', '-o-'];
 
@@ -30143,12 +30247,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	            cssText.push(assembleTransition(transitionDuration));
 
 	        if (backgroundColor) {
-	            // for ie
-	            cssText.push(
-	                'background-Color:' + zrColor.toHex(backgroundColor)
-	            );
-	            cssText.push('filter:alpha(opacity=70)');
-	            cssText.push('background-Color:' + backgroundColor);
+	            if (env.canvasSupported) {
+	                cssText.push('background-Color:' + backgroundColor);
+	            }
+	            else {
+	                // for ie
+	                cssText.push(
+	                    'background-Color:#' + zrColor.toHex(backgroundColor)
+	                );
+	                cssText.push('filter:alpha(opacity=70)');
+	            }
 	        }
 
 	        // Border style
@@ -30328,6 +30436,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 /***/ },
+/* 275 */,
 /* 276 */,
 /* 277 */,
 /* 278 */,
@@ -31150,7 +31259,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var foundOtherAxisModel;
 	            ecModel.eachComponent(otherAxisDim + 'Axis', function (otherAxisModel) {
 	                if ((otherAxisModel.get(coordSysIndexName) || 0)
-	                    === (axisModel.get(coordSysIndexName) || 0)) {
+	                    === (axisModel.get(coordSysIndexName) || 0)
+	                ) {
 	                    foundOtherAxisModel = otherAxisModel;
 	                }
 	            });
@@ -31210,21 +31320,25 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            // FIXME
 	            // Toolbox may has dataZoom injected. And if there are stacked bar chart
-	            // with NaN data. NaN will be filtered and stack will be wrong.
-	            // So we need to force the mode to be set empty
+	            // with NaN data, NaN will be filtered and stack will be wrong.
+	            // So we need to force the mode to be set empty.
+	            // In fect, it is not a big deal that do not support filterMode-'filter'
+	            // when using toolbox#dataZoom, utill tooltip#dataZoom support "single axis
+	            // selection" some day, which might need "adapt to data extent on the
+	            // otherAxis", which is disabled by filterMode-'empty'.
 	            var otherAxisModel = this.getOtherAxisModel();
 	            if (dataZoomModel.get('$fromToolbox')
-	                && otherAxisModel && otherAxisModel.get('type') === 'category') {
+	                && otherAxisModel
+	                && otherAxisModel.get('type') === 'category'
+	            ) {
 	                filterMode = 'empty';
 	            }
+
 	            // Process series data
 	            each(seriesModels, function (seriesModel) {
 	                var seriesData = seriesModel.getData();
-	                if (!seriesData) {
-	                    return;
-	                }
 
-	                each(seriesModel.coordDimToDataDim(axisDim), function (dim) {
+	                seriesData && each(seriesModel.coordDimToDataDim(axisDim), function (dim) {
 	                    if (filterMode === 'empty') {
 	                        seriesModel.setData(
 	                            seriesData.map(dim, function (value) {
@@ -31308,13 +31422,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    boundValue, dataExtent, percentExtent, true
 	                );
 	            }
-	            // Avoid rounding error.
-	            // And make sure the window is larger than the original
-	            function round(val) {
-	                return Math[idx === 0 ? 'floor' : 'ceil'](val * 1e12) / 1e12;
-	            }
-	            valueWindow[idx] = round(boundValue);
-	            percentWindow[idx] = round(boundPercent);
+	            // valueWindow[idx] = round(boundValue);
+	            // percentWindow[idx] = round(boundPercent);
+	            valueWindow[idx] = boundValue;
+	            percentWindow[idx] = boundPercent;
 	        });
 
 	        return {
@@ -32720,7 +32831,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // components.
 
 	    var zrUtil = __webpack_require__(3);
-	    var RoamController = __webpack_require__(160);
+	    var RoamController = __webpack_require__(169);
 	    var throttle = __webpack_require__(297);
 	    var curry = zrUtil.curry;
 
@@ -32943,6 +33054,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var axisProxy = dataZoomModel.findRepresentativeAxisProxy();
 	            var percentRange = axisProxy.getDataPercentWindow();
 	            var valueRange = axisProxy.getDataValueWindow();
+
 	            dataZoomModel.setRawRange({
 	                start: percentRange[0],
 	                end: percentRange[1],
@@ -33658,7 +33770,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var markerHelper = __webpack_require__(322);
 
-	    var LineDraw = __webpack_require__(195);
+	    var LineDraw = __webpack_require__(194);
 
 	    var markLineTransform = function (seriesModel, coordSys, mlModel, item) {
 	        var data = seriesModel.getData();
@@ -33666,34 +33778,50 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var mlType = item.type;
 
 	        if (!zrUtil.isArray(item)
-	            && (mlType === 'min' || mlType === 'max' || mlType === 'average')
+	            && (
+	                mlType === 'min' || mlType === 'max' || mlType === 'average'
+	                // In case
+	                // data: [{
+	                //   yAxis: 10
+	                // }]
+	                || (item.xAxis != null || item.yAxis != null)
+	            )
 	        ) {
-	            var axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
+	            var valueAxis;
+	            var valueDataDim;
+	            var value;
 
-	            var baseAxisKey = axisInfo.baseAxis.dim + 'Axis';
-	            var valueAxisKey = axisInfo.valueAxis.dim + 'Axis';
-	            var baseScaleExtent = axisInfo.baseAxis.scale.getExtent();
+	            if (item.yAxis != null || item.xAxis != null) {
+	                valueDataDim = item.yAxis != null ? 'y' : 'x';
+	                valueAxis = coordSys.getAxis(valueDataDim);
+
+	                value = zrUtil.retrieve(item.yAxis, item.xAxis);
+	            }
+	            else {
+	                var axisInfo = markerHelper.getAxisInfo(item, data, coordSys, seriesModel);
+	                valueDataDim = axisInfo.valueDataDim;
+	                valueAxis = axisInfo.valueAxis;
+	                value = markerHelper.numCalculate(data, valueDataDim, mlType);
+	            }
+	            var valueIndex = valueDataDim === 'x' ? 0 : 1;
+	            var baseIndex = 1 - valueIndex;
 
 	            var mlFrom = zrUtil.clone(item);
 	            var mlTo = {};
 
 	            mlFrom.type = null;
 
-	            // FIXME Polar should use circle
-	            mlFrom[baseAxisKey] = baseScaleExtent[0];
-	            mlTo[baseAxisKey] = baseScaleExtent[1];
-
-	            var value = markerHelper.numCalculate(data, axisInfo.valueDataDim, mlType);
-
-	            // Round if axis is cateogry
-	            value = axisInfo.valueAxis.coordToData(axisInfo.valueAxis.dataToCoord(value));
+	            mlFrom.coord = [];
+	            mlTo.coord = [];
+	            mlFrom.coord[baseIndex] = -Infinity;
+	            mlTo.coord[baseIndex] = Infinity;
 
 	            var precision = mlModel.get('precision');
 	            if (precision >= 0) {
 	                value = +value.toFixed(precision);
 	            }
 
-	            mlFrom[valueAxisKey] = mlTo[valueAxisKey] = value;
+	            mlFrom.coord[valueIndex] = mlTo.coord[valueIndex] = value;
 
 	            item = [mlFrom, mlTo, { // Extra option for tooltip and label
 	                type: mlType,
@@ -33719,7 +33847,36 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return item;
 	    };
 
+	    function isInifinity(val) {
+	        return !isNaN(val) && !isFinite(val);
+	    }
+
+	    // If a markLine has one dim
+	    function ifMarkLineHasOnlyDim(dimIndex, fromCoord, toCoord, coordSys) {
+	        var otherDimIndex = 1 - dimIndex;
+	        var dimName = coordSys.dimensions[dimIndex];
+	        return isInifinity(fromCoord[otherDimIndex]) && isInifinity(toCoord[otherDimIndex])
+	            && fromCoord[dimIndex] === toCoord[dimIndex] && coordSys.getAxis(dimName).containData(fromCoord[dimIndex]);
+	    }
+
 	    function markLineFilter(coordSys, item) {
+	        if (coordSys.type === 'cartesian2d') {
+	            var fromCoord = item[0].coord;
+	            var toCoord = item[1].coord;
+	            // In case
+	            // {
+	            //  markLine: {
+	            //    data: [{ yAxis: 2 }]
+	            //  }
+	            // }
+	            if (
+	                fromCoord && toCoord &&
+	                (ifMarkLineHasOnlyDim(1, fromCoord, toCoord, coordSys)
+	                || ifMarkLineHasOnlyDim(0, fromCoord, toCoord, coordSys))
+	            ) {
+	                return true;
+	            }
+	        }
 	        return markerHelper.dataFilter(coordSys, item[0])
 	            && markerHelper.dataFilter(coordSys, item[1]);
 	    }
@@ -33753,15 +33910,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var y = data.get(dims[1], idx);
 	                point = coordSys.dataToPoint([x, y]);
 	            }
-	            // Expand min, max, average line to the edge of grid
-	            // FIXME Glue code
-	            if (mlType && coordSys.type === 'cartesian2d') {
-	                var mlOnAxis = valueIndex != null
-	                    ? coordSys.getAxis(valueIndex === 1 ? 'x' : 'y')
-	                    : coordSys.getAxesByScale('ordinal')[0];
-	                if (mlOnAxis && mlOnAxis.onBand) {
-	                    point[mlOnAxis.dim === 'x' ? 0 : 1] =
-	                        mlOnAxis.toGlobalCoord(mlOnAxis.getExtent()[isFrom ? 0 : 1]);
+	            // Expand line to the edge of grid if value on one axis is Inifnity
+	            // In case
+	            //  markLine: {
+	            //    data: [{
+	            //      yAxis: 2
+	            //      // or
+	            //      type: 'average'
+	            //    }]
+	            //  }
+	            if (coordSys.type === 'cartesian2d') {
+	                var xAxis = coordSys.getAxis('x');
+	                var yAxis = coordSys.getAxis('y');
+	                var dims = coordSys.dimensions;
+	                if (isInifinity(data.get(dims[0], idx))) {
+	                    point[0] = xAxis.toGlobalCoord(xAxis.getExtent()[isFrom ? 0 : 1]);
+	                }
+	                else if (isInifinity(data.get(dims[1], idx))) {
+	                    point[1] = yAxis.toGlobalCoord(yAxis.getExtent()[isFrom ? 0 : 1]);
 	                }
 	            }
 	        }
@@ -34131,7 +34297,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var graphic = __webpack_require__(42);
 	    var Model = __webpack_require__(8);
 	    var DataDiffer = __webpack_require__(96);
-	    var listComponentHelper = __webpack_require__(270);
+	    var listComponentHelper = __webpack_require__(269);
 	    var textContain = __webpack_require__(14);
 
 	    module.exports = __webpack_require__(1).extendComponentView({
@@ -35194,11 +35360,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var zrUtil = __webpack_require__(3);
 	    var numberUtil = __webpack_require__(7);
-	    var SelectController = __webpack_require__(229);
+	    var SelectController = __webpack_require__(228);
 	    var BoundingRect = __webpack_require__(15);
 	    var Group = __webpack_require__(29);
 	    var history = __webpack_require__(344);
-	    var interactionMutex = __webpack_require__(161);
+	    var interactionMutex = __webpack_require__(170);
 
 	    var each = zrUtil.each;
 	    var asc = numberUtil.asc;
@@ -35474,7 +35640,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        var dataZoomOpts = option.dataZoom || (option.dataZoom = []);
 	        if (!zrUtil.isArray(dataZoomOpts)) {
-	            dataZoomOpts = [dataZoomOpts];
+	            option.dataZoom = dataZoomOpts = [dataZoomOpts];
 	        }
 
 	        var toolboxOpt = option.toolbox;
@@ -36117,11 +36283,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    var y1 = cy + sin(endAngle) * ry;
 
 	                    var type = clockwise ? ' wa ' : ' at ';
-	                    // IE won't render arches drawn counter clockwise if x0 == x1.
-	                    if (Math.abs(x0 - x1) < 1e-10 && Math.abs(endAngle - startAngle) > 1e-2 && clockwise) {
-	                        // Offset x0 by 1/80 of a pixel. Use something
-	                        // that can be represented in binary
-	                        x0 += 270 / Z;
+	                    if (Math.abs(x0 - x1) < 1e-10) {
+	                        // IE won't render arches drawn counter clockwise if x0 == x1.
+	                        if (Math.abs(endAngle - startAngle) > 1e-2) {
+	                            // Offset x0 by 1/80 of a pixel. Use something
+	                            // that can be represented in binary
+	                            if (clockwise) {
+	                                x0 += 270 / Z;
+	                            }
+	                        }
+	                        else {
+	                            // Avoid case draw full circle
+	                            if (Math.abs(y0 - cy) < 1e-10) {
+	                                if ((clockwise && x0 < cx) || (!clockwise && x0 > cx)) {
+	                                    y1 -= 270 / Z;
+	                                }
+	                                else {
+	                                    y1 += 270 / Z;
+	                                }
+	                            }
+	                            else if ((clockwise && y0 < cy) || (!clockwise && y0 > cy)) {
+	                                x1 += 270 / Z;
+	                            }
+	                            else {
+	                                x1 -= 270 / Z;
+	                            }
+	                        }
 	                    }
 	                    str.push(
 	                        type,
@@ -36187,6 +36374,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            }
 	        }
+
 	        return str.join('');
 	    };
 
