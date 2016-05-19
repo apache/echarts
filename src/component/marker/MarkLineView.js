@@ -111,8 +111,9 @@ define(function (require) {
             //  }
             // }
             if (
-                ifMarkLineHasOnlyDim(1, fromCoord, toCoord, coordSys)
-                || ifMarkLineHasOnlyDim(0, fromCoord, toCoord, coordSys)
+                fromCoord && toCoord &&
+                (ifMarkLineHasOnlyDim(1, fromCoord, toCoord, coordSys)
+                || ifMarkLineHasOnlyDim(0, fromCoord, toCoord, coordSys))
             ) {
                 return true;
             }
