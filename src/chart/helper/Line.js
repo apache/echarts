@@ -99,7 +99,7 @@ define(function (require) {
         if (symbolFrom) {
             symbolFrom.attr('position', fromPos);
             var tangent = line.tangentAt(0);
-            symbolFrom.attr('rotation', -Math.PI / 2 - Math.atan2(
+            symbolFrom.attr('rotation', Math.PI / 2 - Math.atan2(
                 tangent[1], tangent[0]
             ));
             symbolFrom.attr('scale', [invScale * percent, invScale * percent]);
