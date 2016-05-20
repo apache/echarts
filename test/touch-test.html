@@ -1,0 +1,189 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css">
+    </head>
+    <body>
+        <style>
+            html {
+                background: #eee;
+            }
+            #main-block {
+                /* See https://github.com/ecomfe/echarts/issues/3233#issuecomment-220269663 */
+                height: 1000px;
+                padding: 0;
+                top: 100px;
+                left: 30px;
+            }
+            #buttons {
+                z-index: 9999;
+                position: fixed;
+                right: 5px;
+                bottom: 5px;
+            }
+            #above {
+                border: 40px solid #aaa;
+                height: 400px;
+                margin: 10px;
+                color: #aaa;
+            }
+        </style>
+
+        <style>
+        </style>
+        <div id="buttons">
+            <button id="switchAbove" onclick="addAbove();">Remove Above</botton>
+            <button id="switchCSSPosition" onclick="switchCSSPosition();">To Fixed</botton>
+        </div>
+        <div id="above">Pinch grid, zoom should be normal.</div>
+        <div id="main-block" style="position:relative"><div id="main" style="position:relative"></div></div>
+        <script>
+
+            function addAbove() {
+                var aboveEl = document.getElementById('above');
+                var btn = document.getElementById('switchAbove');
+
+                if (aboveEl.style.display === 'none') {
+                    aboveEl.style.display = 'block';
+                    btn.innerHTML = 'Remove Above';
+                }
+                else {
+                    aboveEl.style.display = 'none';
+                    btn.innerHTML = 'Add Above';
+                }
+            }
+
+            function switchCSSPosition() {
+                var mainBlockEl = document.getElementById('main-block');
+                var btn = document.getElementById('switchCSSPosition');
+
+                if (mainBlockEl.style.position === 'fixed') {
+                    mainBlockEl.style.position = 'relative';
+                    mainBlockEl.style.top = '0';
+                    btn.innerHTML = 'To Fixed';
+                }
+                else {
+                    mainBlockEl.style.position = 'fixed';
+                    mainBlockEl.style.top = '-400px';
+                    btn.innerHTML = 'To relative';
+                }
+            }
+
+            for (var i = 0; i < 1000; i++) {
+                var d = document.createElement('div');
+                d.innerHTML = i;
+                document.body.appendChild(d);
+            }
+
+            var echarts;
+            var chart;
+            var myChart;
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/chart/bar',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom'
+            ], function (ec) {
+
+                echarts = ec;
+
+                chart = myChart = echarts.init(document.getElementById('main'), null, {
+                    renderer: 'canvas'
+                });
+
+// -------------------------------------------------------------------
+// -------------------------------------------------------------------
+// -------------------------------------------------------------------
+
+
+option = {
+  tooltip : {
+            trigger: 'item'
+        },
+        toolbox: {
+            show : true,
+            feature : {
+                mark : {show: true},
+                dataView : {show: true, readOnly: false},
+                magicType: {show: true, type: ['line', 'bar']},
+                restore : {show: true},
+                saveAsImage : {show: true}
+            }
+        },
+        calculable : true,
+        legend: {
+            data:['Budget 2011', 'Budget 2012'],
+            itemGap: 5
+        },
+        grid: {
+            top: 500, // For touch test, make grid rect y more than 500.
+            left: '1%',
+            right: '10%',
+            containLabel: true
+        },
+        xAxis: [
+            {
+                type : 'category',
+                data : [1,2,3,4,5,6,7,8,9,10,11]
+            }
+        ],
+        yAxis: [
+            {
+                type : 'value',
+                name : 'Budget (million USD)',
+                max: 300,
+                axisLabel: {
+                    formatter: function (a) {
+                        return
+                    }
+                }
+            }
+        ],
+        dataZoom: [
+            {
+                show: true,
+                start: 20,
+                end: 70,
+                handleSize: 8
+            },
+            {
+                type: 'inside',
+                start: 20,
+                end: 70
+            },
+        ],
+        series : [
+            {
+                name: 'Budget 2011',
+                type: 'bar',
+                data: [34,65,11,44,55,32,76,91,3,21,98]
+            },
+            {
+                name: 'Budget 2012',
+                type: 'bar',
+                data: [24,35,51,94,35,9,23,56,11,45,64]
+            }
+        ]
+}
+
+// -------------------------------------------------------------------
+// -------------------------------------------------------------------
+// -------------------------------------------------------------------
+
+
+
+                chart.setOption(option);
+            });
+
+        </script>
+    </body>
+</html>

@@ -76,7 +76,6 @@ define(function (require) {
         if (interactionMutex.isTaken('globalPan', this._zr)) {
             return;
         }
-
         var zoomDelta = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
         zoom.call(this, e, zoomDelta, e.pinchX, e.pinchY);
     }
@@ -129,7 +128,7 @@ define(function (require) {
      *
      * @param {module:zrender/zrender~ZRender} zr
      * @param {module:zrender/Element} target
-     * @param {Function} rectProvider
+     * @param {Function} [rectProvider]
      */
     function RoamController(zr, target, rectProvider) {
 

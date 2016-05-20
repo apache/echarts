@@ -27,7 +27,7 @@
         // Make some change in view, otherwise user may
         // be not aware that log is still printing.
         for (var i = 0; i < msgs.length; i++) {
-            str += msgs[i] + ' ' + (count - msgs.length + i) + ' ';
+            str += ' #' + (count - msgs.length + i) + ' ' + msgs[i];
         }
         infoDom.innerHTML = str;
     };
