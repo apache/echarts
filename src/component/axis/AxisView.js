@@ -10,7 +10,7 @@ define(function (require) {
         'axisLine', 'axisLabel', 'axisTick', 'axisName'
     ];
     var selfBuilderAttrs = [
-        'splitLine', 'splitArea'
+        'splitArea', 'splitLine'
     ];
 
     var AxisView = require('../../echarts').extendComponentView({
