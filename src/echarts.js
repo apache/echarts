@@ -66,11 +66,6 @@ define(function (require) {
             theme = themeStorage[theme];
         }
 
-        if (theme) {
-            each(optionPreprocessorFuncs, function (preProcess) {
-                preProcess(theme);
-            });
-        }
         /**
          * @type {string}
          */
