@@ -762,7 +762,7 @@
             var text = nodeModel.get('name');
             if (thisLayout.isLeafRoot) {
                 var iconChar = seriesModel.get('drillDownIcon', true);
-                text += iconChar ? '  ' + iconChar : '';
+                text = iconChar ? iconChar + ' ' + text : test;
             }
 
             setText(
