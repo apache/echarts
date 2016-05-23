@@ -130,6 +130,16 @@
                     color: contrastColor
                 }
             }
+        },
+        candlestick: {
+            itemStyle: {
+                normal: {
+                    color: '#FD1050',
+                    color0: '#0CF49B',
+                    borderColor: '#FD1050',
+                    borderColor0: '#0CF49B'
+                }
+            }
         }
     };
     theme.categoryAxis.splitLine.show = false;
