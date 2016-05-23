@@ -85,6 +85,11 @@
                 }
             }
         },
+        dataZoom: {
+            textStyle: {
+                color: contrastColor
+            }
+        },
         timeline: {
             lineStyle: {
                 color: contrastColor
