@@ -180,7 +180,7 @@ define(function (require) {
 
             var nodeScaleRatio = this._nodeScaleRatio;
 
-            var groupScale = this.group.scale;
+            var groupScale = coordSys.scale;
             var groupZoom = (groupScale && groupScale[0]) || 1;
             // Scale node when zoom changes
             var roamZoom = coordSys.getZoom();
