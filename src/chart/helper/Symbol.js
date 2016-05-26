@@ -116,6 +116,8 @@ define(function (require) {
      * @param  {number} idx
      */
     symbolProto.updateData = function (data, idx) {
+        this.silent = false;
+
         var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
         var seriesModel = data.hostModel;
         var symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
@@ -141,6 +143,7 @@ define(function (require) {
 
     symbolProto._updateCommon = function (data, idx, symbolSize) {
         var symbolPath = this.childAt(0);
+
         var seriesModel = data.hostModel;
         var itemModel = data.getItemModel(idx);
         var normalItemStyleModel = itemModel.getModel(normalStyleAccessPath);
@@ -247,11 +250,8 @@ define(function (require) {
 
     symbolProto.fadeOut = function (cb) {
         var symbolPath = this.childAt(0);
-        // Avoid trigger hoverAnimation when fading
-        symbolPath.off('mouseover')
-            .off('mouseout')
-            .off('emphasis')
-            .off('normal');
+        // Avoid mistaken hover when fading out
+        this.silent = true;
         // Not show text when animating
         symbolPath.style.text = '';
         graphic.updateProps(symbolPath, {

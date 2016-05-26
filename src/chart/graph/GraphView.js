@@ -104,10 +104,10 @@ define(function (require) {
                 el.setDraggable(draggable && forceLayout);
 
                 el.off('mouseover', this._focusNodeAdjacency);
-                el.off('mouseout', this._unfocusNodeAdjacency);
+                el.off('mouseout', this._unfocusAll);
                 if (itemModel.get('focusNodeAdjacency')) {
                     el.on('mouseover', this._focusNodeAdjacency, this);
-                    el.on('mouseout', this._unfocusNodeAdjacency, this);
+                    el.on('mouseout', this._unfocusAll, this);
                 }
             }, this);
 
@@ -121,10 +121,19 @@ define(function (require) {
             var dataIndex = el.dataIndex;
             var dataType = el.dataType;
 
-            function fadeOut(child) {
-                if (child.type !== 'group') {
-                    child.setStyle('opacity', 0.2);
+            function fadeOutItem(item, opacityPath) {
+                var opacity = getItemOpacity(item, opacityPath);
+                var el = item.getGraphicEl();
+                if (opacity == null) {
+                    opacity = 1;
                 }
+
+                el.traverse(function (child) {
+                    child.trigger('normal');
+                    if (child.type !== 'group') {
+                        child.setStyle('opacity', opacity * 0.1);
+                    }
+                });
             }
 
             function fadeInItem(item, opacityPath) {
@@ -140,12 +149,10 @@ define(function (require) {
             }
             if (dataIndex !== null && dataType !== 'edge') {
                 graph.eachNode(function (node) {
-                    var el = node.getGraphicEl();
-                    el.traverse(fadeOut);
+                    fadeOutItem(node, nodeOpacityPath);
                 });
                 graph.eachEdge(function (edge) {
-                    var el = edge.getGraphicEl();
-                    el.traverse(fadeOut);
+                    fadeOutItem(edge, lineOpacityPath);
                 });
 
                 var node = graph.getNodeByIndex(dataIndex);
@@ -160,7 +167,7 @@ define(function (require) {
             }
         },
 
-        _unfocusNodeAdjacency: function () {
+        _unfocusAll: function () {
             var data = this._model.getData();
             var graph = data.graph;
             graph.eachNode(function (node) {
