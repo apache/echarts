@@ -26,7 +26,6 @@ define(function (require) {
          * @override
          */
         render: function (seriesModel, ecModel, api, payload) {
-
             var dataGroup = this._dataGroup;
             var data = seriesModel.getData();
             var oldData = this._data;
