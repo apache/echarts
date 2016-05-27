@@ -129,7 +129,7 @@ define(function (require) {
                 smooth: smooth
             },
             silent: true,
-            progressive: progressive ? Math.round(dataIndex / progressive) : 0,
+            progressive: progressive ? Math.round(dataIndex / progressive) : -1,
             z2: 10
         });
     }
