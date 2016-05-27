@@ -168,6 +168,8 @@ define(function (require) {
 
             layout: null,
 
+            focusNodeAdjacency: false,
+
             // Configuration of force
             force: {
                 initLayout: null,
