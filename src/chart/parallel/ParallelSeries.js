@@ -32,6 +32,9 @@ define(function(require) {
                     translateCategoryValue(axisModel, dim, rawData);
                     return {name: dim, type: 'ordinal'};
                 }
+                else if (modelDimsIndex < 0) {
+                    return {name: dim, type: 'unknown'};
+                }
                 else {
                     return dim;
                 }
@@ -39,6 +42,11 @@ define(function(require) {
 
             var list = new List(dataDimsInfo, this);
             list.initData(rawData);
+
+            // Anication is forbiden in large data mode.
+            if (this.option.large) {
+                this.option.animation = false;
+            }
 
             return list;
         },
@@ -90,7 +98,8 @@ define(function(require) {
                     type: 'solid'
                 }
             },
-            // smooth: false
+            progressive: false, // 100
+            smooth: false,
 
             animationEasing: 'linear'
         }

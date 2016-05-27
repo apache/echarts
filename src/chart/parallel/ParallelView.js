@@ -2,6 +2,9 @@ define(function (require) {
 
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
+    var polyHelper = require('../line/poly');
+
+    var SMOOTH = 0.3;
 
     var ParallelView = require('../../view/Chart').extend({
 
@@ -31,6 +34,9 @@ define(function (require) {
             var oldData = this._data;
             var coordSys = seriesModel.coordinateSystem;
             var dimensions = coordSys.dimensions;
+            var option = seriesModel.option;
+            var progressive = option.progressive;
+            var smooth = option.smooth ? SMOOTH : null;
 
             data.diff(oldData)
                 .add(add)
@@ -39,19 +45,18 @@ define(function (require) {
                 .execute();
 
             // Update style
-            data.eachItemGraphicEl(function (elGroup, idx) {
+            data.eachItemGraphicEl(function (line, idx) {
                 var itemModel = data.getItemModel(idx);
                 var lineStyleModel = itemModel.getModel('lineStyle.normal');
-                elGroup.eachChild(function (child) {
-                    child.useStyle(zrUtil.extend(
-                        lineStyleModel.getLineStyle(),
-                        {
-                            fill: null,
-                            stroke: data.getItemVisual(idx, 'color'),
-                            opacity: data.getItemVisual(idx, 'opacity')
-                        }
-                    ));
-                });
+
+                line.useStyle(zrUtil.extend(
+                    lineStyleModel.getLineStyle(),
+                    {
+                        fill: null,
+                        stroke: data.getItemVisual(idx, 'color'),
+                        opacity: data.getItemVisual(idx, 'opacity')
+                    }
+                ));
             });
 
             // First create
@@ -66,64 +71,23 @@ define(function (require) {
             this._data = data;
 
             function add(newDataIndex) {
-                var values = data.getValues(dimensions, newDataIndex);
-                var elGroup = new graphic.Group();
-                dataGroup.add(elGroup);
-
-                eachAxisPair(
-                    values, dimensions, coordSys,
-                    function (pointPair, pairIndex) {
-                        // FIXME
-                        // init animation
-                        if (pointPair) {
-                            elGroup.add(createEl(pointPair));
-                        }
-                    }
-                );
-
-                data.setItemGraphicEl(newDataIndex, elGroup);
+                var points = createLinePoints(data, newDataIndex, dimensions, coordSys);
+                var line = createPoly(points, newDataIndex, progressive, smooth);
+                dataGroup.add(line);
+                data.setItemGraphicEl(newDataIndex, line);
             }
 
             function update(newDataIndex, oldDataIndex) {
-                var values = data.getValues(dimensions, newDataIndex);
-                var elGroup = oldData.getItemGraphicEl(oldDataIndex);
-                var newEls = [];
-                var elGroupIndex = 0;
-
-                eachAxisPair(
-                    values, dimensions, coordSys,
-                    function (pointPair, pairIndex) {
-                        var el = elGroup.childAt(elGroupIndex++);
-
-                        if (pointPair && !el) {
-                            newEls.push(createEl(pointPair));
-                        }
-                        else if (pointPair) {
-                            graphic.updateProps(el, {
-                                shape: {
-                                    points: pointPair
-                                }
-                            }, seriesModel, newDataIndex);
-                        }
-                    }
-                );
-
-                // Remove redundent els
-                for (var i = elGroup.childCount() - 1; i >= elGroupIndex; i--) {
-                    elGroup.remove(elGroup.childAt(i));
-                }
-
-                // Add new els
-                for (var i = 0, len = newEls.length; i < len; i++) {
-                    elGroup.add(newEls[i]);
-                }
-
-                data.setItemGraphicEl(newDataIndex, elGroup);
+                var line = oldData.getItemGraphicEl(oldDataIndex);
+                var points = createLinePoints(data, newDataIndex, dimensions, coordSys);
+                line.shape.points = points;
+                line.dirty();
+                data.setItemGraphicEl(newDataIndex, line);
             }
 
             function remove(oldDataIndex) {
-                var elGroup = oldData.getItemGraphicEl(oldDataIndex);
-                dataGroup.remove(elGroup);
+                var line = oldData.getItemGraphicEl(oldDataIndex);
+                dataGroup.remove(line);
             }
         },
 
@@ -158,34 +122,28 @@ define(function (require) {
         return rectEl;
     }
 
-    function eachAxisPair(values, dimensions, coordSys, cb) {
-        for (var i = 0, len = dimensions.length - 1; i < len; i++) {
-            var dimA = dimensions[i];
-            var dimB = dimensions[i + 1];
-            var valueA = values[i];
-            var valueB = values[i + 1];
-
-            cb(
-                (isEmptyValue(valueA, coordSys.getAxis(dimA).type)
-                    || isEmptyValue(valueB, coordSys.getAxis(dimB).type)
-                )
-                    ? null
-                    : [
-                        coordSys.dataToPoint(valueA, dimA),
-                        coordSys.dataToPoint(valueB, dimB)
-                    ],
-                i
-            );
-        }
-    }
-
-    function createEl(pointPair) {
-        return new graphic.Polyline({
-            shape: {points: pointPair},
-            silent: true
+    function createPoly(points, dataIndex, progressive, smooth) {
+        return new polyHelper.Polyline({
+            shape: {
+                points: points,
+                smooth: smooth
+            },
+            silent: true,
+            progressive: progressive ? Math.round(dataIndex / progressive) : 0,
+            z2: 10
         });
     }
 
+    function createLinePoints(data, dataIndex, dimensions, coordSys) {
+        var points = [];
+        zrUtil.each(dimensions, function (dimName) {
+            var value = data.get(dimName, dataIndex);
+            if (!isEmptyValue(value, coordSys.getAxis(dimName).type)) {
+                points.push(coordSys.dataToPoint(value, dimName));
+            }
+        });
+        return points;
+    }
 
     // FIXME
     // 公用方法?
