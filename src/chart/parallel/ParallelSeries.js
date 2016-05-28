@@ -43,8 +43,8 @@ define(function(require) {
             var list = new List(dataDimsInfo, this);
             list.initData(rawData);
 
-            // Anication is forbiden in large data mode.
-            if (this.option.large) {
+            // Anication is forbiden in progressive data mode.
+            if (this.option.progressive) {
                 this.option.animation = false;
             }
 

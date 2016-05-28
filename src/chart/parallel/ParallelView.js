@@ -80,9 +80,8 @@ define(function (require) {
             function update(newDataIndex, oldDataIndex) {
                 var line = oldData.getItemGraphicEl(oldDataIndex);
                 var points = createLinePoints(data, newDataIndex, dimensions, coordSys);
-                line.shape.points = points;
-                line.dirty();
                 data.setItemGraphicEl(newDataIndex, line);
+                graphic.updateProps(line, {shape: {points: points}}, seriesModel, newDataIndex);
             }
 
             function remove(oldDataIndex) {
