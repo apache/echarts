@@ -19,6 +19,7 @@ define(function (require) {
             this._dataGroup = new graphic.Group();
 
             this.group.add(this._dataGroup);
+
             /**
              * @type {module:echarts/data/List}
              */
@@ -29,14 +30,27 @@ define(function (require) {
          * @override
          */
         render: function (seriesModel, ecModel, api, payload) {
+            this[
+                seriesModel.option.progressive
+                    ? '_renderForProgressive'
+                    : '_renderForNormal'
+            ](seriesModel);
+        },
+
+        /**
+         * @private
+         */
+        _renderForNormal: function (seriesModel) {
             var dataGroup = this._dataGroup;
             var data = seriesModel.getData();
             var oldData = this._data;
             var coordSys = seriesModel.coordinateSystem;
             var dimensions = coordSys.dimensions;
             var option = seriesModel.option;
-            var progressive = option.progressive;
             var smooth = option.smooth ? SMOOTH : null;
+
+            // Consider switch between progressive and not.
+            !oldData && dataGroup.removeAll();
 
             data.diff(oldData)
                 .add(add)
@@ -45,19 +59,7 @@ define(function (require) {
                 .execute();
 
             // Update style
-            data.eachItemGraphicEl(function (line, idx) {
-                var itemModel = data.getItemModel(idx);
-                var lineStyleModel = itemModel.getModel('lineStyle.normal');
-
-                line.useStyle(zrUtil.extend(
-                    lineStyleModel.getLineStyle(),
-                    {
-                        fill: null,
-                        stroke: data.getItemVisual(idx, 'color'),
-                        opacity: data.getItemVisual(idx, 'opacity')
-                    }
-                ));
-            });
+            updateElStyle(data);
 
             // First create
             if (!this._data) {
@@ -72,7 +74,7 @@ define(function (require) {
 
             function add(newDataIndex) {
                 var points = createLinePoints(data, newDataIndex, dimensions, coordSys);
-                var line = createPoly(points, newDataIndex, progressive, smooth);
+                var line = createPoly(points, newDataIndex, null, smooth);
                 dataGroup.add(line);
                 data.setItemGraphicEl(newDataIndex, line);
             }
@@ -88,6 +90,37 @@ define(function (require) {
                 var line = oldData.getItemGraphicEl(oldDataIndex);
                 dataGroup.remove(line);
             }
+
+        },
+
+        /**
+         * @private
+         */
+        _renderForProgressive: function (seriesModel) {
+            var dataGroup = this._dataGroup;
+            var data = seriesModel.getData();
+            var coordSys = seriesModel.coordinateSystem;
+            var dimensions = coordSys.dimensions;
+            var option = seriesModel.option;
+            var progressive = option.progressive;
+            var smooth = option.smooth ? SMOOTH : null;
+
+            // In progressive animation is disabled, so data diff,
+            // which effects performance, is not needed.
+            dataGroup.removeAll();
+            data.each(function (dataIndex) {
+                // FIXME
+                // 重复代码 ???????????????????
+                var points = createLinePoints(data, dataIndex, dimensions, coordSys);
+                var line = createPoly(points, dataIndex, progressive, smooth);
+                dataGroup.add(line);
+                data.setItemGraphicEl(dataIndex, line);
+            });
+
+            updateElStyle(data);
+
+            // Consider switch between progressive and not.
+            this._data = null;
         },
 
         /**
@@ -142,6 +175,22 @@ define(function (require) {
             }
         });
         return points;
+    }
+
+    function updateElStyle(data) {
+        data.eachItemGraphicEl(function (line, idx) {
+            var itemModel = data.getItemModel(idx);
+            var lineStyleModel = itemModel.getModel('lineStyle.normal');
+
+            line.useStyle(zrUtil.extend(
+                lineStyleModel.getLineStyle(),
+                {
+                    fill: null,
+                    stroke: data.getItemVisual(idx, 'color'),
+                    opacity: data.getItemVisual(idx, 'opacity')
+                }
+            ));
+        });
     }
 
     // FIXME
