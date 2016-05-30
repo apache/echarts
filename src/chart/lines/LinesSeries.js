@@ -85,6 +85,7 @@ define(function (require) {
                 period: 4,
                 symbol: 'circle',
                 symbolSize: 3,
+                loop: true,
                 // Length of trail, 0 - 1
                 trailLength: 0.2
                 // Same with lineStyle.normal.color
