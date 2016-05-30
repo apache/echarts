@@ -234,11 +234,19 @@ define(function(require) {
 
         /**
          * @param {module:echarts/data/List} data
-         * @param {Functio} cb param: {string} activeState 'active' or 'inactive' or 'normal'
+         * @param {Array} [page] [thisDataIndex, nextDataIndex] If null or not pass, set to be [0, data.count].
+         * @param {Function} callback param: {string} activeState 'active' or 'inactive' or 'normal'
          *                            {number} dataIndex
          * @param {Object} context
          */
-        eachActiveState: function (data, callback, context) {
+        eachActiveState: function (data, page, callback, context) {
+            if (zrUtil.isFunction(page)) {
+                context = callback;
+                callback = page;
+                page = null;
+            }
+            page = page || [0, data.count()];
+
             var dimensions = this.dimensions;
             var axesMap = this._axesMap;
             var hasActiveSet = false;
@@ -249,7 +257,7 @@ define(function(require) {
                 }
             }
 
-            for (var i = 0, len = data.count(); i < len; i++) {
+            for (var i = page[0], len = Math.min(page[1], data.count()); i < len; i++) {
                 var values = data.getValues(dimensions, i);
                 var activeState;
 

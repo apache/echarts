@@ -8,12 +8,22 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
 
     echarts.registerVisualCoding('component', function (ecModel) {
+        travelVisualMaps(ecModel);
+    });
+
+    echarts.registerVisualCodingProgressive(
+        'chart', 'series.parallel', function (seriesModel, ecModel) {
+            travelVisualMaps(ecModel, seriesModel);
+        }
+    );
+
+    function travelVisualMaps(ecModel, targetSeriesModel) {
         ecModel.eachComponent('visualMap', function (visualMapModel) {
             processSingleVisualMap(visualMapModel, ecModel);
         });
-    });
+    }
 
-    function processSingleVisualMap(visualMapModel, ecModel) {
+    function processSingleVisualMap(visualMapModel, ecModel, targetSeriesModel) {
         var visualMappings = visualMapModel.targetVisuals;
         var visualTypesMap = {};
         zrUtil.each(['inRange', 'outOfRange'], function (state) {
@@ -22,8 +32,12 @@ define(function (require) {
         });
 
         visualMapModel.eachTargetSeries(function (seriesModel) {
+            if (targetSeriesModel && seriesModel !== targetSeriesModel) {
+                return;
+            }
+
             var data = seriesModel.getData();
-            var dimension = visualMapModel.getDataDimension(data);
+            var dimension = data.getDimension(visualMapModel.getDataDimension(data));
             var dataIndex;
 
             function getVisual(key) {
@@ -34,9 +48,14 @@ define(function (require) {
                 data.setItemVisual(dataIndex, key, value);
             }
 
-            data.each([dimension], function (value, index) {
+            var thisProgressive = seriesModel.getProgressive();
+            var seg = thisProgressive
+                ? [thisProgressive.thisDataIndex, thisProgressive.nextDataIndex]
+                : [0, data.count()];
+
+            for (dataIndex = seg[0]; dataIndex < seg[1]; dataIndex++) {
                 // For performance consideration, do not use curry.
-                dataIndex = index;
+                var value = data.get(dimension, dataIndex);
                 var valueState = visualMapModel.getValueState(value);
                 var mappings = visualMappings[valueState];
                 var visualTypes = visualTypesMap[valueState];
@@ -44,7 +63,7 @@ define(function (require) {
                     var type = visualTypes[i];
                     mappings[type] && mappings[type].applyVisual(value, getVisual, setVisual);
                 }
-            }, true);
+            }
         });
     }
 

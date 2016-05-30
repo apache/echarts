@@ -7,6 +7,6 @@ define(function (require) {
     require('./parallel/ParallelSeries');
     require('./parallel/ParallelView');
 
-    echarts.registerVisualCoding('chart', require('./parallel/parallelVisual'));
+    require('./parallel/parallelVisual');
 
 });

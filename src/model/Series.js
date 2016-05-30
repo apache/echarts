@@ -206,6 +206,19 @@ define(function(require) {
             this._data = this._dataBeforeProcessed.cloneShallow();
         },
 
+        // TBD_PROGRESSIVE
+        // 临时放在这里
+        // needProgressive do not need to be called each tick.
+        // needProgressive: function (size) {
+        //     this.__needProgressive = size;
+        // },
+
+        // TBD_PROGRESSIVE
+        // 临时放在这里
+        getProgressive: function () {
+            return this.__thisProgressive ? zrUtil.extend({}, this.__thisProgressive) : null;
+        },
+
         getAxisTooltipDataIndex: null
     });
 

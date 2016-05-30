@@ -379,6 +379,8 @@ define(function (require) {
 
             coordSysMgr.update(ecModel, api);
 
+            checkProgressive.call(this, ecModel);
+
             doLayout.call(this, ecModel, payload);
 
             doVisualCoding.call(this, ecModel, payload);
@@ -424,6 +426,8 @@ define(function (require) {
                 return;
             }
 
+            checkProgressive.call(this, ecModel);
+
             doLayout.call(this, ecModel, payload);
 
             doVisualCoding.call(this, ecModel, payload);
@@ -443,6 +447,8 @@ define(function (require) {
                 return;
             }
 
+            checkProgressive.call(this, ecModel);
+
             doVisualCoding.call(this, ecModel, payload);
 
             invokeUpdateMethod.call(this, 'updateVisual', ecModel, payload);
@@ -459,6 +465,8 @@ define(function (require) {
             if (!ecModel) {
                 return;
             }
+
+            checkProgressive.call(this, ecModel);
 
             doLayout.call(this, ecModel, payload);
 
@@ -827,6 +835,100 @@ define(function (require) {
         }, this);
     }
 
+    // TBD_PROGRESSIVE
+    function onProgressiveTick() {
+        // ecModel might be change so should not get from closure.
+        var ecModel = this._model;
+        var api = this._api;
+        var progressiveMap = {};
+
+        checkProgressive.call(this, ecModel, true);
+
+        ecModel.eachSeries(function (seriesModel, idx) {
+            var thisProgressive = seriesModel.__thisProgressive;
+
+            if (!thisProgressive) {
+                return;
+            }
+
+            progressiveMap[thisProgressive.key] = thisProgressive.frame;
+
+            // TBD_PROGRESSIVE
+            // 是否 visualCoding 中的 eachSeries 应该放到外面？
+            // Visual encoding for progressive.
+            each(VISUAL_CODING_STAGES, function (stage) {
+                each(
+                    (visualCodingProgressive[stage] || [])['series.' + seriesModel.subType] || [],
+                    function (func) {
+                        func(seriesModel, ecModel, api);
+                    }
+                );
+            });
+
+            // Render for progressive
+            var chart = this._chartsMap[seriesModel.__viewId];
+            chart.updateProgressive(seriesModel, ecModel, api);
+
+            updateZ(seriesModel, chart);
+        }, this);
+
+        this._zr.refreshImmediately({progressive: progressiveMap});
+    }
+
+    // TBD_PROGRESSIVE
+    function checkProgressive(ecModel, isInFurther) {
+        var needFurther;
+
+        ecModel.eachSeries(function (seriesModel, idx) {
+            var thisProgressive;
+            if (!isInFurther) {
+
+                // this.__needProgressive = size;
+                // var need = seriesModel.__needProgressive;
+                // seriesModel.__needProgressive = null;
+                // TBD_PROGRESSIVE
+                // 这段逻辑是否应该放在 series 中。从而能 action 只影响受影响的 series。
+                // 但是 action 触发时，又没有机会调用
+                var need = seriesModel.option.progressive;
+
+                thisProgressive = seriesModel.__thisProgressive = need
+                    ? {
+                        frame: -1,
+                        size: need,
+                        key: seriesModel.__viewId,
+                        thisDataIndex: 0,
+                        nextDataIndex: 0
+                    }
+                    : null;
+                if (need) {
+                    needFurther = true;
+                }
+            }
+            else {
+                thisProgressive = seriesModel.__thisProgressive;
+                if (thisProgressive) {
+                    thisProgressive.frame++;
+                    var thisDataIndex = thisProgressive.thisDataIndex =
+                        thisProgressive.frame * thisProgressive.size;
+                    thisProgressive.nextDataIndex = Math.min(
+                        seriesModel.getData().count(),
+                        thisDataIndex + thisProgressive.size
+                    );
+                    if (thisProgressive.nextDataIndex > thisProgressive.thisDataIndex) {
+                        needFurther = true;
+                    }
+                }
+            }
+
+        });
+
+        this._zr.onProgressive = needFurther
+            ? this.__onProgressiveTick || (
+                this.__onProgressiveTick = zrUtil.bind(onProgressiveTick, this)
+            )
+            : null;
+    }
+
     var MOUSE_EVENT_NAMES = [
         'click', 'dblclick', 'mouseover', 'mouseout', 'mousedown', 'mouseup', 'globalout'
     ];
@@ -945,6 +1047,10 @@ define(function (require) {
      * @inner
      */
     var visualCodingFuncs = {};
+
+    // TBD_PROGRESSIVE
+    var visualCodingProgressive = {};
+
     /**
      * Theme storage
      * @type {Object.<key, Object>}
@@ -1191,6 +1297,13 @@ define(function (require) {
         }
         var funcs = visualCodingFuncs[stage] || (visualCodingFuncs[stage] = []);
         funcs.push(visualCodingFunc);
+    };
+
+    // TBD_PROGRESSIVE
+    echarts.registerVisualCodingProgressive = function (stage, componentFullType, visualCodingFunc) {
+        var funcs = visualCodingProgressive[stage] || (visualCodingProgressive[stage] = []);
+        var funcsByType = funcs[componentFullType] || (funcs[componentFullType] = []);
+        funcsByType.push(visualCodingFunc);
     };
 
     /**
