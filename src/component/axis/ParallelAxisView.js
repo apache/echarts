@@ -74,7 +74,8 @@ define(function (require) {
                     areaSelectStyle
                 );
 
-                selectController.on('selected', zrUtil.bind(this._onSelected, this));
+                selectController.on('selected', zrUtil.bind(this._onSelected, this, true));
+                selectController.on('selectEnd', zrUtil.bind(this._onSelected, this, false));
             }
 
             selectController.enable(axisGroup);
@@ -89,7 +90,7 @@ define(function (require) {
             selectController.update(ranges);
         },
 
-        _onSelected: function (ranges) {
+        _onSelected: function (realtime, ranges) {
             // Do not cache these object, because the mey be changed.
             var axisModel = this.axisModel;
             var axis = axisModel.axis;
@@ -100,11 +101,15 @@ define(function (require) {
                     axis.coordToData(range[1], true)
                 ];
             });
-            this.api.dispatchAction({
-                type: 'axisAreaSelect',
-                parallelAxisId: axisModel.id,
-                intervals: intervals
-            });
+
+            // Consider axisModel.option.realtime is null/undefined.
+            if (!(axisModel.option.realtime ^ realtime)) {
+                this.api.dispatchAction({
+                    type: 'axisAreaSelect',
+                    parallelAxisId: axisModel.id,
+                    intervals: intervals
+                });
+            }
         },
 
         /**
