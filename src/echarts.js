@@ -817,6 +817,24 @@ define(function (require) {
             chartView.group.silent = !!seriesModel.get('silent');
 
             updateZ(seriesModel, chartView);
+
+            // Progressive configuration
+            var data = seriesModel.getData();
+            var elCount = 0;
+            // FIXME edge data ?
+            var frameCount = +seriesModel.get('progressive');
+            var needProgressive = data.count() > seriesModel.get('progressiveThreshold') && frameCount;
+            if (needProgressive) {
+                chartView.group.traverse(function (el) {
+                    if (el.type !== 'group') {
+                        el.progressive = needProgressive ?
+                            Math.floor(elCount++ / frameCount) : -1;
+                        if (needProgressive) {
+                            el.stopAnimation(true);
+                        }
+                    }
+                });
+            }
         }, this);
 
         // Remove groups of unrendered charts
@@ -904,8 +922,10 @@ define(function (require) {
         var zlevel = model.get('zlevel');
         // Set z and zlevel
         view.group.traverse(function (el) {
-            z != null && (el.z = z);
-            zlevel != null && (el.zlevel = zlevel);
+            if (el.type !== 'group') {
+                z != null && (el.z = z);
+                zlevel != null && (el.zlevel = zlevel);
+            }
         });
     }
     /**

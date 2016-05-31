@@ -376,6 +376,9 @@ define(function(require) {
             cb = dataIndex;
             dataIndex = null;
         }
+        var animationEnabled = animatableModel
+            && animatableModel.ifEnableAnimation
+            && animatableModel.ifEnableAnimation();
 
         var postfix = isUpdate ? 'Update' : '';
         var duration = animatableModel
@@ -388,7 +391,7 @@ define(function(require) {
             animationDelay = animationDelay(dataIndex);
         }
 
-        animatableModel && animatableModel.getShallow('animation')
+        animationEnabled && duration > 0
             ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb)
             : (el.attr(props), cb && cb());
     }

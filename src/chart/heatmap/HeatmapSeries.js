@@ -23,6 +23,8 @@ define(function (require) {
             xAxisIndex: 0,
             yAxisIndex: 0,
 
+            progressive: 500,
+
             // Geo coordinate system
             geoIndex: 0,
 

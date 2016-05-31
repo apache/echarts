@@ -195,7 +195,7 @@ define(function (require) {
             dataType === 'ordinal' || dataType === 'time'
         )) {} // jshint ignore:line
 
-        if (valueDim != null && labelModel.get('show')) {
+        if (valueDim != null && labelModel.getShallow('show')) {
             graphic.setText(elStyle, labelModel, color);
             elStyle.text = zrUtil.retrieve(
                 seriesModel.getFormattedLabel(idx, 'normal'),
@@ -226,7 +226,7 @@ define(function (require) {
 
         graphic.setHoverStyle(symbolPath, hoverStyle);
 
-        if (itemModel.getShallow('hoverAnimation')) {
+        if (itemModel.getShallow('hoverAnimation') && seriesModel.ifEnableAnimation()) {
             var onEmphasis = function() {
                 var ratio = size[1] / size[0];
                 this.animateTo({

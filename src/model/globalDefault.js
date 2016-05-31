@@ -29,16 +29,15 @@ define(function () {
             fontStyle: 'normal',
             fontWeight: 'normal'
         },
-        // 主题，默认标志图形类型列表
-        // symbolList: [
-        //     'circle', 'rectangle', 'triangle', 'diamond',
-        //     'emptyCircle', 'emptyRectangle', 'emptyTriangle', 'emptyDiamond'
-        // ],
-        animation: true,                // 过渡动画是否开启
-        animationThreshold: 2000,       // 动画元素阀值，产生的图形原素超过2000不出动画
-        animationDuration: 1000,        // 过渡动画参数：进入
-        animationDurationUpdate: 300,   // 过渡动画参数：更新
-        animationEasing: 'exponentialOut',    //BounceOut
-        animationEasingUpdate: 'cubicOut'
+        animation: true,
+        animationThreshold: 2000,
+        animationDuration: 1000,
+        animationDurationUpdate: 300,
+        animationEasing: 'exponentialOut',
+        animationEasingUpdate: 'cubicOut',
+
+        // Progressive configuration
+        progressiveThreshold: 2000,
+        progressive: 100
     };
 });
