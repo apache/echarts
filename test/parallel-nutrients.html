@@ -46,6 +46,12 @@
                     chart = myChart = echarts.init(document.getElementById('main'));
 
                     chart.setOption(getOption(data));
+
+                    chart.on('axisAreaSelected', function (event) {
+                        // var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
+                        // console.log('北京: ', indices);
+                    });
+
                 });
 
                 var indices = {
@@ -155,7 +161,7 @@
                                 color: groupColors //['#d94e5d','#eac736','#50a3ba']
                             },
                             outOfRange: {
-                                color: groupColors //['#d94e5d','#eac736','#50a3ba']
+                                color: ['#ccc'] //['#d94e5d','#eac736','#50a3ba']
                             },
                             top: 20,
                             textStyle: {
@@ -212,7 +218,8 @@
                                     textStyle: {
                                         color: '#fff'
                                     }
-                                }
+                                },
+                                realtime: false
                             }
                         },
                         animation: false,

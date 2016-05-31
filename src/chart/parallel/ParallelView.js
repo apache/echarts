@@ -50,7 +50,7 @@ define(function (require) {
             var smooth = option.smooth ? SMOOTH : null;
 
             // Consider switch between progressive and not.
-            !oldData && dataGroup.removeAll();
+            oldData && oldData.__plProgressive && dataGroup.removeAll();
 
             data.diff(oldData)
                 .add(add)
@@ -59,7 +59,7 @@ define(function (require) {
                 .execute();
 
             // Update style
-            updateElStyle(data);
+            updateElCommon(data, null, smooth);
 
             // First create
             if (!this._data) {
@@ -73,10 +73,7 @@ define(function (require) {
             this._data = data;
 
             function add(newDataIndex) {
-                var points = createLinePoints(data, newDataIndex, dimensions, coordSys);
-                var line = createPoly(points, newDataIndex, null, smooth);
-                dataGroup.add(line);
-                data.setItemGraphicEl(newDataIndex, line);
+                addEl(data, dataGroup, newDataIndex, dimensions, coordSys, null, smooth);
             }
 
             function update(newDataIndex, oldDataIndex) {
@@ -99,28 +96,30 @@ define(function (require) {
         _renderForProgressive: function (seriesModel) {
             var dataGroup = this._dataGroup;
             var data = seriesModel.getData();
+            var oldData = this._data;
             var coordSys = seriesModel.coordinateSystem;
             var dimensions = coordSys.dimensions;
             var option = seriesModel.option;
             var progressive = option.progressive;
             var smooth = option.smooth ? SMOOTH : null;
 
-            // In progressive animation is disabled, so data diff,
-            // which effects performance, is not needed.
-            dataGroup.removeAll();
-            data.each(function (dataIndex) {
-                // FIXME
-                // 重复代码 ???????????????????
-                var points = createLinePoints(data, dataIndex, dimensions, coordSys);
-                var line = createPoly(points, dataIndex, progressive, smooth);
-                dataGroup.add(line);
-                data.setItemGraphicEl(dataIndex, line);
-            });
+            // In progressive animation is disabled, so use simple data diff,
+            // which effects performance less.
+            // (Typically performance for data with length 7000+ like:
+            // simpleDiff: 60ms, addEl: 184ms,
+            // in RMBP 2.4GHz intel i7, OSX 10.9 chrome 50.0.2661.102 (64-bit))
+            if (simpleDiff(oldData, data, dimensions)) {
+                dataGroup.removeAll();
+                data.each(function (dataIndex) {
+                    addEl(data, dataGroup, dataIndex, dimensions, coordSys);
+                });
+            }
 
-            updateElStyle(data);
+            updateElCommon(data, progressive, smooth);
 
             // Consider switch between progressive and not.
-            this._data = null;
+            data.__plProgressive = true;
+            this._data = data;
         },
 
         /**
@@ -154,18 +153,6 @@ define(function (require) {
         return rectEl;
     }
 
-    function createPoly(points, dataIndex, progressive, smooth) {
-        return new polyHelper.Polyline({
-            shape: {
-                points: points,
-                smooth: smooth
-            },
-            silent: true,
-            progressive: progressive ? Math.round(dataIndex / progressive) : -1,
-            z2: 10
-        });
-    }
-
     function createLinePoints(data, dataIndex, dimensions, coordSys) {
         var points = [];
         zrUtil.each(dimensions, function (dimName) {
@@ -177,20 +164,54 @@ define(function (require) {
         return points;
     }
 
-    function updateElStyle(data) {
-        data.eachItemGraphicEl(function (line, idx) {
-            var itemModel = data.getItemModel(idx);
+    function addEl(data, dataGroup, dataIndex, dimensions, coordSys) {
+        var points = createLinePoints(data, dataIndex, dimensions, coordSys);
+        var line = new polyHelper.Polyline({
+            shape: {points: points},
+            silent: true,
+            z2: 10
+        });
+        dataGroup.add(line);
+        data.setItemGraphicEl(dataIndex, line);
+    }
+
+    function updateElCommon(data, progressive, smooth) {
+        data.eachItemGraphicEl(function (line, dataIndex) {
+            var itemModel = data.getItemModel(dataIndex);
             var lineStyleModel = itemModel.getModel('lineStyle.normal');
 
             line.useStyle(zrUtil.extend(
                 lineStyleModel.getLineStyle(),
                 {
                     fill: null,
-                    stroke: data.getItemVisual(idx, 'color'),
-                    opacity: data.getItemVisual(idx, 'opacity')
+                    stroke: data.getItemVisual(dataIndex, 'color'),
+                    opacity: data.getItemVisual(dataIndex, 'opacity')
                 }
             ));
+            line.progressive = progressive ? Math.round(dataIndex / progressive) : -1;
+            line.shape.smooth = smooth;
         });
+    }
+
+    function simpleDiff(oldData, newData, dimensions) {
+        var oldLen;
+        if (!oldData
+            || !oldData.__plProgressive
+            || (oldLen = oldData.count()) !== newData.count()
+        ) {
+            return true;
+        }
+
+        var dimLen = dimensions.length;
+        for (var i = 0; i < oldLen; i++) {
+            for (var j = 0; j < dimLen; j++) {
+                if (oldData.get(dimensions[j], i) !== newData.get(dimensions[j], i)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     // FIXME
