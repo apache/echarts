@@ -38,6 +38,6 @@ define(function () {
 
         // Progressive configuration
         progressiveThreshold: 2000,
-        progressive: 100
+        progressive: 400
     };
 });

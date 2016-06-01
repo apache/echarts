@@ -21,6 +21,8 @@ define(function(require) {
         _viewRoot: null,
 
         defaultOption: {
+            // Disable progressive rendering
+            progressive: 0,
             // center: ['50%', '50%'],          // not supported in ec3.
             // size: ['80%', '80%'],            // deprecated, compatible with ec2.
             left: 'center',

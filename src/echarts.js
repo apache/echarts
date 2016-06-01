@@ -822,13 +822,13 @@ define(function (require) {
             var data = seriesModel.getData();
             var elCount = 0;
             // FIXME edge data ?
-            var frameCount = +seriesModel.get('progressive');
-            var needProgressive = data.count() > seriesModel.get('progressiveThreshold') && frameCount;
+            var frameDrawNum = +seriesModel.get('progressive');
+            var needProgressive = data.count() > seriesModel.get('progressiveThreshold') && frameDrawNum;
             if (needProgressive) {
                 chartView.group.traverse(function (el) {
                     if (el.type !== 'group') {
                         el.progressive = needProgressive ?
-                            Math.floor(elCount++ / frameCount) : -1;
+                            Math.floor(elCount++ / frameDrawNum) : -1;
                         if (needProgressive) {
                             el.stopAnimation(true);
                         }

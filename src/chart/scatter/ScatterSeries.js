@@ -41,8 +41,6 @@ define(function (require) {
             // Available when large is true
             largeThreshold: 2000,
 
-            progressive: 500,
-
             // label: {
                 // normal: {
                     // show: false

@@ -2,7 +2,6 @@ define(function (require) {
 
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
-    var polyHelper = require('../line/poly');
 
     var SMOOTH = 0.3;
 
@@ -30,11 +29,12 @@ define(function (require) {
          * @override
          */
         render: function (seriesModel, ecModel, api, payload) {
-            this[
-                seriesModel.option.progressive
-                    ? '_renderForProgressive'
-                    : '_renderForNormal'
-            ](seriesModel);
+            this._renderForNormal(seriesModel);
+            // this[
+            //     seriesModel.option.progressive
+            //         ? '_renderForProgressive'
+            //         : '_renderForNormal'
+            // ](seriesModel);
         },
 
         /**
@@ -50,7 +50,7 @@ define(function (require) {
             var smooth = option.smooth ? SMOOTH : null;
 
             // Consider switch between progressive and not.
-            oldData && oldData.__plProgressive && dataGroup.removeAll();
+            // oldData && oldData.__plProgressive && dataGroup.removeAll();
 
             data.diff(oldData)
                 .add(add)
@@ -93,34 +93,34 @@ define(function (require) {
         /**
          * @private
          */
-        _renderForProgressive: function (seriesModel) {
-            var dataGroup = this._dataGroup;
-            var data = seriesModel.getData();
-            var oldData = this._data;
-            var coordSys = seriesModel.coordinateSystem;
-            var dimensions = coordSys.dimensions;
-            var option = seriesModel.option;
-            var progressive = option.progressive;
-            var smooth = option.smooth ? SMOOTH : null;
+        // _renderForProgressive: function (seriesModel) {
+        //     var dataGroup = this._dataGroup;
+        //     var data = seriesModel.getData();
+        //     var oldData = this._data;
+        //     var coordSys = seriesModel.coordinateSystem;
+        //     var dimensions = coordSys.dimensions;
+        //     var option = seriesModel.option;
+        //     var progressive = option.progressive;
+        //     var smooth = option.smooth ? SMOOTH : null;
 
-            // In progressive animation is disabled, so use simple data diff,
-            // which effects performance less.
-            // (Typically performance for data with length 7000+ like:
-            // simpleDiff: 60ms, addEl: 184ms,
-            // in RMBP 2.4GHz intel i7, OSX 10.9 chrome 50.0.2661.102 (64-bit))
-            if (simpleDiff(oldData, data, dimensions)) {
-                dataGroup.removeAll();
-                data.each(function (dataIndex) {
-                    addEl(data, dataGroup, dataIndex, dimensions, coordSys);
-                });
-            }
+        //     // In progressive animation is disabled, so use simple data diff,
+        //     // which effects performance less.
+        //     // (Typically performance for data with length 7000+ like:
+        //     // simpleDiff: 60ms, addEl: 184ms,
+        //     // in RMBP 2.4GHz intel i7, OSX 10.9 chrome 50.0.2661.102 (64-bit))
+        //     if (simpleDiff(oldData, data, dimensions)) {
+        //         dataGroup.removeAll();
+        //         data.each(function (dataIndex) {
+        //             addEl(data, dataGroup, dataIndex, dimensions, coordSys);
+        //         });
+        //     }
 
-            updateElCommon(data, progressive, smooth);
+        //     updateElCommon(data, progressive, smooth);
 
-            // Consider switch between progressive and not.
-            data.__plProgressive = true;
-            this._data = data;
-        },
+        //     // Consider switch between progressive and not.
+        //     data.__plProgressive = true;
+        //     this._data = data;
+        // },
 
         /**
          * @override
@@ -166,7 +166,7 @@ define(function (require) {
 
     function addEl(data, dataGroup, dataIndex, dimensions, coordSys) {
         var points = createLinePoints(data, dataIndex, dimensions, coordSys);
-        var line = new polyHelper.Polyline({
+        var line = new graphic.Polyline({
             shape: {points: points},
             silent: true,
             z2: 10
@@ -188,31 +188,31 @@ define(function (require) {
                     opacity: data.getItemVisual(dataIndex, 'opacity')
                 }
             ));
-            line.progressive = progressive ? Math.round(dataIndex / progressive) : -1;
+            // line.progressive = progressive ? Math.round(dataIndex / progressive) : -1;
             line.shape.smooth = smooth;
         });
     }
 
-    function simpleDiff(oldData, newData, dimensions) {
-        var oldLen;
-        if (!oldData
-            || !oldData.__plProgressive
-            || (oldLen = oldData.count()) !== newData.count()
-        ) {
-            return true;
-        }
+    // function simpleDiff(oldData, newData, dimensions) {
+    //     var oldLen;
+    //     if (!oldData
+    //         || !oldData.__plProgressive
+    //         || (oldLen = oldData.count()) !== newData.count()
+    //     ) {
+    //         return true;
+    //     }
 
-        var dimLen = dimensions.length;
-        for (var i = 0; i < oldLen; i++) {
-            for (var j = 0; j < dimLen; j++) {
-                if (oldData.get(dimensions[j], i) !== newData.get(dimensions[j], i)) {
-                    return true;
-                }
-            }
-        }
+    //     var dimLen = dimensions.length;
+    //     for (var i = 0; i < oldLen; i++) {
+    //         for (var j = 0; j < dimLen; j++) {
+    //             if (oldData.get(dimensions[j], i) !== newData.get(dimensions[j], i)) {
+    //                 return true;
+    //             }
+    //         }
+    //     }
 
-        return false;
-    }
+    //     return false;
+    // }
 
     // FIXME
     // 公用方法?
