@@ -1,0 +1,96 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/perlin.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/heatmap',
+                'echarts/chart/scatter',
+                'echarts/component/legend',
+                'echarts/component/visualMap',
+                'echarts/component/grid',
+                'echarts/component/polar',
+                'echarts/component/tooltip'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'));
+
+                // function normalDist(theta, x) {
+                //     return 1 / (theta * Math.sqrt(2 * Math.PI)) * Math.exp(- x * x / 2 / theta / theta);
+                // }
+
+                var xData = [];
+                var yData = [];
+                noise.seed(Math.random());
+                function generateData(theta, min, max) {
+                    var data = [];
+                    for (var i = 0; i <= 200; i++) {
+                        for (var j = 0; j <= 100; j++) {
+                            // var x = (max - min) * i / 200 + min;
+                            // var y = (max - min) * j / 100 + min;
+                            data.push([i, j, noise.perlin2(i / 40, j / 20) + 0.5]);
+                            // data.push([i, j, normalDist(theta, x) * normalDist(theta, y)]);
+                        }
+                        yData.push(i);
+                        xData.push(i);
+                    }
+                    return data;
+                }
+                var data = generateData(2, -5, 5);
+
+                console.time('render');
+                chart.setOption({
+                    tooltip: {},
+                    xAxis: {
+                        type: 'category',
+                        data: xData
+                    },
+                    yAxis: {
+                        type: 'category',
+                        data: yData
+                    },
+                    visualMap: {
+                        min: 0,
+                        max: 1,
+                        calculable: true,
+                        inRange: {
+                            color: ['#313695', '#4575b4', '#74add1', '#abd9e9', '#e0f3f8', '#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+                        }
+                    },
+                    series: [{
+                        name: 'Gaussian',
+                        type: 'heatmap',
+                        data: data,
+                        itemStyle: {
+                            emphasis: {
+                                borderColor: '#333',
+                                borderWidth: 1
+                            }
+                        },
+                        // silent: true,
+                        // progressive: 0,
+                        // progressiveThreshold: 30000,
+                        animation: false
+                    }]
+                });
+                console.timeEnd('render');
+            });
+
+        </script>
+    </body>
+</html>
