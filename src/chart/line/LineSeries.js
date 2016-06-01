@@ -71,7 +71,8 @@ define(function(require) {
             animationEasing: 'linear',
 
             // Disable progressive
-            progressive: 0
+            progressive: 0,
+            hoverLayerThreshold: Infinity
         }
     });
 });

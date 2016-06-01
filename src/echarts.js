@@ -821,9 +821,11 @@ define(function (require) {
             // Progressive configuration
             var data = seriesModel.getData();
             var elCount = 0;
+            var dataCount = data.count();
             // FIXME edge data ?
             var frameDrawNum = +seriesModel.get('progressive');
-            var needProgressive = data.count() > seriesModel.get('progressiveThreshold') && frameDrawNum;
+            var needProgressive = dataCount > seriesModel.get('progressiveThreshold') && frameDrawNum;
+            var needHoverLayer = dataCount > seriesModel.get('hoverLayerThreshold');
             if (needProgressive) {
                 chartView.group.traverse(function (el) {
                     if (el.type !== 'group') {
@@ -831,6 +833,9 @@ define(function (require) {
                             Math.floor(elCount++ / frameDrawNum) : -1;
                         if (needProgressive) {
                             el.stopAnimation(true);
+                        }
+                        if (needHoverLayer) {
+                            el.useHoverLayer = true;
                         }
                     }
                 });
