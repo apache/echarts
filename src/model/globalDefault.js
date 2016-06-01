@@ -30,14 +30,17 @@ define(function () {
             fontWeight: 'normal'
         },
         animation: true,
-        animationThreshold: 2000,
         animationDuration: 1000,
         animationDurationUpdate: 300,
         animationEasing: 'exponentialOut',
         animationEasingUpdate: 'cubicOut',
 
+        animationThreshold: 2000,
         // Progressive configuration
         progressiveThreshold: 2000,
-        progressive: 400
+        progressive: 400,
+
+        // Threshold of if use single hover layer to optimize.
+        hoverLayerThreshold: 2000
     };
 });

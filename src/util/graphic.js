@@ -241,8 +241,13 @@ define(function(require) {
 
         cacheElementStl(el);
 
-        el.setStyle(el.__hoverStl);
-        el.z2 += 1;
+        if (el.useHoverLayer) {
+            el.__zr && el.__zr.addHover(el, el.__hoverStl);
+        }
+        else {
+            el.setStyle(el.__hoverStl);
+            el.z2 += 1;
+        }
 
         el.__isHover = true;
     }
@@ -256,8 +261,13 @@ define(function(require) {
         }
 
         var normalStl = el.__normalStl;
-        normalStl && el.setStyle(normalStl);
-        el.z2 -= 1;
+        if (el.useHoverLayer) {
+            el.__zr && el.__zr.removeHover(el);
+        }
+        else {
+            normalStl && el.setStyle(normalStl);
+            el.z2 -= 1;
+        }
 
         el.__isHover = false;
     }
