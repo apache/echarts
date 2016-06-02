@@ -6,6 +6,7 @@ define(function(require) {
     var formatUtil = require('../util/format');
     var modelUtil = require('../util/model');
     var ComponentModel = require('./Component');
+    var colorPaletteMixin = require('./mixin/colorPalette');
 
     var encodeHTML = formatUtil.encodeHTML;
     var addCommas = formatUtil.addCommas;
@@ -219,10 +220,21 @@ define(function(require) {
             this._data = this._dataBeforeProcessed.cloneShallow();
         },
 
+        getColorFromPalette: function (name, scope) {
+            var ecModel = this.ecModel;
+            // PENDING
+            var color = colorPaletteMixin.getColorFromPalette.call(this, name, scope);
+            if (!color) {
+                color = ecModel.getColorFromPalette(name, scope);
+            }
+            return color;
+        },
+
         getAxisTooltipDataIndex: null
     });
 
     zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);
+    zrUtil.mixin(SeriesModel, colorPaletteMixin);
 
     return SeriesModel;
 });

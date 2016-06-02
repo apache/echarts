@@ -783,6 +783,10 @@ define(function (require) {
      * @private
      */
     function doVisualCoding(ecModel, payload) {
+        ecModel.clearColorPalette();
+        ecModel.eachSeries(function (seriesModel) {
+            seriesModel.clearColorPalette();
+        });
         each(VISUAL_CODING_STAGES, function (stage) {
             each(visualCodingFuncs[stage] || [], function (visualCoding) {
                 visualCoding(ecModel, payload);

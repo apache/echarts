@@ -3,10 +3,9 @@ define(function (require) {
     return function (seriesType, styleType, ecModel) {
         function encodeColor(seriesModel) {
             var colorAccessPath = [styleType, 'normal', 'color'];
-            var colorList = ecModel.get('color');
             var data = seriesModel.getData();
             var color = seriesModel.get(colorAccessPath) // Set in itemStyle
-                || colorList[seriesModel.seriesIndex % colorList.length];  // Default color
+                || seriesModel.getColorFromPalette(seriesModel.get('name'));  // Default color
 
             // FIXME Set color function or use the platte color
             data.setVisual('color', color);
@@ -30,7 +29,7 @@ define(function (require) {
                 });
             }
         }
-        seriesType ? ecModel.eachSeriesByType(seriesType, encodeColor)
-            : ecModel.eachSeries(encodeColor);
+        seriesType ? ecModel.eachRawSeriesByType(seriesType, encodeColor)
+            : ecModel.eachRawSeries(encodeColor);
     };
 });

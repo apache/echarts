@@ -748,5 +748,7 @@ define(function (require) {
         }
     }
 
+    zrUtil.mixin(GlobalModel, require('./mixin/colorPalette'));
+
     return GlobalModel;
 });
