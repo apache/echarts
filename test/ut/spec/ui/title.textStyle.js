@@ -117,12 +117,12 @@ describe('title.textStyle', function() {
                 }
             }
         }, {
-            name: 'should display oblique not as normal',
+            name: 'should display oblique different from italic',
             test: 'notEqualOption',
             option1: {
                 series: [],
                 title: {
-                    text: 'oblique vs. normal',
+                    text: 'oblique vs. italic',
                     textStyle: {
                         fontStyle: 'oblique'
                     }
@@ -131,9 +131,9 @@ describe('title.textStyle', function() {
             option2: {
                 series: [],
                 title: {
-                    text: 'oblique vs. normal',
+                    text: 'oblique vs. italic',
                     textStyle: {
-                        fontStyle: 'normal'
+                        fontStyle: 'italic'
                     }
                 }
             }

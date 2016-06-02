@@ -12,12 +12,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a']
@@ -31,12 +31,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -54,12 +54,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -74,12 +74,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -94,12 +94,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -114,12 +114,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -137,12 +137,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -157,12 +157,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -177,12 +177,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -197,12 +197,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -220,39 +220,16 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
                     right: 50
-                }
-            }
-        }]
-    }, {
-        name: 'bottom',
-        cases: [{
-            name: 'should display bottom position',
-            option: {
-                series: [{
-                    name: 'a',
-                    type: 'line',
-                    data: [1, 2, 4]
-                }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
-                }],
-                yAxis : [{
-                    type : 'value'
-                }],
-                legend: {
-                    data: ['a'],
-                    bottom: 50
                 }
             }
         }]
@@ -267,12 +244,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -286,12 +263,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -310,12 +287,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -329,12 +306,12 @@ describe('legend', function() {
                     type: 'line',
                     data: [1, 2, 4]
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
                     data: ['a'],
@@ -353,24 +330,24 @@ describe('legend', function() {
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is b',
+                    name: 'this is b ...',
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is c',
+                    name: 'this is c ... ...',
                     type: 'line',
                     data: []
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
-                    data: ['this is a', 'this is b',
-                        'this is c'],
+                    data: ['this is a', 'this is b ...',
+                        'this is c ... ...'],
                     width: 200
                 }
             },
@@ -380,24 +357,24 @@ describe('legend', function() {
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is b',
+                    name: 'this is b ...',
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is c',
+                    name: 'this is c ... ...',
                     type: 'line',
                     data: []
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
-                    data: ['this is a', 'this is b',
-                        'this is c']
+                    data: ['this is a', 'this is b ...',
+                        'this is c ... ...']
                 }
             }
         }]
@@ -412,24 +389,24 @@ describe('legend', function() {
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is b',
+                    name: 'this is b ...',
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is c',
+                    name: 'this is c ... ...',
                     type: 'line',
                     data: []
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
-                    data: ['this is a', 'this is b',
-                        'this is c'],
+                    data: ['this is a', 'this is b ...',
+                        'this is c ... ...'],
                     height: 50,
                     orient: 'vertical'
                 }
@@ -440,24 +417,24 @@ describe('legend', function() {
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is b',
+                    name: 'this is b ...',
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is c',
+                    name: 'this is c ... ...',
                     type: 'line',
                     data: []
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
-                    data: ['this is a', 'this is b',
-                        'this is c'],
+                    data: ['this is a', 'this is b ...',
+                        'this is c ... ...'],
                     orient: 'vertical'
                 }
             }
@@ -472,24 +449,24 @@ describe('legend', function() {
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is b',
+                    name: 'this is b ...',
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is c',
+                    name: 'this is c ... ...',
                     type: 'line',
                     data: []
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
-                    data: ['this is a', 'this is b',
-                        'this is c'],
+                    data: ['this is a', 'this is b ...',
+                        'this is c ... ...'],
                     orient: 'horizontal'
                 }
             }
@@ -501,24 +478,24 @@ describe('legend', function() {
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is b',
+                    name: 'this is b ...',
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is c',
+                    name: 'this is c ... ...',
                     type: 'line',
                     data: []
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
-                    data: ['this is a', 'this is b',
-                        'this is c'],
+                    data: ['this is a', 'this is b ...',
+                        'this is c ... ...'],
                     orient: 'vertical'
                 }
             }
@@ -531,24 +508,24 @@ describe('legend', function() {
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is b',
+                    name: 'this is b ...',
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is c',
+                    name: 'this is c ... ...',
                     type: 'line',
                     data: []
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
-                    data: ['this is a', 'this is b',
-                        'this is c'],
+                    data: ['this is a', 'this is b ...',
+                        'this is c ... ...'],
                     orient: 'vertical'
                 }
             },
@@ -558,29 +535,503 @@ describe('legend', function() {
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is b',
+                    name: 'this is b ...',
                     type: 'line',
                     data: []
                 }, {
-                    name: 'this is c',
+                    name: 'this is c ...',
                     type: 'line',
                     data: []
                 }],
-                xAxis : [{
-                    type : 'category',
-                    data : ['x','y','z']
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
                 }],
-                yAxis : [{
-                    type : 'value'
+                yAxis: [{
+                    type: 'value'
                 }],
                 legend: {
-                    data: ['this is a', 'this is b',
-                        'this is c']
+                    data: ['this is a', 'this is b ...',
+                        'this is c ... ...']
                 }
             }
         }]
+    }, {
+        name: 'align',
+        cases: [{
+            name: 'should render correctly with align right',
+            option: {
+                series: [{
+                    name: 'this is a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is b bbb',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is c ccc ccc',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['this is a', 'this is b bbb',
+                        'this is c ccc ccc'],
+                    left: 'right',
+                    height: 50,
+                    orient: 'vertical'
+                }
+            }
+        }, {
+            name: 'should align to right when left is right and orient is vertical',
+            test: 'equalOption',
+            option1: {
+                series: [{
+                    name: 'this is a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is b ...',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is c ... ...',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['this is a', 'this is b ...',
+                        'this is c ... ...'],
+                    left: 'right',
+                    orient: 'vertical'
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'this is a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is b ...',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'this is c ... ...',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['this is a', 'this is b ...',
+                        'this is c ... ...'],
+                    left: 'right',
+                    orient: 'vertical',
+                    align: 'right'
+                }
+            }
+        }, {
+            name: 'should align to right when left is right and orient is vertical with height',
+            test: 'equalOption',
+            option1: {
+                series: [{
+                    name: 'a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'b',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'c',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b', 'c'],
+                    left: 'right',
+                    height: 50,
+                    orient: 'vertical'
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'a',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'b',
+                    type: 'line',
+                    data: []
+                }, {
+                    name: 'c',
+                    type: 'line',
+                    data: []
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b', 'c'],
+                    left: 'right',
+                    orient: 'vertical',
+                    height: 50,
+                    align: 'right'
+                }
+            }
+        }]
+    }, {
+        name: 'padding',
+        cases: [{
+            name: 'should display padding at 5px by default',
+            test: 'equalOption',
+            option1: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a'],
+                    backgroundColor: 'yellow'
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a'],
+                    padding: 5,
+                    backgroundColor: 'yellow'
+                }
+            }
+        }, {
+            name: 'should display padding with two values',
+            test: 'equalOption',
+            option1: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a'],
+                    padding: [5, 10],
+                    backgroundColor: 'yellow'
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a'],
+                    padding: [5, 10, 5, 10],
+                    backgroundColor: 'yellow'
+                }
+            }
+        }]
+    }, {
+        name: 'itemGap',
+        cases: [{
+            name: 'should display itemGap at 10 by default',
+            test: 'equalOption',
+            option1: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }, {
+                    name: 'b',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b'],
+                    backgroundColor: 'yellow'
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }, {
+                    name: 'b',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b'],
+                    itemGap: 10,
+                    backgroundColor: 'yellow'
+                }
+            }
+        }]
+    }, {
+        name: 'itemGap',
+        cases: [{
+            name: 'should display larger itemGap',
+            test: 'notEqualOption',
+            option1: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }, {
+                    name: 'b',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b'],
+                    backgroundColor: 'yellow'
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }, {
+                    name: 'b',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b'],
+                    itemGap: 100,
+                    backgroundColor: 'yellow'
+                }
+            }
+        }]
+    }, {
+        name: 'itemGap',
+        cases: [{
+            name: 'should display larger itemGap into another line',
+            test: 'notEqualOption',
+            option1: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }, {
+                    name: 'b',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b'],
+                    itemGap: 350,
+                    backgroundColor: 'yellow'
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }, {
+                    name: 'b',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: ['x','y','z']
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b'],
+                    backgroundColor: 'yellow'
+                }
+            }
+        }]
+    }, {
+        name: 'itemWidth',
+        cases: [{
+            name: 'should have default value of 25',
+            test: 'equalOption',
+            option1: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }, {
+                    name: 'b',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: []
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b'],
+                    backgroundColor: 'yellow'
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }, {
+                    name: 'b',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: []
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b'],
+                    backgroundColor: 'yellow',
+                    itemWidth: 25
+                }
+            }
+        }, {
+            name: 'should have larger itemWidth',
+            cases: (function() {
+                var types = ['bar', 'line', 'scatter', 'effectScatter',
+                    'radar'];
+                var res = [];
+                for (var i = 0; i < types.length; ++i) {
+                    res.push({
+                        name: types[i],
+                        option: {
+                            series: [{
+                                name: 'a',
+                                type: types[i],
+                            }, {
+                                name: 'b',
+                                type: types[i],
+                            }],
+                            xAxis: [{
+                                type: 'category',
+                                data: []
+                            }],
+                            yAxis: [{
+                                type: 'value'
+                            }],
+                            legend: {
+                                data: ['a', 'b'],
+                                backgroundColor: 'yellow',
+                                itemWidth: 50
+                            }
+                        }
+                    });
+                }
+                res.push({
+                    name: 'pie',
+                    option: {
+                        series: [{
+                            type: 'pie',
+                            data: [{
+                                name: 'a'
+                            }, {
+                                name: 'b'
+                            }, {
+                                name: 'c'
+                            }]
+                        }],
+                        legend: {
+                            data: ['a', 'b', 'c']
+                        }
+                    }
+                })
+                return res;
+            })()
+        }]
     }];
 
-    uiHelper.testOptionSpec('legend', suites);
+    uiHelper.testOptionSpec('legend', suites, false);
 
 });

@@ -200,26 +200,40 @@
      * run test with setOption for whole spec
      * @param  {string}   specName spec name
      * @param  {object[]} suites    arrary of suites
+     * @param {boolean} isTestAll true to test all cases,
+     *                            or false to the last one only
      */
-    helper.testOptionSpec = function(specName, suites) {
-        for (var sid = 0, slen = suites.length; sid < slen; ++sid) {
-            (function(suiteName, cases) {
-                describe(suiteName, function() {
-                    for (var cid = 0, clen = cases.length; cid < clen; ++cid) {
-                        var name = specName + ' - ' + suiteName + ': '
-                            + cases[cid].name;
-                        if (cases[cid].test === 'equalOption') {
-                            helper.expectEqualOption(name, cases[cid].option1,
-                                cases[cid].option2);
-                        } else if (cases[cid].test === 'notEqualOption') {
-                            helper.expectNotEqualOption(name, cases[cid].option1,
-                                cases[cid].option2);
-                        } else {
-                            helper.testOption(name, cases[cid].option);
-                        }
+    helper.testOptionSpec = function(specName, suites, isTestAll) {
+        var testCases = function(suiteName, cases) {
+            describe(suiteName, function() {
+                // start = isTestAll ? 0 : cases.length - 1;
+                for (var cid = 0; cid < cases.length; ++cid) {
+                    var name = specName + ' - ' + suiteName + ': '
+                        + cases[cid].name;
+                    if (cases[cid].cases) {
+                        // another level of cases
+                        testCases(name, cases[cid].cases);
+                        return;
                     }
-                });
-            })(suites[sid].name, suites[sid].cases);
+                    if (cases[cid].test === 'equalOption') {
+                        helper.expectEqualOption(name, cases[cid].option1,
+                            cases[cid].option2);
+                        helper.testOption(name + ', same as last version',
+                            cases[cid].option1);
+                    } else if (cases[cid].test === 'notEqualOption') {
+                        helper.expectNotEqualOption(name, cases[cid].option1,
+                            cases[cid].option2);
+                        helper.testOption(name + ', same as last version',
+                            cases[cid].option1);
+                    } else {
+                        helper.testOption(name, cases[cid].option);
+                    }
+                }
+            });
+        };
+        var start = isTestAll ? 0 : suites.length - 1;
+        for (var sid = start, slen = suites.length; sid < slen; ++sid) {
+            testCases(suites[sid].name, suites[sid].cases);
         }
     }
 
