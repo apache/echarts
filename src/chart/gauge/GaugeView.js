@@ -294,7 +294,13 @@ define(function (require) {
                 })
                 .update(function (newIdx, oldIdx) {
                     var pointer = oldData.getItemGraphicEl(oldIdx);
-
+                    if(isNaN(pointer.shape.angle)){
+                        pointer = new PointerPath({
+                            shape: {
+                                angle: startAngle
+                            }
+                        });
+                    }
                     graphic.updateProps(pointer, {
                         shape: {
                             angle: numberUtil.linearMap(data.get('value', newIdx), valueExtent, angleExtent, true)
