@@ -7,6 +7,7 @@ define(function(require) {
     var modelUtil = require('../util/model');
     var ComponentModel = require('./Component');
     var colorPaletteMixin = require('./mixin/colorPalette');
+    var env = require('zrender/core/env');
 
     var encodeHTML = formatUtil.encodeHTML;
     var addCommas = formatUtil.addCommas;
@@ -207,6 +208,10 @@ define(function(require) {
          * @return {boolean}
          */
         ifEnableAnimation: function () {
+            if (env.node) {
+                return false;
+            }
+
             var animationEnabled = this.getShallow('animation');
             if (animationEnabled) {
                 if (this.getData().count() > this.getShallow('animationThreshold')) {

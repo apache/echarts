@@ -823,13 +823,16 @@ define(function (require) {
             updateZ(seriesModel, chartView);
 
             // Progressive configuration
-            var data = seriesModel.getData();
             var elCount = 0;
-            var dataCount = data.count();
+            chartView.group.traverse(function (el) {
+                if (el.type !== 'group') {
+                    elCount++;
+                }
+            });
             // FIXME edge data ?
             var frameDrawNum = +seriesModel.get('progressive');
-            var needProgressive = dataCount > seriesModel.get('progressiveThreshold') && frameDrawNum;
-            var needHoverLayer = dataCount > seriesModel.get('hoverLayerThreshold');
+            var needProgressive = elCount > seriesModel.get('progressiveThreshold') && frameDrawNum && !env.node;
+            var needHoverLayer = elCount > seriesModel.get('hoverLayerThreshold') && !env.node;
             if (needProgressive) {
                 chartView.group.traverse(function (el) {
                     if (el.type !== 'group') {
