@@ -241,8 +241,13 @@ define(function(require) {
 
         cacheElementStl(el);
 
-        el.setStyle(el.__hoverStl);
-        el.z2 += 1;
+        if (el.useHoverLayer) {
+            el.__zr && el.__zr.addHover(el, el.__hoverStl);
+        }
+        else {
+            el.setStyle(el.__hoverStl);
+            el.z2 += 1;
+        }
 
         el.__isHover = true;
     }
@@ -256,8 +261,13 @@ define(function(require) {
         }
 
         var normalStl = el.__normalStl;
-        normalStl && el.setStyle(normalStl);
-        el.z2 -= 1;
+        if (el.useHoverLayer) {
+            el.__zr && el.__zr.removeHover(el);
+        }
+        else {
+            normalStl && el.setStyle(normalStl);
+            el.z2 -= 1;
+        }
 
         el.__isHover = false;
     }
@@ -376,6 +386,9 @@ define(function(require) {
             cb = dataIndex;
             dataIndex = null;
         }
+        var animationEnabled = animatableModel
+            && animatableModel.ifEnableAnimation
+            && animatableModel.ifEnableAnimation();
 
         var postfix = isUpdate ? 'Update' : '';
         var duration = animatableModel
@@ -388,7 +401,7 @@ define(function(require) {
             animationDelay = animationDelay(dataIndex);
         }
 
-        animatableModel && animatableModel.getShallow('animation')
+        animationEnabled && duration > 0
             ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb)
             : (el.attr(props), cb && cb());
     }

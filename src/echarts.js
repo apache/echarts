@@ -66,11 +66,6 @@ define(function (require) {
             theme = themeStorage[theme];
         }
 
-        if (theme) {
-            each(optionPreprocessorFuncs, function (preProcess) {
-                preProcess(theme);
-            });
-        }
         /**
          * @type {string}
          */
@@ -822,6 +817,29 @@ define(function (require) {
             chartView.group.silent = !!seriesModel.get('silent');
 
             updateZ(seriesModel, chartView);
+
+            // Progressive configuration
+            var data = seriesModel.getData();
+            var elCount = 0;
+            var dataCount = data.count();
+            // FIXME edge data ?
+            var frameDrawNum = +seriesModel.get('progressive');
+            var needProgressive = dataCount > seriesModel.get('progressiveThreshold') && frameDrawNum;
+            var needHoverLayer = dataCount > seriesModel.get('hoverLayerThreshold');
+            if (needProgressive) {
+                chartView.group.traverse(function (el) {
+                    if (el.type !== 'group') {
+                        el.progressive = needProgressive ?
+                            Math.floor(elCount++ / frameDrawNum) : -1;
+                        if (needProgressive) {
+                            el.stopAnimation(true);
+                        }
+                        if (needHoverLayer) {
+                            el.useHoverLayer = true;
+                        }
+                    }
+                });
+            }
         }, this);
 
         // Remove groups of unrendered charts
@@ -909,8 +927,10 @@ define(function (require) {
         var zlevel = model.get('zlevel');
         // Set z and zlevel
         view.group.traverse(function (el) {
-            z != null && (el.z = z);
-            zlevel != null && (el.zlevel = zlevel);
+            if (el.type !== 'group') {
+                z != null && (el.z = z);
+                zlevel != null && (el.zlevel = zlevel);
+            }
         });
     }
     /**
@@ -1278,7 +1298,7 @@ define(function (require) {
     each([
             'map', 'each', 'filter', 'indexOf', 'inherits',
             'reduce', 'filter', 'bind', 'curry', 'isArray',
-            'isString', 'isObject', 'isFunction', 'extend'
+            'isString', 'isObject', 'isFunction', 'extend', 'defaults'
         ],
         function (name) {
             echarts.util[name] = zrUtil[name];

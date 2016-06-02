@@ -195,7 +195,7 @@ define(function(require) {
     modelUtil.converDataValue = function (value, dimInfo) {
         // Performance sensitive.
         var dimType = dimInfo && dimInfo.type;
-        if (dimType === 'ordinal') {
+        if (dimType === 'ordinal' || dimType === 'unknown') {
             return value;
         }
 

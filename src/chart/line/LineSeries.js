@@ -68,7 +68,11 @@ define(function(require) {
             // 数据过滤，'average', 'max', 'min', 'sum'
             sampling: 'none',
 
-            animationEasing: 'linear'
+            animationEasing: 'linear',
+
+            // Disable progressive
+            progressive: 0,
+            hoverLayerThreshold: Infinity
         }
     });
 });

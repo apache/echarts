@@ -105,6 +105,8 @@ define(function(require) {
             opacity: 0.3
         },
 
+        realtime: true, // Whether realtime update view when select.
+
         z: 10
     };
 

@@ -1104,7 +1104,9 @@ define(function (require) {
                 });
             }
             else {
-                this.group.hide();
+                if (this.group.children().length) {
+                    this.group.hide();
+                }
             }
         },
 

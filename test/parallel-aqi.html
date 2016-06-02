@@ -10,6 +10,10 @@
             body {
                 /*background: #000;*/
             }
+            #main {
+                width: 766px;
+                height: 688px;
+            }
         </style>
         <div id="main"></div>
 
@@ -54,6 +58,7 @@
                 };
 
                 chart.setOption({
+                    animation: true,
                     legend: {
                         bottom: 30,
                         data: ['北京', '上海', '广州'],
@@ -88,8 +93,11 @@
                         max: 150,
                         dimension: 2,
                         inRange: {
-                            color: ['#d94e5d','#eac736','#50a3ba'].reverse(),
-                            // colorAlpha: [0, 1]
+                            color: ['#d94e5d','#eac736','#50a3ba'].reverse()
+                        },
+                        outOfRange: {
+                            color: ['#ccc'
+                            opacity: 0.001
                         }
                     },
                     // dataZoom: {

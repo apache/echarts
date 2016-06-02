@@ -182,6 +182,10 @@ define(function (require) {
 
             var map = geoCreator.getMap(mapName);
             var geoJson = map && map.geoJson;
+            if (!geoJson) {
+                console.error('Map ' + mapName + ' not exists');
+                return originRegionArr;
+            }
 
             var dataNameMap = {};
             var features = geoJson.features;

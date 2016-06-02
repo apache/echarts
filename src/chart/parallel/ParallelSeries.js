@@ -14,26 +14,39 @@ define(function(require) {
             var parallelModel = ecModel.getComponent(
                 'parallel', this.get('parallelIndex')
             );
-            var dimensions = parallelModel.dimensions;
             var parallelAxisIndices = parallelModel.parallelAxisIndex;
 
             var rawData = option.data;
+            var modelDims = parallelModel.dimensions;
 
-            var dimensionsInfo = zrUtil.map(dimensions, function (dim, index) {
-                var axisModel = ecModel.getComponent(
-                    'parallelAxis', parallelAxisIndices[index]
+            var dataDims = generateDataDims(modelDims, rawData);
+
+            var dataDimsInfo = zrUtil.map(dataDims, function (dim) {
+
+                var modelDimsIndex = zrUtil.indexOf(dim, modelDims);
+                var axisModel = modelDimsIndex >= 0 && ecModel.getComponent(
+                    'parallelAxis', parallelAxisIndices[modelDimsIndex]
                 );
-                if (axisModel.get('type') === 'category') {
+
+                if (axisModel && axisModel.get('type') === 'category') {
                     translateCategoryValue(axisModel, dim, rawData);
                     return {name: dim, type: 'ordinal'};
+                }
+                else if (modelDimsIndex < 0) {
+                    return {name: dim, type: 'unknown'};
                 }
                 else {
                     return dim;
                 }
             });
 
-            var list = new List(dimensionsInfo, this);
+            var list = new List(dataDimsInfo, this);
             list.initData(rawData);
+
+            // Anication is forbiden in progressive data mode.
+            if (this.option.progressive) {
+                this.option.animation = false;
+            }
 
             return list;
         },
@@ -66,21 +79,12 @@ define(function(require) {
             coordinateSystem: 'parallel',
             parallelIndex: 0,
 
-            // FIXME 尚无用
             label: {
                 normal: {
                     show: false
-                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-                    //           'inside'|'left'|'right'|'top'|'bottom'
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                 },
                 emphasis: {
                     show: false
-                    // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
-                    // position: 默认自适应，水平布局为'top'，垂直布局为'right'，可选为
-                    //           'inside'|'left'|'right'|'top'|'bottom'
-                    // textStyle: null      // 默认使用全局文本样式，详见TEXTSTYLE
                 }
             },
 
@@ -94,7 +98,8 @@ define(function(require) {
                     type: 'solid'
                 }
             },
-            // smooth: false
+            progressive: false, // 100
+            smooth: false,
 
             animationEasing: 'linear'
         }
@@ -102,18 +107,49 @@ define(function(require) {
 
     function translateCategoryValue(axisModel, dim, rawData) {
         var axisData = axisModel.get('data');
-        var numberDim = +dim.replace('dim', '');
+        var numberDim = convertDimNameToNumber(dim);
 
         if (axisData && axisData.length) {
             zrUtil.each(rawData, function (dataItem) {
                 if (!dataItem) {
                     return;
                 }
+                // FIXME
+                // time consuming, should use hash?
                 var index = zrUtil.indexOf(axisData, dataItem[numberDim]);
                 dataItem[numberDim] = index >= 0 ? index : NaN;
             });
         }
         // FIXME
         // 如果没有设置axis data, 应自动算出，或者提示。
+    }
+
+    function convertDimNameToNumber(dimName) {
+        return +dimName.replace('dim', '');
+    }
+
+    function generateDataDims(modelDims, rawData) {
+        // parallelModel.dimension should not be regarded as data
+        // dimensions. Consider dimensions = ['dim4', 'dim2', 'dim6'];
+
+        // We detect max dim by parallelModel.dimensions and fist
+        // item in rawData arbitrarily.
+        var maxDimNum = 0;
+        zrUtil.each(modelDims, function (dimName) {
+            var numberDim = convertDimNameToNumber(dimName);
+            numberDim > maxDimNum && (maxDimNum = numberDim);
+        });
+
+        var firstItem = rawData[0];
+        if (firstItem && firstItem.length - 1 > maxDimNum) {
+            maxDimNum = firstItem.length - 1;
+        }
+
+        var dataDims = [];
+        for (var i = 0; i <= maxDimNum; i++) {
+            dataDims.push('dim' + i);
+        }
+
+        return dataDims;
     }
 });

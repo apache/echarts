@@ -66,7 +66,12 @@ define(function (require) {
         var color = effectModel.get('color') || lineData.getItemVisual(idx, 'color');
         var symbol = this.childAt(1);
         var period = effectModel.get('period') * 1000;
-        if (this._symbolType !== symbolType || period !== this._period) {
+        var loop = effectModel.get('loop');
+        if (
+            this._symbolType !== symbolType
+            || period !== this._period
+            || loop !== this._loop
+        ) {
             symbol = symbolUtil.createSymbol(
                 symbolType, -0.5, -0.5, 1, 1, color
             );
@@ -74,17 +79,24 @@ define(function (require) {
             symbol.z2 = 100;
             this._symbolType = symbolType;
             this._period = period;
+            this._loop = loop;
 
             this.add(symbol);
 
             symbol.__t = 0;
-            symbol.animate('', true)
+            var animator = symbol.animate('', loop)
                 .when(period, {
                     __t: 1
                 })
                 .delay(idx / lineData.count() * period / 2)
-                .during(zrUtil.bind(updateSymbolPosition, symbol))
-                .start();
+                .during(zrUtil.bind(updateSymbolPosition, symbol));
+            if (!loop) {
+                var self = this;
+                animator.done(function () {
+                    self.remove(symbol);
+                });
+            }
+            animator.start();
         }
         // Shadow color is same with color in default
         symbol.setStyle('shadowColor', color);

@@ -202,6 +202,19 @@ define(function(require) {
                 : (colorEl + encodeHTML(this.name) + ' : ' + formattedValue);
         },
 
+        /**
+         * @return {boolean}
+         */
+        ifEnableAnimation: function () {
+            var animationEnabled = this.getShallow('animation');
+            if (animationEnabled) {
+                if (this.getData().count() > this.getShallow('animationThreshold')) {
+                    animationEnabled = false;
+                }
+            }
+            return animationEnabled;
+        },
+
         restoreData: function () {
             this._data = this._dataBeforeProcessed.cloneShallow();
         },
