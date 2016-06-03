@@ -100,7 +100,11 @@ define(function (require) {
                 vec2.copy(pts[1], originalPoints[2]);
                 vec2.copy(pts[2], originalPoints[1]);
                 if (fromSymbol && fromSymbol != 'none') {
-                    var t = intersectCurveCircle(pts, originalPoints[0], edge.node1.getVisual('symbolSize') * scale);
+                    var symbolSize = edge.node1.getVisual('symbolSize');
+                    if (symbolSize instanceof Array) {
+                        symbolSize = (symbolSize[0] + symbolSize[1]) / 2;
+                    }
+                    var t = intersectCurveCircle(pts, originalPoints[0], symbolSize * scale);
                     // Subdivide and get the second
                     quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
                     pts[0][0] = tmp0[3];
@@ -110,7 +114,11 @@ define(function (require) {
                     pts[1][1] = tmp0[4];
                 }
                 if (toSymbol && toSymbol != 'none') {
-                    var t = intersectCurveCircle(pts, originalPoints[1], edge.node2.getVisual('symbolSize') * scale);
+                    var symbolSize = edge.node1.getVisual('symbolSize');
+                    if (symbolSize instanceof Array) {
+                        symbolSize = (symbolSize[0] + symbolSize[1]) / 2;
+                    }
+                    var t = intersectCurveCircle(pts, originalPoints[1], symbolSize * scale);
                     // Subdivide and get the first
                     quadraticSubdivide(pts[0][0], pts[1][0], pts[2][0], t, tmp0);
                     pts[1][0] = tmp0[1];
