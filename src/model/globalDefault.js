@@ -41,6 +41,6 @@ define(function () {
         progressive: 400,
 
         // Threshold of if use single hover layer to optimize.
-        hoverLayerThreshold: 2000
+        hoverLayerThreshold: 3000
     };
 });

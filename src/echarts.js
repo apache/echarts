@@ -812,6 +812,7 @@ define(function (require) {
             chart.__alive = false;
         }, this);
 
+        var elCountAll = 0;
         // Render all charts
         ecModel.eachSeries(function (seriesModel, idx) {
             var chartView = this._chartsMap[seriesModel.__viewId];
@@ -829,26 +830,32 @@ define(function (require) {
                     elCount++;
                 }
             });
-            // FIXME edge data ?
+            elCountAll += elCount;
+
             var frameDrawNum = +seriesModel.get('progressive');
             var needProgressive = elCount > seriesModel.get('progressiveThreshold') && frameDrawNum && !env.node;
-            var needHoverLayer = elCount > seriesModel.get('hoverLayerThreshold') && !env.node;
             if (needProgressive) {
                 chartView.group.traverse(function (el) {
+                    // FIXME marker and other components
                     if (el.type !== 'group') {
                         el.progressive = needProgressive ?
                             Math.floor(elCount++ / frameDrawNum) : -1;
                         if (needProgressive) {
                             el.stopAnimation(true);
                         }
-                        if (needHoverLayer) {
-                            el.useHoverLayer = true;
-                        }
                     }
                 });
             }
         }, this);
 
+        // If use hover layer
+        if (elCountAll > ecModel.get('hoverLayerThreshold') && !env.node) {
+            this._zr.storage.traverse(function (el) {
+                if (el.type !== 'group') {
+                    el.useHoverLayer = true;
+                }
+            });
+        }
         // Remove groups of unrendered charts
         each(this._chartsViews, function (chart) {
             if (!chart.__alive) {
