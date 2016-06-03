@@ -387,8 +387,12 @@ define(function(require) {
             dataIndex = null;
         }
         var animationEnabled = animatableModel
-            && animatableModel.ifEnableAnimation
-            && animatableModel.ifEnableAnimation();
+            && (
+                animatableModel.ifEnableAnimation
+                ? animatableModel.ifEnableAnimation()
+                // Directly use animation property
+                : animatableModel.getShallow('animation')
+            );
 
         var postfix = isUpdate ? 'Update' : '';
         var duration = animatableModel
