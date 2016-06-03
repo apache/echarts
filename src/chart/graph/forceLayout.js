@@ -80,16 +80,22 @@ define(function (require) {
                         }
                         for (var i = 0, l = edges.length; i < l; i++) {
                             var e = edges[i];
+                            var edge = graph.getEdgeByIndex(i);
                             var p1 = e.n1.p;
                             var p2 = e.n2.p;
-                            var points = [p1, p2];
+                            var points = edge.getLayout();
+                            points = points ? points.slice() : [];
+                            points[0] = points[0] || [];
+                            points[1] = points[1] || [];
+                            vec2.copy(points[0], p1);
+                            vec2.copy(points[1], p2);
                             if (e.curveness > 0) {
-                                points.push([
+                                points[2] = [
                                     (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * e.curveness,
                                     (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * e.curveness
-                                ]);
+                                ];
                             }
-                            graph.getEdgeByIndex(i).setLayout(points);
+                            edge.setLayout(points);
                         }
                         // Update layout
 

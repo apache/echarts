@@ -79,7 +79,7 @@ define(function (require) {
         var v = [];
         scale /= 2;
 
-        graph.eachEdge(function (edge) {
+        graph.eachEdge(function (edge, idx) {
             var linePoints = edge.getLayout();
             var fromSymbol = edge.getVisual('fromSymbol');
             var toSymbol = edge.getVisual('toSymbol');

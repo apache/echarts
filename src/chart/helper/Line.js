@@ -295,10 +295,7 @@ define(function (require) {
     };
 
     lineProto.updateLayout = function (lineData, idx) {
-        var points = lineData.getItemLayout(idx);
-        var linePath = this.childOfName('line');
-        setLinePoints(linePath.shape, points);
-        linePath.dirty(true);
+        this.setLinePoints(lineData.getItemLayout(idx));
     };
 
     lineProto.setLinePoints = function (points) {

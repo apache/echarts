@@ -276,10 +276,10 @@ define(function (require) {
         },
 
         updateLayout: function (seriesModel) {
+            adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
+
             this._symbolDraw.updateLayout();
             this._lineDraw.updateLayout();
-
-            adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
         },
 
         remove: function (ecModel, api) {
