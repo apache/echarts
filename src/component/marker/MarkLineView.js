@@ -198,36 +198,9 @@ define(function (require) {
 
     zrUtil.defaults(markLineFormatMixin, modelUtil.dataFormatMixin);
 
-    require('../../echarts').extendComponentView({
+    require('./MarkerView').extend({
 
         type: 'markLine',
-
-        init: function () {
-            /**
-             * Markline grouped by series
-             * @private
-             * @type {Object}
-             */
-            this._markLineMap = {};
-        },
-
-        render: function (markLineModel, ecModel, api) {
-            var lineDrawMap = this._markLineMap;
-            for (var name in lineDrawMap) {
-                lineDrawMap[name].__keep = false;
-            }
-
-            ecModel.eachSeries(function (seriesModel) {
-                var mlModel = seriesModel.markLineModel;
-                mlModel && this._renderSeriesML(seriesModel, mlModel, ecModel, api);
-            }, this);
-
-            for (var name in lineDrawMap) {
-                if (!lineDrawMap[name].__keep) {
-                    this.group.remove(lineDrawMap[name].group);
-                }
-            }
-        },
 
         updateLayout: function (markLineModel, ecModel, api) {
             ecModel.eachSeries(function (seriesModel) {
@@ -252,17 +225,18 @@ define(function (require) {
                         ]);
                     });
 
-                    this._markLineMap[seriesModel.name].updateLayout();
+                    this.markerGroupMap[seriesModel.name].updateLayout();
+
                 }
             }, this);
         },
 
-        _renderSeriesML: function (seriesModel, mlModel, ecModel, api) {
+        renderSeries: function (seriesModel, mlModel, ecModel, api) {
             var coordSys = seriesModel.coordinateSystem;
             var seriesName = seriesModel.name;
             var seriesData = seriesModel.getData();
 
-            var lineDrawMap = this._markLineMap;
+            var lineDrawMap = this.markerGroupMap;
             var lineDraw = lineDrawMap[seriesName];
             if (!lineDraw) {
                 lineDraw = lineDrawMap[seriesName] = new LineDraw();

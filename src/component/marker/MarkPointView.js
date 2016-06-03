@@ -18,13 +18,10 @@ define(function (require) {
         mpData.each(function (idx) {
             var itemModel = mpData.getItemModel(idx);
             var point;
-            var xPx = itemModel.getShallow('x');
-            var yPx = itemModel.getShallow('y');
-            if (xPx != null && yPx != null) {
-                point = [
-                    numberUtil.parsePercent(xPx, api.getWidth()),
-                    numberUtil.parsePercent(yPx, api.getHeight())
-                ];
+            var xPx = numberUtil.parsePercent(itemModel.getShallow('x'), api.getWidth());
+            var yPx = numberUtil.parsePercent(itemModel.getShallow('y'), api.getHeight());
+            if (!isNaN(xPx) && !isNaN(yPx)) {
+                point = [xPx, yPx];
             }
             // Chart like bar may have there own marker positioning logic
             else if (seriesModel.getMarkerPosition) {
@@ -37,6 +34,15 @@ define(function (require) {
                 var x = mpData.get(coordSys.dimensions[0], idx);
                 var y = mpData.get(coordSys.dimensions[1], idx);
                 point = coordSys.dataToPoint([x, y]);
+
+            }
+
+            // Use x, y if has any
+            if (!isNaN(xPx)) {
+                point[0] = xPx;
+            }
+            if (!isNaN(yPx)) {
+                point[1] = yPx;
             }
 
             mpData.setItemLayout(idx, point);
@@ -66,49 +72,26 @@ define(function (require) {
 
     zrUtil.defaults(markPointFormatMixin, modelUtil.dataFormatMixin);
 
-    require('../../echarts').extendComponentView({
+    require('./MarkerView').extend({
 
         type: 'markPoint',
-
-        init: function () {
-            this._symbolDrawMap = {};
-        },
-
-        render: function (markPointModel, ecModel, api) {
-            var symbolDrawMap = this._symbolDrawMap;
-            for (var name in symbolDrawMap) {
-                symbolDrawMap[name].__keep = false;
-            }
-
-            ecModel.eachSeries(function (seriesModel) {
-                var mpModel = seriesModel.markPointModel;
-                mpModel && this._renderSeriesMP(seriesModel, mpModel, api);
-            }, this);
-
-            for (var name in symbolDrawMap) {
-                if (!symbolDrawMap[name].__keep) {
-                    symbolDrawMap[name].remove();
-                    this.group.remove(symbolDrawMap[name].group);
-                }
-            }
-        },
 
         updateLayout: function (markPointModel, ecModel, api) {
             ecModel.eachSeries(function (seriesModel) {
                 var mpModel = seriesModel.markPointModel;
                 if (mpModel) {
                     updateMarkerLayout(mpModel.getData(), seriesModel, api);
-                    this._symbolDrawMap[seriesModel.name].updateLayout(mpModel);
+                    this.markerGroupMap[seriesModel.name].updateLayout(mpModel);
                 }
             }, this);
         },
 
-        _renderSeriesMP: function (seriesModel, mpModel, api) {
+        renderSeries: function (seriesModel, mpModel, ecModel, api) {
             var coordSys = seriesModel.coordinateSystem;
             var seriesName = seriesModel.name;
             var seriesData = seriesModel.getData();
 
-            var symbolDrawMap = this._symbolDrawMap;
+            var symbolDrawMap = this.markerGroupMap;
             var symbolDraw = symbolDrawMap[seriesName];
             if (!symbolDraw) {
                 symbolDraw = symbolDrawMap[seriesName] = new SymbolDraw();

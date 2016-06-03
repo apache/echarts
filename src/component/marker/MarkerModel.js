@@ -1,0 +1,91 @@
+define(function (require) {
+
+    var modelUtil = require('../../util/model');
+    var zrUtil = require('zrender/core/util');
+    var env = require('zrender/core/env');
+
+    function fillLabel(opt) {
+        modelUtil.defaultEmphasis(
+            opt.label,
+            modelUtil.LABEL_OPTIONS
+        );
+    }
+    var MarkerModel = require('../../echarts').extendComponentModel({
+
+        type: 'marker',
+
+        dependencies: ['series', 'grid', 'polar', 'geo'],
+        /**
+         * @overrite
+         */
+        init: function (option, parentModel, ecModel, extraOpt) {
+            if (this.type === 'marker') {
+                throw new Error('Marker component is abstract component. Use markLine, markPoint, markArea instead.');
+            }
+            this.mergeDefaultAndTheme(option, ecModel);
+            this.mergeOption(option, ecModel, extraOpt.createdBySelf, true);
+        },
+
+        /**
+         * @return {boolean}
+         */
+        ifEnableAnimation: function () {
+            if (env.node) {
+                return false;
+            }
+
+            var hostSeries = this.__hostSeries;
+            return this.getShallow('animation') && hostSeries && hostSeries.ifEnableAnimation();
+        },
+
+        mergeOption: function (newOpt, ecModel, createdBySelf, isInit) {
+            var MarkerModel = this.constructor;
+            var modelPropName = this.mainType + 'Model';
+            if (!createdBySelf) {
+                ecModel.eachSeries(function (seriesModel) {
+
+                    var markerOpt = seriesModel.get(this.mainType);
+
+                    var markerModel = seriesModel[modelPropName];
+                    if (!markerOpt || !markerOpt.data) {
+                        seriesModel[modelPropName] = null;
+                        return;
+                    }
+                    if (!markerModel) {
+                        if (isInit) {
+                            // Default label emphasis `position` and `show`
+                            fillLabel(markerOpt);
+                        }
+                        zrUtil.each(markerOpt.data, function (item) {
+                            // FIXME Overwrite fillLabel method ?
+                            if (item instanceof Array) {
+                                fillLabel(item[0]);
+                                fillLabel(item[1]);
+                            }
+                            else {
+                                fillLabel(item);
+                            }
+                        });
+                        var opt = {
+                            mainType: this.mainType,
+                            // Use the same series index and name
+                            seriesIndex: seriesModel.seriesIndex,
+                            name: seriesModel.name,
+                            createdBySelf: true
+                        };
+                        markerModel = new MarkerModel(
+                            markerOpt, this, ecModel, opt
+                        );
+                        markerModel.__hostSeries = seriesModel;
+                    }
+                    else {
+                        markerModel.mergeOption(markerOpt, ecModel, true);
+                    }
+                    seriesModel[modelPropName] = markerModel;
+                }, this);
+            }
+        }
+    });
+
+    return MarkerModel;
+});

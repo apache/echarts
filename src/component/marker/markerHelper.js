@@ -4,6 +4,14 @@ define(function (require) {
     var numberUtil = require('../../util/number');
     var indexOf = zrUtil.indexOf;
 
+    function hasXOrY(item) {
+        return !(isNaN(parseFloat(item.x)) && isNaN(parseFloat(item.y)));
+    }
+
+    function hasXAndY(item) {
+        return !isNaN(parseFloat(item.x)) && !isNaN(parseFloat(item.y));
+    }
+
     function getPrecision(data, valueAxisDim, dataIndex) {
         var precision = -1;
         do {
@@ -20,18 +28,18 @@ define(function (require) {
     }
 
     function markerTypeCalculatorWithExtent(
-        mlType, data, baseDataDim, valueDataDim, baseCoordIndex, valueCoordIndex
+        mlType, data, otherDataDim, targetDataDim, otherCoordIndex, targetCoordIndex
     ) {
         var coordArr = [];
-        var value = numCalculate(data, valueDataDim, mlType);
+        var value = numCalculate(data, targetDataDim, mlType);
 
-        var dataIndex = data.indexOfNearest(valueDataDim, value, true);
-        coordArr[baseCoordIndex] = data.get(baseDataDim, dataIndex, true);
-        coordArr[valueCoordIndex] = data.get(valueDataDim, dataIndex, true);
+        var dataIndex = data.indexOfNearest(targetDataDim, value, true);
+        coordArr[otherCoordIndex] = data.get(otherDataDim, dataIndex, true);
+        coordArr[targetCoordIndex] = data.get(targetDataDim, dataIndex, true);
 
-        var precision = getPrecision(data, valueDataDim, dataIndex);
+        var precision = getPrecision(data, targetDataDim, dataIndex);
         if (precision >= 0) {
-            coordArr[valueCoordIndex] = +coordArr[valueCoordIndex].toFixed(precision);
+            coordArr[targetCoordIndex] = +coordArr[targetCoordIndex].toFixed(precision);
         }
 
         return coordArr;
@@ -54,6 +62,7 @@ define(function (require) {
          * @param {string} valueAxisDim
          */
         max: curry(markerTypeCalculatorWithExtent, 'max'),
+
         /**
          * @method
          * @param {module:echarts/data/List} data
@@ -81,10 +90,8 @@ define(function (require) {
         // `yAxis` to specify the coord on each dimension
 
         // parseFloat first because item.x and item.y can be percent string like '20%'
-        if (item && (isNaN(parseFloat(item.x)) || isNaN(parseFloat(item.y)))
-            && !zrUtil.isArray(item.coord)
-            && coordSys
-        ) {
+        if (item && !hasXAndY(item) && !zrUtil.isArray(item.coord) && coordSys) {
+            var dims = coordSys.dimensions;
             var axisInfo = getAxisInfo(item, data, coordSys, seriesModel);
 
             // Clone the option
@@ -95,23 +102,30 @@ define(function (require) {
                 && markerTypeCalculator[item.type]
                 && axisInfo.baseAxis && axisInfo.valueAxis
             ) {
-                var dims = coordSys.dimensions;
-                var baseCoordIndex = indexOf(dims, axisInfo.baseAxis.dim);
-                var valueCoordIndex = indexOf(dims, axisInfo.valueAxis.dim);
+                var otherCoordIndex = indexOf(dims, axisInfo.baseAxis.dim);
+                var targetCoordIndex = indexOf(dims, axisInfo.valueAxis.dim);
 
                 item.coord = markerTypeCalculator[item.type](
                     data, axisInfo.baseDataDim, axisInfo.valueDataDim,
-                    baseCoordIndex, valueCoordIndex
+                    otherCoordIndex, targetCoordIndex
                 );
                 // Force to use the value of calculated value.
-                item.value = item.coord[valueCoordIndex];
+                item.value = item.coord[targetCoordIndex];
             }
             else {
                 // FIXME Only has one of xAxis and yAxis.
-                item.coord = [
+                var coord = [
                     item.xAxis != null ? item.xAxis : item.radiusAxis,
                     item.yAxis != null ? item.yAxis : item.angleAxis
                 ];
+                // Each coord support max, min, average
+                for (var i = 0; i < 2; i++) {
+                    if (markerTypeCalculator[coord[i]]) {
+                        var dataDim = seriesModel.coordDimToDataDim(dims[i])[0];
+                        coord[i] = numCalculate(data, dataDim, coord[i]);
+                    }
+                }
+                item.coord = coord;
             }
         }
         return item;
@@ -146,7 +160,7 @@ define(function (require) {
      */
     var dataFilter = function (coordSys, item) {
         // Alwalys return true if there is no coordSys
-        return (coordSys && coordSys.containData && item.coord && (item.x == null || item.y == null))
+        return (coordSys && coordSys.containData && item.coord && !hasXOrY(item))
             ? coordSys.containData(item.coord) : true;
     };
 
@@ -158,10 +172,10 @@ define(function (require) {
         return item.value;
     };
 
-    var numCalculate = function (data, valueDataDim, mlType) {
-        return mlType === 'average'
+    var numCalculate = function (data, valueDataDim, type) {
+        return type === 'average'
             ? data.getSum(valueDataDim, true) / data.count()
-            : data.getDataExtent(valueDataDim, true)[mlType === 'max' ? 1 : 0];
+            : data.getDataExtent(valueDataDim, true)[type === 'max' ? 1 : 0];
     };
 
     return {
