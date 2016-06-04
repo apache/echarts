@@ -123,7 +123,7 @@ define(function (require) {
     }
 
     function updateSingleMarkerEndLayout(
-        data, idx, isFrom, mlType, valueIndex, seriesModel, api
+        data, idx, isFrom, seriesModel, api
     ) {
         var coordSys = seriesModel.coordinateSystem;
         var itemModel = data.getItemModel(idx);
@@ -211,11 +211,8 @@ define(function (require) {
                     var toData = mlModel.__to;
                     // Update visual and layout of from symbol and to symbol
                     fromData.each(function (idx) {
-                        var lineModel = mlData.getItemModel(idx);
-                        var mlType = lineModel.get('type');
-                        var valueIndex = lineModel.get('valueIndex');
-                        updateSingleMarkerEndLayout(fromData, idx, true, mlType, valueIndex, seriesModel, api);
-                        updateSingleMarkerEndLayout(toData, idx, false, mlType, valueIndex, seriesModel, api);
+                        updateSingleMarkerEndLayout(fromData, idx, true, seriesModel, api);
+                        updateSingleMarkerEndLayout(toData, idx, false, seriesModel, api);
                     });
                     // Update layout of line
                     mlData.each(function (idx) {
@@ -266,11 +263,8 @@ define(function (require) {
 
             // Update visual and layout of from symbol and to symbol
             mlData.from.each(function (idx) {
-                var lineModel = lineData.getItemModel(idx);
-                var mlType = lineModel.get('type');
-                var valueIndex = lineModel.get('valueIndex');
-                updateDataVisualAndLayout(fromData, idx, true, mlType, valueIndex);
-                updateDataVisualAndLayout(toData, idx, false, mlType, valueIndex);
+                updateDataVisualAndLayout(fromData, idx, true);
+                updateDataVisualAndLayout(toData, idx, false);
             });
 
             // Update visual and layout of line
@@ -302,11 +296,11 @@ define(function (require) {
                 });
             });
 
-            function updateDataVisualAndLayout(data, idx, isFrom, mlType, valueIndex) {
+            function updateDataVisualAndLayout(data, idx, isFrom) {
                 var itemModel = data.getItemModel(idx);
 
                 updateSingleMarkerEndLayout(
-                    data, idx, isFrom, mlType, valueIndex, seriesModel, api
+                    data, idx, isFrom, seriesModel, api
                 );
 
                 data.setItemVisual(idx, {

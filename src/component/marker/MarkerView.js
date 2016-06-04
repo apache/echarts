@@ -2,7 +2,7 @@ define(function (require) {
 
     return require('../../echarts').extendComponentView({
 
-        type: 'markArea',
+        type: 'marker',
 
         init: function () {
             /**
