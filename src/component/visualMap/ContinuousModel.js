@@ -27,7 +27,9 @@ define(function(require) {
             realtime: true,         // Whether realtime update.
             itemHeight: null,       // The length of the range control edge.
             itemWidth: null,        // The length of the other side.
-            hoverLink: true         // Enable hover highlight.
+            hoverLink: true,        // Enable hover highlight.
+            hoverLinkDataSize: null,// The size of hovered data.
+            hoverLinkOnHandle: true // Whether trigger hoverLink when hover handle.
         },
 
         /**
