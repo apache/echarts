@@ -260,7 +260,7 @@ define(function(require) {
             var itemModel = data.getItemModel(dataIndex);
 
             var params = this.getDataParams(dataIndex, dataType);
-            if (dimIndex != null && zrUtil.isArray(params.value)) {
+            if (dimIndex != null && (params.value instanceof Array)) {
                 params.value = params.value[dimIndex];
             }
 
@@ -285,7 +285,7 @@ define(function(require) {
             var data = this.getData(dataType);
             var dataItem = data.getRawDataItem(idx);
             if (dataItem != null) {
-                return (zrUtil.isObject(dataItem) && !zrUtil.isArray(dataItem))
+                return (zrUtil.isObject(dataItem) && !(dataItem instanceof Array))
                     ? dataItem.value : dataItem;
             }
         },

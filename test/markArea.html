@@ -64,7 +64,7 @@
                             },
                             data: [
                                 [{
-                                    name: '某个区域',
+                                    name: 'x 3 - 5',
                                     xAxis: 3
                                 }, {
                                     xAxis: 5
@@ -79,13 +79,21 @@
                         data: data2,
 
                         markArea: {
-                            data: []
+                            label: {
+                                normal: {
+                                    position: 'right'
+                                }
+                            },
+                            data: [
+                                [{
+                                    name: 'y 0.5 - 0.7',
+                                    yAxis: 0.5
+                                }, {
+                                    yAxis: 0.7
+                                }]
+                            ]
                         }
                     }]
-                });
-
-                chart.on('click', function (params) {
-                    console.log(params, params.data);
                 });
 
             });

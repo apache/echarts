@@ -2,13 +2,8 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var List = require('../../data/List');
-    var formatUtil = require('../../util/format');
-    var modelUtil = require('../../util/model');
     var numberUtil = require('../../util/number');
     var graphic = require('../../util/graphic');
-
-    var addCommas = formatUtil.addCommas;
-    var encodeHTML = formatUtil.encodeHTML;
 
     var markerHelper = require('./markerHelper');
 
@@ -17,12 +12,14 @@ define(function (require) {
         var rb = markerHelper.dataTransform(seriesModel, item[1]);
         var retrieve = zrUtil.retrieve;
 
-        // TODO make sure lt is less than rb
-        lt.coord[0] = retrieve(lt.coord[0], -Infinity);
-        lt.coord[1] = retrieve(lt.coord[1], -Infinity);
+        // FIXME make sure lt is less than rb
+        var ltCoord = lt.coord;
+        var rbCoord = rb.coord;
+        ltCoord[0] = retrieve(ltCoord[0], -Infinity);
+        ltCoord[1] = retrieve(ltCoord[1], -Infinity);
 
-        rb.coord[0] = retrieve(rb.coord[0], Infinity);
-        rb.coord[1] = retrieve(rb.coord[1], Infinity);
+        rbCoord[0] = retrieve(rbCoord[0], Infinity);
+        rbCoord[1] = retrieve(rbCoord[1], Infinity);
 
         // Merge option into one
         var result = zrUtil.mergeAll([{}, lt, rb]);
@@ -107,11 +104,12 @@ define(function (require) {
             if (coordSys.type === 'cartesian2d') {
                 var xAxis = coordSys.getAxis('x');
                 var yAxis = coordSys.getAxis('y');
-                var dims = coordSys.dimensions;
-                if (isInifinity(data.get(dims[0], idx))) {
+                var x = data.get(dims[0], idx);
+                var y = data.get(dims[1], idx);
+                if (isInifinity(x)) {
                     point[0] = xAxis.toGlobalCoord(xAxis.getExtent()[dims[0] === 'x0' ? 0 : 1]);
                 }
-                else if (isInifinity(data.get(dims[1], idx))) {
+                else if (isInifinity(y)) {
                     point[1] = yAxis.toGlobalCoord(yAxis.getExtent()[dims[1] === 'y0' ? 0 : 1]);
                 }
             }
@@ -119,29 +117,6 @@ define(function (require) {
 
         return point;
     }
-
-    var markAreaFormatMixin = {
-        formatTooltip: function (dataIndex) {
-            var data = this._data;
-            var value = this.getRawValue(dataIndex);
-            var formattedValue = zrUtil.isArray(value)
-                ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
-            var name = data.getName(dataIndex);
-            return this.name + '<br />'
-                + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
-        },
-
-        getData: function () {
-            return this._data;
-        },
-
-        setData: function (data) {
-            this._data = data;
-        }
-    };
-
-    zrUtil.defaults(markAreaFormatMixin, modelUtil.dataFormatMixin);
-
     require('./MarkerView').extend({
 
         type: 'markArea',
@@ -173,7 +148,6 @@ define(function (require) {
             var areaData = createList(coordSys, seriesModel, maModel);
 
             // Line data for tooltip and formatter
-            zrUtil.extend(maModel, markAreaFormatMixin);
             maModel.setData(areaData);
 
             var dimPermutations = [['x0', 'y0'], ['x1', 'y0'], ['x1', 'y1'], ['x0', 'y1']];
@@ -208,7 +182,7 @@ define(function (require) {
                         shape: {
                             points: areaData.getItemLayout(newIdx)
                         }
-                    }, seriesModel, newIdx);
+                    }, maModel, newIdx);
                     polygonGroup.group.add(polygon);
                     areaData.setItemGraphicEl(newIdx, polygon);
                 })

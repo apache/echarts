@@ -2,12 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var List = require('../../data/List');
-    var formatUtil = require('../../util/format');
-    var modelUtil = require('../../util/model');
     var numberUtil = require('../../util/number');
-
-    var addCommas = formatUtil.addCommas;
-    var encodeHTML = formatUtil.encodeHTML;
 
     var markerHelper = require('./markerHelper');
 
@@ -176,28 +171,6 @@ define(function (require) {
         data.setItemLayout(idx, point);
     }
 
-    var markLineFormatMixin = {
-        formatTooltip: function (dataIndex) {
-            var data = this._data;
-            var value = this.getRawValue(dataIndex);
-            var formattedValue = zrUtil.isArray(value)
-                ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
-            var name = data.getName(dataIndex);
-            return this.name + '<br />'
-                + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
-        },
-
-        getData: function () {
-            return this._data;
-        },
-
-        setData: function (data) {
-            this._data = data;
-        }
-    };
-
-    zrUtil.defaults(markLineFormatMixin, modelUtil.dataFormatMixin);
-
     require('./MarkerView').extend({
 
         type: 'markLine',
@@ -249,7 +222,6 @@ define(function (require) {
             mlModel.__from = fromData;
             mlModel.__to = toData;
             // Line data for tooltip and formatter
-            zrUtil.extend(mlModel, markLineFormatMixin);
             mlModel.setData(lineData);
 
             var symbolType = mlModel.get('symbol');

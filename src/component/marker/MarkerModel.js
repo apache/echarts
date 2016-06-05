@@ -4,6 +4,10 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var env = require('zrender/core/env');
 
+    var formatUtil = require('../../util/format');
+    var addCommas = formatUtil.addCommas;
+    var encodeHTML = formatUtil.encodeHTML;
+
     function fillLabel(opt) {
         modelUtil.defaultEmphasis(
             opt.label,
@@ -84,8 +88,28 @@ define(function (require) {
                     seriesModel[modelPropName] = markerModel;
                 }, this);
             }
+        },
+
+        formatTooltip: function (dataIndex) {
+            var data = this.getData();
+            var value = this.getRawValue(dataIndex);
+            var formattedValue = zrUtil.isArray(value)
+                ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
+            var name = data.getName(dataIndex);
+            return this.name + '<br />'
+                + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
+        },
+
+        getData: function () {
+            return this._data;
+        },
+
+        setData: function (data) {
+            this._data = data;
         }
     });
+
+    zrUtil.mixin(MarkerModel, modelUtil.dataFormatMixin);
 
     return MarkerModel;
 });

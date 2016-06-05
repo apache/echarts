@@ -10,6 +10,8 @@ define(function (require) {
             tooltip: {
                 trigger: 'item'
             },
+            // markArea should fixed on the coordinate system
+            animation: false,
             label: {
                 normal: {
                     show: true,
@@ -22,7 +24,7 @@ define(function (require) {
             },
             itemStyle: {
                 normal: {
-                    opacity: 0.4
+                    opacity: 0.5
                 }
             }
         }

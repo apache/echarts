@@ -28,28 +28,15 @@
                 'echarts/component/tooltip',
                 'echarts/component/grid',
                 'echarts/component/axis',
-                'echarts/component/dataZoom'
+                'echarts/component/dataZoom',
+                'echarts/component/markArea'
             ], function (data, echarts) {
 
-                chart = echarts.init(document.getElementById('main'), null, {
-                    renderer: 'canvas'
-                });
-
-                var xAxisData = [];
-                var data1 = [];
-                var data2 = [];
-                var data3 = [];
-
-                for (var i = 0; i < 20; i++) {
-                    xAxisData.push('类目' + i);
-                    data1.push(Math.random() * 2);
-                    data2.push(Math.random() * 2);
-                    data3.push(Math.random() * 2);
-                }
+                var chart = echarts.init(document.getElementById('main'));
 
                 chart.setOption({
                     tooltip: {
-                        trigger: 'axis',
+                        trigger: 'axis'
                     },
                     legend: {
                         data: ['降水量', '流量']
@@ -60,6 +47,7 @@
                         borderWidth: 1,
                         right: '15%'
                     },
+                    animation: false,
                     xAxis: [
                         {
                             // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
@@ -112,6 +100,15 @@
                                 normal: {
                                      areaStyle: {}
                                 }
+                            },
+                            markArea: {
+                                data: [
+                                    [{
+                                        xAxis: 500
+                                    }, {
+                                        xAxis: 1500
+                                    }]
+                                ]
                             }
                         },
                         {
@@ -123,13 +120,17 @@
                                 normal: {
                                      areaStyle: {}
                                 }
+                            },
+                            markArea: {
+                                data: [
+                                    [{
+                                        yAxis: 50
+                                    }, {
+                                        yAxis: 100
+                                    }]
+                                ]
                             }
-                        },
-                        // {
-                        //     name: 'bar3',
-                        //     type: 'line',
-                        //     data: data3
-                        // }
+                        }
                     ],
                     dataZoom: [
                         {

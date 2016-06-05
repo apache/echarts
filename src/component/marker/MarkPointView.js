@@ -2,12 +2,7 @@ define(function (require) {
 
     var SymbolDraw = require('../../chart/helper/SymbolDraw');
     var zrUtil = require('zrender/core/util');
-    var formatUtil = require('../../util/format');
-    var modelUtil = require('../../util/model');
     var numberUtil = require('../../util/number');
-
-    var addCommas = formatUtil.addCommas;
-    var encodeHTML = formatUtil.encodeHTML;
 
     var List = require('../../data/List');
 
@@ -49,29 +44,6 @@ define(function (require) {
         });
     }
 
-    // FIXME
-    var markPointFormatMixin = {
-        formatTooltip: function (dataIndex) {
-            var data = this.getData();
-            var value = this.getRawValue(dataIndex);
-            var formattedValue = zrUtil.isArray(value)
-                ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
-            var name = data.getName(dataIndex);
-            return this.name + '<br />'
-                + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
-        },
-
-        getData: function () {
-            return this._data;
-        },
-
-        setData: function (data) {
-            this._data = data;
-        }
-    };
-
-    zrUtil.defaults(markPointFormatMixin, modelUtil.dataFormatMixin);
-
     require('./MarkerView').extend({
 
         type: 'markPoint',
@@ -100,7 +72,6 @@ define(function (require) {
             var mpData = createList(coordSys, seriesModel, mpModel);
 
             // FIXME
-            zrUtil.mixin(mpModel, markPointFormatMixin);
             mpModel.setData(mpData);
 
             updateMarkerLayout(mpModel.getData(), seriesModel, api);
