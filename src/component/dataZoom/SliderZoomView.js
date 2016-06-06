@@ -394,6 +394,7 @@ define(function (require) {
                 draggable: true,
                 cursor: 'move',
                 drift: bind(this._onDragMove, this, 'all'),
+                ondragstart: bind(this._showDataInfo, this, true),
                 ondragend: bind(this._onDragEnd, this),
                 onmouseover: bind(this._showDataInfo, this, true),
                 onmouseout: bind(this._showDataInfo, this, false),
@@ -575,8 +576,9 @@ define(function (require) {
             function setLabel(handleIndex) {
                 // Label
                 // Text should not transform by barGroup.
+                // Ignore handlers transform
                 var barTransform = graphic.getTransform(
-                    displaybles.handles[handleIndex], this.group
+                    displaybles.handles[handleIndex].parent, this.group
                 );
                 var direction = graphic.transformDirection(
                     handleIndex === 0 ? 'right' : 'left', barTransform
