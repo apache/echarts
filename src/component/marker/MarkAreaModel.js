@@ -6,7 +6,8 @@ define(function (require) {
 
         defaultOption: {
             zlevel: 0,
-            z: 5,
+            // PENDING
+            z: 1,
             tooltip: {
                 trigger: 'item'
             },
@@ -21,12 +22,11 @@ define(function (require) {
                     show: true,
                     position: 'top'
                 }
-            },
-            itemStyle: {
-                normal: {
-                    opacity: 0.4
-                }
             }
+            // itemStyle: {
+            //     normal: {
+            //     }
+            // }
         }
     });
 });

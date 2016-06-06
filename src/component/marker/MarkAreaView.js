@@ -5,6 +5,7 @@ define(function (require) {
     var List = require('../../data/List');
     var numberUtil = require('../../util/number');
     var graphic = require('../../util/graphic');
+    var colorUtil = require('zrender/tool/color');
 
     var markerHelper = require('./markerHelper');
 
@@ -211,11 +212,12 @@ define(function (require) {
                 var itemModel = areaData.getItemModel(idx);
                 var labelModel = itemModel.getModel('label.normal');
                 var labelHoverModel = itemModel.getModel('label.emphasis');
+                var color = areaData.getItemVisual(idx, 'color');
                 polygon.useStyle(
                     zrUtil.extend(
                         itemModel.getModel('itemStyle.normal').getItemStyle(),
                         {
-                            fill: areaData.getItemVisual(idx, 'color')
+                            fill: colorUtil.modifyAlpha(color, 0.4)
                         }
                     )
                 );
@@ -223,13 +225,14 @@ define(function (require) {
                 polygon.hoverStyle = itemModel.getModel('itemStyle.normal').getItemStyle();
 
                 var defaultValue = areaData.getName(idx) || '';
-                graphic.setText(polygon.style, labelModel, polygon.style.fill);
+                var textColor = color || polygon.style.fill;
+                graphic.setText(polygon.style, labelModel, textColor);
                 polygon.style.text = zrUtil.retrieve(
                     maModel.getFormattedLabel(idx, 'normal'),
                     defaultValue
                 );
 
-                graphic.setText(polygon.hoverStyle, labelHoverModel, polygon.style.fill);
+                graphic.setText(polygon.hoverStyle, labelHoverModel, textColor);
                 polygon.hoverStyle.text = zrUtil.retrieve(
                     maModel.getFormattedLabel(idx, 'emphasis'),
                     defaultValue
