@@ -65,7 +65,7 @@ define(function (require) {
              * @private
              * @type {number}
              */
-            this._halfHandleSize;
+            this._handleWidth;
 
             /**
              * @private
@@ -99,7 +99,11 @@ define(function (require) {
             );
 
             this._orient = dataZoomModel.get('orient');
-            this._halfHandleSize = mathRound(dataZoomModel.get('handleSize') / 2);
+
+            // PENDING
+            var path = graphic.makePath(dataZoomModel.get('handleIcon'), {}, { height: 1 }, 'center');
+            var bRect = path.getBoundingRect();
+            this._handleWidth = bRect.width / bRect.height * dataZoomModel.get('handleSize');
 
             if (this.dataZoomModel.get('show') === false) {
                 this.group.removeAll();
@@ -142,9 +146,10 @@ define(function (require) {
 
             var barGroup = this._displayables.barGroup = new graphic.Group();
 
+            this._renderHandle();
+
             this._renderBackground();
             this._renderDataShadow();
-            this._renderHandle();
 
             thisGroup.add(barGroup);
 
@@ -239,9 +244,9 @@ define(function (require) {
          */
         _getViewExtent: function () {
             // View total length.
-            var halfHandleSize = this._halfHandleSize;
-            var totalLength = mathMax(this._size[0], halfHandleSize * 4);
-            var extent = [halfHandleSize, totalLength - halfHandleSize];
+            var handleWidth = this._handleWidth;
+            var totalLength = mathMax(this._size[0], handleWidth * 4);
+            var extent = [0, totalLength];
 
             return extent;
         },
@@ -312,7 +317,7 @@ define(function (require) {
             });
 
             var dataZoomModel = this.dataZoomModel;
-            var dataBackgroundModel = dataZoomModel.getModel('dataBackground');
+            // var dataBackgroundModel = dataZoomModel.getModel('dataBackground');
             this._displayables.barGroup.add(new graphic.Polygon({
                 shape: {points: areaPoints},
                 style: zrUtil.defaults(
@@ -417,19 +422,34 @@ define(function (require) {
                 }
             })));
 
+            var iconStr = dataZoomModel.get('handleIcon');
             each([0, 1], function (handleIndex) {
-
-                barGroup.add(handles[handleIndex] = new Rect({
+                var path = graphic.makePath(iconStr, {
                     style: {
-                        fill: dataZoomModel.get('handleColor')
+                        strokeNoScale: true
                     },
+                    rectHover: true,
                     cursor: 'move',
                     draggable: true,
                     drift: bind(this._onDragMove, this, handleIndex),
                     ondragend: bind(this._onDragEnd, this),
                     onmouseover: bind(this._showDataInfo, this, true),
                     onmouseout: bind(this._showDataInfo, this, false)
-                }));
+                }, {
+                    x: -0.5,
+                    y: 0,
+                    width: 1,
+                    height: 1
+                }, 'center');
+
+                path.setStyle(dataZoomModel.getModel('handleStyle').getItemStyle());
+                var handleColor = dataZoomModel.get('handleColor');
+                // Compatitable with previous version
+                if (handleColor != null) {
+                    path.style.fill = handleColor;
+                }
+
+                barGroup.add(handles[handleIndex] = path);
 
                 var textStyleModel = dataZoomModel.textStyleModel;
 
@@ -495,20 +515,14 @@ define(function (require) {
             var handleEnds = this._handleEnds;
             var handleInterval = asc(handleEnds.slice());
             var size = this._size;
-            var halfHandleSize = this._halfHandleSize;
 
             each([0, 1], function (handleIndex) {
-
                 // Handles
                 var handle = displaybles.handles[handleIndex];
-                handle.setShape({
-                    x: handleEnds[handleIndex] - halfHandleSize,
-                    y: -1,
-                    width: halfHandleSize * 2,
-                    height: size[1] + 2,
-                    r: 1
+                handle.attr({
+                    scale: [size[1], size[1]],
+                    position: [handleEnds[handleIndex], 0]
                 });
-
             }, this);
 
             // Filler
@@ -569,7 +583,7 @@ define(function (require) {
                 var direction = graphic.transformDirection(
                     handleIndex === 0 ? 'right' : 'left', barTransform
                 );
-                var offset = this._halfHandleSize + LABEL_GAP;
+                var offset = this._handleWidth + LABEL_GAP;
                 var textPoint = graphic.applyTransform(
                     [
                         orderedHandleEnds[handleIndex] + (handleIndex === 0 ? -offset : offset),
