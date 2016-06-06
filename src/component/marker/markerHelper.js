@@ -173,9 +173,20 @@ define(function (require) {
     };
 
     var numCalculate = function (data, valueDataDim, type) {
-        return type === 'average'
-            ? data.getSum(valueDataDim, true) / data.count()
-            : data.getDataExtent(valueDataDim, true)[type === 'max' ? 1 : 0];
+        if (type === 'average') {
+            var sum = 0;
+            var count = 0;
+            data.each(valueDataDim, function (val, idx) {
+                if (!isNaN(val)) {
+                    sum += val;
+                    count++;
+                }
+            }, true);
+            return sum / count;
+        }
+        else {
+            return data.getDataExtent(valueDataDim, true)[type === 'max' ? 1 : 0];
+        }
     };
 
     return {
