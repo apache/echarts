@@ -106,7 +106,9 @@ define(function (require) {
                     html += ' : ';
                 }
             }
-            html += formattedValue;
+            if (value != null) {
+                html += formattedValue;
+            }
             return html;
         },
 

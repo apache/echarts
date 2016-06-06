@@ -37,6 +37,7 @@ require('./lib/component/visualMap');
 
 require('./lib/component/markPoint');
 require('./lib/component/markLine');
+require('./lib/component/markArea');
 
 require('./lib/component/timeline');
 require('./lib/component/toolbox');

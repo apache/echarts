@@ -200,7 +200,7 @@ define(function (require) {
                     areaData.setItemGraphicEl(newIdx, polygon);
                 })
                 .remove(function (idx) {
-                    var polygon = areaData.getItemGraphicEl(idx);
+                    var polygon = polygonGroup.__data.getItemGraphicEl(idx);
                     polygonGroup.group.remove(polygon);
                 })
                 .execute();
