@@ -11,7 +11,6 @@ define(function (require) {
     var sliderMove = require('../helper/sliderMove');
     var asc = numberUtil.asc;
     var bind = zrUtil.bind;
-    var mathRound = Math.round;
     var mathMax = Math.max;
     var each = zrUtil.each;
 
@@ -235,8 +234,7 @@ define(function (require) {
 
             // Position barGroup
             var rect = thisGroup.getBoundingRect([barGroup]);
-            thisGroup.position[0] = location.x - rect.x;
-            thisGroup.position[1] = location.y - rect.y;
+            thisGroup.attr('position', [location.x - rect.x, location.y - rect.y]);
         },
 
         /**
