@@ -264,8 +264,8 @@ define(function (require) {
                 labelsPosition[1] = mainPosition[1] + labelPosOpt;
             }
 
-            mainGroup.position = mainPosition;
-            labelGroup.position = labelsPosition;
+            mainGroup.attr('position', mainPosition);
+            labelGroup.attr('position', labelsPosition);
             mainGroup.rotation = labelGroup.rotation = layoutInfo.rotation;
 
             setOrigin(mainGroup);

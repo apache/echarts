@@ -29,7 +29,7 @@ define(function (require) {
             var rect = layoutInfo.rect;
             var boundaryGap = layoutInfo.boundaryGap;
 
-            group.position = [0, rect.y + boundaryGap[0]];
+            group.attr('position', [0, rect.y + boundaryGap[0]]);
 
             function keyGetter(item) {
                 return item.name;

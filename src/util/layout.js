@@ -275,10 +275,10 @@ define(function(require) {
             positionInfo, containerRect, margin
         );
 
-        group.position = [
+        group.attr('position', [
             positionInfo.x - groupRect.x,
             positionInfo.y - groupRect.y
-        ];
+        ]);
     };
 
     /**

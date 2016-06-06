@@ -33,7 +33,7 @@ define(function(require) {
             dataBackground: {
                 lineStyle: {
                     color: '#2f4554',
-                    width: 1,
+                    width: 0.5,
                     opacity: 0.3
                 },
                 areaStyle: {
@@ -45,13 +45,13 @@ define(function(require) {
                                                     // if dataBackgroundColor is set, borderColor
                                                     // is ignored.
 
-            fillerColor: 'rgba(89,170,216,0.15)',     // Color of selected area.
+            fillerColor: 'rgba(167,183,204,0.4)',     // Color of selected area.
             // handleColor: 'rgba(89,170,216,0.95)',     // Color of handle.
             // handleIcon: 'path://M4.9,17.8c0-1.4,4.5-10.5,5.5-12.4c0-0.1,0.6-1.1,0.9-1.1c0.4,0,0.9,1,0.9,1.1c1.1,2.2,5.4,11,5.4,12.4v17.8c0,1.5-0.6,2.1-1.3,2.1H6.1c-0.7,0-1.3-0.6-1.3-2.1V17.8z',
             handleIcon: 'path://M8.2,13.6V3.9H6.3v9.7H3.1v14.9h3.3v9.7h1.8v-9.7h3.3V13.6H8.2z M9.7,24.4H4.8v-1.4h4.9V24.4z M9.7,19.1H4.8v-1.4h4.9V19.1z',
             handleSize: 10,
             handleStyle: {
-                color: '#92B5D4'
+                color: '#a7b7cc'
             },
 
             labelPrecision: null,
