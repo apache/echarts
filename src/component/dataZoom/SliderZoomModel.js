@@ -27,7 +27,24 @@ define(function(require) {
             bottom: null, // Default align to grid rect.
 
             backgroundColor: 'rgba(47,69,84,0)',    // Background of slider zoom component.
-            dataBackgroundColor: '#ddd',            // Background of data shadow.
+            // dataBackgroundColor: '#ddd',         // Background coor of data shadow and border of box,
+                                                    // highest priority, remain for compatibility of
+                                                    // previous version, but not recommended any more.
+            dataBackground: {
+                lineStyle: {
+                    color: '#2f4554',
+                    width: 1,
+                    opacity: 0.3
+                },
+                areaStyle: {
+                    color: '#ddd',
+                    opacity: 0.3
+                }
+            },
+            borderColor: '#ddd',                    // border color of the box. For compatibility,
+                                                    // if dataBackgroundColor is set, borderColor
+                                                    // is ignored.
+
             fillerColor: 'rgba(47,69,84,0.15)',     // Color of selected area.
             handleColor: 'rgba(148,164,165,0.95)',     // Color of handle.
             handleSize: 10,

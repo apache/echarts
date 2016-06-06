@@ -286,7 +286,8 @@ define(function (require) {
 
             var thisShadowExtent = [0, size[0]];
 
-            var points = [[size[0], 0], [0, 0]];
+            var areaPoints = [[size[0], 0], [0, 0]];
+            var linePoints = [];
             var step = thisShadowExtent[1] / (data.count() - 1);
             var thisCoord = 0;
 
@@ -302,16 +303,30 @@ define(function (require) {
                 var otherCoord = (value == null || isNaN(value) || value === '')
                     ? null
                     : linearMap(value, otherDataExtent, otherShadowExtent, true);
-                otherCoord != null && points.push([thisCoord, otherCoord]);
+                if (otherCoord != null) {
+                    areaPoints.push([thisCoord, otherCoord]);
+                    linePoints.push([thisCoord, otherCoord]);
+                }
 
                 thisCoord += step;
             });
 
-            this._displayables.barGroup.add(new graphic.Polyline({
-                shape: {points: points},
-                style: {fill: this.dataZoomModel.get('dataBackgroundColor'), lineWidth: 0},
+            var dataZoomModel = this.dataZoomModel;
+            var dataBackgroundModel = dataZoomModel.getModel('dataBackground');
+            this._displayables.barGroup.add(new graphic.Polygon({
+                shape: {points: areaPoints},
+                style: zrUtil.defaults(
+                    {fill: dataZoomModel.get('dataBackgroundColor')},
+                    dataZoomModel.getModel('dataBackground.areaStyle').getAreaStyle()
+                ),
                 silent: true,
                 z2: -20
+            }));
+            this._displayables.barGroup.add(new graphic.Polyline({
+                shape: {points: linePoints},
+                style: dataZoomModel.getModel('dataBackground.lineStyle').getLineStyle(),
+                silent: true,
+                z2: -19
             }));
         },
 
@@ -370,6 +385,7 @@ define(function (require) {
             var handleLabels = displaybles.handleLabels = [];
             var barGroup = this._displayables.barGroup;
             var size = this._size;
+            var dataZoomModel = this.dataZoomModel;
 
             barGroup.add(displaybles.filler = new Rect({
                 draggable: true,
@@ -379,8 +395,7 @@ define(function (require) {
                 onmouseover: bind(this._showDataInfo, this, true),
                 onmouseout: bind(this._showDataInfo, this, false),
                 style: {
-                    fill: this.dataZoomModel.get('fillerColor'),
-                    // text: ':::',
+                    fill: dataZoomModel.get('fillerColor'),
                     textPosition : 'inside'
                 }
             }));
@@ -395,7 +410,8 @@ define(function (require) {
                     height: size[1]
                 },
                 style: {
-                    stroke: this.dataZoomModel.get('dataBackgroundColor'),
+                    stroke: dataZoomModel.get('dataBackgroundColor')
+                        || dataZoomModel.get('borderColor'),
                     lineWidth: DEFAULT_FRAME_BORDER_WIDTH,
                     fill: 'rgba(0,0,0,0)'
                 }
@@ -405,7 +421,7 @@ define(function (require) {
 
                 barGroup.add(handles[handleIndex] = new Rect({
                     style: {
-                        fill: this.dataZoomModel.get('handleColor')
+                        fill: dataZoomModel.get('handleColor')
                     },
                     cursor: 'move',
                     draggable: true,
@@ -415,7 +431,7 @@ define(function (require) {
                     onmouseout: bind(this._showDataInfo, this, false)
                 }));
 
-                var textStyleModel = this.dataZoomModel.textStyleModel;
+                var textStyleModel = dataZoomModel.textStyleModel;
 
                 this.group.add(
                     handleLabels[handleIndex] = new graphic.Text({
