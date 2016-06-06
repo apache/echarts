@@ -283,6 +283,8 @@ define(function (require) {
             }
 
             lineDraw.__keep = true;
+
+            lineDraw.group.silent = mlModel.get('silent') || seriesModel.get('silent');
         }
     });
 

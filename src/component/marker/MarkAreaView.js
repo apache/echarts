@@ -204,9 +204,6 @@ define(function (require) {
                 })
                 .execute();
 
-            polygonGroup.__data = areaData;
-
-
             areaData.eachItemGraphicEl(function (polygon, idx) {
                 var itemModel = areaData.getItemModel(idx);
                 var labelModel = itemModel.getModel('label.normal');
@@ -242,6 +239,10 @@ define(function (require) {
 
                 polygon.dataModel = maModel;
             });
+
+            polygonGroup.__data = areaData;
+
+            polygonGroup.group.silent = maModel.get('silent') || seriesModel.get('silent');
         }
     });
 

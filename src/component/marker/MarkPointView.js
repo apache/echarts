@@ -106,6 +106,8 @@ define(function (require) {
             });
 
             symbolDraw.__keep = true;
+
+            symbolDraw.group.silent = mpModel.get('silent') || seriesModel.get('silent');
         }
     });
 
