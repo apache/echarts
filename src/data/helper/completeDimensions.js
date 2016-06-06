@@ -37,7 +37,7 @@ define(function (require) {
 
     // The rule should not be complex, otherwise user might not
     // be able to known where the data is wrong.
-    function guessOrdinal(data, dimIndex) {
+    var guessOrdinal = completeDimensions.guessOrdinal = function (data, dimIndex) {
         for (var i = 0, len = data.length; i < len; i++) {
             var value = retrieveValue(data[i]);
 
@@ -54,7 +54,7 @@ define(function (require) {
             }
         }
         return false;
-    }
+    };
 
     function retrieveValue(o) {
         return zrUtil.isArray(o) ? o : zrUtil.isObject(o) ? o.value: o;

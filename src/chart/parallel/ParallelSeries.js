@@ -3,6 +3,7 @@ define(function(require) {
     var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
     var SeriesModel = require('../../model/Series');
+    var completeDimensions = require('../../data/helper/completeDimensions');
 
     return SeriesModel.extend({
 
@@ -21,7 +22,7 @@ define(function(require) {
 
             var dataDims = generateDataDims(modelDims, rawData);
 
-            var dataDimsInfo = zrUtil.map(dataDims, function (dim) {
+            var dataDimsInfo = zrUtil.map(dataDims, function (dim, dimIndex) {
 
                 var modelDimsIndex = zrUtil.indexOf(dim, modelDims);
                 var axisModel = modelDimsIndex >= 0 && ecModel.getComponent(
@@ -33,7 +34,9 @@ define(function(require) {
                     return {name: dim, type: 'ordinal'};
                 }
                 else if (modelDimsIndex < 0) {
-                    return {name: dim, type: 'unknown'};
+                    return completeDimensions.guessOrdinal(rawData, dimIndex)
+                        ? {name: dim, type: 'ordinal'}
+                        : dim;
                 }
                 else {
                     return dim;
