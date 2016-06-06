@@ -6,7 +6,7 @@ define(function (require) {
 
         defaultOption: {
             zlevel: 0,
-            z: 5,
+            z: 1,
             tooltip: {
                 trigger: 'item'
             },

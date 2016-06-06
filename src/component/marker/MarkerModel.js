@@ -96,8 +96,18 @@ define(function (require) {
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
             var name = data.getName(dataIndex);
-            return this.name + '<br />'
-                + ((name ? encodeHTML(name) + ' : ' : '') + formattedValue);
+            var html = this.name;
+            if (value != null || name) {
+                html += '<br />';
+            }
+            if (name) {
+                html += encodeHTML(name);
+                if (value != null) {
+                    html += ' : ';
+                }
+            }
+            html += formattedValue;
+            return html;
         },
 
         getData: function () {

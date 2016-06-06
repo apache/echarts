@@ -1,3 +1,4 @@
+// TODO Better on polar
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
