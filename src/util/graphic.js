@@ -200,7 +200,7 @@ define(function(require) {
     }
 
     function liftColor(color) {
-        return color instanceof Gradient ? color : colorTool.lift(color, -0.1);
+        return typeof color === 'string' ? colorTool.lift(color, -0.1) : color;
     }
 
     /**

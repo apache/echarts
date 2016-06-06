@@ -123,15 +123,9 @@ define(function(require) {
             },
             itemStyle: {
                 normal: {
-                    // color: 各异,
-                    borderColor: 'rgba(0,0,0,0)',
                     borderWidth: 1
                 },
-                emphasis: {
-                    // color: 各异,
-                    borderColor: 'rgba(0,0,0,0)',
-                    borderWidth: 1
-                }
+                emphasis: {}
             },
 
             animationEasing: 'cubicOut',
