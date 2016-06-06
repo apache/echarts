@@ -7,8 +7,6 @@ define(function (require) {
 
     var curry = zrUtil.curry;
 
-    var LEGEND_DISABLE_COLOR = '#ccc';
-
     function dispatchSelectAction(name, api) {
         api.dispatchAction({
             type: 'legendToggleSelect',
@@ -154,6 +152,7 @@ define(function (require) {
         ) {
             var itemWidth = legendModel.get('itemWidth');
             var itemHeight = legendModel.get('itemHeight');
+            var inactiveColor = legendModel.get('inactiveColor');
 
             var isSelected = legendModel.isSelected(name);
             var itemGroup = new graphic.Group();
@@ -165,7 +164,7 @@ define(function (require) {
             // Use user given icon first
             legendSymbolType = itemIcon || legendSymbolType;
             itemGroup.add(symbolCreator.createSymbol(
-                legendSymbolType, 0, 0, itemWidth, itemHeight, isSelected ? color : LEGEND_DISABLE_COLOR
+                legendSymbolType, 0, 0, itemWidth, itemHeight, isSelected ? color : inactiveColor
             ));
 
             // Compose symbols
@@ -181,7 +180,7 @@ define(function (require) {
                 // Put symbol in the center
                 itemGroup.add(symbolCreator.createSymbol(
                     symbolType, (itemWidth - size) / 2, (itemHeight - size) / 2, size, size,
-                    isSelected ? color : LEGEND_DISABLE_COLOR
+                    isSelected ? color : inactiveColor
                 ));
             }
 
@@ -202,7 +201,7 @@ define(function (require) {
                     text: name,
                     x: textX,
                     y: itemHeight / 2,
-                    fill: isSelected ? textStyleModel.getTextColor() : LEGEND_DISABLE_COLOR,
+                    fill: isSelected ? textStyleModel.getTextColor() : inactiveColor,
                     textFont: textStyleModel.getFont(),
                     textAlign: textAlign,
                     textVerticalAlign: 'middle'

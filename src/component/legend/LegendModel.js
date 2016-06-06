@@ -162,6 +162,10 @@ define(function(require) {
             itemWidth: 25,
             // 图例图形高度
             itemHeight: 14,
+
+            // 图例关闭时候的颜色
+            inactiveColor: '#ccc',
+
             textStyle: {
                 // 图例文字颜色
                 color: '#333'
