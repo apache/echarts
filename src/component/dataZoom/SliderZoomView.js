@@ -11,7 +11,7 @@ define(function (require) {
     var sliderMove = require('../helper/sliderMove');
     var asc = numberUtil.asc;
     var bind = zrUtil.bind;
-    var mathMax = Math.max;
+    // var mathMax = Math.max;
     var each = zrUtil.each;
 
     // Constants
@@ -98,11 +98,6 @@ define(function (require) {
             );
 
             this._orient = dataZoomModel.get('orient');
-
-            // PENDING
-            var path = graphic.makePath(dataZoomModel.get('handleIcon'), {}, { height: 1 }, 'center');
-            var bRect = path.getBoundingRect();
-            this._handleWidth = bRect.width / bRect.height * dataZoomModel.get('handleSize');
 
             if (this.dataZoomModel.get('show') === false) {
                 this.group.removeAll();
@@ -241,10 +236,7 @@ define(function (require) {
          * @private
          */
         _getViewExtent: function () {
-            // View total length.
-            var handleWidth = this._handleWidth;
-            var totalLength = mathMax(this._size[0], handleWidth * 4);
-            var extent = [0, totalLength];
+            var extent = [0, this._size[0]];
 
             return extent;
         },
@@ -441,6 +433,10 @@ define(function (require) {
                     height: 1
                 }, 'center');
 
+                var bRect = path.getBoundingRect();
+                this._handleHeight = numberUtil.parsePercent(dataZoomModel.get('handleSize'), this._size[1]);
+                this._handleWidth = bRect.width / bRect.height * this._handleHeight;
+
                 path.setStyle(dataZoomModel.getModel('handleStyle').getItemStyle());
                 var handleColor = dataZoomModel.get('handleColor');
                 // Compatitable with previous version
@@ -518,9 +514,10 @@ define(function (require) {
             each([0, 1], function (handleIndex) {
                 // Handles
                 var handle = displaybles.handles[handleIndex];
+                var handleHeight = this._handleHeight;
                 handle.attr({
-                    scale: [size[1], size[1]],
-                    position: [handleEnds[handleIndex], 0]
+                    scale: [handleHeight, handleHeight],
+                    position: [handleEnds[handleIndex], size[1] / 2 - handleHeight / 2]
                 });
             }, this);
 
@@ -529,7 +526,7 @@ define(function (require) {
                 x: handleInterval[0],
                 y: 0,
                 width: handleInterval[1] - handleInterval[0],
-                height: this._size[1]
+                height: size[1]
             });
 
             this._updateDataInfo();
@@ -583,7 +580,7 @@ define(function (require) {
                 var direction = graphic.transformDirection(
                     handleIndex === 0 ? 'right' : 'left', barTransform
                 );
-                var offset = this._handleWidth + LABEL_GAP;
+                var offset = this._handleWidth / 2 + LABEL_GAP;
                 var textPoint = graphic.applyTransform(
                     [
                         orderedHandleEnds[handleIndex] + (handleIndex === 0 ? -offset : offset),
