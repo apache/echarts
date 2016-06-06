@@ -118,6 +118,9 @@ define(function (require) {
 
         return point;
     }
+
+    var dimPermutations = [['x0', 'y0'], ['x1', 'y0'], ['x1', 'y1'], ['x0', 'y1']];
+
     require('./MarkerView').extend({
 
         type: 'markArea',
@@ -126,7 +129,16 @@ define(function (require) {
             ecModel.eachSeries(function (seriesModel) {
                 var maModel = seriesModel.markAreaModel;
                 if (maModel) {
-                    // TODO
+                    var areaData = maModel.getData();
+                    areaData.each(function (idx) {
+                        var points = zrUtil.map(dimPermutations, function (dim) {
+                            return getSingleMarkerEndPoint(areaData, idx, dim, seriesModel, api);
+                        });
+                        // Layout
+                        areaData.setItemLayout(idx, points);
+                        var el = areaData.getItemGraphicEl(idx);
+                        el.setShape('points', points);
+                    });
                 }
             }, this);
         },
@@ -151,7 +163,6 @@ define(function (require) {
             // Line data for tooltip and formatter
             maModel.setData(areaData);
 
-            var dimPermutations = [['x0', 'y0'], ['x1', 'y0'], ['x1', 'y1'], ['x0', 'y1']];
             // Update visual and layout of line
             areaData.each(function (idx) {
                 // Layout

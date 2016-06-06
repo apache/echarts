@@ -6,7 +6,7 @@ define(function (require) {
 
         defaultOption: {
             zlevel: 0,
-            z: 1,
+            z: 5,
             tooltip: {
                 trigger: 'item'
             },
@@ -24,7 +24,7 @@ define(function (require) {
             },
             itemStyle: {
                 normal: {
-                    opacity: 0.5
+                    opacity: 0.4
                 }
             }
         }
