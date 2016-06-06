@@ -56,6 +56,11 @@ define(function(require) {
 
         var dimValueGetter = (categoryAxisModel && ifNeedCompleteOrdinalData(data))
             ? function (itemOpt, dimName, dataIndex, dimIndex) {
+                // If any dataItem is like { value: 10 }
+                if (modelUtil.isDataItemOption(itemOpt)) {
+                    list.hasItemOption = true;
+                }
+
                 // Use dataIndex as ordinal value in categoryAxis
                 return dimIndex === categoryDimIndex
                     ? dataIndex
@@ -64,6 +69,11 @@ define(function(require) {
             : function (itemOpt, dimName, dataIndex, dimIndex) {
                 var value = getDataItemValue(itemOpt);
                 var val = converDataValue(value && value[dimIndex], dimensions[dimIndex]);
+                // If any dataItem is like { value: 10 }
+                if (modelUtil.isDataItemOption(itemOpt)) {
+                    list.hasItemOption = true;
+                }
+
                 if (categoryDimIndex === dimIndex) {
                     // If given value is a category string
                     if (typeof val === 'string') {
@@ -79,6 +89,7 @@ define(function(require) {
                 return val;
             };
 
+        list.hasItemOption = false;
         list.initData(data, nameList, dimValueGetter);
 
         return list;

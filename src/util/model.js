@@ -188,6 +188,15 @@ define(function(require) {
     };
 
     /**
+     * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
+     * This helper method determine if dataItem has extra option besides value
+     * @param {string|number|Date|Array|Object} dataItem
+     */
+    modelUtil.isDataItemOption = function (dataItem) {
+        return zrUtil.isObject(dataItem) && !(dataItem instanceof Array);
+    };
+
+    /**
      * This helper method convert value in data.
      * @param {string|number|Date} value
      * @param {Object|string} [dimInfo] If string (like 'x'), dimType defaults 'number'.

@@ -100,6 +100,16 @@ define(function (require) {
             var height = yAxis.getBandWidth();
 
             var data = seriesModel.getData();
+
+            var itemStyleQuery = 'itemStyle.normal';
+            var hoverItemStyleQuery = 'itemStyle.emphasis';
+            var labelQuery = 'label.normal';
+            var hoverLabelQuery = 'label.emphasis';
+            var style = seriesModel.getModel(itemStyleQuery).getItemStyle(['color']);
+            var hoverStl = seriesModel.getModel(hoverItemStyleQuery).getItemStyle();
+            var labelModel = seriesModel.getModel('label.normal');
+            var hoverLabelModel = seriesModel.getModel('label.emphasis');
+
             data.each(['x', 'y', 'z'], function (x, y, z, idx) {
                 var itemModel = data.getItemModel(idx);
                 var point = cartesian.dataToPoint([x, y]);
@@ -119,21 +129,24 @@ define(function (require) {
                         opacity: data.getItemVisual(idx, 'opacity')
                     }
                 });
-                var style = itemModel.getModel('itemStyle.normal').getItemStyle(['color']);
-                var hoverStl = itemModel.getModel('itemStyle.emphasis').getItemStyle();
-                var labelModel = itemModel.getModel('label.normal');
-                var hoverLabelModel = itemModel.getModel('label.emphasis');
+                // Optimization for large datset
+                if (data.hasItemOption) {
+                    style = itemModel.getModel(itemStyleQuery).getItemStyle(['color']);
+                    hoverStl = itemModel.getModel(hoverItemStyleQuery).getItemStyle();
+                    labelModel = itemModel.getModel(labelQuery);
+                    hoverLabelModel = itemModel.getModel(hoverLabelQuery);
+                }
 
                 var rawValue = seriesModel.getRawValue(idx);
                 var defaultText = '-';
                 if (rawValue && rawValue[2] != null) {
                     defaultText = rawValue[2];
                 }
-                if (labelModel.get('show')) {
+                if (labelModel.getShallow('show')) {
                     graphic.setText(style, labelModel);
                     style.text = seriesModel.getFormattedLabel(idx, 'normal') || defaultText;
                 }
-                if (hoverLabelModel.get('show')) {
+                if (hoverLabelModel.getShallow('show')) {
                     graphic.setText(hoverStl, hoverLabelModel);
                     hoverStl.text = seriesModel.getFormattedLabel(idx, 'emphasis') || defaultText;
                 }

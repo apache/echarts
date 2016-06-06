@@ -28,12 +28,12 @@ define(function (require) {
     var modelUtil = require('../util/model');
     var isObject = zrUtil.isObject;
 
-    var IMMUTABLE_PROPERTIES = [
-        'stackedOn', '_nameList', '_idList', '_rawData'
+    var TRANSFERABLE_PROPERTIES = [
+        'stackedOn', 'hasItemOption', '_nameList', '_idList', '_rawData'
     ];
 
-    var transferImmuProperties = function (a, b) {
-        zrUtil.each(IMMUTABLE_PROPERTIES.concat(b.__wrappedMethods || []), function (propName) {
+    var transferProperties = function (a, b) {
+        zrUtil.each(TRANSFERABLE_PROPERTIES.concat(b.__wrappedMethods || []), function (propName) {
             if (b.hasOwnProperty(propName)) {
                 a[propName] = b[propName];
             }
@@ -185,6 +185,11 @@ define(function (require) {
     var listProto = List.prototype;
 
     listProto.type = 'list';
+    /**
+     * If each data item has it's own option
+     * @type {boolean}
+     */
+    listProto.hasItemOption = true;
 
     /**
      * Get dimension name
@@ -244,11 +249,19 @@ define(function (require) {
             storage[dimensions[i]] = new DataCtor(size);
         }
 
+        var self = this;
+        if (!dimValueGetter) {
+            self.hasItemOption = false;
+        }
         // Default dim value getter
         dimValueGetter = dimValueGetter || function (dataItem, dimName, dataIndex, dimIndex) {
             var value = modelUtil.getDataItemValue(dataItem);
+            // If any dataItem is like { value: 10 }
+            if (modelUtil.isDataItemOption(dataItem)) {
+                self.hasItemOption = true;
+            }
             return modelUtil.converDataValue(
-                zrUtil.isArray(value)
+                (value instanceof Array)
                     ? value[dimIndex]
                     // If value is a single number or something else not array.
                     : value,
@@ -697,7 +710,7 @@ define(function (require) {
             original.hostModel
         );
         // FIXME If needs stackedOn, value may already been stacked
-        transferImmuProperties(list, original);
+        transferProperties(list, original);
 
         var storage = list._storage = {};
         var originalStorage = original._storage;
@@ -1024,7 +1037,7 @@ define(function (require) {
         // FIXME
         list._storage = this._storage;
 
-        transferImmuProperties(list, this);
+        transferProperties(list, this);
 
         list.indices = this.indices.slice();
 
