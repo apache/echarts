@@ -172,9 +172,8 @@ define(function (require) {
                 }));
 
                 // Visual
-                var itemModel = areaData.getItemModel(idx);
                 areaData.setItemVisual(idx, {
-                    color: itemModel.get('itemStyle.normal.color') || seriesData.getVisual('color')
+                    color: seriesData.getVisual('color')
                 });
             });
 
@@ -214,10 +213,11 @@ define(function (require) {
                 var labelHoverModel = itemModel.getModel('label.emphasis');
                 var color = areaData.getItemVisual(idx, 'color');
                 polygon.useStyle(
-                    zrUtil.extend(
+                    zrUtil.defaults(
                         itemModel.getModel('itemStyle.normal').getItemStyle(),
                         {
-                            fill: colorUtil.modifyAlpha(color, 0.4)
+                            fill: colorUtil.modifyAlpha(color, 0.4),
+                            stroke: color
                         }
                     )
                 );

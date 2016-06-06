@@ -22,11 +22,15 @@ define(function (require) {
                     show: true,
                     position: 'top'
                 }
+            },
+            itemStyle: {
+                normal: {
+                    // color and borderColor default to use color from series
+                    // color: 'auto'
+                    // borderColor: 'auto'
+                    borderWidth: 0
+                }
             }
-            // itemStyle: {
-            //     normal: {
-            //     }
-            // }
         }
     });
 });
