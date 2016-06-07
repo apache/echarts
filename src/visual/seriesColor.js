@@ -20,6 +20,7 @@ define(function (require) {
                     });
                 }
 
+                // itemStyle in each data item
                 data.each(function (idx) {
                     var itemModel = data.getItemModel(idx);
                     var color = itemModel.get(colorAccessPath, true);
