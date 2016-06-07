@@ -59,7 +59,7 @@ define(function (require) {
                 .execute();
 
             // Update style
-            updateElCommon(data, null, smooth);
+            updateElCommon(data, smooth);
 
             // First create
             if (!this._data) {
@@ -155,12 +155,13 @@ define(function (require) {
 
     function createLinePoints(data, dataIndex, dimensions, coordSys) {
         var points = [];
-        zrUtil.each(dimensions, function (dimName) {
+        for (var i = 0; i < dimensions.length; i++) {
+            var dimName = dimensions[i];
             var value = data.get(dimName, dataIndex);
             if (!isEmptyValue(value, coordSys.getAxis(dimName).type)) {
                 points.push(coordSys.dataToPoint(value, dimName));
             }
-        });
+        }
         return points;
     }
 
@@ -175,20 +176,24 @@ define(function (require) {
         data.setItemGraphicEl(dataIndex, line);
     }
 
-    function updateElCommon(data, progressive, smooth) {
+    function updateElCommon(data, smooth) {
+        var seriesStyleModel = data.hostModel.getModel('lineStyle.normal');
+        var lineStyle = seriesStyleModel.getLineStyle();
         data.eachItemGraphicEl(function (line, dataIndex) {
-            var itemModel = data.getItemModel(dataIndex);
-            var lineStyleModel = itemModel.getModel('lineStyle.normal');
+            if (data.hasItemOption) {
+                var itemModel = data.getItemModel(dataIndex);
+                var lineStyleModel = itemModel.getModel('lineStyle.normal', seriesStyleModel);
+                lineStyle = lineStyleModel.getLineStyle();
+            }
 
             line.useStyle(zrUtil.extend(
-                lineStyleModel.getLineStyle(),
+                lineStyle,
                 {
                     fill: null,
                     stroke: data.getItemVisual(dataIndex, 'color'),
                     opacity: data.getItemVisual(dataIndex, 'opacity')
                 }
             ));
-            // line.progressive = progressive ? Math.round(dataIndex / progressive) : -1;
             line.shape.smooth = smooth;
         });
     }

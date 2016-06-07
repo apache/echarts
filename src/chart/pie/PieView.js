@@ -141,6 +141,7 @@ define(function (require) {
         sector.useStyle(
             zrUtil.defaults(
                 {
+                    lineJoin: 'bevel',
                     fill: visualColor
                 },
                 itemStyleModel.getModel('normal').getItemStyle()
