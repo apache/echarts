@@ -1,3 +1,4 @@
+// FIXME step not support polar
 define(function(require) {
 
     'use strict';
@@ -269,7 +270,8 @@ define(function(require) {
 
             group.add(lineGroup);
 
-            var step = seriesModel.get('step');
+            // FIXME step not support polar
+            var step = !isCoordSysPolar && seriesModel.get('step');
             // Initialization animation or coordinate system changed
             if (
                 !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
