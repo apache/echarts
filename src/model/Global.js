@@ -166,7 +166,7 @@ define(function (require) {
                     // ComponentModel.getAllClassMainTypes.
                     if (!newCptOption) {
                         componentModel.mergeOption({}, this);
-                        componentModel.optionUpdated(this);
+                        componentModel.optionUpdated({}, false);
                     }
                     else {
                         var ComponentModelClass = ComponentModel.getClass(
@@ -175,7 +175,7 @@ define(function (require) {
 
                         if (componentModel && componentModel instanceof ComponentModelClass) {
                             componentModel.mergeOption(newCptOption, this);
-                            componentModel.optionUpdated(this);
+                            componentModel.optionUpdated(newCptOption, false);
                         }
                         else {
                             // PENDING Global as parent ?
@@ -190,7 +190,7 @@ define(function (require) {
                                 )
                             );
                             // Call optionUpdated after init
-                            componentModel.optionUpdated(this);
+                            componentModel.optionUpdated(newCptOption, true);
                         }
                     }
 

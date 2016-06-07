@@ -1,6 +1,6 @@
 define(function(require) {
 
-    var VisualMapView = require('./VisualMapView');
+    var ControllerView = require('./ControllerView');
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
@@ -10,7 +10,6 @@ define(function(require) {
     var modelUtil = require('../../util/model');
 
     var linearMap = numberUtil.linearMap;
-    var convertDataIndicesToBatch = helper.convertDataIndicesToBatch;
     var each = zrUtil.each;
     var mathMin = Math.min;
     var mathMax = Math.max;
@@ -27,7 +26,7 @@ define(function(require) {
     // high data value: this._dataInterval[1] and has high coord.
     // The logic of transform is implemented in this._createBarGroup.
 
-    var ContinuousVisualMapView = VisualMapView.extend({
+    var ContinuousView = ControllerView.extend({
 
         type: 'visualMap.continuous',
 
@@ -36,7 +35,7 @@ define(function(require) {
          */
         init: function () {
 
-            VisualMapView.prototype.init.apply(this, arguments);
+            ContinuousView.superApply(this, 'init', arguments);
 
             /**
              * @private
@@ -677,16 +676,13 @@ define(function(require) {
             // When realtime is set as true, highlight will not show when hover
             // handle, because the label on handle, which displays a exact value
             // but not range, might mislead users.
-            var oldBatch = convertDataIndicesToBatch(this._hoverLinkDataIndices);
+            var oldBatch = this._hoverLinkDataIndices;
             var newBatch = [];
             if (hoverOnBar || useHoverLinkOnHandle(visualMapModel)) {
-                this._hoverLinkDataIndices = visualMapModel.findTargetDataIndices(valueRange);
-                newBatch = convertDataIndicesToBatch(this._hoverLinkDataIndices);
+                newBatch = this._hoverLinkDataIndices = visualMapModel.findTargetDataIndices(valueRange);
             }
-            var resultBatches = modelUtil.removeDuplicate(oldBatch, newBatch, function (item) {
-                return item.seriesIndex + '-' + item.dataIndex;
-            });
 
+            var resultBatches = modelUtil.compressBatches(oldBatch, newBatch);
             this._dispatchHighDown('downplay', resultBatches[0]);
             this._dispatchHighDown('highlight', resultBatches[1]);
         },
@@ -726,7 +722,7 @@ define(function(require) {
 
             var indices = this._hoverLinkDataIndices;
 
-            this._dispatchHighDown('downplay', convertDataIndicesToBatch(indices));
+            this._dispatchHighDown('downplay', indices);
 
             indices.length = 0;
         },
@@ -822,5 +818,5 @@ define(function(require) {
         return !visualMapModel.get('realtime') && visualMapModel.get('hoverLinkOnHandle');
     }
 
-    return ContinuousVisualMapView;
+    return ContinuousView;
 });

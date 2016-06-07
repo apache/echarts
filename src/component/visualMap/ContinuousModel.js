@@ -3,14 +3,14 @@
  */
 define(function(require) {
 
-    var VisualMapModel = require('./VisualMapModel');
+    var ControllerModel = require('./ControllerModel');
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
 
     // Constant
     var DEFAULT_BAR_BOUND = [20, 140];
 
-    var ContinuousModel = VisualMapModel.extend({
+    var ContinuousModel = ControllerModel.extend({
 
         type: 'visualMap.continuous',
 
@@ -35,15 +35,19 @@ define(function(require) {
         /**
          * @override
          */
-        doMergeOption: function (newOption, isInit) {
-            ContinuousModel.superApply(this, 'doMergeOption', arguments);
+        optionUpdated: function (newOption, isInit) {
+            ContinuousModel.superApply(this, 'optionUpdated', arguments);
 
-            this.resetTargetSeries(newOption, isInit);
+            this.resetTargetSeries();
             this.resetExtent();
 
-            this.resetVisual(function (mappingOption) {
+            this.resetVisual('controller', this.controllerVisuals, fillVisualOption);
+            this.resetVisual('target', this.targetVisuals, fillVisualOption);
+
+            function fillVisualOption(mappingOption) {
                 mappingOption.mappingMethod = 'linear';
-            });
+                mappingOption.dataExtent = this.getExtent();
+            }
 
             this._resetRange();
         },
@@ -53,7 +57,7 @@ define(function(require) {
          * @override
          */
         resetItemSize: function () {
-            VisualMapModel.prototype.resetItemSize.apply(this, arguments);
+            ContinuousModel.superApply(this, 'resetItemSize', arguments);
 
             var itemSize = this.itemSize;
 
@@ -90,7 +94,7 @@ define(function(require) {
          * @override
          */
         completeVisualOption: function () {
-            VisualMapModel.prototype.completeVisualOption.apply(this, arguments);
+            ControllerModel.prototype.completeVisualOption.apply(this, arguments);
 
             zrUtil.each(this.stateList, function (state) {
                 var symbolSize = this.option.controller[state].symbolSize;
@@ -160,7 +164,7 @@ define(function(require) {
                     range[0] <= value && value <= range[1] && dataIndices.push(dataIndex);
                 }, true, this);
 
-                result.push({seriesId: seriesModel.id, dataIndices: dataIndices});
+                result.push({seriesId: seriesModel.id, dataIndex: dataIndices});
             }, this);
 
             return result;

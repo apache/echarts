@@ -3,7 +3,6 @@ define(function(require) {
     var formatUtil = require('./format');
     var nubmerUtil = require('./number');
     var zrUtil = require('zrender/core/util');
-    var DataDiffer = require('../data/DataDiffer');
 
     var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
 
@@ -65,7 +64,7 @@ define(function(require) {
      * @return {Array} [value] or value
      */
     modelUtil.normalizeToArray = function (value) {
-        return zrUtil.isArray(value)
+        return value instanceof Array
             ? value
             : value == null
             ? []
@@ -401,29 +400,56 @@ define(function(require) {
     };
 
     /**
-     * @param {Array} collectionA
-     * @param {Array} collectionB
-     * @param {Function} getKey
-     * @return {Array.<Array, Array>} result: [resultCollectionA, resultCollectionB]
+     * A helper for removing duplicate items between batchA and batchB,
+     * and in themselves, and categorize by series.
+     *
+     * @param {Array.<Object>} batchA Like: [{seriesId: 2, dataIndex: [32, 4, 5]}, ...]
+     * @param {Array.<Object>} batchB Like: [{seriesId: 2, dataIndex: [32, 4, 5]}, ...]
+     * @return {Array.<Array.<Object>, Array.<Object>>} result: [resultBatchA, resultBatchB]
      */
-    modelUtil.removeDuplicate = function (collectionA, collectionB, getKey) {
-        var result = [[], []];
+    modelUtil.compressBatches = function (batchA, batchB) {
+        var mapA = {};
+        var mapB = {};
 
-        (new DataDiffer(collectionA || [], collectionB || [], getKey, getKey))
-            .add(add)
-            .update(zrUtil.noop)
-            .remove(remove)
-            .execute();
+        makeMap(batchA || [], mapA);
+        makeMap(batchB || [], mapB, mapA);
 
-        function add(index) {
-            result[1].push(collectionB[index]);
+        return [mapToArray(mapA), mapToArray(mapB)];
+
+        function makeMap(sourceBatch, map, otherMap) {
+            for (var i = 0, len = sourceBatch.length; i < len; i++) {
+                var seriesId = sourceBatch[i].seriesId;
+                var dataIndices = modelUtil.normalizeToArray(sourceBatch[i].dataIndex);
+                var otherDataIndices = otherMap && otherMap[seriesId];
+
+                for (var j = 0, lenj = dataIndices.length; j < lenj; j++) {
+                    var dataIndex = dataIndices[j];
+
+                    if (otherDataIndices && otherDataIndices[dataIndex]) {
+                        otherDataIndices[dataIndex] = null;
+                    }
+                    else {
+                        (map[seriesId] || (map[seriesId] = {}))[dataIndex] = 1;
+                    }
+                }
+            }
         }
 
-        function remove(index) {
-            result[0].push(collectionA[index]);
+        function mapToArray(map, isData) {
+            var result = [];
+            for (var i in map) {
+                if (map.hasOwnProperty(i) && map[i] != null) {
+                    if (isData) {
+                        result.push(+i);
+                    }
+                    else {
+                        var dataIndices = mapToArray(map[i], true);
+                        dataIndices.length && result.push({seriesId: i, dataIndex: dataIndices});
+                    }
+                };
+            }
+            return result;
         }
-
-        return result;
     };
 
     return modelUtil;

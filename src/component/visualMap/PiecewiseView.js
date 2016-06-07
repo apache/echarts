@@ -1,13 +1,13 @@
 define(function(require) {
 
-    var VisualMapView = require('./VisualMapView');
+    var ControllerView = require('./ControllerView');
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var symbolCreators = require('../../util/symbol');
     var layout = require('../../util/layout');
     var helper = require('./helper');
 
-    var PiecewiseVisualMapView = VisualMapView.extend({
+    var PiecewiseVisualMapView = ControllerView.extend({
 
         type: 'visualMap.piecewise',
 
@@ -94,9 +94,7 @@ define(function(require) {
 
                 visualMapModel.option.hoverLink && this.api.dispatchAction({
                     type: method,
-                    batch: helper.convertDataIndicesToBatch(
-                        visualMapModel.findTargetDataIndices(pieceIndex)
-                    )
+                    batch: visualMapModel.findTargetDataIndices(pieceIndex)
                 });
             }
         },

@@ -1,7 +1,6 @@
 define(function(require) {
 
     var layout = require('../../util/layout');
-    var zrUtil = require('zrender/core/util');
 
     var helper = {
 
@@ -43,16 +42,6 @@ define(function(require) {
                 (rect.margin[rParam[2]] || 0) + rect[rParam[0]] + rect[rParam[1]] * 0.5
                     < ecSize[rParam[1]] * 0.5 ? 0 : 1
             ];
-        },
-
-        convertDataIndicesToBatch: function (dataIndicesBySeries) {
-            var batch = [];
-            zrUtil.each(dataIndicesBySeries, function (item) {
-                zrUtil.each(item.dataIndices, function (dataIndex) {
-                    batch.push({seriesId: item.seriesId, dataIndex: dataIndex});
-                });
-            });
-            return batch;
         }
 
     };

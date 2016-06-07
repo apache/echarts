@@ -1,10 +1,10 @@
 define(function(require) {
 
-    var VisualMapModel = require('./VisualMapModel');
+    var ControllerModel = require('./ControllerModel');
     var zrUtil = require('zrender/core/util');
     var VisualMapping = require('../../visual/VisualMapping');
 
-    var PiecewiseModel = VisualMapModel.extend({
+    var PiecewiseModel = ControllerModel.extend({
 
         type: 'visualMap.piecewise',
 
@@ -60,8 +60,8 @@ define(function(require) {
         /**
          * @override
          */
-        doMergeOption: function (newOption, isInit) {
-            PiecewiseModel.superApply(this, 'doMergeOption', arguments);
+        optionUpdated: function (newOption, isInit) {
+            PiecewiseModel.superApply(this, 'optionUpdated', arguments);
 
             /**
              * The order is always [low, ..., high].
@@ -71,7 +71,7 @@ define(function(require) {
              */
             this._pieceList = [];
 
-            this.resetTargetSeries(newOption, isInit);
+            this.resetTargetSeries();
             this.resetExtent();
 
             /**
@@ -85,12 +85,17 @@ define(function(require) {
             this._resetSelected(newOption, isInit);
 
             var categories = this.option.categories;
-            this.resetVisual(function (mappingOption, state) {
+
+            this.resetVisual('controller', this.controllerVisuals, fillVisualOption);
+            this.resetVisual('target', this.targetVisuals, fillVisualOption);
+
+            function fillVisualOption(mappingOption, state) {
                 if (mode === 'categories') {
                     mappingOption.mappingMethod = 'category';
                     mappingOption.categories = zrUtil.clone(categories);
                 }
                 else {
+                    mappingOption.dataExtent = this.getExtent();
                     mappingOption.mappingMethod = 'piecewise';
                     mappingOption.pieceList = zrUtil.map(this._pieceList, function (piece) {
                         var piece = zrUtil.clone(piece);
@@ -100,7 +105,7 @@ define(function(require) {
                         return piece;
                     });
                 }
-            });
+            }
         },
 
         _resetSelected: function (newOption, isInit) {
@@ -204,7 +209,7 @@ define(function(require) {
                     pIdx === pieceIndex && dataIndices.push(dataIndex);
                 }, true, this);
 
-                result.push({seriesId: seriesModel.id, dataIndices: dataIndices});
+                result.push({seriesId: seriesModel.id, dataIndex: dataIndices});
             }, this);
 
             return result;
