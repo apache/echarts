@@ -1301,6 +1301,9 @@ define(function (require) {
     // --------
     // Exports
     // --------
+    //
+    echarts.List = require('./data/List');
+    echarts.Model = require('./model/Model');
 
     echarts.graphic = require('./util/graphic');
     echarts.number = require('./util/number');
