@@ -2,7 +2,6 @@ define(function(require) {
 
     var layout = require('../../util/layout');
     var zrUtil = require('zrender/core/util');
-    var DataDiffer = require('../../data/DataDiffer');
 
     var helper = {
 
@@ -54,31 +53,8 @@ define(function(require) {
                 });
             });
             return batch;
-        },
-
-        removeDuplicateBatch: function (batchA, batchB) {
-            var result = [[], []];
-
-            (new DataDiffer(batchA, batchB, getKey, getKey))
-                .add(add)
-                .update(zrUtil.noop)
-                .remove(remove)
-                .execute();
-
-            function getKey(item) {
-                return item.seriesId + '-' + item.dataIndex;
-            }
-
-            function add(index) {
-                result[1].push(batchB[index]);
-            }
-
-            function remove(index) {
-                result[0].push(batchA[index]);
-            }
-
-            return result;
         }
+
     };
 
 

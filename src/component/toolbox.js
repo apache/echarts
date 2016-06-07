@@ -8,4 +8,5 @@ define(function (require) {
     require('./toolbox/feature/DataView');
     require('./toolbox/feature/DataZoom');
     require('./toolbox/feature/Restore');
+    require('./toolbox/feature/AreaSelect');
 });

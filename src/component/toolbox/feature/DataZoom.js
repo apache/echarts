@@ -130,7 +130,7 @@ define(function(require) {
             }
         );
         controller.on(
-            'selectEnd',
+            'selected',
             zrUtil.bind(
                 this._onSelected, this, controller,
                 featureModel, ecModel, api
@@ -142,7 +142,7 @@ define(function(require) {
     proto._disposeController = function () {
         var controller = this._controller;
         if (controller) {
-            controller.off('selected');
+            controller.off();
             controller.dispose();
         }
     };
@@ -180,8 +180,8 @@ define(function(require) {
     /**
      * @private
      */
-    proto._onSelected = function (controller, featureModel, ecModel, api, selRanges) {
-        if (!selRanges.length) {
+    proto._onSelected = function (controller, featureModel, ecModel, api, selRanges, isEnd) {
+        if (!isEnd || !selRanges.length) {
             return;
         }
         var selRange = selRanges[0];

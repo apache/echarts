@@ -7,6 +7,7 @@ define(function(require) {
     var sliderMove = require('../helper/sliderMove');
     var LinearGradient = require('zrender/graphic/LinearGradient');
     var helper = require('./helper');
+    var modelUtil = require('../../util/model');
 
     var linearMap = numberUtil.linearMap;
     var convertDataIndicesToBatch = helper.convertDataIndicesToBatch;
@@ -682,7 +683,9 @@ define(function(require) {
                 this._hoverLinkDataIndices = visualMapModel.findTargetDataIndices(valueRange);
                 newBatch = convertDataIndicesToBatch(this._hoverLinkDataIndices);
             }
-            var resultBatches = helper.removeDuplicateBatch(oldBatch, newBatch);
+            var resultBatches = modelUtil.removeDuplicate(oldBatch, newBatch, function (item) {
+                return item.seriesIndex + '-' + item.dataIndex;
+            });
 
             this._dispatchHighDown('downplay', resultBatches[0]);
             this._dispatchHighDown('highlight', resultBatches[1]);

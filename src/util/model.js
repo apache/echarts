@@ -3,6 +3,7 @@ define(function(require) {
     var formatUtil = require('./format');
     var nubmerUtil = require('./number');
     var zrUtil = require('zrender/core/util');
+    var DataDiffer = require('../data/DataDiffer');
 
     var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
 
@@ -397,6 +398,32 @@ define(function(require) {
         return zrUtil.isObject(cptOption)
             && cptOption.id
             && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
+    };
+
+    /**
+     * @param {Array} collectionA
+     * @param {Array} collectionB
+     * @param {Function} getKey
+     * @return {Array.<Array, Array>} result: [resultCollectionA, resultCollectionB]
+     */
+    modelUtil.removeDuplicate = function (collectionA, collectionB, getKey) {
+        var result = [[], []];
+
+        (new DataDiffer(collectionA || [], collectionB || [], getKey, getKey))
+            .add(add)
+            .update(zrUtil.noop)
+            .remove(remove)
+            .execute();
+
+        function add(index) {
+            result[1].push(collectionB[index]);
+        }
+
+        function remove(index) {
+            result[0].push(collectionA[index]);
+        }
+
+        return result;
     };
 
     return modelUtil;

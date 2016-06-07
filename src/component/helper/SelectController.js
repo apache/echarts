@@ -18,6 +18,23 @@ define(function (require) {
     var COVER_Z = 10000;
     var UNSELECT_THRESHOLD = 2;
     var EVENTS = ['mousedown', 'mousemove', 'mouseup'];
+    var MIN_RESIZE_LINE_WIDTH = 6;
+    var DIRECTION_MAP = {
+        w: [0, 0],
+        e: [0, 1],
+        n: [1, 0],
+        s: [1, 1]
+    };
+    var CURSOR_MAP = {
+        w: 'ew',
+        e: 'ew',
+        n: 'ns',
+        s: 'ns',
+        ne: 'nesw',
+        sw: 'nesw',
+        nw: 'nwse',
+        se: 'nwse'
+    };
 
     /**
      * @alias module:echarts/component/helper/SelectController
@@ -31,6 +48,7 @@ define(function (require) {
      * @param {number} [opt.lineWidth]
      * @param {string} [opt.stroke]
      * @param {string} [opt.fill]
+     * @param {boolean} [opt.resizeEnabled]
      */
     function SelectController(type, zr, opt) {
 
@@ -88,6 +106,12 @@ define(function (require) {
         this._disabled = true;
 
         /**
+         * @type {Array.<Array>}
+         * @private
+         */
+        this._ranges;
+
+        /**
          * @type {Object}
          * @private
          */
@@ -135,11 +159,13 @@ define(function (require) {
         update: function (ranges) {
             // TODO
             // Only support one interval yet.
-            renderCover.call(this, ranges && zrUtil.clone(ranges));
+            this._ranges = ranges && zrUtil.clone(ranges);
+            renderCover.call(this);
         },
 
         disable: function () {
             this._disabled = true;
+            this._ranges = null;
 
             removeGroup.call(this);
         },
@@ -196,7 +222,7 @@ define(function (require) {
 
         preventDefault(e);
 
-        updateViewByCursor.call(this, e);
+        updateViewByCursor.call(this, e, false);
     }
 
     function mouseup(e) {
@@ -220,19 +246,18 @@ define(function (require) {
             this._track.push([x, y]);
 
             // Create or update cover.
-            var ranges = shouldShowCover.call(this)
+            this._ranges = shouldShowCover.call(this)
                 ? coverRenderers[this.type].getRanges.call(this)
                 // Remove cover.
                 : [];
 
-            renderCover.call(this, ranges);
-
-            this.trigger('selected', zrUtil.clone(ranges));
-
-            if (isEnd) {
-                this.trigger('selectEnd', zrUtil.clone(ranges));
-            }
+            renderAndTrigger.call(this, isEnd);
         }
+    }
+
+    function renderAndTrigger(isEnd) {
+        renderCover.call(this);
+        this.trigger('selected', zrUtil.clone(this._ranges), isEnd);
     }
 
     function shouldShowCover() {
@@ -251,8 +276,9 @@ define(function (require) {
         return dist > UNSELECT_THRESHOLD;
     }
 
-    function renderCover(ranges) {
+    function renderCover() {
         var coverRenderer = coverRenderers[this.type];
+        var ranges = this._ranges;
 
         if (ranges && ranges.length) {
             if (!this._cover) {
@@ -278,20 +304,6 @@ define(function (require) {
         }
     }
 
-    function createRectCover() {
-        var opt = this.opt;
-        return new graphic.Rect({
-            // FIXME
-            // customize style.
-            style: {
-                stroke: opt.stroke,
-                fill: opt.fill,
-                lineWidth: opt.lineWidth,
-                opacity: opt.opacity
-            }
-        });
-    }
-
     function getLocalTrack() {
         return zrUtil.map(this._track, function (point) {
             return this.group.transformCoordToLocal(point[0], point[1]);
@@ -305,6 +317,43 @@ define(function (require) {
         return [localTrack[0], localTrack[tail]];
     }
 
+    function createBaseRect(coverGroup) {
+        var opt = this.opt;
+        var rect = new graphic.Rect({
+            name: 'rect',
+            style: {
+                stroke: opt.stroke,
+                fill: opt.fill,
+                lineWidth: opt.lineWidth,
+                opacity: opt.opacity
+            }
+        });
+        coverGroup.add(rect);
+
+        if (opt.resizeEnabled) {
+            rect.draggable = true;
+            rect.cursor = 'move';
+            rect.drift = bind(drift, this, 'nswe');
+            rect.ondragend = bind(renderAndTrigger, this, true);
+        }
+    }
+
+    function updateControlShape(coverGroup, name, x, y, w, h) {
+        coverGroup.childOfName(name).setShape({x: x, y: y, width: w, height: h});
+    }
+
+    function drift(name, dx, dy) {
+        var ranges = this._ranges;
+        var delta = [dx, dy];
+
+        each(name.split(''), function (namePart) {
+            var ind = DIRECTION_MAP[namePart];
+            ranges[0][ind[0]][ind[1]] += delta[ind[0]];
+        });
+
+        renderAndTrigger.call(this, false);
+    }
+
     /**
      * key: this.type
      * @type {Object}
@@ -313,7 +362,13 @@ define(function (require) {
 
         line: {
 
-            create: createRectCover,
+            create: function () {
+                var coverGroup = new graphic.Group();
+
+                createBaseRect.call(this, coverGroup);
+
+                return coverGroup;
+            },
 
             getRanges: function () {
                 var ends = getLocalTrackEnds.call(this);
@@ -326,7 +381,7 @@ define(function (require) {
             update: function (ranges) {
                 var range = ranges[0];
                 var width = this.opt.width;
-                this._cover.setShape({
+                this._cover.childOfName('rect').setShape({
                     x: range[0],
                     y: -width / 2,
                     width: range[1] - range[0],
@@ -337,7 +392,31 @@ define(function (require) {
 
         rect: {
 
-            create: createRectCover,
+            create: function () {
+                var opt = this.opt;
+                var coverGroup = new graphic.Group();
+
+                createBaseRect.call(this, coverGroup);
+
+                if (opt.resizeEnabled) {
+                    each(
+                        ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw'],
+                        function (name) {
+                            coverGroup.add(new graphic.Rect({
+                                name: name,
+                                cursor: CURSOR_MAP[name] + '-resize',
+                                style: {opacity: 0},
+                                draggable: true,
+                                drift: bind(drift, this, name),
+                                ondragend: bind(renderAndTrigger, this, true)
+                            }));
+                        },
+                        this
+                    );
+                }
+
+                return coverGroup;
+            },
 
             getRanges: function () {
                 var ends = getLocalTrackEnds.call(this);
@@ -359,12 +438,36 @@ define(function (require) {
 
             update: function (ranges) {
                 var range = ranges[0];
-                this._cover.setShape({
-                    x: range[0][0],
-                    y: range[1][0],
-                    width: range[0][1] - range[0][0],
-                    height: range[1][1] - range[1][0]
-                });
+                var opt = this.opt;
+                var lineWidth = opt.lineWidth;
+                var handleSize = mathMax(lineWidth, MIN_RESIZE_LINE_WIDTH);
+                var x = range[0][0];
+                var y = range[1][0];
+                var xa = x - lineWidth / 2;
+                var ya = y - lineWidth / 2;
+                var x2 = range[0][1];
+                var y2 = range[1][1];
+                var x2a = x2 - handleSize + lineWidth / 2;
+                var y2a = y2 - handleSize + lineWidth / 2;
+                var width = x2 - x;
+                var height = y2 - y;
+                var widtha = width + lineWidth;
+                var heighta = height + lineWidth;
+                var cover = this._cover;
+
+                updateControlShape(cover, 'rect', x, y, width, height);
+
+                if (opt.resizeEnabled) {
+                    updateControlShape(cover, 'w', xa, ya, handleSize, heighta);
+                    updateControlShape(cover, 'e', x2a, ya, handleSize, heighta);
+                    updateControlShape(cover, 'n', xa, ya, widtha, handleSize);
+                    updateControlShape(cover, 's', xa, y2a, widtha, handleSize);
+
+                    updateControlShape(cover, 'nw', xa, ya, handleSize, handleSize);
+                    updateControlShape(cover, 'ne', x2a, ya, handleSize, handleSize);
+                    updateControlShape(cover, 'sw', xa, y2a, handleSize, handleSize);
+                    updateControlShape(cover, 'se', x2a, y2a, handleSize, handleSize);
+                }
             }
         }
     };
