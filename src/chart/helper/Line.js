@@ -237,15 +237,6 @@ define(function (require) {
         this._updateCommonStl(lineData, idx);
     };
 
-    lineProto.setColor = function (color) {
-        var line = this.childOfName('line');
-        var symbolFrom = this.childOfName('fromSymbol');
-        var symbolTo = this.childOfName('toSymbol');
-        line.setStyle('stroke', color);
-        symbolFrom && symbolFrom.setStyle('fill', color);
-        symbolTo && symbolTo.setStyle('fill', color);
-    };
-
     lineProto._updateCommonStl = function (lineData, idx) {
         var seriesModel = lineData.hostModel;
 
@@ -258,20 +249,21 @@ define(function (require) {
         var textStyleHoverModel = labelHoverModel.getModel('textStyle');
 
         var defaultText = numberUtil.round(seriesModel.getRawValue(idx));
+        var visualColor = lineData.getItemVisual(idx, 'color');
         if (isNaN(defaultText)) {
             // Use name
             defaultText = lineData.getName(idx);
         }
-        line.useStyle(zrUtil.extend(
+        line.useStyle(zrUtil.defaults(
             {
                 strokeNoScale: true,
                 fill: 'none',
-                stroke: lineData.getItemVisual(idx, 'color')
+                stroke: visualColor
             },
             itemModel.getModel('lineStyle.normal').getLineStyle()
         ));
         line.hoverStyle = itemModel.getModel('lineStyle.emphasis').getLineStyle();
-        var defaultColor = lineData.getItemVisual(idx, 'color') || '#000';
+        var defaultColor = visualColor || '#000';
         var label = this.childOfName('label');
         // label.afterUpdate = lineAfterUpdate;
         label.setStyle({

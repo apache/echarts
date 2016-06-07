@@ -8,6 +8,7 @@ define(function (require) {
     }
     return function (ecModel) {
         ecModel.eachSeriesByType('graph', function (seriesModel) {
+            var graph = seriesModel.getGraph();
             var edgeData = seriesModel.getEdgeData();
             var symbolType = normalize(seriesModel.get('edgeSymbol'));
             var symbolSize = normalize(seriesModel.get('edgeSymbolSize'));
@@ -20,13 +21,26 @@ define(function (require) {
 
             edgeData.each(function (idx) {
                 var itemModel = edgeData.getItemModel(idx);
+                var edge = graph.getEdgeByIndex(idx);
                 var symbolType = normalize(itemModel.getShallow('symbol', true));
                 var symbolSize = normalize(itemModel.getShallow('symbolSize', true));
+                // Edge visual must after node visual
+                var color = itemModel.get('lineStyle.normal.color');
+                switch (color) {
+                    case 'source':
+                        color = edge.node1.getVisual('color');
+                        break;
+                    case 'target':
+                        color = edge.node2.getVisual('color');
+                        break;
+                }
 
-                symbolType[0] && edgeData.setItemVisual(idx, 'fromSymbol', symbolType[0]);
-                symbolType[1] && edgeData.setItemVisual(idx, 'toSymbol', symbolType[1]);
-                symbolSize[0] && edgeData.setItemVisual(idx, 'fromSymbolSize', symbolSize[0]);
-                symbolSize[1] && edgeData.setItemVisual(idx, 'toSymbolSize', symbolSize[1]);
+                symbolType[0] && edge.setVisual('fromSymbol', symbolType[0]);
+                symbolType[1] && edge.setVisual('toSymbol', symbolType[1]);
+                symbolSize[0] && edge.setVisual('fromSymbolSize', symbolSize[0]);
+                symbolSize[1] && edge.setVisual('toSymbolSize', symbolSize[1]);
+
+                edge.setVisual('color', color);
             });
         });
     };
