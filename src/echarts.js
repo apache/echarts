@@ -826,7 +826,7 @@ define(function (require) {
             // Progressive configuration
             var elCount = 0;
             chartView.group.traverse(function (el) {
-                if (el.type !== 'group') {
+                if (el.type !== 'group' && !el.ignore) {
                     elCount++;
                 }
             });

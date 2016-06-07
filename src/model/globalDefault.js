@@ -37,7 +37,7 @@ define(function () {
 
         animationThreshold: 2000,
         // Progressive configuration
-        progressiveThreshold: 2000,
+        progressiveThreshold: 3000,
         progressive: 400,
 
         // Threshold of if use single hover layer to optimize.
