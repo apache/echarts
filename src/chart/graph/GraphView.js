@@ -63,7 +63,6 @@ define(function (require) {
             // Fix edge contact point with node
             adjustEdge(seriesModel.getGraph(), this._getNodeGlobalScale(seriesModel));
 
-
             var data = seriesModel.getData();
             symbolDraw.updateData(data);
 
@@ -110,6 +109,20 @@ define(function (require) {
                     el.on('mouseout', this._unfocusAll, this);
                 }
             }, this);
+
+            seriesModel.getGraph().eachEdge(function (edge, idx) {
+                var itemModel = edge.getModel();
+                var el = edge.getGraphicEl();
+                switch (itemModel.get('lineStyle.normal.color')) {
+                    case 'source':
+                        el.setColor(edge.node1.getVisual('color'));
+                        break;
+                    case 'target':
+                        el.setColor(edge.node2.getVisual('color'));
+                        break;
+                    default:
+                }
+            });
 
             this._firstRender = false;
         },

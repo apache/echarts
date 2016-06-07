@@ -237,6 +237,15 @@ define(function (require) {
         this._updateCommonStl(lineData, idx);
     };
 
+    lineProto.setColor = function (color) {
+        var line = this.childOfName('line');
+        var symbolFrom = this.childOfName('fromSymbol');
+        var symbolTo = this.childOfName('toSymbol');
+        line.setStyle('stroke', color);
+        symbolFrom && symbolFrom.setStyle('fill', color);
+        symbolTo && symbolTo.setStyle('fill', color);
+    };
+
     lineProto._updateCommonStl = function (lineData, idx) {
         var seriesModel = lineData.hostModel;
 
