@@ -207,7 +207,7 @@ define(function(require) {
             }
         }
         // Last points
-        stepPoints.push(points[i]);
+        points[i] && stepPoints.push(points[i]);
         return stepPoints;
     }
 
