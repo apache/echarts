@@ -127,7 +127,7 @@ define(function (require) {
                 var x1 = n1Layout.x + n1Layout.dx;
                 var y1 = n1Layout.y + edgeLayout.sy + edgeLayout.dy / 2;
                 var x2 = n2Layout.x;
-                var y2 = n2Layout.y + edgeLayout.ty + edgeLayout.dy /2;
+                var y2 = n2Layout.y + edgeLayout.ty + edgeLayout.dy / 2;
                 var cpx1 = x1 * (1 - curvature) + x2 * curvature;
                 var cpy1 = y1;
                 var cpx2 = x1 * curvature + x2 * (1 - curvature);
@@ -145,6 +145,17 @@ define(function (require) {
                 });
 
                 curve.setStyle(lineStyleModel.getItemStyle());
+                // Special color, use source node color or target node color
+                switch (curve.style.fill) {
+                    case 'source':
+                        curve.style.fill = edge.node1.getVisual('color');
+                        break;
+                    case 'target':
+                        curve.style.fill = edge.node2.getVisual('color');
+                        break;
+                    default:
+                }
+
                 graphic.setHoverStyle(curve, edge.getModel('lineStyle.emphasis').getItemStyle());
 
                 group.add(curve);
