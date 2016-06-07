@@ -1,19 +1,23 @@
-define(function (require) {
+define(function(require) {
 
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
 
     var SankeyShape = graphic.extendShape({
         shape: {
-            x1: 0, y1: 0,
-            x2: 0, y2: 0,
-            cpx1: 0, cpy1: 0,
-            cpx2: 0, cpy2: 0,
+            x1: 0,
+            y1: 0,
+            x2: 0,
+            y2: 0,
+            cpx1: 0,
+            cpy1: 0,
+            cpx2: 0,
+            cpy2: 0,
 
             extent: 0
         },
 
-        buildPath: function (ctx, shape) {
+        buildPath: function(ctx, shape) {
             var halfExtent = shape.extent / 2;
             ctx.moveTo(shape.x1, shape.y1 - halfExtent);
             ctx.bezierCurveTo(
@@ -47,7 +51,8 @@ define(function (require) {
             var layoutInfo = seriesModel.layoutInfo;
             var nodeData = seriesModel.getData();
             var edgeData = seriesModel.getData('edge');
-
+            var edgeColorMode = seriesModel.option.lineStyle.normal.colorMode;
+            
             this._model = seriesModel;
 
             group.removeAll();
@@ -55,7 +60,7 @@ define(function (require) {
             group.position = [layoutInfo.x, layoutInfo.y];
 
             // generate a rect  for each node
-            graph.eachNode(function (node) {
+            graph.eachNode(function(node) {
                 var layout = node.getLayout();
                 var itemModel = node.getModel();
                 var labelModel = itemModel.getModel('label.normal');
@@ -72,8 +77,7 @@ define(function (require) {
                     },
                     style: {
                         // Get formatted label in label.normal option. Use node id if it is not specified
-                        text: labelModel.get('show')
-                            ? seriesModel.getFormattedLabel(node.dataIndex, 'normal') || node.id
+                        text: labelModel.get('show') ? seriesModel.getFormattedLabel(node.dataIndex, 'normal') || node.id
                             // Use empty string to hide the label
                             : '',
                         textFont: textStyleModel.getFont(),
@@ -82,19 +86,15 @@ define(function (require) {
                     }
                 });
 
-                rect.setStyle(zrUtil.defaults(
-                    {
+                rect.setStyle(zrUtil.defaults({
                         fill: node.getVisual('color')
                     },
                     itemModel.getModel('itemStyle.normal').getItemStyle()
                 ));
 
                 graphic.setHoverStyle(rect, zrUtil.extend(
-                    node.getModel('itemStyle.emphasis'),
-                    {
-                        text: labelHoverModel.get('show')
-                            ? seriesModel.getFormattedLabel(node.dataIndex, 'emphasis') || node.id
-                            : '',
+                    node.getModel('itemStyle.emphasis'), {
+                        text: labelHoverModel.get('show') ? seriesModel.getFormattedLabel(node.dataIndex, 'emphasis') || node.id : '',
                         textFont: textStyleHoverModel.getFont(),
                         textFill: textStyleHoverModel.getTextColor(),
                         textPosition: labelHoverModel.get('position')
@@ -108,8 +108,21 @@ define(function (require) {
                 rect.dataType = 'node';
             });
 
+            //get Color by dataIndex
+            function getNodeColorByIdx(idx) {
+                var notFind = true;
+                var color;
+                for (var i = graph.nodes.length - 1; notFind && i >= 0; i--) {
+                    if (graph.nodes[i].dataIndex == idx) {
+                        notFind = false;
+                        color = graph.nodes[i].getVisual('color');
+                    }
+                }
+                return color;
+            }
+
             // generate a bezire Curve for each edge
-            graph.eachEdge(function (edge) {
+            graph.eachEdge(function(edge) {
                 var curve = new SankeyShape();
 
                 curve.dataIndex = edge.dataIndex;
@@ -127,7 +140,7 @@ define(function (require) {
                 var x1 = n1Layout.x + n1Layout.dx;
                 var y1 = n1Layout.y + edgeLayout.sy + edgeLayout.dy / 2;
                 var x2 = n2Layout.x;
-                var y2 = n2Layout.y + edgeLayout.ty + edgeLayout.dy /2;
+                var y2 = n2Layout.y + edgeLayout.ty + edgeLayout.dy / 2;
                 var cpx1 = x1 * (1 - curvature) + x2 * curvature;
                 var cpy1 = y1;
                 var cpx2 = x1 * curvature + x2 * (1 - curvature);
@@ -144,7 +157,14 @@ define(function (require) {
                     cpy2: cpy2
                 });
 
-                curve.setStyle(lineStyleModel.getItemStyle());
+                if (edgeColorMode == 'default') {
+                    curve.setStyle(lineStyleModel.getItemStyle());
+                } else {
+                    var edgeLineStyle = lineStyleModel.getItemStyle();
+                    edgeLineStyle.fill = getNodeColorByIdx((edgeColorMode == 'target') ? edge.node2.dataIndex : edge.node1.dataIndex);
+                    curve.setStyle(edgeLineStyle);
+                }
+                
                 graphic.setHoverStyle(curve, edge.getModel('lineStyle.emphasis').getItemStyle());
 
                 group.add(curve);
@@ -152,7 +172,7 @@ define(function (require) {
                 edgeData.setItemGraphicEl(edge.dataIndex, curve);
             });
             if (!this._data && seriesModel.get('animation')) {
-                group.setClipPath(createGridClipShape(group.getBoundingRect(), seriesModel, function () {
+                group.setClipPath(createGridClipShape(group.getBoundingRect(), seriesModel, function() {
                     group.removeClipPath();
                 }));
             }

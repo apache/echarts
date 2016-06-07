@@ -99,6 +99,7 @@ define(function (require) {
 
             lineStyle: {
                 normal: {
+                    colorMode:'default',
                     color: '#314656',
                     opacity: 0.2,
                     curveness: 0.5
