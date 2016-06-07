@@ -47,7 +47,10 @@ define(function(require) {
                 }
             },
             // areaStyle: {},
+            // false, 'start', 'end', 'middle'
+            step: false,
 
+            // Disabled if step is true
             smooth: false,
             smoothMonotone: null,
             // 拐点图形类型

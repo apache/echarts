@@ -171,6 +171,46 @@ define(function(require) {
             : createGridClipShape(coordSys, hasAnimation, seriesModel);
     }
 
+    function turnPointsIntoStep(points, coordSys, stepTurnAt) {
+        var baseAxis = coordSys.getBaseAxis();
+        var baseIndex = baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1;
+
+        var stepPoints = [];
+        for (var i = 0; i < points.length - 1; i++) {
+            var nextPt = points[i + 1];
+            var pt = points[i];
+            stepPoints.push(pt);
+
+            var stepPt = [];
+            switch (stepTurnAt) {
+                case 'end':
+                    stepPt[baseIndex] = nextPt[baseIndex];
+                    stepPt[1 - baseIndex] = pt[1 - baseIndex];
+                    // default is start
+                    stepPoints.push(stepPt);
+                    break;
+                case 'middle':
+                    // default is start
+                    var middle = (pt[baseIndex] + nextPt[baseIndex]) / 2;
+                    var stepPt2 = [];
+                    stepPt[baseIndex] = stepPt2[baseIndex] = middle;
+                    stepPt[1 - baseIndex] = pt[1 - baseIndex];
+                    stepPt2[1 - baseIndex] = nextPt[1 - baseIndex];
+                    stepPoints.push(stepPt);
+                    stepPoints.push(stepPt2);
+                    break;
+                default:
+                    stepPt[baseIndex] = pt[baseIndex];
+                    stepPt[1 - baseIndex] = nextPt[1 - baseIndex];
+                    // default is start
+                    stepPoints.push(stepPt);
+            }
+        }
+        // Last points
+        stepPoints.push(points[i]);
+        return stepPoints;
+    }
+
     return ChartView.extend({
 
         type: 'line',
@@ -229,11 +269,18 @@ define(function(require) {
 
             group.add(lineGroup);
 
+            var step = seriesModel.get('step');
             // Initialization animation or coordinate system changed
             if (
-                !(polyline && prevCoordSys.type === coordSys.type)
+                !(polyline && prevCoordSys.type === coordSys.type && step === this._step)
             ) {
                 showSymbol && symbolDraw.updateData(data, isSymbolIgnore);
+
+                if (step) {
+                    // TODO If stacked series is not step
+                    points = turnPointsIntoStep(points, coordSys, step);
+                    stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+                }
 
                 polyline = this._newPolyline(points, coordSys, hasAnimation);
                 if (isAreaChart) {
@@ -242,7 +289,7 @@ define(function(require) {
                         coordSys, hasAnimation
                     );
                 }
-                lineGroup.setClipPath(createClipShape(coordSys, true, seriesModel));
+                group.setClipPath(createClipShape(coordSys, true, seriesModel));
             }
             else {
                 if (isAreaChart && !polygon) {
@@ -259,7 +306,7 @@ define(function(require) {
                 }
 
                 // Update clipPath
-                lineGroup.setClipPath(createClipShape(coordSys, false, seriesModel));
+                group.setClipPath(createClipShape(coordSys, false, seriesModel));
 
                 // Always update, or it is wrong in the case turning on legend
                 // because points are not changed
@@ -278,7 +325,7 @@ define(function(require) {
                 ) {
                     if (hasAnimation) {
                         this._updateAnimation(
-                            data, stackedOnPoints, coordSys, api
+                            data, stackedOnPoints, coordSys, api, step
                         );
                     }
                     else {
@@ -342,6 +389,7 @@ define(function(require) {
             this._coordSys = coordSys;
             this._stackedOnPoints = stackedOnPoints;
             this._points = points;
+            this._step = step;
         },
 
         highlight: function (seriesModel, ecModel, api, payload) {
@@ -469,7 +517,7 @@ define(function(require) {
          * @private
          */
         // FIXME Two value axis
-        _updateAnimation: function (data, stackedOnPoints, coordSys, api) {
+        _updateAnimation: function (data, stackedOnPoints, coordSys, api, step) {
             var polyline = this._polyline;
             var polygon = this._polygon;
             var seriesModel = data.hostModel;
@@ -479,23 +527,37 @@ define(function(require) {
                 this._stackedOnPoints, stackedOnPoints,
                 this._coordSys, coordSys
             );
-            polyline.shape.points = diff.current;
+
+            var current = diff.current;
+            var stackedOnCurrent = diff.stackedOnCurrent;
+            var next = diff.next;
+            var stackedOnNext = diff.stackedOnNext;
+            if (step) {
+                // TODO If stacked series is not step
+                current = turnPointsIntoStep(diff.current, coordSys, step);
+                stackedOnCurrent = turnPointsIntoStep(diff.stackedOnCurrent, coordSys, step);
+                next = turnPointsIntoStep(diff.next, coordSys, step);
+                stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, coordSys, step);
+            }
+            polyline.shape.__points = diff.current;
+            polyline.shape.points = current;
 
             graphic.updateProps(polyline, {
                 shape: {
-                    points: diff.next
+                    points: next
                 }
             }, seriesModel);
 
             if (polygon) {
                 polygon.setShape({
-                    points: diff.current,
-                    stackedOnPoints: diff.stackedOnCurrent
+                    points: current,
+                    stackedOnPoints: stackedOnCurrent
                 });
                 graphic.updateProps(polygon, {
                     shape: {
-                        points: diff.next,
-                        stackedOnPoints: diff.stackedOnNext
+                        points: next,
+                        stackedOnPoints: stackedOnNext,
+                        __points: diff.next
                     }
                 }, seriesModel);
             }
@@ -520,7 +582,7 @@ define(function(require) {
                 polyline.animators[0].during(function () {
                     for (var i = 0; i < updatedDataInfo.length; i++) {
                         var el = updatedDataInfo[i].el;
-                        el.attr('position', polyline.shape.points[updatedDataInfo[i].ptIdx]);
+                        el.attr('position', polyline.shape.__points[updatedDataInfo[i].ptIdx]);
                     }
                 });
             }
