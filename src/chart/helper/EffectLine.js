@@ -118,8 +118,10 @@ define(function (require) {
     effectLineProto.updateLayout = function (lineData, idx) {
         this.childAt(0).updateLayout(lineData, idx);
         var symbol = this.childAt(1);
-        var points = lineData.getItemLayout(idx);
-        setAnimationPoints(symbol, points);
+        if (symbol) {
+            var points = lineData.getItemLayout(idx);
+            setAnimationPoints(symbol, points);
+        }
     };
 
     zrUtil.inherits(EffectLine, graphic.Group);
