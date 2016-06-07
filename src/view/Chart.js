@@ -108,14 +108,21 @@ define(function (require) {
      * @inner
      */
     function toggleHighlight(data, payload, state) {
-        if (payload.dataIndex != null) {
-            var el = data.getItemGraphicEl(payload.dataIndex);
-            elSetState(el, state);
+        var dataIndex = payload && payload.dataIndex;
+        var name = payload && payload.name;
+
+        if (dataIndex != null) {
+            var dataIndices = dataIndex instanceof Array ? dataIndex : [dataIndex];
+            for (var i = 0, len = dataIndices.length; i < len; i++) {
+                elSetState(data.getItemGraphicEl(dataIndices[i]), state);
+            }
         }
-        else if (payload.name) {
-            var dataIndex = data.indexOfName(payload.name);
-            var el = data.getItemGraphicEl(dataIndex);
-            elSetState(el, state);
+        else if (name) {
+            var names = name instanceof Array ? name : [name];
+            for (var i = 0, len = names.length; i < len; i++) {
+                var dataIndex = data.indexOfName(names[i]);
+                elSetState(data.getItemGraphicEl(dataIndex), state);
+            }
         }
         else {
             data.eachItemGraphicEl(function (el) {
