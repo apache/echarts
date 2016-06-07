@@ -68,6 +68,12 @@ define(function (require) {
 
             /**
              * @private
+             * @type {number}
+             */
+            this._handleHeight;
+
+            /**
+             * @private
              */
             this._location;
 
@@ -236,9 +242,7 @@ define(function (require) {
          * @private
          */
         _getViewExtent: function () {
-            var extent = [0, this._size[0]];
-
-            return extent;
+            return [0, this._size[0]];
         },
 
         _renderBackground : function () {
@@ -420,7 +424,7 @@ define(function (require) {
                         strokeNoScale: true
                     },
                     rectHover: true,
-                    cursor: 'move',
+                    cursor: this._orient === 'vertical' ? 'ns-resize' : 'ew-resize',
                     draggable: true,
                     drift: bind(this._onDragMove, this, handleIndex),
                     ondragend: bind(this._onDragEnd, this),
