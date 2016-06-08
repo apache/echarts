@@ -403,7 +403,7 @@ define(function(require) {
                 if (!symbol) {
                     // Create a temporary symbol if it is not exists
                     var pt = data.getItemLayout(dataIndex);
-                    symbol = new Symbol(data, dataIndex, api);
+                    symbol = new Symbol(data, dataIndex);
                     symbol.position = pt;
                     symbol.setZ(
                         seriesModel.get('zlevel'),

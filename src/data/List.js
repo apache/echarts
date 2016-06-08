@@ -430,7 +430,7 @@ define(function (require) {
                 value < min && (min = value);
                 value > max && (max = value);
             }
-            return (this._extent[dim + stack] = [min, max]);
+            return (this._extent[dim + !!stack] = [min, max]);
         }
         else {
             return [Infinity, -Infinity];
@@ -1038,7 +1038,13 @@ define(function (require) {
 
         transferProperties(list, this);
 
+
+        // Clone will not change the data extent and indices
         list.indices = this.indices.slice();
+
+        if (this._extent) {
+            list._extent = zrUtil.extend({}, this._extent);
+        }
 
         return list;
     };
