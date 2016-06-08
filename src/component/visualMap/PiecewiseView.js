@@ -1,13 +1,13 @@
 define(function(require) {
 
-    var ControllerView = require('./ControllerView');
+    var VisualMapView = require('./VisualMapView');
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
     var symbolCreators = require('../../util/symbol');
     var layout = require('../../util/layout');
     var helper = require('./helper');
 
-    var PiecewiseVisualMapView = ControllerView.extend({
+    var PiecewiseVisualMapView = VisualMapView.extend({
 
         type: 'visualMap.piecewise',
 

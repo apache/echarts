@@ -1,10 +1,10 @@
 define(function(require) {
 
-    var ControllerModel = require('./ControllerModel');
+    var VisualMapModel = require('./VisualMapModel');
     var zrUtil = require('zrender/core/util');
     var VisualMapping = require('../../visual/VisualMapping');
 
-    var PiecewiseModel = ControllerModel.extend({
+    var PiecewiseModel = VisualMapModel.extend({
 
         type: 'visualMap.piecewise',
 
@@ -86,10 +86,7 @@ define(function(require) {
 
             var categories = this.option.categories;
 
-            this.resetVisual('controller', this.controllerVisuals, fillVisualOption);
-            this.resetVisual('target', this.targetVisuals, fillVisualOption);
-
-            function fillVisualOption(mappingOption, state) {
+            this.resetVisual(function (mappingOption, state) {
                 if (mode === 'categories') {
                     mappingOption.mappingMethod = 'category';
                     mappingOption.categories = zrUtil.clone(categories);
@@ -105,7 +102,7 @@ define(function(require) {
                         return piece;
                     });
                 }
-            }
+            });
         },
 
         _resetSelected: function (newOption, isInit) {

@@ -1,6 +1,6 @@
 define(function(require) {
 
-    var ControllerView = require('./ControllerView');
+    var VisualMapView = require('./VisualMapView');
     var graphic = require('../../util/graphic');
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
@@ -26,7 +26,7 @@ define(function(require) {
     // high data value: this._dataInterval[1] and has high coord.
     // The logic of transform is implemented in this._createBarGroup.
 
-    var ContinuousView = ControllerView.extend({
+    var ContinuousView = VisualMapView.extend({
 
         type: 'visualMap.continuous',
 

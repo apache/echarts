@@ -6,6 +6,7 @@ define(function(require) {
     var BoundingRect = require('zrender/core/BoundingRect');
     var Group = require('zrender/container/Group');
     var interactionMutex = require('../../helper/interactionMutex');
+    // var visualSolution = require('../../visual/visualSolution');
     var modelUtil = require('../../../util/model');
 
     function AreaSelect(model) {
@@ -132,34 +133,32 @@ define(function(require) {
      */
     proto._onSelected = function (featureModel, ecModel, api, selRanges, isEnd) {
         var newBatch = findSelectedItems(this.model, selRanges, ecModel);
+        // ???????????????
+        // FIXME
+        // var resultBatches = modelUtil.compressBatches(this._activeBatch, newBatch);
 
-        var resultBatches = modelUtil.removeDuplicate(this._activeBatch, newBatch, function (item) {
-            return item.seriesIndex + '-' + item.dataIndex;
-        });
-
+        var oldBatch = this._activeBatch || [];
         this._activeBatch = newBatch;
 
         // If dispatch hightlight with empty batch, all will be highlighted.
-        resultBatches[1].length && api.dispatchAction({
-            type: 'highlight',
-            batch: resultBatches[1]
+        newBatch.length && api.dispatchAction({
+            type: 'select',
+            batch: newBatch
         });
-        resultBatches[0].length && api.dispatchAction({
-            type: 'downplay',
-            batch: resultBatches[0]
-        });
+        // oldBatch.length && api.dispatchAction({
+        //     type: 'downplay',
+        //     batch: oldBatch
+        // });
     };
 
     function findSelectedItems(model, selRanges, ecModel) {
-        var newBatch = [];
-
         // If only click but not drag, selRanges is empty.
         if (!selRanges.length) {
-            return newBatch;
+            return [];
         }
 
+        var batchBySeries = [];
         var selRange = selRanges[0];
-
         var selRect = new BoundingRect(
             selRange[0][0],
             selRange[1][0],
@@ -191,19 +190,11 @@ define(function(require) {
                 if (centerPosition
                     && selRect.contain(centerPosition[0], centerPosition[1])
                 ) {
-                    newBatch.push({
-                        seriesIndex: seriesIndex,
-                        dataIndex: dataIndex
-                    });
+                    save(seriesIndex, dataIndex);
 
                     zrUtil.each(broadcastSeriesIndices, function (sidx) {
-                        sidx !== seriesIndex && newBatch.push({
-                            seriesIndex: sidx,
-                            dataIndex: dataIndex
-                        });
+                        sidx !== seriesIndex && save(seriesIndex, dataIndex);
                     });
-                    // FIXME
-                    // 去重
                 }
 
                 // FIXME
@@ -220,7 +211,16 @@ define(function(require) {
             });
         });
 
-        return newBatch;
+        var resultBatch = [];
+        for (var i = 0, len = batchBySeries.length; i < len; i++) {
+            batchBySeries[i] && resultBatch.push({seriesIndex: i, dataIndex: batchBySeries[i]});
+        }
+
+        return resultBatch;
+
+        function save(seriesIndex, dataIndex) {
+            (batchBySeries[seriesIndex] || (batchBySeries[seriesIndex] = [])).push(dataIndex);
+        }
     }
 
     require('../featureManager').register('areaSelect', AreaSelect);

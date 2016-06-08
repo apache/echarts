@@ -19,6 +19,7 @@ define(function (require) {
     var UNSELECT_THRESHOLD = 2;
     var EVENTS = ['mousedown', 'mousemove', 'mouseup'];
     var MIN_RESIZE_LINE_WIDTH = 6;
+
     var DIRECTION_MAP = {
         w: [0, 0],
         e: [0, 1],
@@ -246,10 +247,13 @@ define(function (require) {
             this._track.push([x, y]);
 
             // Create or update cover.
-            this._ranges = shouldShowCover.call(this)
-                ? coverRenderers[this.type].getRanges.call(this)
+            if (shouldShowCover.call(this)) {
+                coverRenderers[this.type].setInitRanges.call(this);
+            }
+            else {
                 // Remove cover.
-                : [];
+                this._ranges = [];
+            }
 
             renderAndTrigger.call(this, isEnd);
         }
@@ -342,14 +346,28 @@ define(function (require) {
         coverGroup.childOfName(name).setShape({x: x, y: y, width: w, height: h});
     }
 
+    function formatRectRange(x, y, x2, y2) {
+        var min = [mathMin(x, x2), mathMin(y, y2)];
+        var max = [mathMax(x, x2), mathMax(y, y2)];
+
+        return [
+            [min[0], max[0]], // x range
+            [min[1], max[1]] // y range
+        ];
+    }
+
     function drift(name, dx, dy) {
-        var ranges = this._ranges;
+        var rectRange = this._ranges[0];
         var delta = [dx, dy];
 
         each(name.split(''), function (namePart) {
             var ind = DIRECTION_MAP[namePart];
-            ranges[0][ind[0]][ind[1]] += delta[ind[0]];
+            rectRange[ind[0]][ind[1]] += delta[ind[0]];
         });
+
+        this._ranges = [formatRectRange(
+            rectRange[0][0], rectRange[1][0], rectRange[0][1], rectRange[1][1]
+        )];
 
         renderAndTrigger.call(this, false);
     }
@@ -370,12 +388,12 @@ define(function (require) {
                 return coverGroup;
             },
 
-            getRanges: function () {
+            setInitRanges: function () {
                 var ends = getLocalTrackEnds.call(this);
                 var min = mathMin(ends[0][0], ends[1][0]);
                 var max = mathMax(ends[0][0], ends[1][0]);
 
-                return [[min, max]];
+                this._range = [[min, max]];
             },
 
             update: function (ranges) {
@@ -418,22 +436,9 @@ define(function (require) {
                 return coverGroup;
             },
 
-            getRanges: function () {
+            setInitRanges: function () {
                 var ends = getLocalTrackEnds.call(this);
-
-                var min = [
-                    mathMin(ends[1][0], ends[0][0]),
-                    mathMin(ends[1][1], ends[0][1])
-                ];
-                var max = [
-                    mathMax(ends[1][0], ends[0][0]),
-                    mathMax(ends[1][1], ends[0][1])
-                ];
-
-                return [[
-                    [min[0], max[0]], // x range
-                    [min[1], max[1]] // y range
-                ]];
+                this._ranges = [formatRectRange(ends[1][0], ends[1][1], ends[0][0], ends[0][1])];
             },
 
             update: function (ranges) {

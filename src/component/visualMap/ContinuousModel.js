@@ -3,14 +3,14 @@
  */
 define(function(require) {
 
-    var ControllerModel = require('./ControllerModel');
+    var VisualMapModel = require('./VisualMapModel');
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
 
     // Constant
     var DEFAULT_BAR_BOUND = [20, 140];
 
-    var ContinuousModel = ControllerModel.extend({
+    var ContinuousModel = VisualMapModel.extend({
 
         type: 'visualMap.continuous',
 
@@ -41,13 +41,10 @@ define(function(require) {
             this.resetTargetSeries();
             this.resetExtent();
 
-            this.resetVisual('controller', this.controllerVisuals, fillVisualOption);
-            this.resetVisual('target', this.targetVisuals, fillVisualOption);
-
-            function fillVisualOption(mappingOption) {
+            this.resetVisual(function (mappingOption) {
                 mappingOption.mappingMethod = 'linear';
                 mappingOption.dataExtent = this.getExtent();
-            }
+            });
 
             this._resetRange();
         },
@@ -94,7 +91,7 @@ define(function(require) {
          * @override
          */
         completeVisualOption: function () {
-            ControllerModel.prototype.completeVisualOption.apply(this, arguments);
+            VisualMapModel.prototype.completeVisualOption.apply(this, arguments);
 
             zrUtil.each(this.stateList, function (state) {
                 var symbolSize = this.option.controller[state].symbolSize;
