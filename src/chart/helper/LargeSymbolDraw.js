@@ -34,7 +34,7 @@ define(function (require) {
                     symbolProxyShape.width = size[0];
                     symbolProxyShape.height = size[1];
 
-                    symbolProxy.buildPath(path, symbolProxyShape);
+                    symbolProxy.buildPath(path, symbolProxyShape, true);
                 }
             }
         }
