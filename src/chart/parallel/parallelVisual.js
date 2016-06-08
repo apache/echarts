@@ -1,11 +1,6 @@
 define(function (require) {
 
-    /**
-     * @payload
-     * @property {string} parallelAxisId
-     * @property {Array.<number>} extent
-     */
-    return function (ecModel, payload) {
+    return function (ecModel) {
 
         ecModel.eachSeriesByType('parallel', function (seriesModel) {
 

@@ -10,7 +10,7 @@ define(function (require) {
     var PI2 = Math.PI * 2;
     var RADIAN = Math.PI / 180;
 
-    return function (seriesType, ecModel, api) {
+    return function (seriesType, ecModel, api, payload) {
         ecModel.eachSeriesByType(seriesType, function (seriesModel) {
             var center = seriesModel.get('center');
             var radius = seriesModel.get('radius');

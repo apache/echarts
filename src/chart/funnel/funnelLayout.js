@@ -94,7 +94,7 @@ define(function (require) {
         });
     }
 
-    return function (ecModel, api) {
+    return function (ecModel, api, payload) {
         ecModel.eachSeriesByType('funnel', function (seriesModel) {
             var data = seriesModel.getData();
             var sort = seriesModel.get('sort');

@@ -5,7 +5,7 @@ define(function (require) {
     var parsePercent = numberUtil.parsePercent;
     var each = zrUtil.each;
 
-    return function (ecModel, api) {
+    return function (ecModel) {
 
         var groupResult = groupSeriesByAxis(ecModel);
 

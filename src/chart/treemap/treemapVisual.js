@@ -7,7 +7,7 @@ define(function (require) {
 
     var ITEM_STYLE_NORMAL = 'itemStyle.normal';
 
-    return function (ecModel, payload) {
+    return function (ecModel, api, payload) {
 
         var condition = {mainType: 'series', subType: 'treemap', query: payload};
         ecModel.eachComponent(condition, function (seriesModel) {

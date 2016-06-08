@@ -9,7 +9,7 @@ define(function (require) {
         require('./candlestick/preprocessor')
     );
 
-    echarts.registerVisualCoding('chart', require('./candlestick/candlestickVisual'));
+    echarts.registerVisual(require('./candlestick/candlestickVisual'));
     echarts.registerLayout(require('./candlestick/candlestickLayout'));
 
 });

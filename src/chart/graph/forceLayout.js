@@ -6,7 +6,7 @@ define(function (require) {
     var circularLayoutHelper = require('./circularLayoutHelper');
     var vec2 = require('zrender/core/vector');
 
-    return function (ecModel, api) {
+    return function (ecModel) {
         ecModel.eachSeriesByType('graph', function (graphSeries) {
             var coordSys = graphSeries.coordinateSystem;
             if (coordSys && coordSys.type !== 'view') {

@@ -4,7 +4,7 @@ define(function (require) {
     var nest = require('../../util/array/nest');
     var zrUtil = require('zrender/core/util');
 
-    return function (ecModel, api) {
+    return function (ecModel, api, payload) {
 
         ecModel.eachSeriesByType('sankey', function (seriesModel) {
 

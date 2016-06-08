@@ -20,15 +20,11 @@ define(function (require) {
         method: 'unSelect'
     }]);
 
-    echarts.registerVisualCoding(
-        'chart',  zrUtil.curry(require('../visual/dataColor'), 'pie')
-    );
+    echarts.registerVisual(zrUtil.curry(require('../visual/dataColor'), 'pie'));
 
     echarts.registerLayout(zrUtil.curry(
         require('./pie/pieLayout'), 'pie'
     ));
 
-    echarts.registerProcessor(
-        'filter', zrUtil.curry(require('../processor/dataFilter'), 'pie')
-    );
+    echarts.registerProcessor(zrUtil.curry(require('../processor/dataFilter'), 'pie'));
 });

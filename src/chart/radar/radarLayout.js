@@ -1,6 +1,6 @@
 define(function (require) {
 
-    return function (ecModel, api) {
+    return function (ecModel) {
         ecModel.eachSeriesByType('radar', function (seriesModel) {
             var data = seriesModel.getData();
             var points = [];

@@ -1,6 +1,7 @@
 define(function (require) {
 
     var echarts = require('../echarts');
+    var PRIORITY = echarts.PRIORITY;
 
     require('./map/MapSeries');
 
@@ -12,9 +13,9 @@ define(function (require) {
 
     echarts.registerLayout(require('./map/mapSymbolLayout'));
 
-    echarts.registerVisualCoding('chart', require('./map/mapVisual'));
+    echarts.registerVisual(require('./map/mapVisual'));
 
-    echarts.registerProcessor('statistic', require('./map/mapDataStatistic'));
+    echarts.registerProcessor(PRIORITY.PROCESSOR.STATISTIC, require('./map/mapDataStatistic'));
 
     echarts.registerPreprocessor(require('./map/backwardCompat'));
 

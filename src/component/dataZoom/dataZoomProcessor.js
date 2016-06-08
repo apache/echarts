@@ -5,7 +5,7 @@ define(function (require) {
 
     var echarts = require('../../echarts');
 
-    echarts.registerProcessor('filter', function (ecModel, api) {
+    echarts.registerProcessor(function (ecModel, api) {
 
         ecModel.eachComponent('dataZoom', function (dataZoomModel) {
             // We calculate window and reset axis here but not in model
