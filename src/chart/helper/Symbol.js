@@ -178,6 +178,9 @@ define(function (require) {
             hoverLabelModel = itemModel.getModel(emphasisLabelAccessPath);
             hoverAnimation = itemModel.getShallow('hoverAnimation');
         }
+        else {
+            hoverItemStyle = zrUtil.extend({}, hoverItemStyle);
+        }
 
         var elStyle = symbolPath.style;
 
