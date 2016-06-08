@@ -394,20 +394,25 @@ define(function(require) {
                 : animatableModel.getShallow('animation')
             );
 
-        var postfix = isUpdate ? 'Update' : '';
-        var duration = animatableModel
-            && animatableModel.getShallow('animationDuration' + postfix);
-        var animationEasing = animatableModel
-            && animatableModel.getShallow('animationEasing' + postfix);
-        var animationDelay = animatableModel
-            && animatableModel.getShallow('animationDelay' + postfix);
-        if (typeof animationDelay === 'function') {
-            animationDelay = animationDelay(dataIndex);
+        if (animationEnabled) {
+            var postfix = isUpdate ? 'Update' : '';
+            var duration = animatableModel
+                && animatableModel.getShallow('animationDuration' + postfix);
+            var animationEasing = animatableModel
+                && animatableModel.getShallow('animationEasing' + postfix);
+            var animationDelay = animatableModel
+                && animatableModel.getShallow('animationDelay' + postfix);
+            if (typeof animationDelay === 'function') {
+                animationDelay = animationDelay(dataIndex);
+            }
+            duration > 0
+                ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb)
+                : (el.attr(props), cb && cb());
         }
-
-        animationEnabled && duration > 0
-            ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb)
-            : (el.attr(props), cb && cb());
+        else {
+            el.attr(props);
+            cb && cb();
+        }
     }
     /**
      * Update graphic element properties with or without animation according to the configuration in series
@@ -425,16 +430,21 @@ define(function(require) {
      *         position: [100, 100]
      *     }, seriesModel, function () { console.log('Animation done!'); });
      */
-    graphic.updateProps = zrUtil.curry(animateOrSetProps, true);
+    graphic.updateProps = function (el, props, animatableModel, dataIndex, cb) {
+        animateOrSetProps(true, el, props, animatableModel, dataIndex, cb);
+    };
 
     /**
      * Init graphic element properties with or without animation according to the configuration in series
      * @param {module:zrender/Element} el
      * @param {Object} props
      * @param {module:echarts/model/Model} [animatableModel]
+     * @param {number} [dataIndex]
      * @param {Function} cb
      */
-    graphic.initProps = zrUtil.curry(animateOrSetProps, false);
+    graphic.initProps = function (el, props, animatableModel, dataIndex, cb) {
+        animateOrSetProps(false, el, props, animatableModel, dataIndex, cb);
+    };
 
     /**
      * Get transform matrix of target (param target),

@@ -9,7 +9,7 @@ define(function (require) {
     var numberUtil = require('../../util/number');
 
     function normalizeSymbolSize(symbolSize) {
-        if (!zrUtil.isArray(symbolSize)) {
+        if (!(symbolSize instanceof Array)) {
             symbolSize = [+symbolSize, +symbolSize];
         }
         return symbolSize;

@@ -293,7 +293,7 @@ define(function(require) {
                 symbolStyle.fill && (symbolStyle.fill = color);
                 symbolStyle.stroke && (symbolStyle.stroke = color);
             }
-            this.dirty();
+            this.dirty(false);
         }
     };
 
