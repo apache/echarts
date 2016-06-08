@@ -153,7 +153,7 @@ define(function (require) {
 
                 rect.setStyle(style);
 
-                graphic.setHoverStyle(rect, hoverStl);
+                graphic.setHoverStyle(rect, data.hasItemOption ? hoverStl : zrUtil.extend({}, hoverStl));
 
                 group.add(rect);
                 data.setItemGraphicEl(idx, rect);

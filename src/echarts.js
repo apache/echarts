@@ -391,7 +391,7 @@ define(function (require) {
 
             coordSysMgr.update(ecModel, api);
 
-            doVisualEncoding.call(this, ecModel, payload, api);
+            doVisualEncoding.call(this, ecModel, payload);
 
             doRender.call(this, ecModel, payload);
 
@@ -468,7 +468,7 @@ define(function (require) {
                 return;
             }
 
-            doLayout.call(this, ecModel, payload, this._api);
+            doLayout.call(this, ecModel, payload);
 
             invokeUpdateMethod.call(this, 'updateLayout', ecModel, payload);
         },
@@ -775,7 +775,8 @@ define(function (require) {
      * @param {module:echarts/model/Global} ecModel
      * @private
      */
-    function doLayout(ecModel, payload, api) {
+    function doLayout(ecModel, payload) {
+        var api = this._api;
         each(visualFuncs, function (visual) {
             if (visual.isLayout) {
                 visual.func(ecModel, api, payload);
@@ -789,7 +790,8 @@ define(function (require) {
      * @param {module:echarts/model/Global} ecModel
      * @private
      */
-    function doVisualEncoding(ecModel, payload, api) {
+    function doVisualEncoding(ecModel, payload) {
+        var api = this._api;
         ecModel.clearColorPalette();
         ecModel.eachSeries(function (seriesModel) {
             seriesModel.clearColorPalette();
