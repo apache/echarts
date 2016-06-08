@@ -36,11 +36,22 @@ define(function (require) {
 
         var SymbolCtor = this._symbolCtor;
 
+        var seriesScope = {
+            itemStyle: seriesModel.getModel('itemStyle.normal').getItemStyle(['color']),
+            hoverItemStyle: seriesModel.getModel('itemStyle.emphasis').getItemStyle(),
+            symbolRotate: seriesModel.get('symbolRotate'),
+            symbolOffset: seriesModel.get('symbolOffset'),
+            hoverAnimation: seriesModel.get('hoverAnimation'),
+
+            labelModel: seriesModel.getModel('label.normal'),
+            hoverLabelModel: seriesModel.getModel('label.emphasis')
+        };
+
         data.diff(oldData)
             .add(function (newIdx) {
                 var point = data.getItemLayout(newIdx);
                 if (symbolNeedsDraw(data, newIdx, isIgnore)) {
-                    var symbolEl = new SymbolCtor(data, newIdx);
+                    var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
                     symbolEl.attr('position', point);
                     symbolEl.centerPosition = point;
                     data.setItemGraphicEl(newIdx, symbolEl);
@@ -59,7 +70,7 @@ define(function (require) {
                     symbolEl.attr('position', point);
                 }
                 else {
-                    symbolEl.updateData(data, newIdx);
+                    symbolEl.updateData(data, newIdx, seriesScope);
                     graphic.updateProps(symbolEl, {
                         position: point
                     }, seriesModel);
