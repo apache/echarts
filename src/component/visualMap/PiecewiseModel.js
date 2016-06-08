@@ -78,7 +78,7 @@ define(function(require) {
              * 'pieces', 'categories', 'splitNumber'
              * @type {string}
              */
-            var mode = this._mode = this._decideMode();
+            var mode = this._mode = this._determineMode();
 
             resetMethods[this._mode].call(this);
 
@@ -156,7 +156,7 @@ define(function(require) {
          * @private
          * @return {string}
          */
-        _decideMode: function () {
+        _determineMode: function () {
             var option = this.option;
 
             return option.pieces && option.pieces.length > 0

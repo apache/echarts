@@ -10,7 +10,6 @@ define(function(require) {
     var visualSolution = {
 
         /**
-         * @protected
          * @param {Object} option
          * @param {Array.<string>} stateList
          * @param {Function} [supplementVisualOption]
@@ -86,9 +85,10 @@ define(function(require) {
          * @param {Object} visualMappings <state, Object.<visualType, module:echarts/visual/VisualMapping>>
          * @param {module:echarts/data/List} list
          * @param {Function} getValueState param: valueOrIndex, return: state.
+         * @param {object} [scope] Scope for getValueState
          * @param {string} [dimension] Concrete dimension, if used.
          */
-        applyVisual: function (stateList, visualMappings, data, getValueState, dimension) {
+        applyVisual: function (stateList, visualMappings, data, getValueState, scope, dimension) {
             var visualTypesMap = {};
             zrUtil.each(stateList, function (state) {
                 var visualTypes = VisualMapping.prepareVisualTypes(visualMappings[state]);
@@ -113,8 +113,8 @@ define(function(require) {
             }
 
             function eachItem(valueOrIndex, index) {
-                dataIndex = index;
-                var valueState = getValueState(valueOrIndex);
+                dataIndex = dimension == null ? valueOrIndex : index;
+                var valueState = getValueState.call(scope, valueOrIndex);
                 var mappings = visualMappings[valueState];
                 var visualTypes = visualTypesMap[valueState];
                 for (var i = 0, len = visualTypes.length; i < len; i++) {

@@ -18,10 +18,11 @@ define(function (require) {
             var data = seriesModel.getData();
 
             visualSolution.applyVisual(
-                ['inRange', 'outOfRange'],
+                visualMapModel.stateList,
                 visualMapModel.targetVisuals,
                 data,
-                zrUtil.bind(visualMapModel.getValueState, visualMapModel),
+                visualMapModel.getValueState,
+                visualMapModel,
                 visualMapModel.getDataDimension(data)
             );
         });

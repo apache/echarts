@@ -1,13 +1,17 @@
 define(function(require) {
     'use strict';
 
+    var echarts = require('../../../echarts');
+    var featureManager = require('../featureManager');
     var zrUtil = require('zrender/core/util');
     var SelectController = require('../../helper/SelectController');
     var BoundingRect = require('zrender/core/BoundingRect');
     var Group = require('zrender/container/Group');
     var interactionMutex = require('../../helper/interactionMutex');
-    // var visualSolution = require('../../visual/visualSolution');
-    var modelUtil = require('../../../util/model');
+    var visualSolution = require('../../../visual/visualSolution');
+
+    var STATE_LIST = ['original', 'inSelect', 'outOfSelect'];
+    var STORE_ATTR = '\0__areaSelect';
 
     function AreaSelect(model) {
 
@@ -31,22 +35,24 @@ define(function(require) {
          * @type {Object}
          */
         this._isActive;
-
-        /**
-         * @private
-         * @type {Array}
-         */
-        this._activeBatch;
     }
+
 
     AreaSelect.defaultOption = {
         show: true,
         icon: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
         title: '区域选择',
+        inSelect: {
+        },
+        outOfSelect: {
+            color: '#ccc'
+        },
         connect: null // Can be 'all' or array of series index.
     };
 
+
     var proto = AreaSelect.prototype;
+
 
     proto.onclick = function (ecModel, api, type) {
         var controllerGroup = this._controllerGroup;
@@ -132,32 +138,23 @@ define(function(require) {
      * @private
      */
     proto._onSelected = function (featureModel, ecModel, api, selRanges, isEnd) {
-        var newBatch = findSelectedItems(this.model, selRanges, ecModel);
-        // ???????????????
         // FIXME
-        // var resultBatches = modelUtil.compressBatches(this._activeBatch, newBatch);
-
-        var oldBatch = this._activeBatch || [];
-        this._activeBatch = newBatch;
-
+        // reuse the big hash map, avoid GC?
+        var selected = getStore(ecModel).selected || {};
+        findSelectedItems(selected, this.model, selRanges, ecModel);
         // If dispatch hightlight with empty batch, all will be highlighted.
-        newBatch.length && api.dispatchAction({
+        api.dispatchAction({
             type: 'select',
-            batch: newBatch
+            selected: selected
         });
-        // oldBatch.length && api.dispatchAction({
-        //     type: 'downplay',
-        //     batch: oldBatch
-        // });
     };
 
-    function findSelectedItems(model, selRanges, ecModel) {
+    function findSelectedItems(selected, model, selRanges, ecModel) {
         // If only click but not drag, selRanges is empty.
         if (!selRanges.length) {
-            return [];
+            return {};
         }
 
-        var batchBySeries = [];
         var selRange = selRanges[0];
         var selRect = new BoundingRect(
             selRange[0][0],
@@ -169,10 +166,10 @@ define(function(require) {
         // ????????????
         // FIXME
         var connect = model.option.connect;
-        var broadcastSeriesIndices = [];
+        var broadcastSeries = [];
         if (connect === 'all') {
-            ecModel.eachSeries(function (seriesModel, seriesIndex) {
-                broadcastSeriesIndices.push(seriesIndex);
+            ecModel.eachSeries(function (seriesModel) {
+                broadcastSeries.push(seriesModel);
             });
         }
 
@@ -190,11 +187,15 @@ define(function(require) {
                 if (centerPosition
                     && selRect.contain(centerPosition[0], centerPosition[1])
                 ) {
-                    save(seriesIndex, dataIndex);
+                    save(seriesModel, dataIndex, 1);
 
-                    zrUtil.each(broadcastSeriesIndices, function (sidx) {
-                        sidx !== seriesIndex && save(seriesIndex, dataIndex);
+                    zrUtil.each(broadcastSeries, function (serModel) {
+                        serModel !== seriesModel && save(seriesModel, dataIndex, 1);
                     });
+                }
+                else {
+                    // FIXME consider other series should.
+                    save(seriesModel, dataIndex, 0);
                 }
 
                 // FIXME
@@ -211,19 +212,163 @@ define(function(require) {
             });
         });
 
-        var resultBatch = [];
-        for (var i = 0, len = batchBySeries.length; i < len; i++) {
-            batchBySeries[i] && resultBatch.push({seriesIndex: i, dataIndex: batchBySeries[i]});
+        function getIndices(seriesModel) {
+            return selected[seriesModel.id] || (selected[seriesModel.id] = []);
         }
 
-        return resultBatch;
-
-        function save(seriesIndex, dataIndex) {
-            (batchBySeries[seriesIndex] || (batchBySeries[seriesIndex] = [])).push(dataIndex);
+        function save(seriesModel, dataIndex, isSel) {
+            getIndices(seriesModel)[dataIndex] = isSel;
         }
     }
 
-    require('../featureManager').register('areaSelect', AreaSelect);
+    // function findSelectedItems(model, selRanges, ecModel) {
+    //     // If only click but not drag, selRanges is empty.
+    //     if (!selRanges.length) {
+    //         return [];
+    //     }
+
+    //     var batchBySeries = [];
+    //     var selRange = selRanges[0];
+    //     var selRect = new BoundingRect(
+    //         selRange[0][0],
+    //         selRange[1][0],
+    //         selRange[0][1] - selRange[0][0],
+    //         selRange[1][1] - selRange[1][0]
+    //     );
+
+    //     // ????????????
+    //     // FIXME
+    //     var connect = model.option.connect;
+    //     var broadcastSeriesIndices = [];
+    //     if (connect === 'all') {
+    //         ecModel.eachSeries(function (seriesModel, seriesIndex) {
+    //             broadcastSeriesIndices.push(seriesIndex);
+    //         });
+    //     }
+
+    //     ecModel.eachSeries(function (seriesModel, seriesIndex) {
+    //         var data = seriesModel.getData();
+
+    //         data.each(function (dataIndex) {
+
+    //             var el = data.getItemGraphicEl(dataIndex);
+    //             if (!el) {
+    //                 return;
+    //             }
+
+    //             var centerPosition = el.centerPosition;
+    //             if (centerPosition
+    //                 && selRect.contain(centerPosition[0], centerPosition[1])
+    //             ) {
+    //                 save(seriesIndex, dataIndex);
+
+    //                 zrUtil.each(broadcastSeriesIndices, function (sidx) {
+    //                     sidx !== seriesIndex && save(seriesIndex, dataIndex);
+    //                 });
+    //             }
+
+    //             // FIXME
+    //             // 考虑 bar 图。但是：
+    //             // rect 未必是 clone 不可 applyTransform
+    //             // var rect = el.getBoundingRect();
+    //             // rect.applyTransform(el.transform)
+    //             // if (rect.intersect(selRect)) {
+    //                 // newBatch.push({
+    //                 //     seriesIndex: seriesIndex,
+    //                 //     dataIndex: dataIndex
+    //                 // });
+    //             // }
+    //         });
+    //     });
+
+    //     var resultBatch = [];
+    //     for (var i = 0, len = batchBySeries.length; i < len; i++) {
+    //         batchBySeries[i] && resultBatch.push({seriesIndex: i, dataIndex: batchBySeries[i]});
+    //     }
+
+    //     return resultBatch;
+
+    //     function save(seriesIndex, dataIndex) {
+    //         (batchBySeries[seriesIndex] || (batchBySeries[seriesIndex] = [])).push(dataIndex);
+    //     }
+    // }
+
+    function getStore(ecModel) {
+        return ecModel[STORE_ATTR] || (ecModel[STORE_ATTR] = {});
+    }
+
+
+
+    featureManager.register('areaSelect', AreaSelect);
+
+
+
+    echarts.registerAction(
+        {
+            type: 'select',
+            event: 'select',
+            update: 'updateView'
+        },
+        function (payload, ecModel) {
+            getStore(ecModel).selected = payload.selected;
+        }
+    );
+
+
+
+    // FIXME priority + 10 ?
+    echarts.registerVisual(echarts.PRIORITY.VISUAL.COMPONENT + 10, function (ecModel) {
+        var toolboxModel = ecModel.getComponent('toolbox');
+
+        if (!toolboxModel) {
+            return;
+        }
+
+        // FIXME
+        // test
+        var visualMappings = toolboxModel.__visualMappings;
+
+        if (!visualMappings) {
+            var option = (toolboxModel.option.feature || {}).areaSelect || {};
+            visualMappings = visualSolution.createVisualMappings(
+                option, STATE_LIST, function (mappingOption) {
+                    mappingOption.mappingMethod = 'fixed';
+                }
+            );
+            toolboxModel.__visualMappings = visualMappings;
+        }
+
+        var selected = getStore(ecModel).selected;
+        var notEmpty;
+        for (var id in selected) {
+            notEmpty = true;
+        }
+
+        // FIXME
+        // all series?
+        ecModel.eachSeries(function (seriesModel) {
+            var data = seriesModel.getData();
+
+            visualSolution.applyVisual(
+                STATE_LIST,
+                visualMappings,
+                data,
+                !notEmpty ? returnOriginal : getValueState
+                // getValueState,
+                // ecModel
+            );
+
+            function getValueState(dataIndex) {
+                var dataIndices = selected[seriesModel.id];
+                return (dataIndices && dataIndices[dataIndex]) ? 'inSelect' : 'outOfSelect';
+            }
+
+            function returnOriginal() {
+                return 'original';
+            }
+        });
+    });
+
 
     return AreaSelect;
 });
