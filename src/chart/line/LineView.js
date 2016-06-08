@@ -291,7 +291,7 @@ define(function(require) {
                         coordSys, hasAnimation
                     );
                 }
-                group.setClipPath(createClipShape(coordSys, true, seriesModel));
+                lineGroup.setClipPath(createClipShape(coordSys, true, seriesModel));
             }
             else {
                 if (isAreaChart && !polygon) {
@@ -308,7 +308,7 @@ define(function(require) {
                 }
 
                 // Update clipPath
-                group.setClipPath(createClipShape(coordSys, false, seriesModel));
+                lineGroup.setClipPath(createClipShape(coordSys, false, seriesModel));
 
                 // Always update, or it is wrong in the case turning on legend
                 // because points are not changed
