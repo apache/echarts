@@ -33,10 +33,14 @@ define(function (require) {
 
     var each = zrUtil.each;
 
-    var VISUAL_CODING_STAGES = ['echarts', 'chart', 'component'];
+    var PRIORITY_PROCESSOR_FILTER = 1000;
+    var PRIORITY_PROCESSOR_STATISTIC = 5000;
 
-    // TODO Transform first or filter first
-    var PROCESSOR_STAGES = ['transform', 'filter', 'statistic'];
+
+    var PRIORITY_VISUAL_LAYOUT = 1000;
+    var PRIORITY_VISUAL_GLOBAL = 2000;
+    var PRIORITY_VISUAL_CHART = 3000;
+    var PRIORITY_VISUAL_COMPONENT = 4000;
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -144,6 +148,14 @@ define(function (require) {
 
         // In case some people write `window.onresize = chart.resize`
         this.resize = zrUtil.bind(this.resize, this);
+
+
+        // Sort on demand
+        function prioritySortFunc(a, b) {
+            return a.prio - b.prio;
+        }
+        visualFuncs.sort(prioritySortFunc);
+        dataProcessorFuncs.sort(prioritySortFunc);
     }
 
     var echartsProto = ECharts.prototype;
@@ -379,9 +391,7 @@ define(function (require) {
 
             coordSysMgr.update(ecModel, api);
 
-            doLayout.call(this, ecModel, payload);
-
-            doVisualCoding.call(this, ecModel, payload);
+            doVisualEncoding.call(this, ecModel, payload, api);
 
             doRender.call(this, ecModel, payload);
 
@@ -424,9 +434,7 @@ define(function (require) {
                 return;
             }
 
-            doLayout.call(this, ecModel, payload);
-
-            doVisualCoding.call(this, ecModel, payload);
+            doVisualEncoding.call(this, ecModel, payload);
 
             invokeUpdateMethod.call(this, 'updateView', ecModel, payload);
         },
@@ -443,7 +451,7 @@ define(function (require) {
                 return;
             }
 
-            doVisualCoding.call(this, ecModel, payload);
+            doVisualEncoding.call(this, ecModel, payload);
 
             invokeUpdateMethod.call(this, 'updateVisual', ecModel, payload);
         },
@@ -460,7 +468,7 @@ define(function (require) {
                 return;
             }
 
-            doLayout.call(this, ecModel, payload);
+            doLayout.call(this, ecModel, payload, this._api);
 
             invokeUpdateMethod.call(this, 'updateLayout', ecModel, payload);
         },
@@ -738,10 +746,8 @@ define(function (require) {
      * @private
      */
     function processData(ecModel, api) {
-        each(PROCESSOR_STAGES, function (stage) {
-            each(dataProcessorFuncs[stage] || [], function (process) {
-                process(ecModel, api);
-            });
+        each(dataProcessorFuncs, function (process) {
+            process.func(ecModel, api);
         });
     }
 
@@ -764,33 +770,32 @@ define(function (require) {
     }
 
     /**
-     * Layout before each chart render there series, after visual coding and data processing
+     * Layout before each chart render there series, special visual encoding stage
      *
      * @param {module:echarts/model/Global} ecModel
      * @private
      */
-    function doLayout(ecModel, payload) {
-        var api = this._api;
-        each(layoutFuncs, function (layout) {
-            layout(ecModel, api, payload);
+    function doLayout(ecModel, payload, api) {
+        each(visualFuncs, function (visual) {
+            if (visual.isLayout) {
+                visual.func(ecModel, api, payload);
+            }
         });
     }
 
     /**
-     * Code visual infomation from data after data processing
+     * Encode visual infomation from data after data processing
      *
      * @param {module:echarts/model/Global} ecModel
      * @private
      */
-    function doVisualCoding(ecModel, payload) {
+    function doVisualEncoding(ecModel, payload, api) {
         ecModel.clearColorPalette();
         ecModel.eachSeries(function (seriesModel) {
             seriesModel.clearColorPalette();
         });
-        each(VISUAL_CODING_STAGES, function (stage) {
-            each(visualCodingFuncs[stage] || [], function (visualCoding) {
-                visualCoding(ecModel, payload);
-            });
+        each(visualFuncs, function (visual) {
+            visual.func(ecModel, api, payload);
         });
     }
 
@@ -960,17 +965,11 @@ define(function (require) {
     var eventActionMap = {};
 
     /**
-     * @type {Array.<Function>}
-     * @inner
-     */
-    var layoutFuncs = [];
-
-    /**
      * Data processor functions of each stage
      * @type {Array.<Object.<string, Function>>}
      * @inner
      */
-    var dataProcessorFuncs = {};
+    var dataProcessorFuncs = [];
 
     /**
      * @type {Array.<Function>}
@@ -979,11 +978,11 @@ define(function (require) {
     var optionPreprocessorFuncs = [];
 
     /**
-     * Visual coding functions of each stage
+     * Visual encoding functions of each stage
      * @type {Array.<Object.<string, Function>>}
      * @inner
      */
-    var visualCodingFuncs = {};
+    var visualFuncs = [];
     /**
      * Theme storage
      * @type {Object.<key, Object>}
@@ -1154,15 +1153,21 @@ define(function (require) {
     };
 
     /**
-     * @param {string} stage
+     * @param {number} [priority=1000]
      * @param {Function} processorFunc
      */
-    echarts.registerProcessor = function (stage, processorFunc) {
-        if (zrUtil.indexOf(PROCESSOR_STAGES, stage) < 0) {
-            throw new Error('stage should be one of ' + PROCESSOR_STAGES);
+    echarts.registerProcessor = function (priority, processorFunc) {
+        if (typeof priority === 'function') {
+            processorFunc = priority;
+            priority = PRIORITY_PROCESSOR_FILTER;
         }
-        var funcs = dataProcessorFuncs[stage] || (dataProcessorFuncs[stage] = []);
-        funcs.push(processorFunc);
+        if (isNaN(priority)) {
+            throw new Error('Unkown processor priority');
+        }
+        dataProcessorFuncs.push({
+            prio: priority,
+            func: processorFunc
+        });
     };
 
     /**
@@ -1211,25 +1216,44 @@ define(function (require) {
     };
 
     /**
-     * @param {*} layout
+     * Layout is a special stage of visual encoding
+     * Most visual encoding like color are common for different chart
+     * But each chart has it's own layout algorithm
+     *
+     * @param {string} [priority=1000]
+     * @param {Function} layoutFunc
      */
-    echarts.registerLayout = function (layout) {
-        // PENDING All functions ?
-        if (zrUtil.indexOf(layoutFuncs, layout) < 0) {
-            layoutFuncs.push(layout);
+    echarts.registerLayout = function (priority, layoutFunc) {
+        if (typeof priority === 'function') {
+            layoutFunc = priority;
+            priority = PRIORITY_VISUAL_LAYOUT;
         }
+        if (isNaN(priority)) {
+            throw new Error('Unkown layout priority');
+        }
+        visualFuncs.push({
+            prio: priority,
+            func: layoutFunc,
+            isLayout: true
+        });
     };
 
     /**
-     * @param {string} stage
-     * @param {Function} visualCodingFunc
+     * @param {string} [priority=3000]
+     * @param {Function} visualFunc
      */
-    echarts.registerVisualCoding = function (stage, visualCodingFunc) {
-        if (zrUtil.indexOf(VISUAL_CODING_STAGES, stage) < 0) {
-            throw new Error('stage should be one of ' + VISUAL_CODING_STAGES);
+    echarts.registerVisual = function (priority, visualFunc) {
+        if (typeof priority === 'function') {
+            visualFunc = priority;
+            priority = PRIORITY_VISUAL_CHART;
         }
-        var funcs = visualCodingFuncs[stage] || (visualCodingFuncs[stage] = []);
-        funcs.push(visualCodingFunc);
+        if (isNaN(priority)) {
+            throw new Error('Unkown visual priority');
+        }
+        visualFuncs.push({
+            prio: priority,
+            func: visualFunc
+        });
     };
 
     /**
@@ -1280,7 +1304,7 @@ define(function (require) {
         zrUtil.createCanvas = creator;
     };
 
-    echarts.registerVisualCoding('echarts', zrUtil.curry(
+    echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, zrUtil.curry(
         require('./visual/seriesColor'), '', 'itemStyle'
     ));
     echarts.registerPreprocessor(require('./preprocessor/backwardCompat'));
@@ -1322,6 +1346,20 @@ define(function (require) {
             echarts.util[name] = zrUtil[name];
         }
     );
+
+    // PRIORITY
+    echarts.PRIORITY = {
+        PROCESSOR: {
+            FILTER: PRIORITY_PROCESSOR_FILTER,
+            STATISTIC: PRIORITY_PROCESSOR_STATISTIC
+        },
+        VISUAL: {
+            LAYOUT: PRIORITY_VISUAL_LAYOUT,
+            GLOBAL: PRIORITY_VISUAL_GLOBAL,
+            CHART: PRIORITY_VISUAL_CHART,
+            COMPONENT: PRIORITY_VISUAL_COMPONENT
+        }
+    };
 
     return echarts;
 });

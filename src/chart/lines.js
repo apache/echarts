@@ -9,7 +9,7 @@ define(function (require) {
         require('./lines/linesLayout')
     );
 
-    echarts.registerVisualCoding(
-        'chart', zrUtil.curry(require('../visual/seriesColor'), 'lines', 'lineStyle')
+    echarts.registerVisual(
+        zrUtil.curry(require('../visual/seriesColor'), 'lines', 'lineStyle')
     );
 });

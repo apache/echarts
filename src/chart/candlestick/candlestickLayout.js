@@ -4,7 +4,7 @@ define(function (require) {
     var CANDLE_MIN_NICE_WIDTH = 5;
     var GPA_MIN = 4;
 
-    return function (ecModel, api) {
+    return function (ecModel) {
 
         ecModel.eachSeriesByType('candlestick', function (seriesModel) {
 

@@ -7,7 +7,7 @@ define(function (require) {
     var VisualMapping = require('../../visual/VisualMapping');
     var zrUtil = require('zrender/core/util');
 
-    echarts.registerVisualCoding('component', function (ecModel) {
+    echarts.registerVisual(echarts.PRIORITY.VISUAL.COMPONENT, function (ecModel) {
         ecModel.eachComponent('visualMap', function (visualMapModel) {
             processSingleVisualMap(visualMapModel, ecModel);
         });

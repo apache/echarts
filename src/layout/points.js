@@ -1,6 +1,6 @@
 define(function (require) {
 
-    return function (seriesType, ecModel, api) {
+    return function (seriesType, ecModel) {
         ecModel.eachSeriesByType(seriesType, function (seriesModel) {
             var data = seriesModel.getData();
             var coordSys = seriesModel.coordinateSystem;

@@ -6,12 +6,8 @@ define(function (require) {
     require('./funnel/FunnelSeries');
     require('./funnel/FunnelView');
 
-    echarts.registerVisualCoding(
-        'chart',  zrUtil.curry(require('../visual/dataColor'), 'funnel')
-    );
+    echarts.registerVisual(zrUtil.curry(require('../visual/dataColor'), 'funnel'));
     echarts.registerLayout(require('./funnel/funnelLayout'));
 
-    echarts.registerProcessor(
-        'filter', zrUtil.curry(require('../processor/dataFilter'), 'funnel')
-    );
+    echarts.registerProcessor(zrUtil.curry(require('../processor/dataFilter'), 'funnel'));
 });

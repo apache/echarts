@@ -9,16 +9,14 @@ define(function (require) {
     require('./radar/RadarSeries');
     require('./radar/RadarView');
 
-    echarts.registerVisualCoding(
-        'chart',  zrUtil.curry(require('../visual/dataColor'), 'radar')
-    );
-    echarts.registerVisualCoding('chart', zrUtil.curry(
+    echarts.registerVisual(zrUtil.curry(require('../visual/dataColor'), 'radar'));
+    echarts.registerVisual(zrUtil.curry(
         require('../visual/symbol'), 'radar', 'circle', null
     ));
     echarts.registerLayout(require('./radar/radarLayout'));
 
     echarts.registerProcessor(
-        'filter', zrUtil.curry(require('../processor/dataFilter'), 'radar')
+        zrUtil.curry(require('../processor/dataFilter'), 'radar')
     );
 
     echarts.registerPreprocessor(require('./radar/backwardCompat'));

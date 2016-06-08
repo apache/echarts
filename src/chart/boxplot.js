@@ -5,7 +5,7 @@ define(function (require) {
     require('./boxplot/BoxplotSeries');
     require('./boxplot/BoxplotView');
 
-    echarts.registerVisualCoding('chart', require('./boxplot/boxplotVisual'));
+    echarts.registerVisual(require('./boxplot/boxplotVisual'));
     echarts.registerLayout(require('./boxplot/boxplotLayout'));
 
 });

@@ -6,7 +6,7 @@ define(function (require) {
     require('./effectScatter/EffectScatterSeries');
     require('./effectScatter/EffectScatterView');
 
-    echarts.registerVisualCoding('chart', zrUtil.curry(
+    echarts.registerVisual(zrUtil.curry(
         require('../visual/symbol'), 'effectScatter', 'circle', null
     ));
     echarts.registerLayout(zrUtil.curry(
