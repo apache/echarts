@@ -4,8 +4,9 @@ define(function (require) {
 
     var createListFromArray = require('../helper/createListFromArray');
     var SeriesModel = require('../../model/Series');
+    var visualSelectable = require('../../visual/visualSelectable');
 
-    return SeriesModel.extend({
+    return visualSelectable(SeriesModel.extend({
 
         type: 'series.scatter',
 
@@ -58,5 +59,5 @@ define(function (require) {
                 }
             }
         }
-    });
+    }));
 });

@@ -17,9 +17,14 @@ define(function(require) {
 
     // Spectial component id start with \0ec\0, see echarts/model/Global.js~hasInnerId
     var DATA_ZOOM_ID_BASE = '\0_ec_\0toolbox-dataZoom_';
+    var MUTEX_USER_KEY = 'dataZoomSelect';
+    var MUTEX_RESOURCE_KEY = 'globalPan';
 
-    function DataZoom(model) {
+    function DataZoom(model, ecModel, api) {
+
         this.model = model;
+        this.ecModel = ecModel;
+        this.api = api;
 
         /**
          * @private
@@ -67,17 +72,17 @@ define(function(require) {
             api.getZr().add(controllerGroup);
         }
 
-        handlers[type].call(this, controllerGroup, this.model, ecModel, api);
+        handlers[type].call(this);
     };
 
     proto.remove = function (ecModel, api) {
         this._disposeController();
-        interactionMutex.release('globalPan', api.getZr());
+        interactionMutex.release(api.getZr(), MUTEX_RESOURCE_KEY, MUTEX_USER_KEY);
     };
 
     proto.dispose = function (ecModel, api) {
         var zr = api.getZr();
-        interactionMutex.release('globalPan', zr);
+        interactionMutex.release(zr, MUTEX_RESOURCE_KEY, MUTEX_USER_KEY);
         this._disposeController();
         this._controllerGroup && zr.remove(this._controllerGroup);
     };
@@ -87,56 +92,53 @@ define(function(require) {
      */
     var handlers = {
 
-        zoom: function (controllerGroup, featureModel, ecModel, api) {
-            var isZoomActive = this._isZoomActive = !this._isZoomActive;
-            var zr = api.getZr();
+        zoom: function () {
+            var zr = this.api.getZr();
+            var nextActive = !this._isZoomActive;
 
-            interactionMutex[isZoomActive ? 'take' : 'release']('globalPan', zr);
-
-            featureModel.setIconStatus('zoom', isZoomActive ? 'emphasis' : 'normal');
-
-            if (isZoomActive) {
-                zr.setDefaultCursorStyle('crosshair');
-
-                this._createController(
-                    controllerGroup, featureModel, ecModel, api
+            if (nextActive) { // jshint ignore:line
+                interactionMutex.take(
+                    zr, MUTEX_RESOURCE_KEY, MUTEX_USER_KEY, zrUtil.bind(onRelease, this)
                 );
+
+                this._isZoomActive = nextActive;
+                this.model.setIconStatus('zoom', 'emphasis');
+                zr.setDefaultCursorStyle('crosshair');
+                this._createController();
             }
             else {
+                interactionMutex.release(zr, MUTEX_RESOURCE_KEY, MUTEX_USER_KEY);
+            }
+
+            function onRelease() {
+                this.model.setIconStatus('zoom', 'normal');
                 zr.setDefaultCursorStyle('default');
                 this._disposeController();
+                this._isZoomActive = false;
             }
         },
 
-        back: function (controllerGroup, featureModel, ecModel, api) {
-            this._dispatchAction(history.pop(ecModel), api);
+        back: function () {
+            this._dispatchAction(history.pop(this.ecModel));
         }
     };
 
     /**
      * @private
      */
-    proto._createController = function (
-        controllerGroup, featureModel, ecModel, api
-    ) {
-        var controller = this._controller = new SelectController(
+    proto._createController = function () {
+        (this._controller = new SelectController(
             'rect',
-            api.getZr(),
+            this.api.getZr(),
             {
                 // FIXME
                 lineWidth: 3,
                 stroke: '#333',
                 fill: 'rgba(0,0,0,0.2)'
             }
-        );
-        controller.on(
-            'selected',
-            zrUtil.bind(
-                this._onSelected, this, controller,
-                featureModel, ecModel, api
-            )
-        );
-        controller.enable(controllerGroup, false);
+        ))
+            .on('selected', zrUtil.bind(this._onSelected, this))
+            .enable(this._controllerGroup, false);
     };
 
     proto._disposeController = function () {
@@ -180,15 +182,16 @@ define(function(require) {
     /**
      * @private
      */
-    proto._onSelected = function (controller, featureModel, ecModel, api, selRanges, isEnd) {
+    proto._onSelected = function (selRanges, isEnd) {
         if (!isEnd || !selRanges.length) {
             return;
         }
         var selRange = selRanges[0];
 
-        controller.update(); // remove cover
+        this._controller.update(); // remove cover
 
         var snapshot = {};
+        var ecModel = this.ecModel;
 
         // FIXME
         // polar
@@ -209,7 +212,7 @@ define(function(require) {
 
         history.push(ecModel, snapshot);
 
-        this._dispatchAction(snapshot, api);
+        this._dispatchAction(snapshot);
     };
 
     function pointToDataInCartesian(selRange, coordInfo) {
@@ -250,14 +253,14 @@ define(function(require) {
     /**
      * @private
      */
-    proto._dispatchAction = function (snapshot, api) {
+    proto._dispatchAction = function (snapshot) {
         var batch = [];
 
         each(snapshot, function (batchItem) {
             batch.push(batchItem);
         });
 
-        batch.length && api.dispatchAction({
+        batch.length && this.api.dispatchAction({
             type: 'dataZoom',
             from: this.uid,
             batch: zrUtil.clone(batch, true)

@@ -4,16 +4,30 @@ define(function (require) {
 
     var interactionMutex = {
 
-        take: function (key, zr) {
-            getStore(zr)[key] = true;
+        take: function (zr, resourceKey, userKey, onRelease) {
+            var store = getStore(zr);
+            var record = store[resourceKey];
+
+            record && record.onRelease && record.onRelease();
+
+            store[resourceKey] = {
+                userKey: userKey,
+                onRelease: onRelease
+            };
         },
 
-        release: function (key, zr) {
-            getStore(zr)[key] = false;
+        release: function (zr, resourceKey, userKey) {
+            var store = getStore(zr);
+            var record = store[resourceKey];
+
+            if (record.userKey === userKey) {
+                store[resourceKey] = null;
+                record.onRelease && record.onRelease();
+            }
         },
 
-        isTaken: function (key, zr) {
-            return !!getStore(zr)[key];
+        isTaken: function (zr, resourceKey) {
+            return !!getStore(zr)[resourceKey];
         }
     };
 

@@ -42,14 +42,14 @@ define(function (require) {
      * @constructor
      * @mixin {module:zrender/mixin/Eventful}
      *
-     * @param {string} type 'line', 'rect'
+     * @param {string} type 'line', 'rect', 'pencil'
      * @param {module:zrender/zrender~ZRender} zr
      * @param {Object} [opt]
      * @param {number} [opt.width]
      * @param {number} [opt.lineWidth]
      * @param {string} [opt.stroke]
      * @param {string} [opt.fill]
-     * @param {boolean} [opt.resizeEnabled]
+     * @param {boolean} [opt.transformEnabled]
      */
     function SelectController(type, zr, opt) {
 
@@ -111,6 +111,11 @@ define(function (require) {
          * @private
          */
         this._ranges;
+
+        var coverRenderer = coverRenderers[type];
+        if (coverRenderer.isInRange) {
+            this.isInRange = coverRenderer.isInRange;
+        }
 
         /**
          * @type {Object}
@@ -177,6 +182,14 @@ define(function (require) {
             each(EVENTS, function (eventName) {
                 this.zr.off(eventName, this._handlers[eventName]);
             }, this);
+        },
+
+        /**
+         * @param {Array.<number>} point
+         * @return {boolean}
+         */
+        isInRange: function (point) {
+            return false;
         }
     };
 
@@ -246,22 +259,19 @@ define(function (require) {
         if (isInContainer.call(this, x, y)) {
             this._track.push([x, y]);
 
-            // Create or update cover.
-            if (shouldShowCover.call(this)) {
-                coverRenderers[this.type].setInitRanges.call(this);
-            }
-            else {
+            this._ranges = shouldShowCover.call(this)
+                // Create or update cover.
+                ? coverRenderers[this.type].getRanges.call(this)
                 // Remove cover.
-                this._ranges = [];
-            }
+                : [];
 
             renderAndTrigger.call(this, isEnd);
         }
     }
 
-    function renderAndTrigger(isEnd) {
+    function renderAndTrigger(isEnd, ranges) {
         renderCover.call(this);
-        this.trigger('selected', zrUtil.clone(this._ranges), isEnd);
+        this.trigger('selected', this._ranges, isEnd);
     }
 
     function shouldShowCover() {
@@ -286,10 +296,10 @@ define(function (require) {
 
         if (ranges && ranges.length) {
             if (!this._cover) {
-                this._cover = coverRenderer.create.call(this);
+                this._cover = coverRenderer.createCover.call(this);
                 this.group.add(this._cover);
             }
-            coverRenderer.update.call(this, ranges);
+            coverRenderer.updateCover.call(this, ranges);
         }
         else {
             this.group.remove(this._cover);
@@ -330,19 +340,20 @@ define(function (require) {
                 fill: opt.fill,
                 lineWidth: opt.lineWidth,
                 opacity: opt.opacity
-            }
+            },
+            silent: !opt.transformEnabled
         });
         coverGroup.add(rect);
 
-        if (opt.resizeEnabled) {
+        if (opt.transformEnabled) {
             rect.draggable = true;
             rect.cursor = 'move';
-            rect.drift = bind(drift, this, 'nswe');
+            rect.drift = bind(driftRect, this, 'nswe');
             rect.ondragend = bind(renderAndTrigger, this, true);
         }
     }
 
-    function updateControlShape(coverGroup, name, x, y, w, h) {
+    function updateRectShape(coverGroup, name, x, y, w, h) {
         coverGroup.childOfName(name).setShape({x: x, y: y, width: w, height: h});
     }
 
@@ -356,7 +367,7 @@ define(function (require) {
         ];
     }
 
-    function drift(name, dx, dy) {
+    function driftRect(name, dx, dy) {
         var rectRange = this._ranges[0];
         var delta = [dx, dy];
 
@@ -372,6 +383,26 @@ define(function (require) {
         renderAndTrigger.call(this, false);
     }
 
+    function driftPencil(dx, dy) {
+        var range = this._ranges[0];
+
+        each(range, function (point) {
+            point[0] += dx;
+            point[1] += dy;
+        });
+
+        renderAndTrigger.call(this, false);
+    }
+
+    function isInShapeRange(point) {
+        // FIXME
+        // multi covers
+        var cover = this._cover;
+        return (cover && this._ranges[0])
+            ? cover.childAt(0).contain(point[0], point[1]) : false;
+    }
+
+
     /**
      * key: this.type
      * @type {Object}
@@ -380,7 +411,7 @@ define(function (require) {
 
         line: {
 
-            create: function () {
+            createCover: function () {
                 var coverGroup = new graphic.Group();
 
                 createBaseRect.call(this, coverGroup);
@@ -388,15 +419,15 @@ define(function (require) {
                 return coverGroup;
             },
 
-            setInitRanges: function () {
+            getRanges: function () {
                 var ends = getLocalTrackEnds.call(this);
                 var min = mathMin(ends[0][0], ends[1][0]);
                 var max = mathMax(ends[0][0], ends[1][0]);
 
-                this._range = [[min, max]];
+                return [[min, max]];
             },
 
-            update: function (ranges) {
+            updateCover: function (ranges) {
                 var range = ranges[0];
                 var width = this.opt.width;
                 this._cover.childOfName('rect').setShape({
@@ -410,41 +441,41 @@ define(function (require) {
 
         rect: {
 
-            create: function () {
+            createCover: function () {
                 var opt = this.opt;
                 var coverGroup = new graphic.Group();
 
                 createBaseRect.call(this, coverGroup);
 
-                if (opt.resizeEnabled) {
-                    each(
-                        ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw'],
-                        function (name) {
-                            coverGroup.add(new graphic.Rect({
-                                name: name,
-                                cursor: CURSOR_MAP[name] + '-resize',
-                                style: {opacity: 0},
-                                draggable: true,
-                                drift: bind(drift, this, name),
-                                ondragend: bind(renderAndTrigger, this, true)
-                            }));
-                        },
-                        this
-                    );
-                }
+                opt.transformEnabled && each(
+                    ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw'],
+                    function (name) {
+                        coverGroup.add(new graphic.Rect({
+                            name: name,
+                            cursor: CURSOR_MAP[name] + '-resize',
+                            style: {opacity: 0},
+                            draggable: true,
+                            drift: bind(driftRect, this, name),
+                            ondragend: bind(renderAndTrigger, this, true)
+                        }));
+                    },
+                    this
+                );
 
                 return coverGroup;
             },
 
-            setInitRanges: function () {
+            getRanges: function () {
                 var ends = getLocalTrackEnds.call(this);
-                this._ranges = [formatRectRange(ends[1][0], ends[1][1], ends[0][0], ends[0][1])];
+                return [formatRectRange(ends[1][0], ends[1][1], ends[0][0], ends[0][1])];
             },
 
-            update: function (ranges) {
+            isInRange: isInShapeRange,
+
+            updateCover: function (ranges) {
                 var range = ranges[0];
                 var opt = this.opt;
-                var lineWidth = opt.lineWidth;
+                var lineWidth = opt.lineWidth || 0;
                 var handleSize = mathMax(lineWidth, MIN_RESIZE_LINE_WIDTH);
                 var x = range[0][0];
                 var y = range[1][0];
@@ -460,19 +491,57 @@ define(function (require) {
                 var heighta = height + lineWidth;
                 var cover = this._cover;
 
-                updateControlShape(cover, 'rect', x, y, width, height);
+                updateRectShape(cover, 'rect', x, y, width, height);
 
-                if (opt.resizeEnabled) {
-                    updateControlShape(cover, 'w', xa, ya, handleSize, heighta);
-                    updateControlShape(cover, 'e', x2a, ya, handleSize, heighta);
-                    updateControlShape(cover, 'n', xa, ya, widtha, handleSize);
-                    updateControlShape(cover, 's', xa, y2a, widtha, handleSize);
+                if (opt.transformEnabled) {
+                    updateRectShape(cover, 'w', xa, ya, handleSize, heighta);
+                    updateRectShape(cover, 'e', x2a, ya, handleSize, heighta);
+                    updateRectShape(cover, 'n', xa, ya, widtha, handleSize);
+                    updateRectShape(cover, 's', xa, y2a, widtha, handleSize);
 
-                    updateControlShape(cover, 'nw', xa, ya, handleSize, handleSize);
-                    updateControlShape(cover, 'ne', x2a, ya, handleSize, handleSize);
-                    updateControlShape(cover, 'sw', xa, y2a, handleSize, handleSize);
-                    updateControlShape(cover, 'se', x2a, y2a, handleSize, handleSize);
+                    updateRectShape(cover, 'nw', xa, ya, handleSize, handleSize);
+                    updateRectShape(cover, 'ne', x2a, ya, handleSize, handleSize);
+                    updateRectShape(cover, 'sw', xa, y2a, handleSize, handleSize);
+                    updateRectShape(cover, 'se', x2a, y2a, handleSize, handleSize);
                 }
+            }
+        },
+
+        pencil: {
+
+            createCover: function () {
+                var cover = new graphic.Group();
+                var opt = this.opt;
+
+                var polygon = new graphic.Polygon({
+                    style: {
+                        stroke: opt.stroke,
+                        fill: opt.fill,
+                        lineWidth: opt.lineWidth,
+                        opacity: opt.opacity
+                    },
+                    silent: !opt.transformEnabled
+                });
+                cover.add(polygon);
+
+                if (opt.transformEnabled) {
+                    polygon.draggable = true;
+                    polygon.cursor = 'move';
+                    polygon.drift = bind(driftPencil, this);
+                    polygon.ondragend = bind(renderAndTrigger, this, true);
+                }
+
+                return cover;
+            },
+
+            getRanges: function () {
+                return [this._track.slice()];
+            },
+
+            isInRange: isInShapeRange,
+
+            updateCover: function (ranges) {
+                this._cover.childAt(0).setShape({points: this._ranges[0]});
             }
         }
     };

@@ -58,7 +58,7 @@ define(function (require) {
                         if (!Feature) {
                             return;
                         }
-                        feature = new Feature(featureModel);
+                        feature = new Feature(featureModel, ecModel, api);
                     }
                     features[featureName] = feature;
                 }
@@ -69,6 +69,8 @@ define(function (require) {
                         return;
                     }
                     feature.model = featureModel;
+                    feature.ecModel = ecModel;
+                    feature.api = api;
                 }
 
                 if (!featureName && oldName) {

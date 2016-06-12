@@ -41,6 +41,7 @@ define(function (require) {
     var PRIORITY_VISUAL_GLOBAL = 2000;
     var PRIORITY_VISUAL_CHART = 3000;
     var PRIORITY_VISUAL_COMPONENT = 4000;
+    var PRIORITY_VISUAL_SELECT = 5000;
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -1359,7 +1360,8 @@ define(function (require) {
             LAYOUT: PRIORITY_VISUAL_LAYOUT,
             GLOBAL: PRIORITY_VISUAL_GLOBAL,
             CHART: PRIORITY_VISUAL_CHART,
-            COMPONENT: PRIORITY_VISUAL_COMPONENT
+            COMPONENT: PRIORITY_VISUAL_COMPONENT,
+            SELECT: PRIORITY_VISUAL_SELECT
         }
     };
 

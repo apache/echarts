@@ -1,21 +1,23 @@
 define(function(require) {
     'use strict';
 
-    var echarts = require('../../../echarts');
     var featureManager = require('../featureManager');
     var zrUtil = require('zrender/core/util');
     var SelectController = require('../../helper/SelectController');
-    var BoundingRect = require('zrender/core/BoundingRect');
     var Group = require('zrender/container/Group');
     var interactionMutex = require('../../helper/interactionMutex');
-    var visualSolution = require('../../../visual/visualSolution');
+    // var throttle = require('../../../util/throttle');
 
-    var STATE_LIST = ['original', 'inSelect', 'outOfSelect'];
-    var STORE_ATTR = '\0__areaSelect';
+    // var THROTTLE_RATE = 200;
+    var MAP_SELECTED = 1;
+    var MAP_UNSELECTED = 0;
+    var MAP_BROADCAST = 2;
 
-    function AreaSelect(model) {
+    function AreaSelect(model, ecModel, api) {
 
         this.model = model;
+        this.ecModel = ecModel;
+        this.api = api;
 
         /**
          * @private
@@ -30,29 +32,54 @@ define(function(require) {
         this._controller;
 
         /**
-         * Is in select state.
+         * 'rect' or 'pencil' or null/undefined
          * @private
-         * @type {Object}
+         * @type {string}
          */
-        this._isActive;
+        this._type;
     }
 
 
     AreaSelect.defaultOption = {
         show: true,
-        icon: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
-        title: '区域选择',
-        inSelect: {
+        type: ['rect', 'pencil'],
+        icon: {
+            // FIXME
+            rect: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
+            // FIXME
+            pencil: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1'
         },
-        outOfSelect: {
-            color: '#ccc'
+        title: {
+            rect: '矩形选择',
+            pencil: '圈选'
         },
-        connect: null // Can be 'all' or array of series index.
+        connect: false      // Whether broadcast in selectable series.
     };
 
 
     var proto = AreaSelect.prototype;
 
+    proto.getIcons = function () {
+        var model = this.model;
+        var availableIcons = model.get('icon', true);
+        var icons = {};
+        zrUtil.each(model.get('type', true), function (type) {
+            if (availableIcons[type]) {
+                icons[type] = availableIcons[type];
+            }
+        });
+        return icons;
+    };
+
+    // proto.render = function () {
+        // FIXME
+        // throttle.createOrUpdate(
+        //     this,
+        //     '_dispatchAction',
+        //     THROTTLE_RATE,
+        //     'fixRate'
+        // );
+    // };
 
     proto.onclick = function (ecModel, api, type) {
         var controllerGroup = this._controllerGroup;
@@ -61,17 +88,17 @@ define(function(require) {
             api.getZr().add(controllerGroup);
         }
 
-        this._switchActive(controllerGroup, this.model, ecModel, api);
+        this._switchType(type);
     };
 
     proto.remove = function (ecModel, api) {
         this._disposeController();
-        interactionMutex.release('globalPan', api.getZr());
+        interactionMutex.release(api.getZr(), 'globalPan', 'areaSelect');
     };
 
     proto.dispose = function (ecModel, api) {
         var zr = api.getZr();
-        interactionMutex.release('globalPan', zr);
+        interactionMutex.release(zr, 'globalPan', 'areaSelect');
         this._disposeController();
         this._controllerGroup && zr.remove(this._controllerGroup);
     };
@@ -79,48 +106,48 @@ define(function(require) {
     /**
      * @private
      */
-    proto._switchActive = function (controllerGroup, featureModel, ecModel, api) {
-        var isActive = this._isActive = !this._isActive;
-        var zr = api.getZr();
+    proto._switchType = function (clickedType) {
+        var oldType = this._type;
+        var thisType = clickedType === oldType ? null : clickedType;
+        var zr = this.api.getZr();
 
-        interactionMutex[isActive ? 'take' : 'release']('globalPan', zr);
+        if (thisType) {
+            interactionMutex.take(zr, 'globalPan', 'areaSelect', zrUtil.bind(onRelease, this));
 
-        featureModel.setIconStatus('areaSelect', isActive ? 'emphasis' : 'normal');
-
-        if (isActive) {
+            this._type = thisType;
+            this.model.setIconStatus(thisType, 'emphasis');
             zr.setDefaultCursorStyle('crosshair');
-
-            this._createController(
-                controllerGroup, featureModel, ecModel, api
-            );
+            this._createController();
         }
         else {
+            interactionMutex.release(zr, 'globalPan', 'areaSelect');
+        }
+
+        function onRelease() {
+            this.model.setIconStatus('rect', 'normal');
+            this.model.setIconStatus('pencil', 'normal');
             zr.setDefaultCursorStyle('default');
             this._disposeController();
+            this._type = null;
         }
     };
 
     /**
      * @private
      */
-    proto._createController = function (controllerGroup, featureModel, ecModel, api) {
-        var controller = this._controller = new SelectController(
-            'rect',
-            api.getZr(),
+    proto._createController = function () {
+        (this._controller = new SelectController(
+            this._type,
+            this.api.getZr(),
             {
-                lineWidth: 3,
-                stroke: 'rgba(0,0,0,0.7)',
-                fill: 'rgba(0,0,0,0.2)',
-                resizeEnabled: true
+                // lineWidth: 2,
+                // stroke: 'rgba(0,0,0,0.3)',
+                fill: 'rgba(0,0,0,0.15)',
+                transformEnabled: true
             }
-        );
-
-        controller.on(
-            'selected',
-            zrUtil.bind(this._onSelected, this, featureModel, ecModel, api)
-        );
-
-        controller.enable(controllerGroup, false);
+        ))
+            .on('selected', zrUtil.bind(this._onSelected, this))
+            .enable(this._controllerGroup, false);
     };
 
     /**
@@ -137,238 +164,100 @@ define(function(require) {
     /**
      * @private
      */
-    proto._onSelected = function (featureModel, ecModel, api, selRanges, isEnd) {
-        // FIXME
-        // reuse the big hash map, avoid GC?
-        var selected = getStore(ecModel).selected || {};
-        findSelectedItems(selected, this.model, selRanges, ecModel);
-        // If dispatch hightlight with empty batch, all will be highlighted.
-        api.dispatchAction({
-            type: 'select',
-            selected: selected
-        });
+    proto._onSelected = function (selRanges, isEnd) {
+        var batch = findSelectedItems(this.model, selRanges, this._controller, this.ecModel);
+        this._dispatchAction(batch);
     };
 
-    function findSelectedItems(selected, model, selRanges, ecModel) {
-        // If only click but not drag, selRanges is empty.
-        if (!selRanges.length) {
-            return {};
-        }
+    proto._dispatchAction = function (batch) {
+        this.api.dispatchAction({type: 'select', batch: batch});
+    };
 
-        var selRange = selRanges[0];
-        var selRect = new BoundingRect(
-            selRange[0][0],
-            selRange[1][0],
-            selRange[0][1] - selRange[0][0],
-            selRange[1][1] - selRange[1][0]
-        );
+    function findSelectedItems(model, selRanges, controller, ecModel) {
+        var hasSel = !!selRanges.length;
 
-        // ????????????
         // FIXME
         var connect = model.option.connect;
-        var broadcastSeries = [];
+        var seriesToBroadcast = [];
         if (connect === 'all') {
             ecModel.eachSeries(function (seriesModel) {
-                broadcastSeries.push(seriesModel);
+                isSelectable(seriesModel) && seriesToBroadcast.push(seriesModel);
             });
         }
 
+        var batchBySeries = {};
+        var batch = [];
+
+        // Create dataIndexMap in first step for broadcast.
         ecModel.eachSeries(function (seriesModel, seriesIndex) {
+            if (isSelectable(seriesModel)) {
+                // If only click but not drag, selRanges.length is 0,
+                // batchItem.dataIndexMap should be undefined, which
+                // indicate series shoule be set back to normal.
+                var batchItem = {seriesId: seriesModel.id};
+                batch.push(batchItem);
+                batchBySeries[batchItem.seriesId] = batchItem;
+
+                if (hasSel) {
+                    batchItem.dataIndexMap =
+                        seriesModel.getSelectedDataIndexMap()
+                        || Array(seriesModel.getData().count());
+                }
+            }
+        });
+
+        ecModel.eachSeries(function (seriesModel, seriesIndex) {
+            if (!isSelectable(seriesModel) || !hasSel) {
+                return;
+            }
+
+            // Do not re-create dataIndexMap but reuse it as it might be a big object.
             var data = seriesModel.getData();
+            var dataIndexMap = batchBySeries[seriesModel.id].dataIndexMap;
 
             data.each(function (dataIndex) {
-
                 var el = data.getItemGraphicEl(dataIndex);
                 if (!el) {
                     return;
                 }
-
                 var centerPosition = el.centerPosition;
-                if (centerPosition
-                    && selRect.contain(centerPosition[0], centerPosition[1])
-                ) {
-                    save(seriesModel, dataIndex, 1);
+                if (centerPosition && controller.isInRange(centerPosition)) {
+                    dataIndexMap[dataIndex] = MAP_SELECTED;
 
-                    zrUtil.each(broadcastSeries, function (serModel) {
-                        serModel !== seriesModel && save(seriesModel, dataIndex, 1);
+                    zrUtil.each(seriesToBroadcast, function (serModel) {
+                        if (serModel !== seriesModel) {
+                            batchBySeries[serModel.id].dataIndexMap[dataIndex] = MAP_BROADCAST;
+                        }
                     });
                 }
-                else {
-                    // FIXME consider other series should.
-                    save(seriesModel, dataIndex, 0);
+                else if (dataIndexMap[dataIndex] !== MAP_BROADCAST) {
+                    dataIndexMap[dataIndex] = MAP_UNSELECTED;
                 }
-
-                // FIXME
-                // 考虑 bar 图。但是：
-                // rect 未必是 clone 不可 applyTransform
-                // var rect = el.getBoundingRect();
-                // rect.applyTransform(el.transform)
-                // if (rect.intersect(selRect)) {
-                    // newBatch.push({
-                    //     seriesIndex: seriesIndex,
-                    //     dataIndex: dataIndex
-                    // });
-                // }
             });
+
+            dataIndexMap.length = data.count(); // Cut remains
         });
 
-        function getIndices(seriesModel) {
-            return selected[seriesModel.id] || (selected[seriesModel.id] = []);
-        }
+        ecModel.eachSeries(function (seriesModel, seriesIndex) {
+            if (isSelectable(seriesModel) && hasSel) {
+                var dataIndexMap = batchBySeries[seriesModel.id].dataIndexMap;
+                var data = seriesModel.getData();
+                dataIndexMap && data.each(function (dataIndex) {
+                    dataIndexMap[dataIndex] === MAP_BROADCAST
+                        && (dataIndexMap[dataIndex] = MAP_SELECTED);
+                });
+            }
+        });
 
-        function save(seriesModel, dataIndex, isSel) {
-            getIndices(seriesModel)[dataIndex] = isSel;
-        }
+        return batch;
     }
 
-    // function findSelectedItems(model, selRanges, ecModel) {
-    //     // If only click but not drag, selRanges is empty.
-    //     if (!selRanges.length) {
-    //         return [];
-    //     }
-
-    //     var batchBySeries = [];
-    //     var selRange = selRanges[0];
-    //     var selRect = new BoundingRect(
-    //         selRange[0][0],
-    //         selRange[1][0],
-    //         selRange[0][1] - selRange[0][0],
-    //         selRange[1][1] - selRange[1][0]
-    //     );
-
-    //     // ????????????
-    //     // FIXME
-    //     var connect = model.option.connect;
-    //     var broadcastSeriesIndices = [];
-    //     if (connect === 'all') {
-    //         ecModel.eachSeries(function (seriesModel, seriesIndex) {
-    //             broadcastSeriesIndices.push(seriesIndex);
-    //         });
-    //     }
-
-    //     ecModel.eachSeries(function (seriesModel, seriesIndex) {
-    //         var data = seriesModel.getData();
-
-    //         data.each(function (dataIndex) {
-
-    //             var el = data.getItemGraphicEl(dataIndex);
-    //             if (!el) {
-    //                 return;
-    //             }
-
-    //             var centerPosition = el.centerPosition;
-    //             if (centerPosition
-    //                 && selRect.contain(centerPosition[0], centerPosition[1])
-    //             ) {
-    //                 save(seriesIndex, dataIndex);
-
-    //                 zrUtil.each(broadcastSeriesIndices, function (sidx) {
-    //                     sidx !== seriesIndex && save(seriesIndex, dataIndex);
-    //                 });
-    //             }
-
-    //             // FIXME
-    //             // 考虑 bar 图。但是：
-    //             // rect 未必是 clone 不可 applyTransform
-    //             // var rect = el.getBoundingRect();
-    //             // rect.applyTransform(el.transform)
-    //             // if (rect.intersect(selRect)) {
-    //                 // newBatch.push({
-    //                 //     seriesIndex: seriesIndex,
-    //                 //     dataIndex: dataIndex
-    //                 // });
-    //             // }
-    //         });
-    //     });
-
-    //     var resultBatch = [];
-    //     for (var i = 0, len = batchBySeries.length; i < len; i++) {
-    //         batchBySeries[i] && resultBatch.push({seriesIndex: i, dataIndex: batchBySeries[i]});
-    //     }
-
-    //     return resultBatch;
-
-    //     function save(seriesIndex, dataIndex) {
-    //         (batchBySeries[seriesIndex] || (batchBySeries[seriesIndex] = [])).push(dataIndex);
-    //     }
-    // }
-
-    function getStore(ecModel) {
-        return ecModel[STORE_ATTR] || (ecModel[STORE_ATTR] = {});
+    function isSelectable(seriesModel) {
+        return !!seriesModel.getSelectedDataIndexMap;
     }
-
 
 
     featureManager.register('areaSelect', AreaSelect);
-
-
-
-    echarts.registerAction(
-        {
-            type: 'select',
-            event: 'select',
-            update: 'updateView'
-        },
-        function (payload, ecModel) {
-            getStore(ecModel).selected = payload.selected;
-        }
-    );
-
-
-
-    // FIXME priority + 10 ?
-    echarts.registerVisual(echarts.PRIORITY.VISUAL.COMPONENT + 10, function (ecModel) {
-        var toolboxModel = ecModel.getComponent('toolbox');
-
-        if (!toolboxModel) {
-            return;
-        }
-
-        // FIXME
-        // test
-        var visualMappings = toolboxModel.__visualMappings;
-
-        if (!visualMappings) {
-            var option = (toolboxModel.option.feature || {}).areaSelect || {};
-            visualMappings = visualSolution.createVisualMappings(
-                option, STATE_LIST, function (mappingOption) {
-                    mappingOption.mappingMethod = 'fixed';
-                }
-            );
-            toolboxModel.__visualMappings = visualMappings;
-        }
-
-        var selected = getStore(ecModel).selected;
-        var notEmpty;
-        for (var id in selected) {
-            notEmpty = true;
-        }
-
-        // FIXME
-        // all series?
-        ecModel.eachSeries(function (seriesModel) {
-            var data = seriesModel.getData();
-
-            visualSolution.applyVisual(
-                STATE_LIST,
-                visualMappings,
-                data,
-                !notEmpty ? returnOriginal : getValueState
-                // getValueState,
-                // ecModel
-            );
-
-            function getValueState(dataIndex) {
-                var dataIndices = selected[seriesModel.id];
-                return (dataIndices && dataIndices[dataIndex]) ? 'inSelect' : 'outOfSelect';
-            }
-
-            function returnOriginal() {
-                return 'original';
-            }
-        });
-    });
-
 
     return AreaSelect;
 });
