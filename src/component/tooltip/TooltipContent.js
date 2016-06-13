@@ -211,11 +211,14 @@ define(function (require) {
 
         show: function (tooltipModel) {
             clearTimeout(this._hideTimeout);
+            var el = this.el;
 
-            this.el.style.cssText = gCssText + assembleCssText(tooltipModel)
+            el.style.cssText = gCssText + assembleCssText(tooltipModel)
                 // http://stackoverflow.com/questions/21125587/css3-transition-not-working-in-chrome-anymore
                 + ';left:' + this._x + 'px;top:' + this._y + 'px;'
                 + (tooltipModel.get('extraCssText') || '');
+
+            el.style.display = el.innerHTML ?  'block' : 'none';
 
             this._show = true;
         },
