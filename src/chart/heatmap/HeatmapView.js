@@ -90,12 +90,15 @@ define(function (require) {
             var yAxis = cartesian.getAxis('y');
             var group = this.group;
 
-            if (!(xAxis.type === 'category' && yAxis.type === 'category')) {
-                throw new Error('Heatmap on cartesian must have two category axes');
+            if (typeof __DEV__ !== 'undefined') {
+                if (!(xAxis.type === 'category' && yAxis.type === 'category')) {
+                    throw new Error('Heatmap on cartesian must have two category axes');
+                }
+                if (!(xAxis.onBand && yAxis.onBand)) {
+                    throw new Error('Heatmap on cartesian must have two axes with boundaryGap true');
+                }
             }
-            if (!(xAxis.onBand && yAxis.onBand)) {
-                throw new Error('Heatmap on cartesian must have two axes with boundaryGap true');
-            }
+
             var width = xAxis.getBandWidth();
             var height = yAxis.getBandWidth();
 
