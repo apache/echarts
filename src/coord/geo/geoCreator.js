@@ -41,8 +41,10 @@ define(function (require) {
         });
     }
 
-    function mapNotExistsError(name) {
-        console.error('Map ' + name + ' not exists');
+    if (__DEV__) {
+        var mapNotExistsError = function (name) {
+            console.error('Map ' + name + ' not exists. You can download map file on http://echarts.baidu.com/download-map.html');
+        };
     }
 
     var geoCreator = {
@@ -57,8 +59,10 @@ define(function (require) {
             ecModel.eachComponent('geo', function (geoModel, idx) {
                 var name = geoModel.get('map');
                 var mapData = mapDataStores[name];
-                if (!mapData) {
-                    mapNotExistsError(name);
+                if (__DEV__) {
+                    if (!mapData) {
+                        mapNotExistsError(name);
+                    }
                 }
                 var geo = new Geo(
                     name + idx, name,
@@ -100,8 +104,10 @@ define(function (require) {
 
             zrUtil.each(mapModelGroupBySeries, function (mapSeries, mapType) {
                 var mapData = mapDataStores[mapType];
-                if (!mapData) {
-                    mapNotExistsError(name);
+                if (__DEV__) {
+                    if (!mapData) {
+                        mapNotExistsError(mapSeries[0].get('map'));
+                    }
                 }
 
                 var nameMapList = zrUtil.map(mapSeries, function (singleMapSeries) {
@@ -183,7 +189,9 @@ define(function (require) {
             var map = geoCreator.getMap(mapName);
             var geoJson = map && map.geoJson;
             if (!geoJson) {
-                console.error('Map ' + mapName + ' not exists');
+                if (__DEV__) {
+                    mapNotExistsError(mapName);
+                }
                 return originRegionArr;
             }
 
