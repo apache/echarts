@@ -1080,7 +1080,7 @@ define(function (require) {
             if (!dom) {
                 throw new Error('Initialize failed: invalid dom.');
             }
-            if (!dom.clientWidth || !dom.clientHeight) {
+            if (zrUtil.isDom(dom) && dom.nodeName.toUpperCase() !== 'CANVAS' && (!dom.clientWidth || !dom.clientHeight)) {
                 console.error('Can\'t get dom width or height');
             }
         }
