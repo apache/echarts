@@ -26,16 +26,14 @@ define(function (require) {
                 ));
             });
 
-            // var coordSys = option.coordinateSystem;
-            // if (coordSys !== 'cartesian2d' && coordSys !== 'geo') {
-            //     throw new Error('Coordinate system can only be cartesian2d or geo in lines');
-            // }
-
-            // var dimensions = coordSys === 'geo' ? ['lng', 'lat'] : ['x', 'y'];
             var coordSys = CoordinateSystem.get(option.coordinateSystem);
-            if (!coordSys) {
-                throw new Error('Invalid coordinate system');
+
+            if (__DEV__) {
+                if (!coordSys) {
+                    throw new Error('Invalid coordinate system');
+                }
             }
+
             var dimensions = coordSys.dimensions;
 
             var fromData = new List(dimensions, this);

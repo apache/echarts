@@ -4,7 +4,8 @@ var webpack = require('webpack');
 module.exports = {
     plugins: [
         new webpack.DefinePlugin({
-            'typeof __DEV__': JSON.stringify(PROD ? 'undefined' : 'boolean')
+            'typeof __DEV__': JSON.stringify('boolean'),
+            __DEV__: PROD ? false : true
         })
     ],
     entry: {

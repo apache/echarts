@@ -743,8 +743,10 @@ define(function (require) {
     function assertSeriesInitialized(ecModel) {
         // Components that use _seriesIndices should depends on series component,
         // which make sure that their initialization is after series.
-        if (!ecModel._seriesIndices) {
-            throw new Error('Series has not been initialized yet.');
+        if (__DEV__) {
+            if (!ecModel._seriesIndices) {
+                throw new Error('Series has not been initialized yet.');
+            }
         }
     }
 

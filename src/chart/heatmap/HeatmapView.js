@@ -69,8 +69,10 @@ define(function (require) {
                 });
             });
 
-            if (!visualMapOfThisSeries) {
-                throw new Error('Heatmap must use with visualMap');
+            if (__DEV__) {
+                if (!visualMapOfThisSeries) {
+                    throw new Error('Heatmap must use with visualMap');
+                }
             }
 
             this.group.removeAll();
@@ -90,7 +92,7 @@ define(function (require) {
             var yAxis = cartesian.getAxis('y');
             var group = this.group;
 
-            if (typeof __DEV__ !== 'undefined') {
+            if (__DEV__) {
                 if (!(xAxis.type === 'category' && yAxis.type === 'category')) {
                     throw new Error('Heatmap on cartesian must have two category axes');
                 }

@@ -402,7 +402,7 @@ define(function(require, factory) {
             var yAxisIndex = seriesModel.get('yAxisIndex');
             var xAxisModel = ecModel.getComponent('xAxis', xAxisIndex);
 
-            if (typeof __DEV__ !== 'undefined') {
+            if (__DEV__) {
                 var yAxisModel = ecModel.getComponent('yAxis', yAxisIndex);
                 if (xAxisModel.get('gridIndex') !== yAxisModel.get('gridIndex')) {
                     throw new Error('xAxis and yAxis must use the same grid');

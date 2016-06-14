@@ -23,8 +23,11 @@ define(function (require) {
          * @overrite
          */
         init: function (option, parentModel, ecModel, extraOpt) {
-            if (this.type === 'marker') {
-                throw new Error('Marker component is abstract component. Use markLine, markPoint, markArea instead.');
+
+            if (__DEV__) {
+                if (this.type === 'marker') {
+                    throw new Error('Marker component is abstract component. Use markLine, markPoint, markArea instead.');
+                }
             }
             this.mergeDefaultAndTheme(option, ecModel);
             this.mergeOption(option, ecModel, extraOpt.createdBySelf, true);
