@@ -12,6 +12,12 @@ define(function(require) {
         dependencies: ['grid', 'polar'],
 
         getInitialData: function (option, ecModel) {
+            if (__DEV__) {
+                var coordSys = option.coordinateSystem;
+                if (coordSys !== 'polar' && coordSys !== 'cartesian2d') {
+                    throw new Error('Line not support coordinateSystem besides cartesian and polar');
+                }
+            }
             return createListFromArray(option.data, this, ecModel);
         },
 

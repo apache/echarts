@@ -1,3 +1,17 @@
+// Enable DEV mode when using source code without build. which has no __DEV__ variable
+// In build process 'typeof __DEV__' will be replace with 'boolean'
+// So this code will be removed or disabled anyway after built.
+if (typeof __DEV__ === 'undefined') {
+    // In browser
+    if (typeof window !== 'undefined') {
+        window.__DEV__ = true;
+    }
+    // In node
+    else if (typeof global !== 'undefined') {
+        global.__DEV__ = true;
+    }
+}
+
 /*!
  * ECharts, a javascript interactive chart library.
  *
@@ -12,6 +26,8 @@
  * @module echarts
  */
 define(function (require) {
+
+    var env = require('zrender/core/env');
 
     var GlobalModel = require('./model/Global');
     var ExtensionAPI = require('./ExtensionAPI');
@@ -28,8 +44,8 @@ define(function (require) {
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
     var colorTool = require('zrender/tool/color');
-    var env = require('zrender/core/env');
     var Eventful = require('zrender/mixin/Eventful');
+    var timsort = require('zrender/core/timsort');
 
     var each = zrUtil.each;
 
@@ -160,8 +176,8 @@ define(function (require) {
         function prioritySortFunc(a, b) {
             return a.prio - b.prio;
         }
-        visualFuncs.sort(prioritySortFunc);
-        dataProcessorFuncs.sort(prioritySortFunc);
+        timsort(visualFuncs, prioritySortFunc);
+        timsort(dataProcessorFuncs, prioritySortFunc);
     }
 
     var echartsProto = ECharts.prototype;
@@ -1095,17 +1111,22 @@ define(function (require) {
      * @param {Object} opts
      */
     echarts.init = function (dom, theme, opts) {
-        // Check version
-        if ((zrender.version.replace('.', '') - 0) < (echarts.dependencies.zrender.replace('.', '') - 0)) {
-            throw new Error(
-                'ZRender ' + zrender.version
-                + ' is too old for ECharts ' + echarts.version
-                + '. Current version need ZRender '
-                + echarts.dependencies.zrender + '+'
-            );
-        }
-        if (!dom) {
-            throw new Error('Initialize failed: invalid dom.');
+        if (__DEV__) {
+            // Check version
+            if ((zrender.version.replace('.', '') - 0) < (echarts.dependencies.zrender.replace('.', '') - 0)) {
+                throw new Error(
+                    'ZRender ' + zrender.version
+                    + ' is too old for ECharts ' + echarts.version
+                    + '. Current version need ZRender '
+                    + echarts.dependencies.zrender + '+'
+                );
+            }
+            if (!dom) {
+                throw new Error('Initialize failed: invalid dom.');
+            }
+            if (zrUtil.isDom(dom) && dom.nodeName.toUpperCase() !== 'CANVAS' && (!dom.clientWidth || !dom.clientHeight)) {
+                console.warn('Can\'t get dom width or height');
+            }
         }
 
         var chart = new ECharts(dom, theme, opts);
@@ -1206,8 +1227,10 @@ define(function (require) {
             processorFunc = priority;
             priority = PRIORITY_PROCESSOR_FILTER;
         }
-        if (isNaN(priority)) {
-            throw new Error('Unkown processor priority');
+        if (__DEV__) {
+            if (isNaN(priority)) {
+                throw new Error('Unkown processor priority');
+            }
         }
         dataProcessorFuncs.push({
             prio: priority,
@@ -1273,8 +1296,10 @@ define(function (require) {
             layoutFunc = priority;
             priority = PRIORITY_VISUAL_LAYOUT;
         }
-        if (isNaN(priority)) {
-            throw new Error('Unkown layout priority');
+        if (__DEV__) {
+            if (isNaN(priority)) {
+                throw new Error('Unkown layout priority');
+            }
         }
         visualFuncs.push({
             prio: priority,
@@ -1292,8 +1317,10 @@ define(function (require) {
             visualFunc = priority;
             priority = PRIORITY_VISUAL_CHART;
         }
-        if (isNaN(priority)) {
-            throw new Error('Unkown visual priority');
+        if (__DEV__) {
+            if (isNaN(priority)) {
+                throw new Error('Unkown visual priority');
+            }
         }
         visualFuncs.push({
             prio: priority,

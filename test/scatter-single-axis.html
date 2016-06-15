@@ -1,0 +1,61 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <div id="main"></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/component/single'
+            ], function (echarts) {
+
+                var chart = echarts.init(document.getElementById('main'));
+
+                var data1 = [];
+
+                var random = function (max) {
+                    return (Math.random() * max).toFixed(3);
+                };
+
+                for (var i = 0; i < 50; i++) {
+                    data1.push([random(5), random(2)]);
+                }
+
+                chart.setOption({
+                    animation: false,
+                    singleAxis: {
+                        bottom: '40%',
+                        top: '40%'
+                    },
+                    series: [{
+                        name: 'scatter',
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: function (val) {
+                            return val[1] * 40;
+                        },
+                        data: data1
+                    }],
+                    animationDelay: function (idx) {
+                        return idx * 20;
+                    },
+                    animationDelayUpdate: function (idx) {
+                        return idx * 20;
+                    }
+                });
+            });
+
+        </script>
+    </body>
+</html>

@@ -83,6 +83,10 @@ define(function (require) {
     var categoryAxis = zrUtil.merge({
         // 类目起始和结束两端空白策略
         boundaryGap: true,
+        // PENDING
+        splitLine: {
+            show: false
+        },
         // 坐标轴小标记
         axisTick: {
             interval: 'auto'
@@ -93,7 +97,7 @@ define(function (require) {
         }
     }, defaultOption);
 
-    var valueAxis = zrUtil.defaults({
+    var valueAxis = zrUtil.merge({
         // 数值起始和结束两端空白策略
         boundaryGap: [0, 0],
         // 最小值, 设置成 'dataMin' 则从数据中计算最小值

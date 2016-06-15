@@ -156,7 +156,7 @@ define(function (require) {
         var trigger = seriesModel.get('tooltip.trigger', true);
         // Ignore series use item tooltip trigger and series coordinate system is not cartesian or
         return !(!coordSys
-            || (coordSys.type !== 'cartesian2d' && coordSys.type !== 'polar' && coordSys.type !== 'single')
+            || (coordSys.type !== 'cartesian2d' && coordSys.type !== 'polar' && coordSys.type !== 'singleAxis')
             || trigger === 'item');
     }
 
@@ -387,7 +387,7 @@ define(function (require) {
                         baseAxis = coordSys.getBaseAxis();
                         key = baseAxis.dim + baseAxis.index;
                     }
-                    else if (coordSys.type === 'single') {
+                    else if (coordSys.type === 'singleAxis') {
                         baseAxis = coordSys.getAxis();
                         key = baseAxis.dim + baseAxis.type;
                     }
@@ -557,7 +557,7 @@ define(function (require) {
                         axisPointerModel, coordSys, axisType, point
                     );
                 }
-                else if (coordSys.type === 'single' && !contentNotChange) {
+                else if (coordSys.type === 'singleAxis' && !contentNotChange) {
                     this._showSinglePointer(
                         axisPointerModel, coordSys, axisType, point
                     );
@@ -591,7 +591,7 @@ define(function (require) {
             var self = this;
 
             var axisPointerType = axisPointerModel.get('type');
-            var moveAnimation = axisPointerType !== 'cross';
+            var moveAnimation = axisPointerType !== 'cross' && cartesian.getBaseAxis().type === 'category';
 
             if (axisPointerType === 'cross') {
                 moveGridLine('x', point, cartesian.getAxis('y').getGlobalExtent());
@@ -657,7 +657,7 @@ define(function (require) {
         _showSinglePointer: function (axisPointerModel, single, axisType, point) {
             var self = this;
             var axisPointerType = axisPointerModel.get('type');
-            var moveAnimation = axisPointerType !== 'cross';
+            var moveAnimation = axisPointerType !== 'cross' && single.getBaseAxis().type === 'category';
             var rect = single.getRect();
             var otherExtent = [rect.y, rect.y + rect.height];
 

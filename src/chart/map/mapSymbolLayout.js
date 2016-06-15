@@ -16,7 +16,7 @@ define(function (require) {
 
             zrUtil.each(mapSeries.seriesGroup, function (subMapSeries) {
                 var geo = subMapSeries.coordinateSystem;
-                var data = subMapSeries.getData();
+                var data = subMapSeries.originalData;
                 if (subMapSeries.get('showLegendSymbol') && ecModel.getComponent('legend')) {
                     data.each('value', function (value, idx) {
                         var name = data.getName(idx);

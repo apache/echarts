@@ -41,8 +41,7 @@
                             trigger: 'axis',
                             axisPointer: {
                                 type: 'cross'
-                            },
-                            zlevel: 1
+                            }
                         },
                         xAxis: {
                             type: 'value',
@@ -70,8 +69,7 @@
                         series: [{
                             name: 'scatter',
                             type: 'scatter',
-                            symbolSize: function (val, param) {
-                                return json[0].marker.size[param.dataIndex] / json[0].marker.sizeref;
+                            symbolSize: function (val, param) {json[0].marker.size[param.dataIndex] / json[0].marker.sizeref;
                             },
                             itemStyle: {
                                 normal: {

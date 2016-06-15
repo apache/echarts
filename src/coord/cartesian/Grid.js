@@ -399,12 +399,17 @@ define(function(require, factory) {
                 return;
             }
             var xAxisIndex = seriesModel.get('xAxisIndex');
-            // TODO Validate
+            var yAxisIndex = seriesModel.get('yAxisIndex');
             var xAxisModel = ecModel.getComponent('xAxis', xAxisIndex);
+
+            if (__DEV__) {
+                var yAxisModel = ecModel.getComponent('yAxis', yAxisIndex);
+                if (xAxisModel.get('gridIndex') !== yAxisModel.get('gridIndex')) {
+                    throw new Error('xAxis and yAxis must use the same grid');
+                }
+            }
             var grid = grids[xAxisModel.get('gridIndex')];
-            seriesModel.coordinateSystem = grid.getCartesian(
-                xAxisIndex, seriesModel.get('yAxisIndex')
-            );
+            seriesModel.coordinateSystem = grid.getCartesian(xAxisIndex, yAxisIndex);
         });
 
         return grids;

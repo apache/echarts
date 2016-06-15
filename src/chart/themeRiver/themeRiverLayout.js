@@ -54,15 +54,16 @@ define(function (require) {
         if (!data.count()) {
             return;
         }
+        var coordSys = seriesModel.coordinateSystem;
         // the data in each layer are organized into a series.
         var layerSeries = seriesModel.getLayerSeries();
 
         //the points in each layer.
         var layerPoints = zrUtil.map(layerSeries, function (singleLayer) {
             return zrUtil.map(singleLayer.indices, function (idx) {
-                return seriesModel.coordinateSystem.dataToPoint([
-                    data.get('time', idx), data.get('value', idx)
-                ]);
+                var pt = coordSys.dataToPoint(data.get('time', idx));
+                pt[1] = data.get('value', idx);
+                return pt;
             });
         });
 

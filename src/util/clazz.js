@@ -79,8 +79,10 @@ define(function (require) {
                 componentType = parseClassType(componentType);
 
                 if (!componentType.sub) {
-                    if (storage[componentType.main]) {
-                        throw new Error(componentType.main + ' exists.');
+                    if (__DEV__) {
+                        if (storage[componentType.main]) {
+                            console.warn(componentType.main + ' exists.');
+                        }
                     }
                     storage[componentType.main] = Clazz;
                 }
