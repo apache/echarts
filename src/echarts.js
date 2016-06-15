@@ -45,6 +45,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var colorTool = require('zrender/tool/color');
     var Eventful = require('zrender/mixin/Eventful');
+    var timsort = require('zrender/core/timsort');
 
     var each = zrUtil.each;
 
@@ -169,8 +170,8 @@ define(function (require) {
         function prioritySortFunc(a, b) {
             return a.prio - b.prio;
         }
-        visualFuncs.sort(prioritySortFunc);
-        dataProcessorFuncs.sort(prioritySortFunc);
+        timsort(visualFuncs, prioritySortFunc);
+        timsort(dataProcessorFuncs, prioritySortFunc);
     }
 
     var echartsProto = ECharts.prototype;
@@ -1081,7 +1082,7 @@ define(function (require) {
                 throw new Error('Initialize failed: invalid dom.');
             }
             if (zrUtil.isDom(dom) && dom.nodeName.toUpperCase() !== 'CANVAS' && (!dom.clientWidth || !dom.clientHeight)) {
-                console.error('Can\'t get dom width or height');
+                console.warn('Can\'t get dom width or height');
             }
         }
 
