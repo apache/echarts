@@ -97,7 +97,8 @@ define(function (require) {
             var seriesGroup = this.seriesGroup;
             var seriesNames = [];
             for (var i = 0; i < seriesGroup.length; i++) {
-                if (!isNaN(seriesGroup[i].getRawValue(dataIndex))) {
+                var otherIndex = seriesGroup[i].getData().indexOfName(name);
+                if (!isNaN(seriesGroup[i].getRawValue(otherIndex))) {
                     seriesNames.push(
                         encodeHTML(seriesGroup[i].name)
                     );
