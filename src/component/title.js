@@ -152,6 +152,11 @@ define(function(require) {
                 if (textAlign === 'middle') {
                     textAlign = 'center';
                 }
+                // If textAlign is illegal, canvas render text with textAlign 'left' and 'right'
+                // alternatively (after optimized that ctx.save/restore are not called if no change).
+                if (textAlign !== 'left' && textAlign !== 'right' && textAlign !== 'center') {
+                    textAlign = 'left';
+                }
                 // Adjust layout by text align
                 if (textAlign === 'right') {
                     layoutRect.x += layoutRect.width;
@@ -160,7 +165,8 @@ define(function(require) {
                     layoutRect.x += layoutRect.width / 2;
                 }
             }
-            group.position = [layoutRect.x, layoutRect.y];
+
+            group.attr('position', [layoutRect.x, layoutRect.y]);
             textEl.setStyle('textAlign', textAlign);
             subTextEl.setStyle('textAlign', textAlign);
 
