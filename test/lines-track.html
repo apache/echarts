@@ -1,0 +1,62 @@
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <script src='esl.js'></script>
+        <script src='config.js'></script>
+        <script src='lib/jquery.min.js'></script>
+        <script src="http://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id='main'></div>
+        <script>
+
+            require([
+                'echarts',
+
+                'echarts/chart/lines',
+                'echarts/component/legend',
+                'extension/bmap/bmap'
+            ], function (echarts) {
+
+                var myChart = echarts.init(document.getElementById('main'));
+
+                $.get('data/hangzhou-tracks.json', function (data) {
+                    var lines = [].concat.apply([], data.map(function (track) {
+                        return track.slice(1).map(function (seg, idx) {
+                            return [track[idx], track[idx + 1]];
+                        });
+                    }));
+                    myChart.setOption({
+                        animation: false,
+                        bmap: {
+                            center: [120.13066322374, 30.240018034923],
+                            zoom: 14,
+                            roam: true
+                        },
+                        series: [{
+                            type: 'lines',
+                            coordinateSystem: 'bmap',
+                            data: lines,
+                            lineStyle: {
+                                opacity: 1,
+                                width: 2
+                            }
+                        }]
+                    });
+
+                    var bmap = myChart.getModel().getComponent('bmap').getBMap();
+                    bmap.addControl(new BMap.MapTypeControl());
+                })
+            });
+
+        </script>
+    </body>
+</html>
