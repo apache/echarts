@@ -703,7 +703,7 @@ define(function (require) {
             var angleAxis = polar.getAngleAxis();
             var radiusAxis = polar.getRadiusAxis();
 
-            var moveAnimation = axisPointerType !== 'cross';
+            var moveAnimation = axisPointerType !== 'cross' && polar.getBaseAxis().type === 'category';
 
             if (axisPointerType === 'cross') {
                 movePolarLine('angle', point, radiusAxis.getExtent());
