@@ -40,8 +40,10 @@ define(function(require) {
                                     // the filtered points when filterModel is set to 'empty', but
                                     // be connected when set to 'filter'.
 
-            throttle: 100,          // Dispatch action by the fixed rate, avoid frequency.
+            throttle: null,         // Dispatch action by the fixed rate, avoid frequency.
                                     // default 100. Do not throttle when use null/undefined.
+                                    // If animation === true and animationDurationUpdate > 0,
+                                    // default value is 100, otherwise 20.
             start: 0,               // Start percent. 0 ~ 100
             end: 100,               // End percent. 0 ~ 100
             startValue: null,       // Start value. If startValue specified, start is ignored.
@@ -76,6 +78,11 @@ define(function(require) {
              */
             this.textStyleModel;
 
+            /**
+             * @private
+             */
+            this._autoThrottle = true;
+
             var rawOption = retrieveRaw(option);
 
             this.mergeDefaultAndTheme(option, ecModel);
@@ -105,6 +112,8 @@ define(function(require) {
             if (!env.canvasSupported) {
                 thisOption.realtime = false;
             }
+
+            this._setDefaultThrottle(rawOption);
 
             processRangeProp('start', 'startValue', rawOption, thisOption);
             processRangeProp('end', 'endValue', rawOption, thisOption);
@@ -293,6 +302,22 @@ define(function(require) {
         },
 
         /**
+         * @private
+         */
+        _setDefaultThrottle: function (rawOption) {
+            // When first time user set throttle, auto throttle ends.
+            if (rawOption.hasOwnProperty('throttle')) {
+                this._autoThrottle = false;
+            }
+            if (this._autoThrottle) {
+                var globalOption = this.ecModel.option;
+                this.option.throttle =
+                    (globalOption.animation && globalOption.animationDurationUpdate > 0)
+                    ? 100 : 20;
+            }
+        },
+
+        /**
          * @public
          */
         getFirstTargetAxisModel: function () {
@@ -410,9 +435,9 @@ define(function(require) {
     function retrieveRaw(option) {
         var ret = {};
         each(
-            ['start', 'end', 'startValue', 'endValue'],
+            ['start', 'end', 'startValue', 'endValue', 'throttle'],
             function (name) {
-                ret[name] = option[name];
+                option.hasOwnProperty(name) && (ret[name] = option[name]);
             }
         );
         return ret;

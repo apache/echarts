@@ -41,6 +41,7 @@ define(function (require) {
             var allCoordIds = zrUtil.map(coordInfoList, function (coordInfo) {
                 return roams.generateCoordId(coordInfo.model);
             });
+
             zrUtil.each(coordInfoList, function (coordInfo) {
                 var coordModel = coordInfo.model;
                 roams.register(
@@ -50,7 +51,7 @@ define(function (require) {
                         allCoordIds: allCoordIds,
                         coordinateSystem: coordModel.coordinateSystem,
                         dataZoomId: dataZoomModel.id,
-                        throttleRage: dataZoomModel.get('throttle', true),
+                        throttleRate: dataZoomModel.get('throttle', true),
                         panGetRange: bind(this._onPan, this, coordInfo),
                         zoomGetRange: bind(this._onZoom, this, coordInfo)
                     }
