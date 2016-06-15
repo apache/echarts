@@ -117,6 +117,7 @@ define(function(require) {
                 var valueState = getValueState.call(scope, valueOrIndex);
                 var mappings = visualMappings[valueState];
                 var visualTypes = visualTypesMap[valueState];
+
                 for (var i = 0, len = visualTypes.length; i < len; i++) {
                     var type = visualTypes[i];
                     mappings[type] && mappings[type].applyVisual(

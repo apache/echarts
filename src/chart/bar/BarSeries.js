@@ -4,6 +4,7 @@ define(function(require) {
 
     var SeriesModel = require('../../model/Series');
     var createListFromArray = require('../helper/createListFromArray');
+    var brushable = require('../helper/brushable');
 
     return SeriesModel.extend({
 
@@ -29,6 +30,9 @@ define(function(require) {
             }
             return [NaN, NaN];
         },
+
+        isInBrush: brushable.isInBrush.rect,
+        getBrushed: brushable.getBrushed,
 
         defaultOption: {
             zlevel: 0,                  // 一级层叠

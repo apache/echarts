@@ -3,11 +3,10 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../../util/number');
-    var SelectController = require('../../helper/SelectController');
+    var BrushController = require('../../helper/BrushController');
     var BoundingRect = require('zrender/core/BoundingRect');
     var Group = require('zrender/container/Group');
     var history = require('../../dataZoom/history');
-    var interactionMutex = require('../../helper/interactionMutex');
 
     var each = zrUtil.each;
     var asc = numberUtil.asc;
@@ -17,26 +16,28 @@ define(function(require) {
 
     // Spectial component id start with \0ec\0, see echarts/model/Global.js~hasInnerId
     var DATA_ZOOM_ID_BASE = '\0_ec_\0toolbox-dataZoom_';
-    var MUTEX_USER_KEY = 'dataZoomSelect';
-    var MUTEX_RESOURCE_KEY = 'globalPan';
 
     function DataZoom(model, ecModel, api) {
 
         this.model = model;
         this.ecModel = ecModel;
         this.api = api;
+        var zr = api.getZr();
 
         /**
          * @private
          * @type {module:zrender/container/Group}
          */
-        this._controllerGroup;
+        var controllerGroup = this._controllerGroup = new Group();
+        zr.add(controllerGroup);
 
         /**
          * @private
-         * @type {module:echarts/component/helper/SelectController}
+         * @type {module:echarts/component/helper/BrushController}
          */
-        this._controller;
+        (this._brushController = new BrushController(zr))
+            .on('brush', zrUtil.bind(this._onBrush, this))
+            .mount(controllerGroup, false);
 
         /**
          * Is zoom active.
@@ -66,24 +67,16 @@ define(function(require) {
     };
 
     proto.onclick = function (ecModel, api, type) {
-        var controllerGroup = this._controllerGroup;
-        if (!this._controllerGroup) {
-            controllerGroup = this._controllerGroup = new Group();
-            api.getZr().add(controllerGroup);
-        }
-
         handlers[type].call(this);
     };
 
     proto.remove = function (ecModel, api) {
-        this._disposeController();
-        interactionMutex.release(api.getZr(), MUTEX_RESOURCE_KEY, MUTEX_USER_KEY);
+        this._brushController.unmount();
     };
 
     proto.dispose = function (ecModel, api) {
         var zr = api.getZr();
-        interactionMutex.release(zr, MUTEX_RESOURCE_KEY, MUTEX_USER_KEY);
-        this._disposeController();
+        this._brushController.dispose();
         this._controllerGroup && zr.remove(this._controllerGroup);
     };
 
@@ -93,59 +86,39 @@ define(function(require) {
     var handlers = {
 
         zoom: function () {
-            var zr = this.api.getZr();
             var nextActive = !this._isZoomActive;
+            var controller = this._brushController;
 
-            if (nextActive) { // jshint ignore:line
-                interactionMutex.take(
-                    zr, MUTEX_RESOURCE_KEY, MUTEX_USER_KEY, zrUtil.bind(onRelease, this)
-                );
-
+            if (nextActive) {
                 this._isZoomActive = nextActive;
                 this.model.setIconStatus('zoom', 'emphasis');
-                zr.setDefaultCursorStyle('crosshair');
-                this._createController();
+
+                controller.enableBrush({
+                    brushType: 'rect',
+                    brushStyle: {
+                        // FIXME
+                        // user customized?
+                        lineWidth: 3,
+                        stroke: '#333',
+                        fill: 'rgba(0,0,0,0.2)'
+                    },
+                    // FIXME
+                    // 是否应通过触发 action 的方式来互斥而非 onRelease？
+                    onRelease: zrUtil.bind(onRelease, this)
+                });
             }
             else {
-                interactionMutex.release(zr, MUTEX_RESOURCE_KEY, MUTEX_USER_KEY);
+                controller.enableBrush(false);
             }
 
             function onRelease() {
                 this.model.setIconStatus('zoom', 'normal');
-                zr.setDefaultCursorStyle('default');
-                this._disposeController();
                 this._isZoomActive = false;
             }
         },
 
         back: function () {
             this._dispatchAction(history.pop(this.ecModel));
-        }
-    };
-
-    /**
-     * @private
-     */
-    proto._createController = function () {
-        (this._controller = new SelectController(
-            'rect',
-            this.api.getZr(),
-            {
-                // FIXME
-                lineWidth: 3,
-                stroke: '#333',
-                fill: 'rgba(0,0,0,0.2)'
-            }
-        ))
-            .on('selected', zrUtil.bind(this._onSelected, this))
-            .enable(this._controllerGroup, false);
-    };
-
-    proto._disposeController = function () {
-        var controller = this._controller;
-        if (controller) {
-            controller.off();
-            controller.dispose();
         }
     };
 
@@ -182,13 +155,13 @@ define(function(require) {
     /**
      * @private
      */
-    proto._onSelected = function (selRanges, isEnd) {
-        if (!isEnd || !selRanges.length) {
+    proto._onBrush = function (brushRanges, isEnd) {
+        if (!isEnd || !brushRanges.length) {
             return;
         }
-        var selRange = selRanges[0];
+        var brushRange = brushRanges[0];
 
-        this._controller.update(); // remove cover
+        this._brushController.updateCovers([]); // remove cover
 
         var snapshot = {};
         var ecModel = this.ecModel;
@@ -199,7 +172,7 @@ define(function(require) {
         ecModel.eachComponent('grid', function (gridModel, gridIndex) {
             var grid = gridModel.coordinateSystem;
             var coordInfo = prepareCoordInfo(grid, ecModel);
-            var selDataRange = pointToDataInCartesian(selRange, coordInfo);
+            var selDataRange = pointToDataInCartesian(brushRange, coordInfo);
 
             if (selDataRange) {
                 var xBatchItem = scaleCartesianAxis(selDataRange, coordInfo, 0, 'x');
@@ -215,21 +188,22 @@ define(function(require) {
         this._dispatchAction(snapshot);
     };
 
-    function pointToDataInCartesian(selRange, coordInfo) {
+    function pointToDataInCartesian(brushRange, coordInfo) {
         var grid = coordInfo.grid;
+        var range = brushRange.range;
 
         var selRect = new BoundingRect(
-            selRange[0][0],
-            selRange[1][0],
-            selRange[0][1] - selRange[0][0],
-            selRange[1][1] - selRange[1][0]
+            range[0][0],
+            range[1][0],
+            range[0][1] - range[0][0],
+            range[1][1] - range[1][0]
         );
         if (!selRect.intersect(grid.getRect())) {
             return;
         }
         var cartesian = grid.getCartesian(coordInfo[0].axisIndex, coordInfo[1].axisIndex);
-        var dataLeftTop = cartesian.pointToData([selRange[0][0], selRange[1][0]], true);
-        var dataRightBottom = cartesian.pointToData([selRange[0][1], selRange[1][1]], true);
+        var dataLeftTop = cartesian.pointToData([range[0][0], range[1][0]], true);
+        var dataRightBottom = cartesian.pointToData([range[0][1], range[1][1]], true);
 
         return [
             asc([dataLeftTop[0], dataRightBottom[0]]), // x, using asc to handle inverse

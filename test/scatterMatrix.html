@@ -27,7 +27,8 @@
                 'echarts/component/markLine',
                 'echarts/component/markPoint',
                 'echarts/component/dataZoom',
-                'echarts/component/visualMap'
+                'echarts/component/visualMap',
+                'echarts/component/brush'
             ], function (ec) {
 
                 echarts = ec;
@@ -262,15 +263,8 @@
                         data: ['scatter', 'scatter2', 'scatter3']
                     },
                     animation: false,
-                    toolbox: {
-                        left: 'left',
-                        feature: {
-                            dataView: {},
-                            saveAsImage: {},
-                            areaSelect: {
-                                connect: 'all'
-                            }
-                        }
+                    brush: {
+                        brushLink: 'all'
                     },
                     visualMap: {
                         type: 'piecewise',

@@ -53,7 +53,6 @@ define(function (require) {
                 if (symbolNeedsDraw(data, newIdx, isIgnore)) {
                     var symbolEl = new SymbolCtor(data, newIdx, seriesScope);
                     symbolEl.attr('position', point);
-                    symbolEl.centerPosition = point;
                     data.setItemGraphicEl(newIdx, symbolEl);
                     group.add(symbolEl);
                 }
@@ -75,7 +74,6 @@ define(function (require) {
                         position: point
                     }, seriesModel);
                 }
-                symbolEl.centerPosition = point;
 
                 // Add back
                 group.add(symbolEl);
@@ -100,7 +98,6 @@ define(function (require) {
             data.eachItemGraphicEl(function (el, idx) {
                 var point = data.getItemLayout(idx);
                 el.attr('position', point);
-                el.centerPosition = point;
             });
         }
     };

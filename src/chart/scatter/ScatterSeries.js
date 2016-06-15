@@ -4,9 +4,9 @@ define(function (require) {
 
     var createListFromArray = require('../helper/createListFromArray');
     var SeriesModel = require('../../model/Series');
-    var visualSelectable = require('../../visual/visualSelectable');
+    var brushable = require('../helper/brushable');
 
-    return visualSelectable(SeriesModel.extend({
+    return SeriesModel.extend({
 
         type: 'series.scatter',
 
@@ -16,6 +16,9 @@ define(function (require) {
             var list = createListFromArray(option.data, this, ecModel);
             return list;
         },
+
+        isInBrush: brushable.isInBrush.point,
+        getBrushed: brushable.getBrushed,
 
         defaultOption: {
             coordinateSystem: 'cartesian2d',
@@ -59,5 +62,6 @@ define(function (require) {
                 }
             }
         }
-    }));
+
+    });
 });

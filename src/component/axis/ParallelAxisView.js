@@ -2,7 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var AxisBuilder = require('./AxisBuilder');
-    var SelectController = require('../helper/SelectController');
+    var BrushController = require('../helper/BrushController');
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'axisName'];
 
@@ -11,9 +11,17 @@ define(function (require) {
         type: 'parallelAxis',
 
         /**
-         * @type {module:echarts/component/helper/SelectController}
+         * @override
          */
-        _selectController: null,
+        init: function (ecModel, api) {
+            AxisView.superApply(this, 'init', arguments);
+
+            /**
+             * @type {module:echarts/component/helper/BrushController}
+             */
+            (this._brushController = new BrushController(api.getZr()))
+                .on('brush', zrUtil.bind(this._onBrush, this));
+        },
 
         /**
          * @override
@@ -57,47 +65,37 @@ define(function (require) {
 
             this.group.add(axisGroup);
 
-            this._buildSelectController(
-                axisGroup, areaSelectStyle, axisModel, api
-            );
+            this._refreshBrushController(axisGroup, areaSelectStyle, axisModel);
         },
 
-        _buildSelectController: function (axisGroup, areaSelectStyle, axisModel, api) {
-
-            var axis = axisModel.axis;
-            var selectController = this._selectController;
-
-            if (!selectController) {
-                selectController = this._selectController = new SelectController(
-                    'line',
-                    api.getZr(),
-                    areaSelectStyle
-                );
-
-                selectController.on('selected', zrUtil.bind(this._onSelected, this));
-            }
-
-            selectController.enable(axisGroup);
-
+        _refreshBrushController: function (axisGroup, areaSelectStyle, axisModel) {
             // After filtering, axis may change, select area needs to be update.
-            var ranges = zrUtil.map(axisModel.activeIntervals, function (interval) {
-                return [
-                    axis.dataToCoord(interval[0], true),
-                    axis.dataToCoord(interval[1], true)
-                ];
+            var axis = axisModel.axis;
+            var coverInfoList = zrUtil.map(axisModel.activeIntervals, function (interval) {
+                return {
+                    type: 'line',
+                    range: [
+                        axis.dataToCoord(interval[0], true),
+                        axis.dataToCoord(interval[1], true)
+                    ]
+                };
             });
-            selectController.update(ranges);
+
+            this._brushController
+                .mount(axisGroup)
+                .enableBrush({brushType: 'line', brushStyle: areaSelectStyle})
+                .updateCovers(coverInfoList);
         },
 
-        _onSelected: function (ranges, isEnd) {
+        _onBrush: function (coverInfoList, isEnd) {
             // Do not cache these object, because the mey be changed.
             var axisModel = this.axisModel;
             var axis = axisModel.axis;
 
-            var intervals = zrUtil.map(ranges, function (range) {
+            var intervals = zrUtil.map(coverInfoList, function (coverInfo) {
                 return [
-                    axis.coordToData(range[0], true),
-                    axis.coordToData(range[1], true)
+                    axis.coordToData(coverInfo.range[0], true),
+                    axis.coordToData(coverInfo.range[1], true)
                 ];
             });
 
@@ -114,18 +112,8 @@ define(function (require) {
         /**
          * @override
          */
-        remove: function () {
-            this._selectController && this._selectController.disable();
-        },
-
-        /**
-         * @override
-         */
         dispose: function () {
-            if (this._selectController) {
-                this._selectController.dispose();
-                this._selectController = null;
-            }
+            this._brushController.dispose();
         }
     });
 

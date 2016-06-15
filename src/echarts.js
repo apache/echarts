@@ -41,7 +41,7 @@ define(function (require) {
     var PRIORITY_VISUAL_GLOBAL = 2000;
     var PRIORITY_VISUAL_CHART = 3000;
     var PRIORITY_VISUAL_COMPONENT = 4000;
-    var PRIORITY_VISUAL_SELECT = 5000;
+    var PRIORITY_VISUAL_BRUSH = 5000;
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -435,6 +435,10 @@ define(function (require) {
                 return;
             }
 
+            ecModel.eachSeries(function (seriesModel) {
+                seriesModel.getData().clearAllVisual();
+            });
+
             doVisualEncoding.call(this, ecModel, payload);
 
             invokeUpdateMethod.call(this, 'updateView', ecModel, payload);
@@ -451,6 +455,10 @@ define(function (require) {
             if (!ecModel) {
                 return;
             }
+
+            ecModel.eachSeries(function (seriesModel) {
+                seriesModel.getData().clearAllVisual();
+            });
 
             doVisualEncoding.call(this, ecModel, payload);
 
@@ -1361,7 +1369,7 @@ define(function (require) {
             GLOBAL: PRIORITY_VISUAL_GLOBAL,
             CHART: PRIORITY_VISUAL_CHART,
             COMPONENT: PRIORITY_VISUAL_COMPONENT,
-            SELECT: PRIORITY_VISUAL_SELECT
+            BRUSH: PRIORITY_VISUAL_BRUSH
         }
     };
 

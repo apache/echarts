@@ -4,6 +4,7 @@ define(function (require) {
 
     var createListFromArray = require('../helper/createListFromArray');
     var SeriesModel = require('../../model/Series');
+    var brushable = require('../helper/brushable');
 
     return SeriesModel.extend({
 
@@ -15,6 +16,9 @@ define(function (require) {
             var list = createListFromArray(option.data, this, ecModel);
             return list;
         },
+
+        isInBrush: brushable.isInBrush.point,
+        getBrushed: brushable.getBrushed,
 
         defaultOption: {
             coordinateSystem: 'cartesian2d',
@@ -60,5 +64,6 @@ define(function (require) {
             //     }
             // }
         }
+
     });
 });

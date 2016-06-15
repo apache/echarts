@@ -8,7 +8,7 @@ define(function (require) {
     );
 
     require('./visualMap/typeDefaulter');
-    require('./visualMap/visualCoding');
+    require('./visualMap/visualEncoding');
     require('./visualMap/ContinuousModel');
     require('./visualMap/ContinuousView');
     require('./visualMap/visualMapAction');
