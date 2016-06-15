@@ -20,7 +20,7 @@ define(function (require) {
          * @type {string}
          * @readOnly
          */
-        this.dimension = 'oneDim';
+        this.dimension = 'x';
 
         /**
          * Add it just for draw tooltip.
@@ -28,7 +28,7 @@ define(function (require) {
          * @type {Array.<string>}
          * @readOnly
          */
-        this.dimensions = ['oneDim'];
+        this.dimensions = ['x'];
 
         /**
          * @private
@@ -52,7 +52,7 @@ define(function (require) {
 
     Single.prototype = {
 
-        type: 'single',
+        type: 'singleAxis',
 
         constructor: Single,
 
@@ -231,33 +231,29 @@ define(function (require) {
 
         /**
          * @param {Array.<number>} point
+         * @return {Array.<number>}
          */
         pointToData: function (point) {
             var axis = this.getAxis();
-            var orient = axis.orient;
-            if (orient === 'horizontal') {
-                return [
-                    axis.coordToData(axis.toLocalCoord(point[0])),
-                    point[1]
-                ];
-            }
-            else {
-                return [
-                    axis.coordToData(axis.toLocalCoord(point[1])),
-                    point[0]
-                ];
-            }
+            return [axis.coordToData(axis.toLocalCoord(
+                point[axis.orient === 'horizontal' ? 0 : 1]
+            ))];
         },
 
         /**
          * Convert the series data to concrete point.
          *
-         * @param  {*} value
-         * @return {number}
+         * @param  {number|Array.<number>} val
+         * @return {Array.<number>}
          */
-        dataToPoint: function (point) {
+        dataToPoint: function (val) {
             var axis = this.getAxis();
-            return [axis.toGlobalCoord(axis.dataToCoord(point[0])), point[1]];
+            var rect = this.getRect();
+            var pt = [];
+            var idx = axis.orient === 'horizontal' ? 0 : 1;
+            pt[idx] = axis.toGlobalCoord(axis.dataToCoord(+val));
+            pt[1 - idx] = idx === 0 ? (rect.y + rect.height / 2) : (rect.x + rect.width / 2);
+            return pt;
         }
     };
 

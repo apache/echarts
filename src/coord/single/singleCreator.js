@@ -26,9 +26,8 @@ define(function (require) {
         });
 
         ecModel.eachSeries(function (seriesModel) {
-
-            if (seriesModel.get('coordinateSystem') === 'single') {
-                var singleAxisIndex = seriesModel.get('singleAxisIndex');
+            if (seriesModel.get('coordinateSystem') === 'singleAxis') {
+                var singleAxisIndex = seriesModel.get('singleAxisIndex') || 0;
                 var axisModel = ecModel.getComponent('singleAxis', singleAxisIndex);
                 seriesModel.coordinateSystem = axisModel.coordinateSystem;
             }
@@ -37,5 +36,8 @@ define(function (require) {
         return singles;
     }
 
-    require('../../CoordinateSystem').register('single', {create: create});
+    require('../../CoordinateSystem').register('single', {
+        create: create,
+        dimensions: Single.prototype.dimensions
+    });
 });
