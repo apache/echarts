@@ -5,10 +5,10 @@ define(function (require) {
     // FIXME 公用？
     /**
      * @param {Array.<module:echarts/data/List>} datas
-     * @param {string} statisticsType 'average' 'sum'
+     * @param {string} statisticType 'average' 'sum'
      * @inner
      */
-    function dataStatistics(datas, statisticsType) {
+    function dataStatistics(datas, statisticType) {
         var dataNameMap = {};
         var dims = ['value'];
 
@@ -34,13 +34,13 @@ define(function (require) {
                 sum += dataNameMap[name][i];
             }
             var result;
-            if (statisticsType === 'min') {
+            if (statisticType === 'min') {
                 result = min;
             }
-            else if (statisticsType === 'max') {
+            else if (statisticType === 'max') {
                 result = max;
             }
-            else if (statisticsType === 'average') {
+            else if (statisticType === 'average') {
                 result = sum / len;
             }
             else {
@@ -66,14 +66,17 @@ define(function (require) {
                 seriesList[0].get('mapValueCalculation')
             );
 
-            seriesList[0].seriesGroup = [];
-
-            seriesList[0].setData(data);
+            for (var i = 0; i < seriesList.length; i++) {
+                seriesList[i].originalData = seriesList[i].getData();
+            }
 
             // FIXME Put where?
             for (var i = 0; i < seriesList.length; i++) {
                 seriesList[i].seriesGroup = seriesList;
                 seriesList[i].needsDrawMap = i === 0;
+
+                seriesList[i].setData(data.cloneShallow());
+                seriesList[i].mainSeries = seriesList[0];
             }
         });
     };
