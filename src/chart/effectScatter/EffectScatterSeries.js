@@ -4,7 +4,6 @@ define(function (require) {
 
     var createListFromArray = require('../helper/createListFromArray');
     var SeriesModel = require('../../model/Series');
-    var brushable = require('../helper/brushable');
 
     return SeriesModel.extend({
 
@@ -17,8 +16,7 @@ define(function (require) {
             return list;
         },
 
-        isInBrush: brushable.isInBrush.point,
-        getBrushed: brushable.getBrushed,
+        brushSelector: 'point',
 
         defaultOption: {
             coordinateSystem: 'cartesian2d',

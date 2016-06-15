@@ -7,6 +7,7 @@ define(function (require) {
     var visualSolution = require('../../visual/visualSolution');
     var zrUtil = require('zrender/core/util');
     var BoundingRect = require('zrender/core/BoundingRect');
+    var selector = require('./selector');
 
     var STATE_LIST = ['inBrush', 'outOfBrush'];
 
@@ -15,9 +16,7 @@ define(function (require) {
      */
     echarts.registerVisual(echarts.PRIORITY.VISUAL.BRUSH, function (ecModel, api, payload) {
 
-        ecModel.eachSeries(function (seriesModel, seriesIndex) {
-            seriesModel.__brushedRawIndices = [];
-        });
+        var brushSelected = [];
 
         ecModel.eachComponent({mainType: 'brush'}, function (brushModel, brushIndex) {
 
@@ -26,6 +25,14 @@ define(function (require) {
             var linkedSeriesMap = [];
             var selectedDataIndexForLink = [];
             var rangeInfo = [];
+
+            var thisBrushSelected = {
+                brushId: brushModel.id,
+                brushIndex: brushIndex,
+                brushName: brushModel.name,
+                series: []
+            };
+            brushSelected.push(thisBrushSelected);
 
             var visualMappings = visualSolution.createVisualMappings(
                 brushModel.option, STATE_LIST, function (mappingOption) {
@@ -42,14 +49,14 @@ define(function (require) {
             }
 
             ecModel.eachSeries(function (seriesModel, seriesIndex) {
-                var isInBrush = seriesModel.isInBrush;
-                if (!isInBrush) {
+                var selectorsByBrushType = getSelectorsByBrushType(seriesModel);
+                if (!selectorsByBrushType) {
                     return;
                 }
                 var rInfo = rangeInfo[seriesIndex] = {ranges: [], boundingRects: []};
 
                 zrUtil.each(brushRanges, function (brushRange) {
-                    if (isInBrush[brushRange.type]) {
+                    if (selectorsByBrushType[brushRange.type]) {
                         rInfo.ranges.push(brushRange);
                         rInfo.boundingRects.push(boundingRectBuilders[brushRange.type](brushRange));
                     }
@@ -58,7 +65,7 @@ define(function (require) {
                 if (useLink(seriesIndex)) {
                     var data = seriesModel.getData();
                     rInfo.ranges.length && data.each(function (dataIndex) {
-                        if (checkInRange(isInBrush, rInfo, data, dataIndex)) {
+                        if (checkInRange(selectorsByBrushType, rInfo, data, dataIndex)) {
                             selectedDataIndexForLink[dataIndex] = 1;
                         }
                     });
@@ -66,25 +73,31 @@ define(function (require) {
             });
 
             ecModel.eachSeries(function (seriesModel, seriesIndex) {
-                var isInBrush = seriesModel.isInBrush;
-                if (!isInBrush) {
+                var selectorsByBrushType = getSelectorsByBrushType(seriesModel);
+                if (!selectorsByBrushType) {
                     return;
                 }
                 var data = seriesModel.getData();
                 var rInfo = rangeInfo[seriesIndex];
-                var brushedRawIndices = seriesModel.__brushedRawIndices;
                 var getValueState = useLink(seriesIndex)
                     ? function (dataIndex) {
                         return selectedDataIndexForLink[dataIndex]
-                            ? (brushedRawIndices.push(data.getRawIndex(dataIndex)), 'inBrush')
+                            ? (seriesBrushSelected.rawIndices.push(data.getRawIndex(dataIndex)), 'inBrush')
                             : 'outOfBrush';
                     }
                     : function (dataIndex) {
-                        return checkInRange(isInBrush, rInfo, data, dataIndex)
-                            ? (brushedRawIndices.push(data.getRawIndex(dataIndex)), 'inBrush')
+                        return checkInRange(selectorsByBrushType, rInfo, data, dataIndex)
+                            ? (seriesBrushSelected.rawIndices.push(data.getRawIndex(dataIndex)), 'inBrush')
                             : 'outOfBrush';
                     };
 
+                var seriesBrushSelected = {
+                    seriesId: seriesModel.id,
+                    seriesIndex: seriesIndex,
+                    seriesName: seriesModel.name,
+                    rawIndices: []
+                };
+                thisBrushSelected.series.push(seriesBrushSelected);
 
                 // If no supported brush, all visuals are in original state.
                 rInfo.ranges.length && visualSolution.applyVisual(
@@ -93,17 +106,35 @@ define(function (require) {
             });
 
         });
+
+        api.prepareExtraEvent({
+            type: 'brushSelected',
+            brushComponents: brushSelected
+        });
     });
 
-    function checkInRange(isInBrush, rInfo, data, dataIndex) {
+    function checkInRange(selectorsByBrushType, rInfo, data, dataIndex) {
         var itemLayout = data.getItemLayout(dataIndex);
         for (var i = 0, len = rInfo.ranges.length; i < len; i++) {
-            if (isInBrush[rInfo.ranges[i].type](
-                itemLayout, rInfo.ranges[i], rInfo.boundingRects[i], data, dataIndex
+            var brushType = rInfo.ranges[i].type;
+            if (selectorsByBrushType[brushType](
+                itemLayout, rInfo.ranges[i], rInfo.boundingRects[i], selector[brushType]
             )) {
                 return true;
             }
         }
+    }
+
+    function getSelectorsByBrushType(seriesModel) {
+        var brushSelector = seriesModel.brushSelector;
+        if (zrUtil.isString(brushSelector)) {
+            var sels = [];
+            zrUtil.each(selector, function (selectorsByElementType, brushType) {
+                sels[brushType] = selectorsByElementType[brushSelector];
+            });
+            return sels;
+        }
+        return brushSelector;
     }
 
     var boundingRectBuilders = {
