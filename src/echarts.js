@@ -59,6 +59,17 @@ define(function (require) {
     var PRIORITY_VISUAL_COMPONENT = 4000;
     var PRIORITY_VISUAL_BRUSH = 5000;
 
+    // Main process have three entries: `setOption`, `dispatchAction` and `resize`,
+    // where they must not be invoked nestedly, except the only case: invoke
+    // dispatchAction with updateMethod "none" in main process.
+    // This flag is used to carry out this rule.
+    // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
+    var IN_MAIN_PROCESS = '__flag_in_main_process';
+    // Only final events can be "program triggered", that is, trigger by `setOption`,
+    // `dispatchAciton` or `resize`. This flag is used to avoid dead lock when calling
+    // those method in final events listener.
+    var IN_FINAL_EVENTS = '__flag_in_final_event';
+
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
             // Event name is all lowercase
@@ -155,7 +166,7 @@ define(function (require) {
         /**
          * @type {Array.<Object>}
          */
-        this._extraEvents = [];
+        this._finalEvents = [];
 
         Eventful.call(this);
 
@@ -200,9 +211,16 @@ define(function (require) {
      * @param {Object} option
      * @param {boolean} notMerge
      * @param {boolean} [notRefreshImmediately=false] Useful when setOption frequently.
-     * @param {boolean} [silent=false]
      */
-    echartsProto.setOption = function (option, notMerge, notRefreshImmediately, silent) {
+    echartsProto.setOption = function (option, notMerge, notRefreshImmediately) {
+        if (__DEV__) {
+            zrUtil.assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
+        }
+
+        this[IN_MAIN_PROCESS] = 1;
+
+        this._finalEvents = [];
+
         if (!this._model || notMerge) {
             this._model = new GlobalModel(
                 null, null, this._theme, new OptionManager(this._api)
@@ -211,13 +229,13 @@ define(function (require) {
 
         this._model.setOption(option, optionPreprocessorFuncs);
 
-        this._extraEvents = [];
-
         updateMethods.prepareAndUpdate.call(this);
 
-        !silent && triggerExtraEvents.call(this);
-
         !notRefreshImmediately && this._zr.refreshImmediately();
+
+        this[IN_MAIN_PROCESS] = 0;
+
+        triggerFinalEvents.call(this);
     };
 
     /**
@@ -569,17 +587,25 @@ define(function (require) {
      * Resize the chart
      */
     echartsProto.resize = function () {
-        this._zr.resize();
+        if (__DEV__) {
+            zrUtil.assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
+        }
 
-        this._extraEvents = [];
+        this[IN_MAIN_PROCESS] = 1;
+
+        this._finalEvents = [];
+
+        this._zr.resize();
 
         var optionChanged = this._model && this._model.resetOption('media');
         updateMethods[optionChanged ? 'prepareAndUpdate' : 'update'].call(this);
 
-        triggerExtraEvents.call(this);
-
         // Resize loading effect
         this._loadingFX && this._loadingFX.resize();
+
+        this[IN_MAIN_PROCESS] = 0;
+
+        triggerFinalEvents.call(this);
     };
 
     var defaultLoadingEffect = require('./loading/default');
@@ -619,18 +645,14 @@ define(function (require) {
         return payload;
     };
 
-    /**
-     * @param {Object} eventObj
-     * @param {string} eventObj.type
-     */
-    echartsProto.prepareExtraEvent = function (eventObj) {
-        this._extraEvents.push(eventObj);
-    };
-
-    function triggerExtraEvents() {
-        each(this._extraEvents, function (eventObj) {
-            this.trigger(eventObj.type.toLowerCase(), eventObj);
-        }, this);
+    function triggerFinalEvents() {
+        if (!this[IN_FINAL_EVENTS]) { // Avoid dead lock.
+            this[IN_FINAL_EVENTS] = 1;
+            each(this._finalEvents, function (eventObj) {
+                this.trigger(eventObj.type, eventObj);
+            }, this);
+            this[IN_FINAL_EVENTS] = 0;
+        }
     }
 
     /**
@@ -641,62 +663,79 @@ define(function (require) {
      */
     echartsProto.dispatchAction = function (payload, silent) {
         var actionWrap = actions[payload.type];
-        if (actionWrap) {
+        if (!actionWrap) {
+            return;
+        }
 
-            this._extraEvents = [];
+        var actionInfo = actionWrap.actionInfo;
+        var updateMethod = actionInfo.update || 'update';
 
-            var actionInfo = actionWrap.actionInfo;
-            var updateMethod = actionInfo.update || 'update';
+        if (__DEV__) {
+            zrUtil.assert(
+                updateMethod === 'none' || !this[IN_MAIN_PROCESS],
+                '`dispatchAction` should not be called during main process.'
+                    + 'unless updateMathod is "none".'
+            );
+        }
 
-            var payloads = [payload];
-            var batched = false;
-            // Batch action
-            if (payload.batch) {
-                batched = true;
-                payloads = zrUtil.map(payload.batch, function (item) {
-                    item = zrUtil.defaults(zrUtil.extend({}, item), payload);
-                    item.batch = null;
-                    return item;
-                });
-            }
+        var isFinalEvent = updateMethod === 'none' && this[IN_MAIN_PROCESS];
+        if (!isFinalEvent) {
+            this[IN_MAIN_PROCESS] = 1;
+            this._finalEvents = [];
+        }
 
-            var eventObjBatch = [];
-            var eventObj;
-            var isHighlightOrDownplay = payload.type === 'highlight' || payload.type === 'downplay';
-            for (var i = 0; i < payloads.length; i++) {
-                var batchItem = payloads[i];
-                // Action can specify the event by return it.
-                eventObj = actionWrap.action(batchItem, this._model);
-                // Emit event outside
-                eventObj = eventObj || zrUtil.extend({}, batchItem);
-                // Convert type to eventType
-                eventObj.type = actionInfo.event || eventObj.type;
-                eventObjBatch.push(eventObj);
+        var payloads = [payload];
+        var batched = false;
+        // Batch action
+        if (payload.batch) {
+            batched = true;
+            payloads = zrUtil.map(payload.batch, function (item) {
+                item = zrUtil.defaults(zrUtil.extend({}, item), payload);
+                item.batch = null;
+                return item;
+            });
+        }
 
-                // Highlight and downplay are special.
-                isHighlightOrDownplay && updateMethods[updateMethod].call(this, batchItem);
-            }
+        var eventObjBatch = [];
+        var eventObj;
+        var isHighlightOrDownplay = payload.type === 'highlight' || payload.type === 'downplay';
+        for (var i = 0; i < payloads.length; i++) {
+            var batchItem = payloads[i];
+            // Action can specify the event by return it.
+            eventObj = actionWrap.action(batchItem, this._model);
+            // Emit event outside
+            eventObj = eventObj || zrUtil.extend({}, batchItem);
+            // Convert type to eventType
+            eventObj.type = actionInfo.event || eventObj.type;
+            eventObjBatch.push(eventObj);
 
-            (updateMethod !== 'none' && !isHighlightOrDownplay)
-                && updateMethods[updateMethod].call(this, payload);
+            // Highlight and downplay are special.
+            isHighlightOrDownplay && updateMethods[updateMethod].call(this, batchItem);
+        }
 
+        (updateMethod !== 'none' && !isHighlightOrDownplay)
+            && updateMethods[updateMethod].call(this, payload);
+
+        // Follow the rule of action batch
+        if (batched) {
+            eventObj = {
+                type: actionInfo.event || payload.type,
+                batch: eventObjBatch
+            };
+        }
+        else {
+            eventObj = eventObjBatch[0];
+        }
+
+        if (!isFinalEvent) {
+            this[IN_MAIN_PROCESS] = 0;
             if (!silent) {
-                // Follow the rule of action batch
-                if (batched) {
-                    eventObj = {
-                        type: actionInfo.event || payload.type,
-                        batch: eventObjBatch
-                    };
-                }
-                else {
-                    eventObj = eventObjBatch[0];
-                }
                 this._messageCenter.trigger(eventObj.type, eventObj);
+                triggerFinalEvents.call(this);
             }
-
-            // FIXME
-            // Should controlled by silent?
-            triggerExtraEvents.call(this);
+        }
+        else {
+            this._finalEvents.push(eventObj);
         }
     };
 
