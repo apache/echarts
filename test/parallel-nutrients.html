@@ -34,7 +34,7 @@
                 'echarts/component/legend',
                 'echarts/component/tooltip',
                 'echarts/component/toolbox',
-                'echarts/component/visualMap',
+                'echarts/component/visualMap'
             ], function (ec, ct) {
 
                 $.getJSON('./data/nutrients.json', function (data) {
@@ -45,7 +45,9 @@
 
                     chart = myChart = echarts.init(document.getElementById('main'));
 
+                    console.time('render');
                     chart.setOption(getOption(data));
+                    console.timeEnd('render');
 
                     chart.on('axisAreaSelected', function (event) {
                         // var indices = chart.getModel().getSeries()[0].getRawIndicesByActiveState('active');
@@ -231,7 +233,7 @@
                                 lineStyle: lineStyle,
                                 inactiveOpacity: 0,
                                 activeOpacity: 0.01,
-                                progressive: 100,
+                                progressive: 500,
                                 smooth: true,
                                 data: data
                             }
