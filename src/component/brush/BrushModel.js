@@ -21,18 +21,22 @@ define(function(require) {
             outOfBrush: {
                 color: '#ddd'
             },
-            brushType: 'rect',
-            brushStyle: {
+            toolbox: null,          // Default value see preprocessor.
+            brushLink: null,        // Series indices array,
+                                    // or 'all', which means all series.
+
+            brushRanges: null,      // Array.<Object>, Initial brushRanges, which is not persistent.
+
+            brushType: 'rect',      // Default brushType, see BrushController.
+            brushMode: 'single',    // Default brushMode, 'single' or 'multiple'
+            transformable: true,    // Default transformable.
+            // FIXME
+            // 是否要配置 brush 控制哪些 series？
+            brushStyle: {           // Default brushStyle
                 // lineWidth: 2,
                 // stroke: 'rgba(0,0,0,0.3)',
                 fill: 'rgba(0,0,0,0.15)'
-            },
-            brushMode: 'single', // 'single' or 'multiple'
-            transformable: true,
-            // FIXME
-            // 是否要配置 brush 控制哪些 series？
-            brushLink: null     // Series indices array,
-                                // or 'all', which means all series.
+            }
         },
 
         /**
@@ -59,10 +63,33 @@ define(function(require) {
         brushOption: {},
 
         /**
+         * @override
+         */
+        optionUpdated: function (newOption, isInit) {
+            var thisOption = this.option;
+            var initBrushRanges = thisOption.brushRanges;
+
+            // Should not keep it, considering setOption next time.
+            thisOption.brushRanges = null;
+
+            initBrushRanges && this.setBrushRanges(initBrushRanges);
+        },
+
+        /**
          * @param {Array.<Object>} ranges
          */
         setBrushRanges: function (brushRanges) {
-            this.brushRanges = brushRanges;
+
+            if (__DEV__) {
+                zrUtil.assert(zrUtil.isArray(brushRanges));
+                zrUtil.each(brushRanges, function (brushRange) {
+                    zrUtil.assert(brushRange.brushType && brushRange.range, 'Illegal brushRanges');
+                });
+            }
+
+            this.brushRanges = zrUtil.map(brushRanges, function (brushRange) {
+                return this._mergeBrushOption(brushRange);
+            }, this);
         },
 
         /**
@@ -70,9 +97,16 @@ define(function(require) {
          * @param {Object} brushOption
          */
         setBrushOption: function (brushOption) {
-            var option = this.option;
+            this.brushOption = this._mergeBrushOption(brushOption);
+            this.brushType = this.brushOption.brushType;
+        },
 
-            this.brushOption = zrUtil.merge(
+        /**
+         * @private
+         */
+        _mergeBrushOption: function (brushOption) {
+            var option = this.option;
+            return zrUtil.merge(
                 {
                     brushType: option.brushType,
                     brushMode: option.brushMode,
@@ -82,8 +116,6 @@ define(function(require) {
                 brushOption,
                 true
             );
-
-            this.brushType = this.brushOption.brushType;
         }
 
     });

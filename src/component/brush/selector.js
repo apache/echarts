@@ -1,6 +1,7 @@
 define(function(require) {
 
     var polygonContain = require('zrender/contain/polygon').contain;
+    var BoundingRect = require('zrender/core/BoundingRect');
 
     // Key of the first level is brushType: `line`, `rect`, `polygon`.
     // Key of the second level is chart element type: `point`, `rect`.
@@ -16,16 +17,8 @@ define(function(require) {
             point: function (itemLayout, brushRange, boundingRect) {
                 return boundingRect.contain(itemLayout[0], itemLayout[1]);
             },
-            rect: function (itemLayout, brushRange, boundingRect, data, dataIndex) {
-                // TEST contain
-                // if (
-                //     data.get('x', dataIndex) === 6
-                //     && data.get('y', dataIndex) === 1
-                //     && boundingRect.contain(itemLayout[0], itemLayout[1])
-                //     && polygonContain(brushRange.range, itemLayout[0], itemLayout[1])
-                // ) {
-                //     console.log(itemLayout, JSON.stringify(brushRange));
-                // }
+            rect: function (itemLayout, brushRange, boundingRect) {
+                return boundingRect.intersect(makeBoundingRect(itemLayout));
             }
         },
         polygon: {
@@ -33,10 +26,91 @@ define(function(require) {
                 return boundingRect.contain(itemLayout[0], itemLayout[1])
                     && polygonContain(brushRange.range, itemLayout[0], itemLayout[1]);
             },
-            rect: function (itemLayout, brushRange, boundingRect, data, dataIndex) {
+            rect: function (itemLayout, brushRange, boundingRect) {
+                // FIXME
+                // 随意写的，没有考察过效率。
+                var points = brushRange.range;
+
+                if (points.length <= 1) {
+                    return false;
+                }
+
+                var x = itemLayout.x;
+                var y = itemLayout.y;
+                var width = itemLayout.width;
+                var height = itemLayout.height;
+                var p = points[0];
+
+                if (polygonContain(points, x, y)
+                    || polygonContain(points, x + width, y)
+                    || polygonContain(points, x, y + height)
+                    || polygonContain(points, x + width, y + height)
+                    || makeBoundingRect(itemLayout).contain(p[0], p[1])
+                    || lineIntersectPolygon(x, y, x + width, y, points)
+                    || lineIntersectPolygon(x, y, x, y + height, points)
+                    || lineIntersectPolygon(x + width, y, x + width, y + height, points)
+                    || lineIntersectPolygon(x, y + height, x + width, y + height, points)
+                ) {
+                    return true;
+                }
             }
         }
     };
+
+    // FIXME
+    // 随意写的，没考察过效率。
+    function lineIntersectPolygon(lx, ly, l2x, l2y, points) {
+        for (var i = 0, p2 = points[points.length - 1]; i < points.length; i++) {
+            var p = points[i];
+            if (lineIntersect(lx, ly, l2x, l2y, p[0], p[1], p2[0], p2[1])) {
+                return true;
+            }
+            p2 = p;
+        }
+    }
+
+    // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+    function lineIntersect(a1x, a1y, a2x, a2y, b1x, b1y, b2x, b2y) {
+        var delta = determinant(a2x - a1x, b1x - b2x, a2y - a1y, b1y - b2y);
+        if (nearZero(delta)) {  // parallel
+            return false;
+        }
+        var namenda = determinant(b1x - a1x, b1x - b2x, b1y - a1y, b1y - b2y) / delta;
+        if (namenda < 0 || namenda > 1) {
+            return false;
+        }
+        var miu = determinant(a2x - a1x, b1x - a1x, a2y - a1y, b1y - a1y) / delta;
+        if (miu < 0 || miu > 1) {
+            return false;
+        }
+        return true;
+    }
+
+    function nearZero(val) {
+        return val <= (1e-6) && val >= -(1e-6);
+    }
+
+    function determinant(v1, v2, v3, v4) {
+        return v1 * v4 - v2 * v3;
+    }
+
+    function makeBoundingRect(itemLayout) {
+        var x = itemLayout.x;
+        var y = itemLayout.y;
+        var width = itemLayout.width;
+        var height = itemLayout.height;
+
+        // width and height might be negative.
+        if (width < 0) {
+            x = x + width;
+            width = -width;
+        }
+        if (height < 0) {
+            y = y + height;
+            height = -height;
+        }
+        return new BoundingRect(x, y, width, height);
+    }
 
     return selector;
 

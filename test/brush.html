@@ -60,6 +60,12 @@
                 margin-right: 220px;
                 margin-left: 20px;
             }
+            strong {
+                background: yellow;
+                padding: 0 2px;
+                border-radius: 2px;
+                color: #000;
+            }
         </style>
 
         <div class="split">Scatter</div>
@@ -68,8 +74,8 @@
             <div id="main2-st"></div>
             <div class="panel">
                 <ul class="panel-desc">
-                    <li>test: select an area and drag dataZoom.</li>
                     <li>bar and pie are individual ec instances.</li>
+                    <li><strong>CHECK</strong>: brush an area and drag dataZoom.</li>
                 </ul>
                 <div id="panel2"></div>
             </div>
@@ -78,19 +84,29 @@
         <div class="split">Scatter in Map</div>
         <div class="block">
             <div id="main1" class="main"></div>
-            <div id="panel1" class="panel"></div>
+            <div class="panel">
+                <ul class="panel-desc">
+                    <li>bar and scatter are in the same ec instances and use setOption in brushSelected event.</li>
+                </ul>
+                <div id="panel1"></div>
+            </div>
+        </div>
+
+        <div class="split">Stacked Bar (rect-polygon intersect)</div>
+        <div class="block">
+            <div id="main4" class="main"></div>
+            <div class="panel">
+                <ul class="panel-desc">
+                    <li><strong>CHECK</strong>: rect-polygon intersect.</li>
+                </ul>
+                <div id="panel4"></div>
+            </div>
         </div>
 
         <div class="split">Map</div>
         <div class="block">
             <div id="main3" class="main"></div>
             <div id="panel3" class="panel"></div>
-        </div>
-
-        <div class="split">Stacked Bar (and inversed)</div>
-        <div class="block">
-            <div id="main4" class="main"></div>
-            <div id="panel4" class="panel"></div>
         </div>
 
 
@@ -161,6 +177,9 @@
                         }
                     },
                     brush: {
+                        brushRanges: [
+                            {brushType: 'rect', range: [[200, 300], [100, 350]]}
+                        ]
                     },
                     legend: {
                         top: 20,
@@ -263,7 +282,7 @@
                 var dim3SumTrack = [];
                 var trackNums = [];
                 var trackNum = 0;
-                var trackMax = 100;
+                var trackMax = 30;
 
                 chart.setOption(option);
 
@@ -828,6 +847,8 @@
                         },
                         geo: {
                             map: 'china',
+                            left: '10',
+                            right: '35%',
                             label: {
                                 emphasis: {
                                     show: false
@@ -848,6 +869,30 @@
                             outOfBrush: {
                                 color: '#abc'
                             }
+                        },
+                        grid: {
+                            right: 20,
+                            top: 50,
+                            bottom: 20,
+                            containLabel: true,
+                            width: '30%'
+                        },
+                        xAxis: {
+                            type: 'value',
+                            scale: true,
+                            boundaryGap: false,
+                            splitLine: {show: false},
+                            axisLine: {show: false, lineStyle: {color: '#ddd'}},
+                            axisTick: {show: false},
+                            axisLabel: {textStyle: {color: '#ddd'}},
+                        },
+                        yAxis: {
+                            type: 'category',
+                            name: 'PM 2.5',
+                            axisLine: {show: false, lineStyle: {color: '#ddd'}},
+                            axisTick: {show: false, lineStyle: {color: '#ddd'}},
+                            axisLabel: {textStyle: {color: '#ddd'}},
+                            data: []
                         },
                         series : [
                             {
@@ -904,6 +949,17 @@
                                     }
                                 },
                                 zlevel: 1
+                            },
+                            {
+                                id: 'bar',
+                                type: 'bar',
+                                symbol: 'none',
+                                itemStyle: {
+                                    normal: {
+                                        color: '#ddb926'
+                                    }
+                                },
+                                data: []
                             }
                         ]
                     };
@@ -918,10 +974,11 @@
                         var sum = 0;
                         var count = 0;
                         var brushComponent = params.brushComponents[0];
+                        var selectedItems = [];
 
                         for (var sIdx = 0; sIdx < brushComponent.series.length; sIdx++) {
                             var rawIndices = brushComponent.series[sIdx].rawIndices;
-                            var places = [];
+                            var placesBySeries = [];
                             for (var i = 0; i < rawIndices.length; i++) {
                                 var rawIndex = rawIndices[i];
                                 var item = convertedData[rawIndex];
@@ -932,9 +989,12 @@
                                     top = value;
                                     topWhere = item.name;
                                 }
-                                places.push(item.name);
+                                if (sIdx === 0) {
+                                    selectedItems.push(item);
+                                }
+                                placesBySeries.push(item.name);
                             }
-                            brushed.push('[Series ' + sIdx + '] ' + places.join(', '));
+                            brushed.push('[Series ' + sIdx + '] ' + placesBySeries.join(', '));
                         }
 
                         panel.innerHTML = [
@@ -946,6 +1006,26 @@
                             '<h3>BRUSHED:</h3>',
                             brushed.join('<br><br>'),
                         ].join(' ');
+
+                        selectedItems.sort(function (a, b) {
+                            return a.value[2] - b.value[2];
+                        });
+                        var categoryData = [];
+                        var barData = [];
+                        for (var i = 0; i < selectedItems.length; i++) {
+                            categoryData.push(selectedItems[i].name);
+                            barData.push(selectedItems[i].value[2]);
+                        }
+
+                        chart.setOption({
+                            yAxis: {
+                                data: categoryData
+                            },
+                            series: {
+                                id: 'bar',
+                                data: barData
+                            }
+                        }, null, null, true);
                     }
 
                 });
@@ -984,6 +1064,7 @@
             ], function (echarts) {
 
                 var main = document.getElementById('main4');
+                var panel = document.getElementById('panel4');
                 if (!main) {
                     return;
                 }
@@ -1022,11 +1103,12 @@
                     }
                 };
 
-                chart.setOption({
+                var option = {
                     backgroundColor: '#eee',
                     legend: {
                         data: ['bar', 'bar2', 'bar3', 'bar4'],
-                        align: 'left'
+                        align: 'left',
+                        left: 10
                     },
                     brush: {
                     },
@@ -1096,7 +1178,29 @@
                             data: data4
                         }
                     ]
-                });
+                };
+
+                chart.on('brushSelected', renderBrushed);
+                window.onresize = function () {
+                    chart.resize();
+                };
+
+                chart.setOption(option);
+
+                function renderBrushed(params) {
+                    var brushed = [];
+                    var brushComponent = params.brushComponents[0];
+
+                    for (var sIdx = 0; sIdx < brushComponent.series.length; sIdx++) {
+                        var rawIndices = brushComponent.series[sIdx].rawIndices;
+                        brushed.push('[Series ' + sIdx + '] ' + rawIndices.join(', '));
+                    }
+
+                    panel.innerHTML = [
+                        '<h3>BRUSHED RAW INDICES:</h3>',
+                        brushed.join('<br><br>'),
+                    ].join(' ');
+                }
             });
         </script>
 

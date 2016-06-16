@@ -64,22 +64,10 @@ define(function (require) {
         Eventful.call(this);
 
         /**
-         * @type {string}
-         * @readOnly
-         */
-        this.brushType;
-
-        /**
          * @type {module:zrender/zrender~ZRender}
          * @readOnly
          */
         this.zr = zr;
-
-        /**
-         * @type {Object}
-         * @readOnly
-         */
-        this.brushOption;
 
         /**
          * @type {module:zrender/container/Group}
@@ -88,48 +76,64 @@ define(function (require) {
         this.group = new graphic.Group();
 
         /**
+         * Only for drawing (after enabledBrush).
+         * @private
+         * @type {string}
+         */
+        this._brushType;
+
+        /**
+         * Only for drawing (after enabledBrush).
+         * @private
+         * @type {Object}
+         */
+        this._brushOption;
+
+        /**
+         * @private
          * @type {module:zrender/core/BoundingRect}
          */
         this._containerRect = null;
 
         /**
-         * @type {Array.<nubmer>}
          * @private
+         * @type {Array.<nubmer>}
          */
         this._track = [];
 
         /**
-         * @type {boolean}
          * @private
+         * @type {boolean}
          */
         this._dragging;
 
         /**
-         * @type {Array}
          * @private
+         * @type {Array}
          */
         this._covers = [];
 
         /**
-         * @type {moudule:zrender/container/Group}
          * @private
+         * @type {moudule:zrender/container/Group}
          */
         this._creatingCover;
 
         /**
-         * @type {boolean}
          * @private
+         * @type {boolean}
          */
         this._mounted = false;
 
         /**
+         * @private
          * @type {string}
          */
         this._uid = 'brushController_' + baseUID++;
 
         /**
-         * @type {Object}
          * @private
+         * @type {Object}
          */
         this._handlers = {};
         each(mouseHandlers, function (handler, eventName) {
@@ -160,7 +164,7 @@ define(function (require) {
                 return;
             }
 
-            this.brushType && doDisableBrush.call(this);
+            this._brushType && doDisableBrush.call(this);
             brushOption.brushType && doEnableBrush.call(this, brushOption);
 
             return this;
@@ -198,28 +202,32 @@ define(function (require) {
 
         /**
          * Update covers.
-         * @param {Array.<Object>} coverInfoList Like:
+         * @param {Array.<Object>} brushOptionList Like:
          *        [
-         *            {id: 'xx', type: 'line', range: [23, 44]},
-         *            {id: 'yy', type: 'rect', range: [[23, 44], [23, 54]]},
+         *            {id: 'xx', brushType: 'line', range: [23, 44], brushStyle, transformable},
+         *            {id: 'yy', brushType: 'rect', range: [[23, 44], [23, 54]]},
          *            ...
          *        ]
-         *        `type` is required in each cover info.
+         *        `brushType` is required in each cover info.
          *        `id` is not mandatory.
-         *        If coverInfoList is null/undefined, all covers removed.
+         *        `brushStyle`, `transformable` is not mandatory, use DEFAULT_BRUSH_OPT by default.
+         *        If brushOptionList is null/undefined, all covers removed.
          */
-        updateCovers: function (coverInfoList) {
+        updateCovers: function (brushOptionList) {
             if (!this._mounted) {
                 return;
             }
 
-            coverInfoList = zrUtil.clone(coverInfoList || []);
+            brushOptionList = zrUtil.map(brushOptionList, function (brushOption) {
+                return zrUtil.merge(zrUtil.clone(DEFAULT_BRUSH_OPT), brushOption, true);
+            });
+
             var tmpIdPrefix = '\0-brush-index-';
             var oldCovers = this._covers;
             var newCovers = this._covers = [];
             var controller = this;
 
-            (new DataDiffer(oldCovers, coverInfoList, oldGetKey, newGetKey))
+            (new DataDiffer(oldCovers, brushOptionList, oldGetKey, newGetKey))
                 .add(add)
                 .update(update)
                 .remove(remove)
@@ -228,30 +236,30 @@ define(function (require) {
             return this;
 
             function oldGetKey(cover, index) {
-                var brushInfo = cover.__brushInfo;
-                return brushInfo.id != null ? brushInfo.id : tmpIdPrefix + index;
+                var brushOption = cover.__brushOption;
+                return brushOption.id != null ? brushOption.id : tmpIdPrefix + index;
             }
 
-            function newGetKey(coverInfo, index) {
-                return coverInfo.id != null ? coverInfo.id : tmpIdPrefix + index;
+            function newGetKey(brushOption, index) {
+                return brushOption.id != null ? brushOption.id : tmpIdPrefix + index;
             }
 
             function add(newIndex) {
-                newCovers[newIndex] = createCover.call(controller, coverInfoList[newIndex]);
-                updateCover.call(controller, newCovers[newIndex]);
+                newCovers[newIndex] = createCover.call(controller, brushOptionList[newIndex]);
+                updateCoverAfterCreation.call(controller, newCovers[newIndex]);
             }
 
             function update(newIndex, oldIndex) {
                 var cover = newCovers[newIndex] = oldCovers[oldIndex];
-                var newCoverInfo = coverInfoList[newIndex];
+                var newBrushOption = brushOptionList[newIndex];
 
-                if (newCoverInfo.type !== cover.__brushInfo.type) {
+                if (newBrushOption.brushType !== cover.__brushOption.brushType) {
                     controller.group.remove(cover);
-                    cover = createCover.call(controller, newCoverInfo);
+                    cover = createCover.call(controller, newBrushOption);
                 }
 
-                cover.__brushInfo = newCoverInfo;
-                updateCover.call(controller, newCovers[newIndex]);
+                cover.__brushOption = newBrushOption;
+                updateCoverAfterCreation.call(controller, newCovers[newIndex]);
             }
 
             function remove(oldIndex) {
@@ -297,8 +305,8 @@ define(function (require) {
             zr.on(eventName, handler);
         });
 
-        this.brushType = brushOption.brushType;
-        this.brushOption = zrUtil.merge(zrUtil.clone(DEFAULT_BRUSH_OPT), brushOption, true);
+        this._brushType = brushOption.brushType;
+        this._brushOption = zrUtil.merge(zrUtil.clone(DEFAULT_BRUSH_OPT), brushOption, true);
     }
 
     function doDisableBrush() {
@@ -311,16 +319,13 @@ define(function (require) {
             zr.off(eventName, handler);
         });
 
-        this.brushType = this.brushOption = null;
+        this._brushType = this._brushOption = null;
     }
 
-    function createCover(brushInfo) {
-        var brushType = brushInfo ? brushInfo.brushType : this.brushType;
-        var cover = coverRenderers[brushType].createCover.call(this);
+    function createCover(brushOption) {
+        var cover = coverRenderers[brushOption.brushType].createCover.call(this, brushOption);
         updateZ(cover);
-        cover.__brushInfo = brushInfo || {type: brushType};
-        // this.brushOption may be erased, but still needed when drift.
-        cover.__brushOption = this.brushOption;
+        cover.__brushOption = brushOption;
         this.group.add(cover);
         return cover;
     }
@@ -331,8 +336,11 @@ define(function (require) {
         });
     }
 
-    function updateCover(cover) {
-        coverRenderers[cover.__brushInfo.type].updateCover.call(this, cover);
+    function updateCoverAfterCreation(cover) {
+        var brushOption = cover.__brushOption;
+        var coverRenderer = coverRenderers[brushOption.brushType];
+        coverRenderer.updateCoverShape.call(this, cover);
+        coverRenderer.updateCommon.call(this, cover);
     }
 
     function isInContainer(x, y) {
@@ -349,10 +357,14 @@ define(function (require) {
     }
 
     function trigger(isEnd) {
-        var coverInfoList = map(this._covers, function (cover) {
-            return zrUtil.clone(cover.__brushInfo);
+        var brushRanges = map(this._covers, function (cover) {
+            var brushOption = cover.__brushOption;
+            return {
+                brushType: brushOption.brushType,
+                range: zrUtil.clone(brushOption.range)
+            };
         });
-        this.trigger('brush', coverInfoList, !!isEnd);
+        this.trigger('brush', brushRanges, !!isEnd);
     }
 
     function shouldShowCover() {
@@ -397,21 +409,26 @@ define(function (require) {
         return [localTrack[0], localTrack[tail]];
     }
 
-    function createBaseRect(cover) {
-        var opt = this.brushOption;
-        var rect = new graphic.Rect({
+    function createBaseRect(cover, brushOption) {
+        cover.add(new graphic.Rect({
             name: 'rect',
-            style: opt.brushStyle,
-            silent: !opt.transformable
-        });
-        cover.add(rect);
+            style: brushOption.brushStyle,
+            silent: true,
+            draggable: true,
+            cursor: 'move',
+            drift: bind(driftRect, this, cover, 'nswe'),
+            ondragend: bind(trigger, this, true)
+        }));
+    }
 
-        if (opt.transformable) {
-            rect.draggable = true;
-            rect.cursor = 'move';
-            rect.drift = bind(driftRect, this, cover, 'nswe');
-            rect.ondragend = bind(trigger, this, true);
-        }
+    function updateCommon(cover) {
+        var brushOption = cover.__brushOption;
+        cover.childAt(0).useStyle(brushOption.brushStyle);
+        var transformable = brushOption.transformable;
+        cover.childAt(0).attr({
+            silent: !transformable,
+            cursor: transformable ? 'move' : 'default'
+        });
     }
 
     function updateRectShape(cover, name, x, y, w, h) {
@@ -429,8 +446,8 @@ define(function (require) {
     }
 
     function driftRect(cover, name, dx, dy) {
-        var brushInfo = cover.__brushInfo;
-        var rectRange = brushInfo.range;
+        var brushOption = cover.__brushOption;
+        var rectRange = brushOption.range;
         var delta = [dx, dy];
 
         each(name.split(''), function (namePart) {
@@ -438,23 +455,23 @@ define(function (require) {
             rectRange[ind[0]][ind[1]] += delta[ind[0]];
         });
 
-        brushInfo.range = formatRectRange(
+        brushOption.range = formatRectRange(
             rectRange[0][0], rectRange[1][0], rectRange[0][1], rectRange[1][1]
         );
 
-        updateCover.call(this, cover);
+        updateCoverAfterCreation.call(this, cover);
         trigger.call(this, false);
     }
 
     function driftPolygon(cover, dx, dy) {
-        var range = cover.__brushInfo.range;
+        var range = cover.__brushOption.range;
 
         each(range, function (point) {
             point[0] += dx;
             point[1] += dy;
         });
 
-        updateCover.call(this, cover);
+        updateCoverAfterCreation.call(this, cover);
         trigger.call(this, false);
     }
 
@@ -467,6 +484,7 @@ define(function (require) {
         var x = e.offsetX;
         var y = e.offsetY;
         var creatingCover = this._creatingCover;
+        var thisBrushOption = this._brushOption;
 
         if (isInContainer.call(this, x, y)) {
             this._track.push([x, y]);
@@ -474,21 +492,27 @@ define(function (require) {
             if (shouldShowCover.call(this)) {
 
                 if (!creatingCover) {
-                    this.brushOption.brushMode === 'single' && clearCovers.call(this);
-                    creatingCover = this._creatingCover = createCover.call(this);
+                    thisBrushOption.brushMode === 'single' && clearCovers.call(this);
+                    creatingCover = this._creatingCover =
+                        createCover.call(this, zrUtil.clone(thisBrushOption));
                     this._covers.push(creatingCover);
                 }
 
-                var coverRenderer = coverRenderers[this.brushType];
-                creatingCover.__brushInfo.range =
+                var coverRenderer = coverRenderers[this._brushType];
+                var coverBrushOption = creatingCover.__brushOption;
+
+                coverBrushOption.range =
                     coverRenderer.getCreatingRange.call(this, isEnd);
 
-                if (isEnd && coverRenderer.endCreating) {
-                    coverRenderer.endCreating.call(this, creatingCover);
-                    updateZ(creatingCover);
+                if (isEnd) {
+                    if (coverRenderer.endCreating) {
+                        coverRenderer.endCreating.call(this, creatingCover);
+                        updateZ(creatingCover);
+                    }
+                    coverRenderer.updateCommon.call(this, creatingCover);
                 }
 
-                updateCover.call(this, creatingCover);
+                coverRenderer.updateCoverShape.call(this, creatingCover);
 
                 trigger.call(this, isEnd);
             }
@@ -545,13 +569,13 @@ define(function (require) {
     var coverRenderers = {
 
         line: {
-
-            createCover: function () {
+            createCover: function (brushOption) {
                 var cover = new graphic.Group();
-                createBaseRect.call(this, cover);
+
+                createBaseRect.call(this, cover, brushOption);
+
                 return cover;
             },
-
             getCreatingRange: function () {
                 var ends = getLocalTrackEnds.call(this);
                 var min = mathMin(ends[0][0], ends[1][0]);
@@ -559,33 +583,32 @@ define(function (require) {
 
                 return [min, max];
             },
-
-            updateCover: function (cover) {
-                var range = cover.__brushInfo.range;
-                var width = cover.__brushOption.brushStyle.width;
+            updateCoverShape: function (cover) {
+                var info = cover.__brushOption;
+                var range = info.range;
+                var width = info.brushStyle.width;
                 cover.childOfName('rect').setShape({
                     x: range[0],
                     y: -width / 2,
                     width: range[1] - range[0],
                     height: width
                 });
-            }
+            },
+            updateCommon: updateCommon
         },
 
         rect: {
-
-            createCover: function () {
-                var opt = this.brushOption;
+            createCover: function (brushOption) {
                 var cover = new graphic.Group();
 
-                createBaseRect.call(this, cover);
+                createBaseRect.call(this, cover, brushOption);
 
-                opt.transformable && each(
+                each(
                     ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw'],
                     function (name) {
                         cover.add(new graphic.Rect({
                             name: name,
-                            cursor: CURSOR_MAP[name] + '-resize',
+                            __cursor: CURSOR_MAP[name] + '-resize',
                             style: {opacity: 0},
                             draggable: true,
                             drift: bind(driftRect, this, cover, name),
@@ -597,16 +620,14 @@ define(function (require) {
 
                 return cover;
             },
-
             getCreatingRange: function () {
                 var ends = getLocalTrackEnds.call(this);
                 return formatRectRange(ends[1][0], ends[1][1], ends[0][0], ends[0][1]);
             },
-
-            updateCover: function (cover) {
-                var range = cover.__brushInfo.range;
-                var opt = cover.__brushOption;
-                var lineWidth = opt.lineWidth || 0;
+            updateCoverShape: function (cover) {
+                var info = cover.__brushOption;
+                var range = info.range;
+                var lineWidth = info.brushStyle.lineWidth || 0;
                 var handleSize = mathMax(lineWidth, MIN_RESIZE_LINE_WIDTH);
                 var x = range[0][0];
                 var y = range[1][0];
@@ -623,7 +644,7 @@ define(function (require) {
 
                 updateRectShape(cover, 'rect', x, y, width, height);
 
-                if (opt.transformable) {
+                if (info.transformable) {
                     updateRectShape(cover, 'w', xa, ya, handleSize, heighta);
                     updateRectShape(cover, 'e', x2a, ya, handleSize, heighta);
                     updateRectShape(cover, 'n', xa, ya, widtha, handleSize);
@@ -634,64 +655,53 @@ define(function (require) {
                     updateRectShape(cover, 'sw', xa, y2a, handleSize, handleSize);
                     updateRectShape(cover, 'se', x2a, y2a, handleSize, handleSize);
                 }
+            },
+            updateCommon: function (cover) {
+                updateCommon.call(this, cover);
+                var transformable = cover.__brushOption.transformable;
+                each(
+                    ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw'],
+                    function (name) {
+                        var el = cover.childOfName(name);
+                        el.attr({
+                            silent: !transformable,
+                            cursor: transformable ? el.__cursor : 'default'
+                        });
+                    },
+                    this
+                );
             }
         },
 
         polygon: {
-
-            createCover: function () {
+            createCover: function (brushOption) {
                 var cover = new graphic.Group();
-                var opt = this.brushOption;
 
                 // Do not use graphic.Polygon because graphic.Polyline do not close the
                 // border of the shape when drawing, which is a better experience for user.
-                var polygon = new graphic.Polyline({
-                    style: opt.brushStyle,
-                    silent: !opt.transformable
-                });
-                cover.add(polygon);
-
-                // if (opt.transformable) {
-                    // polygon.draggable = true;
-                    // polygon.cursor = 'move';
-                    // polygon.drift = bind(driftPolygon, this, cover);
-                    // polygon.ondragend = bind(trigger, this, true);
-                // }
+                cover.add(new graphic.Polyline({
+                    style: brushOption.brushStyle,
+                    silent: true
+                }));
 
                 return cover;
             },
-
-            // getCreatingRange: function (isEnd) {
-            //     var track = this._track.slice();
-            //     isEnd && track.length && track.push(track[0].slice());
-            //     return track;
-            // },
-
             getCreatingRange: function (isEnd) {
                 return this._track.slice();
             },
-
             endCreating: function (cover) {
                 cover.remove(cover.childAt(0));
-                var opt = this.brushOption;
-                // Close the shape
-                var polygon = new graphic.Polygon({
-                    style: opt.brushStyle,
-                    silent: !opt.transformable
-                });
-                cover.add(polygon);
-
-                if (opt.transformable) {
-                    polygon.draggable = true;
-                    polygon.cursor = 'move';
-                    polygon.drift = bind(driftPolygon, this, cover);
-                    polygon.ondragend = bind(trigger, this, true);
-                }
+                // Use graphic.Polygon close the shape.
+                cover.add(new graphic.Polygon({
+                    draggable: true,
+                    drift: bind(driftPolygon, this, cover),
+                    ondragend: bind(trigger, this, true)
+                }));
             },
-
-            updateCover: function (cover) {
-                cover.childAt(0).setShape({points: cover.__brushInfo.range});
-            }
+            updateCoverShape: function (cover) {
+                cover.childAt(0).setShape({points: cover.__brushOption.range});
+            },
+            updateCommon: updateCommon
         }
     };
 

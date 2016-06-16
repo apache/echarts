@@ -200,8 +200,9 @@ define(function (require) {
      * @param {Object} option
      * @param {boolean} notMerge
      * @param {boolean} [notRefreshImmediately=false] Useful when setOption frequently.
+     * @param {boolean} [silent=false]
      */
-    echartsProto.setOption = function (option, notMerge, notRefreshImmediately) {
+    echartsProto.setOption = function (option, notMerge, notRefreshImmediately, silent) {
         if (!this._model || notMerge) {
             this._model = new GlobalModel(
                 null, null, this._theme, new OptionManager(this._api)
@@ -214,7 +215,7 @@ define(function (require) {
 
         updateMethods.prepareAndUpdate.call(this);
 
-        triggerExtraEvents.call(this);
+        !silent && triggerExtraEvents.call(this);
 
         !notRefreshImmediately && this._zr.refreshImmediately();
     };

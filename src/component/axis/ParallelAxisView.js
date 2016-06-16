@@ -73,7 +73,7 @@ define(function (require) {
             var axis = axisModel.axis;
             var coverInfoList = zrUtil.map(axisModel.activeIntervals, function (interval) {
                 return {
-                    type: 'line',
+                    brushType: 'line',
                     range: [
                         axis.dataToCoord(interval[0], true),
                         axis.dataToCoord(interval[1], true)

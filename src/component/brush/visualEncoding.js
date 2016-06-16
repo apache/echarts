@@ -56,9 +56,10 @@ define(function (require) {
                 var rInfo = rangeInfo[seriesIndex] = {ranges: [], boundingRects: []};
 
                 zrUtil.each(brushRanges, function (brushRange) {
-                    if (selectorsByBrushType[brushRange.type]) {
+                    var brushType = brushRange.brushType
+                    if (selectorsByBrushType[brushType]) {
                         rInfo.ranges.push(brushRange);
-                        rInfo.boundingRects.push(boundingRectBuilders[brushRange.type](brushRange));
+                        rInfo.boundingRects.push(boundingRectBuilders[brushType](brushRange));
                     }
                 });
 
@@ -116,7 +117,7 @@ define(function (require) {
     function checkInRange(selectorsByBrushType, rInfo, data, dataIndex) {
         var itemLayout = data.getItemLayout(dataIndex);
         for (var i = 0, len = rInfo.ranges.length; i < len; i++) {
-            var brushType = rInfo.ranges[i].type;
+            var brushType = rInfo.ranges[i].brushType;
             if (selectorsByBrushType[brushType](
                 itemLayout, rInfo.ranges[i], rInfo.boundingRects[i], selector[brushType]
             )) {
