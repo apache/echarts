@@ -22,8 +22,9 @@ define(function(require) {
                 color: '#ddd'
             },
             toolbox: null,          // Default value see preprocessor.
-            brushLink: null,        // Series indices array,
+            brushLink: null,        // Series indices array, broadcast using dataIndex.
                                     // or 'all', which means all series.
+            seriesIndex: 'all',     // seriesIndex array, specify series controlled by this brush component.
 
             brushRanges: null,      // Array.<Object>, Initial brushRanges, which is not persistent.
 

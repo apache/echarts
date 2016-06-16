@@ -56,7 +56,7 @@ define(function (require) {
                 var rInfo = rangeInfo[seriesIndex] = {ranges: [], boundingRects: []};
 
                 zrUtil.each(brushRanges, function (brushRange) {
-                    var brushType = brushRange.brushType
+                    var brushType = brushRange.brushType;
                     if (selectorsByBrushType[brushType]) {
                         rInfo.ranges.push(brushRange);
                         rInfo.boundingRects.push(boundingRectBuilders[brushType](brushRange));
@@ -108,8 +108,15 @@ define(function (require) {
 
         });
 
-        api.prepareExtraEvent({
-            type: 'brushSelected',
+        // This event is always triggered, rather than triggered only when selected
+        // changed. The latter way might help user to reduce unnecessary view update
+        // in listener of this event and improve performance, but probably it is
+        // difficult to diff selected data precisely only by dataIndex records. For
+        // example, considering this event will be triggered when setOption called,
+        // user may change values in series.data, but keep dataIndex the same. So
+        // the diff work is left to user, if it is necessary.
+        api.dispatchAction({
+            type: 'brushSelect',
             brushComponents: brushSelected
         });
     });

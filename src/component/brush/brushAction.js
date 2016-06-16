@@ -38,4 +38,30 @@ define(function(require) {
             });
         }
     );
+
+    /**
+     * payload: {
+     *      brushComponents: [
+     *          {
+     *              brushId,
+     *              brushIndex,
+     *              brushName,
+     *              series: [
+     *                  {
+     *                      seriesId,
+     *                      seriesIndex,
+     *                      seriesName,
+     *                      rawIndices: [21, 34, ...]
+     *                  },
+     *                  ...
+     *              ]
+     *          },
+     *          ...
+     *      ]
+     * }
+     */
+    echarts.registerAction(
+         {type: 'brushSelect', event: 'brushSelected', update: 'none'},
+        function () {}
+    );
 });
