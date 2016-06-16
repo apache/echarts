@@ -167,7 +167,7 @@ define(function (require) {
                 labels[i], font, 'center', 'top'
             );
             rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
-            rect[isAxisHorizontal ? 'width' : 'height'] *= 1.5;
+            rect[isAxisHorizontal ? 'width' : 'height'] *= step > 1 ? 1.5 : 1.1;
             if (!textSpaceTakenRect) {
                 textSpaceTakenRect = rect.clone();
             }
