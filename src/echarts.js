@@ -57,6 +57,7 @@ define(function (require) {
     var PRIORITY_VISUAL_GLOBAL = 2000;
     var PRIORITY_VISUAL_CHART = 3000;
     var PRIORITY_VISUAL_COMPONENT = 4000;
+    var PRIORITY_VISUAL_BRUSH = 5000;
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -151,6 +152,11 @@ define(function (require) {
          */
         this._coordSysMgr = new CoordinateSystemManager();
 
+        /**
+         * @type {Array.<Object>}
+         */
+        this._extraEvents = [];
+
         Eventful.call(this);
 
         /**
@@ -204,7 +210,11 @@ define(function (require) {
 
         this._model.setOption(option, optionPreprocessorFuncs);
 
+        this._extraEvents = [];
+
         updateMethods.prepareAndUpdate.call(this);
+
+        triggerExtraEvents.call(this);
 
         !notRefreshImmediately && this._zr.refreshImmediately();
     };
@@ -450,6 +460,10 @@ define(function (require) {
                 return;
             }
 
+            ecModel.eachSeries(function (seriesModel) {
+                seriesModel.getData().clearAllVisual();
+            });
+
             doVisualEncoding.call(this, ecModel, payload);
 
             invokeUpdateMethod.call(this, 'updateView', ecModel, payload);
@@ -466,6 +480,10 @@ define(function (require) {
             if (!ecModel) {
                 return;
             }
+
+            ecModel.eachSeries(function (seriesModel) {
+                seriesModel.getData().clearAllVisual();
+            });
 
             doVisualEncoding.call(this, ecModel, payload);
 
@@ -552,8 +570,12 @@ define(function (require) {
     echartsProto.resize = function () {
         this._zr.resize();
 
+        this._extraEvents = [];
+
         var optionChanged = this._model && this._model.resetOption('media');
         updateMethods[optionChanged ? 'prepareAndUpdate' : 'update'].call(this);
+
+        triggerExtraEvents.call(this);
 
         // Resize loading effect
         this._loadingFX && this._loadingFX.resize();
@@ -597,6 +619,20 @@ define(function (require) {
     };
 
     /**
+     * @param {Object} eventObj
+     * @param {string} eventObj.type
+     */
+    echartsProto.prepareExtraEvent = function (eventObj) {
+        this._extraEvents.push(eventObj);
+    };
+
+    function triggerExtraEvents() {
+        each(this._extraEvents, function (eventObj) {
+            this.trigger(eventObj.type.toLowerCase(), eventObj);
+        }, this);
+    }
+
+    /**
      * @pubilc
      * @param {Object} payload
      * @param {string} [payload.type] Action type
@@ -605,6 +641,9 @@ define(function (require) {
     echartsProto.dispatchAction = function (payload, silent) {
         var actionWrap = actions[payload.type];
         if (actionWrap) {
+
+            this._extraEvents = [];
+
             var actionInfo = actionWrap.actionInfo;
             var updateMethod = actionInfo.update || 'update';
 
@@ -653,6 +692,10 @@ define(function (require) {
                 }
                 this._messageCenter.trigger(eventObj.type, eventObj);
             }
+
+            // FIXME
+            // Should controlled by silent?
+            triggerExtraEvents.call(this);
         }
     };
 
@@ -1386,7 +1429,8 @@ define(function (require) {
             LAYOUT: PRIORITY_VISUAL_LAYOUT,
             GLOBAL: PRIORITY_VISUAL_GLOBAL,
             CHART: PRIORITY_VISUAL_CHART,
-            COMPONENT: PRIORITY_VISUAL_COMPONENT
+            COMPONENT: PRIORITY_VISUAL_COMPONENT,
+            BRUSH: PRIORITY_VISUAL_BRUSH
         }
     };
 

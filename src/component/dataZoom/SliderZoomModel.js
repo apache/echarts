@@ -65,13 +65,6 @@ define(function(require) {
             textStyle: {
                 color: '#333'
             }
-        },
-
-        /**
-         * @override
-         */
-        mergeOption: function (option) {
-            SliderZoomModel.superApply(this, 'mergeOption', arguments);
         }
 
     });

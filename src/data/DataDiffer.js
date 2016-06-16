@@ -58,7 +58,7 @@ define(function(require) {
             // when duplicate keys exists (consider newDataIndex.pop() below).
             // For performance consideration, these code below do not look neat.
             for (i = 0; i < oldArr.length; i++) {
-                var key = oldKeyGetter(oldArr[i]);
+                var key = oldKeyGetter(oldArr[i], i);
                 var idx = newDataIndexMap[key];
 
                 // idx can never be empty array here. see 'set null' logic below.
@@ -102,7 +102,7 @@ define(function(require) {
 
     function initIndexMap(arr, map, keyGetter) {
         for (var i = 0; i < arr.length; i++) {
-            var key = keyGetter(arr[i]);
+            var key = keyGetter(arr[i], i);
             var existence = map[key];
             if (existence == null) {
                 map[key] = i;

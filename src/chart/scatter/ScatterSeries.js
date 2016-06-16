@@ -16,6 +16,8 @@ define(function (require) {
             return list;
         },
 
+        brushSelector: 'point',
+
         defaultOption: {
             coordinateSystem: 'cartesian2d',
             zlevel: 0,
@@ -58,5 +60,6 @@ define(function (require) {
                 }
             }
         }
+
     });
 });

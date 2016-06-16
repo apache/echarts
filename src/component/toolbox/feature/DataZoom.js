@@ -3,11 +3,10 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../../util/number');
-    var SelectController = require('../../helper/SelectController');
+    var BrushController = require('../../helper/BrushController');
     var BoundingRect = require('zrender/core/BoundingRect');
     var Group = require('zrender/container/Group');
     var history = require('../../dataZoom/history');
-    var interactionMutex = require('../../helper/interactionMutex');
 
     var each = zrUtil.each;
     var asc = numberUtil.asc;
@@ -18,20 +17,27 @@ define(function(require) {
     // Spectial component id start with \0ec\0, see echarts/model/Global.js~hasInnerId
     var DATA_ZOOM_ID_BASE = '\0_ec_\0toolbox-dataZoom_';
 
-    function DataZoom(model) {
+    function DataZoom(model, ecModel, api) {
+
         this.model = model;
+        this.ecModel = ecModel;
+        this.api = api;
+        var zr = api.getZr();
 
         /**
          * @private
          * @type {module:zrender/container/Group}
          */
-        this._controllerGroup;
+        var controllerGroup = this._controllerGroup = new Group();
+        zr.add(controllerGroup);
 
         /**
          * @private
-         * @type {module:echarts/component/helper/SelectController}
+         * @type {module:echarts/component/helper/BrushController}
          */
-        this._controller;
+        (this._brushController = new BrushController(zr))
+            .on('brush', zrUtil.bind(this._onBrush, this))
+            .mount(controllerGroup, false);
 
         /**
          * Is zoom active.
@@ -61,24 +67,16 @@ define(function(require) {
     };
 
     proto.onclick = function (ecModel, api, type) {
-        var controllerGroup = this._controllerGroup;
-        if (!this._controllerGroup) {
-            controllerGroup = this._controllerGroup = new Group();
-            api.getZr().add(controllerGroup);
-        }
-
-        handlers[type].call(this, controllerGroup, this.model, ecModel, api);
+        handlers[type].call(this);
     };
 
     proto.remove = function (ecModel, api) {
-        this._disposeController();
-        interactionMutex.release('globalPan', api.getZr());
+        this._brushController.unmount();
     };
 
     proto.dispose = function (ecModel, api) {
         var zr = api.getZr();
-        interactionMutex.release('globalPan', zr);
-        this._disposeController();
+        this._brushController.dispose();
         this._controllerGroup && zr.remove(this._controllerGroup);
     };
 
@@ -87,63 +85,40 @@ define(function(require) {
      */
     var handlers = {
 
-        zoom: function (controllerGroup, featureModel, ecModel, api) {
-            var isZoomActive = this._isZoomActive = !this._isZoomActive;
-            var zr = api.getZr();
+        zoom: function () {
+            var nextActive = !this._isZoomActive;
+            var controller = this._brushController;
 
-            interactionMutex[isZoomActive ? 'take' : 'release']('globalPan', zr);
+            if (nextActive) {
+                this._isZoomActive = nextActive;
+                this.model.setIconStatus('zoom', 'emphasis');
 
-            featureModel.setIconStatus('zoom', isZoomActive ? 'emphasis' : 'normal');
-
-            if (isZoomActive) {
-                zr.setDefaultCursorStyle('crosshair');
-
-                this._createController(
-                    controllerGroup, featureModel, ecModel, api
-                );
+                controller.enableBrush({
+                    brushType: 'rect',
+                    brushStyle: {
+                        // FIXME
+                        // user customized?
+                        lineWidth: 3,
+                        stroke: '#333',
+                        fill: 'rgba(0,0,0,0.2)'
+                    },
+                    // FIXME
+                    // 是否应通过触发 action 的方式来互斥而非 onRelease？
+                    onRelease: zrUtil.bind(onRelease, this)
+                });
             }
             else {
-                zr.setDefaultCursorStyle('default');
-                this._disposeController();
+                controller.enableBrush(false);
+            }
+
+            function onRelease() {
+                this.model.setIconStatus('zoom', 'normal');
+                this._isZoomActive = false;
             }
         },
 
-        back: function (controllerGroup, featureModel, ecModel, api) {
-            this._dispatchAction(history.pop(ecModel), api);
-        }
-    };
-
-    /**
-     * @private
-     */
-    proto._createController = function (
-        controllerGroup, featureModel, ecModel, api
-    ) {
-        var controller = this._controller = new SelectController(
-            'rect',
-            api.getZr(),
-            {
-                // FIXME
-                lineWidth: 3,
-                stroke: '#333',
-                fill: 'rgba(0,0,0,0.2)'
-            }
-        );
-        controller.on(
-            'selected',
-            zrUtil.bind(
-                this._onSelected, this, controller,
-                featureModel, ecModel, api
-            )
-        );
-        controller.enable(controllerGroup, false);
-    };
-
-    proto._disposeController = function () {
-        var controller = this._controller;
-        if (controller) {
-            controller.off();
-            controller.dispose();
+        back: function () {
+            this._dispatchAction(history.pop(this.ecModel));
         }
     };
 
@@ -180,15 +155,16 @@ define(function(require) {
     /**
      * @private
      */
-    proto._onSelected = function (controller, featureModel, ecModel, api, selRanges, isEnd) {
-        if (!isEnd || !selRanges.length) {
+    proto._onBrush = function (brushRanges, isEnd) {
+        if (!isEnd || !brushRanges.length) {
             return;
         }
-        var selRange = selRanges[0];
+        var brushRange = brushRanges[0];
 
-        controller.update(); // remove cover
+        this._brushController.updateCovers([]); // remove cover
 
         var snapshot = {};
+        var ecModel = this.ecModel;
 
         // FIXME
         // polar
@@ -196,7 +172,7 @@ define(function(require) {
         ecModel.eachComponent('grid', function (gridModel, gridIndex) {
             var grid = gridModel.coordinateSystem;
             var coordInfo = prepareCoordInfo(grid, ecModel);
-            var selDataRange = pointToDataInCartesian(selRange, coordInfo);
+            var selDataRange = pointToDataInCartesian(brushRange, coordInfo);
 
             if (selDataRange) {
                 var xBatchItem = scaleCartesianAxis(selDataRange, coordInfo, 0, 'x');
@@ -209,24 +185,25 @@ define(function(require) {
 
         history.push(ecModel, snapshot);
 
-        this._dispatchAction(snapshot, api);
+        this._dispatchAction(snapshot);
     };
 
-    function pointToDataInCartesian(selRange, coordInfo) {
+    function pointToDataInCartesian(brushRange, coordInfo) {
         var grid = coordInfo.grid;
+        var range = brushRange.range;
 
         var selRect = new BoundingRect(
-            selRange[0][0],
-            selRange[1][0],
-            selRange[0][1] - selRange[0][0],
-            selRange[1][1] - selRange[1][0]
+            range[0][0],
+            range[1][0],
+            range[0][1] - range[0][0],
+            range[1][1] - range[1][0]
         );
         if (!selRect.intersect(grid.getRect())) {
             return;
         }
         var cartesian = grid.getCartesian(coordInfo[0].axisIndex, coordInfo[1].axisIndex);
-        var dataLeftTop = cartesian.pointToData([selRange[0][0], selRange[1][0]], true);
-        var dataRightBottom = cartesian.pointToData([selRange[0][1], selRange[1][1]], true);
+        var dataLeftTop = cartesian.pointToData([range[0][0], range[1][0]], true);
+        var dataRightBottom = cartesian.pointToData([range[0][1], range[1][1]], true);
 
         return [
             asc([dataLeftTop[0], dataRightBottom[0]]), // x, using asc to handle inverse
@@ -250,14 +227,14 @@ define(function(require) {
     /**
      * @private
      */
-    proto._dispatchAction = function (snapshot, api) {
+    proto._dispatchAction = function (snapshot) {
         var batch = [];
 
         each(snapshot, function (batchItem) {
             batch.push(batchItem);
         });
 
-        batch.length && api.dispatchAction({
+        batch.length && this.api.dispatchAction({
             type: 'dataZoom',
             from: this.uid,
             batch: zrUtil.clone(batch, true)

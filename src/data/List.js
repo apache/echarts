@@ -980,6 +980,14 @@ define(function (require) {
         itemVisual[key] = value;
     };
 
+    /**
+     * Clear itemVisuals and list visual.
+     */
+    listProto.clearAllVisual = function () {
+        this._visual = {};
+        this._itemVisuals = [];
+    };
+
     var setItemDataAndSeriesIndex = function (child) {
         child.seriesIndex = this.seriesIndex;
         child.dataIndex = this.dataIndex;

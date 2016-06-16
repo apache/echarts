@@ -189,8 +189,11 @@ define(function (require) {
                                     resultItem.keyInfo
                                 )
                             );
-                            // Call optionUpdated after init
-                            componentModel.optionUpdated(newCptOption, true);
+                            // Call optionUpdated after init.
+                            // newCptOption has been used as componentModel.option
+                            // and may be merged with theme and default, so pass null
+                            // to avoid confusion.
+                            componentModel.optionUpdated(null, true);
                         }
                     }
 

@@ -36,6 +36,8 @@ define(function(require) {
             return [NaN, NaN];
         },
 
+        brushSelector: 'rect',
+
         defaultOption: {
             zlevel: 0,                  // 一级层叠
             z: 2,                       // 二级层叠
