@@ -65,7 +65,9 @@
     "white": false,
 
     "predef": [
-        "define", 
-        "require"
+        "define",
+        "require",
+        "__DEV__",
+        "global"
     ]
 }
