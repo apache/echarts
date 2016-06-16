@@ -37,6 +37,28 @@ define(function (require) {
                     symbolProxy.buildPath(path, symbolProxyShape, true);
                 }
             }
+        },
+
+        findDataIndex: function (x, y) {
+            var shape = this.shape;
+            var points = shape.points;
+            var sizes = shape.sizes;
+
+            // Not consider transform
+            // Treat each element as a rect
+            // top down traverse
+            for (var i = points.length - 1; i >= 0; i--) {
+                var pt = points[i];
+                var size = sizes[i];
+                var x0 = pt[0] - size[0] / 2;
+                var y0 = pt[1] - size[1] / 2;
+                if (x >= x0 && y >= y0 && x <= x0 + size[0] && y <= y0 + size[1]) {
+                    // i is dataIndex
+                    return i;
+                }
+            }
+
+            return -1;
         }
     });
 
@@ -44,7 +66,8 @@ define(function (require) {
         this.group = new graphic.Group();
 
         this._symbolEl = new LargeSymbolPath({
-            silent: true
+            // rectHover: true,
+            // cursor: 'default'
         });
     }
 
@@ -90,8 +113,20 @@ define(function (require) {
             symbolEl.setColor(visualColor);
         }
 
+        // Enable tooltip
+        // PENDING May have performance issue when path is extremely large
+        symbolEl.seriesIndex = seriesModel.seriesIndex;
+        symbolEl.on('mousemove', function (e) {
+            symbolEl.dataIndex = null;
+            var dataIndex = symbolEl.findDataIndex(e.offsetX, e.offsetY);
+            if (dataIndex > 0) {
+                // Provide dataIndex for tooltip
+                symbolEl.dataIndex = dataIndex;
+            }
+        });
+
         // Add back
-        this.group.add(this._symbolEl);
+        this.group.add(symbolEl);
     };
 
     largeSymbolProto.updateLayout = function (seriesModel) {

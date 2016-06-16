@@ -19,6 +19,19 @@ define(function (require) {
         }
         return symbolSize;
     }
+
+    function updateRipplePath(rippleGroup, effectCfg) {
+        rippleGroup.eachChild(function (ripplePath) {
+            ripplePath.attr({
+                z: effectCfg.z,
+                zlevel: effectCfg.zlevel,
+                style: {
+                    stroke: effectCfg.brushType === 'stroke' ? effectCfg.color : null,
+                    fill: effectCfg.brushType === 'fill' ? effectCfg.color : null
+                }
+            });
+        });
+    }
     /**
      * @constructor
      * @param {module:echarts/data/List} data
@@ -45,12 +58,9 @@ define(function (require) {
         this.childAt(1).removeAll();
     };
 
-    effectSymbolProto.startEffectAnimation = function (
-        period, brushType, rippleScale, effectOffset, z, zlevel
-    ) {
-        var symbolType = this._symbolType;
-        var color = this._color;
-
+    effectSymbolProto.startEffectAnimation = function (effectCfg) {
+        var symbolType = effectCfg.symbolType;
+        var color = effectCfg.color;
         var rippleGroup = this.childAt(1);
 
         for (var i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
@@ -59,27 +69,23 @@ define(function (require) {
             );
             ripplePath.attr({
                 style: {
-                    stroke: brushType === 'stroke' ? color : null,
-                    fill: brushType === 'fill' ? color : null,
                     strokeNoScale: true
                 },
                 z2: 99,
                 silent: true,
-                scale: [1, 1],
-                z: z,
-                zlevel: zlevel
+                scale: [1, 1]
             });
 
-            var delay = -i / EFFECT_RIPPLE_NUMBER * period + effectOffset;
-            // TODO Configurable period
+            var delay = -i / EFFECT_RIPPLE_NUMBER * effectCfg.period + effectCfg.effectOffset;
+            // TODO Configurable effectCfg.period
             ripplePath.animate('', true)
-                .when(period, {
-                    scale: [rippleScale, rippleScale]
+                .when(effectCfg.period, {
+                    scale: [effectCfg.rippleScale, effectCfg.rippleScale]
                 })
                 .delay(delay)
                 .start();
             ripplePath.animateStyle(true)
-                .when(period, {
+                .when(effectCfg.period, {
                     opacity: 0
                 })
                 .delay(delay)
@@ -87,6 +93,29 @@ define(function (require) {
 
             rippleGroup.add(ripplePath);
         }
+
+        updateRipplePath(rippleGroup, effectCfg);
+    };
+
+    /**
+     * Update effect symbol
+     */
+    effectSymbolProto.updateEffectAnimation = function (effectCfg) {
+        var oldEffectCfg = this._effectCfg;
+        var rippleGroup = this.childAt(1);
+
+        // Must reinitialize effect if following configuration changed
+        var DIFFICULT_PROPS = ['symbolType', 'period', 'rippleScale'];
+        for (var i = 0; i < DIFFICULT_PROPS; i++) {
+            var propName = DIFFICULT_PROPS[i];
+            if (oldEffectCfg[propName] !== effectCfg[propName]) {
+                this.stopEffectAnimation();
+                this.startEffectAnimation(effectCfg);
+                return;
+            }
+        }
+
+        updateRipplePath(rippleGroup, effectCfg);
     };
 
     /**
@@ -135,43 +164,52 @@ define(function (require) {
         }
         rippleGroup.rotation = (itemModel.getShallow('symbolRotate') || 0) * Math.PI / 180 || 0;
 
-        this._symbolType = symbolType;
-        this._color = color;
+        var effectCfg = {};
 
-        var showEffectOn = seriesModel.get('showEffectOn');
-        var rippleScale = itemModel.get('rippleEffect.scale');
-        var brushType = itemModel.get('rippleEffect.brushType');
-        var effectPeriod = itemModel.get('rippleEffect.period') * 1000;
-        var effectOffset = idx / data.count();
-        var z = itemModel.getShallow('z') || 0;
-        var zlevel = itemModel.getShallow('zlevel') || 0;
+        effectCfg.showEffectOn = seriesModel.get('showEffectOn');
+        effectCfg.rippleScale = itemModel.get('rippleEffect.scale');
+        effectCfg.brushType = itemModel.get('rippleEffect.brushType');
+        effectCfg.period = itemModel.get('rippleEffect.period') * 1000;
+        effectCfg.effectOffset = idx / data.count();
+        effectCfg.z = itemModel.getShallow('z') || 0;
+        effectCfg.zlevel = itemModel.getShallow('zlevel') || 0;
+        effectCfg.symbolType = symbolType;
+        effectCfg.color = color;
 
-        this.stopEffectAnimation();
-        if (showEffectOn === 'render') {
-            this.startEffectAnimation(
-                effectPeriod, brushType, rippleScale, effectOffset, z, zlevel
-            );
-        }
-        var symbol = this.childAt(0);
-        function onEmphasis() {
-            symbol.trigger('emphasis');
-            if (showEffectOn !== 'render') {
-                this.startEffectAnimation(
-                    effectPeriod, brushType, rippleScale, effectOffset, z, zlevel
-                );
-            }
-        }
-        function onNormal() {
-            symbol.trigger('normal');
-            if (showEffectOn !== 'render') {
-                this.stopEffectAnimation();
-            }
-        }
         this.off('mouseover').off('mouseout').off('emphasis').off('normal');
-        this.on('mouseover', onEmphasis, this)
-            .on('mouseout', onNormal, this)
-            .on('emphasis', onEmphasis, this)
-            .on('normal', onNormal, this);
+
+        if (effectCfg.showEffectOn === 'render') {
+            this._effectCfg
+                ? this.updateEffectAnimation(effectCfg)
+                : this.startEffectAnimation(effectCfg);
+
+            this._effectCfg = effectCfg;
+        }
+        else {
+            // Not keep old effect config
+            this._effectCfg = null;
+
+            this.stopEffectAnimation();
+            var symbol = this.childAt(0);
+            var onEmphasis = function () {
+                symbol.trigger('emphasis');
+                if (effectCfg.showEffectOn !== 'render') {
+                    this.startEffectAnimation(effectCfg);
+                }
+            };
+            var onNormal = function () {
+                symbol.trigger('normal');
+                if (effectCfg.showEffectOn !== 'render') {
+                    this.stopEffectAnimation();
+                }
+            };
+            this.on('mouseover', onEmphasis, this)
+                .on('mouseout', onNormal, this)
+                .on('emphasis', onEmphasis, this)
+                .on('normal', onNormal, this);
+        }
+
+        this._effectCfg = effectCfg;
     };
 
     effectSymbolProto.fadeOut = function (cb) {

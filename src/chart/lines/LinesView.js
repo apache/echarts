@@ -39,11 +39,22 @@ define(function (require) {
                 });
             }
             if (hasEffect && trailLength) {
+                if (__DEV__) {
+                    var notInIndividual = false;
+                    ecModel.eachSeries(function (otherSeriesModel) {
+                        if (otherSeriesModel !== seriesModel && otherSeriesModel.get('zlevel') === zlevel) {
+                            notInIndividual = true;
+                        }
+                    });
+                    notInIndividual && console.warn('Lines with trail effect should have an individual zlevel');
+                }
+
                 zr.configLayer(zlevel, {
                     motionBlur: true,
                     lastFrameAlpha: Math.max(Math.min(trailLength / 10 + 0.9, 1), 0)
                 });
             }
+
 
             this.group.add(lineDraw.group);
 

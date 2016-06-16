@@ -23,9 +23,10 @@ define(function (require) {
         },
 
         defaultOption: {
-            center: null,
 
-            zoom: 1,
+            center: [104.114129, 37.550339],
+
+            zoom: 5,
 
             mapStyle: {},
 

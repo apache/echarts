@@ -134,7 +134,7 @@ define(function (require) {
                 group.add(itemGroup);
 
                 polyline.useStyle(
-                    zrUtil.extend(
+                    zrUtil.defaults(
                         itemModel.getModel('lineStyle.normal').getLineStyle(),
                         {
                             fill: 'none',

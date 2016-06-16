@@ -146,9 +146,10 @@ define(function (require) {
 
             var barGroup = this._displayables.barGroup = new graphic.Group();
 
+            this._renderBackground();
+
             this._renderHandle();
 
-            this._renderBackground();
             this._renderDataShadow();
 
             thisGroup.add(barGroup);
@@ -256,7 +257,8 @@ define(function (require) {
                 },
                 style: {
                     fill: dataZoomModel.get('backgroundColor')
-                }
+                },
+                z2: -40
             }));
         },
 
@@ -462,7 +464,8 @@ define(function (require) {
                         textAlign: 'center',
                         fill: textStyleModel.getTextColor(),
                         textFont: textStyleModel.getFont()
-                    }
+                    },
+                    z2: 10
                 }));
 
             }, this);
