@@ -167,6 +167,7 @@ define(function (require) {
                 this.stopEffectAnimation();
             }
         }
+        this.off('mouseover').off('mouseout').off('emphasis').off('normal');
         this.on('mouseover', onEmphasis, this)
             .on('mouseout', onNormal, this)
             .on('emphasis', onEmphasis, this)
