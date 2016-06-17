@@ -409,13 +409,13 @@
 
             require([
                 'echarts',
-
+                'echarts/util/throttle',
                 'echarts/chart/scatter',
                 'echarts/chart/effectScatter',
                 'echarts/component/legend',
                 'echarts/component/geo',
                 'echarts/component/brush'
-            ], function (echarts) {
+            ], function (echarts, throttle) {
 
                 var data = [
                     {name: '海门', value: 9},
@@ -983,8 +983,11 @@
                         ]
                     };
 
-                    chart.on('brushSelected', renderBrushed);
+                    var debouncedRenderer = throttle.debounce(renderBrushed, 300);
+
+                    chart.on('brushSelected', debouncedRenderer);
                     chart.setOption(option);
+
 
                     function renderBrushed(params) {
                         var brushed = [];
@@ -1043,7 +1046,7 @@
                         // console.log(JSON.stringify(params));
 
                         chart.setOption({
-                            animation: false,
+                            // animation: false,
                             yAxis: {
                                 data: categoryData
                             },
