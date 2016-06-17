@@ -15,19 +15,27 @@ define(function (require) {
     }
 
     function dispatchHighlightAction(seriesModel, dataName, api) {
-        seriesModel.get('legendHoverLink') && api.dispatchAction({
-            type: 'highlight',
-            seriesName: seriesModel.name,
-            name: dataName
-        });
+        // If element hover will move to a hoverLayer.
+        var el = api.getZr().storage.getDisplayList()[0];
+        if (!(el && el.useHoverLayer)) {
+            seriesModel.get('legendHoverLink') && api.dispatchAction({
+                type: 'highlight',
+                seriesName: seriesModel.name,
+                name: dataName
+            });
+        }
     }
 
     function dispatchDownplayAction(seriesModel, dataName, api) {
-        seriesModel.get('legendHoverLink') && api.dispatchAction({
-            type: 'downplay',
-            seriesName: seriesModel.name,
-            name: dataName
-        });
+        // If element hover will move to a hoverLayer.
+        var el = api.getZr().storage.getDisplayList()[0];
+        if (!(el && el.useHoverLayer)) {
+            seriesModel.get('legendHoverLink') && api.dispatchAction({
+                type: 'downplay',
+                seriesName: seriesModel.name,
+                name: dataName
+            });
+        }
     }
 
     return require('../../echarts').extendComponentView({
