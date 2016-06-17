@@ -65,10 +65,10 @@ define(function (require) {
     // This flag is used to carry out this rule.
     // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
     var IN_MAIN_PROCESS = '__flag_in_main_process';
-    // Only final events can be "program triggered", that is, trigger by `setOption`,
+    // Only pending events can be "program triggered", that is, triggered by `setOption`,
     // `dispatchAciton` or `resize`. This flag is used to avoid dead lock when calling
-    // those method in final events listener.
-    var IN_FINAL_EVENTS = '__flag_in_final_event';
+    // those method in pending events listener.
+    var IN_PENDING_EVENTS = '__flag_in_pending_event';
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -166,7 +166,7 @@ define(function (require) {
         /**
          * @type {Array.<Object>}
          */
-        this._finalEvents = [];
+        this._pendingEvents = [];
 
         Eventful.call(this);
 
@@ -217,9 +217,9 @@ define(function (require) {
             zrUtil.assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
         }
 
-        this[IN_MAIN_PROCESS] = 1;
+        this[IN_MAIN_PROCESS] = true;
 
-        this._finalEvents = [];
+        this._pendingEvents = [];
 
         if (!this._model || notMerge) {
             this._model = new GlobalModel(
@@ -233,9 +233,9 @@ define(function (require) {
 
         !notRefreshImmediately && this._zr.refreshImmediately();
 
-        this[IN_MAIN_PROCESS] = 0;
+        this[IN_MAIN_PROCESS] = false;
 
-        triggerFinalEvents.call(this);
+        triggerPendingEvents.call(this);
     };
 
     /**
@@ -591,9 +591,9 @@ define(function (require) {
             zrUtil.assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
         }
 
-        this[IN_MAIN_PROCESS] = 1;
+        this[IN_MAIN_PROCESS] = true;
 
-        this._finalEvents = [];
+        this._pendingEvents = [];
 
         this._zr.resize();
 
@@ -603,9 +603,9 @@ define(function (require) {
         // Resize loading effect
         this._loadingFX && this._loadingFX.resize();
 
-        this[IN_MAIN_PROCESS] = 0;
+        this[IN_MAIN_PROCESS] = false;
 
-        triggerFinalEvents.call(this);
+        triggerPendingEvents.call(this);
     };
 
     var defaultLoadingEffect = require('./loading/default');
@@ -645,13 +645,13 @@ define(function (require) {
         return payload;
     };
 
-    function triggerFinalEvents() {
-        if (!this[IN_FINAL_EVENTS]) { // Avoid dead lock.
-            this[IN_FINAL_EVENTS] = 1;
-            each(this._finalEvents, function (eventObj) {
+    function triggerPendingEvents() {
+        if (!this[IN_PENDING_EVENTS]) { // Avoid dead lock.
+            this[IN_PENDING_EVENTS] = true;
+            each(this._pendingEvents, function (eventObj) {
                 this.trigger(eventObj.type, eventObj);
             }, this);
-            this[IN_FINAL_EVENTS] = 0;
+            this[IN_PENDING_EVENTS] = false;
         }
     }
 
@@ -678,10 +678,10 @@ define(function (require) {
             );
         }
 
-        var isFinalEvent = updateMethod === 'none' && this[IN_MAIN_PROCESS];
-        if (!isFinalEvent) {
-            this[IN_MAIN_PROCESS] = 1;
-            this._finalEvents = [];
+        var isPendingEvent = updateMethod === 'none' && this[IN_MAIN_PROCESS];
+        if (!isPendingEvent) {
+            this[IN_MAIN_PROCESS] = true;
+            this._pendingEvents = [];
         }
 
         var payloads = [payload];
@@ -727,15 +727,15 @@ define(function (require) {
             eventObj = eventObjBatch[0];
         }
 
-        if (!isFinalEvent) {
-            this[IN_MAIN_PROCESS] = 0;
+        if (!isPendingEvent) {
+            this[IN_MAIN_PROCESS] = false;
             if (!silent) {
                 this._messageCenter.trigger(eventObj.type, eventObj);
-                triggerFinalEvents.call(this);
+                triggerPendingEvents.call(this);
             }
         }
         else {
-            this._finalEvents.push(eventObj);
+            this._pendingEvents.push(eventObj);
         }
     };
 
