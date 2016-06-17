@@ -79,6 +79,9 @@ define(function (require) {
                 var seriesModel = ecModel.getSeriesByName(name)[0];
 
                 if (legendDrawedMap[name]) {
+                    if (__DEV__) {
+                        console.warn(name + ' series not exists. Legend data should be same with series name.');
+                    }
                     // Series not exists
                     return;
                 }
@@ -122,6 +125,9 @@ define(function (require) {
                             var data = seriesModel.legendDataProvider();
                             var idx = data.indexOfName(name);
                             if (idx < 0) {
+                                if (__DEV__) {
+                                    console.warn(name + ' data item not exists. Legend data should be same with series data name.');
+                                }
                                 return;
                             }
 
