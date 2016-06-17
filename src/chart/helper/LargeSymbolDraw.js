@@ -1,8 +1,9 @@
+// TODO Batch by color
+
 define(function (require) {
 
     var graphic = require('../../util/graphic');
     var symbolUtil = require('../../util/symbol');
-    var zrUtil = require('zrender/core/util');
 
     var LargeSymbolPath = graphic.extendShape({
         shape: {
@@ -89,7 +90,7 @@ define(function (require) {
             sizes: data.mapArray(
                 function (idx) {
                     var size = data.getItemVisual(idx, 'symbolSize');
-                    if (!zrUtil.isArray(size)) {
+                    if (!(size instanceof Array)) {
                         size = [size, size];
                     }
                     return size;

@@ -26,15 +26,15 @@ define(function (require) {
                 ));
             });
 
-            var coordSys = CoordinateSystem.get(option.coordinateSystem);
+            var CoordSys = CoordinateSystem.get(option.coordinateSystem);
 
             if (__DEV__) {
-                if (!coordSys) {
+                if (!CoordSys) {
                     throw new Error('Invalid coordinate system');
                 }
             }
 
-            var dimensions = coordSys.dimensions;
+            var dimensions = CoordSys.dimensions;
 
             var fromData = new List(dimensions, this);
             var toData = new List(dimensions, this);

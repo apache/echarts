@@ -7,6 +7,7 @@ define(function (require) {
             var toData = seriesModel.toData;
             var lineData = seriesModel.getData();
 
+            // FIXME Use data dimensions ?
             var dims = coordSys.dimensions;
             fromData.each(dims, function (x, y, idx) {
                 fromData.setItemLayout(idx, coordSys.dataToPoint([x, y]));

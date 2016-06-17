@@ -1019,7 +1019,14 @@ define(function (require) {
      * Dispose instance
      */
     echartsProto.dispose = function () {
+        if (this._disposed) {
+            if (__DEV__) {
+                console.warn('Instance ' + this.id + ' has been disposed');
+            }
+            return;
+        }
         this._disposed = true;
+
         var api = this._api;
         var ecModel = this._model;
 
@@ -1030,6 +1037,7 @@ define(function (require) {
             chart.dispose(ecModel, api);
         });
 
+        // Dispose after all views disposed
         this._zr.dispose();
 
         delete instances[this.id];

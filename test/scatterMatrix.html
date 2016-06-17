@@ -188,11 +188,11 @@
 
                 var GRID_WIDTH = 220;
                 var GRID_HEIGHT = 220;
-                var GAP = 40;
+                var GAP = 20;
                 var CATEGORY_DIM = 4;
                 var CROSS_DIM_NUMBER = 4;
                 var BASE_LEFT = 30;
-                var BASE_TOP = 40;
+                var BASE_TOP = 20;
                 var SYMBOL_SIZE = 8;
 
                 function genData(data, dimX, dimY) {
@@ -235,15 +235,31 @@
                                 height: GRID_HEIGHT
                             });
                             xAxisList.push({
+                                axisLine: {
+                                    onZero: false
+                                },
+                                axisTick: {
+                                    show: j === 0
+                                },
+                                axisLabel: {
+                                    show: j === 0
+                                },
                                 type: 'value',
                                 gridIndex: i * CROSS_DIM_NUMBER + j,
-                                axisLine: {onZero: false},
                                 scale: true
                             });
                             yAxisList.push({
+                                axisLine: {
+                                    onZero: false
+                                },
+                                axisTick: {
+                                    show: i === 0
+                                },
+                                axisLabel: {
+                                    show: i === 0
+                                },
                                 type: 'value',
                                 gridIndex: i * CROSS_DIM_NUMBER + j,
-                                axisLine: {onZero: false},
                                 scale: true
                             });
                             seriesList.push({
