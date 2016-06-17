@@ -20,30 +20,33 @@ define(function(require) {
             this.mergeDefaultAndTheme(option, ecModel);
 
             option.selected = option.selected || {};
+        },
 
-            this._updateData(ecModel);
+        mergeOption: function (option) {
+            LegendModel.superCall(this, 'mergeOption', option);
+        },
+
+        optionUpdated: function () {
+            this._updateData(this.ecModel);
 
             var legendData = this._data;
-            // If has any selected in option.selected
-            var selectedMap = this.option.selected;
+
             // If selectedMode is single, try to select one
             if (legendData[0] && this.get('selectedMode') === 'single') {
                 var hasSelected = false;
-                for (var name in selectedMap) {
-                    if (selectedMap[name]) {
+                // If has any selected in option.selected
+                for (var i = 0; i < legendData.length; i++) {
+                    var name = legendData[i].get('name');
+                    if (this.isSelected(name)) {
+                        // Force to unselect others
                         this.select(name);
                         hasSelected = true;
+                        break;
                     }
                 }
                 // Try select the first if selectedMode is single
                 !hasSelected && this.select(legendData[0].get('name'));
             }
-        },
-
-        mergeOption: function (option) {
-            LegendModel.superCall(this, 'mergeOption', option);
-
-            this._updateData(this.ecModel);
         },
 
         _updateData: function (ecModel) {
