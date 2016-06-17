@@ -590,39 +590,41 @@ define(function (require) {
      *  list.each(['x', 'y'], function (x, y, idx) {});
      *  list.each(function (idx) {})
      */
-    listProto.each = function (dimensions, cb, stack, context) {
-        if (typeof dimensions === 'function') {
+    listProto.each = function (dims, cb, stack, context) {
+        if (typeof dims === 'function') {
             context = stack;
             stack = cb;
-            cb = dimensions;
-            dimensions = [];
+            cb = dims;
+            dims = [];
         }
 
-        dimensions = zrUtil.map(
-            normalizeDimensions(dimensions), this.getDimension, this
-        );
+        dims = zrUtil.map(normalizeDimensions(dims), this.getDimension, this);
 
         var value = [];
-        var dimSize = dimensions.length;
+        var dimSize = dims.length;
         var indices = this.indices;
 
         context = context || this;
 
         for (var i = 0; i < indices.length; i++) {
-            if (dimSize === 0) {
-                cb.call(context, i);
-            }
             // Simple optimization
-            else if (dimSize === 1) {
-                cb.call(context, this.get(dimensions[0], i, stack), i);
-            }
-            else {
-                for (var k = 0; k < dimSize; k++) {
-                    value[k] = this.get(dimensions[k], i, stack);
-                }
-                // Index
-                value[k] = i;
-                cb.apply(context, value);
+            switch (dimSize) {
+                case 0:
+                    cb.call(context, i);
+                    break;
+                case 1:
+                    cb.call(context, this.get(dims[0], i, stack), i);
+                    break;
+                case 2:
+                    cb.call(context, this.get(dims[0], i, stack), this.get(dims[1], i, stack), i);
+                    break;
+                default:
+                    for (var k = 0; k < dimSize; k++) {
+                        value[k] = this.get(dims[k], i, stack);
+                    }
+                    // Index
+                    value[k] = i;
+                    cb.apply(context, value);
             }
         }
     };
