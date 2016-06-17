@@ -20,7 +20,7 @@ define(function (require) {
             var store = getStore(zr);
             var record = store[resourceKey];
 
-            if (record && (record.userKey === userKey)) {
+            if (record && record.userKey === userKey) {
                 store[resourceKey] = null;
             }
         },

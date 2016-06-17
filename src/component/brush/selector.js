@@ -8,25 +8,25 @@ define(function(require) {
     // See moudule:echarts/component/helper/BrushController
     // function param:
     //      {Object} itemLayout fetch from data.getItemLayout(dataIndex)
-    //      {Object} brushRange {type: ''}
-    //      {module:zrender/core/BoundingRect} [boundingRect]
+    //      {Object} selectors {point: selector, rect: selector, ...}
+    //      {Object} brushRange {range: [[], [], ..], boudingRect}
     // function return:
     //      {boolean} Whether in the given brush.
     var selector = {
         rect: {
-            point: function (itemLayout, brushRange, boundingRect) {
-                return boundingRect.contain(itemLayout[0], itemLayout[1]);
+            point: function (itemLayout, selectors, brushRange) {
+                return brushRange.boundingRect.contain(itemLayout[0], itemLayout[1]);
             },
-            rect: function (itemLayout, brushRange, boundingRect) {
-                return boundingRect.intersect(makeBoundingRect(itemLayout));
+            rect: function (itemLayout, selectors, brushRange) {
+                return brushRange.boundingRect.intersect(makeBoundingRect(itemLayout));
             }
         },
         polygon: {
-            point: function (itemLayout, brushRange, boundingRect) {
-                return boundingRect.contain(itemLayout[0], itemLayout[1])
+            point: function (itemLayout, selectors, brushRange) {
+                return brushRange.boundingRect.contain(itemLayout[0], itemLayout[1])
                     && polygonContain(brushRange.range, itemLayout[0], itemLayout[1]);
             },
-            rect: function (itemLayout, brushRange, boundingRect) {
+            rect: function (itemLayout, selectors, brushRange) {
                 // FIXME
                 // 随意写的，没有考察过效率。
                 var points = brushRange.range;
@@ -69,10 +69,11 @@ define(function(require) {
         }
     }
 
-    // https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection
+    // Code from <http://blog.csdn.net/rickliuxiao/article/details/6259322> with some fix.
+    // See <https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection>
     function lineIntersect(a1x, a1y, a2x, a2y, b1x, b1y, b2x, b2y) {
         var delta = determinant(a2x - a1x, b1x - b2x, a2y - a1y, b1y - b2y);
-        if (nearZero(delta)) {  // parallel
+        if (nearZero(delta)) { // parallel
             return false;
         }
         var namenda = determinant(b1x - a1x, b1x - b2x, b1y - a1y, b1y - b2y) / delta;
