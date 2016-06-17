@@ -856,6 +856,8 @@
                             map: 'china',
                             left: '10',
                             right: '35%',
+                            center: [117.98561551896913, 31.205000490896193],
+                            zoom: 4.177248169415658,
                             label: {
                                 emphasis: {
                                     show: false
@@ -875,13 +877,19 @@
                         brush: {
                             outOfBrush: {
                                 color: '#abc'
-                            }
+                            },
+                            seriesIndex: [0, 1],
+                            brushRanges: [
+                                {
+                                    brushType: 'polygon',
+                                    range: [[482,130],[481,130],[470,123],[406,100],[387,94],[377,88],[374,83],[373,81],[366,76],[360,74],[355,73],[346,79],[337,83],[323,84],[301,84],[297,84],[281,88],[265,92],[265,93],[258,120],[265,144],[272,148],[297,168],[319,192],[324,200],[324,201],[325,205],[337,229],[342,240],[343,242],[343,243],[344,247],[345,250],[350,261],[354,268],[355,274],[355,281],[347,300],[342,319],[336,352],[333,388],[336,424],[351,442],[364,451],[375,455],[392,466],[401,474],[409,483],[419,493],[432,502],[453,502],[487,484],[521,436],[536,364],[539,322],[539,309],[537,305],[537,304],[536,295],[517,273],[511,264],[511,264]]
+                                }
+                            ]
                         },
                         grid: {
                             right: 20,
                             top: 50,
                             bottom: 20,
-                            containLabel: true,
                             width: '30%'
                         },
                         xAxis: {
@@ -898,7 +906,7 @@
                             name: 'PM 2.5',
                             axisLine: {show: false, lineStyle: {color: '#ddd'}},
                             axisTick: {show: false, lineStyle: {color: '#ddd'}},
-                            axisLabel: {textStyle: {color: '#ddd'}},
+                            axisLabel: {interval: 0, textStyle: {color: '#ddd'}},
                             data: []
                         },
                         series : [
@@ -959,6 +967,7 @@
                             },
                             {
                                 id: 'bar',
+                                zlevel: 2,
                                 type: 'bar',
                                 symbol: 'none',
                                 itemStyle: {
@@ -1017,14 +1026,21 @@
                         selectedItems.sort(function (a, b) {
                             return a.value[2] - b.value[2];
                         });
+
                         var categoryData = [];
                         var barData = [];
-                        for (var i = 0; i < selectedItems.length; i++) {
+                        var max = 30;
+
+                        for (var i = 0; i < Math.min(selectedItems.length, max); i++) {
                             categoryData.push(selectedItems[i].name);
                             barData.push(selectedItems[i].value[2]);
                         }
 
+                        // console.log(chart.getOption().geo[0].center, chart.getOption().geo[0].zoom);
+                        // console.log(JSON.stringify(params));
+
                         chart.setOption({
+                            animation: false,
                             yAxis: {
                                 data: categoryData
                             },

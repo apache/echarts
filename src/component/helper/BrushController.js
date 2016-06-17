@@ -20,7 +20,7 @@ define(function (require) {
     var mathPow = Math.pow;
 
     var COVER_Z = 10000;
-    var UNSELECT_THRESHOLD = 2;
+    var UNSELECT_THRESHOLD = 6;
     var MIN_RESIZE_LINE_WIDTH = 6;
     var MUTEX_RESOURCE_KEY = 'globalPan';
 
@@ -47,7 +47,8 @@ define(function (require) {
             fill: 'rgba(0,0,0,0.15)'
         },
         transformable: true,
-        brushMode: 'single'
+        brushMode: 'single',
+        removeOnClick: false
     };
 
     var baseUID = 0;
@@ -61,13 +62,17 @@ define(function (require) {
      */
     function BrushController(zr) {
 
+        if (__DEV__) {
+            zrUtil.assert(zr);
+        }
+
         Eventful.call(this);
 
         /**
          * @type {module:zrender/zrender~ZRender}
-         * @readOnly
+         * @private
          */
-        this.zr = zr;
+        this._zr = zr;
 
         /**
          * @type {module:zrender/container/Group}
@@ -152,6 +157,7 @@ define(function (require) {
          *                          If pass false/null/undefined, disable brush.
          * @param {number} [brushOption.brushMode='single'] 'single' or 'multiple'
          * @param {boolean} [brushOption.transformable=true]
+         * @param {boolean} [brushOption.removeOnClick=false]
          * @param {boolean} [brushOption.onRelease]
          * @param {Object} [brushOption.brushStyle]
          * @param {number} [brushOption.brushStyle.width]
@@ -246,6 +252,7 @@ define(function (require) {
 
             function add(newIndex) {
                 newCovers[newIndex] = createCover.call(controller, brushOptionList[newIndex]);
+                endCreating.call(controller, newCovers[newIndex]);
                 updateCoverAfterCreation.call(controller, newCovers[newIndex]);
             }
 
@@ -256,6 +263,7 @@ define(function (require) {
                 if (newBrushOption.brushType !== cover.__brushOption.brushType) {
                     controller.group.remove(cover);
                     cover = createCover.call(controller, newBrushOption);
+                    endCreating.call(controller, cover);
                 }
 
                 cover.__brushOption = newBrushOption;
@@ -287,7 +295,7 @@ define(function (require) {
 
 
     function doEnableBrush(brushOption) {
-        var zr = this.zr;
+        var zr = this._zr;
 
         if (isGlobalBrush(this)) {
             // FIXME
@@ -310,7 +318,7 @@ define(function (require) {
     }
 
     function doDisableBrush() {
-        var zr = this.zr;
+        var zr = this._zr;
 
         interactionMutex.release(zr, MUTEX_RESOURCE_KEY, this._uid);
         zr.setDefaultCursorStyle('default');
@@ -328,6 +336,14 @@ define(function (require) {
         cover.__brushOption = brushOption;
         this.group.add(cover);
         return cover;
+    }
+
+    function endCreating(creatingCover) {
+        var coverRenderer = coverRenderers[creatingCover.__brushOption.brushType];
+        if (coverRenderer.endCreating) {
+            coverRenderer.endCreating.call(this, creatingCover);
+            updateZ(creatingCover);
+        }
     }
 
     function updateZ(group) {
@@ -505,10 +521,7 @@ define(function (require) {
                     coverRenderer.getCreatingRange.call(this, isEnd);
 
                 if (isEnd) {
-                    if (coverRenderer.endCreating) {
-                        coverRenderer.endCreating.call(this, creatingCover);
-                        updateZ(creatingCover);
-                    }
+                    endCreating.call(this, creatingCover);
                     coverRenderer.updateCommon.call(this, creatingCover);
                 }
 
@@ -516,10 +529,20 @@ define(function (require) {
 
                 trigger.call(this, isEnd);
             }
-        }
+            else if (
+                isEnd
+                && !creatingCover
+                && thisBrushOption.brushMode === 'single'
+                && thisBrushOption.removeOnClick
+            ) {
+                // Help user to remove covers easily, only by a tiny drag, in 'single' mode.
+                // But a single click do not clear covers, because user may have casual
+                // clicks (for example, click on other component and do not expect covers
+                // disappear).
+                clearCovers.call(this);
+                trigger.call(this, isEnd);
+            }
 
-        if (isEnd && creatingCover) {
-            this._creatingCover = null;
         }
     }
 
@@ -532,6 +555,8 @@ define(function (require) {
 
                 var x = e.offsetX;
                 var y = e.offsetY;
+
+                this._creatingCover = null;
 
                 if (isInContainer.call(this, x, y)) {
                     this._dragging = true;

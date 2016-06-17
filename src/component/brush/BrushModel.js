@@ -25,6 +25,8 @@ define(function(require) {
             brushLink: null,        // Series indices array, broadcast using dataIndex.
                                     // or 'all', which means all series.
             seriesIndex: 'all',     // seriesIndex array, specify series controlled by this brush component.
+            gridIndex: null,        //
+            geoIndex: null,         //
 
             brushRanges: null,      // Array.<Object>, Initial brushRanges, which is not persistent.
 
@@ -37,7 +39,10 @@ define(function(require) {
                 // lineWidth: 2,
                 // stroke: 'rgba(0,0,0,0.3)',
                 fill: 'rgba(0,0,0,0.15)'
-            }
+            },
+            // FIXME
+            // 试验效果
+            removeOnClick: true
         },
 
         /**
@@ -80,7 +85,6 @@ define(function(require) {
          * @param {Array.<Object>} ranges
          */
         setBrushRanges: function (brushRanges) {
-
             if (__DEV__) {
                 zrUtil.assert(zrUtil.isArray(brushRanges));
                 zrUtil.each(brushRanges, function (brushRange) {
@@ -112,7 +116,8 @@ define(function(require) {
                     brushType: option.brushType,
                     brushMode: option.brushMode,
                     transformable: option.transformable,
-                    brushStyle: option.brushStyle
+                    brushStyle: option.brushStyle,
+                    removeOnClick: option.removeOnClick
                 },
                 brushOption,
                 true
