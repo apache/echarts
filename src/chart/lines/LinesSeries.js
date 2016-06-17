@@ -14,49 +14,29 @@ define(function (require) {
         dependencies: ['grid', 'polar'],
 
         getInitialData: function (option, ecModel) {
-            var fromDataArr = [];
-            var toDataArr = [];
-            var lineDataArr = [];
-            zrUtil.each(option.data, function (opt) {
-                fromDataArr.push(opt[0]);
-                toDataArr.push(opt[1]);
-                lineDataArr.push(zrUtil.extend(
-                    zrUtil.extend({}, zrUtil.isArray(opt[0]) ? null : opt[0]),
-                    zrUtil.isArray(opt[1]) ? null : opt[1]
-                ));
-            });
-
-            var CoordSys = CoordinateSystem.get(option.coordinateSystem);
-
             if (__DEV__) {
+                var CoordSys = CoordinateSystem.get(option.coordinateSystem);
                 if (!CoordSys) {
-                    throw new Error('Invalid coordinate system');
+                    throw new Error('Unkown coordinate system ' + option.coordinateSystem);
                 }
             }
 
-            var dimensions = CoordSys.dimensions;
-
-            var fromData = new List(dimensions, this);
-            var toData = new List(dimensions, this);
             var lineData = new List(['value'], this);
 
-            function geoCoordGetter(item, dim, dataIndex, dimIndex) {
-                return item.coord && item.coord[dimIndex];
-            }
-
-            fromData.initData(fromDataArr, null, geoCoordGetter);
-            toData.initData(toDataArr, null, geoCoordGetter);
-            lineData.initData(lineDataArr);
-
-            this.fromData = fromData;
-            this.toData = toData;
+            lineData.initData(option.data);
 
             return lineData;
         },
 
         formatTooltip: function (dataIndex) {
-            var fromName = this.fromData.getName(dataIndex);
-            var toName = this.toData.getName(dataIndex);
+            var data = this.getData();
+            var itemModel = data.getItemModel(dataIndex);
+            var name = itemModel.get('name');
+            if (name) {
+                return name;
+            }
+            var fromName = itemModel.get('fromName');
+            var toName = itemModel.get('toName');
             return fromName + ' > ' + toName;
         },
 

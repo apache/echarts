@@ -171,7 +171,7 @@ define(function (require) {
                 },
                 // 也是选中样式
                 emphasis: {
-                    areaColor: 'rgba(255,215, 0, 0.8)'
+                    areaColor: 'rgba(255,215,0,0.8)'
                 }
             }
         },

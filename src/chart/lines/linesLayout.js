@@ -3,22 +3,23 @@ define(function (require) {
     return function (ecModel) {
         ecModel.eachSeriesByType('lines', function (seriesModel) {
             var coordSys = seriesModel.coordinateSystem;
-            var fromData = seriesModel.fromData;
-            var toData = seriesModel.toData;
             var lineData = seriesModel.getData();
 
             // FIXME Use data dimensions ?
-            var dims = coordSys.dimensions;
-            fromData.each(dims, function (x, y, idx) {
-                fromData.setItemLayout(idx, coordSys.dataToPoint([x, y]));
-            });
-            toData.each(dims, function (x, y, idx) {
-                toData.setItemLayout(idx, coordSys.dataToPoint([x, y]));
-            });
             lineData.each(function (idx) {
-                var p1 = fromData.getItemLayout(idx);
-                var p2 = toData.getItemLayout(idx);
-                var curveness = lineData.getItemModel(idx).get('lineStyle.normal.curveness');
+                var itemModel = lineData.getItemModel(idx);
+                var coords = itemModel.get('coords');
+
+                if (__DEV__) {
+                    if (!(coords instanceof Array && coords.length > 0)) {
+                        throw new Error('Lines must have coords array in data item.');
+                    }
+                }
+
+                var p1 = coordSys.dataToPoint(coords[0]);
+                var p2 = coordSys.dataToPoint(coords[1]);
+
+                var curveness = itemModel.get('lineStyle.normal.curveness');
                 var cp1;
                 if (curveness > 0) {
                     cp1 = [
