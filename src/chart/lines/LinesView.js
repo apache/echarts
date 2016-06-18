@@ -3,6 +3,7 @@ define(function (require) {
     var LineDraw = require('../helper/LineDraw');
     var EffectLine = require('../helper/EffectLine');
     var Line = require('../helper/Line');
+    var Polyline = require('../helper/Polyline');
 
     require('../../echarts').extendChartView({
 
@@ -15,14 +16,16 @@ define(function (require) {
             var lineDraw = this._lineDraw;
 
             var hasEffect = seriesModel.get('effect.show');
-            if (hasEffect !== this._hasEffet) {
+            var isPolyline = seriesModel.get('polyline');
+            if (hasEffect !== this._hasEffet || isPolyline !== this._isPolyline) {
                 if (lineDraw) {
                     lineDraw.remove();
                 }
                 lineDraw = this._lineDraw = new LineDraw(
-                    hasEffect ? EffectLine : Line
+                    hasEffect ? EffectLine : (isPolyline ? Polyline : Line)
                 );
                 this._hasEffet = hasEffect;
+                this._isPolyline = isPolyline;
             }
 
             var zlevel = seriesModel.get('zlevel');
