@@ -155,6 +155,7 @@ define(function (require) {
                 });
 
                 var node = graph.getNodeByIndex(dataIndex);
+                fadeInItem(node, nodeOpacityPath);
                 zrUtil.each(node.edges, function (edge) {
                     if (edge.dataIndex < 0) {
                         return;
