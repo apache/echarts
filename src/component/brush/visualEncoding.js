@@ -8,8 +8,11 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var BoundingRect = require('zrender/core/BoundingRect');
     var selector = require('./selector');
+    var throttle = require('../../util/throttle');
 
     var STATE_LIST = ['inBrush', 'outOfBrush'];
+    var DISPATCH_METHOD = '__ecBrushSelect';
+    var DISPATCH_FLAG = '__ecInBrushSelectEvent';
 
     /**
      * Register the visual encoding if this modules required.
@@ -17,6 +20,8 @@ define(function (require) {
     echarts.registerVisual(echarts.PRIORITY.VISUAL.BRUSH, function (ecModel, api, payload) {
 
         var brushSelected = [];
+        var throttleType;
+        var throttleDelay;
 
         ecModel.eachComponent({mainType: 'brush'}, function (brushModel, brushIndex) {
 
@@ -25,6 +30,11 @@ define(function (require) {
             var linkedSeriesMap = [];
             var selectedDataIndexForLink = [];
             var rangeInfoBySeries = [];
+
+            if (!brushIndex) { // Only the first throttle setting works.
+                throttleType = brushOption.throttleType;
+                throttleDelay = brushOption.throttleDelay;
+            }
 
             var thisBrushSelected = {
                 brushId: brushModel.id,
@@ -115,18 +125,44 @@ define(function (require) {
 
         });
 
+        dispatchAction(api, throttleType, throttleDelay, brushSelected);
+    });
+
+    function dispatchAction(api, throttleType, throttleDelay, brushSelected) {
         // This event is always triggered, rather than triggered only when selected
         // changed. The latter way might help user to reduce unnecessary view update
-        // in listener of this event and improve performance, but probably it is
-        // difficult to diff selected data precisely only by dataIndex records. For
+        // in listener of this event and improve performance, but sometimes it is not
+        // obvious (always has changes when data dense), and probably it is difficult
+        // to diff the selected data precisely only by dataIndex records. For
         // example, considering this event will be triggered when setOption called,
         // user may change values in series.data, but keep dataIndex the same. So
         // the diff work is left to user, if it is necessary.
-        api.dispatchAction({
-            type: 'brushSelect',
-            brushComponents: brushSelected
-        });
-    });
+        var zr = api.getZr();
+        if (zr[DISPATCH_FLAG]) {
+            return;
+        }
+
+        if (!zr[DISPATCH_METHOD]) {
+            zr[DISPATCH_METHOD] = doDispatch;
+        }
+
+        var fn = throttle.createOrUpdate(zr, DISPATCH_METHOD, throttleDelay, throttleType);
+        // If throttleDelay is 0 or null or undefined, dispatchAction will also be
+        // called asynchronously, otherwise break the rule that main process should
+        // not be nested.
+        setTimeout(function () {
+            fn(api, brushSelected);
+        }, 0);
+    }
+
+    function doDispatch(api, brushSelected) {
+        if (!api.isDisposed()) {
+            var zr = api.getZr();
+            zr[DISPATCH_FLAG] = true;
+            api.dispatchAction({type: 'brushSelect', brushComponents: brushSelected});
+            zr[DISPATCH_FLAG] = false;
+        }
+    }
 
     function checkInRange(selectorsByBrushType, rangeInfoList, data, dataIndex) {
         var itemLayout = data.getItemLayout(dataIndex);

@@ -65,10 +65,6 @@ define(function (require) {
     // This flag is used to carry out this rule.
     // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
     var IN_MAIN_PROCESS = '__flag_in_main_process';
-    // Only pending events can be "program triggered", that is, triggered by `setOption`,
-    // `dispatchAciton` or `resize`. This flag is used to avoid dead lock when calling
-    // those method in pending events listener.
-    var IN_PENDING_EVENTS = '__flag_in_pending_event';
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -163,11 +159,6 @@ define(function (require) {
          */
         this._coordSysMgr = new CoordinateSystemManager();
 
-        /**
-         * @type {Array.<Object>}
-         */
-        this._pendingEvents = [];
-
         Eventful.call(this);
 
         /**
@@ -219,8 +210,6 @@ define(function (require) {
 
         this[IN_MAIN_PROCESS] = true;
 
-        this._pendingEvents = [];
-
         if (!this._model || notMerge) {
             this._model = new GlobalModel(
                 null, null, this._theme, new OptionManager(this._api)
@@ -234,8 +223,6 @@ define(function (require) {
         !notRefreshImmediately && this._zr.refreshImmediately();
 
         this[IN_MAIN_PROCESS] = false;
-
-        triggerPendingEvents.call(this);
     };
 
     /**
@@ -593,8 +580,6 @@ define(function (require) {
 
         this[IN_MAIN_PROCESS] = true;
 
-        this._pendingEvents = [];
-
         this._zr.resize();
 
         var optionChanged = this._model && this._model.resetOption('media');
@@ -604,8 +589,6 @@ define(function (require) {
         this._loadingFX && this._loadingFX.resize();
 
         this[IN_MAIN_PROCESS] = false;
-
-        triggerPendingEvents.call(this);
     };
 
     var defaultLoadingEffect = require('./loading/default');
@@ -645,16 +628,6 @@ define(function (require) {
         return payload;
     };
 
-    function triggerPendingEvents() {
-        if (!this[IN_PENDING_EVENTS]) { // Avoid dead lock.
-            this[IN_PENDING_EVENTS] = true;
-            each(this._pendingEvents, function (eventObj) {
-                this.trigger(eventObj.type, eventObj);
-            }, this);
-            this[IN_PENDING_EVENTS] = false;
-        }
-    }
-
     /**
      * @pubilc
      * @param {Object} payload
@@ -672,17 +645,13 @@ define(function (require) {
 
         if (__DEV__) {
             zrUtil.assert(
-                updateMethod === 'none' || !this[IN_MAIN_PROCESS],
+                !this[IN_MAIN_PROCESS],
                 '`dispatchAction` should not be called during main process.'
-                    + 'unless updateMathod is "none".'
+                + 'unless updateMathod is "none".'
             );
         }
 
-        var isPendingEvent = updateMethod === 'none' && this[IN_MAIN_PROCESS];
-        if (!isPendingEvent) {
-            this[IN_MAIN_PROCESS] = true;
-            this._pendingEvents = [];
-        }
+        this[IN_MAIN_PROCESS] = true;
 
         var payloads = [payload];
         var batched = false;
@@ -727,16 +696,9 @@ define(function (require) {
             eventObj = eventObjBatch[0];
         }
 
-        if (!isPendingEvent) {
-            this[IN_MAIN_PROCESS] = false;
-            if (!silent) {
-                this._messageCenter.trigger(eventObj.type, eventObj);
-                triggerPendingEvents.call(this);
-            }
-        }
-        else {
-            this._pendingEvents.push(eventObj);
-        }
+        this[IN_MAIN_PROCESS] = false;
+
+        !silent && this._messageCenter.trigger(eventObj.type, eventObj);
     };
 
     /**

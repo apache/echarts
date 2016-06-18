@@ -33,13 +33,16 @@ define(function(require) {
             brushType: 'rect',      // Default brushType, see BrushController.
             brushMode: 'single',    // Default brushMode, 'single' or 'multiple'
             transformable: true,    // Default transformable.
-            // FIXME
-            // 是否要配置 brush 控制哪些 series？
             brushStyle: {           // Default brushStyle
                 // lineWidth: 2,
                 // stroke: 'rgba(0,0,0,0.3)',
                 fill: 'rgba(0,0,0,0.15)'
             },
+
+            throttleType: 'fixRate',// Throttle in brushSelected event. 'fixRate' or 'debounce'.
+                                    // If null, no throttle. Valid only in the first brush component
+            throttleDelay: 0,       // Unit: ms, 0 means every event will be triggered.
+
             // FIXME
             // 试验效果
             removeOnClick: true

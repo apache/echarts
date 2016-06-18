@@ -409,13 +409,12 @@
 
             require([
                 'echarts',
-                'echarts/util/throttle',
                 'echarts/chart/scatter',
                 'echarts/chart/effectScatter',
                 'echarts/component/legend',
                 'echarts/component/geo',
                 'echarts/component/brush'
-            ], function (echarts, throttle) {
+            ], function (echarts) {
 
                 var data = [
                     {name: '海门', value: 9},
@@ -882,6 +881,8 @@
                                 color: '#abc'
                             },
                             seriesIndex: [0, 1],
+                            throttleType: 'debounce',
+                            throttleDelay: 100,
                             brushRanges: [
                                 {
                                     brushType: 'polygon',
@@ -983,11 +984,8 @@
                         ]
                     };
 
-                    var debouncedRenderer = throttle.debounce(renderBrushed, 300);
-
-                    chart.on('brushSelected', debouncedRenderer);
+                    chart.on('brushSelected', renderBrushed);
                     chart.setOption(option);
-
 
                     function renderBrushed(params) {
                         var brushed = [];
@@ -1041,6 +1039,8 @@
                             categoryData.push(selectedItems[i].name);
                             barData.push(selectedItems[i].value[2]);
                         }
+
+                        console.log('in brushSeleteed listener.');
 
                         // console.log(chart.getOption().geo[0].center, chart.getOption().geo[0].zoom);
                         // console.log(JSON.stringify(params));
