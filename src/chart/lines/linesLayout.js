@@ -8,6 +8,7 @@ define(function (require) {
             // FIXME Use data dimensions ?
             lineData.each(function (idx) {
                 var itemModel = lineData.getItemModel(idx);
+                // TODO Support pure array
                 var coords = itemModel.get('coords');
 
                 if (__DEV__) {
@@ -15,19 +16,26 @@ define(function (require) {
                         throw new Error('Lines must have coords array in data item.');
                     }
                 }
+                var pts = [];
 
-                var p1 = coordSys.dataToPoint(coords[0]);
-                var p2 = coordSys.dataToPoint(coords[1]);
-
-                var curveness = itemModel.get('lineStyle.normal.curveness');
-                var cp1;
-                if (curveness > 0) {
-                    cp1 = [
-                        (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * curveness,
-                        (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * curveness
-                    ];
+                if (seriesModel.get('polyline')) {
+                    for (var i = 0; i < coords.length; i++) {
+                        pts.push(coordSys.dataToPoint(coords[i]));
+                    }
                 }
-                lineData.setItemLayout(idx, [p1, p2, cp1]);
+                else {
+                    pts[0] = coordSys.dataToPoint(coords[0]);
+                    pts[1] = coordSys.dataToPoint(coords[1]);
+
+                    var curveness = itemModel.get('lineStyle.normal.curveness');
+                    if (curveness > 0) {
+                        pts[2] = [
+                            (pts[0][0] + pts[1][0]) / 2 - (pts[0][1] - pts[1][1]) * curveness,
+                            (pts[0][1] + pts[1][1]) / 2 - (pts[1][0] - pts[0][0]) * curveness
+                        ];
+                    }
+                }
+                lineData.setItemLayout(idx, pts);
             });
         });
     };

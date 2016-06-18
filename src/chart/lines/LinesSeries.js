@@ -54,10 +54,6 @@ define(function (require) {
             // Geo coordinate system
             geoIndex: 0,
 
-            // symbol: null,
-            // symbolSize: 10,
-            // symbolRotate: null,
-
             effect: {
                 show: false,
                 period: 4,
@@ -74,6 +70,10 @@ define(function (require) {
             // Available when large is true
             largeThreshold: 2000,
 
+            // If lines are polyline
+            // polyline not support effect, curveness, label, animation
+            polyline: false,
+
             label: {
                 normal: {
                     show: false,
@@ -82,10 +82,7 @@ define(function (require) {
                     // formatter: 标签文本格式器，同Tooltip.formatter，不支持异步回调
                 }
             },
-            // itemStyle: {
-            //     normal: {
-            //     }
-            // },
+
             lineStyle: {
                 normal: {
                     opacity: 0.5
