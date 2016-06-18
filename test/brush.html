@@ -24,7 +24,7 @@
             }
             body .main {
                 height: 550px;
-                margin-right: 220px;
+                margin-right: 300px;
                 margin-left: 20px;
             }
             .panel {
@@ -32,7 +32,7 @@
                 top: 0;
                 right: 0;
                 bottom: 0;
-                width: 200px;
+                width: 280px;
                 background: #555;
                 color: #fff;
                 font-size: 14px;
@@ -66,6 +66,14 @@
                 border-radius: 2px;
                 color: #000;
             }
+
+            .sm-settings {
+                border-bottom: 1px solid #777;
+                padding-bottom: 15px;
+            }
+            .sm-settings input {
+                max-width: 50px;
+            }
         </style>
 
         <div class="split">Scatter</div>
@@ -81,6 +89,7 @@
             </div>
         </div>
 
+
         <div class="split">Scatter in Map</div>
         <div class="block">
             <div id="main1" class="main"></div>
@@ -88,9 +97,35 @@
                 <ul class="panel-desc">
                     <li>bar and scatter are in the same ec instances and use setOption in brushSelected event.</li>
                 </ul>
+                <div class="sm-settings">
+                    <div>
+                        DIFF with previous selected:
+                        <input onclick="smChange.diff(true)" type="radio" name="diff" checked="checked"/>Y
+                        <input onclick="smChange.diff(false)" type="radio" name="diff" />N
+                    </div>
+                    <div>
+                        animation:
+                        <input onclick="smChange.animation(true)" type="radio" name="animation" checked="checked"/>Y
+                        <input onclick="smChange.animation(false)" type="radio" name="animation" />N
+                    </div>
+                    <div>
+                        animationDurationUpdate:
+                        <input value="1000" onblur="smChange.animationDurationUpdate(this)" type="text" />
+                    </div>
+                    <div>
+                        throttleDelay:
+                        <input value="300" onblur="smChange.throttleDelay(this)" type="text" />
+                    </div>
+                    <div>
+                        throttleType:
+                        <input onclick="smChange.throttleType('debounce')" type="radio" name="throttleType" checked="checked"/>debounce
+                        <input onclick="smChange.throttleType('fixRate')" type="radio" name="throttleType" />fixRate
+                    </div>
+                </div>
                 <div id="panel1"></div>
             </div>
         </div>
+
 
         <div class="split">Stacked Bar (rect-polygon intersect)</div>
         <div class="block">
@@ -102,6 +137,15 @@
                 <div id="panel4"></div>
             </div>
         </div>
+
+
+
+
+
+
+
+        <!-- =================== 1 ===================== -->
+
 
 
 
@@ -396,6 +440,10 @@
 
 
 
+
+
+
+        <!-- =================== 2 ===================== -->
 
 
 
@@ -821,242 +869,298 @@
                     var chart = echarts.init(document.getElementById('main1'));
                     panel = document.getElementById('panel1');
 
-                    var option = {
-                        backgroundColor: '#404a59',
-                        title: {
-                            text: '全国主要城市空气质量',
-                            subtext: 'data from PM25.in',
-                            sublink: 'http://www.pm25.in',
-                            left: 'center',
-                            textStyle: {
-                                color: '#fff'
-                            }
-                        },
-                        tooltip : {
-                            trigger: 'item'
-                        },
-                        toolbox: {
-                            iconStyle: {
-                                normal: {
-                                    borderColor: '#fff'
-                                },
-                                emphasis: {
-                                    borderColor: '#b1e4ff'
-                                }
-                            }
-                        },
-                        legend: {
-                            orient: 'vertical',
-                            top: 'bottom',
-                            left: 'right',
-                            data:['pm2.5'],
-                            textStyle: {
-                                color: '#fff'
-                            }
-                        },
-                        geo: {
-                            map: 'china',
-                            left: '10',
-                            right: '35%',
-                            center: [117.98561551896913, 31.205000490896193],
-                            zoom: 4.177248169415658,
-                            label: {
-                                emphasis: {
-                                    show: false
-                                }
-                            },
-                            roam: true,
-                            itemStyle: {
-                                normal: {
-                                    areaColor: '#323c48',
-                                    borderColor: '#111'
-                                },
-                                emphasis: {
-                                    areaColor: '#2a333d'
-                                }
-                            }
-                        },
-                        brush: {
-                            outOfBrush: {
-                                color: '#abc'
-                            },
-                            seriesIndex: [0, 1],
-                            throttleType: 'debounce',
-                            throttleDelay: 100,
-                            brushRanges: [
-                                {
-                                    brushType: 'polygon',
-                                    range: [[482,130],[481,130],[470,123],[406,100],[387,94],[377,88],[374,83],[373,81],[366,76],[360,74],[355,73],[346,79],[337,83],[323,84],[301,84],[297,84],[281,88],[265,92],[265,93],[258,120],[265,144],[272,148],[297,168],[319,192],[324,200],[324,201],[325,205],[337,229],[342,240],[343,242],[343,243],[344,247],[345,250],[350,261],[354,268],[355,274],[355,281],[347,300],[342,319],[336,352],[333,388],[336,424],[351,442],[364,451],[375,455],[392,466],[401,474],[409,483],[419,493],[432,502],[453,502],[487,484],[521,436],[536,364],[539,322],[539,309],[537,305],[537,304],[536,295],[517,273],[511,264],[511,264]]
-                                }
-                            ]
-                        },
-                        grid: {
-                            right: 20,
-                            top: 50,
-                            bottom: 20,
-                            width: '30%'
-                        },
-                        xAxis: {
-                            type: 'value',
-                            scale: true,
-                            boundaryGap: false,
-                            splitLine: {show: false},
-                            axisLine: {show: false, lineStyle: {color: '#ddd'}},
-                            axisTick: {show: false},
-                            axisLabel: {textStyle: {color: '#ddd'}},
-                        },
-                        yAxis: {
-                            type: 'category',
-                            name: 'PM 2.5',
-                            axisLine: {show: false, lineStyle: {color: '#ddd'}},
-                            axisTick: {show: false, lineStyle: {color: '#ddd'}},
-                            axisLabel: {interval: 0, textStyle: {color: '#ddd'}},
-                            data: []
-                        },
-                        series : [
-                            {
-                                name: 'pm2.5',
-                                type: 'scatter',
-                                coordinateSystem: 'geo',
-                                data: convertedData,
-                                symbolSize: function (val) {
-                                    return val[2] / 10;
-                                },
-                                label: {
-                                    normal: {
-                                        formatter: '{b}',
-                                        position: 'right',
-                                        show: false
-                                    },
-                                    emphasis: {
-                                        show: true
-                                    }
-                                },
-                                itemStyle: {
-                                    normal: {
-                                        color: '#ddb926'
-                                    }
-                                }
-                            },
-                            {
-                                name: 'Top 5',
-                                type: 'effectScatter',
-                                coordinateSystem: 'geo',
-                                data: convertData(data.sort(function (a, b) {
-                                    return b.value - a.value;
-                                }).slice(0, 6)),
-                                symbolSize: function (val) {
-                                    return val[2] / 10;
-                                },
-                                showEffectOn: 'emphasis',
-                                rippleEffect: {
-                                    brushType: 'stroke'
-                                },
-                                hoverAnimation: true,
-                                label: {
-                                    normal: {
-                                        formatter: '{b}',
-                                        position: 'right',
-                                        show: true
-                                    }
-                                },
-                                itemStyle: {
-                                    normal: {
-                                        color: '#f4e925',
-                                        shadowBlur: 10,
-                                        shadowColor: '#333'
-                                    }
-                                },
-                                zlevel: 1
-                            },
-                            {
-                                id: 'bar',
-                                zlevel: 2,
-                                type: 'bar',
-                                symbol: 'none',
-                                itemStyle: {
-                                    normal: {
-                                        color: '#ddb926'
-                                    }
-                                },
-                                data: []
-                            }
-                        ]
+
+                    var smSettings = {
+                        diff: true,
+                        animation: true,
+                        animationDurationUpdate: 1000,
+                        throttleDelay: 300,
+                        throttleType: 'debounce'
                     };
 
-                    chart.on('brushSelected', renderBrushed);
-                    chart.setOption(option);
-
-                    function renderBrushed(params) {
-                        var brushed = [];
-                        var top = 0;
-                        var topWhere;
-                        var sum = 0;
-                        var count = 0;
-                        var brushComponent = params.brushComponents[0];
-                        var selectedItems = [];
-
-                        for (var sIdx = 0; sIdx < brushComponent.series.length; sIdx++) {
-                            var rawIndices = brushComponent.series[sIdx].rawIndices;
-                            var placesBySeries = [];
-                            for (var i = 0; i < rawIndices.length; i++) {
-                                var rawIndex = rawIndices[i];
-                                var item = convertedData[rawIndex];
-                                var value = item.value[2];
-                                sum += value;
-                                count++;
-                                if (value > top) {
-                                    top = value;
-                                    topWhere = item.name;
-                                }
-                                if (sIdx === 0) {
-                                    selectedItems.push(item);
-                                }
-                                placesBySeries.push(item.name);
-                            }
-                            brushed.push('[Series ' + sIdx + '] ' + placesBySeries.join(', '));
+                    window.smChange = {
+                        diff: function (val) {
+                            smSettings.diff = val;
+                            restart();
+                        },
+                        animation: function (val) {
+                            smSettings.animation = val;
+                            restart();
+                        },
+                        animationDurationUpdate: function (el) {
+                            smSettings.animationDurationUpdate = +el.value;
+                            restart();
+                        },
+                        throttleDelay: function (el) {
+                            smSettings.throttleDelay = +el.value;
+                            restart();
+                        },
+                        throttleType: function (val) {
+                            smSettings.throttleType = val;
+                            restart();
                         }
+                    };
 
-                        panel.innerHTML = [
-                            '<h3>STATISTICS:</h3>',
-                            'PM2.5 TOP: ' + topWhere + ' ' + top.toFixed(4) + '<br>',
-                            'PM2.5 AVERAGE: ' + (sum / count).toFixed(4) + '<br>',
-                            '<br>',
-                            '<br>',
-                            '<h3>BRUSHED:</h3>',
-                            brushed.join('<br><br>'),
-                        ].join(' ');
 
-                        selectedItems.sort(function (a, b) {
-                            return a.value[2] - b.value[2];
-                        });
+                    restart();
 
-                        var categoryData = [];
-                        var barData = [];
-                        var max = 30;
 
-                        for (var i = 0; i < Math.min(selectedItems.length, max); i++) {
-                            categoryData.push(selectedItems[i].name);
-                            barData.push(selectedItems[i].value[2]);
-                        }
+                    function restart() {
+                        chart.off();
 
-                        console.log('in brushSeleteed listener.');
-
-                        // console.log(chart.getOption().geo[0].center, chart.getOption().geo[0].zoom);
-                        // console.log(JSON.stringify(params));
-
-                        chart.setOption({
-                            // animation: false,
-                            yAxis: {
-                                data: categoryData
+                        var option = {
+                            backgroundColor: '#404a59',
+                            animation: smSettings.animation,
+                            animationDurationUpdate: smSettings.animationDurationUpdate,
+                            title: {
+                                text: '全国主要城市空气质量',
+                                subtext: 'data from PM25.in',
+                                sublink: 'http://www.pm25.in',
+                                left: 'center',
+                                textStyle: {
+                                    color: '#fff'
+                                }
                             },
-                            series: {
-                                id: 'bar',
-                                data: barData
-                            }
-                        });
-                    }
+                            tooltip : {
+                                trigger: 'item'
+                            },
+                            toolbox: {
+                                iconStyle: {
+                                    normal: {
+                                        borderColor: '#fff'
+                                    },
+                                    emphasis: {
+                                        borderColor: '#b1e4ff'
+                                    }
+                                }
+                            },
+                            legend: {
+                                orient: 'vertical',
+                                top: 'bottom',
+                                left: 'right',
+                                data:['pm2.5'],
+                                textStyle: {
+                                    color: '#fff'
+                                }
+                            },
+                            geo: {
+                                map: 'china',
+                                left: '10',
+                                right: '35%',
+                                center: [117.98561551896913, 31.205000490896193],
+                                zoom: 4.177248169415658,
+                                label: {
+                                    emphasis: {
+                                        show: false
+                                    }
+                                },
+                                roam: true,
+                                itemStyle: {
+                                    normal: {
+                                        areaColor: '#323c48',
+                                        borderColor: '#111'
+                                    },
+                                    emphasis: {
+                                        areaColor: '#2a333d'
+                                    }
+                                }
+                            },
+                            brush: {
+                                outOfBrush: {
+                                    color: '#abc'
+                                },
+                                seriesIndex: [0, 1],
+                                throttleType: smSettings.throttleType,
+                                throttleDelay: smSettings.throttleDelay,
+                                brushRanges: [
+                                    {
+                                        brushType: 'polygon',
+                                        range: [[482,130],[481,130],[470,123],[406,100],[387,94],[377,88],[374,83],[373,81],[366,76],[360,74],[355,73],[346,79],[337,83],[323,84],[301,84],[297,84],[281,88],[265,92],[265,93],[258,120],[265,144],[272,148],[297,168],[319,192],[324,200],[324,201],[325,205],[337,229],[342,240],[343,242],[343,243],[344,247],[345,250],[350,261],[354,268],[355,274],[355,281],[347,300],[342,319],[336,352],[333,388],[336,424],[351,442],[364,451],[375,455],[392,466],[401,474],[409,483],[419,493],[432,502],[453,502],[487,484],[521,436],[536,364],[539,322],[539,309],[537,305],[537,304],[536,295],[517,273],[511,264],[511,264]]
+                                    }
+                                ]
+                            },
+                            grid: {
+                                right: 20,
+                                top: 50,
+                                bottom: 20,
+                                width: '30%'
+                            },
+                            xAxis: {
+                                type: 'value',
+                                scale: true,
+                                boundaryGap: false,
+                                splitLine: {show: false},
+                                axisLine: {show: false, lineStyle: {color: '#ddd'}},
+                                axisTick: {show: false},
+                                axisLabel: {textStyle: {color: '#ddd'}},
+                            },
+                            yAxis: {
+                                type: 'category',
+                                name: 'PM 2.5',
+                                axisLine: {show: false, lineStyle: {color: '#ddd'}},
+                                axisTick: {show: false, lineStyle: {color: '#ddd'}},
+                                axisLabel: {interval: 0, textStyle: {color: '#ddd'}},
+                                data: []
+                            },
+                            series : [
+                                {
+                                    name: 'pm2.5',
+                                    type: 'scatter',
+                                    coordinateSystem: 'geo',
+                                    data: convertedData,
+                                    symbolSize: function (val) {
+                                        return val[2] / 10;
+                                    },
+                                    label: {
+                                        normal: {
+                                            formatter: '{b}',
+                                            position: 'right',
+                                            show: false
+                                        },
+                                        emphasis: {
+                                            show: true
+                                        }
+                                    },
+                                    itemStyle: {
+                                        normal: {
+                                            color: '#ddb926'
+                                        }
+                                    }
+                                },
+                                {
+                                    name: 'Top 5',
+                                    type: 'effectScatter',
+                                    coordinateSystem: 'geo',
+                                    data: convertData(data.sort(function (a, b) {
+                                        return b.value - a.value;
+                                    }).slice(0, 6)),
+                                    symbolSize: function (val) {
+                                        return val[2] / 10;
+                                    },
+                                    showEffectOn: 'emphasis',
+                                    rippleEffect: {
+                                        brushType: 'stroke'
+                                    },
+                                    hoverAnimation: true,
+                                    label: {
+                                        normal: {
+                                            formatter: '{b}',
+                                            position: 'right',
+                                            show: true
+                                        }
+                                    },
+                                    itemStyle: {
+                                        normal: {
+                                            color: '#f4e925',
+                                            shadowBlur: 10,
+                                            shadowColor: '#333'
+                                        }
+                                    },
+                                    zlevel: 1
+                                },
+                                {
+                                    id: 'bar',
+                                    zlevel: 2,
+                                    type: 'bar',
+                                    symbol: 'none',
+                                    itemStyle: {
+                                        normal: {
+                                            color: '#ddb926'
+                                        }
+                                    },
+                                    data: []
+                                }
+                            ]
+                        };
 
+                        var oldSelectedItems = [];
+
+                        chart.on('brushSelected', renderBrushed);
+                        chart.setOption(option, true);
+
+                        function renderBrushed(params) {
+                            var brushed = [];
+                            var top = 0;
+                            var topWhere;
+                            var sum = 0;
+                            var count = 0;
+                            var brushComponent = params.brushComponents[0];
+                            var selectedItems = [];
+
+                            var isDiff;
+
+                            for (var sIdx = 0; sIdx < brushComponent.series.length; sIdx++) {
+                                var rawIndices = brushComponent.series[sIdx].rawIndices;
+                                var placesBySeries = [];
+                                for (var i = 0; i < rawIndices.length; i++) {
+                                    var rawIndex = rawIndices[i];
+                                    var item = convertedData[rawIndex];
+                                    var value = item.value[2];
+                                    sum += value;
+                                    count++;
+                                    if (value > top) {
+                                        top = value;
+                                        topWhere = item.name;
+                                    }
+                                    if (sIdx === 0) {
+                                        selectedItems.push(item);
+                                    }
+                                    placesBySeries.push(item.name);
+                                }
+                                brushed.push('[Series ' + sIdx + '] ' + placesBySeries.join(', '));
+                            }
+
+                            if (selectedItems.length !== oldSelectedItems.length) {
+                                isDiff = true;
+                            }
+                            else {
+                                for (var i = 0; i < selectedItems.length; i++) {
+                                    if (selectedItems[i].value !== oldSelectedItems[i].value
+                                        || selectedItems[i].name !== oldSelectedItems[i].name
+                                    ) {
+                                        isDiff = true;
+                                    }
+                                }
+                            }
+
+                            panel.innerHTML = [
+                                '<h3>STATISTICS:</h3>',
+                                'PM2.5 TOP: ' + topWhere + ' ' + top.toFixed(4) + '<br>',
+                                'PM2.5 AVERAGE: ' + (sum / count).toFixed(4) + '<br>',
+                                '<br>',
+                                '<br>',
+                                '<h3>BRUSHED:</h3>',
+                                brushed.join('<br><br>'),
+                            ].join(' ');
+
+                            selectedItems.sort(function (a, b) {
+                                return a.value[2] - b.value[2];
+                            });
+
+                            var categoryData = [];
+                            var barData = [];
+                            var max = 30;
+
+                            for (var i = 0; i < Math.min(selectedItems.length, max); i++) {
+                                categoryData.push(selectedItems[i].name);
+                                barData.push(selectedItems[i].value[2]);
+                            }
+
+                            if (!smSettings.diff || isDiff) {
+                                smSettings.diff
+                                    ? console.log('diff checked and setOption.')
+                                    : console.log('do not check diff and setOption.');
+                                chart.setOption({
+                                    yAxis: {data: categoryData},
+                                    series: {id: 'bar', data: barData}
+                                });
+                            }
+
+                            if (smSettings.diff && !isDiff) {
+                                console.log('check diff and NO DIFF');
+                            }
+                        }
+                    }
                 });
             });
 
@@ -1068,6 +1172,10 @@
 
 
 
+
+
+
+        <!-- =================== 3 ===================== -->
 
 
 

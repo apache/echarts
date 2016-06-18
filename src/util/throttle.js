@@ -4,6 +4,7 @@ define(function () {
 
     var ORIGIN_METHOD = '\0__throttleOriginMethod';
     var RATE = '\0__throttleRate';
+    var THROTTLE_TYPE = '\0__throttleType';
 
     /**
      * @public
@@ -104,13 +105,15 @@ define(function () {
         }
 
         var originFn = fn[ORIGIN_METHOD] || fn;
+        var lastThrottleType = fn[THROTTLE_TYPE];
         var lastRate = fn[RATE];
 
-        if (lastRate !== rate) {
+        if (lastRate !== rate || lastThrottleType !== throttleType) {
             fn = obj[fnAttr] = lib.throttle(
                 originFn, rate, throttleType === 'debounce'
             );
             fn[ORIGIN_METHOD] = originFn;
+            fn[THROTTLE_TYPE] = throttleType;
             fn[RATE] = rate;
         }
 
