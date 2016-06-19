@@ -39,7 +39,7 @@ define(function(require) {
             var value = this.getRawValue(dataIndex);
             var coordSys = this.coordinateSystem;
             var indicatorAxes = coordSys.getIndicatorAxes();
-            return this._data.getName(dataIndex) + '<br />'
+            return (this._data.getName(dataIndex) == '' ? this.name : this._data.getName(dataIndex)) + '<br/>'
                 + zrUtil.map(indicatorAxes, function (axis, idx) {
                     return axis.name + ' : ' + value[idx];
                 }).join('<br />');
