@@ -219,6 +219,7 @@ define(function(require) {
             ? NaN : +value; // If string (like '-'), using '+' parse to NaN
     };
 
+    // PENDING A little ugly
     modelUtil.dataFormatMixin = {
         /**
          * Get params for formatter

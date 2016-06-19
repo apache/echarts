@@ -506,7 +506,7 @@
                                 symbolSize: function (val) {
                                     return val[2] / 10;
                                 },
-                                showEffectOn: 'emphasis',
+                                showEffectOn: 'render',
                                 rippleEffect: {
                                     brushType: 'stroke'
                                 },
@@ -529,7 +529,20 @@
                             }
                         ]
                     });
+
+                    setInterval(function () {
+                        myChart.setOption({
+                            series: [{
+                                name: 'Top 5',
+                                data: convertData(data.sort(function (a, b) {
+                                    return b.value - a.value;
+                                }).slice(0, Math.round(6 * Math.random())))
+                            }]
+                        });
+                    }, 2000);
+
                 });
+
             });
 
         </script>

@@ -161,33 +161,6 @@
                 });
             }
 
-            function makePie() {
-                var chart = makeChart();
-                chart.setOption({
-                    legend: {
-                        data:['直接访问','邮件营销','联盟广告','视频广告','搜索引擎']
-                    },
-                    tooltip: {
-
-                    },
-                    series: [{
-                        name: 'pie',
-                        type: 'pie',
-                        selectedMode: 'single',
-                        hoverAnimation: false,
-                        selectedOffset: 30,
-                        clockwise: true,
-                        data:[
-                            {value:335, name:'直接访问'},
-                            {value:310, name:'邮件营销'},
-                            {value:234, name:'联盟广告'},
-                            {value:135, name:'视频广告'},
-                            {value:1548, name:'搜索引擎'}
-                        ]
-                    }]
-                });
-            }
-
             function makeScatter() {
                 var chart = makeChart();
                 var data1 = [];
@@ -530,6 +503,8 @@
                         hoverAnimation: false,
                         selectedOffset: 30,
                         clockwise: true,
+                        radius: [50, 100],
+                        animation: false,
                         data:[
                             {value:0, name:'直接访问'},
                             {value:310, name:'邮件营销'},

@@ -65,6 +65,7 @@ define(function (require) {
         }
         var color = effectModel.get('color') || lineData.getItemVisual(idx, 'color');
         var symbol = this.childAt(1);
+
         var period = effectModel.get('period') * 1000;
         var loop = effectModel.get('loop');
         if (
@@ -72,6 +73,9 @@ define(function (require) {
             || period !== this._period
             || loop !== this._loop
         ) {
+            // Remove previous
+            this.remove(symbol);
+
             symbol = symbolUtil.createSymbol(
                 symbolType, -0.5, -0.5, 1, 1, color
             );
@@ -98,6 +102,11 @@ define(function (require) {
             }
             animator.start();
         }
+        // Symbol may be removed if loop is false
+        if (!symbol) {
+            return;
+        }
+
         // Shadow color is same with color in default
         symbol.setStyle('shadowColor', color);
         symbol.setStyle(effectModel.getItemStyle(['color']));

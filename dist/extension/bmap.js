@@ -258,9 +258,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        },
 
 	        defaultOption: {
-	            center: null,
 
-	            zoom: 1,
+	            center: [104.114129, 37.550339],
+
+	            zoom: 5,
 
 	            mapStyle: {},
 
@@ -349,7 +350,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // FIXME, Not use JSON methods
 	            var mapStyleStr = JSON.stringify(newMapStyle);
 	            if (JSON.stringify(originalStyle) !== mapStyleStr) {
-	                bmap.setMapStyle(newMapStyle);
+	                // FIXME May have blank tile when dragging if setMapStyle
+	                if (Object.keys(newMapStyle).length) {
+	                    bmap.setMapStyle(newMapStyle);
+	                }
 	                bMapModel.__mapStyle = JSON.parse(mapStyleStr);
 	            }
 
