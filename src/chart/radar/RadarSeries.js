@@ -15,17 +15,17 @@ define(function(require) {
 
 
         // Overwrite
-        init: function (option) {
+        init: function(option) {
             RadarSeries.superApply(this, 'init', arguments);
 
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
-            this.legendDataProvider = function () {
+            this.legendDataProvider = function() {
                 return this._dataBeforeProcessed;
             };
         },
 
-        getInitialData: function (option, ecModel) {
+        getInitialData: function(option, ecModel) {
             var data = option.data || [];
             var dimensions = completeDimensions(
                 [], data, [], 'indicator_'
@@ -35,14 +35,20 @@ define(function(require) {
             return list;
         },
 
-        formatTooltip: function (dataIndex) {
+        formatTooltip: function(dataIndex) {
             var value = this.getRawValue(dataIndex);
             var coordSys = this.coordinateSystem;
             var indicatorAxes = coordSys.getIndicatorAxes();
+<<<<<<< HEAD
             return (this._data.getName(dataIndex) == '' ? this.name : this._data.getName(dataIndex)) + '<br/>'
                 + zrUtil.map(indicatorAxes, function (axis, idx) {
                     return axis.name + ' : ' + value[idx];
                 }).join('<br />');
+=======
+            return (this._data.getName(dataIndex) == '' ? this.name : this._data.getName(dataIndex)) + '<br/>' + zrUtil.map(indicatorAxes, function(axis, idx) {
+                return axis.name + ' : ' + value[idx];
+            }).join('<br />');
+>>>>>>> 17f3e34fa6f1546a6de6e64dd5d0338546cb5c47
         },
 
         defaultOption: {
@@ -67,7 +73,7 @@ define(function(require) {
             // itemStyle: {}
             symbol: 'emptyCircle',
             symbolSize: 4
-            // symbolRotate: null
+                // symbolRotate: null
         }
     });
 
