@@ -8,6 +8,7 @@ define(function (require) {
     var Line = require('./Line');
     var zrUtil = require('zrender/core/util');
     var symbolUtil = require('../../util/symbol');
+    var vec2 = require('zrender/core/vector');
 
     var curveUtil = require('zrender/core/curve');
 
@@ -41,14 +42,7 @@ define(function (require) {
         var color = effectModel.get('color') || lineData.getItemVisual(idx, 'color');
         var symbol = this.childAt(1);
 
-        var period = effectModel.get('period') * 1000;
-        var loop = effectModel.get('loop');
-        var self = this;
-        if (
-            this._symbolType !== symbolType
-            || period !== this._period
-            || loop !== this._loop
-        ) {
+        if (this._symbolType !== symbolType) {
             // Remove previous
             this.remove(symbol);
 
@@ -58,18 +52,68 @@ define(function (require) {
             symbol.ignore = true;
             symbol.z2 = 100;
             symbol.culling = true;
-            this._symbolType = symbolType;
-            this._period = period;
-            this._loop = loop;
 
             this.add(symbol);
+        }
 
+        // Symbol may be removed if loop is false
+        if (!symbol) {
+            return;
+        }
+
+        // Shadow color is same with color in default
+        symbol.setStyle('shadowColor', color);
+        symbol.setStyle(effectModel.getItemStyle(['color']));
+
+        symbol.attr('scale', size);
+
+        symbol.setColor(color);
+        symbol.attr('scale', size);
+
+        this._symbolType = symbolType;
+
+        this._updateEffectAnimation(lineData, effectModel, idx);
+    };
+
+    effectLineProto._updateEffectAnimation = function (lineData, effectModel, idx) {
+
+        var symbol = this.childAt(1);
+        if (!symbol) {
+            return;
+        }
+
+        var self = this;
+
+        var points = lineData.getItemLayout(idx);
+
+        var period = effectModel.get('period') * 1000;
+        var loop = effectModel.get('loop');
+        var constantSpeed = effectModel.get('constantSpeed');
+        var delayExpr = effectModel.get('delay') || 0;
+        var isDelayFunc = typeof delayExpr === 'function';
+
+        this.updateAnimationPoints(symbol, points);
+
+        if (constantSpeed > 0) {
+            period = this.getLineLength(symbol) / constantSpeed * 1000;
+        }
+
+        if (period !== this._period || loop !== this._loop) {
+            symbol.stopAnimation();
+
+            var delay = delayExpr;
+            if (isDelayFunc) {
+                delay = delayExpr(idx);
+            }
+            if (symbol.__t > 0) {
+                delay = -period * symbol.__t;
+            }
             symbol.__t = 0;
             var animator = symbol.animate('', loop)
                 .when(period, {
                     __t: 1
                 })
-                .delay(idx / lineData.count() * period / 2)
+                .delay(delay)
                 .during(function () {
                     self.updateSymbolPosition(symbol);
                 });
@@ -81,21 +125,15 @@ define(function (require) {
             }
             animator.start();
         }
-        // Symbol may be removed if loop is false
-        if (!symbol) {
-            return;
-        }
 
-        // Shadow color is same with color in default
-        symbol.setStyle('shadowColor', color);
-        symbol.setStyle(effectModel.getItemStyle(['color']));
+        this._period = period;
+        this._loop = loop;
+    };
 
-        symbol.attr('scale', size);
-        var points = lineData.getItemLayout(idx);
-        this.updateAnimationPoints(symbol, points);
-
-        symbol.setColor(color);
-        symbol.attr('scale', size);
+    effectLineProto.getLineLength = function (symbol) {
+        // Not so accurate
+        return (vec2.dist(symbol.__p1, symbol.__cp1)
+            + vec2.dist(symbol.__cp1, symbol.__p2));
     };
 
     effectLineProto.updateAnimationPoints = function (symbol, points) {
@@ -135,11 +173,9 @@ define(function (require) {
 
     effectLineProto.updateLayout = function (lineData, idx) {
         this.childAt(0).updateLayout(lineData, idx);
-        var symbol = this.childAt(1);
-        if (symbol) {
-            var points = lineData.getItemLayout(idx);
-            this.updateAnimationPoints(symbol, points);
-        }
+
+        var effectModel = lineData.getItemModel(idx).getModel('effect');
+        this._updateEffectAnimation(lineData, effectModel, idx);
     };
 
     zrUtil.inherits(EffectLine, graphic.Group);

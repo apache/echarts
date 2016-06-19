@@ -46,6 +46,12 @@ define(function (require) {
             accLenArr[i] /= len;
         }
         this._offsets = accLenArr;
+        this._length = len;
+    };
+
+    // Overwrite
+    effectPolylineProto.getLineLength = function (symbol) {
+        return this._length;
     };
 
     // Overwrite
@@ -84,7 +90,10 @@ define(function (require) {
             frame = Math.min(frame - 1, len - 2);
         }
 
-        vec2.lerp(symbol.position, points[frame], points[frame + 1], t - offsets[frame]);
+        vec2.lerp(
+            symbol.position, points[frame], points[frame + 1],
+            (t - offsets[frame]) / (offsets[frame + 1] - offsets[frame])
+        );
 
         this._lastFrame = frame;
         this._lastFramePercent = t;

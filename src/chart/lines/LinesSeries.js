@@ -57,6 +57,11 @@ define(function (require) {
             effect: {
                 show: false,
                 period: 4,
+                // Animation delay. support callback
+                delay: 1,
+                // If move with constant speed px/sec
+                // period will be ignored if this property is > 0,
+                constantSpeed: 0,
                 symbol: 'circle',
                 symbolSize: 3,
                 loop: true,
