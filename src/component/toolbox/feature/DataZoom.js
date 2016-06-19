@@ -155,8 +155,8 @@ define(function(require) {
     /**
      * @private
      */
-    proto._onBrush = function (brushRanges, isEnd) {
-        if (!isEnd || !brushRanges.length) {
+    proto._onBrush = function (brushRanges, opt) {
+        if (!opt.isEnd || !brushRanges.length) {
             return;
         }
         var brushRange = brushRanges[0];

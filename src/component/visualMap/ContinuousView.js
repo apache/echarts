@@ -296,15 +296,18 @@ define(function(require) {
 
             this._dragging = !isEnd;
 
-            // Transform dx, dy to bar coordination.
-            var vertex = this._applyTransform([dx, dy], this._shapes.barGroup, true);
-            this._updateInterval(handleIndex, vertex[1]);
+            if (!isEnd) {
+                // Transform dx, dy to bar coordination.
+                var vertex = this._applyTransform([dx, dy], this._shapes.barGroup, true);
+                this._updateInterval(handleIndex, vertex[1]);
 
-            // Considering realtime, update view should be executed
-            // before dispatch action.
-            this._updateView();
+                // Considering realtime, update view should be executed
+                // before dispatch action.
+                this._updateView();
+            }
 
-            if (isEnd || this.visualMapModel.get('realtime')) {
+            // dragEnd do not dispatch action when realtime.
+            if (isEnd === !this.visualMapModel.get('realtime')) { // jshint ignore:line
                 this.api.dispatchAction({
                     type: 'selectDataRange',
                     from: this.uid,
@@ -313,8 +316,8 @@ define(function(require) {
                 });
             }
 
-            if (isEnd && !this._hovering) {
-                this._clearHoverLinkToSeries();
+            if (isEnd) {
+                !this._hovering && this._clearHoverLinkToSeries();
             }
             else if (useHoverLinkOnHandle(this.visualMapModel)) {
                 this._doHoverLinkToSeries(this._handleEnds[handleIndex], false);

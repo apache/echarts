@@ -57,6 +57,8 @@ define(function (require) {
      * @alias module:echarts/component/helper/BrushController
      * @constructor
      * @mixin {module:zrender/mixin/Eventful}
+     * @event module:echarts/component/helper/BrushController#brush
+     *        brushRanges, opt {isEnd, removeOnClick}
      *
      * @param {module:zrender/zrender~ZRender} zr
      */
@@ -372,7 +374,7 @@ define(function (require) {
         this._covers.length = 0;
     }
 
-    function trigger(isEnd) {
+    function trigger(opt) {
         var brushRanges = map(this._covers, function (cover) {
             var brushOption = cover.__brushOption;
             return {
@@ -380,7 +382,10 @@ define(function (require) {
                 range: zrUtil.clone(brushOption.range)
             };
         });
-        this.trigger('brush', brushRanges, !!isEnd);
+        this.trigger('brush', brushRanges, {
+            isEnd: !!opt.isEnd,
+            removeOnClick: !!opt.removeOnClick
+        });
     }
 
     function shouldShowCover() {
@@ -433,7 +438,7 @@ define(function (require) {
             draggable: true,
             cursor: 'move',
             drift: bind(driftRect, this, cover, 'nswe'),
-            ondragend: bind(trigger, this, true)
+            ondragend: bind(trigger, this, {isEnd: true})
         }));
     }
 
@@ -476,7 +481,7 @@ define(function (require) {
         );
 
         updateCoverAfterCreation.call(this, cover);
-        trigger.call(this, false);
+        trigger.call(this, {isEnd: false});
     }
 
     function driftPolygon(cover, dx, dy) {
@@ -488,7 +493,7 @@ define(function (require) {
         });
 
         updateCoverAfterCreation.call(this, cover);
-        trigger.call(this, false);
+        trigger.call(this, {isEnd: false});
     }
 
     function preventDefault(e) {
@@ -527,7 +532,7 @@ define(function (require) {
 
                 coverRenderer.updateCoverShape.call(this, creatingCover);
 
-                trigger.call(this, isEnd);
+                trigger.call(this, {isEnd: isEnd});
             }
             else if (
                 isEnd
@@ -540,7 +545,7 @@ define(function (require) {
                 // clicks (for example, click on other component and do not expect covers
                 // disappear).
                 clearCovers.call(this);
-                trigger.call(this, isEnd);
+                trigger.call(this, {isEnd: isEnd, removeOnClick: true});
             }
 
         }
@@ -637,7 +642,7 @@ define(function (require) {
                             style: {opacity: 0},
                             draggable: true,
                             drift: bind(driftRect, this, cover, name),
-                            ondragend: bind(trigger, this, true)
+                            ondragend: bind(trigger, this, {isEnd: true})
                         }));
                     },
                     this
@@ -720,7 +725,7 @@ define(function (require) {
                 cover.add(new graphic.Polygon({
                     draggable: true,
                     drift: bind(driftPolygon, this, cover),
-                    ondragend: bind(trigger, this, true)
+                    ondragend: bind(trigger, this, {isEnd: true})
                 }));
             },
             updateCoverShape: function (cover) {

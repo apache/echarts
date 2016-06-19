@@ -87,7 +87,7 @@ define(function (require) {
                 .updateCovers(coverInfoList);
         },
 
-        _onBrush: function (coverInfoList, isEnd) {
+        _onBrush: function (coverInfoList, opt) {
             // Do not cache these object, because the mey be changed.
             var axisModel = this.axisModel;
             var axis = axisModel.axis;
@@ -99,14 +99,14 @@ define(function (require) {
                 ];
             });
 
-            // Consider axisModel.option.realtime is null/undefined.
-            if (!(axisModel.option.realtime ^ !isEnd)) {
-                this.api.dispatchAction({
-                    type: 'axisAreaSelect',
-                    parallelAxisId: axisModel.id,
-                    intervals: intervals
-                });
-            }
+            // If realtime is true, action is not dispatched on drag end, because
+            // the drag end emits the same params with the last drag move event,
+            // and may have some delay when using touch pad.
+            (!axisModel.option.realtime === opt.isEnd) && this.api.dispatchAction({ // jshint ignore:line
+                type: 'axisAreaSelect',
+                parallelAxisId: axisModel.id,
+                intervals: intervals
+            });
         },
 
         /**

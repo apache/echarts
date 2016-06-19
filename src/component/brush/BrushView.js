@@ -69,6 +69,16 @@ define(function (require) {
         /**
          * @override
          */
+        updateLayout: function (brushModel, ecModel) {
+            ecModel.eachComponent({mainType: 'geo'}, function (geoModel) {
+                var coord = geoModel.coordinateSystem;
+                console.log(coord.getBoundingRect());
+            });
+        },
+
+        /**
+         * @override
+         */
         dispose: function () {
             this._brushController.dispose();
         },
@@ -76,9 +86,13 @@ define(function (require) {
         /**
          * @private
          */
-        _onBrush: function (brushRanges, isEnd) {
+        _onBrush: function (brushRanges, opt) {
             var modelId = this.model.id;
-            this.api.dispatchAction({
+
+            // Action is not dispatched on drag end, because the drag end
+            // emits the same params with the last drag move event, and
+            // may have some delay when using touch pad.
+            (!opt.isEnd || opt.removeOnClick) && this.api.dispatchAction({
                 type: 'brush',
                 brushId: modelId,
                 brushRanges: zrUtil.clone(brushRanges),
