@@ -1,4 +1,5 @@
 /**
+ * Provide effect for line
  * @module echarts/chart/helper/EffectLine
  */
 define(function (require) {
@@ -18,42 +19,16 @@ define(function (require) {
     function EffectLine(lineData, idx) {
         graphic.Group.call(this);
 
-        var line = new Line(lineData, idx);
-        this.add(line);
+        this.add(this.createLine(lineData, idx));
 
         this._updateEffectSymbol(lineData, idx);
     }
 
     var effectLineProto = EffectLine.prototype;
 
-    function setAnimationPoints(symbol, points) {
-        symbol.__p1 = points[0];
-        symbol.__p2 = points[1];
-        symbol.__cp1 = points[2] || [
-            (points[0][0] + points[1][0]) / 2,
-            (points[0][1] + points[1][1]) / 2
-        ];
-    }
-
-    function updateSymbolPosition() {
-        var p1 = this.__p1;
-        var p2 = this.__p2;
-        var cp1 = this.__cp1;
-        var t = this.__t;
-        var pos = this.position;
-        var quadraticAt = curveUtil.quadraticAt;
-        var quadraticDerivativeAt = curveUtil.quadraticDerivativeAt;
-        pos[0] = quadraticAt(p1[0], cp1[0], p2[0], t);
-        pos[1] = quadraticAt(p1[1], cp1[1], p2[1], t);
-
-        // Tangent
-        var tx = quadraticDerivativeAt(p1[0], cp1[0], p2[0], t);
-        var ty = quadraticDerivativeAt(p1[1], cp1[1], p2[1], t);
-
-        this.rotation = -Math.atan2(ty, tx) - Math.PI / 2;
-
-        this.ignore = false;
-    }
+    effectLineProto.createLine = function (lineData, idx) {
+        return new Line(lineData, idx);
+    };
 
     effectLineProto._updateEffectSymbol = function (lineData, idx) {
         var itemModel = lineData.getItemModel(idx);
@@ -68,6 +43,7 @@ define(function (require) {
 
         var period = effectModel.get('period') * 1000;
         var loop = effectModel.get('loop');
+        var self = this;
         if (
             this._symbolType !== symbolType
             || period !== this._period
@@ -81,6 +57,7 @@ define(function (require) {
             );
             symbol.ignore = true;
             symbol.z2 = 100;
+            symbol.culling = true;
             this._symbolType = symbolType;
             this._period = period;
             this._loop = loop;
@@ -93,7 +70,9 @@ define(function (require) {
                     __t: 1
                 })
                 .delay(idx / lineData.count() * period / 2)
-                .during(zrUtil.bind(updateSymbolPosition, symbol));
+                .during(function () {
+                    self.updateSymbolPosition(symbol);
+                });
             if (!loop) {
                 var self = this;
                 animator.done(function () {
@@ -113,10 +92,19 @@ define(function (require) {
 
         symbol.attr('scale', size);
         var points = lineData.getItemLayout(idx);
-        setAnimationPoints(symbol, points);
+        this.updateAnimationPoints(symbol, points);
 
         symbol.setColor(color);
         symbol.attr('scale', size);
+    };
+
+    effectLineProto.updateAnimationPoints = function (symbol, points) {
+        symbol.__p1 = points[0];
+        symbol.__p2 = points[1];
+        symbol.__cp1 = points[2] || [
+            (points[0][0] + points[1][0]) / 2,
+            (points[0][1] + points[1][1]) / 2
+        ];
     };
 
     effectLineProto.updateData = function (lineData, idx) {
@@ -124,12 +112,33 @@ define(function (require) {
         this._updateEffectSymbol(lineData, idx);
     };
 
+    effectLineProto.updateSymbolPosition = function (symbol) {
+        var p1 = symbol.__p1;
+        var p2 = symbol.__p2;
+        var cp1 = symbol.__cp1;
+        var t = symbol.__t;
+        var pos = symbol.position;
+        var quadraticAt = curveUtil.quadraticAt;
+        var quadraticDerivativeAt = curveUtil.quadraticDerivativeAt;
+        pos[0] = quadraticAt(p1[0], cp1[0], p2[0], t);
+        pos[1] = quadraticAt(p1[1], cp1[1], p2[1], t);
+
+        // Tangent
+        var tx = quadraticDerivativeAt(p1[0], cp1[0], p2[0], t);
+        var ty = quadraticDerivativeAt(p1[1], cp1[1], p2[1], t);
+
+        symbol.rotation = -Math.atan2(ty, tx) - Math.PI / 2;
+
+        symbol.ignore = false;
+    };
+
+
     effectLineProto.updateLayout = function (lineData, idx) {
         this.childAt(0).updateLayout(lineData, idx);
         var symbol = this.childAt(1);
         if (symbol) {
             var points = lineData.getItemLayout(idx);
-            setAnimationPoints(symbol, points);
+            this.updateAnimationPoints(symbol, points);
         }
     };
 

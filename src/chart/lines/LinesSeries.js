@@ -71,7 +71,7 @@ define(function (require) {
             largeThreshold: 2000,
 
             // If lines are polyline
-            // polyline not support effect, curveness, label, animation
+            // polyline not support curveness, label, animation
             polyline: false,
 
             label: {
