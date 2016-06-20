@@ -117,6 +117,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    BMapCoordSys.prototype.dataToPoint = function (data) {
 	        var point = new BMap.Point(data[0], data[1]);
+	        // TODO pointToOverlayPixel is toooooooo slow, cache the transform
 	        var px = this._bmap.pointToOverlayPixel(point);
 	        var mapOffset = this._mapOffset;
 	        return [px.x - mapOffset[0], px.y - mapOffset[1]];

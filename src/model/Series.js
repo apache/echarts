@@ -37,6 +37,11 @@ define(function(require) {
         // PENDING
         legendDataProvider: null,
 
+        /**
+         * Access path of color for visual
+         */
+        visualColorAccessPath: 'itemStyle.normal.color',
+
         init: function (option, parentModel, ecModel, extraOpt) {
 
             /**

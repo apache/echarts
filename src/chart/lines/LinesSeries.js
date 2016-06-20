@@ -35,6 +35,8 @@ define(function (require) {
 
         dependencies: ['grid', 'polar'],
 
+        visualColorAccessPath: 'lineStyle.normal.color',
+
         init: function (option) {
             // Not using preprocessor because mergeOption may not have series.type
             preprocessOption(option);

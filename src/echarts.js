@@ -1386,9 +1386,7 @@ define(function (require) {
         zrUtil.createCanvas = creator;
     };
 
-    echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, zrUtil.curry(
-        require('./visual/seriesColor'), '', 'itemStyle'
-    ));
+    echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, require('./visual/seriesColor'));
     echarts.registerPreprocessor(require('./preprocessor/backwardCompat'));
 
     // Default action
