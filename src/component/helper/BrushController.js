@@ -12,7 +12,7 @@ define(function (require) {
     var interactionMutex = require('./interactionMutex');
     var DataDiffer = require('../../data/DataDiffer');
 
-    var bind = zrUtil.bind;
+    var curry = zrUtil.curry;
     var each = zrUtil.each;
     var map = zrUtil.map;
     var mathMin = Math.min;
@@ -58,7 +58,13 @@ define(function (require) {
      * @constructor
      * @mixin {module:zrender/mixin/Eventful}
      * @event module:echarts/component/helper/BrushController#brush
-     *        brushRanges, opt {isEnd, removeOnClick}
+     *        params:
+     *            brushRanges: Array.<Array>, coord relates to container group,
+     *                                    If no container specified, to global.
+     *            opt {
+     *                isEnd: boolean,
+     *                removeOnClick: boolean
+     *            }
      *
      * @param {module:zrender/zrender~ZRender} zr
      */
@@ -98,9 +104,15 @@ define(function (require) {
 
         /**
          * @private
-         * @type {module:zrender/core/BoundingRect}
+         * @type {Object}
          */
-        this._containerRect = null;
+        this._panels;
+
+        /**
+         * @private
+         * @type {module:zrender/mixin/Transformable}
+         */
+        this._container;
 
         /**
          * @private
@@ -130,7 +142,9 @@ define(function (require) {
          * @private
          * @type {boolean}
          */
-        this._mounted = false;
+        if (__DEV__) {
+            this._mounted;
+        }
 
         /**
          * @private
@@ -144,7 +158,7 @@ define(function (require) {
          */
         this._handlers = {};
         each(mouseHandlers, function (handler, eventName) {
-            this._handlers[eventName] = bind(handler, this);
+            this._handlers[eventName] = zrUtil.bind(handler, this);
         }, this);
     }
 
@@ -168,35 +182,89 @@ define(function (require) {
          * @param {string} [brushOption.brushStyle.fill]
          */
         enableBrush: function (brushOption) {
-            if (!this._mounted) {
-                return;
+            if (__DEV__) {
+                zrUtil.assert(this._mounted);
             }
 
-            this._brushType && doDisableBrush.call(this);
-            brushOption.brushType && doEnableBrush.call(this, brushOption);
+            this._brushType && doDisableBrush(this);
+            brushOption.brushType && doEnableBrush(this, brushOption);
 
             return this;
         },
 
         /**
-         * @param {module:zrender/mixin/Transformable} container
-         * @param {module:zrender/core/BoundingRect|boolean} [rect] If not specified,
-         *        use container.getBoundingRect(). If false, do not use containerRect,
-         *        which means global select.
+         * @param {Array.<Object>} panelOpts If not pass, it is global brush.
+         *        Each items: {panelId, points}
          */
-        mount: function (container, rect) {
-            this._mounted = true; // should be at first.
+        setPanels: function (panelOpts) {
+            var oldPanels = this._panels || {};
+            var newPanels = this._panels = panelOpts && panelOpts.length && {};
+            var thisGroup = this.group;
 
-            // Remove from old container.
-            removeGroup.call(this);
+            newPanels && each(panelOpts, function (panelOpt) {
+                var panelId = panelOpt.panelId;
+                var panel = oldPanels[panelId];
+                if (!panel) {
+                    panel = new graphic.Polygon({
+                        // FIXME
+                        // 这样靠谱么？
+                        // silent: true,
+                        // invisible: true,
+                        style: {
+                            fill: 'rgba(0,0,0,0)'
+                        },
+                        cursor: 'crosshair'
+                    });
+                    // FIXME
+                    // cursor
+                    // boundingRect will change when dragging, so we have
+                    // to keep initial boundingRect.
+                    thisGroup.add(panel);
+                }
+                // FIXME
+                // only support rect panel now.
+                panel.attr('shape', {points: panelOpt.points});
+                panel.__brushPanelId = panelId;
+                newPanels[panelId] = panel;
+                oldPanels[panelId] = null;
+            });
 
-            // boundingRect will change when dragging, so we have
-            // to keep initial boundingRect.
-            this._containerRect = rect !== false
-            ? (rect || container.getBoundingRect()) : null;
+            each(oldPanels, function (panel) {
+                panel && thisGroup.remove(panel);
+            });
 
-            // Add to new container.
-            container.add(this.group);
+            return this;
+        },
+
+        /**
+         * @param {Object} opt
+         * @param {module:zrender/mixin/Transformable} [opt.container]
+         * @param {boolean} [opt.localCoord=false] Whether input and output with global coord,
+         *                                          ohterwise coord is according to panel.
+         */
+        mount: function (opt) {
+            opt = opt || {};
+
+            if (__DEV__) {
+                this._mounted = true; // should be at first.
+            }
+
+            var container = opt.container;
+
+            // Reset container.
+            if (!this._container || container !== this._container) {
+                unmountContainer(this);
+
+                if (!container) {
+                    container = new graphic.Group();
+                    this._zr.add(container);
+                    container.__createdByBrush = true;
+                }
+                this._container = container;
+
+                // Add to new container.
+                container.add(this.group);
+            }
 
             return this;
         },
@@ -222,8 +290,8 @@ define(function (require) {
          *        If brushOptionList is null/undefined, all covers removed.
          */
         updateCovers: function (brushOptionList) {
-            if (!this._mounted) {
-                return;
+            if (__DEV__) {
+                zrUtil.assert(this._mounted);
             }
 
             brushOptionList = zrUtil.map(brushOptionList, function (brushOption) {
@@ -235,54 +303,45 @@ define(function (require) {
             var newCovers = this._covers = [];
             var controller = this;
 
-            (new DataDiffer(oldCovers, brushOptionList, oldGetKey, newGetKey))
-                .add(add)
-                .update(update)
+            (new DataDiffer(oldCovers, brushOptionList, oldGetKey, getKey))
+                .add(addOrUpdate)
+                .update(addOrUpdate)
                 .remove(remove)
                 .execute();
 
             return this;
 
+            function getKey(brushOption, index) {
+                return (brushOption.id != null ? brushOption.id : tmpIdPrefix + index)
+                    + '-' + brushOption.brushType;
+            }
+
             function oldGetKey(cover, index) {
-                var brushOption = cover.__brushOption;
-                return brushOption.id != null ? brushOption.id : tmpIdPrefix + index;
+                return getKey(cover.__brushOption, index);
             }
 
-            function newGetKey(brushOption, index) {
-                return brushOption.id != null ? brushOption.id : tmpIdPrefix + index;
-            }
-
-            function add(newIndex) {
-                newCovers[newIndex] = createCover.call(controller, brushOptionList[newIndex]);
-                endCreating.call(controller, newCovers[newIndex]);
-                updateCoverAfterCreation.call(controller, newCovers[newIndex]);
-            }
-
-            function update(newIndex, oldIndex) {
-                var cover = newCovers[newIndex] = oldCovers[oldIndex];
+            function addOrUpdate(newIndex, oldIndex) {
                 var newBrushOption = brushOptionList[newIndex];
-
-                if (newBrushOption.brushType !== cover.__brushOption.brushType) {
-                    controller.group.remove(cover);
-                    cover = createCover.call(controller, newBrushOption);
-                    endCreating.call(controller, cover);
-                }
-
-                cover.__brushOption = newBrushOption;
-                updateCoverAfterCreation.call(controller, newCovers[newIndex]);
+                var cover = newCovers[newIndex] = oldIndex != null
+                    ? (oldCovers[oldIndex].__brushOption = newBrushOption, oldCovers[oldIndex])
+                    : endCreating(controller, createCover(controller, newBrushOption));
+                updateCoverAfterCreation(controller, cover);
             }
 
             function remove(oldIndex) {
                 controller.group.remove(oldCovers[oldIndex]);
             }
+
         },
 
         unmount: function () {
             this.enableBrush(false);
-            removeGroup.call(this);
 
-            this._covers = [];
-            this._mounted = false; // should be at last.
+            unmountContainer(this);
+
+            if (__DEV__) {
+                this._mounted = false; // should be at last.
+            }
 
             return this;
         },
@@ -296,56 +355,59 @@ define(function (require) {
     zrUtil.mixin(BrushController, Eventful);
 
 
-    function doEnableBrush(brushOption) {
-        var zr = this._zr;
+    function doEnableBrush(controller, brushOption) {
+        var zr = controller._zr;
 
-        if (isGlobalBrush(this)) {
-            // FIXME
-            // 多个 selectcontroller，区域不一样时，这是否合理？
-            var onRelease = zrUtil.bind(function (userOnRelease) {
-                this.enableBrush(false);
-                userOnRelease && userOnRelease();
-            }, this, brushOption.onRelease);
+        var onRelease = zrUtil.bind(function (userOnRelease) {
+            controller.enableBrush(false);
+            userOnRelease && userOnRelease();
+        }, controller, brushOption.onRelease);
 
-            interactionMutex.take(zr, MUTEX_RESOURCE_KEY, this._uid, onRelease);
-            zr.setDefaultCursorStyle('crosshair');
-        }
+        // Consider roam, which takes globalPan too.
+        interactionMutex.take(zr, MUTEX_RESOURCE_KEY, controller._uid, onRelease);
+        zr.setDefaultCursorStyle('crosshair');
 
-        each(this._handlers, function (handler, eventName) {
+        each(controller._handlers, function (handler, eventName) {
             zr.on(eventName, handler);
         });
 
-        this._brushType = brushOption.brushType;
-        this._brushOption = zrUtil.merge(zrUtil.clone(DEFAULT_BRUSH_OPT), brushOption, true);
+        controller._brushType = brushOption.brushType;
+        controller._brushOption = zrUtil.merge(zrUtil.clone(DEFAULT_BRUSH_OPT), brushOption, true);
     }
 
-    function doDisableBrush() {
-        var zr = this._zr;
+    function doDisableBrush(controller) {
+        var zr = controller._zr;
 
-        interactionMutex.release(zr, MUTEX_RESOURCE_KEY, this._uid);
+        interactionMutex.release(zr, MUTEX_RESOURCE_KEY, controller._uid);
         zr.setDefaultCursorStyle('default');
 
-        each(this._handlers, function (handler, eventName) {
+        each(controller._handlers, function (handler, eventName) {
             zr.off(eventName, handler);
         });
 
-        this._brushType = this._brushOption = null;
+        controller._brushType = controller._brushOption = null;
     }
 
-    function createCover(brushOption) {
-        var cover = coverRenderers[brushOption.brushType].createCover.call(this, brushOption);
+    function createCover(controller, brushOption) {
+        var cover = coverRenderers[brushOption.brushType].createCover(controller, brushOption);
         updateZ(cover);
         cover.__brushOption = brushOption;
-        this.group.add(cover);
+        controller.group.add(cover);
         return cover;
     }
 
-    function endCreating(creatingCover) {
-        var coverRenderer = coverRenderers[creatingCover.__brushOption.brushType];
+    function endCreating(controller, creatingCover) {
+        var coverRenderer = getCoverRenderer(creatingCover);
         if (coverRenderer.endCreating) {
-            coverRenderer.endCreating.call(this, creatingCover);
+            coverRenderer.endCreating(controller, creatingCover);
             updateZ(creatingCover);
         }
+        return creatingCover;
+    }
+
+    function updateCoverShape(controller, cover) {
+        var brushOption = cover.__brushOption;
+        getCoverRenderer(cover).updateCoverShape(controller, cover, brushOption.range, brushOption);
     }
 
     function updateZ(group) {
@@ -354,42 +416,53 @@ define(function (require) {
         });
     }
 
-    function updateCoverAfterCreation(cover) {
-        var brushOption = cover.__brushOption;
-        var coverRenderer = coverRenderers[brushOption.brushType];
-        coverRenderer.updateCoverShape.call(this, cover);
-        coverRenderer.updateCommon.call(this, cover);
+    function updateCoverAfterCreation(controller, cover) {
+        getCoverRenderer(cover).updateCommon(controller, cover);
+        updateCoverShape(controller, cover);
     }
 
-    function isInContainer(x, y) {
-        var localPos = this.group.transformCoordToLocal(x, y);
-        return !this._containerRect
-            || this._containerRect.contain(localPos[0], localPos[1]);
+    function getCoverRenderer(cover) {
+        return coverRenderers[cover.__brushOption.brushType];
     }
 
-    function clearCovers() {
-        each(this._covers, function (cover) {
-            this.group.remove(cover);
-        }, this);
-        this._covers.length = 0;
+    function getPanelByPoint(controller, x, y) {
+        if (isGlobalBrush(controller)) {
+            return {};
+        }
+        var panel;
+        each(controller._panels, function (pn) {
+            pn.contain(x, y) && (panel = pn);
+        });
+        return panel;
     }
 
-    function trigger(opt) {
-        var brushRanges = map(this._covers, function (cover) {
+    function clearCovers(controller) {
+        each(controller._covers, function (cover) {
+            controller.group.remove(cover);
+        }, controller);
+        controller._covers.length = 0;
+    }
+
+    function trigger(controller, opt) {
+        var brushRanges = map(controller._covers, function (cover) {
             var brushOption = cover.__brushOption;
+            var range = zrUtil.clone(brushOption.range);
+
             return {
                 brushType: brushOption.brushType,
-                range: zrUtil.clone(brushOption.range)
+                panelId: brushOption.panelId,
+                range: range
             };
         });
-        this.trigger('brush', brushRanges, {
+
+        controller.trigger('brush', brushRanges, {
             isEnd: !!opt.isEnd,
             removeOnClick: !!opt.removeOnClick
         });
     }
 
-    function shouldShowCover() {
-        var track = this._track;
+    function shouldShowCover(controller) {
+        var track = controller._track;
 
         if (!track.length) {
             return false;
@@ -404,47 +477,47 @@ define(function (require) {
         return dist > UNSELECT_THRESHOLD;
     }
 
-    function removeGroup() {
+    function unmountContainer(controller) {
         // container may 'removeAll' outside.
-        var group = this.group;
-        var container = group.parent;
+        clearCovers(controller);
+
+        var group = controller.group;
+        var container = controller._container;
+
         if (container) {
-            container.remove(group);
+            group && container.remove(group);
+            if (container.__createdByBrush) {
+                controller._zr.remove(controller._container);
+            }
+            controller._container = null;
         }
     }
 
     function isGlobalBrush(controller) {
-        return !controller._containerRect;
+        return !controller._panels;
     }
 
-    function getLocalTrack() {
-        return map(this._track, function (point) {
-            return this.group.transformCoordToLocal(point[0], point[1]);
-        }, this);
-    }
-
-    function getLocalTrackEnds() {
-        var localTrack = getLocalTrack.call(this);
-        var tail = localTrack.length - 1;
+    function getTrackEnds(track) {
+        var tail = track.length - 1;
         tail < 0 && (tail = 0);
-        return [localTrack[0], localTrack[tail]];
+        return [track[0], track[tail]];
     }
 
-    function createBaseRect(cover, brushOption) {
+    function createBaseRect(controller, cover, brushOption) {
         cover.add(new graphic.Rect({
             name: 'rect',
-            style: brushOption.brushStyle,
+            style: makeStyle(brushOption),
             silent: true,
             draggable: true,
             cursor: 'move',
-            drift: bind(driftRect, this, cover, 'nswe'),
-            ondragend: bind(trigger, this, {isEnd: true})
+            drift: curry(driftRect, controller, cover, 'nswe'),
+            ondragend: curry(trigger, controller, {isEnd: true})
         }));
     }
 
-    function updateCommon(cover) {
+    function updateCommon(controller, cover) {
         var brushOption = cover.__brushOption;
-        cover.childAt(0).useStyle(brushOption.brushStyle);
+        cover.childAt(0).useStyle(makeStyle(brushOption));
         var transformable = brushOption.transformable;
         cover.childAt(0).attr({
             silent: !transformable,
@@ -454,6 +527,10 @@ define(function (require) {
 
     function updateRectShape(cover, name, x, y, w, h) {
         cover.childOfName(name).setShape({x: x, y: y, width: w, height: h});
+    }
+
+    function makeStyle(brushOption) {
+        return zrUtil.defaults({strokeNoScale: true}, brushOption.brushStyle);
     }
 
     function formatRectRange(x, y, x2, y2) {
@@ -466,7 +543,7 @@ define(function (require) {
         ];
     }
 
-    function driftRect(cover, name, dx, dy) {
+    function driftRect(controller, cover, name, dx, dy) {
         var brushOption = cover.__brushOption;
         var rectRange = brushOption.range;
         var delta = [dx, dy];
@@ -480,11 +557,11 @@ define(function (require) {
             rectRange[0][0], rectRange[1][0], rectRange[0][1], rectRange[1][1]
         );
 
-        updateCoverAfterCreation.call(this, cover);
-        trigger.call(this, {isEnd: false});
+        updateCoverAfterCreation(controller, cover);
+        trigger(controller, {isEnd: false});
     }
 
-    function driftPolygon(cover, dx, dy) {
+    function driftPolygon(controller, cover, dx, dy) {
         var range = cover.__brushOption.range;
 
         each(range, function (point) {
@@ -492,8 +569,8 @@ define(function (require) {
             point[1] += dy;
         });
 
-        updateCoverAfterCreation.call(this, cover);
-        trigger.call(this, {isEnd: false});
+        updateCoverAfterCreation(controller, cover);
+        trigger(controller, {isEnd: false});
     }
 
     function preventDefault(e) {
@@ -501,38 +578,44 @@ define(function (require) {
         rawE.preventDefault && rawE.preventDefault();
     }
 
-    function updateCoverByMouse(e, isEnd) {
+    function updateCoverByMouse(controller, e, isEnd) {
         var x = e.offsetX;
         var y = e.offsetY;
-        var creatingCover = this._creatingCover;
-        var thisBrushOption = this._brushOption;
+        var creatingCover = controller._creatingCover;
+        var thisBrushOption = controller._brushOption;
+        var panel = getPanelByPoint(controller, x, y);
 
-        if (isInContainer.call(this, x, y)) {
-            this._track.push([x, y]);
+        if (panel || isEnd) { // Outside panel but isEnd, cover creating ends.
 
-            if (shouldShowCover.call(this)) {
+            panel && controller._track.push([x, y]);
 
-                if (!creatingCover) {
-                    thisBrushOption.brushMode === 'single' && clearCovers.call(this);
-                    creatingCover = this._creatingCover =
-                        createCover.call(this, zrUtil.clone(thisBrushOption));
-                    this._covers.push(creatingCover);
+            if (shouldShowCover(controller)) {
+
+                if (!creatingCover && panel) {
+                    thisBrushOption.brushMode === 'single' && clearCovers(controller);
+                    var brushOption = zrUtil.clone(thisBrushOption);
+                    brushOption.panelId = panel.__brushPanelId;
+                    creatingCover = controller._creatingCover = createCover(controller, brushOption);
+                    controller._covers.push(creatingCover);
                 }
 
-                var coverRenderer = coverRenderers[this._brushType];
-                var coverBrushOption = creatingCover.__brushOption;
+                if (creatingCover) {
+                    var coverRenderer = coverRenderers[controller._brushType];
+                    var coverBrushOption = creatingCover.__brushOption;
 
-                coverBrushOption.range =
-                    coverRenderer.getCreatingRange.call(this, isEnd);
+                    coverBrushOption.range = coverRenderer.getCreatingRange(
+                        zrUtil.clone(controller._track)
+                    );
 
-                if (isEnd) {
-                    endCreating.call(this, creatingCover);
-                    coverRenderer.updateCommon.call(this, creatingCover);
+                    if (isEnd) {
+                        endCreating(controller, creatingCover);
+                        coverRenderer.updateCommon(controller, creatingCover);
+                    }
+
+                    updateCoverShape(controller, creatingCover);
                 }
 
-                coverRenderer.updateCoverShape.call(this, creatingCover);
-
-                trigger.call(this, {isEnd: isEnd});
+                trigger(controller, {isEnd: isEnd});
             }
             else if (
                 isEnd
@@ -544,8 +627,8 @@ define(function (require) {
                 // But a single click do not clear covers, because user may have casual
                 // clicks (for example, click on other component and do not expect covers
                 // disappear).
-                clearCovers.call(this);
-                trigger.call(this, {isEnd: isEnd, removeOnClick: true});
+                clearCovers(controller);
+                trigger(controller, {isEnd: isEnd, removeOnClick: true});
             }
 
         }
@@ -563,7 +646,7 @@ define(function (require) {
 
                 this._creatingCover = null;
 
-                if (isInContainer.call(this, x, y)) {
+                if (getPanelByPoint(this, x, y)) {
                     this._dragging = true;
                     this._track = [[x, y]];
                 }
@@ -575,7 +658,7 @@ define(function (require) {
 
                 preventDefault(e);
 
-                updateCoverByMouse.call(this, e, false);
+                updateCoverByMouse(this, e, false);
             }
         },
 
@@ -584,7 +667,7 @@ define(function (require) {
 
                 preventDefault(e);
 
-                updateCoverByMouse.call(this, e, true);
+                updateCoverByMouse(this, e, true);
 
                 this._dragging = false;
                 this._track = [];
@@ -599,28 +682,26 @@ define(function (require) {
     var coverRenderers = {
 
         line: {
-            createCover: function (brushOption) {
+            createCover: function (controller, brushOption) {
                 var cover = new graphic.Group();
 
-                createBaseRect.call(this, cover, brushOption);
+                createBaseRect(controller, cover, brushOption);
 
                 return cover;
             },
-            getCreatingRange: function () {
-                var ends = getLocalTrackEnds.call(this);
+            getCreatingRange: function (track) {
+                var ends = getTrackEnds(track);
                 var min = mathMin(ends[0][0], ends[1][0]);
                 var max = mathMax(ends[0][0], ends[1][0]);
 
                 return [min, max];
             },
-            updateCoverShape: function (cover) {
-                var info = cover.__brushOption;
-                var range = info.range;
-                var width = info.brushStyle.width;
+            updateCoverShape: function (controller, cover, localRange, brushOption) {
+                var width = brushOption.brushStyle.width;
                 cover.childOfName('rect').setShape({
-                    x: range[0],
+                    x: localRange[0],
                     y: -width / 2,
-                    width: range[1] - range[0],
+                    width: localRange[1] - localRange[0],
                     height: width
                 });
             },
@@ -628,10 +709,10 @@ define(function (require) {
         },
 
         rect: {
-            createCover: function (brushOption) {
+            createCover: function (controller, brushOption) {
                 var cover = new graphic.Group();
 
-                createBaseRect.call(this, cover, brushOption);
+                createBaseRect(controller, cover, brushOption);
 
                 each(
                     ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw'],
@@ -641,30 +722,27 @@ define(function (require) {
                             __cursor: CURSOR_MAP[name] + '-resize',
                             style: {opacity: 0},
                             draggable: true,
-                            drift: bind(driftRect, this, cover, name),
-                            ondragend: bind(trigger, this, {isEnd: true})
+                            drift: curry(driftRect, controller, cover, name),
+                            ondragend: curry(trigger, controller, {isEnd: true})
                         }));
-                    },
-                    this
+                    }
                 );
 
                 return cover;
             },
-            getCreatingRange: function () {
-                var ends = getLocalTrackEnds.call(this);
+            getCreatingRange: function (track) {
+                var ends = getTrackEnds(track);
                 return formatRectRange(ends[1][0], ends[1][1], ends[0][0], ends[0][1]);
             },
-            updateCoverShape: function (cover) {
-                var info = cover.__brushOption;
-                var range = info.range;
-                var lineWidth = info.brushStyle.lineWidth || 0;
+            updateCoverShape: function (controller, cover, localRange, brushOption) {
+                var lineWidth = brushOption.brushStyle.lineWidth || 0;
                 var handleSize = mathMax(lineWidth, MIN_RESIZE_LINE_WIDTH);
-                var x = range[0][0];
-                var y = range[1][0];
+                var x = localRange[0][0];
+                var y = localRange[1][0];
                 var xa = x - lineWidth / 2;
                 var ya = y - lineWidth / 2;
-                var x2 = range[0][1];
-                var y2 = range[1][1];
+                var x2 = localRange[0][1];
+                var y2 = localRange[1][1];
                 var x2a = x2 - handleSize + lineWidth / 2;
                 var y2a = y2 - handleSize + lineWidth / 2;
                 var width = x2 - x;
@@ -674,7 +752,7 @@ define(function (require) {
 
                 updateRectShape(cover, 'rect', x, y, width, height);
 
-                if (info.transformable) {
+                if (brushOption.transformable) {
                     updateRectShape(cover, 'w', xa, ya, handleSize, heighta);
                     updateRectShape(cover, 'e', x2a, ya, handleSize, heighta);
                     updateRectShape(cover, 'n', xa, ya, widtha, handleSize);
@@ -686,8 +764,8 @@ define(function (require) {
                     updateRectShape(cover, 'se', x2a, y2a, handleSize, handleSize);
                 }
             },
-            updateCommon: function (cover) {
-                updateCommon.call(this, cover);
+            updateCommon: function (controller, cover) {
+                updateCommon(controller, cover);
                 var transformable = cover.__brushOption.transformable;
                 each(
                     ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw'],
@@ -697,39 +775,38 @@ define(function (require) {
                             silent: !transformable,
                             cursor: transformable ? el.__cursor : 'default'
                         });
-                    },
-                    this
+                    }
                 );
             }
         },
 
         polygon: {
-            createCover: function (brushOption) {
+            createCover: function (controller, brushOption) {
                 var cover = new graphic.Group();
 
                 // Do not use graphic.Polygon because graphic.Polyline do not close the
                 // border of the shape when drawing, which is a better experience for user.
                 cover.add(new graphic.Polyline({
-                    style: brushOption.brushStyle,
+                    style: makeStyle(brushOption),
                     silent: true
                 }));
 
                 return cover;
             },
-            getCreatingRange: function (isEnd) {
-                return this._track.slice();
+            getCreatingRange: function (track) {
+                return track;
             },
-            endCreating: function (cover) {
+            endCreating: function (controller, cover) {
                 cover.remove(cover.childAt(0));
                 // Use graphic.Polygon close the shape.
                 cover.add(new graphic.Polygon({
                     draggable: true,
-                    drift: bind(driftPolygon, this, cover),
-                    ondragend: bind(trigger, this, {isEnd: true})
+                    drift: curry(driftPolygon, controller, cover),
+                    ondragend: curry(trigger, controller, {isEnd: true})
                 }));
             },
-            updateCoverShape: function (cover) {
-                cover.childAt(0).setShape({points: cover.__brushOption.range});
+            updateCoverShape: function (controller, cover, localRange, brushOption) {
+                cover.childAt(0).setShape({points: localRange});
             },
             updateCommon: updateCommon
         }

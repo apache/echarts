@@ -5,7 +5,6 @@ define(function(require) {
     var numberUtil = require('../../../util/number');
     var BrushController = require('../../helper/BrushController');
     var BoundingRect = require('zrender/core/BoundingRect');
-    var Group = require('zrender/container/Group');
     var history = require('../../dataZoom/history');
 
     var each = zrUtil.each;
@@ -22,22 +21,14 @@ define(function(require) {
         this.model = model;
         this.ecModel = ecModel;
         this.api = api;
-        var zr = api.getZr();
-
-        /**
-         * @private
-         * @type {module:zrender/container/Group}
-         */
-        var controllerGroup = this._controllerGroup = new Group();
-        zr.add(controllerGroup);
 
         /**
          * @private
          * @type {module:echarts/component/helper/BrushController}
          */
-        (this._brushController = new BrushController(zr))
+        (this._brushController = new BrushController(api.getZr()))
             .on('brush', zrUtil.bind(this._onBrush, this))
-            .mount(controllerGroup, false);
+            .mount();
 
         /**
          * Is zoom active.
@@ -75,9 +66,7 @@ define(function(require) {
     };
 
     proto.dispose = function (ecModel, api) {
-        var zr = api.getZr();
         this._brushController.dispose();
-        this._controllerGroup && zr.remove(this._controllerGroup);
     };
 
     /**

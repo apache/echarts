@@ -82,8 +82,15 @@ define(function (require) {
             });
 
             this._brushController
-                .mount(axisGroup)
-                .enableBrush({brushType: 'line', brushStyle: areaSelectStyle})
+                .mount({container: axisGroup, localCoord: true})
+                .setPanels([{
+                    panelId: 'pl',
+                    rect: axisGroup.getBoundingRect()
+                }])
+                .enableBrush({
+                    brushType: 'line',
+                    brushStyle: areaSelectStyle
+                })
                 .updateCovers(coverInfoList);
         },
 

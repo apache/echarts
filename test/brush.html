@@ -87,7 +87,7 @@
 
         <div class="split">Scatter</div>
         <div class="block">
-            <div id="main2" class="main"></div>
+            <!-- <div id="main2" class="main"></div> -->
             <div id="main2-st"></div>
             <div class="panel">
                 <ul class="panel-desc">
@@ -115,8 +115,8 @@
                     </div>
                     <div>
                         DIFF with previous selected:
-                        <input onclick="smChange.diff(true)" type="radio" name="diff" checked="checked"/>Y
-                        <input onclick="smChange.diff(false)" type="radio" name="diff" />N
+                        <input onclick="smChange.diff(true)" type="radio" name="diff"/>Y
+                        <input onclick="smChange.diff(false)" type="radio" name="diff" checked="checked"/>N
                     </div>
                     <div>
                         animation:
@@ -144,7 +144,7 @@
 
         <div class="split">Stacked Bar (rect-polygon intersect)</div>
         <div class="block">
-            <div id="main4" class="main"></div>
+            <!-- <div id="main4" class="main"></div> -->
             <div class="panel">
                 <ul class="panel-desc">
                     <li><strong>CHECK</strong>: rect-polygon intersect.</li>
@@ -510,7 +510,7 @@
 
                     var smSettings = {
                         seperatedEChartsInstance: false,
-                        diff: true,
+                        diff: false,
                         animation: true,
                         animationDurationUpdate: 1000,
                         throttleDelay: 300,
@@ -575,15 +575,6 @@
                                     }
                                 }
                             },
-                            legend: {
-                                orient: 'vertical',
-                                top: 'bottom',
-                                left: 'right',
-                                data:['pm2.5'],
-                                textStyle: {
-                                    color: '#fff'
-                                }
-                            },
                             brush: {
                                 outOfBrush: {
                                     color: '#abc'
@@ -591,10 +582,19 @@
                                 seriesIndex: [0, 1],
                                 throttleType: smSettings.throttleType,
                                 throttleDelay: smSettings.throttleDelay,
+                                geoIndex: 0,
                                 brushRanges: [
+                                    // {
+                                    //     geoIndex: 0,
+                                    //     brushType: 'polygon',
+                                    //     range: [[482,130],[481,130],[470,123],[406,100],[387,94],[377,88],[374,83],[373,81],[366,76],[360,74],[355,73],[346,79],[337,83],[323,84],[301,84],[297,84],[281,88],[265,92],[265,93],[258,120],[265,144],[272,148],[297,168],[319,192],[324,200],[324,201],[325,205],[337,229],[342,240],[343,242],[343,243],[344,247],[345,250],[350,261],[354,268],[355,274],[355,281],[347,300],[342,319],[336,352],[333,388],[336,424],[351,442],[364,451],[375,455],[392,466],[401,474],[409,483],[419,493],[432,502],[453,502],[487,484],[521,436],[536,364],[539,322],[539,309],[537,305],[537,304],[536,295],[517,273],[511,264],[511,264]]
+                                    // }
                                     {
+                                        geoIndex: 0,
                                         brushType: 'polygon',
-                                        range: [[482,130],[481,130],[470,123],[406,100],[387,94],[377,88],[374,83],[373,81],[366,76],[360,74],[355,73],[346,79],[337,83],[323,84],[301,84],[297,84],[281,88],[265,92],[265,93],[258,120],[265,144],[272,148],[297,168],[319,192],[324,200],[324,201],[325,205],[337,229],[342,240],[343,242],[343,243],[344,247],[345,250],[350,261],[354,268],[355,274],[355,281],[347,300],[342,319],[336,352],[333,388],[336,424],[351,442],[364,451],[375,455],[392,466],[401,474],[409,483],[419,493],[432,502],[453,502],[487,484],[521,436],[536,364],[539,322],[539,309],[537,305],[537,304],[536,295],[517,273],[511,264],[511,264]]
+                                        // geoRange: [[121.15,31.89], [120.95,31.39], [112.91,27.87], [118.78,32.04]]
+                                        // geoRange: [[121.15, 31.89], [121.15, 31.89], [109.781327, 39.608266], [120.38, 37.35], [122.207216, 29.985295], [123.97, 47.33]]
+                                        geoRange: [[117.27,31.86], [114.31,30.52], [126.57,43.87]]
                                     }
                                 ]
                             },
@@ -736,7 +736,8 @@
                             option.grid.width = '30%';
                         }
 
-                        var oldSelectedItems = [];
+                        var oldCategoryData = [];
+                        var oldBarData = [];
 
                         chart.on('brushSelected', renderBrushed);
                         chart.setOption(option, true);
@@ -757,8 +758,6 @@
                             var count = 0;
                             var brushComponent = params.brushComponents[0];
                             var selectedItems = [];
-
-                            var isDiff;
 
                             for (var sIdx = 0; sIdx < brushComponent.series.length; sIdx++) {
                                 var rawIndices = brushComponent.series[sIdx].rawIndices;
@@ -781,18 +780,6 @@
                                 brushed.push('[Series ' + sIdx + '] ' + placesBySeries.join(', '));
                             }
 
-                            if (selectedItems.length !== oldSelectedItems.length) {
-                                isDiff = true;
-                            }
-                            else {
-                                for (var i = 0; i < selectedItems.length; i++) {
-                                    if (selectedItems[i].value !== oldSelectedItems[i].value
-                                        || selectedItems[i].name !== oldSelectedItems[i].name
-                                    ) {
-                                        isDiff = true;
-                                    }
-                                }
-                            }
 
                             panel.innerHTML = [
                                 '<h3>STATISTICS:</h3>',
@@ -817,6 +804,11 @@
                                 barData.push(selectedItems[i].value[2]);
                             }
 
+                            var isDiff = checkDiff(categoryData, oldCategoryData)
+                                || checkDiff(barData, oldBarData);
+                            oldCategoryData = categoryData;
+                            oldBarData = barData;
+
                             if (!smSettings.diff || isDiff) {
                                 var targetName = smSettings.seperatedEChartsInstance ? 'chart2' : 'mainChart';
                                 smSettings.diff
@@ -830,8 +822,21 @@
 
                             }
 
-                            if (smSettings.diff && !isDiff) {
-                                console.log('check diff and NO DIFF');
+                            // if (smSettings.diff && !isDiff) {
+                                // console.log('check diff and NO DIFF');
+                            // }
+                        }
+
+                        function checkDiff(list, oldList) {
+                            if (list.length !== oldList.length) {
+                                return true;
+                            }
+                            else {
+                                for (var i = 0; i < list.length; i++) {
+                                    if (list[i] !== oldList[i]) {
+                                        return true;
+                                    }
+                                }
                             }
                         }
                     }

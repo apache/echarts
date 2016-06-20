@@ -1,5 +1,5 @@
 /**
- * @file Data range visual coding.
+ * @file Brush visual coding.
  */
 define(function (require) {
 
@@ -9,15 +9,24 @@ define(function (require) {
     var BoundingRect = require('zrender/core/BoundingRect');
     var selector = require('./selector');
     var throttle = require('../../util/throttle');
+    var helper = require('./helper');
 
     var STATE_LIST = ['inBrush', 'outOfBrush'];
     var DISPATCH_METHOD = '__ecBrushSelect';
     var DISPATCH_FLAG = '__ecInBrushSelectEvent';
+    var PRIORITY_BRUSH = echarts.PRIORITY.VISUAL.BRUSH;
+
+    /**
+     * Layout for visual, the priority higher than other layout, and before brush visual.
+     */
+    echarts.registerLayout(PRIORITY_BRUSH, function (ecModel, api, payload) {
+        helper.convertCoordRanges(ecModel);
+    });
 
     /**
      * Register the visual encoding if this modules required.
      */
-    echarts.registerVisual(echarts.PRIORITY.VISUAL.BRUSH, function (ecModel, api, payload) {
+    echarts.registerVisual(PRIORITY_BRUSH, function (ecModel, api, payload) {
 
         var brushSelected = [];
         var throttleType;
@@ -48,7 +57,7 @@ define(function (require) {
             // Add boundingRect and selectors to range.
             var brushRanges = zrUtil.map(brushModel.brushRanges, function (brushRange) {
                 return bindSelector(
-                    zrUtil.extend(
+                    zrUtil.defaults(
                         {boundingRect: boundingRectBuilders[brushRange.brushType](brushRange)},
                         brushRange
                     )

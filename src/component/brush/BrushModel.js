@@ -91,7 +91,7 @@ define(function(require) {
             if (__DEV__) {
                 zrUtil.assert(zrUtil.isArray(brushRanges));
                 zrUtil.each(brushRanges, function (brushRange) {
-                    zrUtil.assert(brushRange.brushType && brushRange.range, 'Illegal brushRanges');
+                    zrUtil.assert(brushRange.brushType, 'Illegal brushRanges');
                 });
             }
 
