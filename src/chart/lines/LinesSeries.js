@@ -20,11 +20,16 @@ define(function (require) {
                 var coords = [
                     itemOpt[0].coord, itemOpt[1].coord
                 ];
-                return zrUtil.mergeAll([{
-                    fromName: itemOpt[0].name,
-                    toName: itemOpt[1].name,
+                var target = {
                     coords: coords
-                }, itemOpt[0], itemOpt[1]]);
+                };
+                if (itemOpt[0].name) {
+                    target.fromName = itemOpt[0].name;
+                }
+                if (itemOpt[1].name) {
+                    target.toName = itemOpt[1].name;
+                }
+                return zrUtil.mergeAll([target, itemOpt[0], itemOpt[1]]);
             });
         }
     }
@@ -59,8 +64,20 @@ define(function (require) {
             }
 
             var lineData = new List(['value'], this);
-
-            lineData.initData(option.data);
+            lineData.hasItemOption = false;
+            lineData.initData(option.data, [], function (dataItem, dimName, dataIndex, dimIndex) {
+                // dataItem is simply coords
+                if (dataItem instanceof Array) {
+                    return NaN;
+                }
+                else {
+                    lineData.hasItemOption = true;
+                    var value = dataItem.value;
+                    if (value) {
+                        return value instanceof Array ? value[dimIndex] : value;
+                    }
+                }
+            });
 
             return lineData;
         },

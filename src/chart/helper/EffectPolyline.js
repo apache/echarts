@@ -14,8 +14,8 @@ define(function (require) {
      * @extends {module:echarts/chart/helper/EffectLine}
      * @alias {module:echarts/chart/helper/Polyline}
      */
-    function EffectPolyline(lineData, idx) {
-        EffectLine.call(this, lineData, idx);
+    function EffectPolyline(lineData, idx, seriesScope) {
+        EffectLine.call(this, lineData, idx, seriesScope);
         this._lastFrame = 0;
         this._lastFramePercent = 0;
     }
@@ -23,8 +23,8 @@ define(function (require) {
     var effectPolylineProto = EffectPolyline.prototype;
 
     // Overwrite
-    effectPolylineProto.createLine = function (lineData, idx) {
-        return new Polyline(lineData, idx);
+    effectPolylineProto.createLine = function (lineData, idx, seriesScope) {
+        return new Polyline(lineData, idx, seriesScope);
     };
 
     // Overwrite

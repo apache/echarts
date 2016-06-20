@@ -17,18 +17,18 @@ define(function (require) {
      * @extends {module:zrender/graphic/Group}
      * @alias {module:echarts/chart/helper/Line}
      */
-    function EffectLine(lineData, idx) {
+    function EffectLine(lineData, idx, seriesScope) {
         graphic.Group.call(this);
 
-        this.add(this.createLine(lineData, idx));
+        this.add(this.createLine(lineData, idx, seriesScope));
 
         this._updateEffectSymbol(lineData, idx);
     }
 
     var effectLineProto = EffectLine.prototype;
 
-    effectLineProto.createLine = function (lineData, idx) {
-        return new Line(lineData, idx);
+    effectLineProto.createLine = function (lineData, idx, seriesScope) {
+        return new Line(lineData, idx, seriesScope);
     };
 
     effectLineProto._updateEffectSymbol = function (lineData, idx) {
@@ -149,8 +149,8 @@ define(function (require) {
         ];
     };
 
-    effectLineProto.updateData = function (lineData, idx) {
-        this.childAt(0).updateData(lineData, idx);
+    effectLineProto.updateData = function (lineData, idx, seriesScope) {
+        this.childAt(0).updateData(lineData, idx, seriesScope);
         this._updateEffectSymbol(lineData, idx);
     };
 
