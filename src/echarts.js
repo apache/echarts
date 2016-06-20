@@ -905,7 +905,7 @@ define(function (require) {
             if (needProgressive) {
                 chartView.group.traverse(function (el) {
                     // FIXME marker and other components
-                    if (el.type !== 'group') {
+                    if (!el.isGroup) {
                         el.progressive = needProgressive ?
                             Math.floor(elCount++ / frameDrawNum) : -1;
                         if (needProgressive) {
@@ -914,12 +914,28 @@ define(function (require) {
                     }
                 });
             }
+
+            // Blend configration
+            var blendMode = seriesModel.get('blendMode');
+            if (__DEV__) {
+                if (!env.canvasSupported && blendMode && blendMode !== 'source-over') {
+                    console.warn('Only canvas support blendMode');
+                }
+            }
+            if (blendMode) {
+                chartView.group.traverse(function (el) {
+                    // FIXME marker and other components
+                    if (!el.isGroup) {
+                        el.setStyle('blend', blendMode);
+                    }
+                });
+            }
         }, this);
 
         // If use hover layer
         if (elCountAll > ecModel.get('hoverLayerThreshold') && !env.node) {
             this._zr.storage.traverse(function (el) {
-                if (el.type !== 'group') {
+                if (!el.isGroup) {
                     el.useHoverLayer = true;
                 }
             });

@@ -29,6 +29,12 @@ define(function () {
             fontStyle: 'normal',
             fontWeight: 'normal'
         },
+
+        // http://blogs.adobe.com/webplatform/2014/02/24/using-blend-modes-in-html-canvas/
+        // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
+        // Default is source-over
+        blendMode: null,
+
         animation: true,
         animationDuration: 1000,
         animationDurationUpdate: 300,
