@@ -56,6 +56,8 @@ define(function (require) {
 
             top: 'center',
 
+            silent: false,
+
             // 自适应
             // width:,
             // height:,
