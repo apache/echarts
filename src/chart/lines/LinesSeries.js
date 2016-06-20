@@ -7,11 +7,46 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var CoordinateSystem = require('../../CoordinateSystem');
 
-    return SeriesModel.extend({
+    // Convert [ [{coord: []}, {coord: []}] ]
+    // to [ { coords: [[]] } ]
+    function preprocessOption (seriesOpt) {
+        var data = seriesOpt.data;
+        if (data && data[0] && data[0][0] && data[0][0].coord) {
+            if (__DEV__) {
+                console.warn('Lines data configuration has been changed to'
+                    + ' { coords:[[1,2],[2,3]] }');
+            }
+            seriesOpt.data = zrUtil.map(data, function (itemOpt) {
+                var coords = [
+                    itemOpt[0].coord, itemOpt[1].coord
+                ];
+                return zrUtil.mergeAll([{
+                    fromName: itemOpt[0].name,
+                    toName: itemOpt[1].name,
+                    coords: coords
+                }, itemOpt[0], itemOpt[1]]);
+            });
+        }
+    }
+
+    var LinesSeries = SeriesModel.extend({
 
         type: 'series.lines',
 
         dependencies: ['grid', 'polar'],
+
+        init: function (option) {
+            // Not using preprocessor because mergeOption may not have series.type
+            preprocessOption(option);
+
+            LinesSeries.superApply(this, 'init', arguments);
+        },
+
+        mergeOption: function (option) {
+            preprocessOption(option);
+
+            LinesSeries.superApply(this, 'mergeOption', arguments);
+        },
 
         getInitialData: function (option, ecModel) {
             if (__DEV__) {
@@ -58,7 +93,7 @@ define(function (require) {
                 show: false,
                 period: 4,
                 // Animation delay. support callback
-                delay: 1,
+                // delay: 0,
                 // If move with constant speed px/sec
                 // period will be ignored if this property is > 0,
                 constantSpeed: 0,
