@@ -124,13 +124,10 @@ define(function (require) {
         var itemModel = data.getItemModel(idx);
 
         var point;
-        var xPx = itemModel.get('x');
-        var yPx = itemModel.get('y');
-        if (xPx != null && yPx != null) {
-            point = [
-                numberUtil.parsePercent(xPx, api.getWidth()),
-                numberUtil.parsePercent(yPx, api.getHeight())
-            ];
+        var xPx = numberUtil.parsePercent(itemModel.get('x'), api.getWidth());
+        var yPx = numberUtil.parsePercent(itemModel.get('y'), api.getHeight());
+        if (!isNaN(xPx) && !isNaN(yPx)) {
+            point = [xPx, yPx];
         }
         else {
             // Chart like bar may have there own marker positioning logic
@@ -165,6 +162,14 @@ define(function (require) {
                 else if (isInifinity(data.get(dims[1], idx))) {
                     point[1] = yAxis.toGlobalCoord(yAxis.getExtent()[isFrom ? 0 : 1]);
                 }
+            }
+
+            // Use x, y if has any
+            if (!isNaN(xPx)) {
+                point[0] = xPx;
+            }
+            if (!isNaN(yPx)) {
+                point[1] = yPx;
             }
         }
 
@@ -340,6 +345,7 @@ define(function (require) {
         lineData.initData(
             zrUtil.map(optData, function (item) { return item[2]; })
         );
+        lineData.hasItemOption = true;
         return {
             from: fromData,
             to: toData,

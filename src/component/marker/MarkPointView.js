@@ -13,8 +13,8 @@ define(function (require) {
         mpData.each(function (idx) {
             var itemModel = mpData.getItemModel(idx);
             var point;
-            var xPx = numberUtil.parsePercent(itemModel.getShallow('x'), api.getWidth());
-            var yPx = numberUtil.parsePercent(itemModel.getShallow('y'), api.getHeight());
+            var xPx = numberUtil.parsePercent(itemModel.get('x'), api.getWidth());
+            var yPx = numberUtil.parsePercent(itemModel.get('y'), api.getHeight());
             if (!isNaN(xPx) && !isNaN(yPx)) {
                 point = [xPx, yPx];
             }
