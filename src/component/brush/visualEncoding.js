@@ -134,18 +134,22 @@ define(function (require) {
 
         });
 
-        dispatchAction(api, throttleType, throttleDelay, brushSelected);
+        dispatchAction(api, throttleType, throttleDelay, brushSelected, payload);
     });
 
-    function dispatchAction(api, throttleType, throttleDelay, brushSelected) {
-        // This event is always triggered, rather than triggered only when selected
-        // changed. The latter way might help user to reduce unnecessary view update
-        // in listener of this event and improve performance, but sometimes it is not
-        // obvious (always has changes when data dense), and probably it is difficult
-        // to diff the selected data precisely only by dataIndex records. For
-        // example, considering this event will be triggered when setOption called,
-        // user may change values in series.data, but keep dataIndex the same. So
-        // the diff work is left to user, if it is necessary.
+    function dispatchAction(api, throttleType, throttleDelay, brushSelected, payload) {
+        // This event will not be triggered when `setOpion`, otherwise dead lock may
+        // triggered when do `setOption` in event listener, which we do not find
+        // satisfactory way to solve yet. Some considered resolutions:
+        // (a) Diff with prevoius selected data ant only trigger event when changed.
+        // But store previous data and diff precisely (i.e., not only by dataIndex, but
+        // also detect value changes in selected data) might bring complexity or fragility.
+        // (b) Use spectial param like `silent` to suppress event triggering.
+        // But such kind of volatile param may be weird in `setOption`.
+        if (!payload) {
+            return;
+        }
+
         var zr = api.getZr();
         if (zr[DISPATCH_FLAG]) {
             return;
@@ -193,6 +197,13 @@ define(function (require) {
                 sels[brushType] = selectorsByElementType[brushSelector];
             });
             return sels;
+        }
+        else if (zrUtil.isFunction(brushSelector)) {
+            var bSelector = {};
+            zrUtil.each(selector, function (sel, brushType) {
+                bSelector[brushType] = brushSelector;
+            });
+            return bSelector;
         }
         return brushSelector;
     }

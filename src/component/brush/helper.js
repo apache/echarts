@@ -16,13 +16,14 @@ define(function(require) {
                 each(COORD_NAMES, function (coordName) {
                     var coordIndex = brushRange[coordName + 'Index'];
                     var coordRange = brushRange[coordName + 'Range'];
-                    if (coordIndex >= 0 && coordRange) {
-                        var coordModel = ecModel.getComponent(coordName, coordIndex);
-                        brushRange.range = coordModel
-                            ? coordConvert[brushRange.brushType](
-                                'dataToPoint', coordModel.coordinateSystem, coordRange
-                            )
-                            : [];
+                    var coordModel;
+                    if (coordIndex >= 0
+                        && coordRange
+                        && (coordModel = ecModel.getComponent(coordName, coordIndex))
+                    ) {
+                        brushRange.range = coordConvert[brushRange.brushType](
+                            'dataToPoint', coordModel.coordinateSystem, coordRange
+                        );
                     }
                 });
             });

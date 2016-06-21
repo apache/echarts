@@ -337,7 +337,6 @@ define(function (require) {
             function remove(oldIndex) {
                 controller.group.remove(oldCovers[oldIndex]);
             }
-
         },
 
         unmount: function () {
@@ -590,6 +589,7 @@ define(function (require) {
         var thisGroup = controller.group;
         var localD = thisGroup.transformCoordToLocal(dx, dy);
         var localZero = thisGroup.transformCoordToLocal(0, 0);
+
         return [localD[0] - localZero[0], localD[1] - localZero[1]];
     }
 

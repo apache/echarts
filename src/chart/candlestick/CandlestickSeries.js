@@ -81,6 +81,10 @@ define(function(require) {
             }, this);
 
             return encodeHTML(this.name) + '<br />' + valueHTMLArr.join('<br />');
+        },
+
+        brushSelector: function (itemLayout, selectors, brushRange) {
+            return selectors.rect(itemLayout.brushRect);
         }
 
     });

@@ -51,7 +51,8 @@ define(function (require) {
                     initBaseline: openVal > closeVal
                         ? ocHighPoint[constDim] : ocLowPoint[constDim], // open point.
                     bodyEnds: bodyEnds,
-                    whiskerEnds: whiskerEnds
+                    whiskerEnds: whiskerEnds,
+                    brushRect: makeBrushRect()
                 });
 
                 function getPoint(val) {
@@ -71,6 +72,21 @@ define(function (require) {
                     start
                         ? bodyEnds.push(point1, point2)
                         : bodyEnds.push(point2, point1);
+                }
+
+                function makeBrushRect() {
+                    var pmin = getPoint(Math.min(openVal, closeVal, lowestVal, highestVal));
+                    var pmax = getPoint(Math.max(openVal, closeVal, lowestVal, highestVal));
+
+                    pmin[variableDim] -= candleWidth / 2;
+                    pmax[variableDim] -= candleWidth / 2;
+
+                    return {
+                        x: pmin[0],
+                        y: pmin[1],
+                        width: constDim ? candleWidth : pmax[0] - pmin[0],
+                        height: constDim ? pmax[1] - pmin[1] : candleWidth
+                    };
                 }
 
             }, true);

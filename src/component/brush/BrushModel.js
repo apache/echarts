@@ -28,8 +28,6 @@ define(function(require) {
             gridIndex: null,        //
             geoIndex: null,         //
 
-            brushRanges: null,      // Array.<Object>, Initial brushRanges, which is not persistent.
-
             brushType: 'rect',      // Default brushType, see BrushController.
             brushMode: 'single',    // Default brushMode, 'single' or 'multiple'
             transformable: true,    // Default transformable.
@@ -72,20 +70,9 @@ define(function(require) {
         brushOption: {},
 
         /**
-         * @override
-         */
-        optionUpdated: function (newOption, isInit) {
-            var thisOption = this.option;
-            var initBrushRanges = thisOption.brushRanges;
-
-            // Should not keep it, considering setOption next time.
-            thisOption.brushRanges = null;
-
-            initBrushRanges && this.setBrushRanges(initBrushRanges);
-        },
-
-        /**
-         * @param {Array.<Object>} ranges
+         * If ranges is null/undefined, range state remain.
+         *
+         * @param {Array.<Object>} [ranges]
          */
         setBrushRanges: function (brushRanges) {
             if (__DEV__) {
@@ -93,6 +80,13 @@ define(function(require) {
                 zrUtil.each(brushRanges, function (brushRange) {
                     zrUtil.assert(brushRange.brushType, 'Illegal brushRanges');
                 });
+            }
+
+            // If ranges is null/undefined, range state remain.
+            // This helps user to dispatchAction({type: 'brush'}) with no brushRanges
+            // set but just want to get the current brush select info from a `brush` event.
+            if (!brushRanges) {
+                return;
             }
 
             this.brushRanges = zrUtil.map(brushRanges, function (brushRange) {
