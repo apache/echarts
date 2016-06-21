@@ -424,6 +424,7 @@ define(function (require) {
     function updateZ(group) {
         group.traverse(function (el) {
             el.z = COVER_Z;
+            el.z2 = COVER_Z; // Consider in given container.
         });
     }
 
@@ -514,30 +515,97 @@ define(function (require) {
         return [track[0], track[tail]];
     }
 
-    function createBaseRect(controller, cover, brushOption) {
+    function createBaseRectCover(doDrift, controller, brushOption, edgeNames) {
+        var cover = new graphic.Group();
+
         cover.add(new graphic.Rect({
             name: 'rect',
             style: makeStyle(brushOption),
             silent: true,
             draggable: true,
             cursor: 'move',
-            drift: curry(driftRect, controller, cover, 'nswe'),
+            drift: curry(doDrift, controller, cover, 'nswe'),
             ondragend: curry(trigger, controller, {isEnd: true})
         }));
+
+        each(
+            edgeNames,
+            function (name) {
+                cover.add(new graphic.Rect({
+                    name: name,
+                    style: {opacity: 0},
+                    draggable: true,
+                    silent: true,
+                    invisible: true,
+                    drift: curry(doDrift, controller, cover, name),
+                    ondragend: curry(trigger, controller, {isEnd: true})
+                }));
+            }
+        );
+
+        return cover;
+    }
+
+    function updateBaseRect(cover, localRange, brushOption) {
+        var lineWidth = brushOption.brushStyle.lineWidth || 0;
+        var handleSize = mathMax(lineWidth, MIN_RESIZE_LINE_WIDTH);
+        var x = localRange[0][0];
+        var y = localRange[1][0];
+        var xa = x - lineWidth / 2;
+        var ya = y - lineWidth / 2;
+        var x2 = localRange[0][1];
+        var y2 = localRange[1][1];
+        var x2a = x2 - handleSize + lineWidth / 2;
+        var y2a = y2 - handleSize + lineWidth / 2;
+        var width = x2 - x;
+        var height = y2 - y;
+        var widtha = width + lineWidth;
+        var heighta = height + lineWidth;
+
+        updateRectShape(cover, 'rect', x, y, width, height);
+
+        if (brushOption.transformable) {
+            updateRectShape(cover, 'w', xa, ya, handleSize, heighta);
+            updateRectShape(cover, 'e', x2a, ya, handleSize, heighta);
+            updateRectShape(cover, 'n', xa, ya, widtha, handleSize);
+            updateRectShape(cover, 's', xa, y2a, widtha, handleSize);
+
+            updateRectShape(cover, 'nw', xa, ya, handleSize, handleSize);
+            updateRectShape(cover, 'ne', x2a, ya, handleSize, handleSize);
+            updateRectShape(cover, 'sw', xa, y2a, handleSize, handleSize);
+            updateRectShape(cover, 'se', x2a, y2a, handleSize, handleSize);
+        }
     }
 
     function updateCommon(controller, cover) {
         var brushOption = cover.__brushOption;
-        cover.childAt(0).useStyle(makeStyle(brushOption));
         var transformable = brushOption.transformable;
-        cover.childAt(0).attr({
+
+        var mainEl = cover.childAt(0);
+        mainEl.useStyle(makeStyle(brushOption));
+        mainEl.attr({
             silent: !transformable,
             cursor: transformable ? 'move' : 'default'
         });
+
+        each(
+            ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw'],
+            function (name) {
+                var el = cover.childOfName(name);
+                var globalDir = getGlobalDirection(controller, name);
+
+                el && el.attr({
+                    silent: !transformable,
+                    invisible: !transformable,
+                    cursor: transformable ? CURSOR_MAP[globalDir] + '-resize' : null
+                });
+            }
+        );
     }
 
     function updateRectShape(cover, name, x, y, w, h) {
-        cover.childOfName(name).setShape({x: x, y: y, width: w, height: h});
+        var el = cover.childOfName(name);
+        el && el.setShape({x: x, y: y, width: w, height: h});
     }
 
     function makeStyle(brushOption) {
@@ -554,9 +622,33 @@ define(function (require) {
         ];
     }
 
-    function driftRect(controller, cover, name, dx, dy) {
+    function getTransform(controller) {
+        return graphic.getTransform(controller.group);
+    }
+
+    function getGlobalDirection(controller, localDirection) {
+        if (localDirection.length > 1) {
+            localDirection = localDirection.split('');
+            var globalDir = [
+                getGlobalDirection(controller, localDirection[0]),
+                getGlobalDirection(controller, localDirection[1])
+            ];
+            (globalDir[0] === 'e' || globalDir[0] === 'w') && globalDir.reverse();
+            return globalDir.join('');
+        }
+        else {
+            var map = {w: 'left', e: 'right', n: 'top', s: 'bottom'};
+            var inverseMap = {left: 'w', right: 'e', top: 'n', bottom: 's'};
+            var globalDir = graphic.transformDirection(
+                map[localDirection], getTransform(controller)
+            );
+            return inverseMap[globalDir];
+        }
+    }
+
+    function driftRect(toRectRange, fromRectRange, controller, cover, name, dx, dy) {
         var brushOption = cover.__brushOption;
-        var rectRange = brushOption.range;
+        var rectRange = toRectRange(brushOption.range);
         var localDelta = toLocalDelta(controller, dx, dy);
 
         each(name.split(''), function (namePart) {
@@ -564,9 +656,9 @@ define(function (require) {
             rectRange[ind[0]][ind[1]] += localDelta[ind[0]];
         });
 
-        brushOption.range = formatRectRange(
+        brushOption.range = fromRectRange(formatRectRange(
             rectRange[0][0], rectRange[1][0], rectRange[0][1], rectRange[1][1]
-        );
+        ));
 
         updateCoverAfterCreation(controller, cover);
         trigger(controller, {isEnd: false});
@@ -701,80 +793,35 @@ define(function (require) {
      */
     var coverRenderers = {
 
-        lineX: getLineRender(0),
+        lineX: getLineRenderer(0),
 
-        lineY: getLineRender(1),
+        lineY: getLineRenderer(1),
 
         rect: {
             createCover: function (controller, brushOption) {
-                var cover = new graphic.Group();
-
-                createBaseRect(controller, cover, brushOption);
-
-                each(
-                    ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw'],
-                    function (name) {
-                        cover.add(new graphic.Rect({
-                            name: name,
-                            __cursor: CURSOR_MAP[name] + '-resize',
-                            style: {opacity: 0},
-                            draggable: true,
-                            drift: curry(driftRect, controller, cover, name),
-                            ondragend: curry(trigger, controller, {isEnd: true})
-                        }));
-                    }
+                return createBaseRectCover(
+                    curry(
+                        driftRect,
+                        function (range) {
+                            return range;
+                        },
+                        function (range) {
+                            return range;
+                        }
+                    ),
+                    controller,
+                    brushOption,
+                    ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw']
                 );
-
-                return cover;
             },
             getCreatingRange: function (localTrack) {
                 var ends = getTrackEnds(localTrack);
                 return formatRectRange(ends[1][0], ends[1][1], ends[0][0], ends[0][1]);
             },
             updateCoverShape: function (controller, cover, localRange, brushOption) {
-                var lineWidth = brushOption.brushStyle.lineWidth || 0;
-                var handleSize = mathMax(lineWidth, MIN_RESIZE_LINE_WIDTH);
-                var x = localRange[0][0];
-                var y = localRange[1][0];
-                var xa = x - lineWidth / 2;
-                var ya = y - lineWidth / 2;
-                var x2 = localRange[0][1];
-                var y2 = localRange[1][1];
-                var x2a = x2 - handleSize + lineWidth / 2;
-                var y2a = y2 - handleSize + lineWidth / 2;
-                var width = x2 - x;
-                var height = y2 - y;
-                var widtha = width + lineWidth;
-                var heighta = height + lineWidth;
-
-                updateRectShape(cover, 'rect', x, y, width, height);
-
-                if (brushOption.transformable) {
-                    updateRectShape(cover, 'w', xa, ya, handleSize, heighta);
-                    updateRectShape(cover, 'e', x2a, ya, handleSize, heighta);
-                    updateRectShape(cover, 'n', xa, ya, widtha, handleSize);
-                    updateRectShape(cover, 's', xa, y2a, widtha, handleSize);
-
-                    updateRectShape(cover, 'nw', xa, ya, handleSize, handleSize);
-                    updateRectShape(cover, 'ne', x2a, ya, handleSize, handleSize);
-                    updateRectShape(cover, 'sw', xa, y2a, handleSize, handleSize);
-                    updateRectShape(cover, 'se', x2a, y2a, handleSize, handleSize);
-                }
+                updateBaseRect(cover, localRange, brushOption);
             },
-            updateCommon: function (controller, cover) {
-                updateCommon(controller, cover);
-                var transformable = cover.__brushOption.transformable;
-                each(
-                    ['w', 'e', 'n', 's', 'se', 'sw', 'ne', 'nw'],
-                    function (name) {
-                        var el = cover.childOfName(name);
-                        el.attr({
-                            silent: !transformable,
-                            cursor: transformable ? el.__cursor : 'default'
-                        });
-                    }
-                );
-            }
+            updateCommon: updateCommon
         },
 
         polygon: {
@@ -809,14 +856,25 @@ define(function (require) {
         }
     };
 
-    function getLineRender(xyIndex) {
+    function getLineRenderer(xyIndex) {
         return {
             createCover: function (controller, brushOption) {
-                var cover = new graphic.Group();
-
-                createBaseRect(controller, cover, brushOption);
-
-                return cover;
+                return createBaseRectCover(
+                    curry(
+                        driftRect,
+                        function (range) {
+                            var rectRange = [range, [0, 100]];
+                            xyIndex && rectRange.reverse();
+                            return rectRange;
+                        },
+                        function (rectRange) {
+                            return rectRange[xyIndex];
+                        }
+                    ),
+                    controller,
+                    brushOption,
+                    [['w', 'e'], ['n', 's']][xyIndex]
+                );
             },
             getCreatingRange: function (localTrack) {
                 var ends = getTrackEnds(localTrack);
@@ -827,18 +885,10 @@ define(function (require) {
             },
             updateCoverShape: function (controller, cover, localRange, brushOption) {
                 var t = brushOption.brushStyle.width;
+                var rectRange = [localRange, [-t / 2, t / 2]];
+                xyIndex && rectRange.reverse();
 
-                var x = [localRange[0], -t / 2];
-                var y = [-t / 2, localRange[0]];
-                var width = [localRange[1] - localRange[0], t];
-                var height = [t, localRange[1] - localRange[0]];
-
-                cover.childOfName('rect').setShape({
-                    x: x[xyIndex],
-                    y: y[xyIndex],
-                    width: width[xyIndex],
-                    height: height[xyIndex]
-                });
+                updateBaseRect(cover, rectRange, brushOption);
             },
             updateCommon: updateCommon
         };
