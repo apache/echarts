@@ -139,7 +139,7 @@
                                 label: {
                                     normal: {
                                         formatter: function (param) {
-                                            return param.name + ' ' + param.value;
+                                            return param.name + ' ' + (param.value || '');
                                         },
                                         textStyle: {
                                             color: '#000'
@@ -179,6 +179,11 @@
                                         name: '平均值',
                                         type: 'average',
                                         value: 1
+                                    },
+                                    {
+                                        name: 'Y轴固定',
+                                        xAxis: 'max',
+                                        y: 100
                                     }
                                 ]
                             }

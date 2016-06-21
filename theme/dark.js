@@ -90,6 +90,11 @@
                 color: contrastColor
             }
         },
+        visualMap: {
+            textStyle: {
+                color: contrastColor
+            }
+        },
         timeline: {
             lineStyle: {
                 color: contrastColor

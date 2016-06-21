@@ -33,7 +33,7 @@
                     return (Math.random() * max).toFixed(3);
                 }
 
-                for (var i = 0; i < 30; i++) {
+                for (var i = 0; i < 50; i++) {
                     data1.push([random(5), random(5), random(2)]);
                     data2.push([random(10), random(10), random(2)]);
                     data3.push([random(15), random(10), random(2)]);
@@ -47,7 +47,8 @@
                         left: 'left',
                         feature: {
                             dataView: {},
-                            saveAsImage: {}
+                            saveAsImage: {},
+                            dataZoom: {}
                         }
                     },
                     tooltip: {

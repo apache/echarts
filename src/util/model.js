@@ -193,7 +193,10 @@ define(function(require) {
      * @param {string|number|Date|Array|Object} dataItem
      */
     modelUtil.isDataItemOption = function (dataItem) {
-        return zrUtil.isObject(dataItem) && !(dataItem instanceof Array);
+        return zrUtil.isObject(dataItem)
+            && !(dataItem instanceof Array);
+            // // markLine data can be array
+            // && !(dataItem[0] && zrUtil.isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
     };
 
     /**
@@ -219,6 +222,7 @@ define(function(require) {
             ? NaN : +value; // If string (like '-'), using '+' parse to NaN
     };
 
+    // PENDING A little ugly
     modelUtil.dataFormatMixin = {
         /**
          * Get params for formatter

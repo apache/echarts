@@ -7,11 +7,53 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var CoordinateSystem = require('../../CoordinateSystem');
 
-    return SeriesModel.extend({
+    // Convert [ [{coord: []}, {coord: []}] ]
+    // to [ { coords: [[]] } ]
+    function preprocessOption (seriesOpt) {
+        var data = seriesOpt.data;
+        if (data && data[0] && data[0][0] && data[0][0].coord) {
+            if (__DEV__) {
+                console.warn('Lines data configuration has been changed to'
+                    + ' { coords:[[1,2],[2,3]] }');
+            }
+            seriesOpt.data = zrUtil.map(data, function (itemOpt) {
+                var coords = [
+                    itemOpt[0].coord, itemOpt[1].coord
+                ];
+                var target = {
+                    coords: coords
+                };
+                if (itemOpt[0].name) {
+                    target.fromName = itemOpt[0].name;
+                }
+                if (itemOpt[1].name) {
+                    target.toName = itemOpt[1].name;
+                }
+                return zrUtil.mergeAll([target, itemOpt[0], itemOpt[1]]);
+            });
+        }
+    }
+
+    var LinesSeries = SeriesModel.extend({
 
         type: 'series.lines',
 
         dependencies: ['grid', 'polar'],
+
+        visualColorAccessPath: 'lineStyle.normal.color',
+
+        init: function (option) {
+            // Not using preprocessor because mergeOption may not have series.type
+            preprocessOption(option);
+
+            LinesSeries.superApply(this, 'init', arguments);
+        },
+
+        mergeOption: function (option) {
+            preprocessOption(option);
+
+            LinesSeries.superApply(this, 'mergeOption', arguments);
+        },
 
         getInitialData: function (option, ecModel) {
             if (__DEV__) {
@@ -22,8 +64,20 @@ define(function (require) {
             }
 
             var lineData = new List(['value'], this);
-
-            lineData.initData(option.data);
+            lineData.hasItemOption = false;
+            lineData.initData(option.data, [], function (dataItem, dimName, dataIndex, dimIndex) {
+                // dataItem is simply coords
+                if (dataItem instanceof Array) {
+                    return NaN;
+                }
+                else {
+                    lineData.hasItemOption = true;
+                    var value = dataItem.value;
+                    if (value) {
+                        return value instanceof Array ? value[dimIndex] : value;
+                    }
+                }
+            });
 
             return lineData;
         },
@@ -57,6 +111,11 @@ define(function (require) {
             effect: {
                 show: false,
                 period: 4,
+                // Animation delay. support callback
+                // delay: 0,
+                // If move with constant speed px/sec
+                // period will be ignored if this property is > 0,
+                constantSpeed: 0,
                 symbol: 'circle',
                 symbolSize: 3,
                 loop: true,
@@ -71,7 +130,7 @@ define(function (require) {
             largeThreshold: 2000,
 
             // If lines are polyline
-            // polyline not support effect, curveness, label, animation
+            // polyline not support curveness, label, animation
             polyline: false,
 
             label: {

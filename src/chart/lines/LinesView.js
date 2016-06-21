@@ -4,6 +4,7 @@ define(function (require) {
     var EffectLine = require('../helper/EffectLine');
     var Line = require('../helper/Line');
     var Polyline = require('../helper/Polyline');
+    var EffectPolyline = require('../helper/EffectPolyline');
 
     require('../../echarts').extendChartView({
 
@@ -22,7 +23,9 @@ define(function (require) {
                     lineDraw.remove();
                 }
                 lineDraw = this._lineDraw = new LineDraw(
-                    hasEffect ? EffectLine : (isPolyline ? Polyline : Line)
+                    isPolyline
+                        ? (hasEffect ? EffectPolyline : Polyline)
+                        : (hasEffect ? EffectLine : Line)
                 );
                 this._hasEffet = hasEffect;
                 this._isPolyline = isPolyline;

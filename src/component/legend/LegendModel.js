@@ -51,7 +51,8 @@ define(function(require) {
 
         _updateData: function (ecModel) {
             var legendData = zrUtil.map(this.get('data') || [], function (dataItem) {
-                if (typeof dataItem === 'string') {
+                // Can be string or number
+                if (typeof dataItem === 'string' || typeof dataItem === 'number') {
                     dataItem = {
                         name: dataItem
                     };

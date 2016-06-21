@@ -169,10 +169,10 @@ define(function (require) {
      * @extends {module:zrender/graphic/Group}
      * @alias {module:echarts/chart/helper/Line}
      */
-    function Line(lineData, idx) {
+    function Line(lineData, idx, seriesScope) {
         graphic.Group.call(this);
 
-        this._createLine(lineData, idx);
+        this._createLine(lineData, idx, seriesScope);
     }
 
     var lineProto = Line.prototype;
@@ -180,7 +180,7 @@ define(function (require) {
     // Update symbol position and rotation
     lineProto.beforeUpdate = updateSymbolAndLabelBeforeLineUpdate;
 
-    lineProto._createLine = function (lineData, idx) {
+    lineProto._createLine = function (lineData, idx, seriesScope) {
         var seriesModel = lineData.hostModel;
         var linePoints = lineData.getItemLayout(idx);
 
@@ -208,10 +208,10 @@ define(function (require) {
             this[makeSymbolTypeKey(symbolCategory)] = lineData.getItemVisual(idx, symbolCategory);
         }, this);
 
-        this._updateCommonStl(lineData, idx);
+        this._updateCommonStl(lineData, idx, seriesScope);
     };
 
-    lineProto.updateData = function (lineData, idx) {
+    lineProto.updateData = function (lineData, idx, seriesScope) {
         var seriesModel = lineData.hostModel;
 
         var line = this.childOfName('line');
@@ -227,28 +227,37 @@ define(function (require) {
             var key = makeSymbolTypeKey(symbolCategory);
             // Symbol changed
             if (this[key] !== symbolType) {
-                var symbol = createSymbol(symbolCategory, lineData, idx);
                 this.remove(this.childOfName(symbolCategory));
+                var symbol = createSymbol(symbolCategory, lineData, idx);
                 this.add(symbol);
             }
             this[key] = symbolType;
         }, this);
 
-        this._updateCommonStl(lineData, idx);
+        this._updateCommonStl(lineData, idx, seriesScope);
     };
 
-    lineProto._updateCommonStl = function (lineData, idx) {
+    lineProto._updateCommonStl = function (lineData, idx, seriesScope) {
         var seriesModel = lineData.hostModel;
 
         var line = this.childOfName('line');
-        var itemModel = lineData.getItemModel(idx);
 
-        var labelModel = itemModel.getModel('label.normal');
-        var textStyleModel = labelModel.getModel('textStyle');
-        var labelHoverModel = itemModel.getModel('label.emphasis');
-        var textStyleHoverModel = labelHoverModel.getModel('textStyle');
+        var lineStyle = seriesScope && seriesScope.lineStyle;
+        var hoverLineStyle = seriesScope && seriesScope.hoverLineStyle;
+        var labelModel = seriesScope && seriesScope.labelModel;
+        var hoverLabelModel = seriesScope && seriesScope.hoverLabelModel;
 
-        var defaultText = numberUtil.round(seriesModel.getRawValue(idx));
+        // Optimization for large dataset
+        if (!seriesScope || lineData.hasItemOption) {
+            var itemModel = lineData.getItemModel(idx);
+
+            lineStyle = itemModel.getModel('lineStyle.normal').getLineStyle();
+            hoverLineStyle = itemModel.getModel('lineStyle.emphasis').getLineStyle();
+
+            labelModel = itemModel.getModel('label.normal');
+            hoverLabelModel = itemModel.getModel('label.emphasis');
+        }
+
         var visualColor = lineData.getItemVisual(idx, 'color');
         if (isNaN(defaultText)) {
             // Use name
@@ -260,37 +269,57 @@ define(function (require) {
                 fill: 'none',
                 stroke: visualColor
             },
-            itemModel.getModel('lineStyle.normal').getLineStyle()
+            lineStyle
         ));
-        line.hoverStyle = itemModel.getModel('lineStyle.emphasis').getLineStyle();
-        var defaultColor = visualColor || '#000';
-        var label = this.childOfName('label');
-        // label.afterUpdate = lineAfterUpdate;
-        label.setStyle({
-            text: labelModel.get('show')
-                ? zrUtil.retrieve(
-                    seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
-                    defaultText
-                )
-                : '',
-            textFont: textStyleModel.getFont(),
-            fill: textStyleModel.getTextColor() || defaultColor
-        });
-        label.hoverStyle = {
-            text: labelHoverModel.get('show')
-                ? zrUtil.retrieve(
-                    seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
-                    defaultText
-                )
-                : '',
-            textFont: textStyleHoverModel.getFont(),
-            fill: textStyleHoverModel.getTextColor() || defaultColor
-        };
-        label.__textAlign = textStyleModel.get('align');
-        label.__verticalAlign = textStyleModel.get('baseline');
-        label.__position = labelModel.get('position');
+        line.hoverStyle = hoverLineStyle;
 
-        label.ignore = !label.style.text && !label.hoverStyle.text;
+        var showLabel = labelModel.getShallow('show');
+        var hoverShowLabel = hoverLabelModel.getShallow('show');
+        var defaultText;
+        var label = this.childOfName('label');
+        var defaultLabelColor;
+        if (showLabel || hoverShowLabel) {
+            defaultText = numberUtil.round(seriesModel.getRawValue(idx));
+            defaultLabelColor = visualColor || '#000';
+        }
+        // label.afterUpdate = lineAfterUpdate;
+        if (showLabel) {
+            var textStyleModel = labelModel.getModel('textStyle');
+            label.setStyle({
+                text: zrUtil.retrieve(
+                        seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
+                        defaultText
+                    ),
+                textFont: textStyleModel.getFont(),
+                fill: textStyleModel.getTextColor() || defaultLabelColor
+            });
+
+            label.__textAlign = textStyleModel.get('align');
+            label.__verticalAlign = textStyleModel.get('baseline');
+            label.__position = labelModel.get('position');
+        }
+        else {
+            label.setStyle('text', '');
+        }
+        if (hoverShowLabel) {
+            var textStyleHoverModel = hoverLabelModel.getModel('textStyle');
+
+            label.hoverStyle = {
+                text: zrUtil.retrieve(
+                        seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
+                        defaultText
+                    ),
+                textFont: textStyleHoverModel.getFont(),
+                fill: textStyleHoverModel.getTextColor() || defaultLabelColor
+            };
+        }
+        else {
+            label.hoverStyle = {
+                text: ''
+            };
+        }
+
+        label.ignore = !showLabel && !hoverShowLabel;
 
         graphic.setHoverStyle(this);
     };
