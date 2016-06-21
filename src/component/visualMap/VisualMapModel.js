@@ -204,6 +204,17 @@ define(function(require) {
         },
 
         /**
+         * @pubilc
+         */
+        isTargetSeries: function (seriesModel) {
+            var is = false;
+            this.eachTargetSeries(function (model) {
+                model === seriesModel && (is = true);
+            });
+            return is;
+        },
+
+        /**
          * @example
          * this.formatValueText(someVal); // format single numeric value to text.
          * this.formatValueText(someVal, true); // format single category value to text.

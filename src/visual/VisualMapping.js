@@ -26,8 +26,8 @@ define(function (require) {
      *                                            Visual for only each piece can be specified.
      * @param {Array.<string|Object>=} [option.categories] ['cate1', 'cate2']
      *                                            required when mappingMethod is 'category'.
-     *                                            If no option.categories, it represents
-     *                                            categories is [0, 1, 2, ...].
+     *                                            If no option.categories, categories is set
+     *                                            as [0, 1, 2, ...].
      * @param {boolean} [option.loop=false] Whether loop mapping when mappingMethod is 'category'.
      * @param {(Array|Object|*)} [option.visual]  Visual data.
      *                                            when mappingMethod is 'category',
@@ -286,7 +286,7 @@ define(function (require) {
             visualArr.push(visual);
         }
 
-        var doNotNeedPair = {'color': 1, 'symbol': 1};
+        var doNotNeedPair = {color: 1, symbol: 1};
 
         if (!isCategory
             && visualArr.length === 1

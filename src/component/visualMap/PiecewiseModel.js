@@ -210,6 +210,23 @@ define(function(require) {
             }, this);
 
             return result;
+        },
+
+        getStops: function (seriesModel) {
+            var result = [];
+            if (this.isTargetSeries(seriesModel)) {
+                zrUtil.each(this._pieceList, function (piece) {
+                    // Do not support category yet.
+                    var interval = piece.interval;
+                    if (interval) {
+                        result.push({
+                            interval: interval.slice(),
+                            valueState: this.getValueState((interval[0] + interval[1]) / 2)
+                        });
+                    }
+                }, this);
+            }
+            return result;
         }
 
     });
