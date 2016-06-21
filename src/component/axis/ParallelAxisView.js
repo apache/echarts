@@ -65,15 +65,16 @@ define(function (require) {
 
             this.group.add(axisGroup);
 
-            this._refreshBrushController(axisGroup, areaSelectStyle, axisModel);
+            this._refreshBrushController(axisGroup, areaSelectStyle, axisModel, areaWidth);
         },
 
-        _refreshBrushController: function (axisGroup, areaSelectStyle, axisModel) {
+        _refreshBrushController: function (axisGroup, areaSelectStyle, axisModel, areaWidth) {
             // After filtering, axis may change, select area needs to be update.
             var axis = axisModel.axis;
             var coverInfoList = zrUtil.map(axisModel.activeIntervals, function (interval) {
                 return {
                     brushType: 'line',
+                    panelId: 'pl',
                     range: [
                         axis.dataToCoord(interval[0], true),
                         axis.dataToCoord(interval[1], true)
@@ -81,15 +82,25 @@ define(function (require) {
                 };
             });
 
+            var extent = axis.getExtent();
+            var extra = 30; // Arbitrary value.
+            var points = [
+                [extent[0] - extra, -areaWidth / 2],
+                [extent[0] - extra, areaWidth / 2],
+                [extent[1] + extra, areaWidth / 2],
+                [extent[1] + extra, -areaWidth / 2]
+            ];
+
             this._brushController
-                .mount({container: axisGroup, localCoord: true})
+                .mount({container: axisGroup})
                 .setPanels([{
                     panelId: 'pl',
-                    rect: axisGroup.getBoundingRect()
+                    points: points
                 }])
                 .enableBrush({
-                    brushType: 'line',
-                    brushStyle: areaSelectStyle
+                    brushType: 'lineX',
+                    brushStyle: areaSelectStyle,
+                    removeOnClick: true
                 })
                 .updateCovers(coverInfoList);
         },
@@ -109,11 +120,13 @@ define(function (require) {
             // If realtime is true, action is not dispatched on drag end, because
             // the drag end emits the same params with the last drag move event,
             // and may have some delay when using touch pad.
-            (!axisModel.option.realtime === opt.isEnd) && this.api.dispatchAction({ // jshint ignore:line
-                type: 'axisAreaSelect',
-                parallelAxisId: axisModel.id,
-                intervals: intervals
-            });
+            if (!axisModel.option.realtime === opt.isEnd || opt.removeOnClick) { // jshint ignore:line
+                this.api.dispatchAction({
+                    type: 'axisAreaSelect',
+                    parallelAxisId: axisModel.id,
+                    intervals: intervals
+                });
+            }
         },
 
         /**

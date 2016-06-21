@@ -102,10 +102,17 @@ define(function(require) {
 
     var coordConvert = {
 
-        line: function (to, coordSys, coordRange) {
+        lineX: function (to, coordSys, coordRange) {
             return [
                 coordSys[to]([coordRange[0], 0]),
                 coordSys[to]([coordRange[1], 0])
+            ];
+        },
+
+        lineY: function (to, coordSys, coordRange) {
+            return [
+                coordSys[to]([0, coordRange[0]]),
+                coordSys[to]([0, coordRange[1]])
             ];
         },
 

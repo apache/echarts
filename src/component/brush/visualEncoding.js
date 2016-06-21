@@ -221,7 +221,9 @@ define(function (require) {
 
     var boundingRectBuilders = {
 
-        line: zrUtil.noop,
+        lineX: zrUtil.noop,
+
+        lineY: zrUtil.noop,
 
         rect: function (brushRange) {
             return getBoundingRectFromMinMax(brushRange.range);

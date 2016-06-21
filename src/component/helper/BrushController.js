@@ -138,6 +138,9 @@ define(function (require) {
          */
         this._creatingCover;
 
+        // FIXME
+        this._useGlobalCursor;
+
         /**
          * @private
          * @type {boolean}
@@ -208,10 +211,10 @@ define(function (require) {
                     panel = new graphic.Polygon({
                         // FIXME
                         // 这样靠谱么？
-                        // silent: true,
-                        // invisible: true,
+                        silent: true,
+                        invisible: true,
                         style: {
-                            fill: 'rgba(0,0,0,0)'
+                            // fill: 'rgba(0,0,0,0)'
                         },
                         cursor: 'crosshair'
                     });
@@ -250,6 +253,9 @@ define(function (require) {
             }
 
             var container = opt.container;
+
+            // FIXME
+            this._useGlobalCursor = !container;
 
             // Reset container.
             if (!this._container || container !== this._container) {
@@ -363,9 +369,11 @@ define(function (require) {
             userOnRelease && userOnRelease();
         }, controller, brushOption.onRelease);
 
-        // Consider roam, which takes globalPan too.
-        interactionMutex.take(zr, MUTEX_RESOURCE_KEY, controller._uid, onRelease);
-        zr.setDefaultCursorStyle('crosshair');
+        if (controller._useGlobalCursor) {
+            // Consider roam, which takes globalPan too.
+            interactionMutex.take(zr, MUTEX_RESOURCE_KEY, controller._uid, onRelease);
+            zr.setDefaultCursorStyle('crosshair');
+        }
 
         each(controller._handlers, function (handler, eventName) {
             zr.on(eventName, handler);
@@ -378,8 +386,10 @@ define(function (require) {
     function doDisableBrush(controller) {
         var zr = controller._zr;
 
-        interactionMutex.release(zr, MUTEX_RESOURCE_KEY, controller._uid);
-        zr.setDefaultCursorStyle('default');
+        if (controller._useGlobalCursor) {
+            interactionMutex.release(zr, MUTEX_RESOURCE_KEY, controller._uid);
+            zr.setDefaultCursorStyle('default');
+        }
 
         each(controller._handlers, function (handler, eventName) {
             zr.off(eventName, handler);
@@ -407,7 +417,9 @@ define(function (require) {
 
     function updateCoverShape(controller, cover) {
         var brushOption = cover.__brushOption;
-        getCoverRenderer(cover).updateCoverShape(controller, cover, brushOption.range, brushOption);
+        getCoverRenderer(cover).updateCoverShape(
+            controller, cover, brushOption.range, brushOption
+        );
     }
 
     function updateZ(group) {
@@ -546,11 +558,11 @@ define(function (require) {
     function driftRect(controller, cover, name, dx, dy) {
         var brushOption = cover.__brushOption;
         var rectRange = brushOption.range;
-        var delta = [dx, dy];
+        var localDelta = toLocalDelta(controller, dx, dy);
 
         each(name.split(''), function (namePart) {
             var ind = DIRECTION_MAP[namePart];
-            rectRange[ind[0]][ind[1]] += delta[ind[0]];
+            rectRange[ind[0]][ind[1]] += localDelta[ind[0]];
         });
 
         brushOption.range = formatRectRange(
@@ -563,14 +575,22 @@ define(function (require) {
 
     function driftPolygon(controller, cover, dx, dy) {
         var range = cover.__brushOption.range;
+        var localDelta = toLocalDelta(controller, dx, dy);
 
         each(range, function (point) {
-            point[0] += dx;
-            point[1] += dy;
+            point[0] += localDelta[0];
+            point[1] += localDelta[1];
         });
 
         updateCoverAfterCreation(controller, cover);
         trigger(controller, {isEnd: false});
+    }
+
+    function toLocalDelta(controller, dx, dy) {
+        var thisGroup = controller.group;
+        var localD = thisGroup.transformCoordToLocal(dx, dy);
+        var localZero = thisGroup.transformCoordToLocal(0, 0);
+        return [localD[0] - localZero[0], localD[1] - localZero[1]];
     }
 
     function preventDefault(e) {
@@ -587,7 +607,7 @@ define(function (require) {
 
         if (panel || isEnd) { // Outside panel but isEnd, cover creating ends.
 
-            panel && controller._track.push([x, y]);
+            panel && controller._track.push(controller.group.transformCoordToLocal(x, y));
 
             if (shouldShowCover(controller)) {
 
@@ -648,7 +668,7 @@ define(function (require) {
 
                 if (getPanelByPoint(this, x, y)) {
                     this._dragging = true;
-                    this._track = [[x, y]];
+                    this._track = [this.group.transformCoordToLocal(x, y)];
                 }
             }
         },
@@ -681,32 +701,9 @@ define(function (require) {
      */
     var coverRenderers = {
 
-        line: {
-            createCover: function (controller, brushOption) {
-                var cover = new graphic.Group();
+        lineX: getLineRender(0),
 
-                createBaseRect(controller, cover, brushOption);
-
-                return cover;
-            },
-            getCreatingRange: function (track) {
-                var ends = getTrackEnds(track);
-                var min = mathMin(ends[0][0], ends[1][0]);
-                var max = mathMax(ends[0][0], ends[1][0]);
-
-                return [min, max];
-            },
-            updateCoverShape: function (controller, cover, localRange, brushOption) {
-                var width = brushOption.brushStyle.width;
-                cover.childOfName('rect').setShape({
-                    x: localRange[0],
-                    y: -width / 2,
-                    width: localRange[1] - localRange[0],
-                    height: width
-                });
-            },
-            updateCommon: updateCommon
-        },
+        lineY: getLineRender(1),
 
         rect: {
             createCover: function (controller, brushOption) {
@@ -730,8 +727,8 @@ define(function (require) {
 
                 return cover;
             },
-            getCreatingRange: function (track) {
-                var ends = getTrackEnds(track);
+            getCreatingRange: function (localTrack) {
+                var ends = getTrackEnds(localTrack);
                 return formatRectRange(ends[1][0], ends[1][1], ends[0][0], ends[0][1]);
             },
             updateCoverShape: function (controller, cover, localRange, brushOption) {
@@ -793,8 +790,8 @@ define(function (require) {
 
                 return cover;
             },
-            getCreatingRange: function (track) {
-                return track;
+            getCreatingRange: function (localTrack) {
+                return localTrack;
             },
             endCreating: function (controller, cover) {
                 cover.remove(cover.childAt(0));
@@ -811,6 +808,41 @@ define(function (require) {
             updateCommon: updateCommon
         }
     };
+
+    function getLineRender(xyIndex) {
+        return {
+            createCover: function (controller, brushOption) {
+                var cover = new graphic.Group();
+
+                createBaseRect(controller, cover, brushOption);
+
+                return cover;
+            },
+            getCreatingRange: function (localTrack) {
+                var ends = getTrackEnds(localTrack);
+                var min = mathMin(ends[0][0], ends[1 - xyIndex][xyIndex]);
+                var max = mathMax(ends[0][0], ends[1 - xyIndex][xyIndex]);
+
+                return [min, max];
+            },
+            updateCoverShape: function (controller, cover, localRange, brushOption) {
+                var t = brushOption.brushStyle.width;
+
+                var x = [localRange[0], -t / 2];
+                var y = [-t / 2, localRange[0]];
+                var width = [localRange[1] - localRange[0], t];
+                var height = [t, localRange[1] - localRange[0]];
+
+                cover.childOfName('rect').setShape({
+                    x: x[xyIndex],
+                    y: y[xyIndex],
+                    width: width[xyIndex],
+                    height: height[xyIndex]
+                });
+            },
+            updateCommon: updateCommon
+        };
+    }
 
     return BrushController;
 });
