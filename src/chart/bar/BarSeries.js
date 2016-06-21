@@ -68,17 +68,11 @@ define(function(require) {
                 normal: {
                     // color: '各异',
                     // 柱条边线
-                    barBorderColor: '#fff',
+                    borderColor: '#fff',
                     // 柱条边线线宽，单位px，默认为1
-                    barBorderWidth: 0
+                    borderWidth: 0
                 },
-                emphasis: {
-                    // color: '各异',
-                    // 柱条边线
-                    barBorderColor: '#fff',
-                    // 柱条边线线宽，单位px，默认为1
-                    barBorderWidth: 0
-                }
+                emphasis: {}
             }
         }
     });
