@@ -410,6 +410,7 @@ define(function (require) {
      * @param {boolean} stack
      */
     listProto.getDataExtent = function (dim, stack) {
+        dim = this.getDimension(dim);
         var dimData = this._storage[dim];
         var dimInfo = this.getDimensionInfo(dim);
         stack = (dimInfo && dimInfo.stackable) && stack;

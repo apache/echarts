@@ -212,6 +212,73 @@ define(function(require) {
         return stepPoints;
     }
 
+    function getVisualGradient(data, coordSys) {
+        var visualMetaList = data.getVisual('visualMeta');
+        if (!visualMetaList) {
+            return;
+        }
+
+        var visualMeta;
+        for (var i = visualMetaList.length - 1; i >= 0; i--) {
+            // Can only be x or y
+            if (visualMetaList[i].dimension < 2) {
+                visualMeta = visualMetaList[i];
+                break;
+            }
+        }
+        if (!visualMeta || coordSys.type !== 'cartesian2d') {
+            if (__DEV__) {
+                console.warn('Visual map on line style only support x or y dimension.');
+            }
+            return;
+        }
+        var dimension = visualMeta.dimension;
+        var dimName = data.dimensions[dimension];
+
+        var stops = visualMeta.stops;
+
+        var colorStops = [];
+        var firstStop = stops[0];
+        var lastStop = stops[stops.length - 1];
+        var min = firstStop.interval ? firstStop.interval[0] : firstStop.value;
+        var max = lastStop.interval ? lastStop.interval[1] : lastStop.value;
+        var stopsSpan = max - min;
+        for (var i = 0; i < stops.length; i++) {
+            // Piecewise
+            if (stops[i].interval) {
+                if (stops[i].interval[1] === stops[i].interval[0]) {
+                    continue;
+                }
+                colorStops.push({
+                    offset: (stops[i].interval[0] - min) / stopsSpan,
+                    color: stops[i].color
+                }, {
+                    offset: (stops[i].interval[1] - min) / stopsSpan,
+                    color: stops[i].color
+                });
+            }
+            // Continous
+            else {
+                // if (i > 0 && stops[i].value === stops[i - 1].value) {
+                //     continue;
+                // }
+                colorStops.push({
+                    offset: (stops[i].value - min) / stopsSpan,
+                    color: stops[i].color
+                });
+            }
+        }
+        var gradient = new graphic.LinearGradient(
+            0, 0, 0, 0, colorStops, true
+        );
+        var axis = coordSys.getAxis(dimName);
+
+        gradient[dimName] = axis.toGlobalCoord(axis.dataToCoord(min));
+        gradient[dimName + '2'] = axis.toGlobalCoord(axis.dataToCoord(max));
+
+        return gradient;
+    }
+
     return ChartView.extend({
 
         type: 'line',
@@ -342,12 +409,13 @@ define(function(require) {
                 }
             }
 
+            var visualColor = getVisualGradient(data, coordSys) || data.getVisual('color');
             polyline.useStyle(zrUtil.defaults(
                 // Use color in lineStyle first
                 lineStyleModel.getLineStyle(),
                 {
                     fill: 'none',
-                    stroke: data.getVisual('color'),
+                    stroke: visualColor,
                     lineJoin: 'bevel'
                 }
             ));
@@ -367,7 +435,7 @@ define(function(require) {
                 polygon.useStyle(zrUtil.defaults(
                     areaStyleModel.getAreaStyle(),
                     {
-                        fill: data.getVisual('color'),
+                        fill: visualColor,
                         opacity: 0.7,
                         lineJoin: 'bevel'
                     }

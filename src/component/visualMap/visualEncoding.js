@@ -49,10 +49,13 @@ define(function (require) {
                     var valueState = stop.valueState;
 
                     if (interval) {
-                        stop.intervalColor = [
-                            getColorVisual(interval[0], valueState),
-                            getColorVisual(interval[1], valueState)
-                        ];
+                        stop.color = getColorVisual(
+                            visualMapModel, (interval[0] + interval[1]) / 2, valueState
+                        );
+                        // stop.intervalColor = [
+                        //     getColorVisual(visualMapModel, interval[0], valueState),
+                        //     getColorVisual(visualMapModel, interval[1], valueState)
+                        // ];
                     }
                     else {
                         stop.color = getColorVisual(visualMapModel, stop.value, valueState);
