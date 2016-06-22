@@ -218,7 +218,7 @@ define(function(require) {
 
     function getVisualGradient(data, coordSys) {
         var visualMetaList = data.getVisual('visualMeta');
-        if (!visualMetaList) {
+        if (!visualMetaList || !visualMetaList.length) {
             return;
         }
 
@@ -286,9 +286,17 @@ define(function(require) {
         );
         var axis = coordSys.getAxis(dimName);
 
-        gradient[dimName] = axis.toGlobalCoord(axis.dataToCoord(min));
-        gradient[dimName + '2'] = axis.toGlobalCoord(axis.dataToCoord(max));
+        var start = Math.round(axis.toGlobalCoord(axis.dataToCoord(min)));
+        var end = Math.round(axis.toGlobalCoord(axis.dataToCoord(max)));
+        zrUtil.each(colorStops, function (colorStop) {
+            // Make sure each offset has rounded px to avoid not sharp edge
+            colorStop.offset = (Math.round(colorStop.offset * (end - start) + start) - start) / (end - start);
+        });
 
+        gradient[dimName] = start;
+        gradient[dimName + '2'] = end;
+
+        console.log(gradient);
         return gradient;
     }
 
