@@ -296,7 +296,6 @@ define(function(require) {
         gradient[dimName] = start;
         gradient[dimName + '2'] = end;
 
-        console.log(gradient);
         return gradient;
     }
 
