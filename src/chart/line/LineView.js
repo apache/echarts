@@ -212,6 +212,10 @@ define(function(require) {
         return stepPoints;
     }
 
+    function clamp(number, extent) {
+        return Math.max(Math.min(number, extent[1]), extent[0]);
+    }
+
     function getVisualGradient(data, coordSys) {
         var visualMetaList = data.getVisual('visualMeta');
         if (!visualMetaList) {
@@ -239,11 +243,17 @@ define(function(require) {
         var stops = visualMeta.stops;
 
         var colorStops = [];
+        if (stops[0].interval) {
+            stops.sort(function (a, b) {
+                return a.interval[0] - b.interval[0];
+            });
+        }
+
         var firstStop = stops[0];
         var lastStop = stops[stops.length - 1];
-        // interval canbe infinity in piecewise case
-        var min = firstStop.interval ? Math.max(firstStop.interval[0], dataExtent[0]) : firstStop.value;
-        var max = lastStop.interval ? Math.min(lastStop.interval[1], dataExtent[1]) : lastStop.value;
+        // Interval can be infinity in piecewise case
+        var min = firstStop.interval ? clamp(firstStop.interval[0], dataExtent) : firstStop.value;
+        var max = lastStop.interval ? clamp(lastStop.interval[1], dataExtent) : lastStop.value;
         var stopsSpan = max - min;
         for (var i = 0; i < stops.length; i++) {
             // Piecewise
@@ -252,10 +262,11 @@ define(function(require) {
                     continue;
                 }
                 colorStops.push({
-                    offset: (Math.max(stops[i].interval[0], dataExtent[0]) - min) / stopsSpan,
+                    // Make sure offset is between 0 and 1
+                    offset: (clamp(stops[i].interval[0], dataExtent) - min) / stopsSpan,
                     color: stops[i].color
                 }, {
-                    offset: (Math.min(stops[i].interval[1], dataExtent[1]) - min) / stopsSpan,
+                    offset: (clamp(stops[i].interval[1], dataExtent) - min) / stopsSpan,
                     color: stops[i].color
                 });
             }
