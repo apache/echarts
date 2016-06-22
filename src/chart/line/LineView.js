@@ -234,14 +234,16 @@ define(function(require) {
         }
         var dimension = visualMeta.dimension;
         var dimName = data.dimensions[dimension];
+        var dataExtent = data.getDataExtent(dimName);
 
         var stops = visualMeta.stops;
 
         var colorStops = [];
         var firstStop = stops[0];
         var lastStop = stops[stops.length - 1];
-        var min = firstStop.interval ? firstStop.interval[0] : firstStop.value;
-        var max = lastStop.interval ? lastStop.interval[1] : lastStop.value;
+        // interval canbe infinity in piecewise case
+        var min = firstStop.interval ? Math.max(firstStop.interval[0], dataExtent[0]) : firstStop.value;
+        var max = lastStop.interval ? Math.min(lastStop.interval[1], dataExtent[1]) : lastStop.value;
         var stopsSpan = max - min;
         for (var i = 0; i < stops.length; i++) {
             // Piecewise
@@ -250,10 +252,10 @@ define(function(require) {
                     continue;
                 }
                 colorStops.push({
-                    offset: (stops[i].interval[0] - min) / stopsSpan,
+                    offset: (Math.max(stops[i].interval[0], dataExtent[0]) - min) / stopsSpan,
                     color: stops[i].color
                 }, {
-                    offset: (stops[i].interval[1] - min) / stopsSpan,
+                    offset: (Math.min(stops[i].interval[1], dataExtent[1]) - min) / stopsSpan,
                     color: stops[i].color
                 });
             }
