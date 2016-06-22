@@ -251,8 +251,8 @@ define(function(require) {
                             interval: interval.slice(),
                             valueState: this.getValueState((interval[0] + interval[1]) / 2)
                         });
+                        curr = interval[1];
                     }
-                    curr = interval[1];
                 }, this);
             }
             return result;
