@@ -65,15 +65,6 @@ define(function (require) {
         /**
          * @override
          */
-        remove: function () {
-            roams.unregister(this.api, this.dataZoomModel.id);
-            InsideZoomView.superApply(this, 'remove', arguments);
-            this._range = null;
-        },
-
-        /**
-         * @override
-         */
         dispose: function () {
             roams.unregister(this.api, this.dataZoomModel.id);
             InsideZoomView.superApply(this, 'dispose', arguments);

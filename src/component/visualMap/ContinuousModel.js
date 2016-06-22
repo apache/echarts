@@ -175,7 +175,7 @@ define(function(require) {
 
             zrUtil.each(result, function (item) {
                 item.color = getColorVisual(this, item.value, item.valueState);
-            });
+            }, this);
 
             return result;
         }
