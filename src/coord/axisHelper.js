@@ -161,6 +161,7 @@ define(function (require) {
             // Simple optimization for large amount of labels
             step = Math.floor(labels.length / 40);
         }
+
         for (var i = 0; i < tickCoords.length; i += step) {
             var tickCoord = tickCoords[i];
             var rect = textContain.getBoundingRect(
@@ -168,7 +169,7 @@ define(function (require) {
             );
             rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
             // FIXME Magic number 1.5
-            rect[isAxisHorizontal ? 'width' : 'height'] *= 1.5;
+            rect[isAxisHorizontal ? 'width' : 'height'] *= 1.3;
             if (!textSpaceTakenRect) {
                 textSpaceTakenRect = rect.clone();
             }
@@ -186,7 +187,7 @@ define(function (require) {
         if (autoLabelInterval === 0 && step > 1) {
             return step;
         }
-        return autoLabelInterval * step;
+        return (autoLabelInterval + 1) * step - 1;
     };
 
     /**
