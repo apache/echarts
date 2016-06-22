@@ -401,6 +401,7 @@ define(function (require) {
             var ecModel = this._model;
             var api = this._api;
             var coordSysMgr = this._coordSysMgr;
+            var zr = this._zr;
             // update before setOption
             if (!ecModel) {
                 return;
@@ -430,10 +431,10 @@ define(function (require) {
             // Set background
             var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
 
-            var painter = this._zr.painter;
+            var painter = zr.painter;
             // TODO all use clearColor ?
             if (painter.isSingleCanvas && painter.isSingleCanvas()) {
-                this._zr.configLayer(0, {
+                zr.configLayer(0, {
                     clearColor: backgroundColor
                 });
             }
@@ -446,8 +447,24 @@ define(function (require) {
                         backgroundColor = 'transparent';
                     }
                 }
-                backgroundColor = backgroundColor;
-                this._dom.style.backgroundColor = backgroundColor;
+                if (backgroundColor.colorStops) {
+                    // Gradient background
+                    // FIXME Fixed layer？
+                    zr.configLayer(0, {
+                        clearColor: backgroundColor
+                    });
+                    this._hasGradientBg = true;
+                }
+                else {
+                    if (this._hasGradientBg) {
+                        zr.configLayer(0, {
+                            clearColor: null
+                        });
+                    }
+                    this._hasGradientBg = false;
+
+                    this._dom.style.background = backgroundColor;
+                }
             }
 
             // console.time && console.timeEnd('update');
