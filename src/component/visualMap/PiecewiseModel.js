@@ -43,7 +43,8 @@ define(function(require) {
                                         // vertical side of each item. Otherwise, horizontal side.
             itemSymbol: 'roundRect',
             pieceList: null,            // Each item is Object, with some of those attrs:
-                                        // {min, max, value, color, colorSaturation, colorAlpha, opacity,
+                                        // {min, max, lt, gt, lte, gte, value,
+                                        // color, colorSaturation, colorAlpha, opacity,
                                         // symbol, symbolSize}, which customize the range or visual
                                         // coding of the certain piece. Besides, see "Order Rule".
             categories: null,           // category names, like: ['some1', 'some2', 'some3'].
@@ -212,21 +213,56 @@ define(function(require) {
             return result;
         },
 
-        getStops: function (seriesModel) {
+        /**
+         * @private
+         */
+        getRepresentValue: function (piece) {
+            var representValue;
+            if (this.isCategory()) {
+                representValue = piece.value;
+            }
+            else {
+                if (piece.value != null) {
+                    representValue = piece.value;
+                }
+                else {
+                    var pieceInterval = piece.interval || [];
+                    representValue = (pieceInterval[0] + pieceInterval[1]) / 2;
+                }
+            }
+            return representValue;
+        },
+
+        getStops: function (seriesModel, getColorVisual) {
             var result = [];
+            var model = this;
+
             if (this.isTargetSeries(seriesModel)) {
+                var curr = -Infinity;
                 zrUtil.each(this._pieceList, function (piece) {
                     // Do not support category yet.
                     var interval = piece.interval;
                     if (interval) {
-                        result.push({
+                        interval[0] > curr && setPiece({
+                            interval: [curr, interval[0]],
+                            valueState: 'outOfRange'
+                        });
+                        setPiece({
                             interval: interval.slice(),
                             valueState: this.getValueState((interval[0] + interval[1]) / 2)
                         });
                     }
+                    curr = interval[1];
                 }, this);
             }
             return result;
+
+            function setPiece(piece) {
+                result.push(piece);
+                piece.color = getColorVisual(
+                    model, model.getRepresentValue(piece), piece.valueState
+                );
+            }
         }
 
     });
@@ -240,6 +276,7 @@ define(function(require) {
 
         splitNumber: function () {
             var thisOption = this.option;
+            var pieceList = this._pieceList;
             var precision = thisOption.precision;
             var dataExtent = this.getExtent();
             var splitNumber = thisOption.splitNumber;
@@ -257,12 +294,18 @@ define(function(require) {
             for (var i = 0, curr = dataExtent[0]; i < splitNumber; i++, curr += splitStep) {
                 var max = i === splitNumber - 1 ? dataExtent[1] : (curr + splitStep);
 
-                this._pieceList.push({
-                    text: this.formatValueText([curr, max]),
+                pieceList.push({
                     index: i,
-                    interval: [curr, max]
+                    interval: [curr, max],
+                    close: [1, 1]
                 });
             }
+
+            normalizePieces(pieceList);
+
+            zrUtil.each(pieceList, function (piece) {
+                piece.text = this.formatValueText(piece.interval);
+            }, this);
         },
 
         categories: function () {
@@ -282,6 +325,8 @@ define(function(require) {
 
         pieces: function () {
             var thisOption = this.option;
+            var pieceList = this._pieceList;
+
             zrUtil.each(thisOption.pieces, function (pieceListItem, index) {
 
                 if (!zrUtil.isObject(pieceListItem)) {
@@ -289,52 +334,115 @@ define(function(require) {
                 }
 
                 var item = {text: '', index: index};
-                var hasLabel;
 
                 if (pieceListItem.label != null) {
                     item.text = pieceListItem.label;
-                    hasLabel = true;
                 }
 
                 if (pieceListItem.hasOwnProperty('value')) {
-                    item.value = pieceListItem.value;
-
-                    if (!hasLabel) {
-                        item.text = this.formatValueText(item.value);
-                    }
+                    var value = item.value = pieceListItem.value;
+                    item.interval = [value, value];
+                    item.close = [1, 1];
                 }
                 else {
-                    var min = pieceListItem.min;
-                    var max = pieceListItem.max;
-                    min == null && (min = -Infinity);
-                    max == null && (max = Infinity);
-                    if (min === max) {
+                    // `min` `max` is legacy option.
+                    // `lt` `gt` `lte` `gte` is recommanded.
+                    var interval = item.interval = [];
+                    var close = item.close = [0, 0];
+
+                    var closeList = [1, 0, 1];
+                    var infinityList = [-Infinity, Infinity];
+
+                    var useMinMax = [];
+                    for (var lg = 0; lg < 2; lg++) {
+                        var names = [['gte', 'gt', 'min'], ['lte', 'lt', 'max']][lg];
+                        for (var i = 0; i < 3 && interval[lg] == null; i++) {
+                            interval[lg] = pieceListItem[names[i]];
+                            close[lg] = closeList[i];
+                            useMinMax[lg] = i === 2;
+                        }
+                        interval[lg] == null && (interval[lg] = infinityList[lg]);
+                    }
+                    useMinMax[0] && interval[1] === Infinity && (close[0] = 0);
+                    useMinMax[1] && interval[0] === -Infinity && (close[1] = 0);
+
+                    if (__DEV__) {
+                        if (interval[0] > interval[1]) {
+                            console.warn(
+                                'Piece ' + index + 'is illegal: ' + interval
+                                + ' lower bound should not greater then uppper bound.'
+                            );
+                        }
+                    }
+
+                    if (interval[0] === interval[1] && close[0] && close[1]) {
                         // Consider: [{min: 5, max: 5, visual: {...}}, {min: 0, max: 5}],
                         // we use value to lift the priority when min === max
-                        item.value = min;
-                    }
-                    item.interval = [min, max];
-
-                    if (!hasLabel) {
-                        item.text = this.formatValueText([min, max]);
+                        item.value = interval[0];
                     }
                 }
 
                 item.visual = VisualMapping.retrieveVisuals(pieceListItem);
 
-                this._pieceList.push(item);
+                pieceList.push(item);
 
             }, this);
 
             // See "Order Rule".
-            normalizeReverse(thisOption, this._pieceList);
+            normalizeReverse(thisOption, pieceList);
+            // Only pieces
+            normalizePieces(pieceList);
+
+            zrUtil.each(pieceList, function (piece) {
+                var close = piece.close;
+                var edgeSymbols = [['<', '≤'][close[1]], ['>', '≥'][close[0]]];
+                piece.text = piece.text || this.formatValueText(
+                    piece.value != null ? piece.value : piece.interval,
+                    false,
+                    edgeSymbols
+                );
+            }, this);
         }
     };
 
-    function normalizeReverse(thisOption, arr) {
+    function normalizeReverse(thisOption, pieceList) {
         var inverse = thisOption.inverse;
         if (thisOption.orient === 'vertical' ? !inverse : inverse) {
-             arr.reverse();
+             pieceList.reverse();
+        }
+    }
+
+    // Reorder, remove duplicate, which are needed when using gradient.
+    // Not applicable for categories.
+    function normalizePieces(pieceList) {
+        pieceList.sort(function (a, b) {
+            return littleThan(a, b) ? -1 : 1;
+        });
+
+        var curr = -Infinity;
+        for (var i = 0; i < pieceList.length; i++) {
+            var interval = pieceList[i].interval;
+            var close = pieceList[i].close;
+            for (var lg = 0; lg < 2; lg++) {
+                if (interval[lg] < curr) {
+                    interval[lg] = curr;
+                    close[lg] = 1 - lg;
+                }
+                curr = interval[lg];
+            }
+        }
+        // console.log(JSON.stringify(pieceList.map(a => a.interval)));
+
+        function littleThan(piece, standard, lg) {
+            lg = lg || 0;
+            return piece.interval[lg] < standard.interval[lg]
+                || (
+                    piece.interval[lg] === standard.interval[lg]
+                    && (
+                        +piece.close[lg] > standard.close[lg]
+                        || littleThan(piece, standard, 1)
+                    )
+                );
         }
     }
 

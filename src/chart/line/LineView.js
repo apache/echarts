@@ -479,7 +479,7 @@ define(function(require) {
             var data = seriesModel.getData();
             var dataIndex = queryDataIndex(data, payload);
 
-            if (dataIndex != null && dataIndex >= 0) {
+            if (!(dataIndex instanceof Array) && dataIndex != null && dataIndex >= 0) {
                 var symbol = data.getItemGraphicEl(dataIndex);
                 if (!symbol) {
                     // Create a temporary symbol if it is not exists

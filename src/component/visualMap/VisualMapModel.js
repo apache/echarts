@@ -224,16 +224,18 @@ define(function(require) {
          *
          * @param {number|Array.<number>} value Real value, or this.dataBound[0 or 1].
          * @param {boolean} [isCategory=false] Only available when value is number.
+         * @param {Array.<string>} edgeSymbols Open-close symbol when value is interval.
          * @return {string}
          * @protected
          */
-        formatValueText: function(value, isCategory) {
+        formatValueText: function(value, isCategory, edgeSymbols) {
             var option = this.option;
             var precision = option.precision;
             var dataBound = this.dataBound;
             var formatter = option.formatter;
             var isMinMax;
             var textValue;
+            edgeSymbols = edgeSymbols || ['<', '>'];
 
             if (zrUtil.isArray(value)) {
                 value = value.slice();
@@ -260,10 +262,10 @@ define(function(require) {
 
             if (isMinMax) {
                 if (value[0] === dataBound[0]) {
-                    return '< ' + textValue[1];
+                    return edgeSymbols[0] + ' ' + textValue[1];
                 }
                 else if (value[1] === dataBound[1]) {
-                    return '> ' + textValue[0];
+                    return edgeSymbols[1] + ' ' + textValue[0];
                 }
                 else {
                     return textValue[0] + ' - ' + textValue[1];

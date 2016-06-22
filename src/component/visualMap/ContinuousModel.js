@@ -164,7 +164,7 @@ define(function(require) {
             return result;
         },
 
-        getStops: function (seriesModel) {
+        getStops: function (seriesModel, getColorVisual) {
             if (!this.isTargetSeries(seriesModel)) {
                 return;
             }
@@ -172,6 +172,10 @@ define(function(require) {
             var result = [];
             insertStopList(this, 'outOfRange', this.getExtent(), result);
             insertStopList(this, 'inRange', this.option.range.slice(), result);
+
+            zrUtil.each(result, function (item) {
+                item.color = getColorVisual(this, item.value, item.valueState);
+            });
 
             return result;
         }

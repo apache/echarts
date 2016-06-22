@@ -54,7 +54,7 @@ define(function(require) {
 
                 this._enableHoverLink(itemGroup, item.indexInModelPieceList);
 
-                var representValue = this._getRepresentValue(piece);
+                var representValue = visualMapModel.getRepresentValue(piece);
 
                 this._createItemSymbol(
                     itemGroup, representValue, [0, 0, itemSize[0], itemSize[1]]
@@ -172,26 +172,6 @@ define(function(require) {
             }
 
             return {viewPieceList: viewPieceList, endsText: endsText};
-        },
-
-        /**
-         * @private
-         */
-        _getRepresentValue: function (piece) {
-            var representValue;
-            if (this.visualMapModel.isCategory()) {
-                representValue = piece.value;
-            }
-            else {
-                if (piece.value != null) {
-                    representValue = piece.value;
-                }
-                else {
-                    var pieceInterval = piece.interval || [];
-                    representValue = (pieceInterval[0] + pieceInterval[1]) / 2;
-                }
-            }
-            return representValue;
         },
 
         /**

@@ -44,16 +44,32 @@
                         // max: 50,
                         // FIXME piecewise 的 symbol 颜色有问题
                         type: 'piecewise',
+                        outOfRange: {
+                            color: '#aaa'
+                        },
                         pieces: [{
-                            max: 0,
+                            lte: 120,
+                            gt: 100,
                             color: 'red'
                         }, {
-                            min: 0,
-                            color: 'blue'
+                            lt: 80,
+                            gt: 70,
+                            // color: 'blue'
+                        }, {
+                            lt: 90,
+                            gt: 50,
+                            // color: 'blue'
+                        }, {
+                            lte: 40,
+                            // color: 'blue'
                         }]
-                        // inRange: {
-                        //     color: ['red', 'blue']
-                        // }
+                        // pieces: [{
+                        //     gte: 0,
+                        //     color: 'red'
+                        // }, {
+                        //     lt: 0,
+                        //     color: 'blue'
+                        // }]
                     },
                     tooltip: {
                         trigger: 'axis',
