@@ -4,4 +4,10 @@ define(function (require) {
     require('./axis/SingleAxisView');
     require('../coord/single/AxisModel');
 
+    var echarts = require('../echarts');
+
+    echarts.extendComponentView({
+        type: 'single'
+    });
+
 });
