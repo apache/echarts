@@ -182,7 +182,12 @@ define(function (require) {
             }
 
             this.group.add(graphic.mergePath(tickLines, {
-                style: lineStyleModel.getLineStyle(),
+                style: zrUtil.defaults(
+                    lineStyleModel.getLineStyle(),
+                    {
+                        stroke: axisModel.get('axisLine.lineStyle.color')
+                    }
+                ),
                 z2: 2,
                 silent: true
             }));
@@ -232,7 +237,8 @@ define(function (require) {
                         categoryData[i].textStyle, textStyleModel, axisModel.ecModel
                     );
                 }
-                var textColor = itemTextStyleModel.getTextColor();
+                var textColor = itemTextStyleModel.getTextColor()
+                    || axisModel.get('axisLine.lineStyle.color');
 
                 var tickCoord = axis.dataToCoord(ticks[i]);
                 var pos = [

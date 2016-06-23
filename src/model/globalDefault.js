@@ -42,7 +42,7 @@ define(function () {
         animationEasingUpdate: 'cubicOut',
 
         animationThreshold: 2000,
-        // Progressive configuration
+        // Configuration for progressive/incremental rendering
         progressiveThreshold: 3000,
         progressive: 400,
 

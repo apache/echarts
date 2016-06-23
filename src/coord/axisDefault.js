@@ -18,6 +18,7 @@ define(function (require) {
         nameGap: 15,
         // 是否能触发鼠标事件
         silent: true,
+
         // 坐标轴线
         axisLine: {
             // 默认显示，属性show控制显示与否
@@ -40,7 +41,6 @@ define(function (require) {
             length: 5,
             // 属性lineStyle控制线条样式
             lineStyle: {
-                color: '#333',
                 width: 1
             }
         },
@@ -54,7 +54,6 @@ define(function (require) {
             // formatter: null,
             // 其余属性默认使用全局文本样式，详见TEXTSTYLE
             textStyle: {
-                color: '#333',
                 fontSize: 12
             }
         },
