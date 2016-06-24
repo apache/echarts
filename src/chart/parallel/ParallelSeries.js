@@ -24,7 +24,7 @@ define(function(require) {
 
             var dataDimsInfo = zrUtil.map(dataDims, function (dim, dimIndex) {
 
-                var modelDimsIndex = zrUtil.indexOf(dim, modelDims);
+                var modelDimsIndex = zrUtil.indexOf(modelDims, dim);
                 var axisModel = modelDimsIndex >= 0 && ecModel.getComponent(
                     'parallelAxis', parallelAxisIndices[modelDimsIndex]
                 );
