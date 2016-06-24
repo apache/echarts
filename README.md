@@ -19,6 +19,60 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 We will release the English doc soon:)
 
+## Resources
+
+### Extensions
+
++ [百度地图扩展](https://github.com/ecomfe/echarts/tree/master/extension/bmap)
+
++ [leaflet-echarts](https://github.com/wandergis/leaflet-echarts3) by wandergis
++ [arcgis-echarts](https://github.com/wandergis/arcgis-echarts3) by wandergis
+
+### AngularJS Binding
+
++ [angular-echarts](https://github.com/wangshijun/angular-echarts) by wangshijun
++ [echarts-ng](https://github.com/bornkiller/echarts-ng) by bornkiller
++ [ng-echarts](https://github.com/liekkas/ng-echarts) by liekkas
+
+### Vue Component
+
++ [vue-echarts](https://github.com/Justineo/vue-echarts) by Justineo
++ [vue-echarts](https://github.com/panteng/vue-echarts) by panteng
+
+### React Component
+
++ [echarts-for-react](https://github.com/hustcc/echarts-for-react) by hustcc
++ [react-echarts](https://github.com/somonus/react-echarts) by somonus
++ [re-echarts](https://github.com/liekkas/re-echarts) by liekkas
+
+
+### Other Languages
+#### Python
+
++ [echarts-python](https://github.com/yufeiminds/echarts-python) by yufeiminds
+
+#### R
+
++ [recharts](https://github.com/taiyun/recharts) by taiyun
++ [recharts](https://github.com/yihui/recharts) by yihui
+
+#### purescript
+
++ [purescript-echarts](https://github.com/slamdata/purescript-echarts/)
+
+#### iOS
+
++ [iOS-Echarts](https://github.com/Pluto-Y/iOS-Echarts) by Pluto-Y
+
+#### Java
+
++ [ECharts-Java](http://www.oschina.net/p/echarts-java) by Liuzh_533
+
+#### .NET
+
++ [EChartsSDK](https://github.com/idoku/EChartsSDK) by idoku
+
+
 ## License
 Copyright (c) 2013, Baidu Inc.
 All rights reserved.
