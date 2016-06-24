@@ -503,6 +503,32 @@ define(function (require) {
     };
 
     /**
+     * Retreive the index with given raw data index
+     * @param {number} idx
+     * @param {number} name
+     * @return {number}
+     */
+    listProto.indexOfRawIndex = function (rawIndex) {
+        // Indices are ascending
+        var indices = this.indices;
+        var left = 0;
+        var right = indices.length - 1;
+        while (left <= right) {
+            var mid = (left + right) / 2 | 0;
+            if (indices[mid] < rawIndex) {
+                left = mid + 1;
+            }
+            else if (indices[mid] > rawIndex) {
+                right = mid - 1;
+            }
+            else {
+                return mid;
+            }
+        }
+        return -1;
+    };
+
+    /**
      * Retreive the index of nearest value
      * @param {string} dim
      * @param {number} value

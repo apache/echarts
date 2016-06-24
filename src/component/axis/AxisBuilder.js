@@ -6,6 +6,8 @@ define(function (require) {
     var numberUtil = require('../../util/number');
     var remRadian = numberUtil.remRadian;
     var isRadianAroundZero = numberUtil.isRadianAroundZero;
+    var vec2 = require('zrender/core/vector');
+    var v2ApplyTransform = vec2.applyTransform;
 
     var PI = Math.PI;
 
@@ -82,10 +84,19 @@ define(function (require) {
         /**
          * @readOnly
          */
-        this.group = new graphic.Group({
+        this.group = new graphic.Group();
+
+        // FIXME Not use a seperate text group?
+        var textGroup = new graphic.Group({
             position: opt.position.slice(),
             rotation: opt.rotation
         });
+
+        this.group.add(textGroup);
+        this._textGroup = textGroup;
+
+        textGroup.updateTransform();
+        this._transform = textGroup.transform;
     };
 
     AxisBuilder.prototype = {
@@ -121,12 +132,16 @@ define(function (require) {
 
             var extent = this.axisModel.axis.getExtent();
 
-            this.group.add(new graphic.Line({
+            var matrix = this._transform;
+            var pt1 = v2ApplyTransform([], [extent[0], 0], matrix);
+            var pt2 = v2ApplyTransform([], [extent[1], 0], matrix);
+
+            this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
                 shape: {
-                    x1: extent[0],
-                    y1: 0,
-                    x2: extent[1],
-                    y2: 0
+                    x1: pt1[0],
+                    y1: pt1[1],
+                    x2: pt2[0],
+                    y2: pt2[1]
                 },
                 style: zrUtil.extend(
                     {lineCap: 'round'},
@@ -135,7 +150,7 @@ define(function (require) {
                 strokeContainThreshold: opt.strokeContainThreshold,
                 silent: !!opt.axisLineSilent,
                 z2: 1
-            }));
+            })));
         },
 
         /**
@@ -158,6 +173,9 @@ define(function (require) {
             var ticksCoords = axis.getTicksCoords();
             var tickLines = [];
 
+            var pt1 = [];
+            var pt2 = [];
+            var matrix = this._transform;
             for (var i = 0; i < ticksCoords.length; i++) {
                 // Only ordinal scale support tick interval
                 if (ifIgnoreOnTick(axis, i, tickInterval)) {
@@ -166,13 +184,20 @@ define(function (require) {
 
                 var tickCoord = ticksCoords[i];
 
-                // Tick line
+                pt1[0] = tickCoord;
+                pt1[1] = 0;
+                pt2[0] = tickCoord;
+                pt2[1] = opt.tickDirection * tickLen;
+
+                v2ApplyTransform(pt1, pt1, matrix);
+                v2ApplyTransform(pt2, pt2, matrix);
+                // Tick line, Not use group transform to have better line draw
                 tickLines.push(new graphic.Line(graphic.subPixelOptimizeLine({
                     shape: {
-                        x1: tickCoord,
-                        y1: 0,
-                        x2: tickCoord,
-                        y2: opt.tickDirection * tickLen
+                        x1: pt1[0],
+                        y1: pt1[1],
+                        x2: pt2[0],
+                        y2: pt2[1]
                     },
                     style: {
                         lineWidth: lineStyleModel.get('width')
@@ -182,7 +207,12 @@ define(function (require) {
             }
 
             this.group.add(graphic.mergePath(tickLines, {
-                style: lineStyleModel.getLineStyle(),
+                style: zrUtil.defaults(
+                    lineStyleModel.getLineStyle(),
+                    {
+                        stroke: axisModel.get('axisLine.lineStyle.color')
+                    }
+                ),
                 z2: 2,
                 silent: true
             }));
@@ -232,7 +262,8 @@ define(function (require) {
                         categoryData[i].textStyle, textStyleModel, axisModel.ecModel
                     );
                 }
-                var textColor = itemTextStyleModel.getTextColor();
+                var textColor = itemTextStyleModel.getTextColor()
+                    || axisModel.get('axisLine.lineStyle.color');
 
                 var tickCoord = axis.dataToCoord(ticks[i]);
                 var pos = [
@@ -260,7 +291,7 @@ define(function (require) {
                 textEl.eventData.value = labelBeforeFormat;
 
                 textEls.push(textEl);
-                this.group.add(textEl);
+                this._textGroup.add(textEl);
             }
 
             function isTwoLabelOverlapped(current, next) {
@@ -355,7 +386,7 @@ define(function (require) {
             textEl.eventData.targetType = 'axisName';
             textEl.eventData.name = name;
 
-            this.group.add(textEl);
+            this._textGroup.add(textEl);
         }
 
     };
