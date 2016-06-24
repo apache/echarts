@@ -76,7 +76,7 @@ define(function(require) {
                     list.hasItemOption = true;
                 }
 
-                if (categoryDimIndex === dimIndex) {
+                if (dimensions[dimIndex].type === 'ordinal') {
                     // If given value is a category string
                     if (typeof val === 'string') {
                         // Lazy get categories
