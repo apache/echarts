@@ -76,7 +76,10 @@ define(function(require) {
                     list.hasItemOption = true;
                 }
 
-                if (dimensions[dimIndex].type === 'ordinal') {
+                // Consider case:
+                // (1) [["a", "b"], ...]
+                // (2) [[2, 4, "a"], ...]
+                if (dimensions[dimIndex].type === 'ordinal' && dimIndex < 2) {
                     // If given value is a category string
                     if (typeof val === 'string') {
                         // Lazy get categories
