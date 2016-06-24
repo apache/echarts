@@ -28,18 +28,18 @@ We will release the English doc soon:)
 + [leaflet-echarts](https://github.com/wandergis/leaflet-echarts3) by wandergis
 + [arcgis-echarts](https://github.com/wandergis/arcgis-echarts3) by wandergis
 
-### AngularJS Binding
+#### AngularJS Binding
 
 + [angular-echarts](https://github.com/wangshijun/angular-echarts) by wangshijun
 + [echarts-ng](https://github.com/bornkiller/echarts-ng) by bornkiller
 + [ng-echarts](https://github.com/liekkas/ng-echarts) by liekkas
 
-### Vue Component
+#### Vue Component
 
 + [vue-echarts](https://github.com/Justineo/vue-echarts) by Justineo
 + [vue-echarts](https://github.com/panteng/vue-echarts) by panteng
 
-### React Component
+#### React Component
 
 + [echarts-for-react](https://github.com/hustcc/echarts-for-react) by hustcc
 + [react-echarts](https://github.com/somonus/react-echarts) by somonus
