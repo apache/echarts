@@ -74,6 +74,32 @@ describe('List', function () {
             expect(list.getItemModel(1).option).toEqual([20, 25]);
         });
 
+        testCase('indexOfRawIndex', function (List) {
+            var list = new List(['x']);
+
+            list.initData([]);
+            expect(list.indexOfRawIndex(1)).toEqual(-1);
+
+            list.initData([0]);
+            expect(list.indexOfRawIndex(0)).toEqual(0);
+            expect(list.indexOfRawIndex(1)).toEqual(-1);
+
+            list.initData([0, 1, 2, 3]);
+            expect(list.indexOfRawIndex(1)).toEqual(1);
+            expect(list.indexOfRawIndex(2)).toEqual(2);
+            expect(list.indexOfRawIndex(5)).toEqual(-1);
+
+            list.initData([0, 1, 2, 3, 4]);
+            expect(list.indexOfRawIndex(2)).toEqual(2);
+            expect(list.indexOfRawIndex(3)).toEqual(3);
+            expect(list.indexOfRawIndex(5)).toEqual(-1);
+
+            list.filterSelf(function (idx) {
+                return idx >= 2;
+            });
+            expect(list.indexOfRawIndex(2)).toEqual(0);
+        });
+
         testCase('getDataExtent', function (List) {
             var list = new List(['x', 'y']);
             list.initData([1, 2, 3]);
