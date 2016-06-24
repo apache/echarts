@@ -110,12 +110,6 @@ define(function (require) {
 
         /**
          * @private
-         * @type {module:zrender/mixin/Transformable}
-         */
-        this._container;
-
-        /**
-         * @private
          * @type {Array.<nubmer>}
          */
         this._track = [];
@@ -146,7 +140,7 @@ define(function (require) {
         this._creatingPanel;
 
         // FIXME
-        this._useGlobalCursor;
+        this._forbidGlobalCursor;
 
         /**
          * @private
@@ -247,10 +241,10 @@ define(function (require) {
         },
 
         /**
-         * @param {Object} opt
-         * @param {module:zrender/mixin/Transformable} [opt.container]
-         * @param {boolean} [opt.localCoord=false] Whether input and output with global coord,
-         *                                          ohterwise coord is according to panel.
+         * @param {Object} [opt]
+         * @return {boolean} [opt.position=[0, 0]]
+         * @return {boolean} [opt.rotation=0]
+         * @return {boolean} [opt.scale=[1, 1]]
          */
         mount: function (opt) {
             opt = opt || {};
@@ -259,32 +253,21 @@ define(function (require) {
                 this._mounted = true; // should be at first.
             }
 
-            var container = opt.container;
+            var thisGroup = this.group;
+            this._zr.add(thisGroup);
+
+            thisGroup.attr({
+                position: opt.position || [0, 0],
+                rotation: opt.rotation || 0,
+                scale: opt.scale || [1, 1]
+            });
 
             // FIXME
-            this._useGlobalCursor = !container;
-
-            // Reset container.
-            if (!this._container || container !== this._container) {
-                unmountContainer(this);
-
-                if (!container) {
-                    container = new graphic.Group();
-                    this._zr.add(container);
-                    container.__createdByBrush = true;
-                }
-                this._container = container;
-
-                // Add to new container.
-                container.add(this.group);
-            }
+            this._forbidGlobalCursor = opt.forbidGlobalCursor;
 
             return this;
         },
 
-        /**
-         * @param
-         */
         eachCover: function (cb, context) {
             each(this._covers, cb, context);
         },
@@ -349,7 +332,9 @@ define(function (require) {
         unmount: function () {
             this.enableBrush(false);
 
-            unmountContainer(this);
+            // container may 'removeAll' outside.
+            clearCovers(this);
+            this._zr.remove(this.group);
 
             if (__DEV__) {
                 this._mounted = false; // should be at last.
@@ -375,7 +360,7 @@ define(function (require) {
             userOnRelease && userOnRelease();
         }, controller, brushOption.onRelease);
 
-        if (controller._useGlobalCursor) {
+        if (!controller._forbidGlobalCursor) {
             // Consider roam, which takes globalPan too.
             interactionMutex.take(zr, MUTEX_RESOURCE_KEY, controller._uid, onRelease);
             zr.setDefaultCursorStyle('crosshair');
@@ -392,7 +377,7 @@ define(function (require) {
     function doDisableBrush(controller) {
         var zr = controller._zr;
 
-        if (controller._useGlobalCursor) {
+        if (!controller._forbidGlobalCursor) {
             interactionMutex.release(zr, MUTEX_RESOURCE_KEY, controller._uid);
             zr.setDefaultCursorStyle('default');
         }
@@ -506,22 +491,6 @@ define(function (require) {
         var dist = mathPow(dx * dx + dy * dy, 0.5);
 
         return dist > UNSELECT_THRESHOLD;
-    }
-
-    function unmountContainer(controller) {
-        // container may 'removeAll' outside.
-        clearCovers(controller);
-
-        var group = controller.group;
-        var container = controller._container;
-
-        if (container) {
-            group && container.remove(group);
-            if (container.__createdByBrush) {
-                controller._zr.remove(controller._container);
-            }
-            controller._container = null;
-        }
     }
 
     function getTrackEnds(track) {

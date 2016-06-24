@@ -65,10 +65,10 @@ define(function (require) {
 
             this.group.add(axisGroup);
 
-            this._refreshBrushController(axisGroup, areaSelectStyle, axisModel, areaWidth);
+            this._refreshBrushController(builderOpt, areaSelectStyle, axisModel, areaWidth);
         },
 
-        _refreshBrushController: function (axisGroup, areaSelectStyle, axisModel, areaWidth) {
+        _refreshBrushController: function (builderOpt, areaSelectStyle, axisModel, areaWidth) {
             // After filtering, axis may change, select area needs to be update.
             var axis = axisModel.axis;
             var coverInfoList = zrUtil.map(axisModel.activeIntervals, function (interval) {
@@ -92,7 +92,11 @@ define(function (require) {
             };
 
             this._brushController
-                .mount({container: axisGroup})
+                .mount({
+                    forbidGlobalCursor: true,
+                    rotation: builderOpt.rotation,
+                    position: builderOpt.position
+                })
                 .setPanels([{
                     panelId: 'pl',
                     rect: rect
