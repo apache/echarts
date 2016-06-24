@@ -250,6 +250,8 @@ define(function(require, factory) {
 
                 cartesian.addAxis(xAxis);
                 cartesian.addAxis(yAxis);
+
+                xAxis.model.coordinateSystem = yAxis.model.coordinateSystem = cartesian;
             }, this);
         }, this);
 

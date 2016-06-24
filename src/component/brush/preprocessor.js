@@ -24,8 +24,24 @@ define(function(require) {
             option.toolbox = [toolbox];
         }
 
-        (toolbox.feature || (toolbox.feature = {})).brush = {type: btns};
+        var toolboxFeature = (toolbox.feature || (toolbox.feature = {}));
+        var toolboxBrush = toolboxFeature.brush || (toolboxFeature.brush = {});
+        var brushTypes = toolboxBrush.type || (toolboxBrush.type = []);
+        brushTypes.push.apply(brushTypes, btns);
+
+        removeDuplicate(brushTypes);
     };
+
+    function removeDuplicate(arr) {
+        var map = {};
+        zrUtil.each(arr, function (val) {
+            map[val] = 1;
+        });
+        arr.length = 0;
+        zrUtil.each(map, function (flag, val) {
+            arr.push(val);
+        });
+    }
 
     function findToolboxNeededByBrush(option) {
         var brush = option && option.brush;

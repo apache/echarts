@@ -20,7 +20,7 @@ define(function (require) {
      * Layout for visual, the priority higher than other layout, and before brush visual.
      */
     echarts.registerLayout(PRIORITY_BRUSH, function (ecModel, api, payload) {
-        helper.convertCoordRanges(ecModel);
+        helper.coordRangesToGlobal(ecModel);
     });
 
     /**
@@ -34,17 +34,6 @@ define(function (require) {
 
         ecModel.eachComponent({mainType: 'brush'}, function (brushModel, brushIndex) {
 
-            var brushOption = brushModel.option;
-            var brushLink = brushOption.brushLink;
-            var linkedSeriesMap = [];
-            var selectedDataIndexForLink = [];
-            var rangeInfoBySeries = [];
-
-            if (!brushIndex) { // Only the first throttle setting works.
-                throttleType = brushOption.throttleType;
-                throttleDelay = brushOption.throttleDelay;
-            }
-
             var thisBrushSelected = {
                 brushId: brushModel.id,
                 brushIndex: brushIndex,
@@ -52,7 +41,21 @@ define(function (require) {
                 brushRanges: zrUtil.clone(brushModel.brushRanges),
                 series: []
             };
+            // Every brush component exists in event params, convenient
+            // for user to find by index.
             brushSelected.push(thisBrushSelected);
+
+            var brushOption = brushModel.option;
+            var brushLink = brushOption.brushLink;
+            var linkedSeriesMap = [];
+            var selectedDataIndexForLink = [];
+            var rangeInfoBySeries = [];
+            var supportBrush = [];
+
+            if (!brushIndex) { // Only the first throttle setting works.
+                throttleType = brushOption.throttleType;
+                throttleDelay = brushOption.throttleDelay;
+            }
 
             // Add boundingRect and selectors to range.
             var brushRanges = zrUtil.map(brushModel.brushRanges, function (brushRange) {
@@ -78,20 +81,30 @@ define(function (require) {
                 return brushLink === 'all' || linkedSeriesMap[seriesIndex];
             }
 
+            // If no supported brush or no brush on the series,
+            // all visuals should be in original state.
+            function brushed(rangeInfoList) {
+                return !!rangeInfoList.length;
+            }
+
             ecModel.eachSeries(function (seriesModel, seriesIndex) {
                 var selectorsByBrushType = getSelectorsByBrushType(seriesModel);
-                if (!selectorsByBrushType || isNotControlledSeries(brushModel, seriesIndex)) {
+                if (!selectorsByBrushType || brushModelNotControll(brushModel, seriesIndex)) {
                     return;
                 }
+                // Must after selectorsByBrushType judgement.
                 var rangeInfoList = rangeInfoBySeries[seriesIndex] = [];
 
                 zrUtil.each(brushRanges, function (brushRange) {
-                    selectorsByBrushType[brushRange.brushType] && rangeInfoList.push(brushRange);
+                    selectorsByBrushType[brushRange.brushType]
+                        && (supportBrush[seriesIndex] = true)
+                        && helper.controlSeries(brushRange, seriesModel, ecModel)
+                        && rangeInfoList.push(brushRange);
                 });
 
                 if (useLink(seriesIndex)) {
                     var data = seriesModel.getData();
-                    rangeInfoList.length && data.each(function (dataIndex) {
+                    brushed(rangeInfoList) && data.each(function (dataIndex) {
                         if (checkInRange(selectorsByBrushType, rangeInfoList, data, dataIndex)) {
                             selectedDataIndexForLink[dataIndex] = 1;
                         }
@@ -100,12 +113,24 @@ define(function (require) {
             });
 
             ecModel.eachSeries(function (seriesModel, seriesIndex) {
+                var seriesBrushSelected = {
+                    seriesId: seriesModel.id,
+                    seriesIndex: seriesIndex,
+                    seriesName: seriesModel.name,
+                    rawIndices: []
+                };
+                // Every series exists in event params, convenient
+                // for user to find series by seriesIndex.
+                thisBrushSelected.series.push(seriesBrushSelected);
+
                 var selectorsByBrushType = getSelectorsByBrushType(seriesModel);
-                if (!selectorsByBrushType || isNotControlledSeries(brushModel, seriesIndex)) {
-                    return;
-                }
-                var data = seriesModel.getData();
                 var rangeInfoList = rangeInfoBySeries[seriesIndex];
+
+                if (!rangeInfoList) {
+                    return; // When empty arr, do not return, because brushLink.
+                }
+
+                var data = seriesModel.getData();
                 var getValueState = useLink(seriesIndex)
                     ? function (dataIndex) {
                         return selectedDataIndexForLink[dataIndex]
@@ -118,18 +143,11 @@ define(function (require) {
                             : 'outOfBrush';
                     };
 
-                var seriesBrushSelected = {
-                    seriesId: seriesModel.id,
-                    seriesIndex: seriesIndex,
-                    seriesName: seriesModel.name,
-                    rawIndices: []
-                };
-                thisBrushSelected.series.push(seriesBrushSelected);
-
-                // If no supported brush, all visuals are in original state.
-                rangeInfoList.length && visualSolution.applyVisual(
-                    STATE_LIST, visualMappings, data, getValueState
-                );
+                // If no supported brush or no brush, all visuals are in original state.
+                (brushed(rangeInfoList) || (useLink(seriesIndex) && supportBrush[seriesIndex]))
+                    && visualSolution.applyVisual(
+                        STATE_LIST, visualMappings, data, getValueState
+                    );
             });
 
         });
@@ -172,7 +190,10 @@ define(function (require) {
         if (!api.isDisposed()) {
             var zr = api.getZr();
             zr[DISPATCH_FLAG] = true;
-            api.dispatchAction({type: 'brushSelect', brushComponents: brushSelected});
+            api.dispatchAction({
+                type: 'brushSelect',
+                brushComponents: brushSelected
+            });
             zr[DISPATCH_FLAG] = false;
         }
     }
@@ -208,7 +229,7 @@ define(function (require) {
         return brushSelector;
     }
 
-    function isNotControlledSeries(brushModel, seriesIndex) {
+    function brushModelNotControll(brushModel, seriesIndex) {
         var seriesIndices = brushModel.option.seriesIndex;
         return seriesIndices != null
             && seriesIndices !== 'all'

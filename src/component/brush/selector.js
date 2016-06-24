@@ -13,6 +13,8 @@ define(function(require) {
     // function return:
     //      {boolean} Whether in the given brush.
     var selector = {
+        lineX: getLineSelectors(0),
+        lineY: getLineSelectors(1),
         rect: {
             point: function (itemLayout, selectors, brushRange) {
                 return brushRange.boundingRect.contain(itemLayout[0], itemLayout[1]);
@@ -56,6 +58,28 @@ define(function(require) {
             }
         }
     };
+
+    function getLineSelectors(xyIndex) {
+        var xy = ['x', 'y'];
+        var wh = ['width', 'height'];
+
+        return {
+            point: function (itemLayout, selectors, brushRange) {
+                var range = brushRange.range;
+                var p = itemLayout[xyIndex];
+                return inLineRange(p, range);
+            },
+            rect: function (itemLayout, selectors, brushRange) {
+                var range = brushRange.range;
+                return inLineRange(itemLayout[xy[xyIndex]], range)
+                    || inLineRange(itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]], range);
+            }
+        };
+    }
+
+    function inLineRange(p, range) {
+        return range[0] <= p && p <= range[1];
+    }
 
     // FIXME
     // 随意写的，没考察过效率。

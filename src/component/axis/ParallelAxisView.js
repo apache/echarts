@@ -84,18 +84,18 @@ define(function (require) {
 
             var extent = axis.getExtent();
             var extra = 30; // Arbitrary value.
-            var points = [
-                [extent[0] - extra, -areaWidth / 2],
-                [extent[0] - extra, areaWidth / 2],
-                [extent[1] + extra, areaWidth / 2],
-                [extent[1] + extra, -areaWidth / 2]
-            ];
+            var rect = {
+                x: extent[0] - extra,
+                y: -areaWidth / 2,
+                width: extent[1] - extent[0] + 2 * extra,
+                height: areaWidth
+            };
 
             this._brushController
                 .mount({container: axisGroup})
                 .setPanels([{
                     panelId: 'pl',
-                    points: points
+                    rect: rect
                 }])
                 .enableBrush({
                     brushType: 'lineX',

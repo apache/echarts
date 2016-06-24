@@ -34,7 +34,8 @@ define(function(require) {
             brushStyle: {           // Default brushStyle
                 // lineWidth: 2,
                 // stroke: 'rgba(0,0,0,0.3)',
-                fill: 'rgba(0,0,0,0.15)'
+                fill: 'rgba(0,0,0,0.15)',
+                width: null         // do not use bursh width in line brush, but fetch from grid.
             },
 
             throttleType: 'fixRate',// Throttle in brushSelected event. 'fixRate' or 'debounce'.

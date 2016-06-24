@@ -26,8 +26,8 @@ define(function(require) {
             zlevel: 0,
             z: 4,                   // Higher than normal component (z: 2).
             orient: null,           // Default auto by axisIndex. Possible value: 'horizontal', 'vertical'.
-            xAxisIndex: null,       // Default all horizontal category axis.
-            yAxisIndex: null,       // Default all vertical category axis.
+            xAxisIndex: null,       // Default the first horizontal category axis.
+            yAxisIndex: null,       // Default the first vertical category axis.
             angleAxisIndex: null,
             radiusAxisIndex: null,
             filterMode: 'filter',   // Possible values: 'filter' or 'empty'.
