@@ -504,5 +504,51 @@ define(function(require) {
             : (vertex[1] > 0 ? 'bottom' : 'top');
     };
 
+    /**
+     * Apply group transition animation from g1 to g2
+     */
+    graphic.groupTransition = function (g1, g2, animatableModel, cb) {
+        if (!g1 || !g2) {
+            return;
+        }
+
+        function getElMap(g) {
+            var elMap = {};
+            g.traverse(function (el) {
+                if (!el.isGroup && el.anid) {
+                    elMap[el.anid] = el;
+                }
+            });
+            return elMap;
+        }
+        function getAnimatableProps(el) {
+            var obj = {
+                position: vector.clone(el.position),
+                rotation: el.rotation
+            };
+            if (el.shape) {
+                obj.shape = zrUtil.extend({}, el.shape);
+            }
+            return obj;
+        }
+        var elMap1 = getElMap(g1);
+
+        g2.traverse(function (el) {
+            if (!el.isGroup && el.anid) {
+                var oldEl = elMap1[el.anid];
+                if (oldEl) {
+                    var newProp = getAnimatableProps(el);
+                    el.attr(getAnimatableProps(oldEl));
+                    graphic.updateProps(el, newProp, animatableModel, el.dataIndex);
+                }
+                // else {
+                //     if (el.previousProps) {
+                //         graphic.updateProps
+                //     }
+                // }
+            }
+        });
+    };
+
     return graphic;
 });
