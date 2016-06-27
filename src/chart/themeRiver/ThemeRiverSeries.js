@@ -137,7 +137,7 @@ define(function (require) {
                 }
             ];
 
-            var data = this.fixData(option.data);
+            var data = this.fixData(option.data || []);
             var nameList = [];
             var nameMap = this.nameMap = {};
             var count = 0;
