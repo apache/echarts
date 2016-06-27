@@ -499,7 +499,12 @@
                         }
                         return res;
                     };
-                    convertedData = convertData(data);
+                    var convertedData = [
+                        convertData(data),
+                        convertData(data.slice().sort(function (a, b) {
+                            return b.value - a.value;
+                        }).slice(0, 6))
+                    ];
 
                     var chart = echarts.init(document.getElementById('main1'));
                     var elSt = document.getElementById('main1-st');
@@ -611,7 +616,7 @@
                                     name: 'pm2.5',
                                     type: 'scatter',
                                     coordinateSystem: 'geo',
-                                    data: convertedData,
+                                    data: convertedData[0],
                                     symbolSize: function (val) {
                                         return val[2] / 10;
                                     },
@@ -635,9 +640,7 @@
                                     name: 'Top 5',
                                     type: 'effectScatter',
                                     coordinateSystem: 'geo',
-                                    data: convertData(data.sort(function (a, b) {
-                                        return b.value - a.value;
-                                    }).slice(0, 6)),
+                                    data: convertedData[1],
                                     symbolSize: function (val) {
                                         return val[2] / 10;
                                     },
@@ -768,7 +771,7 @@
                                 var placesBySeries = [];
                                 for (var i = 0; i < rawIndices.length; i++) {
                                     var rawIndex = rawIndices[i];
-                                    var item = convertedData[rawIndex];
+                                    var item = convertedData[sIdx][rawIndex];
                                     var value = item.value[2];
                                     sum += value;
                                     count++;

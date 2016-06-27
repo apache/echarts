@@ -26,6 +26,8 @@ define(function(require) {
                 );
             }
 
+            brushRange.range = brushRange.range || [];
+
             // convert coordRange to global range and set panelId.
             if (coordInfo && coordInfo !== true) {
                 brushRange.range = coordConvert[brushRange.brushType](
