@@ -633,10 +633,6 @@ define(function (require) {
     }
 
     function driftRect(toRectRange, fromRectRange, controller, cover, name, dx, dy, e) {
-        if (!isInPanel(controller, cover, e)) {
-            return;
-        }
-
         var brushOption = cover.__brushOption;
         var rectRange = toRectRange(brushOption.range);
         var localDelta = toLocalDelta(controller, dx, dy);
@@ -655,10 +651,6 @@ define(function (require) {
     }
 
     function driftPolygon(controller, cover, dx, dy, e) {
-        if (!isInPanel(controller, cover, e)) {
-            return;
-        }
-
         var range = cover.__brushOption.range;
         var localDelta = toLocalDelta(controller, dx, dy);
 
@@ -669,14 +661,6 @@ define(function (require) {
 
         updateCoverAfterCreation(controller, cover);
         trigger(controller, {isEnd: false});
-    }
-
-    function isInPanel(controller, cover, e) {
-        var panel = getPanelByCover(controller, cover);
-        var x = e.offsetX;
-        var y = e.offsetY;
-
-        return panel === true || panel.contain(x, y);
     }
 
     function toLocalDelta(controller, dx, dy) {

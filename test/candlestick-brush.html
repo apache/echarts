@@ -292,6 +292,12 @@
                             name: 'Dow-Jones index',
                             type: 'candlestick',
                             data: data.values,
+                            itemStyle: {
+                                normal: {
+                                    borderColor: null,
+                                    borderColor0: null
+                                }
+                            },
                             tooltip: {
                                 formatter: function (param) {
                                     var param = param[0];
