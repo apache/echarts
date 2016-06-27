@@ -718,7 +718,7 @@ define(function (require) {
 
         controller._track.push(controller.group.transformCoordToLocal(x, y));
 
-        if (shouldShowCover(controller)) {
+        if (shouldShowCover(controller) || creatingCover) {
 
             if (panel && !creatingCover) {
                 thisBrushOption.brushMode === 'single' && clearCovers(controller);
@@ -748,7 +748,6 @@ define(function (require) {
         }
         else if (
             isEnd
-            && !creatingCover
             && thisBrushOption.brushMode === 'single'
             && thisBrushOption.removeOnClick
         ) {
