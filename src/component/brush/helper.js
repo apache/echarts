@@ -11,86 +11,82 @@ define(function(require) {
 
     var helper = {};
 
-    helper.coordRangesToGlobal = function (ecModel) {
-        ecModel.eachComponent({mainType: 'brush'}, function (brushModel) {
-            each(brushModel.brushRanges, function (brushRange) {
-                var has = false;
-                each(COMPONENT_NAMES, function (componentName) {
-                    var componentModel = findComponentModel(brushRange, componentName, ecModel);
-                    var componentRange = brushRange[componentName + 'Range'];
+    helper.resetInputRanges = function (brushModel, ecModel) {
+        each(brushModel.brushRanges, function (brushRange) {
+            var coordInfo = findCoordInfo(brushRange, brushModel.coordInfoList);
 
-                    if (__DEV__) {
-                        if (componentModel && !componentRange) {
-                            throw new Error(
-                                componentName + 'Range must be specified when ' + componentName + 'Index specified'
-                            );
-                        }
-                        if (has && componentModel) {
-                            throw new Error('Only one coordinateSystem can be specified');
-                        }
-                    }
+            if (__DEV__) {
+                zrUtil.assert(
+                    !coordInfo || coordInfo === true || brushRange.coordRange,
+                    'coordRange must be specified when coord index specified.'
+                );
+                zrUtil.assert(
+                    !coordInfo || coordInfo !== true || brushRange.range,
+                    'range must be specified.'
+                );
+            }
 
-                    if (componentModel) {
-                        has = true;
-                        brushRange.range = coordConvert[brushRange.brushType](
-                            0, componentModel.coordinateSystem, componentRange, componentModel
-                        );
-                    }
-                });
-            });
+            // convert coordRange to global range and set panelId.
+            if (coordInfo && coordInfo !== true) {
+                brushRange.range = coordConvert[brushRange.brushType](
+                    0, coordInfo, brushRange.coordRange
+                );
+                brushRange.panelId = coordInfo.panelId;
+            }
         });
     };
 
-    helper.globalRangesToCoord = function (brushRanges, ecModel) {
+    helper.resetOutputRanges = function (brushRanges, brushModel, ecModel) {
         each(brushRanges, function (brushRange) {
             var panelId = brushRange.panelId;
+
             if (panelId) {
-                panelId = brushRange.panelId.split(PANEL_ID_SPLIT);
-                var componentName = panelId[0];
-                var componentIndex = +panelId[1];
-                var componentModel = ecModel.getComponent(componentName, componentIndex);
-                brushRange[componentName + 'Index'] = componentIndex;
-                brushRange[componentName + 'Range'] = coordConvert[brushRange.brushType](
-                    1, componentModel.coordinateSystem, brushRange.range, componentModel
+                panelId = panelId.split(PANEL_ID_SPLIT);
+
+                brushRange[panelId[0] + 'Index'] = +panelId[1];
+
+                brushRange.coordRange = coordConvert[brushRange.brushType](
+                    1, findCoordInfo(brushRange, brushModel.coordInfoList), brushRange.range
                 );
             }
         });
     };
 
-    helper.controlSeries = function (brushRange, seriesModel, ecModel) {
-        // Check whether brushRange in bound in coord, and series do not belong to that coord.
+    helper.controlSeries = function (brushRange, brushModel, seriesModel) {
+        // Check whether brushRange is bound in coord, and series do not belong to that coord.
         // If do not do this check, some brush (like lineX) will controll all axes.
-        var isControl = 0;
-        var hasDefinedCpt;
-        each(COMPONENT_NAMES, function (componentName) {
-            var componentIndex = brushRange[componentName + 'Index'];
-            if (componentIndex >= 0) {
-                hasDefinedCpt = true;
-                var componentModel = findComponentModel(brushRange, componentName, ecModel);
-                isControl |= componentModel.coordinateSystem === seriesModel.coordinateSystem;
-            }
-        });
-        return !hasDefinedCpt || !!isControl;
-    };
-
-    helper.setPanelIdToRanges = function (brushRanges) {
-        each(brushRanges, function (brushRange) {
-            each(COMPONENT_NAMES, function (componentName) {
-                var componentIndex = brushRange[componentName + 'Index'];
-                if (componentIndex != null) {
-                    brushRange.panelId = componentName + PANEL_ID_SPLIT + componentIndex;
-                }
-            });
-        });
-        return brushRanges;
+        var coordInfo = findCoordInfo(brushRange, brushModel.coordInfoList);
+        return coordInfo === true || (coordInfo && coordInfo.coordSys === seriesModel.coordinateSystem);
     };
 
     helper.makePanelOpts = function (brushModel, ecModel) {
         var panelOpts = [];
 
+        each(brushModel.coordInfoList, function (coordInfo) {
+            var coordSys = coordInfo.coordSys;
+            var rect;
+
+            if (coordInfo.geoIndex >= 0) {
+                rect = coordSys.getBoundingRect().clone();
+                // geo roam and zoom transform
+                rect.applyTransform(graphic.getTransform(coordSys));
+            }
+            else { // xAxis or yAxis
+                // grid is not Transformable.
+                rect = coordSys.grid.getRect().clone();
+            }
+
+            panelOpts.push({panelId: coordInfo.panelId, rect: rect});
+        });
+
+        return panelOpts;
+    };
+
+    helper.makeCoordInfoList = function (brushModel, ecModel) {
+        var coordInfoList = [];
+
         each(COMPONENT_NAMES, function (componentName) {
             var componentIndices = brushModel.option[componentName + 'Index'];
-
             if (componentIndices == null) {
                 return;
             }
@@ -103,39 +99,73 @@ define(function(require) {
                     return;
                 }
 
-                var coordSys = componentModel.coordinateSystem;
-                var rect;
+                var grid;
+                var coordSys;
 
-                // Enumerate different coord.
-                if (componentName === 'geo') {
-                // geo is getBoundingRect, grid is getRect.
-                    rect = coordSys.getBoundingRect().clone();
-                    // geo roam and zoom transform
-                    rect.applyTransform(graphic.getTransform(coordSys));
-                }
-                else if (componentName === 'xAxis' || componentName === 'yAxis') {
-                    rect = coordSys.grid.getRect().clone();
-                    // grid is not Transformable.
-                }
-                else {
+                (componentName === 'xAxis' || componentName === 'yAxis')
+                    ? (grid = componentModel.axis.grid)
+                    : (coordSys = componentModel.coordinateSystem); // geo
+
+                var coordInfo;
+
+                // Check duplicate and find cartesian when tranval to yAxis.
+                for (var i = 0, len = coordInfoList.length; i < len; i++) {
+                    var cInfo = coordInfoList[i];
                     if (__DEV__) {
-                        throw new Error('Not support: ' + componentName);
+                        zrUtil.assert(
+                            cInfo[componentName + 'Index'] != index,
+                            'Coord should not be defined duplicately: ' + componentName + index
+                        );
+                    }
+                    // CoordSys is always required for `rect brush` or `polygon brush`.
+                    // If both xAxisIndex and yAxisIndex specified, fetch cartesian by them.
+                    if (componentName === 'yAxis' && !cInfo.yAxis && cInfo.xAxis) {
+                        var aCoordSys = grid.getCartesian(cInfo.xAxisIndex, index);
+                        if (aCoordSys) { // The yAxis and xAxis are in the same cartesian.
+                            coordSys = aCoordSys;
+                            coordInfo = cInfo;
+                            break;
+                        }
                     }
                 }
 
-                panelOpts.push({
-                    panelId: componentName + PANEL_ID_SPLIT + index,
-                    rect: rect
-                });
+                !coordInfo && coordInfoList.push(coordInfo = {});
+
+                coordInfo[componentName] = componentModel;
+                coordInfo[componentName + 'Index'] = index;
+                coordInfo.panelId = componentName + PANEL_ID_SPLIT + index;
+                coordInfo.coordSys = coordSys
+                    // If only xAxisIndex or only yAxisIndex specified, find its first cartesian.
+                    || grid.getCartesian(coordInfo.xAxisIndex, coordInfo.yAxisIndex);
             });
         });
 
-        return panelOpts;
+        return coordInfoList;
     };
 
-    function findComponentModel(brushRange, componentName, ecModel) {
-        var componentIndex = brushRange[componentName + 'Index'];
-        return componentIndex >= 0 && ecModel.getComponent(componentName, componentIndex);
+    /**
+     * If return Object, a coord found.
+     * If reutrn true, global found.
+     * Otherwise nothing found.
+     *
+     * @param {Object} brushRange {<componentName>Index}
+     * @param {Array} coordInfoList
+     * @return {Obejct|boolean}
+     */
+    function findCoordInfo(brushRange, coordInfoList) {
+        var isGlobal = true;
+        for (var j = 0; j < COMPONENT_NAMES.length; j++) {
+            var indexAttr = COMPONENT_NAMES[j] + 'Index';
+            if (brushRange[indexAttr] >= 0) {
+                isGlobal = false;
+                for (var i = 0; i < coordInfoList.length; i++) {
+                    if (coordInfoList[i][indexAttr] === brushRange[indexAttr]) {
+                        return coordInfoList[i];
+                    }
+                }
+            }
+        }
+        return isGlobal;
     }
 
     function formatMinMax(minMax) {
@@ -143,11 +173,12 @@ define(function(require) {
         return minMax;
     }
 
-    function axisConvert(to, coordSys, coordRange, componentModel) {
+    function axisConvert(axisName, to, coordInfo, coordRange) {
+        var axis = coordInfo.coordSys.getAxis(axisName);
+
         if (__DEV__) {
-            zrUtil.assert(componentModel.axis, 'line brush is only available in cartesian (grid).');
+            zrUtil.assert(axis, 'line brush is only available in cartesian (grid).');
         }
-        var axis = componentModel.axis;
 
         return formatMinMax(zrUtil.map([0, 1], function (i) {
             return to
@@ -158,11 +189,12 @@ define(function(require) {
 
     var coordConvert = {
 
-        lineX: axisConvert,
+        lineX: zrUtil.curry(axisConvert, 'x'),
 
-        lineY: axisConvert,
+        lineY: zrUtil.curry(axisConvert, 'y'),
 
-        rect: function (to, coordSys, coordRange) {
+        rect: function (to, coordInfo, coordRange) {
+            var coordSys = coordInfo.coordSys;
             var xminymin = coordSys[COORD_CONVERTS[to]]([coordRange[0][0], coordRange[1][0]]);
             var xmaxymax = coordSys[COORD_CONVERTS[to]]([coordRange[0][1], coordRange[1][1]]);
             return [
@@ -171,7 +203,8 @@ define(function(require) {
             ];
         },
 
-        polygon: function (to, coordSys, coordRange) {
+        polygon: function (to, coordInfo, coordRange) {
+            var coordSys = coordInfo.coordSys;
             return zrUtil.map(coordRange, coordSys[COORD_CONVERTS[to]], coordSys);
         }
     };

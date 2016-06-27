@@ -20,7 +20,12 @@ define(function (require) {
      * Layout for visual, the priority higher than other layout, and before brush visual.
      */
     echarts.registerLayout(PRIORITY_BRUSH, function (ecModel, api, payload) {
-        helper.coordRangesToGlobal(ecModel);
+        ecModel.eachComponent({mainType: 'brush'}, function (brushModel) {
+
+            brushModel.coordInfoList = helper.makeCoordInfoList(brushModel, ecModel);
+
+            helper.resetInputRanges(brushModel, ecModel);
+        });
     });
 
     /**
@@ -50,7 +55,7 @@ define(function (require) {
             var linkedSeriesMap = [];
             var selectedDataIndexForLink = [];
             var rangeInfoBySeries = [];
-            var supportBrush = [];
+            var hasBrushExists = 0;
 
             if (!brushIndex) { // Only the first throttle setting works.
                 throttleType = brushOption.throttleType;
@@ -77,7 +82,7 @@ define(function (require) {
                 linkedSeriesMap[seriesIndex] = 1;
             });
 
-            function useLink(seriesIndex) {
+            function linkOthers(seriesIndex) {
                 return brushLink === 'all' || linkedSeriesMap[seriesIndex];
             }
 
@@ -87,31 +92,64 @@ define(function (require) {
                 return !!rangeInfoList.length;
             }
 
+            /**
+             * Logic for each series: (If the logic has to be modified one day, do it carefully!)
+             *
+             * ( brushed ┬ && ┬hasBrushExist ┬ && linkOthers  ) => StepA: ┬record, ┬ StepB: ┬visualByRecord.
+             *   !brushed┘    ├hasBrushExist ┤                            └nothing,┘        ├visualByRecord.
+             *                └!hasBrushExist┘                                              └nothing.
+             * ( !brushed  && ┬hasBrushExist ┬ && linkOthers  ) => StepA:  nothing,  StepB: ┬visualByRecord.
+             *                └!hasBrushExist┘                                              └nothing.
+             * ( brushed ┬ &&                     !linkOthers ) => StepA:  nothing,  StepB: ┬visualByCheck.
+             *   !brushed┘                                                                  └nothing.
+             * ( !brushed  &&                     !linkOthers ) => StepA:  nothing,  StepB:  nothing.
+             */
+
+            // Step A
             ecModel.eachSeries(function (seriesModel, seriesIndex) {
+                seriesModel.subType === 'parallel'
+                    ? stepAParallel(seriesModel, seriesIndex)
+                    : stepAOthers(seriesModel, seriesIndex);
+            });
+
+            function stepAParallel(seriesModel, seriesIndex) {
+                var coordSys = seriesModel.coordinateSystem;
+                hasBrushExists |= coordSys.hasAxisbrushed();
+
+                linkOthers(seriesIndex) && coordSys.eachActiveState(
+                    seriesModel.getData(),
+                    function (activeState, dataIndex) {
+                        activeState === 'active' && (selectedDataIndexForLink[dataIndex] = 1);
+                    }
+                );
+            }
+
+            function stepAOthers(seriesModel, seriesIndex) {
+                var rangeInfoList = rangeInfoBySeries[seriesIndex] = [];
+
                 var selectorsByBrushType = getSelectorsByBrushType(seriesModel);
                 if (!selectorsByBrushType || brushModelNotControll(brushModel, seriesIndex)) {
                     return;
                 }
-                // Must after selectorsByBrushType judgement.
-                var rangeInfoList = rangeInfoBySeries[seriesIndex] = [];
 
                 zrUtil.each(brushRanges, function (brushRange) {
                     selectorsByBrushType[brushRange.brushType]
-                        && (supportBrush[seriesIndex] = true)
-                        && helper.controlSeries(brushRange, seriesModel, ecModel)
+                        && helper.controlSeries(brushRange, brushModel, seriesModel)
                         && rangeInfoList.push(brushRange);
+                    hasBrushExists |= brushed(rangeInfoList);
                 });
 
-                if (useLink(seriesIndex)) {
+                if (linkOthers(seriesIndex) && brushed(rangeInfoList)) {
                     var data = seriesModel.getData();
-                    brushed(rangeInfoList) && data.each(function (dataIndex) {
+                    data.each(function (dataIndex) {
                         if (checkInRange(selectorsByBrushType, rangeInfoList, data, dataIndex)) {
                             selectedDataIndexForLink[dataIndex] = 1;
                         }
                     });
                 }
-            });
+            }
 
+            // Step B
             ecModel.eachSeries(function (seriesModel, seriesIndex) {
                 var seriesBrushSelected = {
                     seriesId: seriesModel.id,
@@ -126,12 +164,8 @@ define(function (require) {
                 var selectorsByBrushType = getSelectorsByBrushType(seriesModel);
                 var rangeInfoList = rangeInfoBySeries[seriesIndex];
 
-                if (!rangeInfoList) {
-                    return; // When empty arr, do not return, because brushLink.
-                }
-
                 var data = seriesModel.getData();
-                var getValueState = useLink(seriesIndex)
+                var getValueState = linkOthers(seriesIndex)
                     ? function (dataIndex) {
                         return selectedDataIndexForLink[dataIndex]
                             ? (seriesBrushSelected.rawIndices.push(data.getRawIndex(dataIndex)), 'inBrush')
@@ -144,7 +178,7 @@ define(function (require) {
                     };
 
                 // If no supported brush or no brush, all visuals are in original state.
-                (brushed(rangeInfoList) || (useLink(seriesIndex) && supportBrush[seriesIndex]))
+                (linkOthers(seriesIndex) ? hasBrushExists : brushed(rangeInfoList))
                     && visualSolution.applyVisual(
                         STATE_LIST, visualMappings, data, getValueState
                     );

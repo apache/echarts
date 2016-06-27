@@ -74,7 +74,7 @@ define(function (require) {
         _onBrush: function (brushRanges, opt) {
             var modelId = this.model.id;
 
-            helper.globalRangesToCoord(brushRanges, this.ecModel);
+            helper.resetOutputRanges(brushRanges, this.model, this.ecModel);
 
             // Action is not dispatched on drag end, because the drag end
             // emits the same params with the last drag move event, and
@@ -95,7 +95,7 @@ define(function (require) {
         (!payload || payload.$from !== brushModel.id) && this._brushController
             .setPanels(helper.makePanelOpts(brushModel, ecModel))
             .enableBrush(brushModel.brushOption)
-            .updateCovers(helper.setPanelIdToRanges(brushModel.brushRanges));
+            .updateCovers(brushModel.brushRanges.slice());
     }
 
 });

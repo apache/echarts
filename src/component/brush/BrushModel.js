@@ -5,12 +5,13 @@ define(function(require) {
 
     var echarts = require('../../echarts');
     var zrUtil = require('zrender/core/util');
+    var helper = require('./helper');
 
     var BrushModel = echarts.extendComponentModel({
 
         type: 'brush',
 
-        dependencies: ['series'],
+        dependencies: ['geo', 'grid', 'xAxis', 'yAxis', 'parallel', 'series'],
 
         /**
          * @protected
@@ -69,6 +70,12 @@ define(function(require) {
          * @type {Object}
          */
         brushOption: {},
+
+        /**
+         * @readOnly
+         * @type {Array.<Object>}
+         */
+        coordInfoList: [],
 
         /**
          * If ranges is null/undefined, range state remain.

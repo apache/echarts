@@ -233,6 +233,7 @@ define(function(require) {
         },
 
         /**
+         * Travel data for one time, get activeState of each data item.
          * @param {module:echarts/data/List} data
          * @param {Functio} cb param: {string} activeState 'active' or 'inactive' or 'normal'
          *                            {number} dataIndex
@@ -241,13 +242,7 @@ define(function(require) {
         eachActiveState: function (data, callback, context) {
             var dimensions = this.dimensions;
             var axesMap = this._axesMap;
-            var hasActiveSet = false;
-
-            for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
-                if (axesMap[dimensions[j]].model.getActiveState() !== 'normal') {
-                    hasActiveSet = true;
-                }
-            }
+            var hasActiveSet = this.hasAxisbrushed();
 
             for (var i = 0, len = data.count(); i < len; i++) {
                 var values = data.getValues(dimensions, i);
@@ -271,6 +266,24 @@ define(function(require) {
 
                 callback.call(context, activeState, i);
             }
+        },
+
+        /**
+         * Whether has any activeSet.
+         * @return {boolean}
+         */
+        hasAxisbrushed: function () {
+            var dimensions = this.dimensions;
+            var axesMap = this._axesMap;
+            var hasActiveSet = false;
+
+            for (var j = 0, lenj = dimensions.length; j < lenj; j++) {
+                if (axesMap[dimensions[j]].model.getActiveState() !== 'normal') {
+                    hasActiveSet = true;
+                }
+            }
+
+            return hasActiveSet;
         },
 
         /**

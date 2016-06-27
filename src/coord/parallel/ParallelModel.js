@@ -30,6 +30,7 @@ define(function(require) {
          */
         parallelAxisIndex: null,
 
+        layoutMode: 'box',
 
         defaultOption: {
             zlevel: 0,                  // 一级层叠
