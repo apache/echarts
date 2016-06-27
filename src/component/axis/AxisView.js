@@ -21,6 +21,11 @@ define(function (require) {
 
             this.group.removeAll();
 
+            var oldAxisGroup = this._axisGroup;
+            this._axisGroup = new graphic.Group();
+
+            this.group.add(this._axisGroup);
+
             if (!axisModel.get('show')) {
                 return;
             }
@@ -33,13 +38,15 @@ define(function (require) {
 
             zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
 
-            this.group.add(axisBuilder.getGroup());
+            this._axisGroup.add(axisBuilder.getGroup());
 
             zrUtil.each(selfBuilderAttrs, function (name) {
-                if (axisModel.get(name +'.show')) {
+                if (axisModel.get(name + '.show')) {
                     this['_' + name](axisModel, gridModel, layout.labelInterval);
                 }
             }, this);
+
+            graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
         },
 
         /**
@@ -53,7 +60,6 @@ define(function (require) {
 
             var splitLineModel = axisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
-            var lineWidth = lineStyleModel.get('width');
             var lineColors = lineStyleModel.get('color');
 
             var lineInterval = getInterval(splitLineModel, labelInterval);
@@ -63,13 +69,16 @@ define(function (require) {
             var gridRect = gridModel.coordinateSystem.getRect();
             var isHorizontal = axis.isHorizontal();
 
-            var splitLines = [];
             var lineCount = 0;
 
             var ticksCoords = axis.getTicksCoords();
+            var ticks = axis.scale.getTicks();
 
             var p1 = [];
             var p2 = [];
+            // Simple optimization
+            // Batching the lines if color are the same
+            var lineStyle = lineStyleModel.getLineStyle();
             for (var i = 0; i < ticksCoords.length; i++) {
                 if (ifIgnoreOnTick(axis, i, lineInterval)) {
                     continue;
@@ -91,31 +100,20 @@ define(function (require) {
                 }
 
                 var colorIndex = (lineCount++) % lineColors.length;
-                splitLines[colorIndex] = splitLines[colorIndex] || [];
-                splitLines[colorIndex].push(new graphic.Line(graphic.subPixelOptimizeLine({
+                this._axisGroup.add(new graphic.Line(graphic.subPixelOptimizeLine({
+                    anid: 'line_' + ticks[i],
+
                     shape: {
                         x1: p1[0],
                         y1: p1[1],
                         x2: p2[0],
                         y2: p2[1]
                     },
-                    style: {
-                        lineWidth: lineWidth
-                    },
-                    silent: true
-                })));
-            }
-
-            // Simple optimization
-            // Batching the lines if color are the same
-            var lineStyle = lineStyleModel.getLineStyle();
-            for (var i = 0; i < splitLines.length; i++) {
-                this.group.add(graphic.mergePath(splitLines[i], {
                     style: zrUtil.defaults({
-                        stroke: lineColors[i % lineColors.length]
+                        stroke: lineColors[colorIndex]
                     }, lineStyle),
                     silent: true
-                }));
+                })));
             }
         },
 
@@ -134,15 +132,16 @@ define(function (require) {
 
             var gridRect = gridModel.coordinateSystem.getRect();
             var ticksCoords = axis.getTicksCoords();
+            var ticks = axis.scale.getTicks();
 
             var prevX = axis.toGlobalCoord(ticksCoords[0]);
             var prevY = axis.toGlobalCoord(ticksCoords[0]);
 
-            var splitAreaRects = [];
             var count = 0;
 
             var areaInterval = getInterval(splitAreaModel, labelInterval);
 
+            var areaStyle = areaStyleModel.getAreaStyle();
             areaColors = zrUtil.isArray(areaColors) ? areaColors : [areaColors];
 
             for (var i = 1; i < ticksCoords.length; i++) {
@@ -170,31 +169,23 @@ define(function (require) {
                 }
 
                 var colorIndex = (count++) % areaColors.length;
-                splitAreaRects[colorIndex] = splitAreaRects[colorIndex] || [];
-                splitAreaRects[colorIndex].push(new graphic.Rect({
+                this._axisGroup.add(new graphic.Rect({
+                    anid: 'area_' + ticks[i],
+
                     shape: {
                         x: x,
                         y: y,
                         width: width,
                         height: height
                     },
+                    style: zrUtil.defaults({
+                        fill: areaColors[colorIndex]
+                    }, areaStyle),
                     silent: true
                 }));
 
                 prevX = x + width;
                 prevY = y + height;
-            }
-
-            // Simple optimization
-            // Batching the rects if color are the same
-            var areaStyle = areaStyleModel.getAreaStyle();
-            for (var i = 0; i < splitAreaRects.length; i++) {
-                this.group.add(graphic.mergePath(splitAreaRects[i], {
-                    style: zrUtil.defaults({
-                        fill: areaColors[i % areaColors.length]
-                    }, areaStyle),
-                    silent: true
-                }));
             }
         }
     });
@@ -241,8 +232,7 @@ define(function (require) {
         ];
 
         // Axis rotation
-        var r = {x: 0, y: 1};
-        layout.rotation = Math.PI / 2 * r[axisDim];
+        layout.rotation = Math.PI / 2 * (axisDim === 'x' ? 0 : 1);
 
         // Tick and label direction, x y is axisDim
         var dirMap = {top: -1, bottom: 1, left: -1, right: 1};

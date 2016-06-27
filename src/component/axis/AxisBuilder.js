@@ -87,16 +87,18 @@ define(function (require) {
         this.group = new graphic.Group();
 
         // FIXME Not use a seperate text group?
-        var textGroup = new graphic.Group({
+        var dumbGroup = new graphic.Group({
             position: opt.position.slice(),
             rotation: opt.rotation
         });
 
-        this.group.add(textGroup);
-        this._textGroup = textGroup;
+        // this.group.add(dumbGroup);
+        // this._dumbGroup = dumbGroup;
 
-        textGroup.updateTransform();
-        this._transform = textGroup.transform;
+        dumbGroup.updateTransform();
+        this._transform = dumbGroup.transform;
+
+        this._dumbGroup = dumbGroup;
     };
 
     AxisBuilder.prototype = {
@@ -137,6 +139,10 @@ define(function (require) {
             var pt2 = v2ApplyTransform([], [extent[1], 0], matrix);
 
             this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
+
+                // Id for animation
+                anid: 'line',
+
                 shape: {
                     x1: pt1[0],
                     y1: pt1[1],
@@ -171,7 +177,7 @@ define(function (require) {
             var tickLen = tickModel.get('length');
             var tickInterval = getInterval(tickModel, opt.labelInterval);
             var ticksCoords = axis.getTicksCoords();
-            var tickLines = [];
+            var ticks = axis.scale.getTicks();
 
             var pt1 = [];
             var pt2 = [];
@@ -192,30 +198,27 @@ define(function (require) {
                 v2ApplyTransform(pt1, pt1, matrix);
                 v2ApplyTransform(pt2, pt2, matrix);
                 // Tick line, Not use group transform to have better line draw
-                tickLines.push(new graphic.Line(graphic.subPixelOptimizeLine({
+                this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
+
+                    // Id for animation
+                    anid: 'tick_' + ticks[i],
+
                     shape: {
                         x1: pt1[0],
                         y1: pt1[1],
                         x2: pt2[0],
                         y2: pt2[1]
                     },
-                    style: {
-                        lineWidth: lineStyleModel.get('width')
-                    },
+                    style: zrUtil.defaults(
+                        lineStyleModel.getLineStyle(),
+                        {
+                            stroke: axisModel.get('axisLine.lineStyle.color')
+                        }
+                    ),
+                    z2: 2,
                     silent: true
                 })));
             }
-
-            this.group.add(graphic.mergePath(tickLines, {
-                style: zrUtil.defaults(
-                    lineStyleModel.getLineStyle(),
-                    {
-                        stroke: axisModel.get('axisLine.lineStyle.color')
-                    }
-                ),
-                z2: 2,
-                silent: true
-            }));
         },
 
         /**
@@ -273,6 +276,10 @@ define(function (require) {
                 var labelBeforeFormat = axis.scale.getLabel(ticks[i]);
 
                 var textEl = new graphic.Text({
+
+                    // Id for animation
+                    anid: 'label_' + ticks[i],
+
                     style: {
                         text: labels[i],
                         textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
@@ -290,8 +297,15 @@ define(function (require) {
                 textEl.eventData.targetType = 'axisLabel';
                 textEl.eventData.value = labelBeforeFormat;
 
+
+                // FIXME
+                this._dumbGroup.add(textEl);
+                textEl.updateTransform();
+
                 textEls.push(textEl);
-                this._textGroup.add(textEl);
+                this.group.add(textEl);
+
+                textEl.decomposeTransform();
             }
 
             function isTwoLabelOverlapped(current, next) {
@@ -368,6 +382,10 @@ define(function (require) {
             }
 
             var textEl = new graphic.Text({
+
+                // Id for animation
+                anid: 'name',
+
                 style: {
                     text: name,
                     textFont: textStyleModel.getFont(),
@@ -386,7 +404,13 @@ define(function (require) {
             textEl.eventData.targetType = 'axisName';
             textEl.eventData.name = name;
 
-            this._textGroup.add(textEl);
+            // FIXME
+            this._dumbGroup.add(textEl);
+            textEl.updateTransform();
+
+            this.group.add(textEl);
+
+            textEl.decomposeTransform();
         }
 
     };
