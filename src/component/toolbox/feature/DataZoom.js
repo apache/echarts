@@ -219,7 +219,7 @@ define(function(require) {
                 ? {
                     brushType: brushType,
                     brushStyle: { // FIXME user customized?
-                        lineWidth: 3,
+                        lineWidth: 2,
                         stroke: '#333',
                         fill: 'rgba(0,0,0,0.2)'
                     }
