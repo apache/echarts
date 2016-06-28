@@ -299,7 +299,7 @@ define(function (require) {
             }
             var name = nameList[i] || '';
             // Try using the id in option
-            var id = data[i].id;
+            var id = data[i] && data[i].id;
 
             if (!id && name) {
                 // Use name as id and add counter to avoid same name
