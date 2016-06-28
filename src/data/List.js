@@ -293,13 +293,13 @@ define(function (require) {
         // Use the name in option and create id
         for (var i = 0; i < data.length; i++) {
             if (!nameList[i]) {
-                if (data[i].name != null) {
+                if (data[i] && data[i].name != null) {
                     nameList[i] = data[i].name;
                 }
             }
             var name = nameList[i] || '';
             // Try using the id in option
-            var id = data[i].id;
+            var id = data[i] && data[i].id;
 
             if (!id && name) {
                 // Use name as id and add counter to avoid same name

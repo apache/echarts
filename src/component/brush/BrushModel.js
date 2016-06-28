@@ -5,6 +5,8 @@ define(function(require) {
 
     var echarts = require('../../echarts');
     var zrUtil = require('zrender/core/util');
+    var visualSolution = require('../../visual/visualSolution');
+    var Model = require('../../model/Model');
 
     var BrushModel = echarts.extendComponentModel({
 
@@ -16,11 +18,11 @@ define(function(require) {
          * @protected
          */
         defaultOption: {
-            inBrush: {
-            },
-            outOfBrush: {
-                color: '#ddd'
-            },
+            // inBrush: {
+            // },
+            // outOfBrush: {
+            //     color: '#ddd'
+            // },
             toolbox: null,          // Default value see preprocessor.
             brushLink: null,        // Series indices array, broadcast using dataIndex.
                                     // or 'all', which means all series.
@@ -32,9 +34,9 @@ define(function(require) {
             brushMode: 'single',    // Default brushMode, 'single' or 'multiple'
             transformable: true,    // Default transformable.
             brushStyle: {           // Default brushStyle
-                // lineWidth: 2,
-                // stroke: 'rgba(0,0,0,0.2)',
-                // fill: 'rgba(0,0,0,0.1)',
+                borderWidth: 1,
+                color: 'rgba(120,140,180,0.3)',
+                borderColor: 'rgba(120,140,180,0.8)',
                 width: null         // do not use bursh width in line brush, but fetch from grid.
             },
 
@@ -75,6 +77,25 @@ define(function(require) {
          * @type {Array.<Object>}
          */
         coordInfoList: [],
+
+        init: function (option) {
+            var newOption = zrUtil.clone(option);
+            BrushModel.superApply(this, 'init', arguments);
+            visualSolution.replaceVisualOption(this.option, newOption, ['inBrush', 'outOfBrush']);
+
+            this.option.outOfBrush = this.option.outOfBrush || {
+                color: '#ddd'
+            };
+            this.option.inBrush = this.option.inBrush || {};
+        },
+
+        mergeOption: function (newOption) {
+            // FIXME init will pass a null newOption
+            visualSolution.replaceVisualOption(
+                this.option, newOption, ['inBrush', 'outOfBrush']
+            );
+            BrushModel.superApply(this, 'mergeOption', arguments);
+        },
 
         /**
          * If ranges is null/undefined, range state remain.
@@ -120,7 +141,7 @@ define(function(require) {
                     brushType: option.brushType,
                     brushMode: option.brushMode,
                     transformable: option.transformable,
-                    brushStyle: option.brushStyle,
+                    brushStyle: new Model(option.brushStyle).getItemStyle(),
                     removeOnClick: option.removeOnClick
                 },
                 brushOption,
