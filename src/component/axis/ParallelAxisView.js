@@ -93,7 +93,6 @@ define(function (require) {
 
             this._brushController
                 .mount({
-                    forbidGlobalCursor: true,
                     rotation: builderOpt.rotation,
                     position: builderOpt.position
                 })
