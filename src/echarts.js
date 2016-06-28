@@ -65,6 +65,7 @@ define(function (require) {
     // This flag is used to carry out this rule.
     // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
     var IN_MAIN_PROCESS = '__flag_in_main_process';
+    var HAS_GRADIENT_OR_PATTERN_BG = '_hasGradientOrPatternBg';
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -447,21 +448,23 @@ define(function (require) {
                         backgroundColor = 'transparent';
                     }
                 }
-                if (backgroundColor.colorStops) {
+                if (backgroundColor.colorStops || backgroundColor.image) {
                     // Gradient background
                     // FIXME Fixed layer？
                     zr.configLayer(0, {
                         clearColor: backgroundColor
                     });
-                    this._hasGradientBg = true;
+                    this[HAS_GRADIENT_OR_PATTERN_BG] = true;
+
+                    this._dom.style.background = 'transparent';
                 }
                 else {
-                    if (this._hasGradientBg) {
+                    if (this[HAS_GRADIENT_OR_PATTERN_BG]) {
                         zr.configLayer(0, {
                             clearColor: null
                         });
                     }
-                    this._hasGradientBg = false;
+                    this[HAS_GRADIENT_OR_PATTERN_BG] = false;
 
                     this._dom.style.background = backgroundColor;
                 }
