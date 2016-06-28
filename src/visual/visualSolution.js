@@ -7,6 +7,16 @@ define(function(require) {
     var VisualMapping = require('./VisualMapping');
     var each = zrUtil.each;
 
+    function hasKeys(obj) {
+        if (obj) {
+            for (var name in obj){
+                if (obj.hasOwnProperty(name)) {
+                    return true;
+                }
+            }
+        }
+    }
+
     var visualSolution = {
 
         /**
@@ -66,12 +76,12 @@ define(function(require) {
             // will be reset. Otherwise, all keys remain.
             var has;
             zrUtil.each(keys, function (key) {
-                if (newOption.hasOwnProperty(key)) {
+                if (newOption.hasOwnProperty(key) && hasKeys(newOption[key])) {
                     has = true;
                 }
             });
             has && zrUtil.each(keys, function (key) {
-                if (newOption.hasOwnProperty(key)) {
+                if (newOption.hasOwnProperty(key) && hasKeys(newOption[key])) {
                     thisOption[key] = zrUtil.clone(newOption[key]);
                 }
                 else {

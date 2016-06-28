@@ -293,7 +293,7 @@ define(function (require) {
         // Use the name in option and create id
         for (var i = 0; i < data.length; i++) {
             if (!nameList[i]) {
-                if (data[i].name != null) {
+                if (data[i] && data[i].name != null) {
                     nameList[i] = data[i].name;
                 }
             }

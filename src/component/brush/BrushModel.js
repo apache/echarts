@@ -5,6 +5,7 @@ define(function(require) {
 
     var echarts = require('../../echarts');
     var zrUtil = require('zrender/core/util');
+    var visualSolution = require('../../visual/visualSolution');
 
     var BrushModel = echarts.extendComponentModel({
 
@@ -75,6 +76,20 @@ define(function(require) {
          * @type {Array.<Object>}
          */
         coordInfoList: [],
+
+        init: function (option) {
+            var newOption = zrUtil.clone(option);
+            BrushModel.superApply(this, 'init', arguments);
+            visualSolution.replaceVisualOption(this.option, newOption, ['inBrush', 'outOfBrush']);
+        },
+
+        mergeOption: function (newOption) {
+            // FIXME init will pass a null newOption
+            visualSolution.replaceVisualOption(
+                this.option, newOption, ['inBrush', 'outOfBrush']
+            );
+            BrushModel.superApply(this, 'mergeOption', arguments);
+        },
 
         /**
          * If ranges is null/undefined, range state remain.
