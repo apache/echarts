@@ -18,11 +18,11 @@ define(function(require) {
          * @protected
          */
         defaultOption: {
-            inBrush: {
-            },
-            outOfBrush: {
-                color: '#ddd'
-            },
+            // inBrush: {
+            // },
+            // outOfBrush: {
+            //     color: '#ddd'
+            // },
             toolbox: null,          // Default value see preprocessor.
             brushLink: null,        // Series indices array, broadcast using dataIndex.
                                     // or 'all', which means all series.
@@ -82,6 +82,11 @@ define(function(require) {
             var newOption = zrUtil.clone(option);
             BrushModel.superApply(this, 'init', arguments);
             visualSolution.replaceVisualOption(this.option, newOption, ['inBrush', 'outOfBrush']);
+
+            this.option.outOfBrush = this.option.outOfBrush || {
+                color: '#ddd'
+            };
+            this.option.inBrush = this.option.inBrush || {};
         },
 
         mergeOption: function (newOption) {
