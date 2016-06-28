@@ -292,13 +292,15 @@ define(function (require) {
 
         // Use the name in option and create id
         for (var i = 0; i < data.length; i++) {
-            var id = '';
             if (!nameList[i]) {
-                nameList[i] = data[i].name;
-                // Try using the id in option
-                id = data[i].id;
+                if (data[i].name != null) {
+                    nameList[i] = data[i].name;
+                }
             }
             var name = nameList[i] || '';
+            // Try using the id in option
+            var id = data[i].id;
+
             if (!id && name) {
                 // Use name as id and add counter to avoid same name
                 nameRepeatCount[name] = nameRepeatCount[name] || 0;
