@@ -35,8 +35,8 @@ define(function(require) {
             transformable: true,    // Default transformable.
             brushStyle: {           // Default brushStyle
                 borderWidth: 1,
-                borderColor: 'rgba(0,0,0,0.3)',
-                color: 'rgba(0,0,0,0.15)',
+                color: 'rgba(120,140,180,0.3)',
+                borderColor: 'rgba(120,140,180,0.8)',
                 width: null         // do not use bursh width in line brush, but fetch from grid.
             },
 
