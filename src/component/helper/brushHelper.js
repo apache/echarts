@@ -11,18 +11,18 @@ define(function(require) {
     var PANEL_ID_SPLIT = '--';
     var COORD_CONVERTS = ['dataToPoint', 'pointToData'];
 
-    helper.parseOutputRanges = function (brushRanges, coordInfoList, ecModel, rangesCoordInfo) {
-        each(brushRanges, function (brushRange, index) {
-            var panelId = brushRange.panelId;
+    helper.parseOutputRanges = function (areas, coordInfoList, ecModel, rangesCoordInfo) {
+        each(areas, function (area, index) {
+            var panelId = area.panelId;
 
             if (panelId) {
                 panelId = panelId.split(PANEL_ID_SPLIT);
 
-                brushRange[panelId[0] + 'Index'] = +panelId[1];
+                area[panelId[0] + 'Index'] = +panelId[1];
 
-                var coordInfo = findCoordInfo(brushRange, coordInfoList);
-                brushRange.coordRange = coordConvert[brushRange.brushType](
-                    1, coordInfo, brushRange.range
+                var coordInfo = findCoordInfo(area, coordInfoList);
+                area.coordRange = coordConvert[area.brushType](
+                    1, coordInfo, area.range
                 );
                 rangesCoordInfo && (rangesCoordInfo[index] = coordInfo);
             }
@@ -30,28 +30,28 @@ define(function(require) {
     };
 
     helper.parseInputRanges = function (brushModel, ecModel) {
-        each(brushModel.brushRanges, function (brushRange) {
-            var coordInfo = findCoordInfo(brushRange, brushModel.coordInfoList);
+        each(brushModel.areas, function (area) {
+            var coordInfo = findCoordInfo(area, brushModel.coordInfoList);
 
             if (__DEV__) {
                 zrUtil.assert(
-                    !coordInfo || coordInfo === true || brushRange.coordRange,
+                    !coordInfo || coordInfo === true || area.coordRange,
                     'coordRange must be specified when coord index specified.'
                 );
                 zrUtil.assert(
-                    !coordInfo || coordInfo !== true || brushRange.range,
+                    !coordInfo || coordInfo !== true || area.range,
                     'range must be specified.'
                 );
             }
 
-            brushRange.range = brushRange.range || [];
+            area.range = area.range || [];
 
             // convert coordRange to global range and set panelId.
             if (coordInfo && coordInfo !== true) {
-                brushRange.range = coordConvert[brushRange.brushType](
-                    0, coordInfo, brushRange.coordRange
+                area.range = coordConvert[area.brushType](
+                    0, coordInfo, area.coordRange
                 );
-                brushRange.panelId = coordInfo.panelId;
+                area.panelId = coordInfo.panelId;
             }
         });
     };
@@ -151,10 +151,10 @@ define(function(require) {
         return coordInfoList;
     };
 
-    helper.controlSeries = function (brushRange, brushModel, seriesModel) {
-        // Check whether brushRange is bound in coord, and series do not belong to that coord.
+    helper.controlSeries = function (area, brushModel, seriesModel) {
+        // Check whether area is bound in coord, and series do not belong to that coord.
         // If do not do this check, some brush (like lineX) will controll all axes.
-        var coordInfo = findCoordInfo(brushRange, brushModel.coordInfoList);
+        var coordInfo = findCoordInfo(area, brushModel.coordInfoList);
         return coordInfo === true || (coordInfo && coordInfo.coordSys === seriesModel.coordinateSystem);
     };
 
@@ -168,18 +168,18 @@ define(function(require) {
      * If reutrn true, global found.
      * Otherwise nothing found.
      *
-     * @param {Object} brushRange {<componentName>Index}
+     * @param {Object} area {<componentName>Index}
      * @param {Array} coordInfoList
      * @return {Obejct|boolean}
      */
-    function findCoordInfo(brushRange, coordInfoList) {
+    function findCoordInfo(area, coordInfoList) {
         var isGlobal = true;
         for (var j = 0; j < COMPONENT_NAMES.length; j++) {
             var indexAttr = COMPONENT_NAMES[j] + 'Index';
-            if (brushRange[indexAttr] >= 0) {
+            if (area[indexAttr] >= 0) {
                 isGlobal = false;
                 for (var i = 0; i < coordInfoList.length; i++) {
-                    if (coordInfoList[i][indexAttr] === brushRange[indexAttr]) {
+                    if (coordInfoList[i][indexAttr] === area[indexAttr]) {
                         return coordInfoList[i];
                     }
                 }

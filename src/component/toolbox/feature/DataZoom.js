@@ -33,8 +33,6 @@ define(function(require) {
 
     DataZoom.defaultOption = {
         show: true,
-        xAxisIndex: 'all',
-        yAxisIndex: false, // In most case, we dont use yAxis dataZoom.
         // Icon group
         icon: {
             zoom: 'M0,13.5h26.9 M13.5,26.9V0 M32.1,13.5H58V58H13.5 V32.1',
@@ -92,8 +90,8 @@ define(function(require) {
     /**
      * @private
      */
-    proto._onBrush = function (brushRanges, opt) {
-        if (!opt.isEnd || !brushRanges.length) {
+    proto._onBrush = function (areas, opt) {
+        if (!opt.isEnd || !areas.length) {
             return;
         }
         var snapshot = {};
@@ -105,12 +103,12 @@ define(function(require) {
             retrieveAxisSetting(this.model.option), ecModel
         );
         var rangesCoordInfoList = [];
-        brushHelper.parseOutputRanges(brushRanges, coordInfoList, ecModel, rangesCoordInfoList);
+        brushHelper.parseOutputRanges(areas, coordInfoList, ecModel, rangesCoordInfoList);
 
-        var brushRange = brushRanges[0]; // dataZoom can not multiple brushRange.
+        var area = areas[0]; // dataZoom can not multiple area.
         var coordInfo = rangesCoordInfoList[0];
-        var coordRange = brushRange.coordRange;
-        var brushType = brushRange.brushType;
+        var coordRange = area.coordRange;
+        var brushType = area.brushType;
 
         if (coordInfo && coordRange) {
             if (brushType === 'rect') {
@@ -219,8 +217,8 @@ define(function(require) {
                 ? {
                     brushType: brushType,
                     brushStyle: { // FIXME user customized?
-                        lineWidth: 3,
-                        stroke: '#333',
+                        lineWidth: 0,
+                        // stroke: '#333',
                         fill: 'rgba(0,0,0,0.2)'
                     }
                 }

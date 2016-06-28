@@ -44,7 +44,7 @@ define(function (require) {
         brushStyle: {
             lineWidth: 2,
             stroke: 'rgba(0,0,0,0.3)',
-            fill: 'rgba(0,0,0,0.15)'
+            fill: 'rgba(0,0,0,0.1)'
         },
         transformable: true,
         brushMode: 'single',
@@ -59,7 +59,7 @@ define(function (require) {
      * @mixin {module:zrender/mixin/Eventful}
      * @event module:echarts/component/helper/BrushController#brush
      *        params:
-     *            brushRanges: Array.<Array>, coord relates to container group,
+     *            areas: Array.<Array>, coord relates to container group,
      *                                    If no container specified, to global.
      *            opt {
      *                isEnd: boolean,
@@ -430,7 +430,7 @@ define(function (require) {
     }
 
     function trigger(controller, opt) {
-        var brushRanges = map(controller._covers, function (cover) {
+        var areas = map(controller._covers, function (cover) {
             var brushOption = cover.__brushOption;
             var range = zrUtil.clone(brushOption.range);
 
@@ -441,7 +441,7 @@ define(function (require) {
             };
         });
 
-        controller.trigger('brush', brushRanges, {
+        controller.trigger('brush', areas, {
             isEnd: !!opt.isEnd,
             removeOnClick: !!opt.removeOnClick
         });
@@ -473,7 +473,7 @@ define(function (require) {
         var cover = new graphic.Group();
 
         cover.add(new graphic.Rect({
-            name: 'rect',
+            name: 'main',
             style: makeStyle(brushOption),
             silent: true,
             draggable: true,
@@ -516,7 +516,7 @@ define(function (require) {
         var widtha = width + lineWidth;
         var heighta = height + lineWidth;
 
-        updateRectShape(controller, cover, 'rect', x, y, width, height);
+        updateRectShape(controller, cover, 'main', x, y, width, height);
 
         if (brushOption.transformable) {
             updateRectShape(controller, cover, 'w', xa, ya, handleSize, heighta);
@@ -681,13 +681,25 @@ define(function (require) {
 
         if (controller._brushType) { // If active
             var panels = controller._panels;
-            if (panels) { // Brush on panels
-                each(panels, function (panel) {
-                    panel.contain(x, y) && zr.setCursorStyle('crosshair');
-                });
+            var covers = controller._covers;
+            var inCover;
+
+            for (var i = 0; i < covers.length; i++) {
+                if (coverRenderers[covers[i].__brushOption.brushType].contain(covers[i], x, y)) {
+                    inCover = true;
+                    break;
+                }
             }
-            else { // Global brush
-                zr.setCursorStyle('crosshair');
+
+            if (!inCover) {
+                if (panels) { // Brush on panels
+                    each(panels, function (panel) {
+                        panel.contain(x, y) && zr.setCursorStyle('crosshair');
+                    });
+                }
+                else { // Global brush
+                    zr.setCursorStyle('crosshair');
+                }
             }
         }
     }
@@ -695,6 +707,10 @@ define(function (require) {
     function preventDefault(e) {
         var rawE = e.event;
         rawE.preventDefault && rawE.preventDefault();
+    }
+
+    function mainShapeContain(cover, x, y) {
+        return cover.childOfName('main').contain(x, y);
     }
 
     function updateCoverByMouse(controller, e, isEnd) {
@@ -838,7 +854,8 @@ define(function (require) {
             updateCoverShape: function (controller, cover, localRange, brushOption) {
                 updateBaseRect(controller, cover, localRange, brushOption);
             },
-            updateCommon: updateCommon
+            updateCommon: updateCommon,
+            contain: mainShapeContain
         },
 
         polygon: {
@@ -848,6 +865,7 @@ define(function (require) {
                 // Do not use graphic.Polygon because graphic.Polyline do not close the
                 // border of the shape when drawing, which is a better experience for user.
                 cover.add(new graphic.Polyline({
+                    name: 'main',
                     style: makeStyle(brushOption),
                     silent: true
                 }));
@@ -861,6 +879,7 @@ define(function (require) {
                 cover.remove(cover.childAt(0));
                 // Use graphic.Polygon close the shape.
                 cover.add(new graphic.Polygon({
+                    name: 'main',
                     draggable: true,
                     drift: curry(driftPolygon, controller, cover),
                     ondragend: curry(trigger, controller, {isEnd: true})
@@ -871,7 +890,8 @@ define(function (require) {
                     points: clipByPanel(controller, cover, localRange)
                 });
             },
-            updateCommon: updateCommon
+            updateCommon: updateCommon,
+            contain: mainShapeContain
         }
     };
 
@@ -926,7 +946,8 @@ define(function (require) {
 
                 updateBaseRect(controller, cover, rectRange, brushOption);
             },
-            updateCommon: updateCommon
+            updateCommon: updateCommon,
+            contain: mainShapeContain
         };
     }
 

@@ -33,8 +33,8 @@ define(function(require) {
             transformable: true,    // Default transformable.
             brushStyle: {           // Default brushStyle
                 // lineWidth: 2,
-                // stroke: 'rgba(0,0,0,0.3)',
-                fill: 'rgba(0,0,0,0.15)',
+                // stroke: 'rgba(0,0,0,0.2)',
+                // fill: 'rgba(0,0,0,0.1)',
                 width: null         // do not use bursh width in line brush, but fetch from grid.
             },
 
@@ -49,9 +49,9 @@ define(function(require) {
 
         /**
          * @readOnly
-         * @type {Array.<Object>} ranges
+         * @type {Array.<Object>}
          */
-        brushRanges: [],
+        areas: [],
 
         /**
          * Current activated brush type.
@@ -81,23 +81,23 @@ define(function(require) {
          *
          * @param {Array.<Object>} [ranges]
          */
-        setBrushRanges: function (brushRanges) {
+        setAreas: function (areas) {
             if (__DEV__) {
-                zrUtil.assert(zrUtil.isArray(brushRanges));
-                zrUtil.each(brushRanges, function (brushRange) {
-                    zrUtil.assert(brushRange.brushType, 'Illegal brushRanges');
+                zrUtil.assert(zrUtil.isArray(areas));
+                zrUtil.each(areas, function (area) {
+                    zrUtil.assert(area.brushType, 'Illegal areas');
                 });
             }
 
             // If ranges is null/undefined, range state remain.
-            // This helps user to dispatchAction({type: 'brush'}) with no brushRanges
+            // This helps user to dispatchAction({type: 'brush'}) with no areas
             // set but just want to get the current brush select info from a `brush` event.
-            if (!brushRanges) {
+            if (!areas) {
                 return;
             }
 
-            this.brushRanges = zrUtil.map(brushRanges, function (brushRange) {
-                return this._mergeBrushOption(brushRange);
+            this.areas = zrUtil.map(areas, function (area) {
+                return this._mergeBrushOption(area);
             }, this);
         },
 

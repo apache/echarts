@@ -3,6 +3,7 @@
         <meta charset="utf-8">
         <script src="esl.js"></script>
         <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
         <link rel="stylesheet" href="reset.css" />
     </head>
     <body>
@@ -91,12 +92,24 @@
             <!-- <div id="main1-st"></div> -->
             <div class="panel">
                 <ul class="panel-desc">
-                    <li>+++++++++++.</li>
                     <li><strong>CHECK</strong>: brush an area and drag dataZoom.</li>
                 </ul>
                 <div id="panel1"></div>
             </div>
         </div>
+
+        <div class="split">Graph</div>
+        <div class="block">
+            <div id="main2" class="main"></div>
+            <!-- <div id="main1-st"></div> -->
+            <div class="panel">
+                <ul class="panel-desc">
+                    <li><strong>CHECK</strong>: brush an area and drag dataZoom.</li>
+                </ul>
+                <div id="panel2"></div>
+            </div>
+        </div>
+
 
 
 
@@ -204,7 +217,9 @@
                     },
                     toolbox: {
                         feature: {
-                            dataZoom: {},
+                            dataZoom: {
+                                yAxisIndex: false
+                            },
                             brush: {
                                 type: ['polygon', 'rect', 'lineX', 'lineY', 'keep', 'clear']
                             }
@@ -385,7 +400,7 @@
 
                 chart.dispatchAction({
                     type: 'brush',
-                    brushRanges: [
+                    areas: [
                         {
                             brushType: 'lineX',
                             coordRange: ['2016-06-02', '2016-06-20'],
@@ -399,6 +414,124 @@
 
 
 
+
+
+
+
+        <!-- =================== 2 ===================== -->
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'extension/dataTool/gexf',
+                'echarts/chart/graph',
+                'echarts/component/title',
+                'echarts/component/legend',
+                'echarts/component/geo',
+                'echarts/component/tooltip',
+                'echarts/component/visualMap',
+                'theme/vintage'
+            ], function (echarts, gexf) {
+
+                var chart = echarts.init(document.getElementById('main2'), 'vintage');
+
+                $.get('./data/les-miserables.gexf', function (xml) {
+                    var graph = gexf.parse(xml);
+                    var categories = [];
+                    for (var i = 0; i < 9; i++) {
+                        categories[i] = {
+                            name: '类目' + i
+                        };
+                    }
+                    graph.nodes.forEach(function (node) {
+                        delete node.itemStyle;
+                        node.value = node.symbolSize;
+                        node.label = {
+                            normal: {
+                                show: node.symbolSize > 30
+                            },
+                            emphasis: {
+                                show: true
+                            }
+                        };
+                        node.category = node.attributes['modularity_class'];
+                    });
+                    graph.links.forEach(function (link) {
+                        delete link.lineStyle;
+                    });
+                    var option = {
+                        tooltip: {},
+                        legend: [{
+                            width: '70%',
+                            // selectedMode: 'single',
+                            data: categories.map(function (a) {
+                                return a.name;
+                            })
+                        }],
+                        animationDurationUpdate: 1500,
+                        animationEasingUpdate: 'quinticInOut',
+                        brush: {
+                        },
+                        series : [
+                            {
+                                name: 'Les Miserables',
+                                type: 'graph',
+                                layout: 'none',
+                                data: graph.nodes,
+                                links: graph.links,
+                                categories: categories,
+                                roam: true,
+                                draggable: true,
+                                itemStyle: {
+                                    normal: {
+                                        borderColor: '#fff',
+                                        borderWidth: 2,
+                                        shadowBlur: 10,
+                                        shadowColor: 'rgba(0, 0, 0, 0.3)'
+                                    }
+                                },
+                                focusNodeAdjacency: true,
+                                // edgeSymbol: ['none', 'arrow'],
+                                // scaleLimit: {
+                                //     min: 1.5,
+                                //     max: 2
+                                // },
+                                label: {
+                                    normal: {
+                                        position: 'right',
+                                        formatter: '{b}'
+                                    }
+                                },
+                                lineStyle: {
+                                    normal: {
+                                        color: 'source',
+                                        curveness: 0.3
+                                    }
+                                }
+                            }
+                        ]
+                    };
+
+                    chart.setOption(option);
+
+                    var config = {
+                        layout: 'none'
+                    };
+
+                    chart.on('click', function (params) {
+                        console.log(params, params.data);
+                    });
+
+                });
+            });
+        </script>
 
 
 

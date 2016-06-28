@@ -334,7 +334,7 @@
                 var trackMax = 30;
 
                 chart.setOption(option);
-                chart.dispatchAction({type: 'brush', brushRanges: [
+                chart.dispatchAction({type: 'brush', areas: [
                     {brushType: 'rect', range: [[200, 300], [100, 350]]}
                 ]});
 
@@ -732,7 +732,7 @@
                         chart.setOption(option, true);
                         chart.dispatchAction({
                             type: 'brush',
-                            brushRanges: [
+                            areas: [
                                 // {
                                 //     geoIndex: 0,
                                 //     brushType: 'polygon',

@@ -57,7 +57,7 @@ define(function(require) {
         ecModel.eachComponent({mainType: 'brush'}, function (brushModel) {
             brushType = brushModel.brushType;
             brushMode = brushModel.brushOption.brushMode || 'single';
-            isBrushed |= brushModel.brushRanges.length;
+            isBrushed |= brushModel.areas.length;
         });
         this._brushType = brushType;
         this._brushMode = brushMode;
@@ -96,8 +96,8 @@ define(function(require) {
         if (type === 'clear') {
             api.dispatchAction({
                 type: 'brush',
-                // Clear all brushRanges of all brush components.
-                brushRanges: []
+                // Clear all areas of all brush components.
+                areas: []
             });
         }
         else {

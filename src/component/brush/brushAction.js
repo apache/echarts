@@ -17,7 +17,7 @@ define(function(require) {
          {type: 'brush', event: 'brush', update: 'updateView'},
         function (payload, ecModel) {
             ecModel.eachComponent({mainType: 'brush', query: payload}, function (brushModel) {
-                brushModel.setBrushRanges(payload.brushRanges);
+                brushModel.setAreas(payload.areas);
             });
         }
     );

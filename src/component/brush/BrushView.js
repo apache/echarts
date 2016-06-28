@@ -71,10 +71,10 @@ define(function (require) {
         /**
          * @private
          */
-        _onBrush: function (brushRanges, opt) {
+        _onBrush: function (areas, opt) {
             var modelId = this.model.id;
 
-            brushHelper.parseOutputRanges(brushRanges, this.model.coordInfoList, this.ecModel);
+            brushHelper.parseOutputRanges(areas, this.model.coordInfoList, this.ecModel);
 
             // Action is not dispatched on drag end, because the drag end
             // emits the same params with the last drag move event, and
@@ -83,7 +83,7 @@ define(function (require) {
             (!opt.isEnd || opt.removeOnClick) && this.api.dispatchAction({
                 type: 'brush',
                 brushId: modelId,
-                brushRanges: zrUtil.clone(brushRanges),
+                areas: zrUtil.clone(areas),
                 $from: modelId
             });
         }
@@ -95,7 +95,7 @@ define(function (require) {
         (!payload || payload.$from !== brushModel.id) && this._brushController
             .setPanels(brushHelper.makePanelOpts(brushModel.coordInfoList))
             .enableBrush(brushModel.brushOption)
-            .updateCovers(brushModel.brushRanges.slice());
+            .updateCovers(brushModel.areas.slice());
     }
 
 });

@@ -47,7 +47,7 @@ define(function (require) {
                 brushId: brushModel.id,
                 brushIndex: brushIndex,
                 brushName: brushModel.name,
-                brushRanges: zrUtil.clone(brushModel.brushRanges),
+                areas: zrUtil.clone(brushModel.areas),
                 series: []
             };
             // Every brush component exists in event params, convenient
@@ -67,11 +67,11 @@ define(function (require) {
             }
 
             // Add boundingRect and selectors to range.
-            var brushRanges = zrUtil.map(brushModel.brushRanges, function (brushRange) {
+            var areas = zrUtil.map(brushModel.areas, function (area) {
                 return bindSelector(
                     zrUtil.defaults(
-                        {boundingRect: boundingRectBuilders[brushRange.brushType](brushRange)},
-                        brushRange
+                        {boundingRect: boundingRectBuilders[area.brushType](area)},
+                        area
                     )
                 );
             });
@@ -136,10 +136,10 @@ define(function (require) {
                     return;
                 }
 
-                zrUtil.each(brushRanges, function (brushRange) {
-                    selectorsByBrushType[brushRange.brushType]
-                        && brushHelper.controlSeries(brushRange, brushModel, seriesModel)
-                        && rangeInfoList.push(brushRange);
+                zrUtil.each(areas, function (area) {
+                    selectorsByBrushType[area.brushType]
+                        && brushHelper.controlSeries(area, brushModel, seriesModel)
+                        && rangeInfoList.push(area);
                     hasBrushExists |= brushed(rangeInfoList);
                 });
 
@@ -239,9 +239,9 @@ define(function (require) {
     function checkInRange(selectorsByBrushType, rangeInfoList, data, dataIndex) {
         var itemLayout = data.getItemLayout(dataIndex);
         for (var i = 0, len = rangeInfoList.length; i < len; i++) {
-            var brushRange = rangeInfoList[i];
-            if (selectorsByBrushType[brushRange.brushType](
-                itemLayout, brushRange.selectors, brushRange
+            var area = rangeInfoList[i];
+            if (selectorsByBrushType[area.brushType](
+                itemLayout, area.selectors, area
             )) {
                 return true;
             }
@@ -278,15 +278,15 @@ define(function (require) {
             );
     }
 
-    function bindSelector(brushRange) {
-        var selectors = brushRange.selectors = {};
-        zrUtil.each(selector[brushRange.brushType], function (selFn, elType) {
+    function bindSelector(area) {
+        var selectors = area.selectors = {};
+        zrUtil.each(selector[area.brushType], function (selFn, elType) {
             // Do not use function binding or curry for performance.
             selectors[elType] = function (itemLayout) {
-                return selFn(itemLayout, selectors, brushRange);
+                return selFn(itemLayout, selectors, area);
             };
         });
-        return brushRange;
+        return area;
     }
 
     var boundingRectBuilders = {
@@ -295,13 +295,13 @@ define(function (require) {
 
         lineY: zrUtil.noop,
 
-        rect: function (brushRange) {
-            return getBoundingRectFromMinMax(brushRange.range);
+        rect: function (area) {
+            return getBoundingRectFromMinMax(area.range);
         },
 
-        polygon: function (brushRange) {
+        polygon: function (area) {
             var minMax;
-            var range = brushRange.range;
+            var range = area.range;
 
             for (var i = 0, len = range.length; i < len; i++) {
                 minMax = minMax || [[Infinity, -Infinity], [Infinity, -Infinity]];
