@@ -5,13 +5,31 @@ define(function(require) {
 
     var each = zrUtil.each;
 
+    var helper = {};
+
     var COMPONENT_NAMES = ['geo', 'xAxis', 'yAxis'];
     var PANEL_ID_SPLIT = '--';
     var COORD_CONVERTS = ['dataToPoint', 'pointToData'];
 
-    var helper = {};
+    helper.parseOutputRanges = function (brushRanges, coordInfoList, ecModel, rangesCoordInfo) {
+        each(brushRanges, function (brushRange, index) {
+            var panelId = brushRange.panelId;
 
-    helper.resetInputRanges = function (brushModel, ecModel) {
+            if (panelId) {
+                panelId = panelId.split(PANEL_ID_SPLIT);
+
+                brushRange[panelId[0] + 'Index'] = +panelId[1];
+
+                var coordInfo = findCoordInfo(brushRange, coordInfoList);
+                brushRange.coordRange = coordConvert[brushRange.brushType](
+                    1, coordInfo, brushRange.range
+                );
+                rangesCoordInfo && (rangesCoordInfo[index] = coordInfo);
+            }
+        });
+    };
+
+    helper.parseInputRanges = function (brushModel, ecModel) {
         each(brushModel.brushRanges, function (brushRange) {
             var coordInfo = findCoordInfo(brushRange, brushModel.coordInfoList);
 
@@ -38,33 +56,10 @@ define(function(require) {
         });
     };
 
-    helper.resetOutputRanges = function (brushRanges, brushModel, ecModel) {
-        each(brushRanges, function (brushRange) {
-            var panelId = brushRange.panelId;
-
-            if (panelId) {
-                panelId = panelId.split(PANEL_ID_SPLIT);
-
-                brushRange[panelId[0] + 'Index'] = +panelId[1];
-
-                brushRange.coordRange = coordConvert[brushRange.brushType](
-                    1, findCoordInfo(brushRange, brushModel.coordInfoList), brushRange.range
-                );
-            }
-        });
-    };
-
-    helper.controlSeries = function (brushRange, brushModel, seriesModel) {
-        // Check whether brushRange is bound in coord, and series do not belong to that coord.
-        // If do not do this check, some brush (like lineX) will controll all axes.
-        var coordInfo = findCoordInfo(brushRange, brushModel.coordInfoList);
-        return coordInfo === true || (coordInfo && coordInfo.coordSys === seriesModel.coordinateSystem);
-    };
-
-    helper.makePanelOpts = function (brushModel, ecModel) {
+    helper.makePanelOpts = function (coordInfoList) {
         var panelOpts = [];
 
-        each(brushModel.coordInfoList, function (coordInfo) {
+        each(coordInfoList, function (coordInfo) {
             var coordSys = coordInfo.coordSys;
             var rect;
 
@@ -84,11 +79,16 @@ define(function(require) {
         return panelOpts;
     };
 
-    helper.makeCoordInfoList = function (brushModel, ecModel) {
+    /**
+     * @param {Object} option {xAxisIndex, yAxisIndex, geoIndex}
+     * @param {module:echarts/model/Global} ecModel
+     * @return {Array.<Obejct>} coordInfoList
+     */
+    helper.makeCoordInfoList = function (option, ecModel) {
         var coordInfoList = [];
 
         each(COMPONENT_NAMES, function (componentName) {
-            var componentIndices = brushModel.option[componentName + 'Index'];
+            var componentIndices = option[componentName + 'Index'];
             if (componentIndices == null) {
                 return;
             }
@@ -135,15 +135,33 @@ define(function(require) {
 
                 coordInfo[componentName] = componentModel;
                 coordInfo[componentName + 'Index'] = index;
+                // If both xAxisIndex and yAxisIndex specified, panelId only use yAxisIndex,
+                // which is enough to index panel.
                 coordInfo.panelId = componentName + PANEL_ID_SPLIT + index;
                 coordInfo.coordSys = coordSys
                     // If only xAxisIndex or only yAxisIndex specified, find its first cartesian.
                     || grid.getCartesian(coordInfo.xAxisIndex, coordInfo.yAxisIndex);
+
+                coordInfo.coordSys
+                    ? (coordInfoList[componentName + 'Has'] = true)
+                    : coordInfoList.pop(); // If a coordInfo exists originally, existance of coordSys is ensured.
             });
         });
 
         return coordInfoList;
     };
+
+    helper.controlSeries = function (brushRange, brushModel, seriesModel) {
+        // Check whether brushRange is bound in coord, and series do not belong to that coord.
+        // If do not do this check, some brush (like lineX) will controll all axes.
+        var coordInfo = findCoordInfo(brushRange, brushModel.coordInfoList);
+        return coordInfo === true || (coordInfo && coordInfo.coordSys === seriesModel.coordinateSystem);
+    };
+
+    function formatMinMax(minMax) {
+        minMax[0] > minMax[1] && minMax.reverse();
+        return minMax;
+    }
 
     /**
      * If return Object, a coord found.
@@ -168,11 +186,6 @@ define(function(require) {
             }
         }
         return isGlobal;
-    }
-
-    function formatMinMax(minMax) {
-        minMax[0] > minMax[1] && minMax.reverse();
-        return minMax;
     }
 
     function axisConvert(axisName, to, coordInfo, coordRange) {

@@ -4,23 +4,16 @@ define(function (require) {
 
     var interactionMutex = {
 
-        take: function (zr, resourceKey, userKey, onTakeAway) {
+        take: function (zr, resourceKey, userKey) {
             var store = getStore(zr);
-            var record = store[resourceKey];
-
-            record && record.onTakeAway && record.onTakeAway();
-
-            store[resourceKey] = {
-                userKey: userKey,
-                onTakeAway: onTakeAway
-            };
+            store[resourceKey] = userKey;
         },
 
         release: function (zr, resourceKey, userKey) {
             var store = getStore(zr);
-            var record = store[resourceKey];
+            var uKey = store[resourceKey];
 
-            if (record && record.userKey === userKey) {
+            if (uKey === userKey) {
                 store[resourceKey] = null;
             }
         },
@@ -33,6 +26,18 @@ define(function (require) {
     function getStore(zr) {
         return zr[ATTR] || (zr[ATTR] = {});
     }
+
+    /**
+     * payload: {
+     *     type: 'takeGlobalCursor',
+     *     key: 'dataZoomSelect', or 'brush', or ...,
+     *         If no userKey, release global cursor.
+     * }
+     */
+    require('../../echarts').registerAction(
+        {type: 'takeGlobalCursor', event: 'globalCursorTaken', update: 'update'},
+        function () {}
+    );
 
     return interactionMutex;
 });

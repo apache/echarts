@@ -3,7 +3,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var BrushController = require('../helper/BrushController');
     var echarts = require('../../echarts');
-    var helper = require('./helper');
+    var brushHelper = require('../helper/brushHelper');
 
     return echarts.extendComponentView({
 
@@ -74,7 +74,7 @@ define(function (require) {
         _onBrush: function (brushRanges, opt) {
             var modelId = this.model.id;
 
-            helper.resetOutputRanges(brushRanges, this.model, this.ecModel);
+            brushHelper.parseOutputRanges(brushRanges, this.model.coordInfoList, this.ecModel);
 
             // Action is not dispatched on drag end, because the drag end
             // emits the same params with the last drag move event, and
@@ -93,7 +93,7 @@ define(function (require) {
     function updateController(brushModel, ecModel, api, payload) {
         // Do not update controller when drawing.
         (!payload || payload.$from !== brushModel.id) && this._brushController
-            .setPanels(helper.makePanelOpts(brushModel, ecModel))
+            .setPanels(brushHelper.makePanelOpts(brushModel.coordInfoList))
             .enableBrush(brushModel.brushOption)
             .updateCovers(brushModel.brushRanges.slice());
     }

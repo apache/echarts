@@ -24,23 +24,6 @@ define(function(require) {
 
     /**
      * payload: {
-     *      brushIndex: number, or,
-     *      brushId: string, or,
-     *      brushName: string,
-     *      brushOption: Object
-     * }
-     */
-    echarts.registerAction(
-         {type: 'enableBrush', event: 'brushEnabled', update: 'update'},
-        function (payload, ecModel) {
-            ecModel.eachComponent({mainType: 'brush', query: payload}, function (brushModel) {
-                brushModel.setBrushOption(payload.brushOption);
-            });
-        }
-    );
-
-    /**
-     * payload: {
      *      brushComponents: [
      *          {
      *              brushId,

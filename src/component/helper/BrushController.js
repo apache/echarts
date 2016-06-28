@@ -22,7 +22,7 @@ define(function (require) {
     var COVER_Z = 10000;
     var UNSELECT_THRESHOLD = 6;
     var MIN_RESIZE_LINE_WIDTH = 6;
-    var MUTEX_RESOURCE_KEY = 'globalPan';
+    var MUTEX_RESOURCE_KEY = 'globalCursor';
 
     var DIRECTION_MAP = {
         w: [0, 0],
@@ -178,7 +178,6 @@ define(function (require) {
          * @param {number} [brushOption.brushMode='single'] 'single' or 'multiple'
          * @param {boolean} [brushOption.transformable=true]
          * @param {boolean} [brushOption.removeOnClick=false]
-         * @param {boolean} [brushOption.onRelease]
          * @param {Object} [brushOption.brushStyle]
          * @param {number} [brushOption.brushStyle.width]
          * @param {number} [brushOption.brushStyle.lineWidth]
@@ -355,14 +354,9 @@ define(function (require) {
     function doEnableBrush(controller, brushOption) {
         var zr = controller._zr;
 
-        var onRelease = zrUtil.bind(function (userOnRelease) {
-            controller.enableBrush(false);
-            userOnRelease && userOnRelease();
-        }, controller, brushOption.onRelease);
-
         if (!controller._forbidGlobalCursor) {
-            // Consider roam, which takes globalPan too.
-            interactionMutex.take(zr, MUTEX_RESOURCE_KEY, controller._uid, onRelease);
+            // Consider roam, which takes globalCursor too.
+            interactionMutex.take(zr, MUTEX_RESOURCE_KEY, controller._uid);
             zr.setDefaultCursorStyle('crosshair');
         }
 
@@ -763,7 +757,12 @@ define(function (require) {
     var mouseHandlers = {
 
         mousedown: function (e) {
-            if (!e.target || !e.target.draggable) {
+            if (this._dragging) {
+                // In case some browser do not support globalOut,
+                // and release mose out side the browser.
+                handleDragEnd.call(this, e);
+            }
+            else if (!e.target || !e.target.draggable) {
 
                 preventDefault(e);
 
@@ -789,18 +788,24 @@ define(function (require) {
             }
         },
 
-        mouseup: function (e) {
-            if (this._dragging) {
+        mouseup: handleDragEnd //,
 
-                preventDefault(e);
-
-                updateCoverByMouse(this, e, true);
-
-                this._dragging = false;
-                this._track = [];
-            }
-        }
+        // FIXME
+        // in tooltip, globalout should not be triggered.
+        // globalout: handleDragEnd
     };
+
+    function handleDragEnd(e) {
+        if (this._dragging) {
+
+            preventDefault(e);
+
+            updateCoverByMouse(this, e, true);
+
+            this._dragging = false;
+            this._track = [];
+        }
+    }
 
     /**
      * key: brushType

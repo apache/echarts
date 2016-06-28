@@ -9,7 +9,7 @@ define(function (require) {
     var BoundingRect = require('zrender/core/BoundingRect');
     var selector = require('./selector');
     var throttle = require('../../util/throttle');
-    var helper = require('./helper');
+    var brushHelper = require('../helper/brushHelper');
 
     var STATE_LIST = ['inBrush', 'outOfBrush'];
     var DISPATCH_METHOD = '__ecBrushSelect';
@@ -22,9 +22,13 @@ define(function (require) {
     echarts.registerLayout(PRIORITY_BRUSH, function (ecModel, api, payload) {
         ecModel.eachComponent({mainType: 'brush'}, function (brushModel) {
 
-            brushModel.coordInfoList = helper.makeCoordInfoList(brushModel, ecModel);
+            payload && payload.type === 'takeGlobalCursor' && brushModel.setBrushOption(
+                payload.key === 'brush' ? payload.brushOption : {brushType: false}
+            );
 
-            helper.resetInputRanges(brushModel, ecModel);
+            brushModel.coordInfoList = brushHelper.makeCoordInfoList(brushModel.option, ecModel);
+
+            brushHelper.parseInputRanges(brushModel, ecModel);
         });
     });
 
@@ -134,7 +138,7 @@ define(function (require) {
 
                 zrUtil.each(brushRanges, function (brushRange) {
                     selectorsByBrushType[brushRange.brushType]
-                        && helper.controlSeries(brushRange, brushModel, seriesModel)
+                        && brushHelper.controlSeries(brushRange, brushModel, seriesModel)
                         && rangeInfoList.push(brushRange);
                     hasBrushExists |= brushed(rangeInfoList);
                 });

@@ -43,25 +43,8 @@ define(function (require) {
 
                 var stops = visualMeta.stops = visualMapModel.getStops(seriesModel, getColorVisual);
                 visualMeta.dimension = visualMapModel.getDataDimension(data);
-
-                // zrUtil.each(stops, function (stop) {
-                //     var interval = stop.interval;
-                //     var valueState = stop.valueState;
-
-                //     if (interval) {
-                //         stop.color = getColorVisual(
-                //             visualMapModel, (interval[0] + interval[1]) / 2, valueState
-                //         );
-                //         // stop.intervalColor = [
-                //         //     getColorVisual(visualMapModel, interval[0], valueState),
-                //         //     getColorVisual(visualMapModel, interval[1], valueState)
-                //         // ];
-                //     }
-                //     else {
-                //         stop.color = getColorVisual(visualMapModel, stop.value, valueState);
-                //     }
-                // });
             });
+
             // console.log(JSON.stringify(visualMetaList.map(a => a.stops)));
             seriesModel.getData().setVisual('visualMeta', visualMetaList);
         });

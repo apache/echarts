@@ -5,7 +5,6 @@ define(function(require) {
 
     var echarts = require('../../echarts');
     var zrUtil = require('zrender/core/util');
-    var helper = require('./helper');
 
     var BrushModel = echarts.extendComponentModel({
 
