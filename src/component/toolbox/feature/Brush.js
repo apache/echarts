@@ -4,8 +4,6 @@ define(function(require) {
     var featureManager = require('../featureManager');
     var zrUtil = require('zrender/core/util');
 
-    require('../../brush');
-
     function Brush(model, ecModel, api) {
         this.model = model;
         this.ecModel = ecModel;

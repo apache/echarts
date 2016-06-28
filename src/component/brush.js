@@ -12,4 +12,6 @@ define(function (require) {
     require('./brush/BrushView');
     require('./brush/BrushAction');
 
+    require('./toolbox/feature/Brush');
+
 });
