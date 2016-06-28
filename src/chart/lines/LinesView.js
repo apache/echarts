@@ -5,6 +5,7 @@ define(function (require) {
     var Line = require('../helper/Line');
     var Polyline = require('../helper/Polyline');
     var EffectPolyline = require('../helper/EffectPolyline');
+    var LargeLineDraw = require('../helper/LargeLineDraw');
 
     require('../../echarts').extendChartView({
 
@@ -18,17 +19,27 @@ define(function (require) {
 
             var hasEffect = seriesModel.get('effect.show');
             var isPolyline = seriesModel.get('polyline');
-            if (hasEffect !== this._hasEffet || isPolyline !== this._isPolyline) {
+            var isLarge = seriesModel.get('large') && data.count() >= seriesModel.get('largeThreshold');
+
+            if (__DEV__) {
+                if (hasEffect && isLarge) {
+                    console.warn('Large lines not support effect');
+                }
+            }
+            if (hasEffect !== this._hasEffet || isPolyline !== this._isPolyline || isLarge !== this._isLarge) {
                 if (lineDraw) {
                     lineDraw.remove();
                 }
-                lineDraw = this._lineDraw = new LineDraw(
-                    isPolyline
-                        ? (hasEffect ? EffectPolyline : Polyline)
-                        : (hasEffect ? EffectLine : Line)
-                );
+                lineDraw = this._lineDraw = isLarge
+                    ? new LargeLineDraw()
+                    : new LineDraw(
+                        isPolyline
+                            ? (hasEffect ? EffectPolyline : Polyline)
+                            : (hasEffect ? EffectLine : Line)
+                    );
                 this._hasEffet = hasEffect;
                 this._isPolyline = isPolyline;
+                this._isLarge = isLarge;
             }
 
             var zlevel = seriesModel.get('zlevel');
@@ -61,7 +72,6 @@ define(function (require) {
                 });
             }
 
-
             this.group.add(lineDraw.group);
 
             lineDraw.updateData(data);
@@ -70,7 +80,7 @@ define(function (require) {
         },
 
         updateLayout: function (seriesModel, ecModel, api) {
-            this._lineDraw.updateLayout();
+            this._lineDraw.updateLayout(seriesModel);
             // Not use motion when dragging or zooming
             var zr = api.getZr();
             zr.painter.getLayer(this._lastZlevel).clear(true);
