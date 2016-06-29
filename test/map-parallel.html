@@ -25,6 +25,7 @@
                 'echarts/chart/scatter',
                 'echarts/chart/parallel',
                 'echarts/component/geo',
+                'echarts/component/title',
                 'echarts/component/legend',
                 'echarts/component/brush',
                 'echarts/component/tooltip',
@@ -295,7 +296,11 @@ option = {
         subtext: 'data from macrofocus',
         sublink: 'https://www.macrofocus.com/public/products/infoscope/datasets/pricesandearnings/',
         left: 'center',
-        top: 'top'
+        top: 5,
+        itemGap: 0,
+        textStyle: {
+            color: '#eee'
+        }
     },
     tooltip: {
         trigger: 'item',
@@ -314,8 +319,6 @@ option = {
             }
         },
         feature: {
-            restore: {},
-            saveAsImage: {}
         }
     },
     brush: {
@@ -346,8 +349,8 @@ option = {
             }
         },
         left: '6%',
-        top: 20,
-        bottom: '53%',
+        top: 40,
+        bottom: '54%',
         right: '14%',
         roam: false,
         // itemStyle: {
@@ -362,7 +365,7 @@ option = {
     },
     parallelAxis: makeParallelAxis(schema),
     parallel: {
-        top: '55%',
+        top: '50%',
         left: 60,
         right: 20,
         bottom: 80,
