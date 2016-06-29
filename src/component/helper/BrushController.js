@@ -434,10 +434,14 @@ define(function (require) {
     }
 
     function clearCovers(controller) {
-        each(controller._covers, function (cover) {
+        var covers = controller._covers;
+        var originalLength = covers.length;
+        each(covers, function (cover) {
             controller.group.remove(cover);
         }, controller);
-        controller._covers.length = 0;
+        covers.length = 0;
+
+        return !!originalLength;
     }
 
     function trigger(controller, opt) {
@@ -770,8 +774,10 @@ define(function (require) {
             // But a single click do not clear covers, because user may have casual
             // clicks (for example, click on other component and do not expect covers
             // disappear).
-            clearCovers(controller);
-            trigger(controller, {isEnd: isEnd, removeOnClick: true});
+            // Only some cover removed, trigger action, but not every click trigger action.
+            clearCovers(controller) && trigger(
+                controller, {isEnd: isEnd, removeOnClick: true}
+            );
         }
     }
 
