@@ -775,7 +775,7 @@ define(function (require) {
             // clicks (for example, click on other component and do not expect covers
             // disappear).
             // Only some cover removed, trigger action, but not every click trigger action.
-            clearCovers(controller) && trigger(
+            getPanelByPoint(controller, x, y) && clearCovers(controller) && trigger(
                 controller, {isEnd: isEnd, removeOnClick: true}
             );
         }
