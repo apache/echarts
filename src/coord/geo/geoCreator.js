@@ -16,8 +16,9 @@ define(function (require) {
         var rect = this.getBoundingRect();
 
         var boxLayoutOption = geoModel.getBoxLayoutParams();
+        var aspectScale = geoModel.get('aspectScale') || 0.75;
         // 0.75 rate
-        boxLayoutOption.aspect = rect.width / rect.height * 0.75;
+        boxLayoutOption.aspect = rect.width / rect.height * aspectScale;
 
         var viewRect = layout.getLayoutRect(boxLayoutOption, {
             width: api.getWidth(),

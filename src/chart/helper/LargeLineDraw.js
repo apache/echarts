@@ -14,8 +14,6 @@ define(function (require) {
             segs: []
         },
 
-        symbolProxy: null,
-
         buildPath: function (path, shape) {
             var segs = shape.segs;
             var isPolyline = shape.polyline;

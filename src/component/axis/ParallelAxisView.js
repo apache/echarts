@@ -3,6 +3,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var AxisBuilder = require('./AxisBuilder');
     var BrushController = require('../helper/BrushController');
+    var graphic = require('../../util/graphic');
 
     var elementList = ['axisLine', 'axisLabel', 'axisTick', 'axisName'];
 
@@ -35,6 +36,10 @@ define(function (require) {
             this.api = api;
 
             this.group.removeAll();
+
+            var oldAxisGroup = this._axisGroup;
+            this._axisGroup = new graphic.Group();
+            this.group.add(this._axisGroup);
 
             if (!axisModel.get('show')) {
                 return;
@@ -81,11 +86,11 @@ define(function (require) {
 
             zrUtil.each(elementList, axisBuilder.add, axisBuilder);
 
-            var axisGroup = axisBuilder.getGroup();
-
-            this.group.add(axisGroup);
+            this._axisGroup.add(axisBuilder.getGroup());
 
             this._refreshBrushController(builderOpt, areaSelectStyle, axisModel, areaWidth);
+
+            graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
         },
 
         _refreshBrushController: function (builderOpt, areaSelectStyle, axisModel, areaWidth) {

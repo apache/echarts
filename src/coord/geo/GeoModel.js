@@ -56,13 +56,17 @@ define(function (require) {
 
             top: 'center',
 
-            silent: false,
+            // Aspect is width / height. Inited to be geoJson bbox aspect
+            // This parameter is used for scale this aspect
+            aspectScale: 0.75,
 
             // 自适应
             // width:,
             // height:,
             // right
             // bottom
+
+            silent: false,
 
             // Map type
             map: '',
