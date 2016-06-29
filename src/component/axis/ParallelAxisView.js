@@ -93,6 +93,7 @@ define(function (require) {
 
             this._brushController
                 .mount({
+                    enableGlobalPan: true,
                     rotation: builderOpt.rotation,
                     position: builderOpt.position
                 })

@@ -22,7 +22,7 @@ define(function (require) {
     var COVER_Z = 10000;
     var UNSELECT_THRESHOLD = 6;
     var MIN_RESIZE_LINE_WIDTH = 6;
-    var MUTEX_RESOURCE_KEY = 'globalCursor';
+    var MUTEX_RESOURCE_KEY = 'globalPan';
 
     var DIRECTION_MAP = {
         w: [0, 0],
@@ -143,6 +143,12 @@ define(function (require) {
          * @private
          * @type {boolean}
          */
+        this._enableGlobalPan;
+
+        /**
+         * @private
+         * @type {boolean}
+         */
         if (__DEV__) {
             this._mounted;
         }
@@ -226,6 +232,7 @@ define(function (require) {
 
         /**
          * @param {Object} [opt]
+         * @return {boolean} [opt.enableGlobalPan=false]
          * @return {boolean} [opt.position=[0, 0]]
          * @return {boolean} [opt.rotation=0]
          * @return {boolean} [opt.scale=[1, 1]]
@@ -236,6 +243,8 @@ define(function (require) {
             if (__DEV__) {
                 this._mounted = true; // should be at first.
             }
+
+            this._enableGlobalPan = opt.enableGlobalPan;
 
             var thisGroup = this.group;
             this._zr.add(thisGroup);
@@ -336,8 +345,10 @@ define(function (require) {
     function doEnableBrush(controller, brushOption) {
         var zr = controller._zr;
 
-        // Consider roam, which takes globalCursor too.
-        interactionMutex.take(zr, MUTEX_RESOURCE_KEY, controller._uid);
+        // Consider roam, which takes globalPan too.
+        if (!controller._enableGlobalPan) {
+            interactionMutex.take(zr, MUTEX_RESOURCE_KEY, controller._uid);
+        }
 
         each(controller._handlers, function (handler, eventName) {
             zr.on(eventName, handler);

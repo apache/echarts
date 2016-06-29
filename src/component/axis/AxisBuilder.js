@@ -378,7 +378,9 @@ define(function (require) {
                 labelLayout = innerTextLayout(opt, opt.rotation, nameDirection);
             }
             else {
-                labelLayout = endTextLayout(opt, nameLocation, extent);
+                labelLayout = endTextLayout(
+                    opt, nameLocation, axisModel.get('nameRotate'), extent
+                );
             }
 
             var textEl = new graphic.Text({
@@ -452,8 +454,8 @@ define(function (require) {
     /**
      * @inner
      */
-    function endTextLayout(opt, textPosition, extent) {
-        var rotationDiff = remRadian(-opt.rotation);
+    function endTextLayout(opt, textPosition, rotate, extent) {
+        var rotationDiff = remRadian((rotate || 0) - opt.rotation);
         var textAlign;
         var verticalAlign;
         var inverse = extent[0] > extent[1];

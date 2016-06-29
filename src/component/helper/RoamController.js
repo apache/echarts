@@ -33,7 +33,7 @@ define(function (require) {
 
         if (e.gestureEvent !== 'pinch') {
 
-            if (interactionMutex.isTaken(this._zr, 'globalCursor')) {
+            if (interactionMutex.isTaken(this._zr, 'globalPan')) {
                 return;
             }
 
@@ -73,7 +73,7 @@ define(function (require) {
     }
 
     function pinch(e) {
-        if (interactionMutex.isTaken(this._zr, 'globalCursor')) {
+        if (interactionMutex.isTaken(this._zr, 'globalPan')) {
             return;
         }
         var zoomDelta = e.pinchScale > 1 ? 1.1 : 1 / 1.1;
