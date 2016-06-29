@@ -283,6 +283,7 @@ function makeParallelAxis(schema) {
 
 
 option = {
+    backgroundColor: '#404a59',
     title: {
         text: 'Prices and Earnings 2012',
         subtext: 'data from macrofocus',
@@ -301,6 +302,11 @@ option = {
     toolbox: {
         show: true,
         left: 'right',
+        iconStyle: {
+            normal: {
+                borderColor: '#ddd'
+            }
+        },
         feature: {
             restore: {},
             saveAsImage: {}
@@ -320,6 +326,7 @@ option = {
     },
     geo: {
         map: 'world',
+        silent: true,
         label: {
             emphasis: {
                 show: false,
@@ -327,13 +334,15 @@ option = {
             }
         },
         itemStyle: {
-            emphasis: {
-                show: false,
-                color: '#eee'
+            normal: {
+                borderWidth: 0.2,
+                borderColor: '#404a59'
             }
         },
+        left: '6%',
         top: 20,
         bottom: '53%',
+        right: '14%',
         roam: false,
         // itemStyle: {
         //     normal: {
@@ -366,8 +375,7 @@ option = {
             // nameRotate: 45,
             // nameLocation: 'end',
             nameTextStyle: {
-                fontSize: 12,
-                color: '#333'
+                fontSize: 12
             },
             nameTruncateLength: 5,
             nameGap: 20,
@@ -377,23 +385,14 @@ option = {
                 // show: false,
                 lineStyle: {
                     width: 1,
-                    color: 'rgba(0,0,0,0.1)'
+                    color: 'rgba(255,255,255,0.3)'
                 }
             },
             axisTick: {
-                show: false,
-                lineStyle: {
-                    color: '#555'
-                }
+                show: false
             },
             splitLine: {
                 show: false
-            },
-            axisLabel: {
-                // show: false,
-                textStyle: {
-                    color: 'rgba(0,0,0,0.4)'
-                }
             }
         }
     },
@@ -415,9 +414,13 @@ option = {
                     show: true
                 }
             },
+            symbolSize: function (data) {
+                return data[2] / 5;
+            },
             itemStyle: {
                 normal: {
-                    // color: '#ddb926'
+                    borderColor: '#fff',
+                    color: '#577ceb',
                 }
             }
         },
@@ -429,9 +432,10 @@ option = {
                 normal: {
                     color: '#577ceb',
                     width: 0.5,
-                    opacity: 0.3
+                    opacity: 0.6
                 }
             },
+            blendMode: 'lighter',
             data: rawData
         }
     ]
