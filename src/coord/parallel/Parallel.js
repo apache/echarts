@@ -8,8 +8,8 @@ define(function(require) {
     var axisHelper = require('../../coord/axisHelper');
     var zrUtil = require('zrender/core/util');
     var ParallelAxis = require('./ParallelAxis');
+    var graphic = require('../../util/graphic');
     var matrix = require('zrender/core/matrix');
-    var vector = require('zrender/core/vector');
 
     var each = zrUtil.each;
 
@@ -166,8 +166,62 @@ define(function(require) {
                 axis.setExtent(axisExtent[idx], axisExtent[1 - idx]);
             });
 
+            var axisExpandable = parallelModel.get('axisExpandable');
+            var axisExpandWidth = parallelModel.get('axisExpandWidth');
+            var axisExpandCenter = parallelModel.get('axisExpandCenter');
+            var axisExpandCount = parallelModel.get('axisExpandCount') || 0;
+            var axisExpandWindow;
+
+            if (axisExpandCenter != null) {
+                // Clamp
+                var left = Math.max(0, Math.floor(axisExpandCenter - (axisExpandCount - 1) / 2));
+                var right = left + axisExpandCount - 1;
+                if (right >= dimensions.length) {
+                    right = dimensions.length - 1;
+                    left = Math.max(0, Math.floor(right - axisExpandCount + 1));
+                }
+                axisExpandWindow = [left, right];
+            }
+
+            var getAxisPosition = (axisExpandable && axisExpandWindow && axisExpandWidth)
+                ? function getAxisPosition(axisIndex, layoutLength, axisCount) {
+                    var peekIntervalCount = axisExpandWindow[1] - axisExpandWindow[0];
+                    var otherWidth = (
+                        layoutLength - axisExpandWidth * peekIntervalCount
+                    ) / (axisCount - 1 - peekIntervalCount);
+
+                    var posToWindow = compareToWindow(axisIndex);
+
+                    if (posToWindow < 0) {
+                        return (axisIndex - 1) * otherWidth;
+                    }
+                    else if (posToWindow === 0) {
+                        return axisExpandWindow[0] * otherWidth
+                            + (axisIndex - axisExpandWindow[0]) * axisExpandWidth;
+                    }
+                    else if (axisIndex === axisCount - 1) {
+                        return layoutLength;
+                    }
+                    else {
+                        return axisExpandWindow[0] * otherWidth
+                            + peekIntervalCount * axisExpandWidth
+                            + (axisIndex - axisExpandWindow[1]) * otherWidth;
+                    }
+                }
+                : function (axisIndex, layoutLength, axisCount) {
+                    return layoutLength * axisIndex / (axisCount - 1);
+                };
+
+            function compareToWindow(axisIndex) {
+                return axisIndex < axisExpandWindow[0]
+                    ? -1
+                    : axisIndex > axisExpandWindow[1]
+                    ? 1
+                    : 0;
+            }
+
             each(dimensions, function (dim, idx) {
-                var pos = layoutLength * idx / (dimensions.length - 1);
+                var pos = getAxisPosition(idx, layoutLength, dimensions.length);
 
                 var positionTable = {
                     horizontal: {
@@ -205,7 +259,8 @@ define(function(require) {
                     rotation: rotation,
                     transform: transform,
                     tickDirection: 1,
-                    labelDirection: 1
+                    labelDirection: 1,
+                    axisExpandWindow: axisExpandWindow
                 };
             }, this);
         },
@@ -295,9 +350,7 @@ define(function(require) {
          */
         axisCoordToPoint: function (coord, dim) {
             var axisLayout = this._axesLayout[dim];
-            var point = [coord, 0];
-            vector.applyTransform(point, point, axisLayout.transform);
-            return point;
+            return graphic.applyTransform([coord, 0], axisLayout.transform);
         },
 
         /**
@@ -305,6 +358,28 @@ define(function(require) {
          */
         getAxisLayout: function (dim) {
             return zrUtil.clone(this._axesLayout[dim]);
+        },
+
+        findClosestAxisDim: function (point) {
+            var axisDim;
+            var minDist = Infinity;
+
+            zrUtil.each(this._axesLayout, function (axisLayout, dim) {
+                var localPoint = graphic.applyTransform(point, axisLayout.transform, true);
+                var extent = this._axesMap[dim].getExtent();
+
+                if (localPoint[0] < extent[0] || localPoint[0] > extent[1]) {
+                    return;
+                }
+
+                var dist = Math.abs(localPoint[1]);
+                if (dist < minDist) {
+                    minDist = dist;
+                    axisDim = dim;
+                }
+            }, this);
+
+            return axisDim;
         }
 
     };

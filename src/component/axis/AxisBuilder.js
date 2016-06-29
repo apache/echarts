@@ -1,13 +1,16 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('../../util/model');
     var graphic = require('../../util/graphic');
     var Model = require('../../model/Model');
+    var List = require('../../data/List');
     var numberUtil = require('../../util/number');
     var remRadian = numberUtil.remRadian;
     var isRadianAroundZero = numberUtil.isRadianAroundZero;
     var vec2 = require('zrender/core/vector');
     var v2ApplyTransform = vec2.applyTransform;
+    var retrieve = zrUtil.retrieve;
 
     var PI = Math.PI;
 
@@ -50,7 +53,10 @@ define(function (require) {
      * @param {number} [opt.tickDirection=1] 1 or -1
      * @param {number} [opt.labelDirection=1] 1 or -1
      * @param {number} [opt.labelOffset=0] Usefull when onZero.
+     * @param {string} [opt.axisLabelShow] default get from axisModel.
      * @param {string} [opt.axisName] default get from axisModel.
+     * @param {string} [opt.axisNameTruncateLength] default get from axisModel.
+     * @param {string} [opt.axisNameTruncateEllipsis] default get from axisModel.
      * @param {number} [opt.labelRotation] by degree, default get from axisModel.
      * @param {number} [opt.labelInterval] Default label interval when label
      *                                     interval from model is null or 'auto'.
@@ -227,13 +233,14 @@ define(function (require) {
          * @private
          */
         axisLabel: function () {
+            var opt = this.opt;
             var axisModel = this.axisModel;
+            var show = retrieve(opt.axisLabelShow, axisModel.get('axisLabel.show'));
 
-            if (!axisModel.get('axisLabel.show')) {
+            if (!show) {
                 return;
             }
 
-            var opt = this.opt;
             var axis = axisModel.axis;
             var labelModel = axisModel.getModel('axisLabel');
             var textStyleModel = labelModel.getModel('textStyle');
@@ -242,10 +249,7 @@ define(function (require) {
             var labels = axisModel.getFormattedLabels();
 
             // Special label rotate.
-            var labelRotation = opt.labelRotation;
-            if (labelRotation == null) {
-                labelRotation = labelModel.get('rotate') || 0;
-            }
+            var labelRotation = retrieve(opt.labelRotation, labelModel.get('rotate')) || 0;
             // To radian.
             labelRotation = labelRotation * PI / 180;
 
@@ -344,12 +348,7 @@ define(function (require) {
         axisName: function () {
             var opt = this.opt;
             var axisModel = this.axisModel;
-
-            var name = this.opt.axisName;
-            // If name is '', do not get name from axisMode.
-            if (name == null) {
-                name = axisModel.get('name');
-            }
+            var name = retrieve(opt.axisName, axisModel.get('name'));
 
             if (!name) {
                 return;
@@ -374,13 +373,34 @@ define(function (require) {
 
             var labelLayout;
 
+            var nameRotation = axisModel.get('nameRotate');
+            if (nameRotation != null) {
+                nameRotation = nameRotation * PI / 180; // To radian.
+            }
+
             if (nameLocation === 'middle') {
-                labelLayout = innerTextLayout(opt, opt.rotation, nameDirection);
+                labelLayout = innerTextLayout(
+                    opt,
+                    nameRotation != null ? nameRotation : opt.rotation, // Adapt to axis.
+                    nameDirection
+                );
             }
             else {
                 labelLayout = endTextLayout(
-                    opt, nameLocation, axisModel.get('nameRotate'), extent
+                    opt, nameLocation, nameRotation || 0, extent
                 );
+            }
+
+            var truncatedText = name;
+            var truncateLength = retrieve(
+                opt.axisNameTruncateLength, axisModel.get('nameTruncateLength')
+            );
+            var truncateEllipsis = retrieve(
+                opt.axisNameTruncateEllipsis, axisModel.get('nameTruncateEllipsis')
+            );
+
+            if (truncateLength != null) {
+                truncatedText = modelUtil.truncate(name, truncateLength, truncateEllipsis);
             }
 
             var textEl = new graphic.Text({
@@ -388,8 +408,11 @@ define(function (require) {
                 // Id for animation
                 anid: 'name',
 
+                __fullText: name,
+                __truncatedText: truncatedText,
+
                 style: {
-                    text: name,
+                    text: truncatedText,
                     textFont: textStyleModel.getFont(),
                     fill: textStyleModel.getTextColor()
                         || axisModel.get('axisLine.lineStyle.color'),
@@ -401,6 +424,14 @@ define(function (require) {
                 silent: axisModel.get('silent'),
                 z2: 1
             });
+
+            // Make truncate tooltip show.
+            if (truncateLength != null) {
+                textEl.dataIndex = 0;
+                var data = new List(['value'], axisModel);
+                data.initData([{value: name, tooltip: {formatter: tooltipFormatter}}]);
+                textEl.dataModel = modelUtil.createDataFormatModel(data, {mainType: 'axis'});
+            }
 
             textEl.eventData = makeAxisEventDataBase(axisModel);
             textEl.eventData.targetType = 'axisName';
@@ -416,6 +447,10 @@ define(function (require) {
         }
 
     };
+
+    function tooltipFormatter(params) {
+        return params.value;
+    }
 
     /**
      * @inner
@@ -454,8 +489,8 @@ define(function (require) {
     /**
      * @inner
      */
-    function endTextLayout(opt, textPosition, rotate, extent) {
-        var rotationDiff = remRadian((rotate || 0) - opt.rotation);
+    function endTextLayout(opt, textPosition, textRotate, extent) {
+        var rotationDiff = remRadian(textRotate - opt.rotation);
         var textAlign;
         var verticalAlign;
         var inverse = extent[0] > extent[1];

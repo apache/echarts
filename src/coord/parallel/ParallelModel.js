@@ -33,8 +33,8 @@ define(function(require) {
         layoutMode: 'box',
 
         defaultOption: {
-            zlevel: 0,                  // 一级层叠
-            z: 0,                       // 二级层叠
+            zlevel: 0,
+            z: 0,
             left: 80,
             top: 60,
             right: 80,
@@ -43,6 +43,13 @@ define(function(require) {
             // height: {totalHeight} - top - bottom,
 
             layout: 'horizontal',      // 'horizontal' or 'vertical'
+
+            // FIXME
+            // naming?
+            axisExpandable: false,
+            axisExpandCenter: null,
+            axisExpandCount: 0,
+            axisExpandWidth: 50,      // FIXME '10%' ?
 
             parallelAxisDefault: null
         },
@@ -76,6 +83,18 @@ define(function(require) {
             var parallelIndex = model.get('parallelIndex');
             return parallelIndex != null
                 && ecModel.getComponent('parallel', parallelIndex) === this;
+        },
+
+        setAxisExpand: function (opt) {
+            zrUtil.each(
+                ['axisExpandable', 'axisExpandCenter', 'axisExpandCount', 'axisExpandWidth'],
+                function (name) {
+                    if (opt.hasOwnProperty(name)) {
+                        this.option[name] = opt[name];
+                    }
+                },
+                this
+            );
         },
 
         /**

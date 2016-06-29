@@ -8,16 +8,20 @@ define(function (require) {
         z: 0,                       // 二级层叠
         // 反向坐标轴
         inverse: false,
+
         // 坐标轴名字，默认为空
         name: '',
         // 坐标轴名字位置，支持'start' | 'middle' | 'end'
         nameLocation: 'end',
         // 坐标轴名字旋转，radian。
-        nameRotate: 0,
+        nameRotate: null, // Adapt to axis rotate, when nameLocation is 'middle'.
+        nameTruncateLength: null, // truncate text when characters more than the given number.
+        nameTruncateEllipsis: '...',
         // 坐标轴文字样式，默认取全局样式
         nameTextStyle: {},
         // 文字与轴线距离
         nameGap: 15,
+
         // 是否能触发鼠标事件
         silent: true,
 

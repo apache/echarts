@@ -2,6 +2,7 @@ define(function(require) {
 
     var formatUtil = require('./format');
     var nubmerUtil = require('./number');
+    var Model = require('../model/Model');
     var zrUtil = require('zrender/core/util');
 
     var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
@@ -222,6 +223,29 @@ define(function(require) {
             ? NaN : +value; // If string (like '-'), using '+' parse to NaN
     };
 
+    /**
+     * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
+     * @param {module:echarts/data/List} data
+     * @param {Object} opt
+     * @param {string} [opt.seriesIndex]
+     * @param {Object} [opt.name]
+     * @param {Object} [opt.mainType]
+     * @param {Object} [opt.subType]
+     */
+    modelUtil.createDataFormatModel = function (data, opt) {
+        var model = new Model();
+        zrUtil.mixin(model, modelUtil.dataFormatMixin);
+        model.seriesIndex = opt.seriesIndex;
+        model.name = opt.name || '';
+        model.mainType = opt.mainType;
+        model.subType = opt.subType;
+
+        model.getData = function () {
+            return data;
+        };
+        return model;
+    };
+
     // PENDING A little ugly
     modelUtil.dataFormatMixin = {
         /**
@@ -404,6 +428,33 @@ define(function(require) {
     };
 
     /**
+     * Truncate text, if overflow.
+     * If not ASCII, count as tow ASCII length.
+     * Notice case: truncate('是', 1) => '是', not ''.
+     *
+     * @public
+     * @param {string} str
+     * @param {number} length Over the length, truncate.
+     * @param {string} [ellipsis='...']
+     * @return {string} Result string.
+     */
+    modelUtil.truncate = function (str, length, ellipsis) {
+        if (!str) {
+            return str;
+        }
+
+        var count = 0;
+        for(var i = 0, l = str.length; i < l && count < length; i++) {
+            count += str.charCodeAt(i) > 255 ? 2 : 1;
+        }
+        if (i < l) {
+            str = str.slice(0, i) + (ellipsis || '');
+        }
+
+        return str;
+    };
+
+    /**
      * A helper for removing duplicate items between batchA and batchB,
      * and in themselves, and categorize by series.
      *
@@ -450,7 +501,7 @@ define(function(require) {
                         var dataIndices = mapToArray(map[i], true);
                         dataIndices.length && result.push({seriesId: i, dataIndex: dataIndices});
                     }
-                };
+                }
             }
             return result;
         }

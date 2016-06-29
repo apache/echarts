@@ -47,9 +47,30 @@ define(function (require) {
             var areaSelectStyle = axisModel.getAreaSelectStyle();
             var areaWidth = areaSelectStyle.width;
 
-            var axisLayout = coordSys.getAxisLayout(axisModel.axis.dim);
+            var dim = axisModel.axis.dim;
+            var axisLayout = coordSys.getAxisLayout(dim);
+
+            // Fetch from axisModel by default.
+            var axisNameTruncateLength;
+            var axisNameTruncateEllipsis;
+            var axisLabelShow;
+            var axisIndex = zrUtil.indexOf(coordSys.dimensions, dim);
+
+            var axisExpandWindow = axisLayout.axisExpandWindow;
+            if (axisExpandWindow
+                && (axisIndex <= axisExpandWindow[0] || axisIndex >= axisExpandWindow[1])
+            ) {
+                // edge axis do not show detail info, otherwise overlap.
+                axisNameTruncateLength = 1;
+                axisNameTruncateEllipsis = '';
+                axisLabelShow = false;
+            }
+
             var builderOpt = zrUtil.extend(
                 {
+                    axisLabelShow: axisLabelShow,
+                    axisNameTruncateLength: axisNameTruncateLength,
+                    axisNameTruncateEllipsis: axisNameTruncateEllipsis,
                     strokeContainThreshold: areaWidth,
                     // lineWidth === 0 or no value.
                     axisLineSilent: !(areaWidth > 0) // jshint ignore:line
