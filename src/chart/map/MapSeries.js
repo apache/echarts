@@ -122,6 +122,10 @@ define(function (require) {
             left: 'center',
             // 'center' | 'top' | 'bottom' | 'x%' | {number}
             top: 'center',
+
+            // Aspect is width / height. Inited to be geoJson bbox aspect
+            // This parameter is used for scale this aspect
+            aspectScale: 0.75,
             // right
             // bottom
             // width:
