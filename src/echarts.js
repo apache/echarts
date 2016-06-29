@@ -730,9 +730,10 @@ define(function (require) {
 
         this[IN_MAIN_PROCESS] = false;
 
+        !silent && this._messageCenter.trigger(eventObj.type, eventObj);
+
         this._flushPendingActions();
 
-        !silent && this._messageCenter.trigger(eventObj.type, eventObj);
     };
 
     echartsProto._flushPendingActions = function () {

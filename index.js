@@ -30,6 +30,7 @@ require('./lib/component/polar');
 require('./lib/component/geo');
 require('./lib/component/parallel');
 require('./lib/component/singleAxis');
+require('./lib/component/brush');
 
 require('./lib/component/title');
 
