@@ -17,7 +17,8 @@
             require([
                 'echarts',
                 'echarts/chart/scatter',
-                'echarts/component/single'
+                'echarts/component/singleAxis',
+                'echarts/component/tooltip'
             ], function (echarts) {
 
                 var chart = echarts.init(document.getElementById('main'));
@@ -34,6 +35,9 @@
 
                 chart.setOption({
                     animation: false,
+                    tooltip: {
+                        trigger: 'axis'
+                    },
                     singleAxis: {
                         bottom: '40%',
                         top: '40%'
