@@ -30,7 +30,7 @@
 
                 $.get('data/lines-bus.json', function (data) {
                     var hStep = 300 / (data.length - 1);
-                    var busLines = [].concat.apply([], data.map(function (busLine, idx) {
+                    var busLines = data.map(function (busLine, idx) {
                         var prevPt;
                         var points = [];
                         for (var i = 0; i < busLine.length; i += 2) {
@@ -53,9 +53,9 @@
                                 }
                             }
                         };
-                    }));
+                    });
                     console.log(busLines.length);
-                    // busLines = busLines.slice(0, 50000);
+                    // busLines = busLines.slice(0, 100);
 
                     myChart.setOption({
                         animation: false,
@@ -200,9 +200,9 @@
                                     opacity: 0.2,
                                     width: 1
                                 }
-                            }
-                            // progressiveThreshold: 500,
-                            // progressive: 200
+                            },
+                            progressiveThreshold: 500,
+                            progressive: 200
                         }, {
                             type: 'lines',
                             coordinateSystem: 'bmap',
