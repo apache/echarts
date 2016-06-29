@@ -146,7 +146,7 @@ define(function (require) {
 
             var oldOptionBackup = this._optionBackup;
             var newParsedOption = parseRawOption.call(
-                this, rawOption, optionPreprocessorFuncs
+                this, rawOption, optionPreprocessorFuncs, !oldOptionBackup
             );
             this._newBaseOption = newParsedOption.baseOption;
 
@@ -266,7 +266,7 @@ define(function (require) {
         }
     };
 
-    function parseRawOption(rawOption, optionPreprocessorFuncs) {
+    function parseRawOption(rawOption, optionPreprocessorFuncs, isNew) {
         var timelineOptions = [];
         var mediaList = [];
         var mediaDefault;
@@ -320,7 +320,7 @@ define(function (require) {
             })),
             function (option) {
                 each(optionPreprocessorFuncs, function (preProcess) {
-                    preProcess(option);
+                    preProcess(option, isNew);
                 });
             }
         );

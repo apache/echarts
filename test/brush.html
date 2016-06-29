@@ -334,6 +334,8 @@
                 var trackMax = 30;
 
                 chart.setOption(option);
+                chart.setOption({});
+
                 chart.dispatchAction({type: 'brush', areas: [
                     {brushType: 'rect', range: [[200, 300], [100, 350]]}
                 ]});
@@ -343,10 +345,10 @@
                     var dim2Sum = 0;
                     var dim3Sum = 0;
                     var countBySeries = [];
-                    var brushComponent = params.brushComponents[0];
+                    var brushComponent = params.batch[0];
 
-                    for (var sIdx = 0; sIdx < brushComponent.series.length; sIdx++) {
-                        var rawIndices = brushComponent.series[sIdx].rawIndices;
+                    for (var sIdx = 0; sIdx < brushComponent.selected.length; sIdx++) {
+                        var rawIndices = brushComponent.selected[sIdx].dataIndex;
                         brushed.push('[Series ' + sIdx + '] ' + rawIndices.join(', '));
                         for (var i = 0; i < rawIndices.length; i++) {
                             dim2Sum += dataList[sIdx][rawIndices[i]][2];
@@ -584,6 +586,11 @@
                                 outOfBrush: {
                                     color: '#abc'
                                 },
+                                brushStyle: {
+                                    borderWidth: 2,
+                                    color: 'rgba(0,0,0,0.2)',
+                                    borderColor: 'rgba(0,0,0,0.5)',
+                                },
                                 seriesIndex: [0, 1],
                                 throttleType: smSettings.throttleType,
                                 throttleDelay: smSettings.throttleDelay,
@@ -763,11 +770,11 @@
                             var topWhere;
                             var sum = 0;
                             var count = 0;
-                            var brushComponent = params.brushComponents[0];
+                            var brushComponent = params.batch[0];
                             var selectedItems = [];
 
-                            for (var sIdx = 0; sIdx < brushComponent.series.length; sIdx++) {
-                                var rawIndices = brushComponent.series[sIdx].rawIndices;
+                            for (var sIdx = 0; sIdx < brushComponent.selected.length; sIdx++) {
+                                var rawIndices = brushComponent.selected[sIdx].dataIndex;
                                 var placesBySeries = [];
                                 for (var i = 0; i < rawIndices.length; i++) {
                                     var rawIndex = rawIndices[i];
@@ -1007,10 +1014,10 @@
 
                 function renderBrushed(params) {
                     var brushed = [];
-                    var brushComponent = params.brushComponents[0];
+                    var brushComponent = params.batch[0];
 
-                    for (var sIdx = 0; sIdx < brushComponent.series.length; sIdx++) {
-                        var rawIndices = brushComponent.series[sIdx].rawIndices;
+                    for (var sIdx = 0; sIdx < brushComponent.selected.length; sIdx++) {
+                        var rawIndices = brushComponent.selected[sIdx].dataIndex;
                         brushed.push('[Series ' + sIdx + '] ' + rawIndices.join(', '));
                     }
 

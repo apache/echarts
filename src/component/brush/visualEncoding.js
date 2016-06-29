@@ -48,7 +48,7 @@ define(function (require) {
                 brushIndex: brushIndex,
                 brushName: brushModel.name,
                 areas: zrUtil.clone(brushModel.areas),
-                series: []
+                selected: []
             };
             // Every brush component exists in event params, convenient
             // for user to find by index.
@@ -111,9 +111,11 @@ define(function (require) {
 
             // Step A
             ecModel.eachSeries(function (seriesModel, seriesIndex) {
+                var rangeInfoList = rangeInfoBySeries[seriesIndex] = [];
+
                 seriesModel.subType === 'parallel'
-                    ? stepAParallel(seriesModel, seriesIndex)
-                    : stepAOthers(seriesModel, seriesIndex);
+                    ? stepAParallel(seriesModel, seriesIndex, rangeInfoList)
+                    : stepAOthers(seriesModel, seriesIndex, rangeInfoList);
             });
 
             function stepAParallel(seriesModel, seriesIndex) {
@@ -128,9 +130,7 @@ define(function (require) {
                 );
             }
 
-            function stepAOthers(seriesModel, seriesIndex) {
-                var rangeInfoList = rangeInfoBySeries[seriesIndex] = [];
-
+            function stepAOthers(seriesModel, seriesIndex, rangeInfoList) {
                 var selectorsByBrushType = getSelectorsByBrushType(seriesModel);
                 if (!selectorsByBrushType || brushModelNotControll(brushModel, seriesIndex)) {
                     return;
@@ -159,11 +159,11 @@ define(function (require) {
                     seriesId: seriesModel.id,
                     seriesIndex: seriesIndex,
                     seriesName: seriesModel.name,
-                    rawIndices: []
+                    dataIndex: []
                 };
                 // Every series exists in event params, convenient
                 // for user to find series by seriesIndex.
-                thisBrushSelected.series.push(seriesBrushSelected);
+                thisBrushSelected.selected.push(seriesBrushSelected);
 
                 var selectorsByBrushType = getSelectorsByBrushType(seriesModel);
                 var rangeInfoList = rangeInfoBySeries[seriesIndex];
@@ -172,12 +172,12 @@ define(function (require) {
                 var getValueState = linkOthers(seriesIndex)
                     ? function (dataIndex) {
                         return selectedDataIndexForLink[dataIndex]
-                            ? (seriesBrushSelected.rawIndices.push(data.getRawIndex(dataIndex)), 'inBrush')
+                            ? (seriesBrushSelected.dataIndex.push(data.getRawIndex(dataIndex)), 'inBrush')
                             : 'outOfBrush';
                     }
                     : function (dataIndex) {
                         return checkInRange(selectorsByBrushType, rangeInfoList, data, dataIndex)
-                            ? (seriesBrushSelected.rawIndices.push(data.getRawIndex(dataIndex)), 'inBrush')
+                            ? (seriesBrushSelected.dataIndex.push(data.getRawIndex(dataIndex)), 'inBrush')
                             : 'outOfBrush';
                     };
 
@@ -230,7 +230,7 @@ define(function (require) {
             zr[DISPATCH_FLAG] = true;
             api.dispatchAction({
                 type: 'brushSelect',
-                brushComponents: brushSelected
+                batch: brushSelected
             });
             zr[DISPATCH_FLAG] = false;
         }

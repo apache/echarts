@@ -12,6 +12,8 @@ define(function (require) {
         name: '',
         // 坐标轴名字位置，支持'start' | 'middle' | 'end'
         nameLocation: 'end',
+        // 坐标轴名字旋转，radian。
+        nameRotate: 0,
         // 坐标轴文字样式，默认取全局样式
         nameTextStyle: {},
         // 文字与轴线距离

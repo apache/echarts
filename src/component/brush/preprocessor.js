@@ -7,12 +7,26 @@ define(function(require) {
 
     var DEFAULT_TOOLBOX_BTNS = ['rect', 'polygon', 'keep', 'clear'];
 
-    return function (option) {
-        var btns = findToolboxNeededByBrush(option);
+    return function (option, isNew) {
+        var brushComponents = option && option.brush;
+        if (!zrUtil.isArray(brushComponents)) {
+            brushComponents = brushComponents ? [brushComponents] : [];
+        }
 
-        if (!btns.length) {
+        if (!brushComponents.length) {
             return;
         }
+
+        var brushComponentSpecifiedBtns = [];
+
+        zrUtil.each(brushComponents, function (brushOpt) {
+            var tbs = brushOpt.hasOwnProperty('toolbox')
+                ? brushOpt.toolbox : [];
+
+            if (tbs instanceof Array) {
+                brushComponentSpecifiedBtns = brushComponentSpecifiedBtns.concat(tbs);
+            }
+        });
 
         var toolbox = option && option.toolbox;
 
@@ -27,9 +41,14 @@ define(function(require) {
         var toolboxFeature = (toolbox.feature || (toolbox.feature = {}));
         var toolboxBrush = toolboxFeature.brush || (toolboxFeature.brush = {});
         var brushTypes = toolboxBrush.type || (toolboxBrush.type = []);
-        brushTypes.push.apply(brushTypes, btns);
+
+        brushTypes.push.apply(brushTypes, brushComponentSpecifiedBtns);
 
         removeDuplicate(brushTypes);
+
+        if (isNew && !brushTypes.length) {
+            brushTypes.push.apply(brushTypes, DEFAULT_TOOLBOX_BTNS);
+        }
     };
 
     function removeDuplicate(arr) {
@@ -41,27 +60,6 @@ define(function(require) {
         zrUtil.each(map, function (flag, val) {
             arr.push(val);
         });
-    }
-
-    function findToolboxNeededByBrush(option) {
-        var brush = option && option.brush;
-        var btns = [];
-
-        if (!zrUtil.isArray(brush)) {
-            brush = brush ? [brush] : [];
-        }
-
-        zrUtil.each(brush, function (brushOpt) {
-            var tbs = brushOpt.hasOwnProperty('toolbox')
-                ? brushOpt.toolbox
-                : DEFAULT_TOOLBOX_BTNS; // Default value
-
-            if (tbs instanceof Array) {
-                btns = btns.concat(tbs);
-            }
-        });
-
-        return btns;
     }
 
 });

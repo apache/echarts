@@ -379,9 +379,9 @@
                     var min = Infinity;
                     var max = -Infinity;
                     var countBySeries = [];
-                    var brushComponent = params.brushComponents[0];
+                    var brushComponent = params.batch[0];
 
-                    var rawIndices = brushComponent.series[0].rawIndices;
+                    var rawIndices = brushComponent.selected[0].dataIndex;
                     for (var i = 0; i < rawIndices.length; i++) {
                         var val = data.values[rawIndices[i]][1];
                         sum += val;
