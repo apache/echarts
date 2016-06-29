@@ -216,12 +216,8 @@ define(function (require) {
         }
 
         var fn = throttle.createOrUpdate(zr, DISPATCH_METHOD, throttleDelay, throttleType);
-        // If throttleDelay is 0 or null or undefined, dispatchAction will also be
-        // called asynchronously, otherwise break the rule that main process should
-        // not be nested.
-        setTimeout(function () {
-            fn(api, brushSelected);
-        }, 0);
+
+        fn(api, brushSelected);
     }
 
     function doDispatch(api, brushSelected) {

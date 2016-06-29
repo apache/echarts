@@ -174,7 +174,8 @@ define(function (require) {
         // In case some people write `window.onresize = chart.resize`
         this.resize = zrUtil.bind(this.resize, this);
 
-
+        // Can't dispatch action during rendering procedure
+        this._pendingActions = [];
         // Sort on demand
         function prioritySortFunc(a, b) {
             return a.prio - b.prio;
@@ -221,9 +222,11 @@ define(function (require) {
 
         updateMethods.prepareAndUpdate.call(this);
 
-        !notRefreshImmediately && this._zr.refreshImmediately();
-
         this[IN_MAIN_PROCESS] = false;
+
+        this._flushPendingActions();
+
+        !notRefreshImmediately && this._zr.refreshImmediately();
     };
 
     /**
@@ -391,6 +394,7 @@ define(function (require) {
     };
 
     var updateMethods = {
+
 
         /**
          * @param {Object} payload
@@ -609,6 +613,8 @@ define(function (require) {
         this._loadingFX && this._loadingFX.resize();
 
         this[IN_MAIN_PROCESS] = false;
+
+        this._flushPendingActions();
     };
 
     var defaultLoadingEffect = require('./loading/default');
@@ -663,12 +669,18 @@ define(function (require) {
         var actionInfo = actionWrap.actionInfo;
         var updateMethod = actionInfo.update || 'update';
 
-        if (__DEV__) {
-            zrUtil.assert(
-                !this[IN_MAIN_PROCESS],
-                '`dispatchAction` should not be called during main process.'
-                + 'unless updateMathod is "none".'
-            );
+        // if (__DEV__) {
+        //     zrUtil.assert(
+        //         !this[IN_MAIN_PROCESS],
+        //         '`dispatchAction` should not be called during main process.'
+        //         + 'unless updateMathod is "none".'
+        //     );
+        // }
+
+        // May dispatchAction in rendering procedure
+        if (this[IN_MAIN_PROCESS]) {
+            this._pendingActions.push(payload);
+            return;
         }
 
         this[IN_MAIN_PROCESS] = true;
@@ -718,7 +730,17 @@ define(function (require) {
 
         this[IN_MAIN_PROCESS] = false;
 
+        this._flushPendingActions();
+
         !silent && this._messageCenter.trigger(eventObj.type, eventObj);
+    };
+
+    echartsProto._flushPendingActions = function () {
+        var pendingActions = this._pendingActions;
+        while (pendingActions.length) {
+            var payload = pendingActions.shift();
+            this.dispatchAction(payload);
+        }
     };
 
     /**
