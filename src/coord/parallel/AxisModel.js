@@ -97,6 +97,8 @@ define(function(require) {
 
         parallelIndex: null,
 
+        nameTruncateLengthOutExpand: 1,
+
         areaSelectStyle: {
             width: 20,
             borderWidth: 1,

@@ -60,8 +60,7 @@ define(function (require) {
             if (axisExpandWindow
                 && (axisIndex <= axisExpandWindow[0] || axisIndex >= axisExpandWindow[1])
             ) {
-                // edge axis do not show detail info, otherwise overlap.
-                axisNameTruncateLength = 1;
+                axisNameTruncateLength = axisModel.get('nameTruncateLengthOutExpand');
                 axisNameTruncateEllipsis = '';
                 axisLabelShow = false;
             }
