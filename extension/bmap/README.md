@@ -2,8 +2,6 @@
 
 ECharts 百度地图扩展，可以在百度地图上展现 [点图](http://echarts.baidu.com/option.html#series-scatter)，[线图](http://echarts.baidu.com/option.html#series-line) [热力图](http://echarts.baidu.com/option.html#series-heatmap) 等可视化。
 
-<!--
-下面链接 3.2.0 发布后有效
 
 ### 示例
 
@@ -17,7 +15,6 @@ ECharts 百度地图扩展，可以在百度地图上展现 [点图](http://echa
 
 [杭州热门步行路线](http://echarts.baidu.com/demo.html#heatmap-bmap)
 
--->
 
 ### 引入
 
