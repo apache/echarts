@@ -25,7 +25,7 @@ define(function(require) {
             // },
             toolbox: null,          // Default value see preprocessor.
             brushLink: null,        // Series indices array, broadcast using dataIndex.
-                                    // or 'all', which means all series.
+                                    // or 'all', which means all series. 'none' or null means no series.
             seriesIndex: 'all',     // seriesIndex array, specify series controlled by this brush component.
             gridIndex: null,        //
             geoIndex: null,         //

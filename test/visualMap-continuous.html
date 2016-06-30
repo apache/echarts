@@ -656,6 +656,13 @@
                         }
                     ]
                 });
+
+                // Check setOption at the second time.
+                chart.setOption({
+                    visualMap: {
+                        outOfRange: {color: '#aaa'}
+                    }
+                });
             });
         </script>
 
