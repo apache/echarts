@@ -177,7 +177,7 @@ define(function(require) {
         zrUtil.each(['xAxisIndex', 'yAxisIndex'], function (name) {
             setting[name] = option[name];
             setting[name] == null && (setting[name] = 'all');
-            setting[name] === false && (setting[name] = []);
+            (setting[name] === false || setting[name] === 'none') && (setting[name] = []);
         });
         return setting;
     }
@@ -267,7 +267,7 @@ define(function(require) {
                 && givenAxisIndices != 'all'
                 && !zrUtil.isArray(givenAxisIndices)
             ) {
-                givenAxisIndices = givenAxisIndices === false ? [] : [givenAxisIndices];
+                givenAxisIndices = (givenAxisIndices === false || givenAxisIndices === 'none') ? [] : [givenAxisIndices];
             }
 
             forEachComponent(axisName, function (axisOpt, axisIndex) {
