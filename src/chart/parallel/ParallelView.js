@@ -63,11 +63,15 @@ define(function (require) {
 
             // First create
             if (!this._data) {
-                dataGroup.setClipPath(createGridClipShape(
+                var clipPath = createGridClipShape(
                     coordSys, seriesModel, function () {
-                        dataGroup.removeClipPath();
+                        // Callback will be invoked immediately if there is no animation
+                        setTimeout(function () {
+                            dataGroup.removeClipPath();
+                        });
                     }
-                ));
+                );
+                dataGroup.setClipPath(clipPath);
             }
 
             this._data = data;
@@ -142,6 +146,7 @@ define(function (require) {
                 height: rect.height
             }
         });
+
         var dim = parallelModel.get('layout') === 'horizontal' ? 'width' : 'height';
         rectEl.setShape(dim, 0);
         graphic.initProps(rectEl, {

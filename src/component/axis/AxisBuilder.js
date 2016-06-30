@@ -141,8 +141,12 @@ define(function (require) {
             var extent = this.axisModel.axis.getExtent();
 
             var matrix = this._transform;
-            var pt1 = v2ApplyTransform([], [extent[0], 0], matrix);
-            var pt2 = v2ApplyTransform([], [extent[1], 0], matrix);
+            var pt1 = [extent[0], 0];
+            var pt2 = [extent[1], 0];
+            if (matrix) {
+                v2ApplyTransform(pt1, pt1, matrix);
+                v2ApplyTransform(pt2, pt2, matrix);
+            }
 
             this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
 
@@ -201,8 +205,10 @@ define(function (require) {
                 pt2[0] = tickCoord;
                 pt2[1] = opt.tickDirection * tickLen;
 
-                v2ApplyTransform(pt1, pt1, matrix);
-                v2ApplyTransform(pt2, pt2, matrix);
+                if (matrix) {
+                    v2ApplyTransform(pt1, pt1, matrix);
+                    v2ApplyTransform(pt2, pt2, matrix);
+                }
                 // Tick line, Not use group transform to have better line draw
                 this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
 
