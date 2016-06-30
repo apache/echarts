@@ -328,14 +328,6 @@ define(function(require) {
             var thisOption = this.option;
             var base = {inRange: thisOption.inRange, outOfRange: thisOption.outOfRange};
 
-            // Compatible with previous logic, always give a defautl color, otherwise
-            // simple config with no inRange and outOfRange will not work.
-            // Originally we use visualMap.color as the default color, but setOption at
-            // the second time the default color will be erased. So we change to use
-            // constant DEFAULT_COLOR.
-            // If user do not want the defualt color, set inRange: {color: null}.
-            base.inRange = base.inRange || {color: DEFAULT_COLOR};
-
             var target = thisOption.target || (thisOption.target = {});
             var controller = thisOption.controller || (thisOption.controller = {});
 
@@ -362,6 +354,14 @@ define(function(require) {
                 ) {
                     base.inRange = {color: thisOption.color.slice().reverse()};
                 }
+
+                // Compatible with previous logic, always give a defautl color, otherwise
+                // simple config with no inRange and outOfRange will not work.
+                // Originally we use visualMap.color as the default color, but setOption at
+                // the second time the default color will be erased. So we change to use
+                // constant DEFAULT_COLOR.
+                // If user do not want the defualt color, set inRange: {color: null}.
+                base.inRange = base.inRange || {color: DEFAULT_COLOR};
 
                 // If using shortcut like: {inRange: 'symbol'}, complete default value.
                 each(this.stateList, function (state) {
