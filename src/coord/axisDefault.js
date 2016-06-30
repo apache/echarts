@@ -13,7 +13,7 @@ define(function (require) {
         name: '',
         // 坐标轴名字位置，支持'start' | 'middle' | 'end'
         nameLocation: 'end',
-        // 坐标轴名字旋转，radian。
+        // 坐标轴名字旋转，degree。
         nameRotate: null, // Adapt to axis rotate, when nameLocation is 'middle'.
         nameTruncateLength: null, // truncate text when characters more than the given number.
         nameTruncateEllipsis: '...',

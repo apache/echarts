@@ -26,8 +26,9 @@ define(function(require) {
             brushLink: null,        // Series indices array, broadcast using dataIndex.
                                     // or 'all', which means all series. 'none' or null means no series.
             seriesIndex: 'all',     // seriesIndex array, specify series controlled by this brush component.
-            gridIndex: null,        //
             geoIndex: null,         //
+            xAxisIndex: null,
+            yAxisIndex: null,
 
             brushType: 'rect',      // Default brushType, see BrushController.
             brushMode: 'single',    // Default brushMode, 'single' or 'multiple'
