@@ -96,7 +96,7 @@ define(function(require) {
 
             lineStyle: {
                 normal: {
-                    width: 2,
+                    width: 1,
                     opacity: 0.45,
                     type: 'solid'
                 }
