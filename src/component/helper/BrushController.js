@@ -288,6 +288,7 @@ define(function (require) {
             var oldCovers = this._covers;
             var newCovers = this._covers = [];
             var controller = this;
+            var creatingCover = this._creatingCover;
 
             (new DataDiffer(oldCovers, brushOptionList, oldGetKey, getKey))
                 .add(addOrUpdate)
@@ -308,14 +309,26 @@ define(function (require) {
 
             function addOrUpdate(newIndex, oldIndex) {
                 var newBrushOption = brushOptionList[newIndex];
-                var cover = newCovers[newIndex] = oldIndex != null
-                    ? (oldCovers[oldIndex].__brushOption = newBrushOption, oldCovers[oldIndex])
-                    : endCreating(controller, createCover(controller, newBrushOption));
-                updateCoverAfterCreation(controller, cover);
+                // Consider setOption in event listener of brushSelect,
+                // where updating cover when creating should be forbiden.
+                if (oldIndex != null && oldCovers[oldIndex] === creatingCover) {
+                    newCovers[newIndex] = oldCovers[oldIndex];
+                }
+                else {
+                    var cover = newCovers[newIndex] = oldIndex != null
+                        ? (
+                            oldCovers[oldIndex].__brushOption = newBrushOption,
+                            oldCovers[oldIndex]
+                        )
+                        : endCreating(controller, createCover(controller, newBrushOption));
+                    updateCoverAfterCreation(controller, cover);
+                }
             }
 
             function remove(oldIndex) {
-                controller.group.remove(oldCovers[oldIndex]);
+                if (oldCovers[oldIndex] !== creatingCover) {
+                    controller.group.remove(oldCovers[oldIndex]);
+                }
             }
         },
 
