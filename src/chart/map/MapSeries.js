@@ -90,15 +90,16 @@ define(function (require) {
          * @param {number} dataIndex
          */
         formatTooltip: function (dataIndex) {
-            var data = this._data;
+            // FIXME orignalData and data is a bit confusing
+            var data = this.getData();
             var formattedValue = addCommas(this.getRawValue(dataIndex));
             var name = data.getName(dataIndex);
 
             var seriesGroup = this.seriesGroup;
             var seriesNames = [];
             for (var i = 0; i < seriesGroup.length; i++) {
-                var otherIndex = seriesGroup[i].getData().indexOfName(name);
-                if (!isNaN(seriesGroup[i].getRawValue(otherIndex))) {
+                var otherIndex = seriesGroup[i].originalData.indexOfName(name);
+                if (!isNaN(seriesGroup[i].originalData.get('value', otherIndex))) {
                     seriesNames.push(
                         encodeHTML(seriesGroup[i].name)
                     );
