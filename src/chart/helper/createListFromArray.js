@@ -110,7 +110,6 @@ define(function(require) {
 
     /**
      * Creaters for each coord system.
-     * @return {Object} {dimensions, categoryAxisModel};
      */
     var creators = {
 
@@ -235,9 +234,15 @@ define(function(require) {
     function createNameList(result, data) {
         var nameList = [];
 
-        if (result && result.categoryAxisModel) {
+        var categoryDim = result && result.dimensions[result.categoryIndex];
+        var categoryAxisModel;
+        if (categoryDim) {
+            categoryAxisModel = result.categoryAxesModels[categoryDim.name];
+        }
+
+        if (categoryAxisModel) {
             // FIXME Two category axis
-            var categories = result.categoryAxisModel.getCategories();
+            var categories = categoryAxisModel.getCategories();
             if (categories) {
                 var dataLen = data.length;
                 // Ordered data is given explicitly like

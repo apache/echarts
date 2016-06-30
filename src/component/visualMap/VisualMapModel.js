@@ -334,9 +334,7 @@ define(function(require) {
             // the second time the default color will be erased. So we change to use
             // constant DEFAULT_COLOR.
             // If user do not want the defualt color, set inRange: {color: null}.
-            if (!base.inRange || !base.inRange.hasOwnProperty('color')) {
-                (base.inRange || (base.inRange = {})).color = DEFAULT_COLOR;
-            }
+            base.inRange = base.inRange || {color: DEFAULT_COLOR};
 
             var target = thisOption.target || (thisOption.target = {});
             var controller = thisOption.controller || (thisOption.controller = {});
@@ -349,7 +347,7 @@ define(function(require) {
             completeSingle.call(this, target);
             completeSingle.call(this, controller);
             completeInactive.call(this, target, 'inRange', 'outOfRange');
-            completeInactive.call(this, target, 'outOfRange', 'inRange');
+            // completeInactive.call(this, target, 'outOfRange', 'inRange');
             completeController.call(this, controller);
 
             function completeSingle(base) {

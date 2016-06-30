@@ -747,6 +747,7 @@ define(function (require) {
         var creatingCover = controller._creatingCover;
         var panel = controller._creatingPanel;
         var thisBrushOption = controller._brushOption;
+        var eventParams;
 
         controller._track.push(controller.group.transformCoordToLocal(x, y));
 
@@ -775,7 +776,7 @@ define(function (require) {
 
                 updateCoverShape(controller, creatingCover);
 
-                trigger(controller, {isEnd: isEnd});
+                eventParams = {isEnd: isEnd};
             }
         }
         else if (
@@ -788,10 +789,12 @@ define(function (require) {
             // clicks (for example, click on other component and do not expect covers
             // disappear).
             // Only some cover removed, trigger action, but not every click trigger action.
-            getPanelByPoint(controller, x, y) && clearCovers(controller) && trigger(
-                controller, {isEnd: isEnd, removeOnClick: true}
-            );
+            if (getPanelByPoint(controller, x, y) && clearCovers(controller)) {
+                eventParams = {isEnd: isEnd, removeOnClick: true};
+            }
         }
+
+        return eventParams;
     }
 
     var mouseHandlers = {
@@ -827,7 +830,9 @@ define(function (require) {
 
                 preventDefault(e);
 
-                updateCoverByMouse(this, e, false);
+                var eventParams = updateCoverByMouse(this, e, false);
+
+                eventParams && trigger(this, eventParams);
             }
         },
 
@@ -843,10 +848,14 @@ define(function (require) {
 
             preventDefault(e);
 
-            updateCoverByMouse(this, e, true);
+            var eventParams = updateCoverByMouse(this, e, true);
 
             this._dragging = false;
             this._track = [];
+            this._creatingCover = null;
+
+            // trigger event shoule be at final, after procedure will be nested.
+            eventParams && trigger(this, eventParams);
         }
     }
 

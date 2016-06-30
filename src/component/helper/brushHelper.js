@@ -89,7 +89,7 @@ define(function(require) {
 
         each(COMPONENT_NAMES, function (componentName) {
             var componentIndices = option[componentName + 'Index'];
-            if (componentIndices == null) {
+            if (componentIndices == null || componentIndices === 'none') {
                 return;
             }
             if (componentIndices !== 'all' && !zrUtil.isArray(componentIndices)) {
