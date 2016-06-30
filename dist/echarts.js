@@ -32879,7 +32879,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                }
 	            },
-	            color: 'none',              // Array. Specify color list of each level.
+	            color: [],                  // Array. Specify color list of each level.
 	                                        // level[0].color would be global color list.
 	            colorAlpha: null,           // Array. Specify color alpha range of each level, like [0.2, 0.8]
 	            colorSaturation: null,      // Array. Specify color saturation of each level, like [0.2, 0.5]
@@ -33110,6 +33110,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        zrUtil.each(levels, function (levelDefine) {
 	            var model = new Model(levelDefine);
 	            var modelColor = model.get('color');
+
 	            if (model.get('itemStyle.normal.color')
 	                || (modelColor && modelColor !== 'none')
 	            ) {
@@ -42202,7 +42203,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            lineStyle: {
 	                normal: {
-	                    width: 2,
+	                    width: 1,
 	                    opacity: 0.45,
 	                    type: 'solid'
 	                }
