@@ -135,10 +135,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    // This flag is used to carry out this rule.
 	    // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
 	    var IN_MAIN_PROCESS = '__flag_in_main_process';
-	    // Only final events can be "program triggered", that is, trigger by `setOption`,
-	    // `dispatchAciton` or `resize`. This flag is used to avoid dead lock when calling
-	    // those method in final events listener.
-	    var IN_FINAL_EVENTS = '__flag_in_final_event';
+	    var HAS_GRADIENT_OR_PATTERN_BG = '_hasGradientOrPatternBg';
 
 	    function createRegisterEventWithLowercaseName(method) {
 	        return function (eventName, handler, context) {
@@ -233,11 +230,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	         */
 	        this._coordSysMgr = new CoordinateSystemManager();
 
-	        /**
-	         * @type {Array.<Object>}
-	         */
-	        this._finalEvents = [];
-
 	        Eventful.call(this);
 
 	        /**
@@ -252,7 +244,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // In case some people write `window.onresize = chart.resize`
 	        this.resize = zrUtil.bind(this.resize, this);
 
-
+	        // Can't dispatch action during rendering procedure
+	        this._pendingActions = [];
 	        // Sort on demand
 	        function prioritySortFunc(a, b) {
 	            return a.prio - b.prio;
@@ -287,9 +280,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            zrUtil.assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
 	        }
 
-	        this[IN_MAIN_PROCESS] = 1;
-
-	        this._finalEvents = [];
+	        this[IN_MAIN_PROCESS] = true;
 
 	        if (!this._model || notMerge) {
 	            this._model = new GlobalModel(
@@ -301,11 +292,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        updateMethods.prepareAndUpdate.call(this);
 
+	        this[IN_MAIN_PROCESS] = false;
+
+	        this._flushPendingActions();
+
 	        !notRefreshImmediately && this._zr.refreshImmediately();
-
-	        this[IN_MAIN_PROCESS] = 0;
-
-	        triggerFinalEvents.call(this);
 	    };
 
 	    /**
@@ -474,6 +465,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var updateMethods = {
 
+
 	        /**
 	         * @param {Object} payload
 	         * @private
@@ -484,6 +476,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var ecModel = this._model;
 	            var api = this._api;
 	            var coordSysMgr = this._coordSysMgr;
+	            var zr = this._zr;
 	            // update before setOption
 	            if (!ecModel) {
 	                return;
@@ -513,10 +506,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // Set background
 	            var backgroundColor = ecModel.get('backgroundColor') || 'transparent';
 
-	            var painter = this._zr.painter;
+	            var painter = zr.painter;
 	            // TODO all use clearColor ?
 	            if (painter.isSingleCanvas && painter.isSingleCanvas()) {
-	                this._zr.configLayer(0, {
+	                zr.configLayer(0, {
 	                    clearColor: backgroundColor
 	                });
 	            }
@@ -529,8 +522,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        backgroundColor = 'transparent';
 	                    }
 	                }
-	                backgroundColor = backgroundColor;
-	                this._dom.style.backgroundColor = backgroundColor;
+	                if (backgroundColor.colorStops || backgroundColor.image) {
+	                    // Gradient background
+	                    // FIXME Fixed layer？
+	                    zr.configLayer(0, {
+	                        clearColor: backgroundColor
+	                    });
+	                    this[HAS_GRADIENT_OR_PATTERN_BG] = true;
+
+	                    this._dom.style.background = 'transparent';
+	                }
+	                else {
+	                    if (this[HAS_GRADIENT_OR_PATTERN_BG]) {
+	                        zr.configLayer(0, {
+	                            clearColor: null
+	                        });
+	                    }
+	                    this[HAS_GRADIENT_OR_PATTERN_BG] = false;
+
+	                    this._dom.style.background = backgroundColor;
+	                }
 	            }
 
 	            // console.time && console.timeEnd('update');
@@ -661,9 +672,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            zrUtil.assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
 	        }
 
-	        this[IN_MAIN_PROCESS] = 1;
-
-	        this._finalEvents = [];
+	        this[IN_MAIN_PROCESS] = true;
 
 	        this._zr.resize();
 
@@ -673,9 +682,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // Resize loading effect
 	        this._loadingFX && this._loadingFX.resize();
 
-	        this[IN_MAIN_PROCESS] = 0;
+	        this[IN_MAIN_PROCESS] = false;
 
-	        triggerFinalEvents.call(this);
+	        this._flushPendingActions();
 	    };
 
 	    var defaultLoadingEffect = __webpack_require__(92);
@@ -715,16 +724,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return payload;
 	    };
 
-	    function triggerFinalEvents() {
-	        if (!this[IN_FINAL_EVENTS]) { // Avoid dead lock.
-	            this[IN_FINAL_EVENTS] = 1;
-	            each(this._finalEvents, function (eventObj) {
-	                this.trigger(eventObj.type, eventObj);
-	            }, this);
-	            this[IN_FINAL_EVENTS] = 0;
-	        }
-	    }
-
 	    /**
 	     * @pubilc
 	     * @param {Object} payload
@@ -740,19 +739,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var actionInfo = actionWrap.actionInfo;
 	        var updateMethod = actionInfo.update || 'update';
 
-	        if (true) {
-	            zrUtil.assert(
-	                updateMethod === 'none' || !this[IN_MAIN_PROCESS],
-	                '`dispatchAction` should not be called during main process.'
-	                    + 'unless updateMathod is "none".'
-	            );
+	        // if (__DEV__) {
+	        //     zrUtil.assert(
+	        //         !this[IN_MAIN_PROCESS],
+	        //         '`dispatchAction` should not be called during main process.'
+	        //         + 'unless updateMathod is "none".'
+	        //     );
+	        // }
+
+	        // May dispatchAction in rendering procedure
+	        if (this[IN_MAIN_PROCESS]) {
+	            this._pendingActions.push(payload);
+	            return;
 	        }
 
-	        var isFinalEvent = updateMethod === 'none' && this[IN_MAIN_PROCESS];
-	        if (!isFinalEvent) {
-	            this[IN_MAIN_PROCESS] = 1;
-	            this._finalEvents = [];
-	        }
+	        this[IN_MAIN_PROCESS] = true;
 
 	        var payloads = [payload];
 	        var batched = false;
@@ -797,15 +798,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	            eventObj = eventObjBatch[0];
 	        }
 
-	        if (!isFinalEvent) {
-	            this[IN_MAIN_PROCESS] = 0;
-	            if (!silent) {
-	                this._messageCenter.trigger(eventObj.type, eventObj);
-	                triggerFinalEvents.call(this);
-	            }
-	        }
-	        else {
-	            this._finalEvents.push(eventObj);
+	        this[IN_MAIN_PROCESS] = false;
+
+	        !silent && this._messageCenter.trigger(eventObj.type, eventObj);
+
+	        this._flushPendingActions();
+
+	    };
+
+	    echartsProto._flushPendingActions = function () {
+	        var pendingActions = this._pendingActions;
+	        while (pendingActions.length) {
+	            var payload = pendingActions.shift();
+	            this.dispatchAction(payload);
 	        }
 	    };
 
@@ -838,8 +843,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            chart[methodName](seriesModel, ecModel, api, payload);
 
 	            updateZ(seriesModel, chart);
+
+	            updateProgressiveAndBlend(seriesModel, chart);
 	        }, this);
 
+	        // If use hover layer
+	        updateHoverLayerStatus(this._zr, ecModel);
 	    }
 
 	    /**
@@ -988,7 +997,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            chart.__alive = false;
 	        }, this);
 
-	        var elCountAll = 0;
 	        // Render all charts
 	        ecModel.eachSeries(function (seriesModel, idx) {
 	            var chartView = this._chartsMap[seriesModel.__viewId];
@@ -999,39 +1007,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            updateZ(seriesModel, chartView);
 
-	            // Progressive configuration
-	            var elCount = 0;
-	            chartView.group.traverse(function (el) {
-	                if (el.type !== 'group' && !el.ignore) {
-	                    elCount++;
-	                }
-	            });
-	            elCountAll += elCount;
+	            updateProgressiveAndBlend(seriesModel, chartView);
 
-	            var frameDrawNum = +seriesModel.get('progressive');
-	            var needProgressive = elCount > seriesModel.get('progressiveThreshold') && frameDrawNum && !env.node;
-	            if (needProgressive) {
-	                chartView.group.traverse(function (el) {
-	                    // FIXME marker and other components
-	                    if (el.type !== 'group') {
-	                        el.progressive = needProgressive ?
-	                            Math.floor(elCount++ / frameDrawNum) : -1;
-	                        if (needProgressive) {
-	                            el.stopAnimation(true);
-	                        }
-	                    }
-	                });
-	            }
 	        }, this);
 
 	        // If use hover layer
-	        if (elCountAll > ecModel.get('hoverLayerThreshold') && !env.node) {
-	            this._zr.storage.traverse(function (el) {
-	                if (el.type !== 'group') {
-	                    el.useHoverLayer = true;
-	                }
-	            });
-	        }
+	        updateHoverLayerStatus(this._zr, ecModel);
+
 	        // Remove groups of unrendered charts
 	        each(this._chartsViews, function (chart) {
 	            if (!chart.__alive) {
@@ -1115,10 +1097,67 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    zrUtil.mixin(ECharts, Eventful);
 
+	    function updateHoverLayerStatus(zr, ecModel) {
+	        var storage = zr.storage;
+	        var elCount = 0;
+	        storage.traverse(function (el) {
+	            if (!el.isGroup) {
+	                elCount++;
+	            }
+	        });
+	        if (elCount > ecModel.get('hoverLayerThreshold') && !env.node) {
+	            storage.traverse(function (el) {
+	                if (!el.isGroup) {
+	                    el.useHoverLayer = true;
+	                }
+	            });
+	        }
+	    }
+	    /**
+	     * Update chart progressive and blend.
+	     * @param {module:echarts/model/Series|module:echarts/model/Component} model
+	     * @param {module:echarts/view/Component|module:echarts/view/Chart} view
+	     */
+	    function updateProgressiveAndBlend(seriesModel, chartView) {
+	        // Progressive configuration
+	        var elCount = 0;
+	        chartView.group.traverse(function (el) {
+	            if (el.type !== 'group' && !el.ignore) {
+	                elCount++;
+	            }
+	        });
+	        var frameDrawNum = +seriesModel.get('progressive');
+	        var needProgressive = elCount > seriesModel.get('progressiveThreshold') && frameDrawNum && !env.node;
+	        if (needProgressive) {
+	            chartView.group.traverse(function (el) {
+	                // FIXME marker and other components
+	                if (!el.isGroup) {
+	                    el.progressive = needProgressive ?
+	                        Math.floor(elCount++ / frameDrawNum) : -1;
+	                    if (needProgressive) {
+	                        el.stopAnimation(true);
+	                    }
+	                }
+	            });
+	        }
+
+	        // Blend configration
+	        var blendMode = seriesModel.get('blendMode') || null;
+	        if (true) {
+	            if (!env.canvasSupported && blendMode && blendMode !== 'source-over') {
+	                console.warn('Only canvas support blendMode');
+	            }
+	        }
+	        chartView.group.traverse(function (el) {
+	            // FIXME marker and other components
+	            if (!el.isGroup) {
+	                el.setStyle('blend', blendMode);
+	            }
+	        });
+	    }
 	    /**
 	     * @param {module:echarts/model/Series|module:echarts/model/Component} model
 	     * @param {module:echarts/view/Component|module:echarts/view/Chart} view
-	     * @return {string}
 	     */
 	    function updateZ(model, view) {
 	        var z = model.get('z');
@@ -1182,9 +1221,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.1.10',
+	        version: '3.2.0',
 	        dependencies: {
-	            zrender: '3.1.0'
+	            zrender: '3.1.1'
 	        }
 	    };
 
@@ -1494,9 +1533,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        zrUtil.createCanvas = creator;
 	    };
 
-	    echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, zrUtil.curry(
-	        __webpack_require__(93), '', 'itemStyle'
-	    ));
+	    echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, __webpack_require__(93));
 	    echarts.registerPreprocessor(__webpack_require__(94));
 
 	    // Default action
@@ -2946,6 +2983,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var formatUtil = __webpack_require__(6);
 	    var nubmerUtil = __webpack_require__(7);
+	    var Model = __webpack_require__(8);
 	    var zrUtil = __webpack_require__(4);
 
 	    var AXIS_DIMS = ['x', 'y', 'z', 'radius', 'angle'];
@@ -3137,7 +3175,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {string|number|Date|Array|Object} dataItem
 	     */
 	    modelUtil.isDataItemOption = function (dataItem) {
-	        return zrUtil.isObject(dataItem) && !(dataItem instanceof Array);
+	        return zrUtil.isObject(dataItem)
+	            && !(dataItem instanceof Array);
+	            // // markLine data can be array
+	            // && !(dataItem[0] && zrUtil.isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
 	    };
 
 	    /**
@@ -3163,6 +3204,30 @@ return /******/ (function(modules) { // webpackBootstrap
 	            ? NaN : +value; // If string (like '-'), using '+' parse to NaN
 	    };
 
+	    /**
+	     * Create a model proxy to be used in tooltip for edge data, markLine data, markPoint data.
+	     * @param {module:echarts/data/List} data
+	     * @param {Object} opt
+	     * @param {string} [opt.seriesIndex]
+	     * @param {Object} [opt.name]
+	     * @param {Object} [opt.mainType]
+	     * @param {Object} [opt.subType]
+	     */
+	    modelUtil.createDataFormatModel = function (data, opt) {
+	        var model = new Model();
+	        zrUtil.mixin(model, modelUtil.dataFormatMixin);
+	        model.seriesIndex = opt.seriesIndex;
+	        model.name = opt.name || '';
+	        model.mainType = opt.mainType;
+	        model.subType = opt.subType;
+
+	        model.getData = function () {
+	            return data;
+	        };
+	        return model;
+	    };
+
+	    // PENDING A little ugly
 	    modelUtil.dataFormatMixin = {
 	        /**
 	         * Get params for formatter
@@ -3344,6 +3409,33 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    /**
+	     * Truncate text, if overflow.
+	     * If not ASCII, count as tow ASCII length.
+	     * Notice case: truncate('是', 1) => '是', not ''.
+	     *
+	     * @public
+	     * @param {string} str
+	     * @param {number} length Over the length, truncate.
+	     * @param {string} [ellipsis='...']
+	     * @return {string} Result string.
+	     */
+	    modelUtil.truncate = function (str, length, ellipsis) {
+	        if (!str) {
+	            return str;
+	        }
+
+	        var count = 0;
+	        for(var i = 0, l = str.length; i < l && count < length; i++) {
+	            count += str.charCodeAt(i) > 255 ? 2 : 1;
+	        }
+	        if (i < l) {
+	            str = str.slice(0, i) + (ellipsis || '');
+	        }
+
+	        return str;
+	    };
+
+	    /**
 	     * A helper for removing duplicate items between batchA and batchB,
 	     * and in themselves, and categorize by series.
 	     *
@@ -3390,7 +3482,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        var dataIndices = mapToArray(map[i], true);
 	                        dataIndices.length && result.push({seriesId: i, dataIndex: dataIndices});
 	                    }
-	                };
+	                }
 	            }
 	            return result;
 	        }
@@ -4763,8 +4855,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	         */
 	        create: function (x, y) {
 	            var out = new ArrayCtor(2);
-	            out[0] = x || 0;
-	            out[1] = y || 0;
+	            if (x == null) {
+	                x = 0;
+	            }
+	            if (y == null) {
+	                y = 0;
+	            }
+	            out[0] = x;
+	            out[1] = y;
 	            return out;
 	        },
 
@@ -6041,6 +6139,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            fontStyle: 'normal',
 	            fontWeight: 'normal'
 	        },
+
+	        // http://blogs.adobe.com/webplatform/2014/02/24/using-blend-modes-in-html-canvas/
+	        // https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
+	        // Default is source-over
+	        blendMode: null,
+
 	        animation: true,
 	        animationDuration: 1000,
 	        animationDurationUpdate: 300,
@@ -6048,7 +6152,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        animationEasingUpdate: 'cubicOut',
 
 	        animationThreshold: 2000,
-	        // Progressive configuration
+	        // Configuration for progressive/incremental rendering
 	        progressiveThreshold: 3000,
 	        progressive: 400,
 
@@ -6101,7 +6205,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var zrUtil = __webpack_require__(4);
 
 	    var echartsAPIList = [
-	        'getDom', 'getZr', 'getWidth', 'getHeight', 'dispatchAction',
+	        'getDom', 'getZr', 'getWidth', 'getHeight', 'dispatchAction', 'isDisposed',
 	        'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getModel', 'getOption'
 	    ];
 
@@ -6121,7 +6225,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	'use strict';
 
 
-	    // var zrUtil = require('zrender/lib/core/util');
 	    var coordinateSystemCreators = {};
 
 	    function CoordinateSystemManager() {
@@ -6315,7 +6418,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            var oldOptionBackup = this._optionBackup;
 	            var newParsedOption = parseRawOption.call(
-	                this, rawOption, optionPreprocessorFuncs
+	                this, rawOption, optionPreprocessorFuncs, !oldOptionBackup
 	            );
 	            this._newBaseOption = newParsedOption.baseOption;
 
@@ -6435,7 +6538,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	    };
 
-	    function parseRawOption(rawOption, optionPreprocessorFuncs) {
+	    function parseRawOption(rawOption, optionPreprocessorFuncs, isNew) {
 	        var timelineOptions = [];
 	        var mediaList = [];
 	        var mediaDefault;
@@ -6489,7 +6592,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            })),
 	            function (option) {
 	                each(optionPreprocessorFuncs, function (preProcess) {
-	                    preProcess(option);
+	                    preProcess(option, isNew);
 	                });
 	            }
 	        );
@@ -6644,6 +6747,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	         */
 	        // PENDING
 	        legendDataProvider: null,
+
+	        /**
+	         * Access path of color for visual
+	         */
+	        visualColorAccessPath: 'itemStyle.normal.color',
 
 	        init: function (option, parentModel, ecModel, extraOpt) {
 
@@ -7496,17 +7604,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 
-	        var idStart = 0x0907;
+	    var idStart = 0x0907;
 
-	        module.exports = function () {
-	            return 'zr_' + (idStart++);
-	        };
-	    
+	    module.exports = function () {
+	        return idStart++;
+	    };
+
 
 
 /***/ },
 /* 33 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	/**
 	 * 事件扩展
@@ -7517,8 +7625,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	    var arrySlice = Array.prototype.slice;
-	    var zrUtil = __webpack_require__(4);
-	    var indexOf = zrUtil.indexOf;
 
 	    /**
 	     * 事件分发器
@@ -7551,8 +7657,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                _h[event] = [];
 	            }
 
-	            if (indexOf(_h[event], event) >= 0) {
-	                return this;
+	            for (var i = 0; i < _h[event].length; i++) {
+	                if (_h[event][i].h === handler) {
+	                    return this;
+	                }
 	            }
 
 	            _h[event].push({
@@ -7579,6 +7687,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            if (!_h[event]) {
 	                _h[event] = [];
+	            }
+
+	            for (var i = 0; i < _h[event].length; i++) {
+	                if (_h[event][i].h === handler) {
+	                    return this;
+	                }
 	            }
 
 	            _h[event].push({
@@ -8646,12 +8760,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var frame;
 	            if (percent < lastFramePercent) {
 	                // Start from next key
+	                // PENDING start from lastFrame ?
 	                start = Math.min(lastFrame + 1, trackLen - 1);
 	                for (frame = start; frame >= 0; frame--) {
 	                    if (kfPercents[frame] <= percent) {
 	                        break;
 	                    }
 	                }
+	                // PENDING really need to do this ?
 	                frame = Math.min(frame, trackLen - 2);
 	            }
 	            else {
@@ -10619,6 +10735,52 @@ return /******/ (function(modules) { // webpackBootstrap
 	            : (vertex[1] > 0 ? 'bottom' : 'top');
 	    };
 
+	    /**
+	     * Apply group transition animation from g1 to g2
+	     */
+	    graphic.groupTransition = function (g1, g2, animatableModel, cb) {
+	        if (!g1 || !g2) {
+	            return;
+	        }
+
+	        function getElMap(g) {
+	            var elMap = {};
+	            g.traverse(function (el) {
+	                if (!el.isGroup && el.anid) {
+	                    elMap[el.anid] = el;
+	                }
+	            });
+	            return elMap;
+	        }
+	        function getAnimatableProps(el) {
+	            var obj = {
+	                position: vector.clone(el.position),
+	                rotation: el.rotation
+	            };
+	            if (el.shape) {
+	                obj.shape = zrUtil.extend({}, el.shape);
+	            }
+	            return obj;
+	        }
+	        var elMap1 = getElMap(g1);
+
+	        g2.traverse(function (el) {
+	            if (!el.isGroup && el.anid) {
+	                var oldEl = elMap1[el.anid];
+	                if (oldEl) {
+	                    var newProp = getAnimatableProps(el);
+	                    el.attr(getAnimatableProps(oldEl));
+	                    graphic.updateProps(el, newProp, animatableModel, el.dataIndex);
+	                }
+	                // else {
+	                //     if (el.previousProps) {
+	                //         graphic.updateProps
+	                //     }
+	                // }
+	            }
+	        });
+	    };
+
 	    module.exports = graphic;
 
 
@@ -11687,6 +11849,45 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.extendFrom(opts);
 	    };
 
+	    function createLinearGradient(ctx, obj, rect) {
+	        // var size =
+	        var x = obj.x;
+	        var x2 = obj.x2;
+	        var y = obj.y;
+	        var y2 = obj.y2;
+
+	        if (!obj.global) {
+	            x = x * rect.width + rect.x;
+	            x2 = x2 * rect.width + rect.x;
+	            y = y * rect.height + rect.y;
+	            y2 = y2 * rect.height + rect.y;
+	        }
+
+	        var canvasGradient = ctx.createLinearGradient(x, y, x2, y2);
+
+	        return canvasGradient;
+	    }
+
+	    function createRadialGradient(ctx, obj, rect) {
+	        var width = rect.width;
+	        var height = rect.height;
+	        var min = Math.min(width, height);
+
+	        var x = obj.x;
+	        var y = obj.y;
+	        var r = obj.r;
+	        if (!obj.global) {
+	            x = x * width + rect.x;
+	            y = y * height + rect.y;
+	            r = r * min;
+	        }
+
+	        var canvasGradient = ctx.createRadialGradient(x, y, 0, x, y, r);
+
+	        return canvasGradient;
+	    }
+
+
 	    Style.prototype = {
 
 	        constructor: Style,
@@ -11803,6 +12004,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        textShadowOffsetY: 0,
 
 	        /**
+	         * @type {string}
+	         * https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation
+	         */
+	        blend: null,
+
+	        /**
 	         * @param {CanvasRenderingContext2D} ctx
 	         */
 	        bind: function (ctx, el, prevEl) {
@@ -11828,6 +12035,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	            if ((firstDraw || style.opacity !== prevStyle.opacity)) {
 	                ctx.globalAlpha = style.opacity == null ? 1 : style.opacity;
+	            }
+
+	            if ((firstDraw || style.blend !== prevStyle.blend)) {
+	                ctx.globalCompositeOperation = style.blend || 'source-over';
 	            }
 	            if (this.hasStroke()) {
 	                var lineWidth = style.lineWidth;
@@ -11889,35 +12100,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return newStyle;
 	        },
 
-	        createLinearGradient: function (ctx, obj, rect) {
-	            // var size =
-	            var x = obj.x * rect.width + rect.x;
-	            var x2 = obj.x2 * rect.width + rect.x;
-	            var y = obj.y * rect.height + rect.y;
-	            var y2 = obj.y2 * rect.height + rect.y;
-
-	            var canvasGradient = ctx.createLinearGradient(x, y, x2, y2);
-
-	            return canvasGradient;
-	        },
-
-	        createRadialGradient: function (ctx, obj, rect) {
-	            var width = rect.width;
-	            var height = rect.height;
-	            var min = Math.min(width, height);
-
-	            var x = obj.x * width + rect.x;
-	            var y = obj.y * height + rect.y;
-	            var r = obj.r * min;
-
-	            var canvasGradient = ctx.createRadialGradient(x, y, 0, x, y, r);
-
-	            return canvasGradient;
-	        },
-
 	        getGradient: function (ctx, obj, rect) {
-	            var method = obj.type === 'radial' ? 'createRadialGradient' : 'createLinearGradient';
-	            var canvasGradient = this[method](ctx, obj, rect);
+	            var method = obj.type === 'radial' ? createRadialGradient : createLinearGradient;
+	            var canvasGradient = method(ctx, obj, rect);
 	            var colorStops = obj.colorStops;
 	            for (var i = 0; i < colorStops.length; i++) {
 	                canvasGradient.addColorStop(
@@ -11935,6 +12120,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            styleProto[prop[0]] = prop[1];
 	        }
 	    }
+
+	    // Provide for others
+	    Style.getGradient = styleProto.getGradient;
 
 	    module.exports = Style;
 
@@ -12507,14 +12695,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	            x -= offset * dx;
 	            y -= offset * dy;
 
-	            while ((dx >= 0 && x <= x1) || (dx < 0 && x > x1)) {
+	            while ((dx > 0 && x <= x1) || (dx < 0 && x >= x1)
+	            || (dx == 0 && ((dy > 0 && y <= y1) || (dy < 0 && y >= y1)))) {
 	                idx = this._dashIdx;
 	                dash = lineDash[idx];
 	                x += dx * dash;
 	                y += dy * dash;
 	                this._dashIdx = (idx + 1) % nDash;
 	                // Skip positive offset
-	                if ((dx > 0 && x < x0) || (dx < 0 && x > x0)) {
+	                if ((dx > 0 && x < x0) || (dx < 0 && x > x0) || (dy > 0 && y < y0) || (dy < 0 && y > y0)) {
 	                    continue;
 	                }
 	                ctx[idx % 2 ? 'moveTo' : 'lineTo'](
@@ -14483,7 +14672,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var image;
 
 	            // Must bind each time
-	            style.bind(ctx, prevEl);
+	            style.bind(ctx, this, prevEl);
 
 	            // style.image is a url string
 	            if (typeof src === 'string') {
@@ -14929,7 +15118,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            text != null && (text += '');
 
 	            // Always bind style
-	            style.bind(ctx, prevEl);
+	            style.bind(ctx, this, prevEl);
 
 	            if (text) {
 
@@ -15830,8 +16019,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {number} [x2=1]
 	     * @param {number} [y2=0]
 	     * @param {Array.<Object>} colorStops
+	     * @param {boolean} [globalCoord=false]
 	     */
-	    var LinearGradient = function (x, y, x2, y2, colorStops) {
+	    var LinearGradient = function (x, y, x2, y2, colorStops, globalCoord) {
 	        this.x = x == null ? 0 : x;
 
 	        this.y = y == null ? 0 : y;
@@ -15842,6 +16032,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // Can be cloned
 	        this.type = 'linear';
+
+	        // If use global coord
+	        this.global = globalCoord || false;
 
 	        Gradient.call(this, colorStops);
 	    };
@@ -15873,8 +16066,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {number} [y=0.5]
 	     * @param {number} [r=0.5]
 	     * @param {Array.<Object>} [colorStops]
+	     * @param {boolean} [globalCoord=false]
 	     */
-	    var RadialGradient = function (x, y, r, colorStops) {
+	    var RadialGradient = function (x, y, r, colorStops, globalCoord) {
 	        this.x = x == null ? 0.5 : x;
 
 	        this.y = y == null ? 0.5 : y;
@@ -15883,6 +16077,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // Can be cloned
 	        this.type = 'radial';
+
+	        // If use global coord
+	        this.global = globalCoord || false;
 
 	        Gradient.call(this, colorStops);
 	    };
@@ -15931,7 +16128,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @type {string}
 	     */
-	    zrender.version = '3.1.0';
+	    zrender.version = '3.1.1';
 
 	    /**
 	     * Initializing a zrender instance
@@ -16240,10 +16437,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        /**
 	         * Set default cursor
-	         * @param {string} cursorStyle 例如 crosshair
+	         * @param {string} [cursorStyle='default'] 例如 crosshair
 	         */
-	        setDefaultCursorStyle: function (cursorStyle) {
-	            this.handler && this.handler.setDefaultCursorStyle(cursorStyle);
+	        setCursorStyle: function (cursorStyle) {
+	            this.handler && this.handler.setCursorStyle(cursorStyle);
 	        },
 
 	        /**
@@ -16385,7 +16582,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            this._hovered = hovered;
 
-	            this.root.style.cursor = hovered ? hovered.cursor : this._defaultCursorStyle;
+	            this.root.style.cursor = hovered ? hovered.cursor : 'default';
 	            // Mouse out on previous hovered element
 	            if (lastHovered && hovered !== lastHovered && lastHovered.__zr) {
 	                this._dispatchProxy(lastHovered, 'mouseout', event);
@@ -16619,12 +16816,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        /**
 	         * @private
-	         * @type {string}
-	         */
-	        this._defaultCursorStyle = 'default';
-
-	        /**
-	         * @private
 	         * @type {module:zrender/core/GestureMgr}
 	         */
 	        this._gestureMgr = new GestureMgr();
@@ -16714,10 +16905,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        /**
 	         * 设置默认的cursor style
-	         * @param {string} cursorStyle 例如 crosshair
+	         * @param {string} [cursorStyle='default'] 例如 crosshair
 	         */
-	        setDefaultCursorStyle: function (cursorStyle) {
-	            this._defaultCursorStyle = cursorStyle;
+	        setCursorStyle: function (cursorStyle) {
+	            this.root.style.cursor = cursorStyle || 'default';
 	        },
 
 	        /**
@@ -17194,6 +17385,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                // if (a.z2 === b.z2) {
 	                //     // FIXME Slow has renderidx compare
 	                //     // http://stackoverflow.com/questions/20883421/sorting-in-javascript-should-every-compare-function-have-a-return-0-statement
+	                //     // https://github.com/v8/v8/blob/47cce544a31ed5577ffe2963f67acb4144ee0232/src/js/array.js#L1012
 	                //     return a.__renderidx - b.__renderidx;
 	                // }
 	                return a.z2 - b.z2;
@@ -18804,6 +18996,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var el = list[i];
 	                var elZLevel = this._singleCanvas ? 0 : el.zlevel;
 
+	                var elFrame = el.__frame;
+
+	                // Flush at current context
+	                // PENDING
+	                if (elFrame < 0 && currentProgressiveLayer) {
+	                    flushProgressiveLayer(currentProgressiveLayer);
+	                    currentProgressiveLayer = null;
+	                }
+
 	                // Change draw layer
 	                if (currentZLevel !== elZLevel) {
 	                    if (ctx) {
@@ -18834,8 +19035,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        currentLayer.clear();
 	                    }
 	                }
-
-	                var elFrame = el.__frame;
 
 	                if (!(currentLayer.__dirty || paintAll)) {
 	                    continue;
@@ -18876,10 +19075,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    }
 	                }
 	                else {
-	                    if (currentProgressiveLayer) {
-	                        flushProgressiveLayer(currentProgressiveLayer);
-	                        currentProgressiveLayer = null;
-	                    }
 	                    this._doPaintEl(el, currentLayer, paintAll, scope);
 	                }
 
@@ -19431,6 +19626,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var util = __webpack_require__(4);
 	    var config = __webpack_require__(41);
+	    var Style = __webpack_require__(47);
+	    var Pattern = __webpack_require__(59);
 
 	    function returnFalse() {
 	        return false;
@@ -19599,7 +19796,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var width = dom.width;
 	            var height = dom.height;
 
-	            var haveClearColor = this.clearColor;
+	            var clearColor = this.clearColor;
 	            var haveMotionBLur = this.motionBlur && !clearAll;
 	            var lastFrameAlpha = this.lastFrameAlpha;
 
@@ -19619,9 +19816,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 
 	            ctx.clearRect(0, 0, width / dpr, height / dpr);
-	            if (haveClearColor) {
+	            if (clearColor) {
+	                var clearColorGradientOrPattern;
+	                // Gradient
+	                if (clearColor.colorStops) {
+	                    // Cache canvas gradient
+	                    clearColorGradientOrPattern = clearColor.__canvasGradient || Style.getGradient(ctx, clearColor, {
+	                        x: 0,
+	                        y: 0,
+	                        width: width / dpr,
+	                        height: height / dpr
+	                    });
+
+	                    clearColor.__canvasGradient = clearColorGradientOrPattern;
+	                }
+	                // Pattern
+	                else if (clearColor.image) {
+	                    clearColorGradientOrPattern = Pattern.prototype.getCanvasPattern.call(clearColor, ctx);
+	                }
 	                ctx.save();
-	                ctx.fillStyle = this.clearColor;
+	                ctx.fillStyle = clearColorGradientOrPattern || clearColor;
 	                ctx.fillRect(0, 0, width / dpr, height / dpr);
 	                ctx.restore();
 	            }
@@ -19748,9 +19962,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	
 	    var Gradient = __webpack_require__(61);
-	    module.exports = function (seriesType, styleType, ecModel) {
+	    module.exports = function (ecModel) {
 	        function encodeColor(seriesModel) {
-	            var colorAccessPath = [styleType, 'normal', 'color'];
+	            var colorAccessPath = (seriesModel.visualColorAccessPath || 'itemStyle.normal.color').split('.');
 	            var data = seriesModel.getData();
 	            var color = seriesModel.get(colorAccessPath) // Set in itemStyle
 	                || seriesModel.getColorFromPalette(seriesModel.get('name'));  // Default color
@@ -19778,8 +19992,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                });
 	            }
 	        }
-	        seriesType ? ecModel.eachRawSeriesByType(seriesType, encodeColor)
-	            : ecModel.eachRawSeries(encodeColor);
+	        ecModel.eachRawSeries(encodeColor);
 	    };
 
 
@@ -20272,13 +20485,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	        // Use the name in option and create id
 	        for (var i = 0; i < data.length; i++) {
-	            var id = '';
 	            if (!nameList[i]) {
-	                nameList[i] = data[i].name;
-	                // Try using the id in option
-	                id = data[i].id;
+	                if (data[i] && data[i].name != null) {
+	                    nameList[i] = data[i].name;
+	                }
 	            }
 	            var name = nameList[i] || '';
+	            // Try using the id in option
+	            var id = data[i] && data[i].id;
+
 	            if (!id && name) {
 	                // Use name as id and add counter to avoid same name
 	                nameRepeatCount[name] = nameRepeatCount[name] || 0;
@@ -20390,6 +20605,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {boolean} stack
 	     */
 	    listProto.getDataExtent = function (dim, stack) {
+	        dim = this.getDimension(dim);
 	        var dimData = this._storage[dim];
 	        var dimInfo = this.getDimensionInfo(dim);
 	        stack = (dimInfo && dimInfo.stackable) && stack;
@@ -20478,6 +20694,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        }
 
+	        return -1;
+	    };
+
+	    /**
+	     * Retreive the index with given raw data index
+	     * @param {number} idx
+	     * @param {number} name
+	     * @return {number}
+	     */
+	    listProto.indexOfRawIndex = function (rawIndex) {
+	        // Indices are ascending
+	        var indices = this.indices;
+	        var left = 0;
+	        var right = indices.length - 1;
+	        while (left <= right) {
+	            var mid = (left + right) / 2 | 0;
+	            if (indices[mid] < rawIndex) {
+	                left = mid + 1;
+	            }
+	            else if (indices[mid] > rawIndex) {
+	                right = mid - 1;
+	            }
+	            else {
+	                return mid;
+	            }
+	        }
 	        return -1;
 	    };
 
@@ -21359,24 +21601,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var creator = creators[coordSysName];
 	        var registeredCoordSys = CoordinateSystem.get(coordSysName);
 	        // FIXME
-	        var result = creator && creator(data, seriesModel, ecModel);
-	        var dimensions = result && result.dimensions;
+	        var axesInfo = creator && creator(data, seriesModel, ecModel);
+	        var dimensions = axesInfo && axesInfo.dimensions;
 	        if (!dimensions) {
 	            // Get dimensions from registered coordinate system
 	            dimensions = (registeredCoordSys && registeredCoordSys.dimensions) || ['x', 'y'];
 	            dimensions = completeDimensions(dimensions, data, dimensions.concat(['value']));
 	        }
-	        var categoryAxisModel = result && result.categoryAxisModel;
-	        var categories;
-
-	        var categoryDimIndex = dimensions[0].type === 'ordinal'
-	            ? 0 : (dimensions[1].type === 'ordinal' ? 1 : -1);
+	        var categoryIndex = axesInfo ? axesInfo.categoryIndex : -1;
 
 	        var list = new List(dimensions, seriesModel);
 
-	        var nameList = createNameList(result, data);
+	        var nameList = createNameList(axesInfo, data);
 
-	        var dimValueGetter = (categoryAxisModel && ifNeedCompleteOrdinalData(data))
+	        var categories = {};
+	        var dimValueGetter = (categoryIndex >= 0 && ifNeedCompleteOrdinalData(data))
 	            ? function (itemOpt, dimName, dataIndex, dimIndex) {
 	                // If any dataItem is like { value: 10 }
 	                if (modelUtil.isDataItemOption(itemOpt)) {
@@ -21384,7 +21623,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                // Use dataIndex as ordinal value in categoryAxis
-	                return dimIndex === categoryDimIndex
+	                return dimIndex === categoryIndex
 	                    ? dataIndex
 	                    : converDataValue(getDataItemValue(itemOpt), dimensions[dimIndex]);
 	            }
@@ -21396,12 +21635,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    list.hasItemOption = true;
 	                }
 
-	                if (categoryDimIndex === dimIndex) {
+	                var categoryAxesModels = axesInfo && axesInfo.categoryAxesModels;
+	                if (categoryAxesModels && categoryAxesModels[dimName]) {
 	                    // If given value is a category string
 	                    if (typeof val === 'string') {
 	                        // Lazy get categories
-	                        categories = categories || categoryAxisModel.getCategories();
-	                        val = zrUtil.indexOf(categories, val);
+	                        categories[dimName] = categories[dimName]
+	                            || categoryAxesModels[dimName].getCategories();
+	                        val = zrUtil.indexOf(categories[dimName], val);
 	                        if (val < 0 && !isNaN(val)) {
 	                            // In case some one write '1', '2' istead of 1, 2
 	                            val = +val;
@@ -21431,7 +21672,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    /**
 	     * Creaters for each coord system.
-	     * @return {Object} {dimensions, categoryAxisModel};
 	     */
 	    var creators = {
 
@@ -21466,15 +21706,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	            ];
 
 	            var isXAxisCateogry = xAxisType === 'category';
+	            var isYAxisCategory = yAxisType === 'category';
 
 	            completeDimensions(dimensions, data, ['x', 'y', 'z']);
 
+	            var categoryAxesModels = {};
+	            if (isXAxisCateogry) {
+	                categoryAxesModels.x = xAxisModel;
+	            }
+	            if (isYAxisCategory) {
+	                categoryAxesModels.y = yAxisModel;
+	            }
 	            return {
 	                dimensions: dimensions,
-	                categoryIndex: isXAxisCateogry ? 0 : 1,
-	                categoryAxisModel: isXAxisCateogry
-	                    ? xAxisModel
-	                    : (yAxisType === 'category' ? yAxisModel : null)
+	                categoryIndex: isXAxisCateogry ? 0 : (isYAxisCategory ? 1 : -1),
+	                categoryAxesModels: categoryAxesModels
 	            };
 	        },
 
@@ -21517,15 +21763,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            ];
 	            var isAngleAxisCateogry = angleAxisType === 'category';
+	            var isRadiusAxisCateogry = radiusAxisType === 'category';
 
 	            completeDimensions(dimensions, data, ['radius', 'angle', 'value']);
 
+	            var categoryAxesModels = {};
+	            if (isRadiusAxisCateogry) {
+	                categoryAxesModels.radius = radiusAxisModel;
+	            }
+	            if (isAngleAxisCateogry) {
+	                categoryAxesModels.angle = angleAxisModel;
+	            }
 	            return {
 	                dimensions: dimensions,
-	                categoryIndex: isAngleAxisCateogry ? 1 : 0,
-	                categoryAxisModel: isAngleAxisCateogry
-	                    ? angleAxisModel
-	                    : (radiusAxisType === 'category' ? radiusAxisModel : null)
+	                categoryIndex: isAngleAxisCateogry ? 1 : (isRadiusAxisCateogry ? 0 : -1),
+	                categoryAxesModels: categoryAxesModels
 	            };
 	        },
 
@@ -21544,9 +21796,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    function createNameList(result, data) {
 	        var nameList = [];
 
-	        if (result && result.categoryAxisModel) {
+	        var categoryDim = result && result.dimensions[result.categoryIndex];
+	        var categoryAxisModel;
+	        if (categoryDim) {
+	            categoryAxisModel = result.categoryAxesModels[categoryDim.name];
+	        }
+
+	        if (categoryAxisModel) {
 	            // FIXME Two category axis
-	            var categories = result.categoryAxisModel.getCategories();
+	            var categories = categoryAxisModel.getCategories();
 	            if (categories) {
 	                var dataLen = data.length;
 	                // Ordered data is given explicitly like
@@ -21859,6 +22117,93 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return stepPoints;
 	    }
 
+	    function clamp(number, extent) {
+	        return Math.max(Math.min(number, extent[1]), extent[0]);
+	    }
+
+	    function getVisualGradient(data, coordSys) {
+	        var visualMetaList = data.getVisual('visualMeta');
+	        if (!visualMetaList || !visualMetaList.length) {
+	            return;
+	        }
+
+	        var visualMeta;
+	        for (var i = visualMetaList.length - 1; i >= 0; i--) {
+	            // Can only be x or y
+	            if (visualMetaList[i].dimension < 2) {
+	                visualMeta = visualMetaList[i];
+	                break;
+	            }
+	        }
+	        if (!visualMeta || coordSys.type !== 'cartesian2d') {
+	            if (true) {
+	                console.warn('Visual map on line style only support x or y dimension.');
+	            }
+	            return;
+	        }
+	        var dimension = visualMeta.dimension;
+	        var dimName = data.dimensions[dimension];
+	        var dataExtent = data.getDataExtent(dimName);
+
+	        var stops = visualMeta.stops;
+
+	        var colorStops = [];
+	        if (stops[0].interval) {
+	            stops.sort(function (a, b) {
+	                return a.interval[0] - b.interval[0];
+	            });
+	        }
+
+	        var firstStop = stops[0];
+	        var lastStop = stops[stops.length - 1];
+	        // Interval can be infinity in piecewise case
+	        var min = firstStop.interval ? clamp(firstStop.interval[0], dataExtent) : firstStop.value;
+	        var max = lastStop.interval ? clamp(lastStop.interval[1], dataExtent) : lastStop.value;
+	        var stopsSpan = max - min;
+	        for (var i = 0; i < stops.length; i++) {
+	            // Piecewise
+	            if (stops[i].interval) {
+	                if (stops[i].interval[1] === stops[i].interval[0]) {
+	                    continue;
+	                }
+	                colorStops.push({
+	                    // Make sure offset is between 0 and 1
+	                    offset: (clamp(stops[i].interval[0], dataExtent) - min) / stopsSpan,
+	                    color: stops[i].color
+	                }, {
+	                    offset: (clamp(stops[i].interval[1], dataExtent) - min) / stopsSpan,
+	                    color: stops[i].color
+	                });
+	            }
+	            // Continous
+	            else {
+	                // if (i > 0 && stops[i].value === stops[i - 1].value) {
+	                //     continue;
+	                // }
+	                colorStops.push({
+	                    offset: (stops[i].value - min) / stopsSpan,
+	                    color: stops[i].color
+	                });
+	            }
+	        }
+	        var gradient = new graphic.LinearGradient(
+	            0, 0, 0, 0, colorStops, true
+	        );
+	        var axis = coordSys.getAxis(dimName);
+
+	        var start = Math.round(axis.toGlobalCoord(axis.dataToCoord(min)));
+	        var end = Math.round(axis.toGlobalCoord(axis.dataToCoord(max)));
+	        zrUtil.each(colorStops, function (colorStop) {
+	            // Make sure each offset has rounded px to avoid not sharp edge
+	            colorStop.offset = (Math.round(colorStop.offset * (end - start) + start) - start) / (end - start);
+	        });
+
+	        gradient[dimName] = start;
+	        gradient[dimName + '2'] = end;
+
+	        return gradient;
+	    }
+
 	    module.exports = ChartView.extend({
 
 	        type: 'line',
@@ -21989,12 +22334,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 	            }
 
+	            var visualColor = getVisualGradient(data, coordSys) || data.getVisual('color');
 	            polyline.useStyle(zrUtil.defaults(
 	                // Use color in lineStyle first
 	                lineStyleModel.getLineStyle(),
 	                {
 	                    fill: 'none',
-	                    stroke: data.getVisual('color'),
+	                    stroke: visualColor,
 	                    lineJoin: 'bevel'
 	                }
 	            ));
@@ -22014,7 +22360,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                polygon.useStyle(zrUtil.defaults(
 	                    areaStyleModel.getAreaStyle(),
 	                    {
-	                        fill: data.getVisual('color'),
+	                        fill: visualColor,
 	                        opacity: 0.7,
 	                        lineJoin: 'bevel'
 	                    }
@@ -22045,7 +22391,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var data = seriesModel.getData();
 	            var dataIndex = queryDataIndex(data, payload);
 
-	            if (dataIndex != null && dataIndex >= 0) {
+	            if (!(dataIndex instanceof Array) && dataIndex != null && dataIndex >= 0) {
 	                var symbol = data.getItemGraphicEl(dataIndex);
 	                if (!symbol) {
 	                    // Create a temporary symbol if it is not exists
@@ -23907,8 +24253,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    };
 
 	    gridProto.getCartesian = function (xAxisIndex, yAxisIndex) {
-	        var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
-	        return this._coordsMap[key];
+	        if (xAxisIndex != null && yAxisIndex != null) {
+	            var key = 'x' + xAxisIndex + 'y' + yAxisIndex;
+	            return this._coordsMap[key];
+	        }
+	        else {
+	            // When only xAxisIndex or yAxisIndex given, find its first cartesian.
+	            for (var i = 0, coordList = this._coordsList; i < coordList.length; i++) {
+	                if (coordList[i].getAxis('x').index === xAxisIndex
+	                    || coordList[i].getAxis('y').index === yAxisIndex
+	                ) {
+	                    return coordList[i];
+	                }
+	            }
+	        }
 	    };
 
 	    /**
@@ -24008,6 +24366,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                // Inject axisModel into axis
 	                axis.model = axisModel;
+
+	                // Inject grid info axis
+	                axis.grid = this;
 
 	                // Index of axis, can be used as key
 	                axis.index = idx;
@@ -24298,6 +24659,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // Simple optimization for large amount of labels
 	            step = Math.floor(labels.length / 40);
 	        }
+
 	        for (var i = 0; i < tickCoords.length; i += step) {
 	            var tickCoord = tickCoords[i];
 	            var rect = textContain.getBoundingRect(
@@ -24305,7 +24667,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            );
 	            rect[isAxisHorizontal ? 'x' : 'y'] += tickCoord;
 	            // FIXME Magic number 1.5
-	            rect[isAxisHorizontal ? 'width' : 'height'] *= 1.5;
+	            rect[isAxisHorizontal ? 'width' : 'height'] *= 1.3;
 	            if (!textSpaceTakenRect) {
 	                textSpaceTakenRect = rect.clone();
 	            }
@@ -24323,7 +24685,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        if (autoLabelInterval === 0 && step > 1) {
 	            return step;
 	        }
-	        return autoLabelInterval * step;
+	        return (autoLabelInterval + 1) * step - 1;
 	    };
 
 	    /**
@@ -25949,16 +26311,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	        z: 0,                       // 二级层叠
 	        // 反向坐标轴
 	        inverse: false,
+
 	        // 坐标轴名字，默认为空
 	        name: '',
 	        // 坐标轴名字位置，支持'start' | 'middle' | 'end'
 	        nameLocation: 'end',
+	        // 坐标轴名字旋转，degree。
+	        nameRotate: null, // Adapt to axis rotate, when nameLocation is 'middle'.
+	        nameTruncateLength: null, // truncate text when characters more than the given number.
+	        nameTruncateEllipsis: '...',
 	        // 坐标轴文字样式，默认取全局样式
 	        nameTextStyle: {},
 	        // 文字与轴线距离
 	        nameGap: 15,
+
 	        // 是否能触发鼠标事件
 	        silent: true,
+
 	        // 坐标轴线
 	        axisLine: {
 	            // 默认显示，属性show控制显示与否
@@ -25981,7 +26350,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            length: 5,
 	            // 属性lineStyle控制线条样式
 	            lineStyle: {
-	                color: '#333',
 	                width: 1
 	            }
 	        },
@@ -25995,7 +26363,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // formatter: null,
 	            // 其余属性默认使用全局文本样式，详见TEXTSTYLE
 	            textStyle: {
-	                color: '#333',
 	                fontSize: 12
 	            }
 	        },
@@ -26158,6 +26525,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            this.group.removeAll();
 
+	            var oldAxisGroup = this._axisGroup;
+	            this._axisGroup = new graphic.Group();
+
+	            this.group.add(this._axisGroup);
+
 	            if (!axisModel.get('show')) {
 	                return;
 	            }
@@ -26170,13 +26542,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            zrUtil.each(axisBuilderAttrs, axisBuilder.add, axisBuilder);
 
-	            this.group.add(axisBuilder.getGroup());
+	            this._axisGroup.add(axisBuilder.getGroup());
 
 	            zrUtil.each(selfBuilderAttrs, function (name) {
-	                if (axisModel.get(name +'.show')) {
+	                if (axisModel.get(name + '.show')) {
 	                    this['_' + name](axisModel, gridModel, layout.labelInterval);
 	                }
 	            }, this);
+
+	            graphic.groupTransition(oldAxisGroup, this._axisGroup, axisModel);
 	        },
 
 	        /**
@@ -26190,7 +26564,6 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            var splitLineModel = axisModel.getModel('splitLine');
 	            var lineStyleModel = splitLineModel.getModel('lineStyle');
-	            var lineWidth = lineStyleModel.get('width');
 	            var lineColors = lineStyleModel.get('color');
 
 	            var lineInterval = getInterval(splitLineModel, labelInterval);
@@ -26200,13 +26573,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var gridRect = gridModel.coordinateSystem.getRect();
 	            var isHorizontal = axis.isHorizontal();
 
-	            var splitLines = [];
 	            var lineCount = 0;
 
 	            var ticksCoords = axis.getTicksCoords();
+	            var ticks = axis.scale.getTicks();
 
 	            var p1 = [];
 	            var p2 = [];
+	            // Simple optimization
+	            // Batching the lines if color are the same
+	            var lineStyle = lineStyleModel.getLineStyle();
 	            for (var i = 0; i < ticksCoords.length; i++) {
 	                if (ifIgnoreOnTick(axis, i, lineInterval)) {
 	                    continue;
@@ -26228,31 +26604,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                var colorIndex = (lineCount++) % lineColors.length;
-	                splitLines[colorIndex] = splitLines[colorIndex] || [];
-	                splitLines[colorIndex].push(new graphic.Line(graphic.subPixelOptimizeLine({
+	                this._axisGroup.add(new graphic.Line(graphic.subPixelOptimizeLine({
+	                    anid: 'line_' + ticks[i],
+
 	                    shape: {
 	                        x1: p1[0],
 	                        y1: p1[1],
 	                        x2: p2[0],
 	                        y2: p2[1]
 	                    },
-	                    style: {
-	                        lineWidth: lineWidth
-	                    },
-	                    silent: true
-	                })));
-	            }
-
-	            // Simple optimization
-	            // Batching the lines if color are the same
-	            var lineStyle = lineStyleModel.getLineStyle();
-	            for (var i = 0; i < splitLines.length; i++) {
-	                this.group.add(graphic.mergePath(splitLines[i], {
 	                    style: zrUtil.defaults({
-	                        stroke: lineColors[i % lineColors.length]
+	                        stroke: lineColors[colorIndex]
 	                    }, lineStyle),
 	                    silent: true
-	                }));
+	                })));
 	            }
 	        },
 
@@ -26271,15 +26636,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            var gridRect = gridModel.coordinateSystem.getRect();
 	            var ticksCoords = axis.getTicksCoords();
+	            var ticks = axis.scale.getTicks();
 
 	            var prevX = axis.toGlobalCoord(ticksCoords[0]);
 	            var prevY = axis.toGlobalCoord(ticksCoords[0]);
 
-	            var splitAreaRects = [];
 	            var count = 0;
 
 	            var areaInterval = getInterval(splitAreaModel, labelInterval);
 
+	            var areaStyle = areaStyleModel.getAreaStyle();
 	            areaColors = zrUtil.isArray(areaColors) ? areaColors : [areaColors];
 
 	            for (var i = 1; i < ticksCoords.length; i++) {
@@ -26307,31 +26673,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	                }
 
 	                var colorIndex = (count++) % areaColors.length;
-	                splitAreaRects[colorIndex] = splitAreaRects[colorIndex] || [];
-	                splitAreaRects[colorIndex].push(new graphic.Rect({
+	                this._axisGroup.add(new graphic.Rect({
+	                    anid: 'area_' + ticks[i],
+
 	                    shape: {
 	                        x: x,
 	                        y: y,
 	                        width: width,
 	                        height: height
 	                    },
+	                    style: zrUtil.defaults({
+	                        fill: areaColors[colorIndex]
+	                    }, areaStyle),
 	                    silent: true
 	                }));
 
 	                prevX = x + width;
 	                prevY = y + height;
-	            }
-
-	            // Simple optimization
-	            // Batching the rects if color are the same
-	            var areaStyle = areaStyleModel.getAreaStyle();
-	            for (var i = 0; i < splitAreaRects.length; i++) {
-	                this.group.add(graphic.mergePath(splitAreaRects[i], {
-	                    style: zrUtil.defaults({
-	                        fill: areaColors[i % areaColors.length]
-	                    }, areaStyle),
-	                    silent: true
-	                }));
 	            }
 	        }
 	    });
@@ -26378,8 +26736,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        ];
 
 	        // Axis rotation
-	        var r = {x: 0, y: 1};
-	        layout.rotation = Math.PI / 2 * r[axisDim];
+	        layout.rotation = Math.PI / 2 * (axisDim === 'x' ? 0 : 1);
 
 	        // Tick and label direction, x y is axisDim
 	        var dirMap = {top: -1, bottom: 1, left: -1, right: 1};
@@ -26417,11 +26774,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 
 	    var zrUtil = __webpack_require__(4);
+	    var modelUtil = __webpack_require__(5);
 	    var graphic = __webpack_require__(43);
 	    var Model = __webpack_require__(8);
+	    var List = __webpack_require__(96);
 	    var numberUtil = __webpack_require__(7);
 	    var remRadian = numberUtil.remRadian;
 	    var isRadianAroundZero = numberUtil.isRadianAroundZero;
+	    var vec2 = __webpack_require__(16);
+	    var v2ApplyTransform = vec2.applyTransform;
+	    var retrieve = zrUtil.retrieve;
 
 	    var PI = Math.PI;
 
@@ -26464,7 +26826,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {number} [opt.tickDirection=1] 1 or -1
 	     * @param {number} [opt.labelDirection=1] 1 or -1
 	     * @param {number} [opt.labelOffset=0] Usefull when onZero.
+	     * @param {string} [opt.axisLabelShow] default get from axisModel.
 	     * @param {string} [opt.axisName] default get from axisModel.
+	     * @param {string} [opt.axisNameTruncateLength] default get from axisModel.
+	     * @param {string} [opt.axisNameTruncateEllipsis] default get from axisModel.
 	     * @param {number} [opt.labelRotation] by degree, default get from axisModel.
 	     * @param {number} [opt.labelInterval] Default label interval when label
 	     *                                     interval from model is null or 'auto'.
@@ -26498,10 +26863,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @readOnly
 	         */
-	        this.group = new graphic.Group({
+	        this.group = new graphic.Group();
+
+	        // FIXME Not use a seperate text group?
+	        var dumbGroup = new graphic.Group({
 	            position: opt.position.slice(),
 	            rotation: opt.rotation
 	        });
+
+	        // this.group.add(dumbGroup);
+	        // this._dumbGroup = dumbGroup;
+
+	        dumbGroup.updateTransform();
+	        this._transform = dumbGroup.transform;
+
+	        this._dumbGroup = dumbGroup;
 	    };
 
 	    AxisBuilder.prototype = {
@@ -26537,12 +26913,24 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            var extent = this.axisModel.axis.getExtent();
 
-	            this.group.add(new graphic.Line({
+	            var matrix = this._transform;
+	            var pt1 = [extent[0], 0];
+	            var pt2 = [extent[1], 0];
+	            if (matrix) {
+	                v2ApplyTransform(pt1, pt1, matrix);
+	                v2ApplyTransform(pt2, pt2, matrix);
+	            }
+
+	            this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
+
+	                // Id for animation
+	                anid: 'line',
+
 	                shape: {
-	                    x1: extent[0],
-	                    y1: 0,
-	                    x2: extent[1],
-	                    y2: 0
+	                    x1: pt1[0],
+	                    y1: pt1[1],
+	                    x2: pt2[0],
+	                    y2: pt2[1]
 	                },
 	                style: zrUtil.extend(
 	                    {lineCap: 'round'},
@@ -26551,7 +26939,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                strokeContainThreshold: opt.strokeContainThreshold,
 	                silent: !!opt.axisLineSilent,
 	                z2: 1
-	            }));
+	            })));
 	        },
 
 	        /**
@@ -26572,8 +26960,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var tickLen = tickModel.get('length');
 	            var tickInterval = getInterval(tickModel, opt.labelInterval);
 	            var ticksCoords = axis.getTicksCoords();
-	            var tickLines = [];
+	            var ticks = axis.scale.getTicks();
 
+	            var pt1 = [];
+	            var pt2 = [];
+	            var matrix = this._transform;
 	            for (var i = 0; i < ticksCoords.length; i++) {
 	                // Only ordinal scale support tick interval
 	                if (ifIgnoreOnTick(axis, i, tickInterval)) {
@@ -26582,26 +26973,37 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                var tickCoord = ticksCoords[i];
 
-	                // Tick line
-	                tickLines.push(new graphic.Line(graphic.subPixelOptimizeLine({
+	                pt1[0] = tickCoord;
+	                pt1[1] = 0;
+	                pt2[0] = tickCoord;
+	                pt2[1] = opt.tickDirection * tickLen;
+
+	                if (matrix) {
+	                    v2ApplyTransform(pt1, pt1, matrix);
+	                    v2ApplyTransform(pt2, pt2, matrix);
+	                }
+	                // Tick line, Not use group transform to have better line draw
+	                this.group.add(new graphic.Line(graphic.subPixelOptimizeLine({
+
+	                    // Id for animation
+	                    anid: 'tick_' + ticks[i],
+
 	                    shape: {
-	                        x1: tickCoord,
-	                        y1: 0,
-	                        x2: tickCoord,
-	                        y2: opt.tickDirection * tickLen
+	                        x1: pt1[0],
+	                        y1: pt1[1],
+	                        x2: pt2[0],
+	                        y2: pt2[1]
 	                    },
-	                    style: {
-	                        lineWidth: lineStyleModel.get('width')
-	                    },
+	                    style: zrUtil.defaults(
+	                        lineStyleModel.getLineStyle(),
+	                        {
+	                            stroke: axisModel.get('axisLine.lineStyle.color')
+	                        }
+	                    ),
+	                    z2: 2,
 	                    silent: true
 	                })));
 	            }
-
-	            this.group.add(graphic.mergePath(tickLines, {
-	                style: lineStyleModel.getLineStyle(),
-	                z2: 2,
-	                silent: true
-	            }));
 	        },
 
 	        /**
@@ -26610,13 +27012,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	         * @private
 	         */
 	        axisLabel: function () {
+	            var opt = this.opt;
 	            var axisModel = this.axisModel;
+	            var show = retrieve(opt.axisLabelShow, axisModel.get('axisLabel.show'));
 
-	            if (!axisModel.get('axisLabel.show')) {
+	            if (!show) {
 	                return;
 	            }
 
-	            var opt = this.opt;
 	            var axis = axisModel.axis;
 	            var labelModel = axisModel.getModel('axisLabel');
 	            var textStyleModel = labelModel.getModel('textStyle');
@@ -26625,10 +27028,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var labels = axisModel.getFormattedLabels();
 
 	            // Special label rotate.
-	            var labelRotation = opt.labelRotation;
-	            if (labelRotation == null) {
-	                labelRotation = labelModel.get('rotate') || 0;
-	            }
+	            var labelRotation = retrieve(opt.labelRotation, labelModel.get('rotate')) || 0;
 	            // To radian.
 	            labelRotation = labelRotation * PI / 180;
 
@@ -26648,7 +27048,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	                        categoryData[i].textStyle, textStyleModel, axisModel.ecModel
 	                    );
 	                }
-	                var textColor = itemTextStyleModel.getTextColor();
+	                var textColor = itemTextStyleModel.getTextColor()
+	                    || axisModel.get('axisLine.lineStyle.color');
 
 	                var tickCoord = axis.dataToCoord(ticks[i]);
 	                var pos = [
@@ -26658,6 +27059,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	                var labelBeforeFormat = axis.scale.getLabel(ticks[i]);
 
 	                var textEl = new graphic.Text({
+
+	                    // Id for animation
+	                    anid: 'label_' + ticks[i],
+
 	                    style: {
 	                        text: labels[i],
 	                        textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
@@ -26675,8 +27080,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	                textEl.eventData.targetType = 'axisLabel';
 	                textEl.eventData.value = labelBeforeFormat;
 
+
+	                // FIXME
+	                this._dumbGroup.add(textEl);
+	                textEl.updateTransform();
+
 	                textEls.push(textEl);
 	                this.group.add(textEl);
+
+	                textEl.decomposeTransform();
 	            }
 
 	            function isTwoLabelOverlapped(current, next) {
@@ -26715,12 +27127,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        axisName: function () {
 	            var opt = this.opt;
 	            var axisModel = this.axisModel;
-
-	            var name = this.opt.axisName;
-	            // If name is '', do not get name from axisMode.
-	            if (name == null) {
-	                name = axisModel.get('name');
-	            }
+	            var name = retrieve(opt.axisName, axisModel.get('name'));
 
 	            if (!name) {
 	                return;
@@ -26745,16 +27152,46 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	            var labelLayout;
 
+	            var nameRotation = axisModel.get('nameRotate');
+	            if (nameRotation != null) {
+	                nameRotation = nameRotation * PI / 180; // To radian.
+	            }
+
 	            if (nameLocation === 'middle') {
-	                labelLayout = innerTextLayout(opt, opt.rotation, nameDirection);
+	                labelLayout = innerTextLayout(
+	                    opt,
+	                    nameRotation != null ? nameRotation : opt.rotation, // Adapt to axis.
+	                    nameDirection
+	                );
 	            }
 	            else {
-	                labelLayout = endTextLayout(opt, nameLocation, extent);
+	                labelLayout = endTextLayout(
+	                    opt, nameLocation, nameRotation || 0, extent
+	                );
+	            }
+
+	            var truncatedText = name;
+	            var truncateLength = retrieve(
+	                opt.axisNameTruncateLength, axisModel.get('nameTruncateLength')
+	            );
+	            var truncateEllipsis = retrieve(
+	                opt.axisNameTruncateEllipsis, axisModel.get('nameTruncateEllipsis')
+	            );
+
+	            if (truncateLength != null) {
+	                truncatedText = modelUtil.truncate(name, truncateLength, truncateEllipsis);
 	            }
 
 	            var textEl = new graphic.Text({
+
+	                // Id for animation
+	                anid: 'name',
+
+	                __fullText: name,
+	                __truncatedText: truncatedText,
+
 	                style: {
-	                    text: name,
+	                    text: truncatedText,
 	                    textFont: textStyleModel.getFont(),
 	                    fill: textStyleModel.getTextColor()
 	                        || axisModel.get('axisLine.lineStyle.color'),
@@ -26767,14 +27204,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	                z2: 1
 	            });
 
+	            // Make truncate tooltip show.
+	            if (truncateLength != null) {
+	                textEl.dataIndex = 0;
+	                var data = new List(['value'], axisModel);
+	                data.initData([{value: name, tooltip: {formatter: tooltipFormatter}}]);
+	                textEl.dataModel = modelUtil.createDataFormatModel(data, {mainType: 'axis'});
+	            }
+
 	            textEl.eventData = makeAxisEventDataBase(axisModel);
 	            textEl.eventData.targetType = 'axisName';
 	            textEl.eventData.name = name;
 
+	            // FIXME
+	            this._dumbGroup.add(textEl);
+	            textEl.updateTransform();
+
 	            this.group.add(textEl);
+
+	            textEl.decomposeTransform();
 	        }
 
 	    };
+
+	    function tooltipFormatter(params) {
+	        return params.value;
+	    }
 
 	    /**
 	     * @inner
@@ -26813,8 +27268,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    /**
 	     * @inner
 	     */
-	    function endTextLayout(opt, textPosition, extent) {
-	        var rotationDiff = remRadian(-opt.rotation);
+	    function endTextLayout(opt, textPosition, textRotate, extent) {
+	        var rotationDiff = remRadian(textRotate - opt.rotation);
 	        var textAlign;
 	        var verticalAlign;
 	        var inverse = extent[0] > extent[1];
@@ -26980,17 +27435,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	                normal: {
 	                    // color: '各异',
 	                    // 柱条边线
-	                    barBorderColor: '#fff',
+	                    borderColor: '#fff',
 	                    // 柱条边线线宽，单位px，默认为1
-	                    barBorderWidth: 0
+	                    borderWidth: 0
 	                },
-	                emphasis: {
-	                    // color: '各异',
-	                    // 柱条边线
-	                    barBorderColor: '#fff',
-	                    // 柱条边线线宽，单位px，默认为1
-	                    barBorderWidth: 0
-	                }
+	                emphasis: {}
 	            }
 	        }
 	    });
@@ -27220,22 +27669,32 @@ return /******/ (function(modules) { // webpackBootstrap
 /***/ function(module, exports, __webpack_require__) {
 
 	
+
+
+	    var getBarItemStyle = __webpack_require__(11)(
+	        [
+	            ['fill', 'color'],
+	            ['stroke', 'borderColor'],
+	            ['lineWidth', 'borderWidth'],
+	            // Compatitable with 2
+	            ['stroke', 'barBorderColor'],
+	            ['lineWidth', 'barBorderWidth'],
+	            ['opacity'],
+	            ['shadowBlur'],
+	            ['shadowOffsetX'],
+	            ['shadowOffsetY'],
+	            ['shadowColor']
+	        ]
+	    );
 	    module.exports = {
-	        getBarItemStyle: __webpack_require__(11)(
-	            [
-	                ['fill', 'color'],
-	                ['stroke', 'borderColor'],
-	                ['lineWidth', 'borderWidth'],
-	                // Compatitable with 2
-	                ['stroke', 'barBorderColor'],
-	                ['lineWidth', 'barBorderWidth'],
-	                ['opacity'],
-	                ['shadowBlur'],
-	                ['shadowOffsetX'],
-	                ['shadowOffsetY'],
-	                ['shadowColor']
-	            ]
-	        )
+	        getBarItemStyle: function (excludes) {
+	            var style = getBarItemStyle.call(this, excludes);
+	            if (this.getBorderLineDash) {
+	                var lineDash = this.getBorderLineDash();
+	                lineDash && (style.lineDash = lineDash);
+	            }
+	            return style;
+	        }
 	    };
 
 
