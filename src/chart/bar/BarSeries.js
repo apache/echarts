@@ -66,11 +66,7 @@ define(function(require) {
             // },
             itemStyle: {
                 normal: {
-                    // color: '各异',
-                    // 柱条边线
-                    borderColor: '#fff',
-                    // 柱条边线线宽，单位px，默认为1
-                    borderWidth: 0
+                    // color: '各异'
                 },
                 emphasis: {}
             }

@@ -193,10 +193,9 @@ define(function (require) {
             ]);
         }
 
+        symbolPath.setStyle(itemStyle);
         // PENDING setColor before setStyle
         symbolPath.setColor(color);
-
-        symbolPath.setStyle(itemStyle);
 
         var opacity = data.getItemVisual(idx, 'opacity');
         if (opacity != null) {
