@@ -1176,7 +1176,7 @@ define(function (require) {
                     var otherCharts = [];
                     for (var id in instances) {
                         var otherChart = instances[id];
-                        if (otherChart !== chart && otherChart.group === chart.group) {
+                        if (otherChart && otherChart !== chart && otherChart.group === chart.group) {
                             otherCharts.push(otherChart);
                         }
                     }
