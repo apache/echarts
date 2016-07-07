@@ -125,20 +125,29 @@ define(function (require) {
             left: 'center',
             // 'center' | 'top' | 'bottom' | 'x%' | {number}
             top: 'center',
+            // right
+            // bottom
+            // width:
+            // height
 
             // Aspect is width / height. Inited to be geoJson bbox aspect
             // This parameter is used for scale this aspect
             aspectScale: 0.75,
-            // right
-            // bottom
-            // width:
-            // height   // 自适应
+
+            ///// Layout with center and size
+            // If you wan't to put map in a fixed size box with right aspect ratio
+            // This two properties may more conveninet
+            // layoutCenter: [50%, 50%]
+            // layoutSize: 100
+
 
             // 数值合并方式，默认加和，可选为：
             // 'sum' | 'average' | 'max' | 'min'
             // mapValueCalculation: 'sum',
             // 地图数值计算结果小数精度
             // mapValuePrecision: 0,
+
+
             // 显示图例颜色标识（系列标识的小圆点），图例开启时有效
             showLegendSymbol: true,
             // 选择模式，默认关闭，可选single，multiple
