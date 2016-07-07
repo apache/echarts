@@ -50,6 +50,7 @@ We will release the English doc soon:)
 #### Python
 
 + [echarts-python](https://github.com/yufeiminds/echarts-python) by yufeiminds
++ [krisk](https://github.com/napjon/krisk) by napjon
 
 #### R
 
