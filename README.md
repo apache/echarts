@@ -50,13 +50,18 @@ We will release the English doc soon:)
 #### Python
 
 + [echarts-python](https://github.com/yufeiminds/echarts-python) by yufeiminds
++ [krisk](https://github.com/napjon/krisk) by napjon
 
 #### R
 
 + [recharts](https://github.com/taiyun/recharts) by taiyun
 + [recharts](https://github.com/yihui/recharts) by yihui
 
-#### purescript
+#### Julia
+
++ [ECharts.jl](https://github.com/randyzwitch/ECharts.jl) by randyzwitch
+
+#### PureScript
 
 + [purescript-echarts](https://github.com/slamdata/purescript-echarts/)
 
