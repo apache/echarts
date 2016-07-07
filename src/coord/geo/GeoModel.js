@@ -19,6 +19,8 @@ define(function (require) {
          */
         coordinateSystem: null,
 
+        layoutMode: 'box',
+
         init: function (option) {
             ComponentModel.prototype.init.apply(this, arguments);
 

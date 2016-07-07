@@ -17,6 +17,8 @@ define(function (require) {
 
         type: 'series.map',
 
+        layoutMode: 'box',
+
         /**
          * Only first map series of same mapType will drawMap
          * @type {boolean}
