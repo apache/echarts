@@ -6,7 +6,6 @@ define(function (require) {
     var echarts = require('../../echarts');
     var visualSolution = require('../../visual/visualSolution');
     var VisualMapping = require('../../visual/VisualMapping');
-    var zrUtil = require('zrender/core/util');
 
     echarts.registerVisual(echarts.PRIORITY.VISUAL.COMPONENT, function (ecModel) {
         ecModel.eachComponent('visualMap', function (visualMapModel) {
@@ -38,11 +37,12 @@ define(function (require) {
             var visualMetaList = [];
 
             ecModel.eachComponent('visualMap', function (visualMapModel) {
-                var visualMeta = {};
-                visualMetaList.push(visualMeta);
-
-                var stops = visualMeta.stops = visualMapModel.getStops(seriesModel, getColorVisual);
-                visualMeta.dimension = visualMapModel.getDataDimension(data);
+                if (visualMapModel.isTargetSeries(seriesModel)) {
+                    var visualMeta = {};
+                    visualMetaList.push(visualMeta);
+                    visualMeta.stops = visualMapModel.getStops(seriesModel, getColorVisual);
+                    visualMeta.dimension = visualMapModel.getDataDimension(data);
+                }
             });
 
             // console.log(JSON.stringify(visualMetaList.map(a => a.stops)));

@@ -165,10 +165,6 @@ define(function(require) {
         },
 
         getStops: function (seriesModel, getColorVisual) {
-            if (!this.isTargetSeries(seriesModel)) {
-                return;
-            }
-
             var result = [];
             insertStopList(this, 'outOfRange', this.getExtent(), result);
             insertStopList(this, 'inRange', this.option.range.slice(), result);

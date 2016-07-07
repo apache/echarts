@@ -705,7 +705,9 @@ define(function(require) {
             var dim = data.getDimension(this.visualMapModel.getDataDimension(data));
             var value = data.get(dim, el.dataIndex, true);
 
-            this._showIndicator(value, value);
+            if (!isNaN(value)) {
+                this._showIndicator(value, value);
+            }
         },
 
         /**
