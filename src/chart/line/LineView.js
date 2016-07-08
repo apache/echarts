@@ -255,6 +255,9 @@ define(function(require) {
         var min = firstStop.interval ? clamp(firstStop.interval[0], dataExtent) : firstStop.value;
         var max = lastStop.interval ? clamp(lastStop.interval[1], dataExtent) : lastStop.value;
         var stopsSpan = max - min;
+        if (stopsSpan === 0) {
+            stopsSpan = 1;
+        }
         for (var i = 0; i < stops.length; i++) {
             // Piecewise
             if (stops[i].interval) {
@@ -288,10 +291,10 @@ define(function(require) {
 
         var start = Math.round(axis.toGlobalCoord(axis.dataToCoord(min)));
         var end = Math.round(axis.toGlobalCoord(axis.dataToCoord(max)));
-        zrUtil.each(colorStops, function (colorStop) {
-            // Make sure each offset has rounded px to avoid not sharp edge
-            colorStop.offset = (Math.round(colorStop.offset * (end - start) + start) - start) / (end - start);
-        });
+        // zrUtil.each(colorStops, function (colorStop) {
+        //     // Make sure each offset has rounded px to avoid not sharp edge
+        //     colorStop.offset = (Math.round(colorStop.offset * (end - start) + start) - start) / (end - start);
+        // });
 
         gradient[dimName] = start;
         gradient[dimName + '2'] = end;
