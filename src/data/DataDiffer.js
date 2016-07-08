@@ -94,8 +94,8 @@ define(function(require) {
                         this._add && this._add(idx);
                     }
                     else {
-                        for (var i = 0, len = idx.length; i < len; i++) {
-                            this._add && this._add(idx[i]);
+                        for (var j = 0, len = idx.length; j < len; j++) {
+                            this._add && this._add(idx[j]);
                         }
                     }
                 }
