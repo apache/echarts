@@ -900,7 +900,9 @@ define(function (require) {
                         ? series.getAxisTooltipDataIndex(series.coordDimToDataDim(baseAxis.dim), value, baseAxis)
                         : series.getData().indexOfNearest(
                             series.coordDimToDataDim(baseAxis.dim)[0],
-                            value[baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1]
+                            value[baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1],
+                            // Add a threshold to avoid find the wrong dataIndex when data length is not same
+                            false, baseAxis.type === 'category' ? 0.5 : null
                         )
                 };
             });
