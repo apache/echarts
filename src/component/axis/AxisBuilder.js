@@ -163,7 +163,7 @@ define(function (require) {
                     {lineCap: 'round'},
                     axisModel.getModel('axisLine.lineStyle').getLineStyle()
                 ),
-                strokeContainThreshold: opt.strokeContainThreshold,
+                strokeContainThreshold: opt.strokeContainThreshold || 5,
                 silent: !!opt.axisLineSilent,
                 z2: 1
             })));
