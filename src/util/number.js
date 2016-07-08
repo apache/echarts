@@ -123,6 +123,7 @@ define(function (require) {
      * @param {number} val
      */
     number.getPrecision = function (val) {
+        val = +val;
         if (isNaN(val)) {
             return 0;
         }
