@@ -591,7 +591,10 @@ define(function (require) {
             var self = this;
 
             var axisPointerType = axisPointerModel.get('type');
-            var moveAnimation = axisPointerType !== 'cross' && cartesian.getBaseAxis().type === 'category';
+            var baseAxis = cartesian.getBaseAxis();
+            var moveAnimation = axisPointerType !== 'cross'
+                && baseAxis.type === 'category'
+                && baseAxis.getBandWidth() > 20;
 
             if (axisPointerType === 'cross') {
                 moveGridLine('x', point, cartesian.getAxis('y').getGlobalExtent());
@@ -703,7 +706,8 @@ define(function (require) {
             var angleAxis = polar.getAngleAxis();
             var radiusAxis = polar.getRadiusAxis();
 
-            var moveAnimation = axisPointerType !== 'cross' && polar.getBaseAxis().type === 'category';
+            var moveAnimation = axisPointerType !== 'cross'
+                && polar.getBaseAxis().type === 'category';
 
             if (axisPointerType === 'cross') {
                 movePolarLine('angle', point, radiusAxis.getExtent());
