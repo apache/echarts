@@ -161,9 +161,19 @@ define(function (require) {
             if (extent[0] === extent[1]) {
                 if (extent[0] !== 0) {
                     // Expand extent
-                    var expandSize = extent[0] / 2;
-                    extent[0] -= expandSize;
-                    extent[1] += expandSize;
+                    var expandSize = extent[0];
+                    // In the fowllowing case
+                    //      Axis has been fixed max 100
+                    //      Plus data are all 100 and axis extent are [100, 100].
+                    // Extend to the both side will cause expanded max is larger than fixed max.
+                    // So only expand to the smaller side.
+                    if (!fixMax) {
+                        extent[1] += expandSize / 2;
+                        extent[0] -= expandSize / 2;
+                    }
+                    else {
+                        extent[0] -= expandSize / 2;
+                    }
                 }
                 else {
                     extent[1] = 1;
