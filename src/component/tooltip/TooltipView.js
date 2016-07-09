@@ -458,6 +458,10 @@ define(function (require) {
                     seriesIndex: el.seriesIndex
                 });
             }
+            // Tooltip provided directly. Like legend
+            else if (el && el.tooltip) {
+                var tooltipContent = el.tooltip;
+            }
             else {
                 if (globalTrigger === 'item') {
                     this._hide();
@@ -893,7 +897,6 @@ define(function (require) {
         ) {
 
             var rootTooltipModel = this._tooltipModel;
-            var tooltipContent = this._tooltipContent;
 
             var baseAxis = coordSys.getBaseAxis();
             var baseDimIndex = baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1;
@@ -938,69 +941,39 @@ define(function (require) {
             });
 
             if (baseAxis && rootTooltipModel.get('showContent') && rootTooltipModel.get('show')) {
-
-                var formatter = rootTooltipModel.get('formatter');
-                var positionExpr = rootTooltipModel.get('position');
-                var html;
-
                 var paramsList = zrUtil.map(seriesList, function (series, index) {
                     return series.getDataParams(payloadBatch[index].dataIndex);
                 });
-                // If only one series
-                // FIXME
-                // if (paramsList.length === 1) {
-                //     paramsList = paramsList[0];
-                // }
 
-                tooltipContent.show(rootTooltipModel);
-
-                // Update html content
-                var firstDataIndex = payloadBatch[0].dataIndex;
                 if (!contentNotChange) {
-                    // Reset ticket
-                    this._ticket = '';
-                    if (!formatter) {
-                        // Default tooltip content
-                        // FIXME
-                        // (1) shold be the first data which has name?
-                        // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
-                        var firstLine = baseAxis.type === 'time'
-                            ? baseAxis.scale.getLabel(value[baseDimIndex])
-                            : seriesList[0].getData().getName(firstDataIndex);
-                        html = (firstLine ? firstLine + '<br />' : '')
-                            + zrUtil.map(seriesList, function (series, index) {
-                                return series.formatTooltip(payloadBatch[index].dataIndex, true);
-                            }).join('<br />');
-                    }
-                    else {
-                        if (typeof formatter === 'string') {
-                            html = formatUtil.formatTpl(formatter, paramsList);
-                        }
-                        else if (typeof formatter === 'function') {
-                            var self = this;
-                            var ticket = 'axis_' + coordSys.name + '_' + firstDataIndex;
-                            var callback = function (cbTicket, html) {
-                                if (cbTicket === self._ticket) {
-                                    tooltipContent.setContent(html);
+                    // Update html content
+                    var firstDataIndex = payloadBatch[0].dataIndex;
 
-                                    updatePosition(
-                                        positionExpr, point[0], point[1],
-                                        tooltipContent, paramsList, null, api
-                                    );
-                                }
-                            };
-                            self._ticket = ticket;
-                            html = formatter(paramsList, ticket, callback);
-                        }
-                    }
+                    // Default tooltip content
+                    // FIXME
+                    // (1) shold be the first data which has name?
+                    // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
+                    var firstLine = baseAxis.type === 'time'
+                        ? baseAxis.scale.getLabel(value[baseDimIndex])
+                        : seriesList[0].getData().getName(firstDataIndex);
+                    var defaultHtml = (firstLine ? firstLine + '<br />' : '')
+                        + zrUtil.map(seriesList, function (series, index) {
+                            return series.formatTooltip(payloadBatch[index].dataIndex, true);
+                        }).join('<br />');
 
-                    tooltipContent.setContent(html);
+                    var asyncTicket = 'axis_' + coordSys.name + '_' + firstDataIndex;
+
+                    this._showTooltipContent(
+                        rootTooltipModel, defaultHtml, paramsList, asyncTicket,
+                        point[0], point[1], null, api
+                    );
                 }
-
-                updatePosition(
-                    positionExpr, point[0], point[1],
-                    tooltipContent, paramsList, null, api
-                );
+                else {
+                    updatePosition(
+                        rootTooltipModel.get('position'), point[0], point[1],
+                        this._tooltipContent, paramsList, null, api
+                    );
+                }
             }
         },
 
@@ -1019,8 +992,6 @@ define(function (require) {
 
             var rootTooltipModel = this._tooltipModel;
 
-            var tooltipContent = this._tooltipContent;
-
             var tooltipModel = itemModel.getModel('tooltip');
 
             // If series model
@@ -1031,28 +1002,44 @@ define(function (require) {
                 tooltipModel.parentModel = this._tooltipModel;
             }
 
+            var params = seriesModel.getDataParams(dataIndex, dataType);
+            var defaultHtml = seriesModel.formatTooltip(dataIndex, false, dataType);
+
+            var asyncTicket = 'item_' + seriesModel.name + '_' + dataIndex;
+
+            this._showTooltipContent(
+                tooltipModel, defaultHtml, params, asyncTicket,
+                e.offsetX, e.offsetY, e.target, api
+            );
+        },
+
+        _showTooltipContent: function (
+            tooltipModel, defaultHtml, params, asyncTicket, x, y, target, api
+        ) {
+            // Reset ticket
+            this._ticket = '';
+
             if (tooltipModel.get('showContent') && tooltipModel.get('show')) {
+                var tooltipContent = this._tooltipContent;
+
                 var formatter = tooltipModel.get('formatter');
                 var positionExpr = tooltipModel.get('position');
-                var params = seriesModel.getDataParams(dataIndex, dataType);
-                var html;
-                if (!formatter) {
-                    html = seriesModel.formatTooltip(dataIndex, false, dataType);
-                }
-                else {
+                var html = defaultHtml;
+
+                if (formatter) {
                     if (typeof formatter === 'string') {
                         html = formatUtil.formatTpl(formatter, params);
                     }
                     else if (typeof formatter === 'function') {
                         var self = this;
-                        var ticket = 'item_' + seriesModel.name + '_' + dataIndex;
+                        var ticket = asyncTicket;
                         var callback = function (cbTicket, html) {
                             if (cbTicket === self._ticket) {
                                 tooltipContent.setContent(html);
 
                                 updatePosition(
-                                    positionExpr, e.offsetX, e.offsetY,
-                                    tooltipContent, params, e.target, api
+                                    positionExpr, x, y,
+                                    tooltipContent, params, target, api
                                 );
                             }
                         };
@@ -1065,8 +1052,8 @@ define(function (require) {
                 tooltipContent.setContent(html);
 
                 updatePosition(
-                    positionExpr, e.offsetX, e.offsetY,
-                    tooltipContent, params, e.target, api
+                    positionExpr, x, y,
+                    tooltipContent, params, target, api
                 );
             }
         },
