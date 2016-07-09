@@ -62,6 +62,7 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 + [recharts](https://github.com/taiyun/recharts) by taiyun
 + [recharts](https://github.com/yihui/recharts) by yihui
++ [ECharts2Shiny](https://github.com/XD-DENG/ECharts2Shiny) by XD-DENG
 
 #### Julia
 
