@@ -13,6 +13,14 @@ define(function (require) {
         'splitArea', 'splitLine'
     ];
 
+    // function getAlignWithLabel(model, axisModel) {
+    //     var alignWithLabel = model.get('alignWithLabel');
+    //     if (alignWithLabel === 'auto') {
+    //         alignWithLabel = axisModel.get('axisTick.alignWithLabel');
+    //     }
+    //     return alignWithLabel;
+    // }
+
     var AxisView = require('../../echarts').extendComponentView({
 
         type: 'axis',
@@ -71,7 +79,9 @@ define(function (require) {
 
             var lineCount = 0;
 
-            var ticksCoords = axis.getTicksCoords();
+            var ticksCoords = axis.getTicksCoords(
+                // splitLineModel.get('alignWithLabel')
+            );
             var ticks = axis.scale.getTicks();
 
             var p1 = [];
@@ -131,7 +141,10 @@ define(function (require) {
             var areaColors = areaStyleModel.get('color');
 
             var gridRect = gridModel.coordinateSystem.getRect();
-            var ticksCoords = axis.getTicksCoords();
+
+            var ticksCoords = axis.getTicksCoords(
+                // splitAreaModel.get('alignWithLabel')
+            );
             var ticks = axis.scale.getTicks();
 
             var prevX = axis.toGlobalCoord(ticksCoords[0]);

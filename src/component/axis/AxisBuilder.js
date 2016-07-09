@@ -185,13 +185,15 @@ define(function (require) {
 
             var lineStyleModel = tickModel.getModel('lineStyle');
             var tickLen = tickModel.get('length');
+
             var tickInterval = getInterval(tickModel, opt.labelInterval);
-            var ticksCoords = axis.getTicksCoords();
+            var ticksCoords = axis.getTicksCoords(tickModel.get('alignWithLabel'));
             var ticks = axis.scale.getTicks();
 
             var pt1 = [];
             var pt2 = [];
             var matrix = this._transform;
+
             for (var i = 0; i < ticksCoords.length; i++) {
                 // Only ordinal scale support tick interval
                 if (ifIgnoreOnTick(axis, i, tickInterval)) {
