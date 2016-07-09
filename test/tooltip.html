@@ -47,6 +47,13 @@
                 }
 
                 chart.setOption({
+                    legend: {
+                        data: ['坐标轴触发1', '坐标轴触发2'],
+                        tooltip: {
+                            show: true,
+                            formatter: null
+                        }
+                    },
                     tooltip : {         // Option config. Can be overwrited by series or data
                         trigger: 'axis',
                         //show: true,   //default true
@@ -75,6 +82,9 @@
                             fontWeight: 'bold'
                         },
                         formatter: function (params,ticket,callback) {
+                            if (params.componentType === 'legend') {
+                                return params.name;
+                            }
                             var res = 'Function formatter : <br/>' + params[0].name;
                             for (var i = 0, l = params.length; i < l; i++) {
                                 res += '<br/>' + params[i].seriesName + ' : ' + params[i].value;
