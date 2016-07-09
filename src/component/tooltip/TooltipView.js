@@ -896,6 +896,7 @@ define(function (require) {
             var tooltipContent = this._tooltipContent;
 
             var baseAxis = coordSys.getBaseAxis();
+            var baseDimIndex = baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1;
 
             var payloadBatch = zrUtil.map(seriesList, function (series) {
                 return {
@@ -904,7 +905,7 @@ define(function (require) {
                         ? series.getAxisTooltipDataIndex(series.coordDimToDataDim(baseAxis.dim), value, baseAxis)
                         : series.getData().indexOfNearest(
                             series.coordDimToDataDim(baseAxis.dim)[0],
-                            value[baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1],
+                            value[baseDimIndex],
                             // Add a threshold to avoid find the wrong dataIndex when data length is not same
                             false, baseAxis.type === 'category' ? 0.5 : null
                         )
@@ -963,7 +964,9 @@ define(function (require) {
                         // FIXME
                         // (1) shold be the first data which has name?
                         // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
-                        var firstLine = seriesList[0].getData().getName(firstDataIndex);
+                        var firstLine = baseAxis.type === 'time'
+                            ? baseAxis.scale.getLabel(value[baseDimIndex])
+                            : seriesList[0].getData().getName(firstDataIndex);
                         html = (firstLine ? firstLine + '<br />' : '')
                             + zrUtil.map(seriesList, function (series, index) {
                                 return series.formatTooltip(payloadBatch[index].dataIndex, true);

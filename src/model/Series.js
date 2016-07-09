@@ -189,12 +189,17 @@ define(function(require) {
                 return zrUtil.map(value, function (val, idx) {
                     var dimInfo = data.getDimensionInfo(idx);
                     var dimType = dimInfo && dimInfo.type;
-                    if (dimType === 'ordinal' || dimType === 'time') {
+                    if (dimType === 'ordinal') {
                         return val;
+                    }
+                    else if (dimType === 'time') {
+                        return multipleSeries ? '' : formatUtil.formatTime('yyyy/mm/dd hh:mm:ss', val);
                     }
                     else {
                         return addCommas(val);
                     }
+                }).filter(function (val) {
+                    return !!val;
                 }).join(', ');
             }
 
