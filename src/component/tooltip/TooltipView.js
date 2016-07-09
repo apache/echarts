@@ -467,9 +467,7 @@ define(function (require) {
                     tooltipOpt = {
                         content: content,
                         // Fixed formatter
-                        formatter: function () {
-                            return content;
-                        }
+                        formatter: content
                     };
                 }
                 var subTooltipModel = new Model(tooltipOpt, tooltipModel);
@@ -1009,17 +1007,23 @@ define(function (require) {
             var data = seriesModel.getData(dataType);
             var itemModel = data.getItemModel(dataIndex);
 
+            var tooltipOpt = itemModel.get('tooltip', true);
+            if (typeof tooltipOpt === 'string') {
+                // In each data item tooltip can be simply write:
+                // {
+                //  value: 10,
+                //  tooltip: 'Something you need to know'
+                // }
+                var tooltipContent = tooltipOpt;
+                tooltipOpt = {
+                    formatter: tooltipContent
+                };
+            }
             var rootTooltipModel = this._tooltipModel;
-
-            var tooltipModel = itemModel.getModel('tooltip');
-
-            // If series model
-            if (tooltipModel.parentModel) {
-                tooltipModel.parentModel.parentModel = rootTooltipModel;
-            }
-            else {
-                tooltipModel.parentModel = this._tooltipModel;
-            }
+            var seriesTooltipModel = seriesModel.getModel(
+                'tooltip', rootTooltipModel
+            );
+            var tooltipModel = new Model(tooltipOpt, seriesTooltipModel, seriesTooltipModel.ecModel);
 
             var params = seriesModel.getDataParams(dataIndex, dataType);
             var defaultHtml = seriesModel.formatTooltip(dataIndex, false, dataType);

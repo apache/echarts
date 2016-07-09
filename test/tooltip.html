@@ -48,7 +48,7 @@
 
                 chart.setOption({
                     legend: {
-                        data: ['坐标轴触发1', '坐标轴触发2'],
+                        data: ['坐标轴触发1', '坐标轴触发2', '数据项触发', '不显示的数据项触发'],
                         tooltip: {
                             show: true,
                             formatter: null
@@ -129,7 +129,7 @@
                             data:[862, 1018, 964, 1026, 1679, 1600, 157]
                         },
                         {
-                            name:'数据项触发1',
+                            name:'数据项触发',
                             type:'bar',
                             tooltip : {             // Series config.
                                 trigger: 'item',
@@ -139,7 +139,10 @@
                             },
                             stack: '数据项',
                             data:[
-                                120, 132,
+                                {
+                                    value: 120,
+                                    tooltip: '我是一个简单的字符串'
+                                }, 132,
                                 {
                                     value: 301,
                                     itemStyle: {normal: {color: 'red'}},
@@ -151,13 +154,19 @@
                                 134, 90,
                                 {
                                     value: 230,
+                                    label: {
+                                        normal: {
+                                            show: true,
+                                            formatter: '我不显示 tooltip'
+                                        }
+                                    },
                                     tooltip: {show: false}
                                 },
                                 210
                             ]
                         },
                         {
-                            name:'数据项触发2',
+                            name:'不显示的数据项触发',
                             type:'bar',
                             tooltip : {
                                 show : false,
