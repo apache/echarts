@@ -49,12 +49,16 @@ define(function(require) {
                 maxWidth: 0
             };
 
-            var barWidth = seriesModel.get('barWidth');
-            var barMaxWidth = seriesModel.get('barMaxWidth');
+            var barWidth = parsePercent(
+                seriesModel.get('barWidth'), bandWidth
+            );
+            var barMaxWidth = parsePercent(
+                seriesModel.get('barMaxWidth'), bandWidth
+            );
             var barGap = seriesModel.get('barGap');
             var barCategoryGap = seriesModel.get('barCategoryGap');
             // TODO
-            if (barWidth && ! stacks[stackId].width) {
+            if (barWidth && !stacks[stackId].width) {
                 barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
                 stacks[stackId].width = barWidth;
                 columnsOnAxis.remainedWidth -= barWidth;
