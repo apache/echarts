@@ -7,6 +7,7 @@ define(function (require) {
     var numberUtil = require('../../util/number');
     var parsePercent = numberUtil.parsePercent;
     var env = require('zrender/core/env');
+    var Model = require('../../model/Model');
 
     function dataEqual(a, b) {
         if (!a || !b) {
@@ -460,7 +461,20 @@ define(function (require) {
             }
             // Tooltip provided directly. Like legend
             else if (el && el.tooltip) {
-                var tooltipContent = el.tooltip;
+                var tooltipOpt = el.tooltip;
+                if (typeof tooltipOpt === 'string') {
+                    tooltipOpt = {
+                        content: tooltipOpt
+                    };
+                }
+                var subTooltipModel = new Model(tooltipOpt, tooltipModel);
+                var defaultHtml = subTooltipModel.get('content');
+                var asyncTicket = Math.random();
+                this._showTooltipContent(
+                    // TODO params
+                    subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') || {},
+                    asyncTicket, e.offsetX, e.offsetY, el, api
+                );
             }
             else {
                 if (globalTrigger === 'item') {
