@@ -463,8 +463,13 @@ define(function (require) {
             else if (el && el.tooltip) {
                 var tooltipOpt = el.tooltip;
                 if (typeof tooltipOpt === 'string') {
+                    var content = tooltipOpt;
                     tooltipOpt = {
-                        content: tooltipOpt
+                        content: content,
+                        // Fixed formatter
+                        formatter: function () {
+                            return content;
+                        }
                     };
                 }
                 var subTooltipModel = new Model(tooltipOpt, tooltipModel);

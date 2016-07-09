@@ -2,6 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
+    var formatUtil = require('../../util/format');
     var graphic = require('../../util/graphic');
     var Model = require('../../model/Model');
     var List = require('../../data/List');
@@ -408,7 +409,7 @@ define(function (require) {
             );
 
             if (truncateLength != null) {
-                truncatedText = modelUtil.truncate(name, truncateLength, truncateEllipsis);
+                truncatedText = formatUtil.truncate(name, truncateLength, truncateEllipsis);
             }
 
             var textEl = new graphic.Text({
@@ -435,10 +436,11 @@ define(function (require) {
 
             // Make truncate tooltip show.
             if (truncateLength != null) {
-                textEl.dataIndex = 0;
-                var data = new List(['value'], axisModel);
-                data.initData([{value: name, tooltip: {formatter: tooltipFormatter}}]);
-                textEl.dataModel = modelUtil.createDataFormatModel(data, {mainType: 'axis'});
+                // textEl.dataIndex = 0;
+                // var data = new List(['value'], axisModel);
+                // data.initData([{value: name, tooltip: {formatter: tooltipFormatter}}]);
+                // textEl.dataModel = modelUtil.createDataFormatModel(data, {mainType: 'axis'});
+                textEl.tooltip = name;
             }
 
             textEl.eventData = makeAxisEventDataBase(axisModel);
@@ -455,10 +457,6 @@ define(function (require) {
         }
 
     };
-
-    function tooltipFormatter(params) {
-        return params.value;
-    }
 
     /**
      * @inner
