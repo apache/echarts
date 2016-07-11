@@ -166,7 +166,8 @@ describe('title.subtextStyle', function() {
                 title: {
                     subtext: 'bold font vs. normal font',
                     subtextStyle: {
-                        fontStyle: 'bold'
+                        fontStyle: 'bold',
+                        fontFamily: 'Arial'
                     }
                 }
             },
@@ -175,7 +176,8 @@ describe('title.subtextStyle', function() {
                 title: {
                     subtext: 'bold font vs. normal font',
                     subtextStyle: {
-                        fontStyle: 'normal'
+                        fontStyle: 'normal',
+                        fontFamily: 'Arial'
                     }
                 }
             }
@@ -187,7 +189,8 @@ describe('title.subtextStyle', function() {
                 title: {
                     subtext: 'bolder font vs. normal font',
                     subtextStyle: {
-                        fontStyle: 'bolder'
+                        fontStyle: 'bolder',
+                        fontFamily: 'Arial'
                     }
                 }
             },
@@ -196,7 +199,8 @@ describe('title.subtextStyle', function() {
                 title: {
                     subtext: 'bolder font vs. normal font',
                     subtextStyle: {
-                        fontStyle: 'normal'
+                        fontStyle: 'normal',
+                        fontFamily: 'Arial'
                     }
                 }
             }
@@ -208,7 +212,8 @@ describe('title.subtextStyle', function() {
                 title: {
                     subtext: 'light font vs. normal font',
                     subtextStyle: {
-                        fontStyle: 'light'
+                        fontStyle: 'light',
+                        fontFamily: 'Arial'
                     }
                 }
             },
@@ -217,7 +222,8 @@ describe('title.subtextStyle', function() {
                 title: {
                     subtext: 'light font vs. normal font',
                     subtextStyle: {
-                        fontStyle: 'normal'
+                        fontStyle: 'normal',
+                        fontFamily: 'Arial'
                     }
                 }
             }
@@ -227,9 +233,10 @@ describe('title.subtextStyle', function() {
             option1: {
                 series: [],
                 title: {
-                    subtext: '100 font vs. normal font',
+                    subtext: '600 font vs. normal font',
                     subtextStyle: {
-                        fontStyle: '100'
+                        fontStyle: '600',
+                        fontFamily: 'Arial'
                     }
                 }
             },
@@ -238,7 +245,8 @@ describe('title.subtextStyle', function() {
                 title: {
                     subtext: '100 font vs. normal font',
                     subtextStyle: {
-                        fontStyle: 'normal'
+                        fontStyle: 'normal',
+                        fontFamily: 'Arial'
                     }
                 }
             }
@@ -286,20 +294,20 @@ describe('title.subtextStyle', function() {
     }, {
         name: 'textStyle.fontSize',
         cases: [{
-            name: 'should display default fontSize at 18',
+            name: 'should display default fontSize at 12',
             test: 'equalOption',
             option1: {
                 series: [],
                 title: {
-                    subtext: 'default font size, should be 18'
+                    subtext: 'default font size, should be 12'
                 }
             },
             option2: {
                 series: [],
                 title: {
-                    subtext: 'default font size, should be 18',
+                    subtext: 'default font size, should be 12',
                     subtextStyle: {
-                        fontSize: 18
+                        fontSize: 12
                     }
                 }
             }
