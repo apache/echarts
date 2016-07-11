@@ -231,7 +231,11 @@ define(function (require) {
                 shape: itemGroup.getBoundingRect(),
                 invisible: true,
                 tooltip: tooltipModel.get('show') ? zrUtil.extend({
-                    content: content,
+                    content: name,
+                    // Defaul formatter
+                    formatter: function () {
+                        return name;
+                    },
                     formatterParams: {
                         componentType: 'legend',
                         legendIndex: legendModel.componentIndex,

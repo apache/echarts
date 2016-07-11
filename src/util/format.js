@@ -2,6 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('./number');
+    var textContain = require('zrender/contain/text');
 
     /**
      * 每三位默认加,格式化
@@ -153,10 +154,10 @@ define(function (require) {
      * @public
      * @param {string} str
      * @param {number} length Over the length, truncate.
-     * @param {string} [ellipsis='...']
+     * @param {string} [ellipsis='']
      * @return {string} Result string.
      */
-    function truncate(str, length, ellipsis) {
+    function truncateText(str, length, ellipsis) {
         if (!str) {
             return str;
         }
@@ -186,6 +187,6 @@ define(function (require) {
 
         formatTime: formatTime,
 
-        truncate: truncate
+        truncateText: textContain.truncateText
     };
 });
