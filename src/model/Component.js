@@ -86,9 +86,18 @@ define(function(require) {
          */
         layoutMode: null,
 
+        $constructor: function (option, parentModel, ecModel, extraOpt) {
+            Model.call(this, option, parentModel, ecModel, extraOpt);
+
+            // Set dependentModels, componentIndex, name, id, mainType, subType.
+            zrUtil.extend(this, extraOpt);
+
+            this.uid = componentUtil.getUID('componentModel');
+        },
+
 
         init: function (option, parentModel, ecModel, extraOpt) {
-            this.mergeDefaultAndTheme(this.option, this.ecModel);
+            this.mergeDefaultAndTheme(option, ecModel);
         },
 
         mergeDefaultAndTheme: function (option, ecModel) {
@@ -139,20 +148,20 @@ define(function(require) {
     });
 
     // Reset ComponentModel.extend, add preConstruct.
-    clazzUtil.enableClassExtend(
-        ComponentModel,
-        function (option, parentModel, ecModel, extraOpt) {
-            // Set dependentModels, componentIndex, name, id, mainType, subType.
-            zrUtil.extend(this, extraOpt);
+    // clazzUtil.enableClassExtend(
+    //     ComponentModel,
+    //     function (option, parentModel, ecModel, extraOpt) {
+    //         // Set dependentModels, componentIndex, name, id, mainType, subType.
+    //         zrUtil.extend(this, extraOpt);
 
-            this.uid = componentUtil.getUID('componentModel');
+    //         this.uid = componentUtil.getUID('componentModel');
 
-            // this.setReadOnly([
-            //     'type', 'id', 'uid', 'name', 'mainType', 'subType',
-            //     'dependentModels', 'componentIndex'
-            // ]);
-        }
-    );
+    //         // this.setReadOnly([
+    //         //     'type', 'id', 'uid', 'name', 'mainType', 'subType',
+    //         //     'dependentModels', 'componentIndex'
+    //         // ]);
+    //     }
+    // );
 
     // Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
     clazzUtil.enableClassManagement(

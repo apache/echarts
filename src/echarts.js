@@ -213,9 +213,10 @@ define(function (require) {
         this[IN_MAIN_PROCESS] = true;
 
         if (!this._model || notMerge) {
-            this._model = new GlobalModel(
-                null, null, this._theme, new OptionManager(this._api)
-            );
+            var optionManager = new OptionManager(this._api);
+            var theme = this._theme;
+            var ecModel = this._model = new GlobalModel(null, null, theme, optionManager);
+            ecModel.init(null, null, theme, optionManager);
         }
 
         this._model.setOption(option, optionPreprocessorFuncs);
@@ -1415,32 +1416,59 @@ define(function (require) {
         });
     };
 
+    var parseClassType = ComponentModel.parseClassType;
     /**
      * @param {Object} opts
+     * @param {string} [superClass]
      */
-    echarts.extendChartView = function (opts) {
+    echarts.extendComponentModel = function (opts, superClass) {
+        var Clazz = ComponentModel;
+        if (superClass) {
+            var classType = parseClassType(superClass);
+            Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
+        }
+        return Clazz.extend(opts);
+    };
+
+    /**
+     * @param {Object} opts
+     * @param {string} [superClass]
+     */
+    echarts.extendComponentView = function (opts, superClass) {
+        var Clazz = ComponentView;
+        if (superClass) {
+            var classType = parseClassType(superClass);
+            Clazz = ComponentView.getClass(classType.main, classType.sub, true);
+        }
+        return Clazz.extend(opts);
+    };
+
+    /**
+     * @param {Object} opts
+     * @param {string} [superClass]
+     */
+    echarts.extendSeriesModel = function (opts, superClass) {
+        var Clazz = SeriesModel;
+        if (superClass) {
+            superClass = 'series.' + superClass.replace('series.', '');
+            var classType = parseClassType(superClass);
+            Clazz = SeriesModel.getClass(classType.main, classType.sub, true);
+        }
+        return Clazz.extend(opts);
+    };
+
+    /**
+     * @param {Object} opts
+     * @param {string} [superClass]
+     */
+    echarts.extendChartView = function (opts, superClass) {
+        var Clazz = ChartView;
+        if (superClass) {
+            superClass.replace('series.', '');
+            var classType = parseClassType(superClass);
+            Clazz = ChartView.getClass(classType.main, true);
+        }
         return ChartView.extend(opts);
-    };
-
-    /**
-     * @param {Object} opts
-     */
-    echarts.extendComponentModel = function (opts) {
-        return ComponentModel.extend(opts);
-    };
-
-    /**
-     * @param {Object} opts
-     */
-    echarts.extendSeriesModel = function (opts) {
-        return SeriesModel.extend(opts);
-    };
-
-    /**
-     * @param {Object} opts
-     */
-    echarts.extendComponentView = function (opts) {
-        return ComponentView.extend(opts);
     };
 
     /**

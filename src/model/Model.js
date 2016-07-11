@@ -12,9 +12,8 @@ define(function (require) {
      * @param {Object} option
      * @param {module:echarts/model/Model} [parentModel]
      * @param {module:echarts/model/Global} [ecModel]
-     * @param {Object} extraOpt
      */
-    function Model(option, parentModel, ecModel, extraOpt) {
+    function Model(option, parentModel, ecModel) {
         /**
          * @type {module:echarts/model/Model}
          * @readOnly
@@ -34,14 +33,14 @@ define(function (require) {
         this.option = option;
 
         // Simple optimization
-        if (this.init) {
-            if (arguments.length <= 4) {
-                this.init(option, parentModel, ecModel, extraOpt);
-            }
-            else {
-                this.init.apply(this, arguments);
-            }
-        }
+        // if (this.init) {
+        //     if (arguments.length <= 4) {
+        //         this.init(option, parentModel, ecModel, extraOpt);
+        //     }
+        //     else {
+        //         this.init.apply(this, arguments);
+        //     }
+        // }
     }
 
     Model.prototype = {
