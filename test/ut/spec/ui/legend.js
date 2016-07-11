@@ -1023,12 +1023,315 @@ describe('legend', function() {
                             }]
                         }],
                         legend: {
-                            data: ['a', 'b', 'c']
+                            data: ['a', 'b', 'c'],
+                            backgroundColor: 'yellow',
+                            itemWidth: 50
                         }
                     }
                 })
                 return res;
             })()
+        }]
+    }, {
+        name: 'itemHeight',
+        cases: [{
+            name: 'should have default value of 14',
+            test: 'equalOption',
+            option1: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }, {
+                    name: 'b',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: []
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b'],
+                    backgroundColor: 'yellow'
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'a',
+                    type: 'bar',
+                }, {
+                    name: 'b',
+                    type: 'bar',
+                }],
+                xAxis: [{
+                    type: 'category',
+                    data: []
+                }],
+                yAxis: [{
+                    type: 'value'
+                }],
+                legend: {
+                    data: ['a', 'b'],
+                    backgroundColor: 'yellow',
+                    itemHeight: 14
+                }
+            }
+        }, {
+            name: 'should have larger itemHeight',
+            cases: (function() {
+                var types = ['bar', 'line', 'scatter', 'effectScatter',
+                    'radar'];
+                var res = [];
+                for (var i = 0; i < types.length; ++i) {
+                    res.push({
+                        name: types[i],
+                        option: {
+                            series: [{
+                                name: 'a',
+                                type: types[i],
+                            }, {
+                                name: 'b',
+                                type: types[i],
+                            }],
+                            xAxis: [{
+                                type: 'category',
+                                data: []
+                            }],
+                            yAxis: [{
+                                type: 'value'
+                            }],
+                            legend: {
+                                data: ['a', 'b'],
+                                backgroundColor: 'yellow',
+                                itemHeight: 30
+                            }
+                        }
+                    });
+                }
+                res.push({
+                    name: 'pie',
+                    option: {
+                        series: [{
+                            type: 'pie',
+                            data: [{
+                                name: 'a'
+                            }, {
+                                name: 'b'
+                            }, {
+                                name: 'c'
+                            }]
+                        }],
+                        legend: {
+                            data: ['a', 'b', 'c'],
+                            backgroundColor: 'yellow',
+                            itemHeight: 30
+                        }
+                    }
+                })
+                return res;
+            })()
+        }]
+    }, {
+        name: 'formatter',
+        cases: [{
+            name: 'should have default value as null',
+            test: 'equalOption',
+            option1: {
+                series: [{
+                    name: 'abc',
+                    type: 'pie',
+                    data: []
+                }],
+                legend: {
+                    data: ['abc']
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'abc',
+                    type: 'pie',
+                    data: []
+                }],
+                legend: {
+                    data: ['abc'],
+                    formatter: null
+                }
+            }
+        }, {
+            name: 'should work with string formatter',
+            option: {
+                series: [{
+                    name: 'abc',
+                    type: 'pie',
+                    data: []
+                }],
+                legend: {
+                    data: ['abc'],
+                    formatter: '{name} series'
+                }
+            }
+        }, {
+            name: 'should work with callback formatter',
+            test: 'equalOption',
+            option1: {
+                series: [{
+                    name: 'abc',
+                    type: 'pie',
+                    data: []
+                }],
+                legend: {
+                    data: ['abc'],
+                    formatter: function(name) {
+                        return name + ' series';
+                    }
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'abc',
+                    type: 'pie',
+                    data: []
+                }],
+                legend: {
+                    data: ['abc'],
+                    formatter: '{name} series'
+                }
+            }
+        }]
+    }, {
+        name: 'inactiveColor',
+        cases: [{
+            name: 'should have default value as #ccc',
+            test: 'equalOption',
+            option1: {
+                series: [{
+                    name: 'a',
+                    type: 'pie',
+                    data: []
+                }],
+                legend: {
+                    data: ['a'],
+                    selected: {
+                        a: false
+                    }
+                }
+            },
+            option2: {
+                series: [{
+                    name: 'a',
+                    type: 'pie',
+                    data: []
+                }],
+                legend: {
+                    data: ['a'],
+                    selected: {
+                        a: false
+                    },
+                    inactiveColor: '#ccc'
+                }
+            }
+        }, {
+            name: 'can be changed to other color',
+            option: {
+                series: [{
+                    name: 'a',
+                    type: 'pie',
+                    data: []
+                }],
+                legend: {
+                    data: ['a'],
+                    selected: {
+                        a: false
+                    },
+                    inactiveColor: '#f00'
+                }
+            }
+        }]
+    }, {
+        name: 'selected',
+        cases: [{
+            name: 'should select all by default',
+            test: 'equalOption',
+            option1: {
+                series: [{
+                    type: 'pie',
+                    data: [{
+                        name: 'a'
+                    }, {
+                        name: 'b'
+                    }, {
+                        name: 'c'
+                    }]
+                }],
+                legend: {
+                    data: ['a', 'b', 'c']
+                }
+            },
+            option2: {
+                series: [{
+                    type: 'pie',
+                    data: [{
+                        name: 'a'
+                    }, {
+                        name: 'b'
+                    }, {
+                        name: 'c'
+                    }]
+                }],
+                legend: {
+                    data: ['a', 'b', 'c'],
+                    selected: {
+                        a: true,
+                        b: true,
+                        c: true
+                    }
+                }
+            }
+        }, {
+            name: 'should hide when selected is set to be false',
+            test: 'notEqualOption',
+            option1: {
+                series: [{
+                    type: 'pie',
+                    data: [{
+                        name: 'a'
+                    }, {
+                        name: 'b'
+                    }, {
+                        name: 'c'
+                    }]
+                }],
+                legend: {
+                    data: ['a', 'b', 'c'],
+                    selected: {
+                        a: false,
+                        b: true,
+                        c: true
+                    }
+                }
+            },
+            option2: {
+                series: [{
+                    type: 'pie',
+                    data: [{
+                        name: 'a'
+                    }, {
+                        name: 'b'
+                    }, {
+                        name: 'c'
+                    }]
+                }],
+                legend: {
+                    data: ['a', 'b', 'c'],
+                    selected: {
+                        a: true,
+                        b: true,
+                        c: true
+                    }
+                }
+            }
         }]
     }];
 
