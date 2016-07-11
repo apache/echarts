@@ -277,9 +277,9 @@ define(function(require, factory) {
                     if (axisPosition !== 'top' && axisPosition !== 'bottom') {
                         // Default bottom of X
                         axisPosition = 'bottom';
-                    }
-                    if (axisPositionUsed[axisPosition]) {
-                        axisPosition = axisPosition === 'top' ? 'bottom' : 'top';
+                        if (axisPositionUsed[axisPosition]) {
+                            axisPosition = axisPosition === 'top' ? 'bottom' : 'top';
+                        }
                     }
                 }
                 else {
@@ -287,9 +287,9 @@ define(function(require, factory) {
                     if (axisPosition !== 'left' && axisPosition !== 'right') {
                         // Default left of Y
                         axisPosition = 'left';
-                    }
-                    if (axisPositionUsed[axisPosition]) {
-                        axisPosition = axisPosition === 'left' ? 'right' : 'left';
+                        if (axisPositionUsed[axisPosition]) {
+                            axisPosition = axisPosition === 'left' ? 'right' : 'left';
+                        }
                     }
                 }
                 axisPositionUsed[axisPosition] = true;
