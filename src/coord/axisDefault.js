@@ -88,12 +88,17 @@ define(function (require) {
     var categoryAxis = zrUtil.merge({
         // 类目起始和结束两端空白策略
         boundaryGap: true,
-        // PENDING
+        // splitArea: {
+            // show: false
+        // },
         splitLine: {
             show: false
         },
         // 坐标轴小标记
         axisTick: {
+            // If tick is align with label when boundaryGap is true
+            // Default with axisTick
+            alignWithLabel: false,
             interval: 'auto'
         },
         // 坐标轴文本标签，详见axis.axisLabel

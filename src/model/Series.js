@@ -185,10 +185,29 @@ define(function(require) {
          * @param {number} [dataType]
          */
         formatTooltip: function (dataIndex, multipleSeries, dataType) {
+            function formatArrayValue(value) {
+                return zrUtil.map(value, function (val, idx) {
+                    var dimInfo = data.getDimensionInfo(idx);
+                    var dimType = dimInfo && dimInfo.type;
+                    if (dimType === 'ordinal') {
+                        return val;
+                    }
+                    else if (dimType === 'time') {
+                        return multipleSeries ? '' : formatUtil.formatTime('yyyy/mm/dd hh:mm:ss', val);
+                    }
+                    else {
+                        return addCommas(val);
+                    }
+                }).filter(function (val) {
+                    return !!val;
+                }).join(', ');
+            }
+
             var data = this._data;
+
             var value = this.getRawValue(dataIndex);
             var formattedValue = zrUtil.isArray(value)
-                ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
+                ? formatArrayValue(value) : addCommas(value);
             var name = data.getName(dataIndex);
             var color = data.getItemVisual(dataIndex, 'color');
             var colorEl = '<span style="display:inline-block;margin-right:5px;'

@@ -1234,7 +1234,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.2.0',
+	        version: '3.2.1',
 	        dependencies: {
 	            zrender: '3.1.1'
 	        }
@@ -22946,10 +22946,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            ]);
 	        }
 
+	        symbolPath.setStyle(itemStyle);
 	        // PENDING setColor before setStyle
 	        symbolPath.setColor(color);
-
-	        symbolPath.setStyle(itemStyle);
 
 	        var opacity = data.getItemVisual(idx, 'opacity');
 	        if (opacity != null) {
@@ -23299,7 +23298,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 
-	        buildPath: function (ctx, shape) {
+	        buildPath: function (ctx, shape, inBundle) {
 	            var symbolType = shape.symbolType;
 	            var proxySymbol = symbolBuildProxies[symbolType];
 	            if (shape.symbolType !== 'none') {
@@ -23311,7 +23310,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                symbolShapeMakers[symbolType](
 	                    shape.x, shape.y, shape.width, shape.height, proxySymbol.shape
 	                );
-	                proxySymbol.buildPath(ctx, proxySymbol.shape);
+	                proxySymbol.buildPath(ctx, proxySymbol.shape, inBundle);
 	            }
 	        }
 	    });
@@ -27446,11 +27445,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // },
 	            itemStyle: {
 	                normal: {
-	                    // color: '各异',
-	                    // 柱条边线
-	                    borderColor: '#fff',
-	                    // 柱条边线线宽，单位px，默认为1
-	                    borderWidth: 0
+	                    // color: '各异'
 	                },
 	                emphasis: {}
 	            }
@@ -29170,6 +29165,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var symbolUtil = __webpack_require__(105);
 
 	    var LargeSymbolPath = graphic.extendShape({
+
 	        shape: {
 	            points: null,
 	            sizes: null
@@ -34668,7 +34664,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var seriesModels = [];
 
 	            this.ecModel.eachSeries(function (seriesModel) {
-	                if (this._axisIndex === seriesModel.get(this._dimName + 'AxisIndex')) {
+	                // Legacy problem: some one wrote xAxisIndex as [0] following the wrong way in example.
+	                if (this._axisIndex === +seriesModel.get(this._dimName + 'AxisIndex')) {
 	                    seriesModels.push(seriesModel);
 	                }
 	            }, this);

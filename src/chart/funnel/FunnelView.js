@@ -96,6 +96,7 @@ define(function (require) {
         polygon.setStyle(
             zrUtil.defaults(
                 {
+                    lineJoin: 'round',
                     fill: visualColor
                 },
                 itemStyleModel.getModel('normal').getItemStyle(['opacity'])

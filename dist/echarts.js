@@ -1260,7 +1260,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        /**
 	         * @type {number}
 	         */
-	        version: '3.2.0',
+	        version: '3.2.1',
 	        dependencies: {
 	            zrender: '3.1.1'
 	        }
@@ -22972,10 +22972,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            ]);
 	        }
 
+	        symbolPath.setStyle(itemStyle);
 	        // PENDING setColor before setStyle
 	        symbolPath.setColor(color);
-
-	        symbolPath.setStyle(itemStyle);
 
 	        var opacity = data.getItemVisual(idx, 'opacity');
 	        if (opacity != null) {
@@ -23325,7 +23324,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	        },
 
-	        buildPath: function (ctx, shape) {
+	        buildPath: function (ctx, shape, inBundle) {
 	            var symbolType = shape.symbolType;
 	            var proxySymbol = symbolBuildProxies[symbolType];
 	            if (shape.symbolType !== 'none') {
@@ -23337,7 +23336,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                symbolShapeMakers[symbolType](
 	                    shape.x, shape.y, shape.width, shape.height, proxySymbol.shape
 	                );
-	                proxySymbol.buildPath(ctx, proxySymbol.shape);
+	                proxySymbol.buildPath(ctx, proxySymbol.shape, inBundle);
 	            }
 	        }
 	    });
@@ -27472,11 +27471,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // },
 	            itemStyle: {
 	                normal: {
-	                    // color: '各异',
-	                    // 柱条边线
-	                    borderColor: '#fff',
-	                    // 柱条边线线宽，单位px，默认为1
-	                    borderWidth: 0
+	                    // color: '各异'
 	                },
 	                emphasis: {}
 	            }
@@ -29196,6 +29191,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var symbolUtil = __webpack_require__(105);
 
 	    var LargeSymbolPath = graphic.extendShape({
+
 	        shape: {
 	            points: null,
 	            sizes: null
@@ -32879,8 +32875,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	                }
 	            },
-	            color: [],                  // Array. Specify color list of each level.
-	                                        // level[0].color would be global color list.
+	            color: [],                  // + treemapSeries.color should not be modified. Please only modified
+	                                        // level[n].color (if necessary).
+	                                        // + Specify color list of each level. level[0].color would be global
+	                                        // color list if not specified. (see method `setDefault`).
+	                                        // + But set as a empty array to forbid fetch color from global palette
+	                                        // when using nodeModel.get('color'), otherwise nodes on deep level
+	                                        // will always has color palette set and are not able to inherit color
+	                                        // from parent node.
+	                                        // + TreemapSeries.color can not be set as 'none', otherwise effect
+	                                        // legend color fetching (see seriesColor.js).
 	            colorAlpha: null,           // Array. Specify color alpha range of each level, like [0.2, 0.8]
 	            colorSaturation: null,      // Array. Specify color saturation of each level, like [0.2, 0.5]
 	            colorMappingBy: 'index',    // 'value' or 'index' or 'id'.
@@ -52685,7 +52689,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var seriesModels = [];
 
 	            this.ecModel.eachSeries(function (seriesModel) {
-	                if (this._axisIndex === seriesModel.get(this._dimName + 'AxisIndex')) {
+	                // Legacy problem: some one wrote xAxisIndex as [0] following the wrong way in example.
+	                if (this._axisIndex === +seriesModel.get(this._dimName + 'AxisIndex')) {
 	                    seriesModels.push(seriesModel);
 	                }
 	            }, this);

@@ -237,24 +237,23 @@ define(function(require) {
             var result = [];
             var model = this;
 
-            if (this.isTargetSeries(seriesModel)) {
-                var curr = -Infinity;
-                zrUtil.each(this._pieceList, function (piece) {
-                    // Do not support category yet.
-                    var interval = piece.interval;
-                    if (interval) {
-                        interval[0] > curr && setPiece({
-                            interval: [curr, interval[0]],
-                            valueState: 'outOfRange'
-                        });
-                        setPiece({
-                            interval: interval.slice(),
-                            valueState: this.getValueState((interval[0] + interval[1]) / 2)
-                        });
-                        curr = interval[1];
-                    }
-                }, this);
-            }
+            var curr = -Infinity;
+            zrUtil.each(this._pieceList, function (piece) {
+                // Do not support category yet.
+                var interval = piece.interval;
+                if (interval) {
+                    interval[0] > curr && setPiece({
+                        interval: [curr, interval[0]],
+                        valueState: 'outOfRange'
+                    });
+                    setPiece({
+                        interval: interval.slice(),
+                        valueState: this.getValueState((interval[0] + interval[1]) / 2)
+                    });
+                    curr = interval[1];
+                }
+            }, this);
+
             return result;
 
             function setPiece(piece) {

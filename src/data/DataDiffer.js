@@ -49,16 +49,18 @@ define(function(require) {
 
             var oldDataIndexMap = {};
             var newDataIndexMap = {};
+            var oldDataKeyArr = [];
+            var newDataKeyArr = [];
             var i;
 
-            initIndexMap(oldArr, oldDataIndexMap, oldKeyGetter);
-            initIndexMap(newArr, newDataIndexMap, newKeyGetter);
+            initIndexMap(oldArr, oldDataIndexMap, oldDataKeyArr, oldKeyGetter);
+            initIndexMap(newArr, newDataIndexMap, newDataKeyArr, newKeyGetter);
 
             // Travel by inverted order to make sure order consistency
             // when duplicate keys exists (consider newDataIndex.pop() below).
             // For performance consideration, these code below do not look neat.
             for (i = 0; i < oldArr.length; i++) {
-                var key = oldKeyGetter(oldArr[i], i);
+                var key = oldDataKeyArr[i];
                 var idx = newDataIndexMap[key];
 
                 // idx can never be empty array here. see 'set null' logic below.
@@ -80,7 +82,8 @@ define(function(require) {
                 }
             }
 
-            for (var key in newDataIndexMap) {
+            for (var i = 0; i < newDataKeyArr.length; i++) {
+                var key = newDataKeyArr[i];
                 if (newDataIndexMap.hasOwnProperty(key)) {
                     var idx = newDataIndexMap[key];
                     if (idx == null) {
@@ -91,8 +94,8 @@ define(function(require) {
                         this._add && this._add(idx);
                     }
                     else {
-                        for (var i = 0, len = idx.length; i < len; i++) {
-                            this._add && this._add(idx[i]);
+                        for (var j = 0, len = idx.length; j < len; j++) {
+                            this._add && this._add(idx[j]);
                         }
                     }
                 }
@@ -100,10 +103,11 @@ define(function(require) {
         }
     };
 
-    function initIndexMap(arr, map, keyGetter) {
+    function initIndexMap(arr, map, keyArr, keyGetter) {
         for (var i = 0; i < arr.length; i++) {
             var key = keyGetter(arr[i], i);
             var existence = map[key];
+            keyArr[i] = key;
             if (existence == null) {
                 map[key] = i;
             }

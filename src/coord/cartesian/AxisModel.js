@@ -95,7 +95,10 @@ define(function(require) {
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
 
     var extraOption = {
-        gridIndex: 0
+        gridIndex: 0,
+
+        // Offset is for multiple axis on the same position
+        offset: 0
     };
 
     axisModelCreator('x', AxisModel, getAxisType, extraOption);

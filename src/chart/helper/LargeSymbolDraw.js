@@ -6,6 +6,7 @@ define(function (require) {
     var symbolUtil = require('../../util/symbol');
 
     var LargeSymbolPath = graphic.extendShape({
+
         shape: {
             points: null,
             sizes: null

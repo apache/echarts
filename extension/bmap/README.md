@@ -1,6 +1,6 @@
 ## 百度地图扩展
 
-ECharts 百度地图扩展，可以在百度地图上展现 [点图](http://echarts.baidu.com/option.html#series-scatter)，[线图](http://echarts.baidu.com/option.html#series-line) [热力图](http://echarts.baidu.com/option.html#series-heatmap) 等可视化。
+ECharts 百度地图扩展，可以在百度地图上展现 [点图](http://echarts.baidu.com/option.html#series-scatter)，[线图](http://echarts.baidu.com/option.html#series-line)，[热力图](http://echarts.baidu.com/option.html#series-heatmap) 等可视化。
 
 
 ### 示例

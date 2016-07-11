@@ -193,7 +193,7 @@ define(function (require) {
             ]);
         }
 
-        // PENDING setColor before setStyle
+        // PENDING setColor before setStyle!!!
         symbolPath.setColor(color);
 
         symbolPath.setStyle(itemStyle);

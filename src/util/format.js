@@ -145,6 +145,33 @@ define(function (require) {
         return str < 10 ? ('0' + str) : str;
     }
 
+    /**
+     * Truncate text, if overflow.
+     * If not ASCII, count as tow ASCII length.
+     * Notice case: truncate('是', 1) => '是', not ''.
+     *
+     * @public
+     * @param {string} str
+     * @param {number} length Over the length, truncate.
+     * @param {string} [ellipsis='...']
+     * @return {string} Result string.
+     */
+    function truncate(str, length, ellipsis) {
+        if (!str) {
+            return str;
+        }
+
+        var count = 0;
+        for(var i = 0, l = str.length; i < l && count < length; i++) {
+            count += str.charCodeAt(i) > 255 ? 2 : 1;
+        }
+        if (i < l) {
+            str = str.slice(0, i) + (ellipsis || '');
+        }
+
+        return str;
+    }
+
     return {
 
         normalizeCssArray: normalizeCssArray,
@@ -157,6 +184,8 @@ define(function (require) {
 
         formatTpl: formatTpl,
 
-        formatTime: formatTime
+        formatTime: formatTime,
+
+        truncate: truncate
     };
 });

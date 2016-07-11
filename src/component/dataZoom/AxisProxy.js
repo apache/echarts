@@ -106,7 +106,8 @@ define(function(require) {
             var seriesModels = [];
 
             this.ecModel.eachSeries(function (seriesModel) {
-                if (this._axisIndex === seriesModel.get(this._dimName + 'AxisIndex')) {
+                // Legacy problem: some one wrote xAxisIndex as [0] following the wrong way in example.
+                if (this._axisIndex === +seriesModel.get(this._dimName + 'AxisIndex')) {
                     seriesModels.push(seriesModel);
                 }
             }, this);

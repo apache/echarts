@@ -10,25 +10,34 @@ define(function(require) {
         return seriesModel.get('stack') || '__ec_stack_' + seriesModel.seriesIndex;
     }
 
+    function getAxisKey(axis) {
+        return axis.dim + axis.index;
+    }
+
     function calBarWidthAndOffset(barSeries, api) {
         // Columns info on each category axis. Key is cartesian name
         var columnsMap = {};
 
         zrUtil.each(barSeries, function (seriesModel, idx) {
+            var data = seriesModel.getData();
             var cartesian = seriesModel.coordinateSystem;
 
             var baseAxis = cartesian.getBaseAxis();
+            var axisExtent = baseAxis.getExtent();
+            var bandWidth = baseAxis.type === 'category'
+                ? baseAxis.getBandWidth()
+                : (Math.abs(axisExtent[1] - axisExtent[0]) / data.count());
 
-            var columnsOnAxis = columnsMap[baseAxis.index] || {
-                remainedWidth: baseAxis.getBandWidth(),
+            var columnsOnAxis = columnsMap[getAxisKey(baseAxis)] || {
+                bandWidth: bandWidth,
+                remainedWidth: bandWidth,
                 autoWidthCount: 0,
                 categoryGap: '20%',
                 gap: '30%',
-                axis: baseAxis,
                 stacks: {}
             };
             var stacks = columnsOnAxis.stacks;
-            columnsMap[baseAxis.index] = columnsOnAxis;
+            columnsMap[getAxisKey(baseAxis)] = columnsOnAxis;
 
             var stackId = getSeriesStackId(seriesModel);
 
@@ -40,12 +49,16 @@ define(function(require) {
                 maxWidth: 0
             };
 
-            var barWidth = seriesModel.get('barWidth');
-            var barMaxWidth = seriesModel.get('barMaxWidth');
+            var barWidth = parsePercent(
+                seriesModel.get('barWidth'), bandWidth
+            );
+            var barMaxWidth = parsePercent(
+                seriesModel.get('barMaxWidth'), bandWidth
+            );
             var barGap = seriesModel.get('barGap');
             var barCategoryGap = seriesModel.get('barCategoryGap');
             // TODO
-            if (barWidth && ! stacks[stackId].width) {
+            if (barWidth && !stacks[stackId].width) {
                 barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);
                 stacks[stackId].width = barWidth;
                 columnsOnAxis.remainedWidth -= barWidth;
@@ -63,8 +76,7 @@ define(function(require) {
             result[coordSysName] = {};
 
             var stacks = columnsOnAxis.stacks;
-            var baseAxis = columnsOnAxis.axis;
-            var bandWidth = baseAxis.getBandWidth();
+            var bandWidth = columnsOnAxis.bandWidth;
             var categoryGap = parsePercent(columnsOnAxis.categoryGap, bandWidth);
             var barGapPercent = parsePercent(columnsOnAxis.gap, 1);
 
@@ -144,7 +156,7 @@ define(function(require) {
             var baseAxis = cartesian.getBaseAxis();
 
             var stackId = getSeriesStackId(seriesModel);
-            var columnLayoutInfo = barWidthAndOffset[baseAxis.index][stackId];
+            var columnLayoutInfo = barWidthAndOffset[getAxisKey(baseAxis)][stackId];
             var columnOffset = columnLayoutInfo.offset;
             var columnWidth = columnLayoutInfo.width;
             var valueAxis = cartesian.getOtherAxis(baseAxis);

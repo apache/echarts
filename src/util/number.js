@@ -123,6 +123,7 @@ define(function (require) {
      * @param {number} val
      */
     number.getPrecision = function (val) {
+        val = +val;
         if (isNaN(val)) {
             return 0;
         }
@@ -185,6 +186,7 @@ define(function (require) {
             ? value
             : new Date(
                 typeof value === 'string'
+                    // FIXME Date.parse('1970-01-01') is UTC, Date.parse('1970/01/01') is local
                     ? (new Date(value.replace(/-/g, '/')) - new Date('1970/01/01'))
                     : Math.round(value)
             );
