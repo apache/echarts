@@ -80,7 +80,7 @@ define(function (require) {
             return '';
         }
 
-        var $vars = paramsList[0].$vars;
+        var $vars = paramsList[0].$vars || [];
         for (var i = 0; i < $vars.length; i++) {
             var alias = TPL_VAR_ALIAS[i];
             tpl = tpl.replace(wrapVar(alias),  wrapVar(alias, 0));
