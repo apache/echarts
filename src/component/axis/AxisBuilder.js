@@ -414,7 +414,7 @@ define(function (require) {
 
             var textFont = textStyleModel.getFont();
 
-            var truncateOpt = axisModel.get('nameTruncate', true);
+            var truncateOpt = axisModel.get('nameTruncate', true) || {};
             var ellipsis = truncateOpt.ellipsis;
             var maxWidth = retrieve(truncateOpt.maxWidth, axisNameAvailableWidth);
             var truncatedText = (ellipsis != null && maxWidth != null)
