@@ -26999,7 +26999,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	     * @param {number} [opt.labelInterval] Default label interval when label
 	     *                                     interval from model is null or 'auto'.
 	     * @param {number} [opt.strokeContainThreshold] Default label interval when label
-	     * @param {number} [opt.axisLineSilent=true] If axis line is silent
 	     */
 	    var AxisBuilder = function (axisModel, opt) {
 
@@ -27102,7 +27101,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    axisModel.getModel('axisLine.lineStyle').getLineStyle()
 	                ),
 	                strokeContainThreshold: opt.strokeContainThreshold || 5,
-	                silent: false,
+	                silent: true,
 	                z2: 1
 	            })));
 	        },
@@ -41181,9 +41180,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            var builderOpt = zrUtil.extend(
 	                {
 	                    axisLabelShow: axisLabelShow,
-	                    strokeContainThreshold: areaWidth,
-	                    // lineWidth === 0 or no value.
-	                    axisLineSilent: !(areaWidth > 0) // jshint ignore:line
+	                    strokeContainThreshold: areaWidth
 	                },
 	                axisLayout
 	            );
