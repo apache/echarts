@@ -645,6 +645,11 @@ define(function (require) {
                 var pointerEl = self._getPointerElement(
                     cartesian, axisPointerModel, axisType, targetShape
                 );
+                graphic.subPixelOptimizeLine({
+                    shape: targetShape,
+                    style: pointerEl.style
+                });
+
                 moveAnimation
                     ? graphic.updateProps(pointerEl, {
                         shape: targetShape
