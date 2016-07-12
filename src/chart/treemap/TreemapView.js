@@ -793,9 +793,10 @@
             }
             else if (textRect.width > contentWidth) {
                 style.text = labelTextStyleModel.get('ellipsis')
-                    ? labelTextStyleModel.truncateText(text, contentWidth, null, {
-                        minCharacters: 3
-                    }) : '';
+                    ? labelTextStyleModel.truncateText(
+                        text, contentWidth, null, {minChar: 2}
+                    )
+                    : '';
             }
             else {
                 style.text = text;
