@@ -414,11 +414,13 @@ define(function (require) {
 
             var textFont = textStyleModel.getFont();
 
-            var truncateEllipsis = axisModel.get('nameTruncateEllipsis');
-            var axisNameMaxWidth = retrieve(axisModel.get('nameMaxWidth'), axisNameAvailableWidth);
-            var truncatedText = (truncateEllipsis != null && axisNameMaxWidth != null)
+            var truncateOpt = axisModel.get('nameTruncate', true);
+            var ellipsis = truncateOpt.ellipsis;
+            var maxWidth = retrieve(truncateOpt.maxWidth, axisNameAvailableWidth);
+            var truncatedText = (ellipsis != null && maxWidth != null)
                 ? formatUtil.truncateText(
-                    name, axisNameMaxWidth, textFont, truncateEllipsis, {minChar: 2}
+                    name, maxWidth, textFont, ellipsis,
+                    {minChar: 2, placeholder: truncateOpt.placeholder}
                 )
                 : name;
 
