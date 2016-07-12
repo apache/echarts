@@ -255,8 +255,11 @@ define(function(require) {
         var min = firstStop.interval ? clamp(firstStop.interval[0], dataExtent) : firstStop.value;
         var max = lastStop.interval ? clamp(lastStop.interval[1], dataExtent) : lastStop.value;
         var stopsSpan = max - min;
+
+        // In the piecewise case data out of visual range
+        // ----dataMin----dataMax-----visualMin----visualMax
         if (stopsSpan === 0) {
-            stopsSpan = 1;
+            return data.getItemVisual(0, 'color');
         }
         for (var i = 0; i < stops.length; i++) {
             // Piecewise
