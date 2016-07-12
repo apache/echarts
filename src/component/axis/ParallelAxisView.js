@@ -69,9 +69,7 @@ define(function (require) {
             var builderOpt = zrUtil.extend(
                 {
                     axisLabelShow: axisLabelShow,
-                    strokeContainThreshold: areaWidth,
-                    // lineWidth === 0 or no value.
-                    axisLineSilent: !(areaWidth > 0) // jshint ignore:line
+                    strokeContainThreshold: areaWidth
                 },
                 axisLayout
             );
