@@ -162,7 +162,7 @@ define(function (require) {
                     axisModel.getModel('axisLine.lineStyle').getLineStyle()
                 ),
                 strokeContainThreshold: opt.strokeContainThreshold || 5,
-                silent: !!opt.axisLineSilent,
+                silent: false,
                 z2: 1
             })));
         },
