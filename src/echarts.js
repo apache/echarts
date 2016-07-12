@@ -618,7 +618,6 @@ define(function (require) {
         this._flushPendingActions();
     };
 
-    var defaultLoadingEffect = require('./loading/default');
     /**
      * Show loading effect
      * @param  {string} [name='default']
@@ -630,7 +629,13 @@ define(function (require) {
             name = 'default';
         }
         this.hideLoading();
-        var el = defaultLoadingEffect(this._api, cfg);
+        if (!loadingEffects[name]) {
+            if (__DEV__) {
+                console.warn('Loading effects ' + name + ' not exists.');
+            }
+            return;
+        }
+        var el = loadingEffects[name](this._api, cfg);
         var zr = this._zr;
         this._loadingFX = el;
 
@@ -1137,6 +1142,10 @@ define(function (require) {
      * @type {Object.<key, Object>}
      */
     var themeStorage = {};
+    /**
+     * Loading effects
+     */
+    var loadingEffects = {};
 
 
     var instances = {};
@@ -1376,7 +1385,7 @@ define(function (require) {
      * Most visual encoding like color are common for different chart
      * But each chart has it's own layout algorithm
      *
-     * @param {string} [priority=1000]
+     * @param {number} [priority=1000]
      * @param {Function} layoutFunc
      */
     echarts.registerLayout = function (priority, layoutFunc) {
@@ -1397,7 +1406,7 @@ define(function (require) {
     };
 
     /**
-     * @param {string} [priority=3000]
+     * @param {number} [priority=3000]
      * @param {Function} visualFunc
      */
     echarts.registerVisual = function (priority, visualFunc) {
@@ -1415,6 +1424,14 @@ define(function (require) {
             func: visualFunc
         });
     };
+
+    /**
+     * @param {string} name
+     */
+    echarts.registerLoading = function (name, loadingFx) {
+        loadingEffects[name] = loadingFx;
+    };
+
 
     var parseClassType = ComponentModel.parseClassType;
     /**
@@ -1493,6 +1510,7 @@ define(function (require) {
 
     echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, require('./visual/seriesColor'));
     echarts.registerPreprocessor(require('./preprocessor/backwardCompat'));
+    echarts.registerLoading('default', require('./loading/default'));
 
     // Default action
     echarts.registerAction({
