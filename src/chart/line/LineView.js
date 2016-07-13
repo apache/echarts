@@ -221,7 +221,9 @@ define(function(require) {
         if (!visualMetaList || !visualMetaList.length) {
             return;
         }
-
+        if(visualMetaList[0].stops.length==0){
+			return;
+		}
         var visualMeta;
         for (var i = visualMetaList.length - 1; i >= 0; i--) {
             // Can only be x or y
