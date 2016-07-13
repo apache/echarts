@@ -179,23 +179,23 @@ define(function (require) {
 
     /**
      * @param {string|Date|number} value
-     * @return {number} timestamp
+     * @return {Date} date
      */
     number.parseDate = function (value) {
         if (value instanceof Date) {
-            return +value;
+            return value;
         }
         else if (typeof value === 'string') {
             // Treat as ISO format. See issue #3623
-            var ret = +new Date(value);
-            if (isNaN(ret)) {
+            var ret = new Date(value);
+            if (isNaN(+ret)) {
                 // FIXME Date.parse('1970-01-01') is UTC, Date.parse('1970/01/01') is local
-                ret = new Date(value.replace(/-/g, '/')) - new Date('1970/01/01');
+                ret = new Date(new Date(value.replace(/-/g, '/')) - new Date('1970/01/01'));
             }
-            return +ret;
+            return ret;
         }
 
-        return Math.round(value);
+        return new Date(Math.round(value));
     };
 
     /**
