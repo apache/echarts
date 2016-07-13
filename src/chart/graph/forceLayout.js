@@ -89,7 +89,7 @@ define(function (require) {
                             points[1] = points[1] || [];
                             vec2.copy(points[0], p1);
                             vec2.copy(points[1], p2);
-                            if (e.curveness > 0) {
+                            if (+e.curveness) {
                                 points[2] = [
                                     (p1[0] + p2[0]) / 2 - (p1[1] - p2[1]) * e.curveness,
                                     (p1[1] + p2[1]) / 2 - (p2[0] - p1[0]) * e.curveness

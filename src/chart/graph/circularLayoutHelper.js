@@ -40,7 +40,7 @@ define(function (require) {
             var cp1;
             var x12 = (p1[0] + p2[0]) / 2;
             var y12 = (p1[1] + p2[1]) / 2;
-            if (curveness > 0) {
+            if (+curveness) {
                 curveness *= 3;
                 cp1 = [
                     cx * curveness + x12 * (1 - curveness),
