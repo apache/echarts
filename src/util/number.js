@@ -189,7 +189,7 @@ define(function (require) {
             // Treat as ISO format. See issue #3623
             var ret = new Date(value);
             if (isNaN(+ret)) {
-                // FIXME Date.parse('1970-01-01') is UTC, Date.parse('1970/01/01') is local
+                // FIXME new Date('1970-01-01') is UTC, new Date('1970/01/01') is local
                 ret = new Date(new Date(value.replace(/-/g, '/')) - new Date('1970/01/01'));
             }
             return ret;

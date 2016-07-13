@@ -1485,7 +1485,7 @@ define(function (require) {
             var classType = parseClassType(superClass);
             Clazz = ChartView.getClass(classType.main, true);
         }
-        return ChartView.extend(opts);
+        return Clazz.extend(opts);
     };
 
     /**
