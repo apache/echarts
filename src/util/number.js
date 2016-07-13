@@ -182,14 +182,20 @@ define(function (require) {
      * @return {number} timestamp
      */
     number.parseDate = function (value) {
-        return value instanceof Date
-            ? value
-            : new Date(
-                typeof value === 'string'
-                    // FIXME Date.parse('1970-01-01') is UTC, Date.parse('1970/01/01') is local
-                    ? (new Date(value.replace(/-/g, '/')) - new Date('1970/01/01'))
-                    : Math.round(value)
-            );
+        if (value instanceof Date) {
+            return +value;
+        }
+        else if (typeof value === 'string') {
+            // Treat as ISO format. See issue #3623
+            var ret = +new Date(value);
+            if (isNaN(ret)) {
+                // FIXME Date.parse('1970-01-01') is UTC, Date.parse('1970/01/01') is local
+                ret = new Date(value.replace(/-/g, '/')) - new Date('1970/01/01');
+            }
+            return +ret;
+        }
+
+        return Math.round(value);
     };
 
     /**
