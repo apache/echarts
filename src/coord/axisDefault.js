@@ -15,15 +15,22 @@ define(function (require) {
         nameLocation: 'end',
         // 坐标轴名字旋转，degree。
         nameRotate: null, // Adapt to axis rotate, when nameLocation is 'middle'.
-        nameTruncateLength: null, // truncate text when characters more than the given number.
-        nameTruncateEllipsis: '...',
+        nameTruncate: {
+            maxWidth: null,
+            ellipsis: '...',
+            placeholder: '.'
+        },
         // 坐标轴文字样式，默认取全局样式
         nameTextStyle: {},
         // 文字与轴线距离
         nameGap: 15,
 
-        // 是否能触发鼠标事件
-        silent: true,
+        silent: false, // Default false to support tooltip.
+        triggerEvent: false, // Default false to avoid legacy user event listener fail.
+
+        tooltip: {
+            show: false
+        },
 
         // 坐标轴线
         axisLine: {

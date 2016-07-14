@@ -1,11 +1,9 @@
 define(function (require) {
 
     var zrUtil = require('zrender/core/util');
-    var modelUtil = require('../../util/model');
     var formatUtil = require('../../util/format');
     var graphic = require('../../util/graphic');
     var Model = require('../../model/Model');
-    var List = require('../../data/List');
     var numberUtil = require('../../util/number');
     var remRadian = numberUtil.remRadian;
     var isRadianAroundZero = numberUtil.isRadianAroundZero;
@@ -56,13 +54,11 @@ define(function (require) {
      * @param {number} [opt.labelOffset=0] Usefull when onZero.
      * @param {string} [opt.axisLabelShow] default get from axisModel.
      * @param {string} [opt.axisName] default get from axisModel.
-     * @param {string} [opt.axisNameTruncateLength] default get from axisModel.
-     * @param {string} [opt.axisNameTruncateEllipsis] default get from axisModel.
+     * @param {number} [opt.axisNameAvailableWidth]
      * @param {number} [opt.labelRotation] by degree, default get from axisModel.
      * @param {number} [opt.labelInterval] Default label interval when label
      *                                     interval from model is null or 'auto'.
      * @param {number} [opt.strokeContainThreshold] Default label interval when label
-     * @param {number} [opt.axisLineSilent=true] If axis line is silent
      */
     var AxisBuilder = function (axisModel, opt) {
 
@@ -165,7 +161,7 @@ define(function (require) {
                     axisModel.getModel('axisLine.lineStyle').getLineStyle()
                 ),
                 strokeContainThreshold: opt.strokeContainThreshold || 5,
-                silent: !!opt.axisLineSilent,
+                silent: true,
                 z2: 1
             })));
         },
@@ -266,7 +262,9 @@ define(function (require) {
             var categoryData = axisModel.get('data');
 
             var textEls = [];
-            var isSilent = axisModel.get('silent');
+            var silent = isSilent(axisModel);
+            var triggerEvent = axisModel.get('triggerEvent');
+
             for (var i = 0; i < ticks.length; i++) {
                 if (ifIgnoreOnTick(axis, i, opt.labelInterval)) {
                      continue;
@@ -302,13 +300,16 @@ define(function (require) {
                     },
                     position: pos,
                     rotation: labelLayout.rotation,
-                    silent: isSilent,
+                    silent: silent,
                     z2: 10
                 });
+
                 // Pack data for mouse event
-                textEl.eventData = makeAxisEventDataBase(axisModel);
-                textEl.eventData.targetType = 'axisLabel';
-                textEl.eventData.value = labelBeforeFormat;
+                if (triggerEvent) {
+                    textEl.eventData = makeAxisEventDataBase(axisModel);
+                    textEl.eventData.targetType = 'axisLabel';
+                    textEl.eventData.value = labelBeforeFormat;
+                }
 
 
                 // FIXME
@@ -387,6 +388,8 @@ define(function (require) {
                 nameRotation = nameRotation * PI / 180; // To radian.
             }
 
+            var axisNameAvailableWidth;
+
             if (nameLocation === 'middle') {
                 labelLayout = innerTextLayout(
                     opt,
@@ -398,19 +401,37 @@ define(function (require) {
                 labelLayout = endTextLayout(
                     opt, nameLocation, nameRotation || 0, extent
                 );
+
+                axisNameAvailableWidth = opt.axisNameAvailableWidth;
+                if (axisNameAvailableWidth != null) {
+                    axisNameAvailableWidth = Math.abs(
+                        axisNameAvailableWidth / Math.sin(labelLayout.rotation)
+                    );
+                    !isFinite(axisNameAvailableWidth) && (axisNameAvailableWidth = null);
+                }
             }
 
-            var truncatedText = name;
-            var truncateLength = retrieve(
-                opt.axisNameTruncateLength, axisModel.get('nameTruncateLength')
-            );
-            var truncateEllipsis = retrieve(
-                opt.axisNameTruncateEllipsis, axisModel.get('nameTruncateEllipsis')
-            );
+            var textFont = textStyleModel.getFont();
 
-            if (truncateLength != null) {
-                truncatedText = formatUtil.truncate(name, truncateLength, truncateEllipsis);
-            }
+            var truncateOpt = axisModel.get('nameTruncate', true) || {};
+            var ellipsis = truncateOpt.ellipsis;
+            var maxWidth = retrieve(truncateOpt.maxWidth, axisNameAvailableWidth);
+            var truncatedText = (ellipsis != null && maxWidth != null)
+                ? formatUtil.truncateText(
+                    name, maxWidth, textFont, ellipsis,
+                    {minChar: 2, placeholder: truncateOpt.placeholder}
+                )
+                : name;
+
+            var tooltipOpt = axisModel.get('tooltip', true);
+
+            var mainType = axisModel.mainType;
+            var formatterParams = {
+                componentType: mainType,
+                name: name,
+                $vars: ['name']
+            };
+            formatterParams[mainType + 'Index'] = axisModel.componentIndex;
 
             var textEl = new graphic.Text({
 
@@ -422,7 +443,7 @@ define(function (require) {
 
                 style: {
                     text: truncatedText,
-                    textFont: textStyleModel.getFont(),
+                    textFont: textFont,
                     fill: textStyleModel.getTextColor()
                         || axisModel.get('axisLine.lineStyle.color'),
                     textAlign: labelLayout.textAlign,
@@ -430,22 +451,24 @@ define(function (require) {
                 },
                 position: pos,
                 rotation: labelLayout.rotation,
-                silent: axisModel.get('silent'),
-                z2: 1
+                silent: isSilent(axisModel),
+                z2: 1,
+                tooltip: (tooltipOpt && tooltipOpt.show)
+                    ? zrUtil.extend({
+                        content: name,
+                        formatter: function () {
+                            return name;
+                        },
+                        formatterParams: formatterParams
+                    }, tooltipOpt)
+                    : null
             });
 
-            // Make truncate tooltip show.
-            if (truncateLength != null) {
-                // textEl.dataIndex = 0;
-                // var data = new List(['value'], axisModel);
-                // data.initData([{value: name, tooltip: {formatter: tooltipFormatter}}]);
-                // textEl.dataModel = modelUtil.createDataFormatModel(data, {mainType: 'axis'});
-                textEl.tooltip = name;
+            if (axisModel.get('triggerEvent')) {
+                textEl.eventData = makeAxisEventDataBase(axisModel);
+                textEl.eventData.targetType = 'axisName';
+                textEl.eventData.name = name;
             }
-
-            textEl.eventData = makeAxisEventDataBase(axisModel);
-            textEl.eventData.targetType = 'axisName';
-            textEl.eventData.name = name;
 
             // FIXME
             this._dumbGroup.add(textEl);
@@ -526,6 +549,18 @@ define(function (require) {
             textAlign: textAlign,
             verticalAlign: verticalAlign
         };
+    }
+
+    /**
+     * @inner
+     */
+    function isSilent(axisModel) {
+        var tooltipOpt = axisModel.get('tooltip');
+        return axisModel.get('silent')
+            // Consider mouse cursor, add these restrictions.
+            || !(
+                axisModel.get('triggerEvent') || (tooltipOpt && tooltipOpt.show)
+            );
     }
 
     /**

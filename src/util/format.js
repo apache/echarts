@@ -2,6 +2,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('./number');
+    var textContain = require('zrender/contain/text');
 
     /**
      * 每三位默认加,格式化
@@ -79,7 +80,7 @@ define(function (require) {
             return '';
         }
 
-        var $vars = paramsList[0].$vars;
+        var $vars = paramsList[0].$vars || [];
         for (var i = 0; i < $vars.length; i++) {
             var alias = TPL_VAR_ALIAS[i];
             tpl = tpl.replace(wrapVar(alias),  wrapVar(alias, 0));
@@ -145,33 +146,6 @@ define(function (require) {
         return str < 10 ? ('0' + str) : str;
     }
 
-    /**
-     * Truncate text, if overflow.
-     * If not ASCII, count as tow ASCII length.
-     * Notice case: truncate('是', 1) => '是', not ''.
-     *
-     * @public
-     * @param {string} str
-     * @param {number} length Over the length, truncate.
-     * @param {string} [ellipsis='...']
-     * @return {string} Result string.
-     */
-    function truncate(str, length, ellipsis) {
-        if (!str) {
-            return str;
-        }
-
-        var count = 0;
-        for(var i = 0, l = str.length; i < l && count < length; i++) {
-            count += str.charCodeAt(i) > 255 ? 2 : 1;
-        }
-        if (i < l) {
-            str = str.slice(0, i) + (ellipsis || '');
-        }
-
-        return str;
-    }
-
     return {
 
         normalizeCssArray: normalizeCssArray,
@@ -186,6 +160,6 @@ define(function (require) {
 
         formatTime: formatTime,
 
-        truncate: truncate
+        truncateText: textContain.truncateText
     };
 });

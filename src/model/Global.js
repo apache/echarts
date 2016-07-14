@@ -179,16 +179,17 @@ define(function (require) {
                         }
                         else {
                             // PENDING Global as parent ?
-                            componentModel = new ComponentModelClass(
-                                newCptOption, this, this,
-                                zrUtil.extend(
-                                    {
-                                        dependentModels: dependentModels,
-                                        componentIndex: index
-                                    },
-                                    resultItem.keyInfo
-                                )
+                            var extraOpt = zrUtil.extend(
+                                {
+                                    dependentModels: dependentModels,
+                                    componentIndex: index
+                                },
+                                resultItem.keyInfo
                             );
+                            componentModel = new ComponentModelClass(
+                                newCptOption, this, this, extraOpt
+                            );
+                            componentModel.init(newCptOption, this, this, extraOpt);
                             // Call optionUpdated after init.
                             // newCptOption has been used as componentModel.option
                             // and may be merged with theme and default, so pass null

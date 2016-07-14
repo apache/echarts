@@ -43,9 +43,9 @@ define(function (require) {
             );
         },
 
-        ellipsis: function (text, containerWidth, options) {
-            return textContain.ellipsis(
-                text, this.getFont(), containerWidth, options
+        truncateText: function (text, containerWidth, ellipsis, options) {
+            return textContain.truncateText(
+                text, containerWidth, this.getFont(), ellipsis, options
             );
         }
     };

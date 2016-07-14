@@ -31,10 +31,10 @@ define(function (require) {
             var nameGap = this.get('nameGap');
             var indicatorModels = zrUtil.map(this.get('indicator') || [], function (indicatorOpt) {
                 // PENDING
-                if (indicatorOpt.max != null && indicatorOpt.max > 0) {
+                if (indicatorOpt.max != null && indicatorOpt.max > 0 && !indicatorOpt.min) {
                     indicatorOpt.min = 0;
                 }
-                else if (indicatorOpt.min != null && indicatorOpt.min < 0) {
+                else if (indicatorOpt.min != null && indicatorOpt.min < 0 && !indicatorOpt.max) {
                     indicatorOpt.max = 0;
                 }
                 // Use same configuration

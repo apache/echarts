@@ -29,7 +29,7 @@ define(function (require) {
                     pts[1] = coordSys.dataToPoint(coords[1]);
 
                     var curveness = itemModel.get('lineStyle.normal.curveness');
-                    if (curveness > 0) {
+                    if (+curveness) {
                         pts[2] = [
                             (pts[0][0] + pts[1][0]) / 2 - (pts[0][1] - pts[1][1]) * curveness,
                             (pts[0][1] + pts[1][1]) / 2 - (pts[1][0] - pts[0][0]) * curveness

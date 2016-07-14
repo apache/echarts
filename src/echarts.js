@@ -213,9 +213,10 @@ define(function (require) {
         this[IN_MAIN_PROCESS] = true;
 
         if (!this._model || notMerge) {
-            this._model = new GlobalModel(
-                null, null, this._theme, new OptionManager(this._api)
-            );
+            var optionManager = new OptionManager(this._api);
+            var theme = this._theme;
+            var ecModel = this._model = new GlobalModel(null, null, theme, optionManager);
+            ecModel.init(null, null, theme, optionManager);
         }
 
         this._model.setOption(option, optionPreprocessorFuncs);
@@ -617,7 +618,6 @@ define(function (require) {
         this._flushPendingActions();
     };
 
-    var defaultLoadingEffect = require('./loading/default');
     /**
      * Show loading effect
      * @param  {string} [name='default']
@@ -629,7 +629,13 @@ define(function (require) {
             name = 'default';
         }
         this.hideLoading();
-        var el = defaultLoadingEffect(this._api, cfg);
+        if (!loadingEffects[name]) {
+            if (__DEV__) {
+                console.warn('Loading effects ' + name + ' not exists.');
+            }
+            return;
+        }
+        var el = loadingEffects[name](this._api, cfg);
         var zr = this._zr;
         this._loadingFX = el;
 
@@ -1136,6 +1142,10 @@ define(function (require) {
      * @type {Object.<key, Object>}
      */
     var themeStorage = {};
+    /**
+     * Loading effects
+     */
+    var loadingEffects = {};
 
 
     var instances = {};
@@ -1151,9 +1161,9 @@ define(function (require) {
         /**
          * @type {number}
          */
-        version: '3.2.1',
+        version: '3.2.2',
         dependencies: {
-            zrender: '3.1.1'
+            zrender: '3.1.2'
         }
     };
 
@@ -1375,7 +1385,7 @@ define(function (require) {
      * Most visual encoding like color are common for different chart
      * But each chart has it's own layout algorithm
      *
-     * @param {string} [priority=1000]
+     * @param {number} [priority=1000]
      * @param {Function} layoutFunc
      */
     echarts.registerLayout = function (priority, layoutFunc) {
@@ -1396,7 +1406,7 @@ define(function (require) {
     };
 
     /**
-     * @param {string} [priority=3000]
+     * @param {number} [priority=3000]
      * @param {Function} visualFunc
      */
     echarts.registerVisual = function (priority, visualFunc) {
@@ -1416,31 +1426,66 @@ define(function (require) {
     };
 
     /**
-     * @param {Object} opts
+     * @param {string} name
      */
-    echarts.extendChartView = function (opts) {
-        return ChartView.extend(opts);
+    echarts.registerLoading = function (name, loadingFx) {
+        loadingEffects[name] = loadingFx;
+    };
+
+
+    var parseClassType = ComponentModel.parseClassType;
+    /**
+     * @param {Object} opts
+     * @param {string} [superClass]
+     */
+    echarts.extendComponentModel = function (opts, superClass) {
+        var Clazz = ComponentModel;
+        if (superClass) {
+            var classType = parseClassType(superClass);
+            Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
+        }
+        return Clazz.extend(opts);
     };
 
     /**
      * @param {Object} opts
+     * @param {string} [superClass]
      */
-    echarts.extendComponentModel = function (opts) {
-        return ComponentModel.extend(opts);
+    echarts.extendComponentView = function (opts, superClass) {
+        var Clazz = ComponentView;
+        if (superClass) {
+            var classType = parseClassType(superClass);
+            Clazz = ComponentView.getClass(classType.main, classType.sub, true);
+        }
+        return Clazz.extend(opts);
     };
 
     /**
      * @param {Object} opts
+     * @param {string} [superClass]
      */
-    echarts.extendSeriesModel = function (opts) {
-        return SeriesModel.extend(opts);
+    echarts.extendSeriesModel = function (opts, superClass) {
+        var Clazz = SeriesModel;
+        if (superClass) {
+            superClass = 'series.' + superClass.replace('series.', '');
+            var classType = parseClassType(superClass);
+            Clazz = SeriesModel.getClass(classType.main, classType.sub, true);
+        }
+        return Clazz.extend(opts);
     };
 
     /**
      * @param {Object} opts
+     * @param {string} [superClass]
      */
-    echarts.extendComponentView = function (opts) {
-        return ComponentView.extend(opts);
+    echarts.extendChartView = function (opts, superClass) {
+        var Clazz = ChartView;
+        if (superClass) {
+            superClass.replace('series.', '');
+            var classType = parseClassType(superClass);
+            Clazz = ChartView.getClass(classType.main, true);
+        }
+        return Clazz.extend(opts);
     };
 
     /**
@@ -1465,6 +1510,7 @@ define(function (require) {
 
     echarts.registerVisual(PRIORITY_VISUAL_GLOBAL, require('./visual/seriesColor'));
     echarts.registerPreprocessor(require('./preprocessor/backwardCompat'));
+    echarts.registerLoading('default', require('./loading/default'));
 
     // Default action
     echarts.registerAction({

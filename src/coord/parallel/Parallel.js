@@ -183,54 +183,57 @@ define(function(require) {
                 axisExpandWindow = [left, right];
             }
 
-            var getAxisPosition = (axisExpandable && axisExpandWindow && axisExpandWidth)
-                ? function getAxisPosition(axisIndex, layoutLength, axisCount) {
+            var calcPos = (axisExpandable && axisExpandWindow && axisExpandWidth)
+                ? function (axisIndex, layoutLength, axisCount) {
                     var peekIntervalCount = axisExpandWindow[1] - axisExpandWindow[0];
                     var otherWidth = (
                         layoutLength - axisExpandWidth * peekIntervalCount
                     ) / (axisCount - 1 - peekIntervalCount);
 
-                    var posToWindow = compareToWindow(axisIndex);
+                    var position;
 
-                    if (posToWindow < 0) {
-                        return (axisIndex - 1) * otherWidth;
+                    if (axisIndex < axisExpandWindow[0]) {
+                        position = (axisIndex - 1) * otherWidth;
                     }
-                    else if (posToWindow === 0) {
-                        return axisExpandWindow[0] * otherWidth
+                    else if (axisIndex <= axisExpandWindow[1]) {
+                        position = axisExpandWindow[0] * otherWidth
                             + (axisIndex - axisExpandWindow[0]) * axisExpandWidth;
                     }
                     else if (axisIndex === axisCount - 1) {
-                        return layoutLength;
+                        position = layoutLength;
                     }
                     else {
-                        return axisExpandWindow[0] * otherWidth
+                        position = axisExpandWindow[0] * otherWidth
                             + peekIntervalCount * axisExpandWidth
                             + (axisIndex - axisExpandWindow[1]) * otherWidth;
                     }
+
+                    return {
+                        position: position,
+                        axisNameAvailableWidth: (
+                            axisExpandWindow[0] < axisIndex && axisIndex < axisExpandWindow[1]
+                        ) ? axisExpandWidth : otherWidth
+                    };
                 }
                 : function (axisIndex, layoutLength, axisCount) {
-                    return layoutLength * axisIndex / (axisCount - 1);
+                    var step = layoutLength / (axisCount - 1);
+                    return {
+                        position: step * axisIndex,
+                        axisNameAvailableWidth: step
+                    };
                 };
 
-            function compareToWindow(axisIndex) {
-                return axisIndex < axisExpandWindow[0]
-                    ? -1
-                    : axisIndex > axisExpandWindow[1]
-                    ? 1
-                    : 0;
-            }
-
             each(dimensions, function (dim, idx) {
-                var pos = getAxisPosition(idx, layoutLength, dimensions.length);
+                var posInfo = calcPos(idx, layoutLength, dimensions.length);
 
                 var positionTable = {
                     horizontal: {
-                        x: pos,
+                        x: posInfo.position,
                         y: axisLength
                     },
                     vertical: {
                         x: 0,
-                        y: pos
+                        y: posInfo.position
                     }
                 };
                 var rotationTable = {
@@ -258,6 +261,7 @@ define(function(require) {
                     position: position,
                     rotation: rotation,
                     transform: transform,
+                    axisNameAvailableWidth: posInfo.axisNameAvailableWidth,
                     tickDirection: 1,
                     labelDirection: 1,
                     axisExpandWindow: axisExpandWindow

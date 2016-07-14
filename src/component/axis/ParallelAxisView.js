@@ -56,8 +56,6 @@ define(function (require) {
             var axisLayout = coordSys.getAxisLayout(dim);
 
             // Fetch from axisModel by default.
-            var axisNameTruncateLength;
-            var axisNameTruncateEllipsis;
             var axisLabelShow;
             var axisIndex = zrUtil.indexOf(coordSys.dimensions, dim);
 
@@ -65,19 +63,13 @@ define(function (require) {
             if (axisExpandWindow
                 && (axisIndex <= axisExpandWindow[0] || axisIndex >= axisExpandWindow[1])
             ) {
-                axisNameTruncateLength = axisModel.get('nameTruncateLengthOutExpand');
-                axisNameTruncateEllipsis = '';
                 axisLabelShow = false;
             }
 
             var builderOpt = zrUtil.extend(
                 {
                     axisLabelShow: axisLabelShow,
-                    axisNameTruncateLength: axisNameTruncateLength,
-                    axisNameTruncateEllipsis: axisNameTruncateEllipsis,
-                    strokeContainThreshold: areaWidth,
-                    // lineWidth === 0 or no value.
-                    axisLineSilent: !(areaWidth > 0) // jshint ignore:line
+                    strokeContainThreshold: areaWidth
                 },
                 axisLayout
             );
