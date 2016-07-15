@@ -182,10 +182,31 @@ define(function (require) {
         }
         timsort(visualFuncs, prioritySortFunc);
         timsort(dataProcessorFuncs, prioritySortFunc);
+
+        /**
+         * @private
+         * @type {boolean}
+         */
+        this._optionUpdated;
+
+        this._zr.animation.on('frame', this._onframe, this);
     }
 
     var echartsProto = ECharts.prototype;
 
+    echartsProto._onframe = function () {
+        // Lazy update
+        if (this._optionUpdated) {
+
+            this[IN_MAIN_PROCESS] = true;
+
+            updateMethods.prepareAndUpdate.call(this);
+
+            this[IN_MAIN_PROCESS] = false;
+
+            this._optionUpdated = false;
+        }
+    };
     /**
      * @return {HTMLDomElement}
      */
@@ -203,9 +224,9 @@ define(function (require) {
     /**
      * @param {Object} option
      * @param {boolean} notMerge
-     * @param {boolean} [notRefreshImmediately=false] Useful when setOption frequently.
+     * @param {boolean} [lazyUpdate=false] Useful when setOption frequently.
      */
-    echartsProto.setOption = function (option, notMerge, notRefreshImmediately) {
+    echartsProto.setOption = function (option, notMerge, lazyUpdate) {
         if (__DEV__) {
             zrUtil.assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
         }
@@ -221,13 +242,17 @@ define(function (require) {
 
         this._model.setOption(option, optionPreprocessorFuncs);
 
-        updateMethods.prepareAndUpdate.call(this);
+        if (lazyUpdate) {
+            this._optionUpdated = true;
+        }
+        else {
+            updateMethods.prepareAndUpdate.call(this);
+            this._zr.refreshImmediately();
+        }
 
         this[IN_MAIN_PROCESS] = false;
 
         this._flushPendingActions();
-
-        !notRefreshImmediately && this._zr.refreshImmediately();
     };
 
     /**
@@ -1001,7 +1026,7 @@ define(function (require) {
      * Clear
      */
     echartsProto.clear = function () {
-        this.setOption({}, true);
+        this.setOption({ series: [] }, true);
     };
     /**
      * Dispose instance
