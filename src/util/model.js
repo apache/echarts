@@ -365,22 +365,31 @@ define(function(require) {
                 return;
             }
 
+            // id has highest priority.
             for (var i = 0; i < result.length; i++) {
-                var exist = result[i].exist;
                 if (!result[i].option // Consider name: two map to one.
-                    && (
-                        // id has highest priority.
-                        (cptOption.id != null && exist.id === cptOption.id + '')
-                        || (cptOption.name != null
-                            && !modelUtil.isIdInner(cptOption)
-                            && !modelUtil.isIdInner(exist)
-                            && exist.name === cptOption.name + ''
-                        )
-                    )
+                    && cptOption.id != null
+                    && result[i].exist.id === cptOption.id + ''
                 ) {
                     result[i].option = cptOption;
                     newCptOptions[index] = null;
-                    break;
+                    return;
+                }
+            }
+
+            for (var i = 0; i < result.length; i++) {
+                var exist = result[i].exist;
+                if (!result[i].option // Consider name: two map to one.
+                    // Can not match when both ids exist but different.
+                    && (exist.id == null || cptOption.id == null)
+                    && cptOption.name != null
+                    && !modelUtil.isIdInner(cptOption)
+                    && !modelUtil.isIdInner(exist)
+                    && exist.name === cptOption.name + ''
+                ) {
+                    result[i].option = cptOption;
+                    newCptOptions[index] = null;
+                    return;
                 }
             }
         });

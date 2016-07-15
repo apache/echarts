@@ -62,7 +62,7 @@
                                     axisTick: {
                                         show: j === dimSize - 1
                                     },
-                                    // name: j === dimSize - 1 ? schema[i].text : '',
+                                    name: j === dimSize - 1 ? schema[i].text : '',
                                     nameLocation: 'middle',
                                     nameGap: 30,
                                     splitNumber: 3
@@ -76,7 +76,7 @@
                                     axisTick: {
                                         show: i === 1
                                     },
-                                    // name: i === 1 ? schema[j].text : '',
+                                    name: i === 1 ? schema[j].text : '',
                                     nameLocation: 'middle',
                                     nameGap: 30,
                                     splitNumber: 4
@@ -85,7 +85,7 @@
                                     return {
                                         id: id + '-' + dataIdx,
                                         hoverAnimation: false,
-                                        // name: nameList[dataIdx],
+                                        name: nameList[dataIdx],
                                         type: 'scatter',
                                         xAxisIndex: idx,
                                         yAxisIndex: idx,

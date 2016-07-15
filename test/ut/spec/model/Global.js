@@ -442,6 +442,43 @@ describe('modelAndOptionMapping', function() {
         });
 
 
+        testCase.createChart()('nameTheSameButIdNotTheSame', function () {
+            var chart = this.chart;
+
+            var option = {
+                grid: {},
+                xAxis: [
+                    {id: 'x1', name: 'a', xxxx: 'x1_a'},
+                    {id: 'x2', name: 'b', xxxx: 'x2_b'}
+                ],
+                yAxis: {}
+            };
+
+            chart.setOption(option);
+
+            var xAxisModel0 = getModel(chart, 'xAxis', 0);
+            var xAxisModel1 = getModel(chart, 'xAxis', 1);
+            expect(xAxisModel0.option.xxxx).toEqual('x1_a');
+            expect(xAxisModel1.option.xxxx).toEqual('x2_b');
+            expect(xAxisModel1.option.name).toEqual('b');
+
+            var option2 = {
+                xAxis: [
+                    {id: 'k1', name: 'a', xxxx: 'k1_a'},
+                    {id: 'x2', name: 'a', xxxx: 'x2_a'}
+                ]
+            };
+            chart.setOption(option2);
+
+            var xAxisModel0 = getModel(chart, 'xAxis', 0);
+            var xAxisModel1 = getModel(chart, 'xAxis', 1);
+            var xAxisModel2 = getModel(chart, 'xAxis', 2);
+            expect(xAxisModel0.option.xxxx).toEqual('x1_a');
+            expect(xAxisModel1.option.xxxx).toEqual('x2_a');
+            expect(xAxisModel1.option.name).toEqual('a');
+            expect(xAxisModel2.option.xxxx).toEqual('k1_a');
+        });
+
     });
 
 

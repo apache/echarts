@@ -136,6 +136,8 @@ define(function (require) {
                 newCptTypes, ComponentModel.getAllClassMainTypes(), visitComponent, this
             );
 
+            this._seriesIndices = this._seriesIndices || [];
+
             function visitComponent(mainType, dependencies) {
                 var newCptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
 
