@@ -3,13 +3,14 @@ define(function(require) {
 
     var graphic = require('../util/graphic');
     var zrUtil = require('zrender/core/util');
+    var echarts = require('../echarts');
 
     require('../coord/cartesian/Grid');
 
     require('./axis');
 
     // Grid view
-    require('../echarts').extendComponentView({
+    echarts.extendComponentView({
 
         type: 'grid',
 
@@ -24,6 +25,13 @@ define(function(require) {
                     silent: true
                 }));
             }
+        }
+    });
+
+    echarts.registerPreprocessor(function (option) {
+        // Only create grid when need
+        if (option.xAxis && option.yAxis && !option.grid) {
+            option.grid = {};
         }
     });
 });
