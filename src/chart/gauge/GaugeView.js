@@ -205,6 +205,13 @@ define(function (require) {
                         labelModel.get('formatter')
                     );
                     var distance = labelModel.get('distance');
+                    if(distance+splitLineLen>0){
+                        var textVerticalAlign = unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle');
+                        var textAlign = unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center');
+                    }else{
+                        textVerticalAlign = unitY < -0.4 ? 'middle' : (unitY > 0.4 ? 'top' : 'top');
+                        textAlign = unitX < -0.4 ? 'right' : (unitX > 0.4 ? 'left' : 'center');
+                    }
 
                     var text = new graphic.Text({
                         style: {
@@ -213,8 +220,8 @@ define(function (require) {
                             y: unitY * (r - splitLineLen - distance) + cy,
                             fill: textStyleModel.getTextColor(),
                             textFont: textStyleModel.getFont(),
-                            textVerticalAlign: unitY < -0.4 ? 'top' : (unitY > 0.4 ? 'bottom' : 'middle'),
-                            textAlign: unitX < -0.4 ? 'left' : (unitX > 0.4 ? 'right' : 'center')
+                            textVerticalAlign: textVerticalAlign,
+                            textAlign: textAlign
                         },
                         silent: true
                     });
