@@ -307,6 +307,10 @@ define(function (require) {
                         || (!isNameArray && cpt.name === name);
                 });
             }
+            else {
+                // Return all components with mainType
+                result = cpts;
+            }
 
             return filterBySubType(result, condition);
         },

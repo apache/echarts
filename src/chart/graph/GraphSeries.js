@@ -154,10 +154,10 @@ define(function (require) {
             coordinateSystem: 'view',
 
             // Default option for all coordinate systems
-            xAxisIndex: 0,
-            yAxisIndex: 0,
-            polarIndex: 0,
-            geoIndex: 0,
+            // xAxisIndex: 0,
+            // yAxisIndex: 0,
+            // polarIndex: 0,
+            // geoIndex: 0,
 
             legendHoverLink: true,
 

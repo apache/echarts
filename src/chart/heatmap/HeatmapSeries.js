@@ -20,8 +20,8 @@ define(function (require) {
             z: 2,
 
             // Cartesian coordinate system
-            xAxisIndex: 0,
-            yAxisIndex: 0,
+            // xAxisIndex: 0,
+            // yAxisIndex: 0,
 
             // Geo coordinate system
             geoIndex: 0,

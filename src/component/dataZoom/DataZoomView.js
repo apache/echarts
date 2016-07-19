@@ -41,18 +41,35 @@ define(function (require) {
                 var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
                 if (axisModel) {
                     axisModels.push(axisModel);
-
-                    var gridIndex = axisModel.get('gridIndex');
-                    var polarIndex = axisModel.get('polarIndex');
-
-                    if (gridIndex != null) {
-                        var coordModel = ecModel.getComponent('grid', gridIndex);
-                        save(coordModel, axisModel, cartesians, gridIndex);
+                    var coordSysName;
+                    if (dimNames.axis === 'xAxis' || dimNames.axis === 'yAxis') {
+                        coordSysName = 'grid';
                     }
-                    else if (polarIndex != null) {
-                        var coordModel = ecModel.getComponent('polar', polarIndex);
-                        save(coordModel, axisModel, polars, polarIndex);
+                    else {
+                        // Polar
+                        coordSysName = 'polar';
                     }
+                    var coordModel = ecModel.queryComponents({
+                        mainType: coordSysName,
+                        index: axisModel.get(coordSysName + 'Index'),
+                        id: axisModel.get(coordSysName + 'Id')
+                    })[0];
+
+                    if (coordModel != null) {
+                        save(coordModel, axisModel, coordSysName === 'grid' ? cartesians : polars, coordModel.componentIndex);
+                    }
+                    // var gridIndex = axisModel.get('gridIndex');
+
+                    // var polarIndex = axisModel.get('polarIndex');
+
+                    // if (gridIndex != null) {
+                    //     var coordModel = ecModel.getComponent('grid', gridIndex);
+                    //     save(coordModel, axisModel, cartesians, gridIndex);
+                    // }
+                    // else if (polarIndex != null) {
+                    //     var coordModel = ecModel.getComponent('polar', polarIndex);
+                    //     save(coordModel, axisModel, polars, polarIndex);
+                    // }
                 }
             }, this);
 

@@ -651,8 +651,10 @@ define(function (require) {
     echartsProto.showLoading = function (name, cfg) {
         if (zrUtil.isObject(name)) {
             cfg = name;
-            name = 'default';
+            name = '';
         }
+        name = name || 'default';
+
         this.hideLoading();
         if (!loadingEffects[name]) {
             if (__DEV__) {

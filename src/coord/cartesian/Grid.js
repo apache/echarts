@@ -338,12 +338,10 @@ define(function(require, factory) {
             axis.scale.setExtent(Infinity, -Infinity);
         });
         ecModel.eachSeries(function (seriesModel) {
-            if (seriesModel.get('coordinateSystem') === 'cartesian2d') {
-                var xAxisIndex = seriesModel.get('xAxisIndex');
-                var yAxisIndex = seriesModel.get('yAxisIndex');
-
-                var xAxisModel = ecModel.getComponent('xAxis', xAxisIndex);
-                var yAxisModel = ecModel.getComponent('yAxis', yAxisIndex);
+            if (isCartesian2D(seriesModel)) {
+                var axesModels = findAxesModels(seriesModel, ecModel);
+                var xAxisModel = axesModels[0];
+                var yAxisModel = axesModels[1];
 
                 if (!isAxisUsedInTheGrid(xAxisModel, gridModel, ecModel)
                     || !isAxisUsedInTheGrid(yAxisModel, gridModel, ecModel)
@@ -351,7 +349,9 @@ define(function(require, factory) {
                     return;
                 }
 
-                var cartesian = this.getCartesian(xAxisIndex, yAxisIndex);
+                var cartesian = this.getCartesian(
+                    xAxisModel.componentIndex, yAxisModel.componentIndex
+                );
                 var data = seriesModel.getData();
                 var xAxis = cartesian.getAxis('x');
                 var yAxis = cartesian.getAxis('y');
@@ -396,6 +396,38 @@ define(function(require, factory) {
             };
     }
 
+    var axesTypes = ['xAxis', 'yAxis'];
+    /**
+     * @inner
+     */
+    function findAxesModels(seriesModel, ecModel) {
+        return zrUtil.map(axesTypes, function (axisType) {
+            var axisModel = ecModel.queryComponents({
+                mainType: axisType,
+                index: seriesModel.get(axisType + 'Index'),
+                id: seriesModel.get(axisType + 'Id')
+            })[0];
+
+            if (__DEV__) {
+                if (!axisModel) {
+                    throw new Error(axisType + ' "' + zrUtil.retrieve(
+                        seriesModel.get(axisType + 'Index'),
+                        seriesModel.get(axisType + 'Id'),
+                        0
+                    ) + '" not found');
+                }
+            }
+            return axisModel;
+        });
+    }
+
+    /**
+     * @inner
+     */
+    function isCartesian2D(seriesModel) {
+        return seriesModel.get('coordinateSystem') === 'cartesian2d';
+    }
+
     Grid.create = function (ecModel, api) {
         var grids = [];
         ecModel.eachComponent('grid', function (gridModel, idx) {
@@ -410,21 +442,40 @@ define(function(require, factory) {
 
         // Inject the coordinateSystems into seriesModel
         ecModel.eachSeries(function (seriesModel) {
-            if (seriesModel.get('coordinateSystem') !== 'cartesian2d') {
+            if (!isCartesian2D(seriesModel)) {
                 return;
             }
-            var xAxisIndex = seriesModel.get('xAxisIndex');
-            var yAxisIndex = seriesModel.get('yAxisIndex');
-            var xAxisModel = ecModel.getComponent('xAxis', xAxisIndex);
+
+            var axesModels = findAxesModels(seriesModel, ecModel);
+            var xAxisModel = axesModels[0];
+            var yAxisModel = axesModels[1];
+
+            var gridModel = ecModel.queryComponents({
+                mainType: 'grid',
+                index: xAxisModel.get('gridIndex'),
+                id: xAxisModel.get('gridId')
+            })[0];
 
             if (__DEV__) {
-                var yAxisModel = ecModel.getComponent('yAxis', yAxisIndex);
-                if (xAxisModel.get('gridIndex') !== yAxisModel.get('gridIndex')) {
+                if (!gridModel) {
+                    throw new Error(
+                        'Grid "' + zrUtil.retrieve(
+                            xAxisModel.get('gridIndex'),
+                            xAxisModel.get('gridId'),
+                            0
+                        ) + '" not found'
+                    );
+                }
+                if (yAxisModel.get('gridIndex') !== yAxisModel.get('gridIndex')) {
                     throw new Error('xAxis and yAxis must use the same grid');
                 }
             }
-            var grid = grids[xAxisModel.get('gridIndex')];
-            seriesModel.coordinateSystem = grid.getCartesian(xAxisIndex, yAxisIndex);
+
+            var grid = gridModel.coordinateSystem;
+
+            seriesModel.coordinateSystem = grid.getCartesian(
+                xAxisModel.componentIndex, yAxisModel.componentIndex
+            );
         });
 
         return grids;

@@ -7,9 +7,10 @@ define(function(require) {
     var env = require('zrender/core/env');
     var echarts = require('../../echarts');
     var modelUtil = require('../../util/model');
+    var helper = require('./helper');
     var AxisProxy = require('./AxisProxy');
     var each = zrUtil.each;
-    var eachAxisDim = modelUtil.eachAxisDim;
+    var eachAxisDim = helper.eachAxisDim;
 
     var DataZoomModel = echarts.extendComponentModel({
 
@@ -28,8 +29,8 @@ define(function(require) {
             orient: null,           // Default auto by axisIndex. Possible value: 'horizontal', 'vertical'.
             xAxisIndex: null,       // Default the first horizontal category axis.
             yAxisIndex: null,       // Default the first vertical category axis.
-            angleAxisIndex: null,
-            radiusAxisIndex: null,
+
+
             filterMode: 'filter',   // Possible values: 'filter' or 'empty'.
                                     // 'filter': data items which are out of window will be removed.
                                     //           This option is applicable when filtering outliers.
@@ -257,7 +258,29 @@ define(function(require) {
                     if (this._isSeriesHasAllAxesTypeOf(seriesModel, 'value')) {
                         eachAxisDim(function (dimNames) {
                             var axisIndices = thisOption[dimNames.axisIndex];
+
                             var axisIndex = seriesModel.get(dimNames.axisIndex);
+                            var axisId = seriesModel.get(dimNames.axisId);
+
+                            var axisModel = seriesModel.ecModel.queryComponents({
+                                mainType: dimNames.axis,
+                                index: axisIndex,
+                                id: axisId
+                            })[0];
+
+                            if (__DEV__) {
+                                if (!axisModel) {
+                                    throw new Error(
+                                        dimNames.axis + ' "' + zrUtil.retrieve(
+                                            axisIndex,
+                                            axisId,
+                                            0
+                                        ) + '" not found'
+                                    );
+                                }
+                            }
+                            axisIndex = axisModel.componentIndex;
+
                             if (zrUtil.indexOf(axisIndices, axisIndex) < 0) {
                                 axisIndices.push(axisIndex);
                             }

@@ -37,8 +37,8 @@ define(function(require) {
 
             hoverAnimation: true,
 
-            xAxisIndex: 0,
-            yAxisIndex: 0,
+            // xAxisIndex: 0,
+            // yAxisIndex: 0,
 
             layout: null, // 'horizontal' or 'vertical'
 

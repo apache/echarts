@@ -46,8 +46,8 @@ define(function(require) {
             // stack: null
 
             // Cartesian coordinate system
-            xAxisIndex: 0,
-            yAxisIndex: 0,
+            // xAxisIndex: 0,
+            // yAxisIndex: 0,
 
             // 最小高度改为0
             barMinHeight: 0,

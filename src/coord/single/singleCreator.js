@@ -27,9 +27,12 @@ define(function (require) {
 
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.get('coordinateSystem') === 'singleAxis') {
-                var singleAxisIndex = seriesModel.get('singleAxisIndex') || 0;
-                var axisModel = ecModel.getComponent('singleAxis', singleAxisIndex);
-                seriesModel.coordinateSystem = axisModel.coordinateSystem;
+                var singleAxisModel = ecModel.queryComponents({
+                    mainType: 'singleAxis',
+                    index: seriesModel.get('singleAxisIndex'),
+                    id: seriesModel.get('singleAxisId')
+                })[0];
+                seriesModel.coordinateSystem = singleAxisModel.coordinateSystem;
             }
         });
 

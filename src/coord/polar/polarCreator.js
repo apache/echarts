@@ -3,6 +3,7 @@ define(function (require) {
 
     var Polar = require('./Polar');
     var numberUtil = require('../../util/number');
+    var zrUtil = require('zrender/core/util');
 
     var axisHelper = require('../../coord/axisHelper');
     var niceScaleExtent = axisHelper.niceScaleExtent;
@@ -119,7 +120,24 @@ define(function (require) {
             // Inject coordinateSystem to series
             ecModel.eachSeries(function (seriesModel) {
                 if (seriesModel.get('coordinateSystem') === 'polar') {
-                    seriesModel.coordinateSystem = polarList[seriesModel.get('polarIndex')];
+                    var polarModel = ecModel.queryComponents({
+                        mainType: 'polar',
+                        index: seriesModel.get('polarIndex'),
+                        id: seriesModel.get('polarId')
+                    })[0];
+
+                    if (__DEV__) {
+                        if (!polarModel) {
+                            throw new Error(
+                                'Polar "' + zrUtil.retrieve(
+                                    seriesModel.get('polarIndex'),
+                                    seriesModel.get('polarId'),
+                                    0
+                                ) + '" not found'
+                            );
+                        }
+                    }
+                    seriesModel.coordinateSystem = polarModel.coordinateSystem;
                 }
             });
 
