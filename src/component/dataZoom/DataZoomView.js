@@ -58,18 +58,6 @@ define(function (require) {
                     if (coordModel != null) {
                         save(coordModel, axisModel, coordSysName === 'grid' ? cartesians : polars, coordModel.componentIndex);
                     }
-                    // var gridIndex = axisModel.get('gridIndex');
-
-                    // var polarIndex = axisModel.get('polarIndex');
-
-                    // if (gridIndex != null) {
-                    //     var coordModel = ecModel.getComponent('grid', gridIndex);
-                    //     save(coordModel, axisModel, cartesians, gridIndex);
-                    // }
-                    // else if (polarIndex != null) {
-                    //     var coordModel = ecModel.getComponent('polar', polarIndex);
-                    //     save(coordModel, axisModel, polars, polarIndex);
-                    // }
                 }
             }, this);
 

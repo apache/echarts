@@ -25,7 +25,7 @@ define(function(require, factory) {
      * @inner
      */
     function isAxisUsedInTheGrid(axisModel, gridModel, ecModel) {
-        return ecModel.getComponent('grid', axisModel.get('gridIndex')) === gridModel;
+        return axisModel.findGridModel() === gridModel;
     }
 
     function getLabelUnionRect(axis) {
@@ -450,11 +450,7 @@ define(function(require, factory) {
             var xAxisModel = axesModels[0];
             var yAxisModel = axesModels[1];
 
-            var gridModel = ecModel.queryComponents({
-                mainType: 'grid',
-                index: xAxisModel.get('gridIndex'),
-                id: xAxisModel.get('gridId')
-            })[0];
+            var gridModel = xAxisModel.findGridModel();
 
             if (__DEV__) {
                 if (!gridModel) {
@@ -466,7 +462,7 @@ define(function(require, factory) {
                         ) + '" not found'
                     );
                 }
-                if (yAxisModel.get('gridIndex') !== yAxisModel.get('gridIndex')) {
+                if (xAxisModel.findGridModel() !== yAxisModel.findGridModel()) {
                     throw new Error('xAxis and yAxis must use the same grid');
                 }
             }

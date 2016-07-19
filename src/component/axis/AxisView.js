@@ -38,7 +38,7 @@ define(function (require) {
                 return;
             }
 
-            var gridModel = ecModel.getComponent('grid', axisModel.get('gridIndex'));
+            var gridModel = axisModel.findGridModel();
 
             var layout = layoutAxis(gridModel, axisModel);
 

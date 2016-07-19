@@ -55,7 +55,8 @@
                                 }],
                                 xAxis: [{
                                     id: id,
-                                    gridIndex: idx,
+                                    gridId: id,
+                                    // gridIndex: idx,
                                     axisLabel: {
                                         show: j === dimSize - 1
                                     },
@@ -69,7 +70,8 @@
                                 }],
                                 yAxis: [{
                                     id: id,
-                                    gridIndex: idx,
+                                    gridId: id,
+                                    // gridIndex: idx,
                                     axisLabel: {
                                         show: i === 1
                                     },
@@ -87,8 +89,10 @@
                                         hoverAnimation: false,
                                         name: nameList[dataIdx],
                                         type: 'scatter',
-                                        xAxisIndex: idx,
-                                        yAxisIndex: idx,
+                                        xAxisId: id,
+                                        yAxisId: id,
+                                        // xAxisIndex: idx,
+                                        // yAxisIndex: idx,
                                         data: data.map(function (item) {
                                             return [item[i], item[j]];
                                         }),

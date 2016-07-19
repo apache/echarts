@@ -78,6 +78,17 @@ define(function(require) {
         },
 
         /**
+         * @return {module:echarts/model/Model}
+         */
+        findGridModel: function () {
+            return this.ecModel.queryComponents({
+                mainType: 'grid',
+                index: this.get('gridIndex'),
+                id: this.get('gridId')
+            })[0];
+        },
+
+        /**
          * @private
          */
         _resetRange: function () {
