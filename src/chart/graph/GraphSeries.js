@@ -147,6 +147,12 @@ define(function (require) {
             this.option.center = center;
         },
 
+        ifEnableAnimation: function () {
+            return GraphSeries.superCall(this, 'ifEnableAnimation')
+                // Not enable animation when do force layout
+                && !(this.get('layout') === 'force' && this.get('force.layoutAnimation'));
+        },
+
         defaultOption: {
             zlevel: 0,
             z: 2,
