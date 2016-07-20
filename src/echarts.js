@@ -67,6 +67,9 @@ define(function (require) {
     var IN_MAIN_PROCESS = '__flag_in_main_process';
     var HAS_GRADIENT_OR_PATTERN_BG = '_hasGradientOrPatternBg';
 
+
+    var OPTION_UPDATED = '_optionUpdated';
+
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
             // Event name is all lowercase
@@ -183,12 +186,6 @@ define(function (require) {
         timsort(visualFuncs, prioritySortFunc);
         timsort(dataProcessorFuncs, prioritySortFunc);
 
-        /**
-         * @private
-         * @type {boolean}
-         */
-        this._optionUpdated;
-
         this._zr.animation.on('frame', this._onframe, this);
     }
 
@@ -196,7 +193,7 @@ define(function (require) {
 
     echartsProto._onframe = function () {
         // Lazy update
-        if (this._optionUpdated) {
+        if (this[OPTION_UPDATED]) {
 
             this[IN_MAIN_PROCESS] = true;
 
@@ -204,7 +201,7 @@ define(function (require) {
 
             this[IN_MAIN_PROCESS] = false;
 
-            this._optionUpdated = false;
+            this[OPTION_UPDATED] = false;
         }
     };
     /**
@@ -243,11 +240,12 @@ define(function (require) {
         this._model.setOption(option, optionPreprocessorFuncs);
 
         if (lazyUpdate) {
-            this._optionUpdated = true;
+            this[OPTION_UPDATED] = true;
         }
         else {
             updateMethods.prepareAndUpdate.call(this);
             this._zr.refreshImmediately();
+            this[OPTION_UPDATED] = false;
         }
 
         this[IN_MAIN_PROCESS] = false;
@@ -747,8 +745,17 @@ define(function (require) {
             isHighlightOrDownplay && updateMethods[updateMethod].call(this, batchItem);
         }
 
-        (updateMethod !== 'none' && !isHighlightOrDownplay)
-            && updateMethods[updateMethod].call(this, payload);
+        if (updateMethod !== 'none' && !isHighlightOrDownplay) {
+            // Still dirty
+            if (this[OPTION_UPDATED]) {
+                // FIXME Pass payload ?
+                updateMethods.prepareAndUpdate.call(this, payload);
+                this[OPTION_UPDATED] = false;
+            }
+            else {
+                updateMethods[updateMethod].call(this, payload);
+            }
+        }
 
         // Follow the rule of action batch
         if (batched) {
