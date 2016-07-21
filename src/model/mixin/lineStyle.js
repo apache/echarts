@@ -21,7 +21,7 @@ define(function (require) {
         getLineDash: function () {
             var lineType = this.get('type');
             return (lineType === 'solid' || lineType == null) ? null
-                : (lineType === 'dashed' ? [5, 5] : [1, 1]);
+                : (lineType === 'dashed' ? [5, 5] : [2, 2]);
         }
     };
 });
