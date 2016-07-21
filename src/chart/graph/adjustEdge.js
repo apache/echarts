@@ -114,7 +114,7 @@ define(function (require) {
                     pts[1][1] = tmp0[4];
                 }
                 if (toSymbol && toSymbol != 'none') {
-                    var symbolSize = edge.node1.getVisual('symbolSize');
+                    var symbolSize = edge.node2.getVisual('symbolSize');
                     if (symbolSize instanceof Array) {
                         symbolSize = (symbolSize[0] + symbolSize[1]) / 2;
                     }

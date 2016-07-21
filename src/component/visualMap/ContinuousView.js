@@ -418,7 +418,7 @@ define(function(require) {
             var barPoints = this._createBarPoints(handleEnds, symbolSizes);
 
             return {
-                barColor: new LinearGradient(0, 0, 1, 1, colorStops),
+                barColor: new LinearGradient(0, 0, 0, 1, colorStops),
                 barPoints: barPoints,
                 handlesColor: [
                     colorStops[0].color,

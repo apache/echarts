@@ -20,16 +20,21 @@ define(function (require) {
          * @return {module:echarts/coord/polar/AxisModel}
          */
         findAxisModel: function (axisType) {
-            var angleAxisModel;
+            var foundAxisModel;
             var ecModel = this.ecModel;
+
             ecModel.eachComponent(axisType, function (axisModel) {
-                if (ecModel.getComponent(
-                        'polar', axisModel.getShallow('polarIndex')
-                    ) === this) {
-                    angleAxisModel = axisModel;
+                var polarModel = ecModel.queryComponents({
+                    mainType: 'polar',
+                    index: axisModel.getShallow('polarIndex'),
+                    id: axisModel.getShallow('polarId')
+                })[0];
+
+                if(polarModel === this) {
+                    foundAxisModel = axisModel;
                 }
             }, this);
-            return angleAxisModel;
+            return foundAxisModel;
         },
 
         defaultOption: {

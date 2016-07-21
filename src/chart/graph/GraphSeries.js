@@ -147,6 +147,12 @@ define(function (require) {
             this.option.center = center;
         },
 
+        ifEnableAnimation: function () {
+            return GraphSeries.superCall(this, 'ifEnableAnimation')
+                // Not enable animation when do force layout
+                && !(this.get('layout') === 'force' && this.get('force.layoutAnimation'));
+        },
+
         defaultOption: {
             zlevel: 0,
             z: 2,
@@ -154,10 +160,10 @@ define(function (require) {
             coordinateSystem: 'view',
 
             // Default option for all coordinate systems
-            xAxisIndex: 0,
-            yAxisIndex: 0,
-            polarIndex: 0,
-            geoIndex: 0,
+            // xAxisIndex: 0,
+            // yAxisIndex: 0,
+            // polarIndex: 0,
+            // geoIndex: 0,
 
             legendHoverLink: true,
 

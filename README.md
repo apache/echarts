@@ -31,6 +31,8 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 + [百度地图扩展](https://github.com/ecomfe/echarts/tree/master/extension/bmap)
 
++ [字符云 wordcloud](https://github.com/ecomfe/echarts-wordcloud)
+
 + [leaflet-echarts](https://github.com/wandergis/leaflet-echarts3) by wandergis
 + [arcgis-echarts](https://github.com/wandergis/arcgis-echarts3) by wandergis
 

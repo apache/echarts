@@ -4,15 +4,15 @@
 define(function(require) {
 
     var zrUtil = require('zrender/core/util');
-    var modelUtil = require('../../util/model');
+    var helper = require('./helper');
     var echarts = require('../../echarts');
 
 
     echarts.registerAction('dataZoom', function (payload, ecModel) {
 
-        var linkedNodesFinder = modelUtil.createLinkedNodesFinder(
+        var linkedNodesFinder = helper.createLinkedNodesFinder(
             zrUtil.bind(ecModel.eachComponent, ecModel, 'dataZoom'),
-            modelUtil.eachAxisDim,
+            helper.eachAxisDim,
             function (model, dimNames) {
                 return model.get(dimNames.axisIndex);
             }

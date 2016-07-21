@@ -424,6 +424,13 @@ define(function(require) {
                         );
                     }
                     else {
+                        // Not do it in update with animation
+                        if (step) {
+                            // TODO If stacked series is not step
+                            points = turnPointsIntoStep(points, coordSys, step);
+                            stackedOnPoints = turnPointsIntoStep(stackedOnPoints, coordSys, step);
+                        }
+
                         polyline.setShape({
                             points: points
                         });

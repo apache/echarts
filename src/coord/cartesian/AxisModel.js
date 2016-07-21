@@ -78,6 +78,17 @@ define(function(require) {
         },
 
         /**
+         * @return {module:echarts/model/Model}
+         */
+        findGridModel: function () {
+            return this.ecModel.queryComponents({
+                mainType: 'grid',
+                index: this.get('gridIndex'),
+                id: this.get('gridId')
+            })[0];
+        },
+
+        /**
          * @private
          */
         _resetRange: function () {
@@ -95,7 +106,8 @@ define(function(require) {
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
 
     var extraOption = {
-        gridIndex: 0,
+        // gridIndex: 0,
+        // gridId: '',
 
         // Offset is for multiple axis on the same position
         offset: 0

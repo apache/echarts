@@ -136,6 +136,8 @@ define(function (require) {
                 newCptTypes, ComponentModel.getAllClassMainTypes(), visitComponent, this
             );
 
+            this._seriesIndices = this._seriesIndices || [];
+
             function visitComponent(mainType, dependencies) {
                 var newCptOptionList = modelUtil.normalizeToArray(newOption[mainType]);
 
@@ -304,6 +306,10 @@ define(function (require) {
                     return (isNameArray && indexOf(name, cpt.name) >= 0)
                         || (!isNameArray && cpt.name === name);
                 });
+            }
+            else {
+                // Return all components with mainType
+                result = cpts;
             }
 
             return filterBySubType(result, condition);

@@ -67,6 +67,9 @@ define(function (require) {
     var IN_MAIN_PROCESS = '__flag_in_main_process';
     var HAS_GRADIENT_OR_PATTERN_BG = '_hasGradientOrPatternBg';
 
+
+    var OPTION_UPDATED = '_optionUpdated';
+
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
             // Event name is all lowercase
@@ -182,10 +185,25 @@ define(function (require) {
         }
         timsort(visualFuncs, prioritySortFunc);
         timsort(dataProcessorFuncs, prioritySortFunc);
+
+        this._zr.animation.on('frame', this._onframe, this);
     }
 
     var echartsProto = ECharts.prototype;
 
+    echartsProto._onframe = function () {
+        // Lazy update
+        if (this[OPTION_UPDATED]) {
+
+            this[IN_MAIN_PROCESS] = true;
+
+            updateMethods.prepareAndUpdate.call(this);
+
+            this[IN_MAIN_PROCESS] = false;
+
+            this[OPTION_UPDATED] = false;
+        }
+    };
     /**
      * @return {HTMLDomElement}
      */
@@ -203,9 +221,9 @@ define(function (require) {
     /**
      * @param {Object} option
      * @param {boolean} notMerge
-     * @param {boolean} [notRefreshImmediately=false] Useful when setOption frequently.
+     * @param {boolean} [lazyUpdate=false] Useful when setOption frequently.
      */
-    echartsProto.setOption = function (option, notMerge, notRefreshImmediately) {
+    echartsProto.setOption = function (option, notMerge, lazyUpdate) {
         if (__DEV__) {
             zrUtil.assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
         }
@@ -221,13 +239,18 @@ define(function (require) {
 
         this._model.setOption(option, optionPreprocessorFuncs);
 
-        updateMethods.prepareAndUpdate.call(this);
+        if (lazyUpdate) {
+            this[OPTION_UPDATED] = true;
+        }
+        else {
+            updateMethods.prepareAndUpdate.call(this);
+            this._zr.refreshImmediately();
+            this[OPTION_UPDATED] = false;
+        }
 
         this[IN_MAIN_PROCESS] = false;
 
         this._flushPendingActions();
-
-        !notRefreshImmediately && this._zr.refreshImmediately();
     };
 
     /**
@@ -626,8 +649,10 @@ define(function (require) {
     echartsProto.showLoading = function (name, cfg) {
         if (zrUtil.isObject(name)) {
             cfg = name;
-            name = 'default';
+            name = '';
         }
+        name = name || 'default';
+
         this.hideLoading();
         if (!loadingEffects[name]) {
             if (__DEV__) {
@@ -720,8 +745,17 @@ define(function (require) {
             isHighlightOrDownplay && updateMethods[updateMethod].call(this, batchItem);
         }
 
-        (updateMethod !== 'none' && !isHighlightOrDownplay)
-            && updateMethods[updateMethod].call(this, payload);
+        if (updateMethod !== 'none' && !isHighlightOrDownplay) {
+            // Still dirty
+            if (this[OPTION_UPDATED]) {
+                // FIXME Pass payload ?
+                updateMethods.prepareAndUpdate.call(this, payload);
+                this[OPTION_UPDATED] = false;
+            }
+            else {
+                updateMethods[updateMethod].call(this, payload);
+            }
+        }
 
         // Follow the rule of action batch
         if (batched) {
@@ -959,7 +993,7 @@ define(function (require) {
     }
 
     var MOUSE_EVENT_NAMES = [
-        'click', 'dblclick', 'mouseover', 'mouseout', 'mousedown', 'mouseup', 'globalout'
+        'click', 'dblclick', 'mouseover', 'mouseout', 'mousemove', 'mousedown', 'mouseup', 'globalout'
     ];
     /**
      * @private
@@ -1001,7 +1035,7 @@ define(function (require) {
      * Clear
      */
     echartsProto.clear = function () {
-        this.setOption({}, true);
+        this.setOption({ series: [] }, true);
     };
     /**
      * Dispose instance
