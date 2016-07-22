@@ -100,11 +100,8 @@ define(function (require) {
          */
         getShallow: function (key, ignoreParent) {
             var option = this.option;
-            if (option == null) {
-                return;
-            }
 
-            var val = option[key];
+            var val = option == null ? option : option[key];
             var parentModel = this.parentModel;
             if (val == null && parentModel && !ignoreParent) {
                 val = parentModel.getShallow(key);
