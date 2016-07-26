@@ -24,17 +24,24 @@
             width: 100%;
             height: 400px;
         }
+
+        textarea {
+            height: 150px;
+        }
     </style>
 </head>
-<body>
-    <div class="container" id="app">
+<body id="app">
+    <div class="container">
         <h1>ECharts Stress Test</h1>
 
         <div>
-            <button class="btn btn-primary" v-on:click="run">
+            <button class="btn" v-bind:class="{'btn-primary': !hasRun, 'btn-default': hasRun}" v-on:click="run">
                 Start
             </button>
-            <span v-if="hasRun">Elapsed time: {{ elapsedTime }}</span>
+            <button class="btn btn-primary" data-target="#export-modal" data-toggle="modal" v-if="hasRun">
+                Export
+            </button>
+            <span v-if="hasRun">Elapsed time: {{ elapsedTime / 1000 }} seconds</span>
         </div>
 
         <div id="report" v-if="hasRun"></div>
@@ -49,13 +56,33 @@
                 <th v-for="(cid, name) in caseNames">{{ times[aid][cid] }}</th>
             </tr>
         </table>
-
     </div>
 
-    <!-- <script src="https://code.jquery.com/jquery-2.2.4.js"></script> -->
-    <!-- <script type="text/javascript" src="dep/jquery.js"></script> -->
-    <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script> -->
+    <div class="modal fade" id="export-modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Test Result</h4>
+                </div>
+                <div class="modal-body">
+                    <div>
+                        <button class="btn btn-primary" v-on:click="download">Download</button>
+                    </div>
+                    <textarea v-if="hasRun" class="form-control">{{ result }}</textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div><!-- end of modal -->
+
+    <script src="https://code.jquery.com/jquery-2.2.4.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/vue/1.0.26/vue.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js"></script>
+
     <script type="text/javascript" src="../dist/echarts.js"></script>
 
     <script src="../test/esl.js"></script>

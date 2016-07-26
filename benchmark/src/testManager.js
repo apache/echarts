@@ -25,9 +25,6 @@ define(function (require) {
      */
     TestManager.prototype.init = function () {
         this.times = [];
-        this.caseId = 0;
-        this.amountId = 0;
-        this.hasNext = true;
     };
 
     /**
@@ -79,11 +76,11 @@ define(function (require) {
             })(),
             xAxis: {
                 name: 'Data Amount',
-                type: 'value'
+                type: 'log'
             },
             yAxis: {
                 name: 'Run Time (milliseconds)',
-                type: 'value'
+                type: 'log'
             },
             legend: {
                 show: true,
@@ -94,6 +91,20 @@ define(function (require) {
                 trigger: 'axis'
             }
         });
+    };
+
+    /**
+     * get test result in json string
+     *
+     * @return {string} json string of result
+     */
+    TestManager.prototype.exportResult = function () {
+        var obj = {
+            caseNames: this.caseNames,
+            amounts: this.amounts,
+            times: this.times
+        };
+        return JSON.stringify(obj, null, '    ');
     };
 
     return TestManager;
