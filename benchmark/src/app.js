@@ -41,38 +41,51 @@ define(function (require) {
     var manager = new TestManager(vm.amounts, vm.caseNames);
 
     function run() {
-        vm.$set('hasRun', false);
-        vm.$set('isRunning', true);
-        // var timerHandler = setInterval(function() {
-        //     if (vm.isRunning) {
-        //         vm.$set('elapsedTime', vm.elapsedTime + 1);
-        //     } else {
-        //         clearInterval(timerHandler);
-        //     }
-        // }, 1000);
 
-        manager.init();
+        var results = [];
 
-        var start = new Date();
-        while (manager.hasNext) {
-            var test = manager.next(); // ECharts test case
-            Vue.nextTick(function () {
+        var updateUI = function () {
+            for (var i = 0; i < results.length; ++i) {
+                var test = results[i];
                 if (!vm.times[test.amountId]) {
                     vm.$set('times[' + test.amountId + ']', []);
                 }
-                vm.$set('times[' + test.amountId + '][' + test.caseId + ']', test.time);
-            });
+                vm.$set('times[' + test.amountId + '][' + test.caseId
+                    + ']', test.time);
+            }
+            results = [];
+        };
 
+        vm.$set('hasRun', false);
+        vm.$set('isRunning', true);
+        manager.init();
+        var start = new Date();
+
+        for (var aid = 0; aid < vm.amounts.length; ++aid) {
+            for (var cid = 0; cid < vm.caseNames.length; ++cid) {
+                // run a test case in each loop
+                (function(aid, cid) {
+                    setTimeout(function () {
+                        var test = manager.run(cid, aid);
+                        results.push(test);
+
+                        if (aid === vm.amounts.length - 1
+                            && cid === vm.caseNames.length - 1) {
+                            // last test case
+                            var end = new Date();
+                            vm.$set('hasRun', true);
+                            vm.$set('elapsedTime', end - start);
+                            vm.$set('isRunning', false);
+                            updateUI();
+                        }
+                    }, 0);
+                })(aid, cid);
+
+                // log results
+                setTimeout(updateUI, 0);
+            }
         }
-        var end = new Date();
-        vm.$set('elapsedTime', end - start);
-        // console.log(end - start);
 
-        vm.$set('isRunning', false);
-        vm.$set('hasRun', true);
-
-        // Use setTimeout to make sure it is called after report element is
-        // rendered by Vue.
         setTimeout(function () {
             manager.drawReport(document.getElementById('report'));
         }, 0);

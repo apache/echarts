@@ -31,36 +31,24 @@ define(function (require) {
     };
 
     /**
-     * run next test case
+     * run a test case
      *
+     * @param  {number} cid case name id
+     * @param  {number} aid amount id
      * @return {Object} case name, case id, amount id, and run time
      */
-    TestManager.prototype.next = function () {
-        var lastAmountId = this.amountId;
-        var lastCaseId = this.caseId;
-
-        var test = factory.create(this.caseNames[this.caseId],
-            this.amounts[this.amountId]);
-        ++this.caseId;
-        if (this.caseId >= this.caseNames.length) {
-            // last case for certain amount
-            ++this.amountId;
-            this.caseId = 0;
-            if (this.amountId >= this.amounts.length) {
-                // last case for all
-                this.hasNext = false;
-            }
-        }
+    TestManager.prototype.run = function (cid, aid) {
+        var test = factory.create(this.caseNames[cid], this.amounts[aid]);
         var time = test.runtime();
-        if (!this.times[lastAmountId]) {
-            this.times[lastAmountId] = [];
+        if (!this.times[aid]) {
+            this.times[aid] = [];
         }
-        this.times[lastAmountId][lastCaseId] = time;
+        this.times[aid][cid] = time;
 
         return {
-            caseName: this.caseNames[lastCaseId],
-            caseId: lastCaseId,
-            amountId: lastAmountId,
+            caseName: this.caseNames[cid],
+            caseId: cid,
+            amountId: aid,
             time: time
         };
     };

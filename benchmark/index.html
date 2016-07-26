@@ -34,7 +34,7 @@
             <button class="btn btn-primary" v-on:click="run">
                 Start
             </button>
-            <span v-if="isRunning || hasRun">Elapsed time: {{ elapsedTime }}</span>
+            <span v-if="hasRun">Elapsed time: {{ elapsedTime }}</span>
         </div>
 
         <div id="report" v-if="hasRun"></div>
