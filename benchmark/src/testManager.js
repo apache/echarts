@@ -46,7 +46,7 @@ define(function (require) {
         // cancel if last test time of the same caseName is larger than 5
         var test = factory.create(this.caseNames[cid], this.amounts[aid]);
 
-        var time = Math.floor(test.runTime(20));
+        var time = Math.floor(test.runTime(50));
         if (!this.times[aid]) {
             this.times[aid] = [];
         }

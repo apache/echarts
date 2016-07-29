@@ -11,13 +11,10 @@ define(function (require) {
         el: '#app',
 
         data: {
-            caseNames: ['line'],
+            caseNames: ['line sampling'],
             amounts: (function () {
                 var arr = [];
-                for (var i = 5000; i > 4000; i -= 50) {
-                    arr.push(i);
-                }
-                for (var i = 4000; i > 0; i -= 200) {
+                for (var i = 1000000; i > 0; i -= 10000) {
                     arr.push(i);
                 }
                 return arr;
