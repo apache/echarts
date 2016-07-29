@@ -11,13 +11,13 @@ define(function (require) {
         el: '#app',
 
         data: {
-            caseNames: ['scatter', 'line', 'bar'],
+            caseNames: ['line'],
             amounts: (function () {
                 var arr = [];
-                for (var i = 2000; i > 1000; i -= 200) {
+                for (var i = 5000; i > 4000; i -= 50) {
                     arr.push(i);
                 }
-                for (var i = 1000; i > 50; i -= 50) {
+                for (var i = 4000; i > 0; i -= 200) {
                     arr.push(i);
                 }
                 return arr;
@@ -41,6 +41,8 @@ define(function (require) {
 
     function run() {
         var results = [];
+        var start = new Date();
+
         var updateUI = function () {
             var progress = Math.ceil(manager.getProgress() * 100);
             vm.$set('progress', progress);
@@ -62,7 +64,6 @@ define(function (require) {
         vm.$set('isRunning', true);
         vm.$set('progress', 0);
         manager.init();
-        var start = new Date();
 
         for (var aid = 0; aid < vm.amounts.length; ++aid) {
             for (var cid = 0; cid < vm.caseNames.length; ++cid) {

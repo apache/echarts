@@ -18,7 +18,6 @@ define(function (require) {
      */
     TestFactory.create = function (name, amount) {
         var option = null;
-
         switch (name) {
             case 'line':
             case 'bar':

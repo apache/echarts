@@ -45,7 +45,8 @@ define(function (require) {
     TestManager.prototype.run = function (cid, aid) {
         // cancel if last test time of the same caseName is larger than 5
         var test = factory.create(this.caseNames[cid], this.amounts[aid]);
-        var time = test.runtime();
+
+        var time = Math.floor(test.runTime(20));
         if (!this.times[aid]) {
             this.times[aid] = [];
         }
@@ -63,11 +64,12 @@ define(function (require) {
 
     /**
      * get current progress
+     *
      * @return {number} progress from 0 to 1
      */
-    TestManager.prototype.getProgress = function() {
+    TestManager.prototype.getProgress = function () {
         return this.ranAmounts / this.totalAmounts;
-    }
+    };
 
     /**
      * draw report with ECharts chart

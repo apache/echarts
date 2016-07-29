@@ -21,10 +21,19 @@ define(function (require) {
     /**
      * run test case and return elapsed time
      *
-     * @return {number} elapsed time
+     * @param  {iterations} iterations number of iterations
+     * @return {number}                elapsed time
      */
-    TestCase.prototype.runtime = function () {
+    TestCase.prototype.runTime = function (iterations) {
+        // run for multi times
+        var total = 0;
+        for (var i = 0; i < iterations; ++i) {
+            total += runTime(this.option);
+        }
+        return total / iterations;
+    };
 
+    function runTime(option) {
         var container = document.createElement('div');
         container.style.width = '800px';
         container.style.height = '600px';
@@ -32,15 +41,14 @@ define(function (require) {
         var start = new Date();
 
         var chart = echarts.init(container);
-        chart.setOption(this.option);
+        chart.setOption(option);
 
         var end = new Date();
 
         chart.dispose();
 
         return end - start;
-
-    };
+    }
 
     return TestCase;
 
