@@ -36,6 +36,8 @@ define(function (require) {
 
         var end = new Date();
 
+        chart.dispose();
+
         return end - start;
 
     };

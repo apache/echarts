@@ -25,6 +25,14 @@ define(function (require) {
      */
     TestManager.prototype.init = function () {
         this.times = [];
+
+        this.totalAmounts = 0;
+        for (var i = 0; i < this.amounts.length; ++i) {
+            this.totalAmounts += this.amounts[i];
+        }
+        this.totalAmounts *= this.caseNames.length;
+
+        this.ranAmounts = 0;
     };
 
     /**
@@ -35,12 +43,15 @@ define(function (require) {
      * @return {Object} case name, case id, amount id, and run time
      */
     TestManager.prototype.run = function (cid, aid) {
+        // cancel if last test time of the same caseName is larger than 5
         var test = factory.create(this.caseNames[cid], this.amounts[aid]);
         var time = test.runtime();
         if (!this.times[aid]) {
             this.times[aid] = [];
         }
         this.times[aid][cid] = time;
+
+        this.ranAmounts += this.amounts[aid];
 
         return {
             caseName: this.caseNames[cid],
@@ -49,6 +60,14 @@ define(function (require) {
             time: time
         };
     };
+
+    /**
+     * get current progress
+     * @return {number} progress from 0 to 1
+     */
+    TestManager.prototype.getProgress = function() {
+        return this.ranAmounts / this.totalAmounts;
+    }
 
     /**
      * draw report with ECharts chart
@@ -76,11 +95,21 @@ define(function (require) {
             })(),
             xAxis: {
                 name: 'Data Amount',
-                type: 'log'
+                // type: 'log',
+                axisLabel: {
+                    formatter: function (v) {
+                        return Math.floor(v);
+                    }
+                }
             },
             yAxis: {
                 name: 'Run Time (milliseconds)',
-                type: 'log'
+                // type: 'log',
+                axisLabel: {
+                    formatter: function (v) {
+                        return Math.floor(v);
+                    }
+                }
             },
             legend: {
                 show: true,
