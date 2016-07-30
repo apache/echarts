@@ -74,6 +74,11 @@ define(function (require) {
         var fixMin = (model.getMin ? model.getMin() : model.get('min')) != null;
         var fixMax = (model.getMax ? model.getMax() : model.get('max')) != null;
         var splitNumber = model.get('splitNumber');
+
+        if (scale.type === 'log') {
+            scale.base = model.get('logBase');
+        }
+
         scale.setExtent(extent[0], extent[1]);
         scale.niceExtent(splitNumber, fixMin, fixMax);
 
