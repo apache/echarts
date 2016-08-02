@@ -1,3 +1,7 @@
+/**
+ * @file  The file used to draw sankey view
+ * @author  Deqing Li(annong035@gmail.com)
+ */
 define(function (require) {
 
     var graphic = require('../../util/graphic');
@@ -41,7 +45,7 @@ define(function (require) {
          */
         _model: null,
 
-        render: function(seriesModel, ecModel, api) {
+        render: function (seriesModel, ecModel, api) {
             var graph = seriesModel.getGraph();
             var group = this.group;
             var layoutInfo = seriesModel.layoutInfo;
@@ -71,7 +75,8 @@ define(function (require) {
                         height: node.getLayout().dy
                     },
                     style: {
-                        // Get formatted label in label.normal option. Use node id if it is not specified
+                        // Get formatted label in label.normal option
+                        //  Use node id if it is not specified
                         text: labelModel.get('show')
                             ? seriesModel.getFormattedLabel(node.dataIndex, 'normal') || node.id
                             // Use empty string to hide the label
@@ -153,7 +158,6 @@ define(function (require) {
                     case 'target':
                         curve.style.fill = edge.node2.getVisual('color');
                         break;
-                    default:
                 }
 
                 graphic.setHoverStyle(curve, edge.getModel('lineStyle.emphasis').getItemStyle());
@@ -171,7 +175,7 @@ define(function (require) {
         }
     });
 
-    //add animation to the view
+    // add animation to the view
     function createGridClipShape(rect, seriesModel, cb) {
         var rectEl = new graphic.Rect({
             shape: {

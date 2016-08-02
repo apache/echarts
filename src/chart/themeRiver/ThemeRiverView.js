@@ -1,3 +1,7 @@
+/**
+ * @file  The file used to draw themeRiver view
+ * @author  Deqing Li(annong035@gmail.com)
+ */
 define(function (require) {
 
     var poly = require('../line/poly');
@@ -151,7 +155,7 @@ define(function (require) {
         }
     });
 
-    //add animation to the view
+    // add animation to the view
     function createGridClipShape(rect, seriesModel, cb) {
         var rectEl = new graphic.Rect({
             shape: {

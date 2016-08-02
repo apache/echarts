@@ -1,3 +1,7 @@
+/**
+ * @file  Define the themeRiver view's series model
+ * @author Deqing Li(annong035@gmail.com)
+ */
 define(function (require) {
 
     'use strict';
@@ -30,6 +34,7 @@ define(function (require) {
         init: function (option) {
             ThemeRiverSeries.superApply(this, 'init', arguments);
 
+            // Put this function here is for the sake of consistency of code
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
             this.legendDataProvider = function () {
@@ -40,7 +45,7 @@ define(function (require) {
         /**
          * If there is no value of a certain point in the time for some event,set it value to 0.
          *
-         * @param {Array} data
+         * @param {Array} data  initial data in the option
          * @return {Array}
          */
         fixData: function (data) {
@@ -49,7 +54,7 @@ define(function (require) {
             // grouped data by name
             var dataByName = nest()
                 .key(function (dataItem) {
-                    return dataItem[2] ;
+                    return dataItem[2];
                 })
                 .entries(data);
 
@@ -81,7 +86,7 @@ define(function (require) {
                     var timeValue = layData[index].dataList[j][0];
                     var length = layData[k].dataList.length;
                     var keyIndex = -1;
-                    for (var l = 0; l < length; ++l){
+                    for (var l = 0; l < length; ++l) {
                         var value = layData[k].dataList[l][0];
                         if (value === timeValue) {
                             keyIndex = l;
@@ -104,7 +109,7 @@ define(function (require) {
         /**
          * @override
          * @param  {Object} option  the initial option that user gived
-         * @param  {module:echarts/model/Model} ecModel
+         * @param  {module:echarts/model/Model} ecModel  the model object for themeRiver option
          * @return {module:echarts/data/List}
          */
         getInitialData: function (option, ecModel) {
@@ -119,8 +124,7 @@ define(function (require) {
             dimensions = [
                 {
                     name: 'time',
-                    // FIXME
-                    // common?
+                    // FIXME common?
                     type: axisType === 'category'
                         ? 'ordinal'
                         : axisType === 'time'
@@ -159,9 +163,9 @@ define(function (require) {
         },
 
         /**
-         * used by single coordinate.
+         * Used by single coordinate
          *
-         * @param {string} axisDim
+         * @param {string} axisDim  the dimension for singel coordinate
          * @return {Array.<string> } specified dimensions on the axis.
          */
         coordDimToDataDim: function (axisDim) {
@@ -170,9 +174,9 @@ define(function (require) {
 
         /**
          * The raw data is divided into multiple layers and each layer
-         * has same name.
+         *     has same name.
          *
-         * @return {Array.<Array.<number>}
+         * @return {Array.<Array.<number>>}
          */
         getLayerSeries: function () {
             var data = this.getData();
@@ -196,7 +200,7 @@ define(function (require) {
                 };
             });
 
-            for(var j = 0; j < layerSeries.length; ++j) {
+            for (var j = 0; j < layerSeries.length; ++j) {
                 layerSeries[j].indices.sort(comparer);
             }
 
@@ -208,11 +212,12 @@ define(function (require) {
         },
 
         /**
-         * Get data indices for show tooltip content.
+         * Get data indices for show tooltip content
          *
-         * @param {Array.<string>} dim
-         * @param {Array.<number>} value
-         * @param {module:echarts/coord/single/SingleAxis} baseAxis
+         * @param {Array.<string>} dim  singel coordinate dimension
+         * @param {Array.<number>} value  coordinate value
+         * @param {module:echarts/coord/single/SingleAxis} baseAxis  single Axis used
+         *     the themeRiver.
          * @return {Array.<number>}
          */
         getAxisTooltipDataIndex: function (dim, value, baseAxis) {
@@ -251,7 +256,7 @@ define(function (require) {
 
         /**
          * @override
-         * @param {Array.<number>} dataIndex
+         * @param {Array.<number>} dataIndexs  index of data
          */
         formatTooltip: function (dataIndexs) {
             var data = this.getData();

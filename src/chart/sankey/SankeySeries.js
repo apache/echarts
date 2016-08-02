@@ -1,6 +1,8 @@
+/**
+ * @file Get initial data and define sankey view's series model
+ * @author Deqing Li(annong035@gmail.com)
+ */
 define(function (require) {
-
-    'use strict';
 
     var SeriesModel = require('../../model/Series');
     var createGraphFromNodeEdge = require('../helper/createGraphFromNodeEdge');
@@ -11,7 +13,13 @@ define(function (require) {
 
         layoutInfo: null,
 
-        getInitialData: function (option, ecModel) {
+        /**
+         * Init a graph data structure from data in option series
+         *
+         * @param  {Object} option  the object used to config echarts view
+         * @return {module:echarts/data/List} storage initial data
+         */
+        getInitialData: function (option) {
             var links = option.edges || option.links;
             var nodes = option.data || option.nodes;
             if (nodes && links) {
@@ -21,16 +29,20 @@ define(function (require) {
         },
 
         /**
-         * @return {module:echarts/data/Graph}
+         * Return the graphic data structure
+         *
+         * @return {module:echarts/data/Graph} graphic data structure
          */
         getGraph: function () {
             return this.getData().graph;
         },
 
         /**
-         * return {module:echarts/data/List}
+         * Get edge data of graphic data structure
+         *
+         * @return {module:echarts/data/List} data structure of list
          */
-        getEdgeData: function() {
+        getEdgeData: function () {
             return this.getGraph().edgeData;
         },
 
@@ -38,6 +50,7 @@ define(function (require) {
          * @override
          */
         formatTooltip: function (dataIndex, multipleSeries, dataType) {
+            // dataType === 'node' or empty do not show tooltip by default
             if (dataType === 'edge') {
                 var params = this.getDataParams(dataIndex, dataType);
                 var rawDataOpt = params.data;
@@ -47,10 +60,8 @@ define(function (require) {
                 }
                 return html;
             }
-            else {
-                return SankeySeries.superCall(this, 'formatTooltip', dataIndex, multipleSeries);
-            }
-            // dataType === 'node' or empty do not show tooltip by default.
+
+            return SankeySeries.superCall(this, 'formatTooltip', dataIndex, multipleSeries);
         },
 
         defaultOption: {
@@ -59,7 +70,7 @@ define(function (require) {
 
             coordinateSystem: 'view',
 
-            layout : null,
+            layout: null,
 
             // the position of the whole view
             left: '5%',
@@ -70,7 +81,7 @@ define(function (require) {
             // the dx of the node
             nodeWidth: 20,
 
-            // the distance between two nodes
+            // the vertical distance between two nodes
             nodeGap: 8,
 
             // the number of iterations to change the position of the node

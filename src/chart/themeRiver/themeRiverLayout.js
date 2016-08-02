@@ -1,5 +1,6 @@
 /**
- * Transform the raw data to layout information.
+ * @file  Using layout algorithm transform the raw data to layout information.
+ * @author Deqing Li(annong035@gmail.com)
  */
 define(function (require) {
 
@@ -46,9 +47,11 @@ define(function (require) {
     };
 
     /**
-     * the layout information about themeriver
-     * @param  {module:echarts/data/List} data
-     * @return
+     * The layout information about themeriver
+     *
+     * @param {module:echarts/data/List} data  data in the series
+     * @param {module:echarts/model/Series} seriesModel  the model object of themeRiver series
+     * @param {number} height  value used to compute every series height
      */
     function themeRiverLayout(data, seriesModel, height) {
         if (!data.count()) {
@@ -58,7 +61,7 @@ define(function (require) {
         // the data in each layer are organized into a series.
         var layerSeries = seriesModel.getLayerSeries();
 
-        //the points in each layer.
+        // the points in each layer.
         var layerPoints = zrUtil.map(layerSeries, function (singleLayer) {
             return zrUtil.map(singleLayer.indices, function (idx) {
                 var pt = coordSys.dataToPoint(data.get('time', idx));
@@ -71,7 +74,7 @@ define(function (require) {
         var baseLine = base.y0;
         var ky = height / base.max;
 
-        //set layout information for each item.
+        // set layout information for each item.
         var n = layerSeries.length;
         var m = layerSeries[0].indices.length;
         var baseY0;
@@ -96,9 +99,10 @@ define(function (require) {
     }
 
     /**
-     * Compute the baseLine of the rawdata.
-     * Inspired by Lee Byron's paper Stacked Graphs - Geometry & Aesthetics.
-     * @param  {Array.<Array>} data
+     * Compute the baseLine of the rawdata
+     * Inspired by Lee Byron's paper Stacked Graphs - Geometry & Aesthetics
+     *
+     * @param  {Array.<Array>} data  the points in each layer
      * @return {Array}
      */
     function computeBaseline(data) {
@@ -123,19 +127,17 @@ define(function (require) {
         for (var k = 0; k < pointNum; ++k) {
             y0[k] = (max - sums[k]) / 2;
         }
-
         max = 0;
+
         for (var l = 0; l < pointNum; ++l) {
             var sum = sums[l] + y0[l];
             if (sum > max) {
                 max = sum;
             }
         }
-
         base.y0 = y0;
         base.max = max;
 
         return base;
     }
-
 });

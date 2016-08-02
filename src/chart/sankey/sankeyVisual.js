@@ -1,3 +1,7 @@
+/**
+ * @file Visual encoding for sankey view
+ * @author  Deqing Li(annong035@gmail.com)
+ */
 define(function (require) {
 
     var VisualMapping = require('../../visual/VisualMapping');
@@ -32,6 +36,6 @@ define(function (require) {
                 }
             });
 
-        }) ;
+        });
     };
 });
