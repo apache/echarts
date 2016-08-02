@@ -58,6 +58,60 @@ define(function (require) {
 
             group.position = [layoutInfo.x, layoutInfo.y];
 
+            // generate a bezire Curve for each edge
+            graph.eachEdge(function (edge) {
+                var curve = new SankeyShape();
+
+                curve.dataIndex = edge.dataIndex;
+                curve.seriesIndex = seriesModel.seriesIndex;
+                curve.dataType = 'edge';
+
+                var lineStyleModel = edge.getModel('lineStyle.normal');
+                var curvature = lineStyleModel.get('curveness');
+                var n1Layout = edge.node1.getLayout();
+                var n2Layout = edge.node2.getLayout();
+                var edgeLayout = edge.getLayout();
+
+                curve.shape.extent = Math.max(1, edgeLayout.dy);
+
+                var x1 = n1Layout.x + n1Layout.dx;
+                var y1 = n1Layout.y + edgeLayout.sy + edgeLayout.dy / 2;
+                var x2 = n2Layout.x;
+                var y2 = n2Layout.y + edgeLayout.ty + edgeLayout.dy / 2;
+                var cpx1 = x1 * (1 - curvature) + x2 * curvature;
+                var cpy1 = y1;
+                var cpx2 = x1 * curvature + x2 * (1 - curvature);
+                var cpy2 = y2;
+
+                curve.setShape({
+                    x1: x1,
+                    y1: y1,
+                    x2: x2,
+                    y2: y2,
+                    cpx1: cpx1,
+                    cpy1: cpy1,
+                    cpx2: cpx2,
+                    cpy2: cpy2
+                });
+
+                curve.setStyle(lineStyleModel.getItemStyle());
+                // Special color, use source node color or target node color
+                switch (curve.style.fill) {
+                    case 'source':
+                        curve.style.fill = edge.node1.getVisual('color');
+                        break;
+                    case 'target':
+                        curve.style.fill = edge.node2.getVisual('color');
+                        break;
+                }
+
+                graphic.setHoverStyle(curve, edge.getModel('lineStyle.emphasis').getItemStyle());
+
+                group.add(curve);
+
+                edgeData.setItemGraphicEl(edge.dataIndex, curve);
+            });
+
             // generate a rect  for each node
             graph.eachNode(function (node) {
                 var layout = node.getLayout();
@@ -113,64 +167,12 @@ define(function (require) {
                 rect.dataType = 'node';
             });
 
-            // generate a bezire Curve for each edge
-            graph.eachEdge(function (edge) {
-                var curve = new SankeyShape();
-
-                curve.dataIndex = edge.dataIndex;
-                curve.seriesIndex = seriesModel.seriesIndex;
-                curve.dataType = 'edge';
-
-                var lineStyleModel = edge.getModel('lineStyle.normal');
-                var curvature = lineStyleModel.get('curveness');
-                var n1Layout = edge.node1.getLayout();
-                var n2Layout = edge.node2.getLayout();
-                var edgeLayout = edge.getLayout();
-
-                curve.shape.extent = Math.max(1, edgeLayout.dy);
-
-                var x1 = n1Layout.x + n1Layout.dx;
-                var y1 = n1Layout.y + edgeLayout.sy + edgeLayout.dy / 2;
-                var x2 = n2Layout.x;
-                var y2 = n2Layout.y + edgeLayout.ty + edgeLayout.dy / 2;
-                var cpx1 = x1 * (1 - curvature) + x2 * curvature;
-                var cpy1 = y1;
-                var cpx2 = x1 * curvature + x2 * (1 - curvature);
-                var cpy2 = y2;
-
-                curve.setShape({
-                    x1: x1,
-                    y1: y1,
-                    x2: x2,
-                    y2: y2,
-                    cpx1: cpx1,
-                    cpy1: cpy1,
-                    cpx2: cpx2,
-                    cpy2: cpy2
-                });
-
-                curve.setStyle(lineStyleModel.getItemStyle());
-                // Special color, use source node color or target node color
-                switch (curve.style.fill) {
-                    case 'source':
-                        curve.style.fill = edge.node1.getVisual('color');
-                        break;
-                    case 'target':
-                        curve.style.fill = edge.node2.getVisual('color');
-                        break;
-                }
-
-                graphic.setHoverStyle(curve, edge.getModel('lineStyle.emphasis').getItemStyle());
-
-                group.add(curve);
-
-                edgeData.setItemGraphicEl(edge.dataIndex, curve);
-            });
             if (!this._data && seriesModel.get('animation')) {
                 group.setClipPath(createGridClipShape(group.getBoundingRect(), seriesModel, function () {
                     group.removeClipPath();
                 }));
             }
+
             this._data = seriesModel.getData();
         }
     });
