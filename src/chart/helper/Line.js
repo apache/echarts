@@ -61,6 +61,10 @@ define(function (require) {
             targetShape.cpx1 = cp1[0];
             targetShape.cpy1 = cp1[1];
         }
+        else {
+            targetShape.cpx1 = NaN;
+            targetShape.cpy1 = NaN;
+        }
     }
 
     function updateSymbolAndLabelBeforeLineUpdate () {
