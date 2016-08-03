@@ -76,6 +76,7 @@ define(function (require) {
 
             if (interval) {
                 var niceExtent = this._niceExtent;
+                var precision = numberUtil.getPrecisionSafe(interval) + 2;
                 if (extent[0] < niceExtent[0]) {
                     ticks.push(extent[0]);
                 }
@@ -83,7 +84,7 @@ define(function (require) {
                 while (tick <= niceExtent[1]) {
                     ticks.push(tick);
                     // Avoid rounding error
-                    tick = numberUtil.round(tick + interval);
+                    tick = numberUtil.round(tick + interval, precision);
                     if (ticks.length > safeLimit) {
                         return [];
                     }
@@ -139,10 +140,11 @@ define(function (require) {
             // var niceSpan = numberUtil.nice(span, false);
             var step = numberUtil.nice(span / splitNumber, true);
 
+            var precision = numberUtil.getPrecisionSafe(step) + 2;
             // Niced extent inside original extent
             var niceExtent = [
-                numberUtil.round(mathCeil(extent[0] / step) * step),
-                numberUtil.round(mathFloor(extent[1] / step) * step)
+                numberUtil.round(mathCeil(extent[0] / step) * step, precision),
+                numberUtil.round(mathFloor(extent[1] / step) * step, precision)
             ];
 
             this._interval = step;
