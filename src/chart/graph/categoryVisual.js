@@ -1,6 +1,8 @@
 define(function (require) {
 
     return function (ecModel) {
+
+        var paletteScope = {};
         ecModel.eachSeriesByType('graph', function (seriesModel) {
             var categoriesData = seriesModel.getCategoriesData();
             var data = seriesModel.getData();
@@ -13,7 +15,7 @@ define(function (require) {
 
                 var itemModel = categoriesData.getItemModel(idx);
                 var color = itemModel.get('itemStyle.normal.color')
-                    || seriesModel.getColorFromPalette(name);
+                    || seriesModel.getColorFromPalette(name, paletteScope);
                 categoriesData.setItemVisual(idx, 'color', color);
             });
 
