@@ -21,6 +21,10 @@ define(function (require) {
 
     function symbolNeedsDraw(data, idx, isIgnore) {
         var point = data.getItemLayout(idx);
+        // Is an object
+        // if (point && point.hasOwnProperty('point')) {
+        //     point = point.point;
+        // }
         return point && !isNaN(point[0]) && !isNaN(point[1]) && !(isIgnore && isIgnore(idx))
                     && data.getItemVisual(idx, 'symbol') !== 'none';
     }

@@ -33,6 +33,11 @@ define(function (require) {
             angle += unitAngle * (sum ? value : 2) / 2;
         });
 
+        nodeData.setLayout({
+            cx: cx,
+            cy: cy
+        });
+
         graph.eachEdge(function (edge) {
             var curveness = edge.getModel().get('lineStyle.normal.curveness') || 0;
             var p1 = vec2.clone(edge.node1.getLayout());

@@ -173,7 +173,11 @@ define(function (require) {
 
             focusNodeAdjacency: false,
 
-            // Configuration of force
+            // Configuration of circular layout
+            circular: {
+                rotateLabel: false
+            },
+            // Configuration of force directed layout
             force: {
                 initLayout: null,
                 // Node repulsion. Can be an array to represent range.

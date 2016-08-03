@@ -73,6 +73,13 @@ define(function (require) {
     };
 
     /**
+     * Get symbol path element
+     */
+    symbolProto.getSymbolPath = function () {
+        return this.childAt(0);
+    };
+
+    /**
      * Get scale(aka, current symbol size).
      * Including the change caused by animation
      */
@@ -242,7 +249,9 @@ define(function (require) {
             .off('emphasis')
             .off('normal');
 
-        graphic.setHoverStyle(symbolPath, hoverItemStyle);
+        symbolPath.hoverStyle = hoverItemStyle;
+
+        graphic.setHoverStyle(symbolPath);
 
         if (hoverAnimation && seriesModel.ifEnableAnimation()) {
             var onEmphasis = function() {
