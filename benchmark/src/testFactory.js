@@ -18,9 +18,9 @@ define(function (require) {
      */
     TestFactory.create = function (name, amount) {
         var option = null;
-
         switch (name) {
             case 'line':
+            case 'line sampling':
             case 'bar':
             case 'scatter':
                 option = {
@@ -49,6 +49,11 @@ define(function (require) {
             default:
                 console.error('Test name ' + name + ' not found!');
                 return null;
+        }
+
+        if (name === 'line sampling') {
+            option.series.sampling = 'max';
+            option.series.type = 'line';
         }
 
         option.animation = false;

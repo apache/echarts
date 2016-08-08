@@ -1,3 +1,7 @@
+/**
+ * @file Visual encoding for themeRiver view
+ * @author  Deqing Li(annong035@gmail.com)
+ */
 define(function (require) {
 
     return function (ecModel) {
@@ -17,5 +21,5 @@ define(function (require) {
                 );
             });
         });
-   };
+    };
 });

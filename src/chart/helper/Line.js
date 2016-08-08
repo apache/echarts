@@ -61,6 +61,10 @@ define(function (require) {
             targetShape.cpx1 = cp1[0];
             targetShape.cpy1 = cp1[1];
         }
+        else {
+            targetShape.cpx1 = NaN;
+            targetShape.cpy1 = NaN;
+        }
     }
 
     function updateSymbolAndLabelBeforeLineUpdate () {
@@ -259,6 +263,11 @@ define(function (require) {
         }
 
         var visualColor = lineData.getItemVisual(idx, 'color');
+        var visualOpacity = zrUtil.retrieve(
+            lineData.getItemVisual(idx, 'opacity'),
+            lineStyle.opacity,
+            1
+        );
         if (isNaN(defaultText)) {
             // Use name
             defaultText = lineData.getName(idx);
@@ -267,11 +276,23 @@ define(function (require) {
             {
                 strokeNoScale: true,
                 fill: 'none',
-                stroke: visualColor
+                stroke: visualColor,
+                opacity: visualOpacity
             },
             lineStyle
         ));
         line.hoverStyle = hoverLineStyle;
+
+        // Update symbol
+        zrUtil.each(SYMBOL_CATEGORIES, function (symbolCategory) {
+            var symbol = this.childOfName(symbolCategory);
+            if (symbol) {
+                symbol.setColor(visualColor);
+                symbol.setStyle({
+                    opacity: visualOpacity
+                });
+            }
+        }, this);
 
         var showLabel = labelModel.getShallow('show');
         var hoverShowLabel = hoverLabelModel.getShallow('show');

@@ -11,22 +11,12 @@ define(function (require) {
         el: '#app',
 
         data: {
-            caseNames: ['line', 'pie', 'scatter', 'bar'],
+            caseNames: ['line sampling'],
             amounts: (function () {
                 var arr = [];
-                for (var i = 20; i < 200; i += 20) {
+                for (var i = 1000000; i > 0; i -= 10000) {
                     arr.push(i);
                 }
-                for (var i = 200; i < 1000; i += 200) {
-                    arr.push(i);
-                }
-                for (i = 1000; i <= 10000; i += 2000) {
-                    arr.push(i);
-                }
-                // for (i = 10000; i <= 100000; i += 20000) {
-                //     arr.push(i);
-                // }
-                // arr.push(100000);
                 return arr;
             })(),
             times: [],
@@ -34,7 +24,8 @@ define(function (require) {
 
             hasRun: false,
             isRunning: false,
-            elapsedTime: 0
+            elapsedTime: 0,
+            progress: 0
         },
 
         methods: {
@@ -47,7 +38,14 @@ define(function (require) {
 
     function run() {
         var results = [];
+        var start = new Date();
+
         var updateUI = function () {
+            var progress = Math.ceil(manager.getProgress() * 100);
+            vm.$set('progress', progress);
+            var end = new Date();
+            vm.$set('elapsedTime', end - start);
+
             for (var i = 0; i < results.length; ++i) {
                 var test = results[i];
                 if (!vm.times[test.amountId]) {
@@ -61,8 +59,8 @@ define(function (require) {
 
         vm.$set('hasRun', false);
         vm.$set('isRunning', true);
+        vm.$set('progress', 0);
         manager.init();
-        var start = new Date();
 
         for (var aid = 0; aid < vm.amounts.length; ++aid) {
             for (var cid = 0; cid < vm.caseNames.length; ++cid) {
@@ -75,9 +73,7 @@ define(function (require) {
                         if (aid === vm.amounts.length - 1
                             && cid === vm.caseNames.length - 1) {
                             // last test case
-                            var end = new Date();
                             vm.$set('hasRun', true);
-                            vm.$set('elapsedTime', end - start);
                             vm.$set('isRunning', false);
                             vm.$set('result', manager.exportResult());
                             updateUI();

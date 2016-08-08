@@ -18,20 +18,21 @@ define(function (require) {
     var mathCeil = Math.ceil;
     var mathPow = Math.pow;
 
-    var LOG_BASE = 10;
     var mathLog = Math.log;
 
     var LogScale = Scale.extend({
 
         type: 'log',
 
+        base: 10,
+
         /**
          * @return {Array.<number>}
          */
         getTicks: function () {
             return zrUtil.map(intervalScaleProto.getTicks.call(this), function (val) {
-                return numberUtil.round(mathPow(LOG_BASE, val));
-            });
+                return numberUtil.round(mathPow(this.base, val));
+            }, this);
         },
 
         /**
@@ -46,7 +47,7 @@ define(function (require) {
          */
         scale: function (val) {
             val = scaleProto.scale.call(this, val);
-            return mathPow(LOG_BASE, val);
+            return mathPow(this.base, val);
         },
 
         /**
@@ -54,8 +55,9 @@ define(function (require) {
          * @param {number} end
          */
         setExtent: function (start, end) {
-            start = mathLog(start) / mathLog(LOG_BASE);
-            end = mathLog(end) / mathLog(LOG_BASE);
+            var base = this.base;
+            start = mathLog(start) / mathLog(base);
+            end = mathLog(end) / mathLog(base);
             intervalScaleProto.setExtent.call(this, start, end);
         },
 
@@ -63,9 +65,10 @@ define(function (require) {
          * @return {number} end
          */
         getExtent: function () {
+            var base = this.base;
             var extent = scaleProto.getExtent.call(this);
-            extent[0] = mathPow(LOG_BASE, extent[0]);
-            extent[1] = mathPow(LOG_BASE, extent[1]);
+            extent[0] = mathPow(base, extent[0]);
+            extent[1] = mathPow(base, extent[1]);
             return extent;
         },
 
@@ -73,8 +76,9 @@ define(function (require) {
          * @param  {Array.<number>} extent
          */
         unionExtent: function (extent) {
-            extent[0] = mathLog(extent[0]) / mathLog(LOG_BASE);
-            extent[1] = mathLog(extent[1]) / mathLog(LOG_BASE);
+            var base = this.base;
+            extent[0] = mathLog(extent[0]) / mathLog(base);
+            extent[1] = mathLog(extent[1]) / mathLog(base);
             scaleProto.unionExtent.call(this, extent);
         },
 
@@ -90,13 +94,19 @@ define(function (require) {
                 return;
             }
 
-            var interval = mathPow(10, mathFloor(mathLog(span / approxTickNum) / Math.LN10));
+            var interval = numberUtil.quantity(span);
             var err = approxTickNum / span * interval;
 
             // Filter ticks to get closer to the desired count.
             if (err <= 0.5) {
                 interval *= 10;
             }
+
+            // Interval should not have decimal
+            while (!isNaN(interval) && Math.abs(interval) < 1 && Math.abs(interval) > 0) {
+                interval *= 10;
+            }
+
             var niceExtent = [
                 numberUtil.round(mathCeil(extent[0] / interval) * interval),
                 numberUtil.round(mathFloor(extent[1] / interval) * interval)
@@ -117,7 +127,7 @@ define(function (require) {
 
     zrUtil.each(['contain', 'normalize'], function (methodName) {
         LogScale.prototype[methodName] = function (val) {
-            val = mathLog(val) / mathLog(LOG_BASE);
+            val = mathLog(val) / mathLog(this.base);
             return scaleProto[methodName].call(this, val);
         };
     });

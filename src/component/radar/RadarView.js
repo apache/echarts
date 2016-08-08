@@ -114,7 +114,15 @@ define(function (require) {
                         points.push(axesTicksPoints[j][i]);
                     }
                     // Close
-                    points.push(points[0].slice());
+                    if (points[0]) {
+                        points.push(points[0].slice());
+                    }
+                    else {
+                        if (__DEV__) {
+                            console.error('Can\'t draw value axis ' + i);
+                            continue;
+                        }
+                    }
                     if (showSplitLine) {
                         var colorIndex = getColorIndex(splitLines, splitLineColors, i);
                         splitLines[colorIndex].push(new graphic.Polyline({

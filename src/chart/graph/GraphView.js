@@ -110,6 +110,35 @@ define(function (require) {
                 }
             }, this);
 
+            var circularRotateLabel = seriesModel.get('layout') === 'circular' && seriesModel.get('circular.rotateLabel');
+            var cx = data.getLayout('cx');
+            var cy = data.getLayout('cy');
+            data.eachItemGraphicEl(function (el, idx) {
+                var symbolPath = el.getSymbolPath();
+                if (circularRotateLabel) {
+                    var pos = data.getItemLayout(idx);
+                    var rad = Math.atan2(pos[1] - cy, pos[0] - cx);
+                    if (rad < 0) {
+                        rad = Math.PI * 2 + rad;
+                    }
+                    var isLeft = pos[0] < cx;
+                    if (isLeft) {
+                        rad = rad - Math.PI;
+                    }
+                    var textPosition = isLeft ? 'left' : 'right';
+                    symbolPath.setStyle({
+                        textRotation: rad,
+                        textPosition: textPosition
+                    });
+                    symbolPath.hoverStyle && (symbolPath.hoverStyle.textPosition = textPosition);
+                }
+                else {
+                    symbolPath.setStyle({
+                        textRotation: 0
+                    });
+                }
+            });
+
             this._firstRender = false;
         },
 

@@ -17,15 +17,21 @@ define(function (require) {
                     // FIXME Performance
                     var itemModel = dataAll.getItemModel(rawIdx);
                     var filteredIdx = idxMap[rawIdx];
+
                     // If series.itemStyle.normal.color is a function. itemVisual may be encoded
-                    var singleDataColor = data.getItemVisual(filteredIdx, 'color', true);
+                    var singleDataColor = filteredIdx != null
+                        && data.getItemVisual(filteredIdx, 'color', true);
 
                     if (!singleDataColor) {
                         var color = itemModel.get('itemStyle.normal.color')
                             || seriesModel.getColorFromPalette(dataAll.getName(rawIdx), paletteScope);
                         // Legend may use the visual info in data before processed
                         dataAll.setItemVisual(rawIdx, 'color', color);
-                        data.setItemVisual(filteredIdx, 'color', color);
+
+                        // Data is not filtered
+                        if (filteredIdx != null) {
+                            data.setItemVisual(filteredIdx, 'color', color);
+                        }
                     }
                     else {
                         // Set data all color for legend

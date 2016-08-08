@@ -271,7 +271,7 @@ define(function (require) {
      * @return {Object}
      */
     echartsProto.getOption = function () {
-        return this._model.getOption();
+        return this._model && this._model.getOption();
     };
 
     /**

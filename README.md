@@ -33,6 +33,8 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 + [字符云 wordcloud](https://github.com/ecomfe/echarts-wordcloud)
 
++ [Graph Modularity](https://github.com/ecomfe/echarts-graph-modularity) Graph modularity extension for community detection
+
 + [leaflet-echarts](https://github.com/wandergis/leaflet-echarts3) by wandergis
 + [arcgis-echarts](https://github.com/wandergis/arcgis-echarts3) by wandergis
 

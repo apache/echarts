@@ -5,6 +5,7 @@ define(function (require) {
     var simpleLayoutHelper = require('./simpleLayoutHelper');
     var circularLayoutHelper = require('./circularLayoutHelper');
     var vec2 = require('zrender/core/vector');
+    var zrUtil = require('zrender/core/util');
 
     return function (ecModel) {
         ecModel.eachSeriesByType('graph', function (graphSeries) {
@@ -33,13 +34,23 @@ define(function (require) {
                 }
 
                 var nodeDataExtent = nodeData.getDataExtent('value');
+                var edgeDataExtent = edgeData.getDataExtent('value');
                 // var edgeDataExtent = edgeData.getDataExtent('value');
                 var repulsion = forceModel.get('repulsion');
                 var edgeLength = forceModel.get('edgeLength');
+                if (!zrUtil.isArray(repulsion)) {
+                    repulsion = [repulsion, repulsion];
+                }
+                if (!zrUtil.isArray(edgeLength)) {
+                    edgeLength = [edgeLength, edgeLength];
+                }
                 var nodes = nodeData.mapArray('value', function (value, idx) {
                     var point = nodeData.getItemLayout(idx);
                     // var w = numberUtil.linearMap(value, nodeDataExtent, [0, 50]);
-                    var rep = numberUtil.linearMap(value, nodeDataExtent, [0, repulsion]) || (repulsion / 2);
+                    var rep = numberUtil.linearMap(value, nodeDataExtent, repulsion);
+                    if (isNaN(rep)) {
+                        rep = (repulsion[0] + repulsion[1]) / 2;
+                    }
                     return {
                         w: rep,
                         rep: rep,
@@ -48,11 +59,14 @@ define(function (require) {
                 });
                 var edges = edgeData.mapArray('value', function (value, idx) {
                     var edge = graph.getEdgeByIndex(idx);
-                    // var w = numberUtil.linearMap(value, edgeDataExtent, [0, 100]);
+                    var d = numberUtil.linearMap(value, edgeDataExtent, edgeLength);
+                    if (isNaN(d)) {
+                        d = (edgeLength[0] + edgeLength[1]) / 2;
+                    }
                     return {
                         n1: nodes[edge.node1.dataIndex],
                         n2: nodes[edge.node2.dataIndex],
-                        d: edgeLength,
+                        d: d,
                         curveness: edge.getModel().get('lineStyle.normal.curveness') || 0
                     };
                 });

@@ -106,9 +106,12 @@ define(function (require) {
      * @param {number} x
      * @return {number}
      */
-    number.round = function (x) {
+    number.round = function (x, precision) {
+        if (precision == null) {
+            precision = 10;
+        }
         // PENDING
-        return +(+x).toFixed(10);
+        return +(+x).toFixed(precision);
     };
 
     number.asc = function (arr) {
@@ -138,6 +141,15 @@ define(function (require) {
             count++;
         }
         return count;
+    };
+
+    number.getPrecisionSafe = function (val) {
+        var str = val.toString();
+        var dotIndex = str.indexOf('.');
+        if (dotIndex < 0) {
+            return 0;
+        }
+        return str.length - 1 - dotIndex;
     };
 
     /**

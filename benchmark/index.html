@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link rel="stylesheet" href="./dep/bootstrap/bootstrap.min.css">
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -28,6 +28,10 @@
         textarea {
             height: 150px;
         }
+
+        .progress-bar {
+            transition-duration: 0s;
+        }
     </style>
 </head>
 <body id="app">
@@ -41,18 +45,22 @@
             <button class="btn btn-primary" data-target="#export-modal" data-toggle="modal" v-if="hasRun">
                 Export
             </button>
-            <span v-if="hasRun">Elapsed time: {{ elapsedTime / 1000 }} seconds</span>
+            <span v-if="hasRun || isRunning">Elapsed time: {{ elapsedTime / 1000 }} seconds</span>
+        </div>
+
+        <div class="progress" v-if="isRunning">
+            <div class="progress-bar" role="progressbar" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100" style="width: {{ progress }}%;">{{ progress }}%</div>
         </div>
 
         <div id="report" v-if="hasRun"></div>
 
-        <table id="test-table" class="table table-striped">
+        <table id="test-table" class="table table-striped" v-if="hasRun">
             <tr>
                 <th>Data Amount</th>
                 <th v-for="name in caseNames">{{ name }}</th>
             </tr>
             <tr v-for="(aid, amount) in amounts">
-                <td>{{ aid, amount }}</td>
+                <td>{{ amount }}</td>
                 <th v-for="(cid, name) in caseNames">{{ times[aid][cid] }}</th>
             </tr>
         </table>
@@ -78,10 +86,11 @@
         </div>
     </div><!-- end of modal -->
 
-    <script src="https://code.jquery.com/jquery-2.2.4.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-    <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/vue/1.0.26/vue.min.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.min.js"></script>
+    <script src="./dep/jquery/jquery-2.2.4.js"></script>
+    <script src="./dep/bootstrap/bootstrap.min.js"></script>
+    <script src="./dep/vue/vue.min.js"></script>
+    <script src="./dep/lodash/lodash.js"></script>
+    <script src="./dep/filesaver/FileSaver.min.js"></script>
 
     <script type="text/javascript" src="../dist/echarts.js"></script>
 
