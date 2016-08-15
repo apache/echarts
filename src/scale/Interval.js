@@ -147,7 +147,9 @@ define(function (require) {
                 Math.max(
                     getPrecisionSafe(extent[0]),
                     getPrecisionSafe(extent[1])
-                )
+                // extent may be [0, 1], and step should have 1 more digits.
+                // To make it safe we add 2 more digits
+                ) + 2
             );
 
             var precision = getPrecisionSafe(step) + 2;
