@@ -13,8 +13,14 @@
                 height: 100%;
                 margin: 0;
             }
+            #pause-resume {
+                position: absolute;
+                left: 10;
+                top: 10;
+            }
         </style>
         <div id='main'></div>
+        <button id="pause-resume">Pause/Resume</button>
         <script>
 
             require([
@@ -217,7 +223,7 @@
                                 trailLength: 0.7,
                                 color: '#fff',
                                 symbolSize: 2,
-                                loop: false
+                                // loop: false
                             },
                             lineStyle: {
                                 normal: {
@@ -238,7 +244,7 @@
                                 trailLength: 0,
                                 symbol: planePath,
                                 symbolSize: 20,
-                                loop: false
+                                // loop: false
                             },
                             lineStyle: {
                                 normal: {
@@ -326,6 +332,12 @@
                         },
                         series: series
                     });
+
+                    var isPaused = false;
+                    document.getElementById('pause-resume').onclick = function () {
+                        myChart.getZr().animation[isPaused ? 'resume' : 'pause']();
+                        isPaused = !isPaused;
+                    };
                 });
             });
 
