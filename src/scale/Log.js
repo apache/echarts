@@ -102,7 +102,7 @@ define(function (require) {
                 interval *= 10;
             }
 
-            // Interval should not have decimal
+            // Interval should be integer
             while (!isNaN(interval) && Math.abs(interval) < 1 && Math.abs(interval) > 0) {
                 interval *= 10;
             }

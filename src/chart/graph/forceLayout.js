@@ -44,6 +44,9 @@ define(function (require) {
                 if (!zrUtil.isArray(edgeLength)) {
                     edgeLength = [edgeLength, edgeLength];
                 }
+                // Larger value has smaller length
+                edgeLength = [edgeLength[1], edgeLength[0]];
+
                 var nodes = nodeData.mapArray('value', function (value, idx) {
                     var point = nodeData.getItemLayout(idx);
                     // var w = numberUtil.linearMap(value, nodeDataExtent, [0, 50]);
