@@ -107,14 +107,17 @@ define(function(require) {
             var ecModel = this.ecModel;
 
             ecModel.eachSeries(function (seriesModel) {
-                var dimName = this._dimName;
-                var axisModel = ecModel.queryComponents({
-                    mainType: dimName + 'Axis',
-                    index: seriesModel.get(dimName + 'AxisIndex'),
-                    id: seriesModel.get(dimName + 'AxisId')
-                })[0];
-                if (this._axisIndex === (axisModel && axisModel.componentIndex)) {
-                    seriesModels.push(seriesModel);
+                var coordSysName = seriesModel.get('coordinateSystem');
+                if (coordSysName === 'cartesian2d' || coordSysName === 'polar') {
+                    var dimName = this._dimName;
+                    var axisModel = ecModel.queryComponents({
+                        mainType: dimName + 'Axis',
+                        index: seriesModel.get(dimName + 'AxisIndex'),
+                        id: seriesModel.get(dimName + 'AxisId')
+                    })[0];
+                    if (this._axisIndex === (axisModel && axisModel.componentIndex)) {
+                        seriesModels.push(seriesModel);
+                    }
                 }
             }, this);
 
