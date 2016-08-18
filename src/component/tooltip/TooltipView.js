@@ -978,10 +978,31 @@ define(function (require) {
                     var firstLine = baseAxis.type === 'time'
                         ? baseAxis.scale.getLabel(value[baseDimIndex])
                         : seriesList[0].getData().getName(firstDataIndex);
-                    var defaultHtml = (firstLine ? firstLine + '<br />' : '')
-                        + zrUtil.map(seriesList, function (series, index) {
-                            return series.formatTooltip(payloadBatch[index].dataIndex, true);
-                        }).join('<br />');
+                    var defaultHtml = (firstLine ? firstLine + '<br />' : '');
+
+                    // Create series map to store the stack group
+                    var seriesMap = {};
+                    zrUtil.each(seriesList, function(series, index) {
+                        var dataIndex = payloadBatch[index].dataIndex;
+                        var value = series.getRawValue(dataIndex);
+                        var tooltip = series.formatTooltip(payloadBatch[index].dataIndex, true);
+                        var stackGroup = series.option.stack || "__NONE_STACK_SERIES__";
+                        var seriesList = seriesMap[stackGroup] = seriesMap[stackGroup] || [];
+
+                        // Reverse order if is in same stack and positive number
+                        if(series.option.stack && value >= 0) {
+                            seriesList.unshift(tooltip);
+                        } else {
+                            seriesList.push(tooltip);
+                        }
+                    });
+
+                    // Merge series stack group & render content
+                    var seriesHtmlList = [];
+                    zrUtil.each(seriesMap, function(seriesList) {
+                        seriesHtmlList = seriesHtmlList.concat(seriesList);
+                    });
+                    defaultHtml += seriesHtmlList.join('<br />');
 
                     var asyncTicket = 'axis_' + coordSys.name + '_' + firstDataIndex;
 
