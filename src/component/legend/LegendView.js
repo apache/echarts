@@ -176,6 +176,7 @@ define(function (require) {
             var itemIcon = itemModel.get('icon');
 
             var tooltipModel = itemModel.getModel('tooltip');
+            var legendGlobalTooltipModel = tooltipModel.parentModel;
 
             // Use user given icon first
             legendSymbolType = itemIcon || legendSymbolType;
@@ -233,7 +234,7 @@ define(function (require) {
                 tooltip: tooltipModel.get('show') ? zrUtil.extend({
                     content: name,
                     // Defaul formatter
-                    formatter: function () {
+                    formatter: legendGlobalTooltipModel.get('formatter', true) || function () {
                         return name;
                     },
                     formatterParams: {
