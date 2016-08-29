@@ -642,6 +642,9 @@ define(function(require) {
                 next = turnPointsIntoStep(diff.next, coordSys, step);
                 stackedOnNext = turnPointsIntoStep(diff.stackedOnNext, coordSys, step);
             }
+            // `diff.current` is subset of `current` (which should be ensured by
+            // turnPointsIntoStep), so points in `__points` can be updated when
+            // points in `current` are update during animation.
             polyline.shape.__points = diff.current;
             polyline.shape.points = current;
 
@@ -658,9 +661,8 @@ define(function(require) {
                 });
                 graphic.updateProps(polygon, {
                     shape: {
-                        points: next,
-                        stackedOnPoints: stackedOnNext,
-                        __points: diff.next
+                        // points: next, // Have been updated by polyline.
+                        stackedOnPoints: stackedOnNext
                     }
                 }, seriesModel);
             }
