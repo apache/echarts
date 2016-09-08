@@ -661,7 +661,7 @@ define(function(require) {
                 });
                 graphic.updateProps(polygon, {
                     shape: {
-                        // points: next, // Have been updated by polyline.
+                        points: next,
                         stackedOnPoints: stackedOnNext
                     }
                 }, seriesModel);

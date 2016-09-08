@@ -1,0 +1,375 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/facePrint.js"></script>
+    </head>
+    <body>
+        <style>
+            html, body, .main {
+                padding: 0;
+                margin: 0;
+                width: 100%;
+                height: 300px;
+            }
+            .label {
+                background: rgba(00, 200, 00, 0.4);
+                padding: 10px;
+                text-align: center;
+            }
+        </style>
+        <div class="label">different category value | with ainmation | 3 times setOption</div>
+        <div class="main" id="main0"></div>
+        <div class="label">different category value | with ainmation | 3 times setOption | step</div>
+        <div class="main" id="main1"></div>
+        <div class="label">same category value | with ainmation | 2 times setOption</div>
+        <div class="main" id="main2"></div>
+
+
+
+
+
+
+
+
+
+
+
+        <!-- ==================== -->
+        <!-- Test Case 1 -->
+
+
+
+        <script>
+            var option0 = {"tooltip":{"trigger":"axis","enterable":true,"padding":[10],"showDelay":100,"hideDelay":100,"z":0,"axisPointer":{"lineStyle":{"color":"#999"}},"textStyle":{"color":"#333"},"borderColor":"#ececec","borderWidth":1,"backgroundColor":"rgb(255,255,255)","extraCssText":"width: 200px;height: 80px;border-radius: 3px;z-index: 100;"},"grid":{"left":72,"right":77},"xAxis":{"type":"category","boundaryGap":false,"axisLine":{"show":true,"lineStyle":{"color":"#f2f2f2","width":1}},"z":0,"axisTick":false,"splitLine":{"show":false},"axisLabel":{"textStyle":{"color":"#ccc"}},"data":
+            ["2016-07-23","2016-07-25","2016-07-26","2016-07-27","2016-07-28","2016-07-29","2016-07-30","2016-08-01","2016-08-02","2016-08-03","2016-08-05","2016-08-06","2016-08-08","2016-08-09","2016-08-10","2016-08-11","2016-08-12","2016-08-15","2016-08-16","2016-08-17","2016-08-18","2016-08-19","2016-08-20","2016-08-22"]
+            },"yAxis":{"type":"value","z":0,"min":0,"max":100,"interval":20,"positon":"right","boundaryGap":false,"axisLine":{"show":true,"lineStyle":{"color":"#f2f2f2","width":1}},"axisTick":false,"splitLine":{"lineStyle":{"color":"#f2f2f2"}},"axisLabel":{"textStyle":{"color":"#ccc"}}},"dataZoom":[{"show":false},{"show":true,"z":0,"type":"slider","fillerColor":"rgba(230,230,230,.3)","dataBackground":{"areaStyle":{"color":"rgb(210,210,210)"}}}],"series":[{"type":"line","smooth":true,"symbol":"emptyCircle","itemStyle":{"normal":{"color":"rgb(255, 223, 190)"}},"z":0,"areaStyle":{"normal":{"color":"rgb(255, 242, 230)"}},"showAllSymbol":true,"data":
+            ["69","65","65","64","63","69","66","67","66","66","63","62","68","66","65","70","70","71","70","58","66","68","67","62"]
+            }]}
+
+            var option1 = {"tooltip":{"trigger":"axis","enterable":true,"padding":[10],"showDelay":100,"hideDelay":100,"z":0,"axisPointer":{"lineStyle":{"color":"#999"}},"textStyle":{"color":"#333"},"borderColor":"#ececec","borderWidth":1,"backgroundColor":"rgb(255,255,255)","extraCssText":"width: 200px;height: 80px;border-radius: 3px;z-index: 100;"},"grid":{"left":72,"right":77},"xAxis":{"type":"category","boundaryGap":false,"axisLine":{"show":true,"lineStyle":{"color":"#f2f2f2","width":1}},"z":0,"axisTick":false,"splitLine":{"show":false},"axisLabel":{"textStyle":{"color":"#ccc"}},"data":
+            ["2016-05-24","2016-05-25","2016-05-26","2016-05-27","2016-05-30","2016-06-01","2016-06-02","2016-06-03","2016-06-06","2016-06-13","2016-06-14","2016-06-15","2016-06-16","2016-06-17","2016-06-23","2016-06-24","2016-06-27","2016-06-28","2016-06-29","2016-06-30","2016-07-01","2016-07-04","2016-07-05","2016-07-06","2016-07-07","2016-07-11","2016-07-13","2016-07-14","2016-07-15","2016-07-18","2016-07-20","2016-07-21","2016-07-22","2016-07-23","2016-07-25","2016-07-26","2016-07-27","2016-07-28","2016-07-29","2016-07-30","2016-08-01","2016-08-02","2016-08-03","2016-08-05","2016-08-06","2016-08-08","2016-08-09","2016-08-10","2016-08-11","2016-08-12","2016-08-15","2016-08-16","2016-08-17","2016-08-18","2016-08-19","2016-08-20","2016-08-22"]
+            },"yAxis":{"type":"value","z":0,"min":0,"max":100,"interval":20,"positon":"right","boundaryGap":false,"axisLine":{"show":true,"lineStyle":{"color":"#f2f2f2","width":1}},"axisTick":false,"splitLine":{"lineStyle":{"color":"#f2f2f2"}},"axisLabel":{"textStyle":{"color":"#ccc"}}},"dataZoom":[{"show":false},{"show":true,"z":0,"type":"slider","fillerColor":"rgba(230,230,230,.3)","dataBackground":{"areaStyle":{"color":"rgb(210,210,210)"}}}],"series":[{"type":"line","smooth":true,"symbol":"emptyCircle","itemStyle":{"normal":{"color":"rgb(255, 223, 190)"}},"z":0,"areaStyle":{"normal":{"color":"rgb(255, 242, 230)"}},"showAllSymbol":true,"data":
+            ["66","66","61","59","59","57","61","63","61","65","65","65","66","70","60","62","66","66","66","70","64","66","68","69","71","67","69","71","68","69","68","69","67","69","65","65","64","63","69","66","67","66","66","63","62","68","66","65","70","70","71","70","58","66","68","67","62"]
+            }]}
+
+            var option2 = {"tooltip":{"trigger":"axis","enterable":true,"padding":[10],"showDelay":100,"hideDelay":100,"z":0,"axisPointer":{"lineStyle":{"color":"#999"}},"textStyle":{"color":"#333"},"borderColor":"#ececec","borderWidth":1,"backgroundColor":"rgb(255,255,255)","extraCssText":"width: 200px;height: 80px;border-radius: 3px;z-index: 100;"},"grid":{"left":72,"right":77},"xAxis":{"type":"category","boundaryGap":false,"axisLine":{"show":true,"lineStyle":{"color":"#f2f2f2","width":1}},"z":0,"axisTick":false,"splitLine":{"show":false},"axisLabel":{"textStyle":{"color":"#ccc"}},"data":
+            ["2016-02-24","2016-02-25","2016-02-26","2016-02-29","2016-03-01","2016-03-02","2016-03-03","2016-03-04","2016-03-07","2016-03-08","2016-03-09","2016-03-10","2016-03-11","2016-03-15","2016-03-16","2016-03-17","2016-03-18","2016-03-21","2016-03-22","2016-03-23","2016-03-24","2016-03-25","2016-03-28","2016-03-29","2016-03-30","2016-03-31","2016-04-01","2016-04-06","2016-04-07","2016-04-08","2016-04-11","2016-04-12","2016-04-13","2016-04-14","2016-04-18","2016-04-20","2016-04-21","2016-04-22","2016-04-26","2016-04-27","2016-04-28","2016-05-05","2016-05-06","2016-05-09","2016-05-10","2016-05-12","2016-05-13","2016-05-16","2016-05-17","2016-05-19","2016-05-20","2016-05-24","2016-05-25","2016-05-26","2016-05-27","2016-05-30","2016-06-01","2016-06-02","2016-06-03","2016-06-06","2016-06-13","2016-06-14","2016-06-15","2016-06-16","2016-06-17","2016-06-23","2016-06-24","2016-06-27","2016-06-28","2016-06-29","2016-06-30","2016-07-01","2016-07-04","2016-07-05","2016-07-06","2016-07-07","2016-07-11","2016-07-13","2016-07-14","2016-07-15","2016-07-18","2016-07-20","2016-07-21","2016-07-22","2016-07-23","2016-07-25","2016-07-26","2016-07-27","2016-07-28","2016-07-29","2016-07-30","2016-08-01","2016-08-02","2016-08-03","2016-08-05","2016-08-06","2016-08-08","2016-08-09","2016-08-10","2016-08-11","2016-08-12","2016-08-15","2016-08-16","2016-08-17","2016-08-18","2016-08-19","2016-08-20","2016-08-22"]
+            },"yAxis":{"type":"value","z":0,"min":0,"max":100,"interval":20,"positon":"right","boundaryGap":false,"axisLine":{"show":true,"lineStyle":{"color":"#f2f2f2","width":1}},"axisTick":false,"splitLine":{"lineStyle":{"color":"#f2f2f2"}},"axisLabel":{"textStyle":{"color":"#ccc"}}},"dataZoom":[{"show":false},{"show":true,"z":0,"type":"slider","fillerColor":"rgba(230,230,230,.3)","dataBackground":{"areaStyle":{"color":"rgb(210,210,210)"}}}],"series":[{"type":"line","smooth":true,"symbol":"emptyCircle","itemStyle":{"normal":{"color":"rgb(255, 223, 190)"}},"z":0,"areaStyle":{"normal":{"color":"rgb(255, 242, 230)"}},"showAllSymbol":true,"data":
+            ["61","57","62","65","65","67","65","68","68","65","67","69","66","67","66","70","67","72","73","73","71","69","72","73","72","74","77","75","74","74","68","70","69","70","70","72","74","71","71","70","72","74","76","72","76","73","67","60","59","64","64","66","66","61","59","59","57","61","63","61","65","65","65","66","70","60","62","66","66","66","70","64","66","68","69","71","67","69","71","68","69","68","69","67","69","65","65","64","63","69","66","67","66","66","63","62","68","66","65","70","70","71","70","58","66","68","67","62"]
+            }]}
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom'
+            ], function (echarts) {
+
+                var main = document.getElementById('main0');
+                if (!main) {
+                    return;
+                }
+                var chart = echarts.init(main);
+
+                chart.setOption(option0);
+
+                setTimeout(() => {
+                    chart.setOption(option1);
+
+                    setTimeout(() => {
+                        chart.setOption(option2);
+                    }, 2000)
+
+                }, 2000)
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- ==================== -->
+        <!-- Test Case 2 -->
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom'
+            ], function (echarts) {
+
+                var main = document.getElementById('main1');
+                if (!main) {
+                    return;
+                }
+                var chart = echarts.init(main);
+
+                var option = {
+                    "grid": {
+                        "left": 72,
+                        "right": 77
+                    },
+                    "xAxis": {
+                        "type": "category",
+                        "data": ["2016-07-23","2016-08-22"]
+                    },
+                    "yAxis": {
+                        "type": "value"
+                    },
+                    "series": [
+                        {
+                            "type": "line",
+                            // step: true,
+                            "areaStyle": {
+                                "normal": {
+                                    "color": "rgb(255, 242, 230)"
+                                }
+                            },
+                            step: true,
+                            stack: 'a',
+                            "showAllSymbol": true,
+                            "data": ["69","62"]
+                        },
+                        {
+                            "type": "line",
+                            step: true,
+                            "areaStyle": {
+                                "normal": {
+                                    "color": "rgb(155, 242, 230)"
+                                }
+                            },
+                            stack: 'a',
+                            "showAllSymbol": true,
+                            "data": ["19","12"]
+                        }
+                    ]
+                };
+
+                var option1 = {
+                    xAxis: {data: ["2016-05-24","2016-07-23","2016-08-22"]},
+                    series: [{
+                        data: ["66","67","62"]
+                    }, {
+                        data: ["26","27","22"]
+                    }]
+                };
+
+                var option2 = {
+                    xAxis: {data: ["2016-02-24","2016-05-24","2016-07-23","2016-08-22"]},
+                    series: [
+                        {data: ["61","57","62","65"]},
+                        {data: ["31","37","32","35"]}
+                    ]
+                };
+
+
+                chart.setOption(option);
+
+                setTimeout(function () {
+                    chart.setOption(option1);
+
+                    setTimeout(function () {
+                        chart.setOption(option2);
+                    }, 2000)
+
+                }, 2000)
+
+            });
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- ==================== -->
+        <!-- Test Case 3 -->
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/line',
+                // 'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                // 'zrender/vml/vml'
+            ], function (echarts) {
+
+                var main = document.getElementById('main2');
+                if (!main) {
+                    return;
+                }
+                var chart = echarts.init(main);
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+                var data4 = [];
+
+                xAxisData.push('类目' + -1);
+                data1.push('-');
+                data2.push('-');
+                data3.push('-');
+                data4.push('-');
+
+                for (var i = 0; i < 5; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((-Math.random() - 0.2).toFixed(3));
+                    data2.push((Math.random() + 0.3).toFixed(3));
+                    data3.push((Math.random() + 0.2).toFixed(3));
+                    data4.push((Math.random() + 0.2).toFixed(3));
+                }
+
+                xAxisData.push('类目' + i);
+                data1.push('-');
+                data2.push('-');
+                data3.push('-');
+                data4.push('-');
+
+                for (; i < 10; i++) {
+                    xAxisData.push('类目' + i);
+                    data1.push((-Math.random() - 0.2).toFixed(3));
+                    data2.push((Math.random() + 0.3).toFixed(3));
+                    data3.push((Math.random() + 0.2).toFixed(3));
+                    data4.push((Math.random() + 0.2).toFixed(3));
+                }
+                xAxisData.push('类目' + i);
+                data1.push('-');
+                data2.push('-');
+                data3.push('-');
+                data4.push('-');
+
+                var itemStyle = {
+                    normal: {
+                        // borderColor: 'white',
+                        // borderWidth: 3,
+                        // shadowBlur: 10,
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 5,
+                        // shadowColor: 'rgba(0, 0, 0, 0.4)',
+                        lineStyle: {
+                            width: 2
+                            // shadowBlur: 10,
+                            // shadowOffsetX: 0,
+                            // shadowOffsetY: 5,
+                            // shadowColor: 'rgba(0, 0, 0, 0.4)'
+                        },
+                        areaStyle: {
+                        }
+                    }
+                };
+
+                chart.setOption({
+                    legend: {
+                        data: ['line', 'line2', 'line3']
+                    },
+                    tooltip: {
+                        trigger: 'axis',
+                        position: function (point) {
+                            return [point[0], '10%'];
+                        },
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    xAxis: {
+                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        data: xAxisData,
+                        boundaryGap: false,
+                        // inverse: true,
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    yAxis: {
+                    },
+                    series: [{
+                        id: 'aaa',
+                        name: 'line33333',
+                        type: 'line',
+                        stack: 'all',
+                        symbolSize: 10,
+                        data: data3,
+                        itemStyle: itemStyle,
+                        label: {
+                            normal: {
+                                show: true
+                            }
+                        },
+                        connectNulls: true,
+                        smooth: true
+                    }]
+                });
+
+                setTimeout(function () {
+                    chart.setOption({
+                        series: [
+                            {
+                                id: 'aaa',
+                                name: 'xxxxxxxxxxxxxxxx',
+                                data: data4,
+                            }
+                        ]
+                    });
+                }, 1000);
+
+            })
+
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </body>
+</html>
