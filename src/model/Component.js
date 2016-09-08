@@ -89,9 +89,6 @@ define(function(require) {
         $constructor: function (option, parentModel, ecModel, extraOpt) {
             Model.call(this, option, parentModel, ecModel, extraOpt);
 
-            // Set dependentModels, componentIndex, name, id, mainType, subType.
-            zrUtil.extend(this, extraOpt);
-
             this.uid = componentUtil.getUID('componentModel');
         },
 
@@ -114,7 +111,7 @@ define(function(require) {
             }
         },
 
-        mergeOption: function (option) {
+        mergeOption: function (option, extraOpt) {
             zrUtil.merge(this.option, option, true);
 
             var layoutMode = this.layoutMode;

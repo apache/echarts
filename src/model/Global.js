@@ -176,6 +176,7 @@ define(function (require) {
                         );
 
                         if (componentModel && componentModel instanceof ComponentModelClass) {
+                            componentModel.name = resultItem.keyInfo.name;
                             componentModel.mergeOption(newCptOption, this);
                             componentModel.optionUpdated(newCptOption, false);
                         }
@@ -191,6 +192,7 @@ define(function (require) {
                             componentModel = new ComponentModelClass(
                                 newCptOption, this, this, extraOpt
                             );
+                            zrUtil.extend(componentModel, extraOpt);
                             componentModel.init(newCptOption, this, this, extraOpt);
                             // Call optionUpdated after init.
                             // newCptOption has been used as componentModel.option

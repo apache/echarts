@@ -73,16 +73,19 @@ define(function (require) {
                                 fillLabel(item);
                             }
                         });
-                        var opt = {
+
+                        markerModel = new MarkerModel(
+                            markerOpt, this, ecModel
+                        );
+
+                        zrUtil.extend(markerModel, {
                             mainType: this.mainType,
                             // Use the same series index and name
                             seriesIndex: seriesModel.seriesIndex,
                             name: seriesModel.name,
                             createdBySelf: true
-                        };
-                        markerModel = new MarkerModel(
-                            markerOpt, this, ecModel, opt
-                        );
+                        });
+
                         markerModel.__hostSeries = seriesModel;
                     }
                     else {
