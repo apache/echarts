@@ -8,7 +8,9 @@ define(function (require) {
             ['shadowBlur'],
             ['shadowOffsetX'],
             ['shadowOffsetY'],
-            ['shadowColor']
+            ['shadowColor'],
+            ['textPosition'],
+            ['textAlign']
         ]
     );
     return {
