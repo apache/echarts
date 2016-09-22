@@ -42,21 +42,30 @@ define(function (require) {
                 if (axisModel) {
                     axisModels.push(axisModel);
                     var coordSysName;
-                    if (dimNames.axis === 'xAxis' || dimNames.axis === 'yAxis') {
+                    var axisName = dimNames.axis;
+
+                    if (axisName === 'xAxis' || axisName === 'yAxis') {
                         coordSysName = 'grid';
                     }
-                    else {
-                        // Polar
+                    else if (axisName === 'angleAxis' || axisName === 'radiusAxis') {
                         coordSysName = 'polar';
                     }
-                    var coordModel = ecModel.queryComponents({
-                        mainType: coordSysName,
-                        index: axisModel.get(coordSysName + 'Index'),
-                        id: axisModel.get(coordSysName + 'Id')
-                    })[0];
+
+                    var coordModel = coordSysName
+                        ? ecModel.queryComponents({
+                            mainType: coordSysName,
+                            index: axisModel.get(coordSysName + 'Index'),
+                            id: axisModel.get(coordSysName + 'Id')
+                        })[0]
+                        : null;
 
                     if (coordModel != null) {
-                        save(coordModel, axisModel, coordSysName === 'grid' ? cartesians : polars, coordModel.componentIndex);
+                        save(
+                            coordModel,
+                            axisModel,
+                            coordSysName === 'grid' ? cartesians : polars,
+                            coordModel.componentIndex
+                        );
                     }
                 }
             }, this);

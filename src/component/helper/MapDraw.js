@@ -285,9 +285,9 @@ define(function (require) {
                     }
                 }, this);
 
-            controller.rectProvider = function () {
-                return geo.getViewRectAfterRoam();
-            };
+            controller.setContainsPoint(function (x, y) {
+                return geo.getViewRectAfterRoam().contain(x, y);
+            });
         }
     };
 

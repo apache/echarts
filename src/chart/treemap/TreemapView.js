@@ -375,9 +375,9 @@
             }
 
             var rect = new BoundingRect(0, 0, api.getWidth(), api.getHeight());
-            controller.rectProvider = function () {
-                return rect;
-            };
+            controller.setContainsPoint(function (x, y) {
+                return rect.contain(x, y);
+            });
         },
 
         /**
@@ -762,7 +762,7 @@
             var text = nodeModel.get('name');
             if (thisLayout.isLeafRoot) {
                 var iconChar = seriesModel.get('drillDownIcon', true);
-                text = iconChar ? iconChar + ' ' + text : test;
+                text = iconChar ? iconChar + ' ' + text : text;
             }
 
             setText(

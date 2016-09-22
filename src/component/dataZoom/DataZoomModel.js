@@ -30,7 +30,6 @@ define(function(require) {
             xAxisIndex: null,       // Default the first horizontal category axis.
             yAxisIndex: null,       // Default the first vertical category axis.
 
-
             filterMode: 'filter',   // Possible values: 'filter' or 'empty'.
                                     // 'filter': data items which are out of window will be removed.
                                     //           This option is applicable when filtering outliers.

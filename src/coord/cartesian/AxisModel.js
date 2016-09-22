@@ -20,7 +20,7 @@ define(function(require) {
          */
         init: function () {
             AxisModel.superApply(this, 'init', arguments);
-            this._resetRange();
+            this.resetRange();
         },
 
         /**
@@ -28,7 +28,7 @@ define(function(require) {
          */
         mergeOption: function () {
             AxisModel.superApply(this, 'mergeOption', arguments);
-            this._resetRange();
+            this.resetRange();
         },
 
         /**
@@ -36,45 +36,7 @@ define(function(require) {
          */
         restoreData: function () {
             AxisModel.superApply(this, 'restoreData', arguments);
-            this._resetRange();
-        },
-
-        /**
-         * @public
-         * @param {number} rangeStart
-         * @param {number} rangeEnd
-         */
-        setRange: function (rangeStart, rangeEnd) {
-            this.option.rangeStart = rangeStart;
-            this.option.rangeEnd = rangeEnd;
-        },
-
-        /**
-         * @public
-         * @return {Array.<number|string|Date>}
-         */
-        getMin: function () {
-            var option = this.option;
-            return option.rangeStart != null ? option.rangeStart : option.min;
-        },
-
-        /**
-         * @public
-         * @return {Array.<number|string|Date>}
-         */
-        getMax: function () {
-            var option = this.option;
-            return option.rangeEnd != null ? option.rangeEnd : option.max;
-        },
-
-        /**
-         * @public
-         * @return {boolean}
-         */
-        getNeedCrossZero: function () {
-            var option = this.option;
-            return (option.rangeStart != null || option.rangeEnd != null)
-                ? false : !option.scale;
+            this.resetRange();
         },
 
         /**
@@ -86,14 +48,6 @@ define(function(require) {
                 index: this.get('gridIndex'),
                 id: this.get('gridId')
             })[0];
-        },
-
-        /**
-         * @private
-         */
-        _resetRange: function () {
-            // rangeStart and rangeEnd is readonly.
-            this.option.rangeStart = this.option.rangeEnd = null;
         }
 
     });
@@ -104,6 +58,7 @@ define(function(require) {
     }
 
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
+    zrUtil.merge(AxisModel.prototype, require('../axisModelZoomMixin'));
 
     var extraOption = {
         // gridIndex: 0,

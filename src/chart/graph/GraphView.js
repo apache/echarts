@@ -236,11 +236,13 @@ define(function (require) {
         _updateController: function (seriesModel, api) {
             var controller = this._controller;
             var group = this.group;
-            controller.rectProvider = function () {
+
+            controller.setContainsPoint(function (x, y) {
                 var rect = group.getBoundingRect();
                 rect.applyTransform(group.transform);
-                return rect;
-            };
+                return rect.contain(x, y);
+            });
+
             if (seriesModel.coordinateSystem.type !== 'view') {
                 controller.disable();
                 return;

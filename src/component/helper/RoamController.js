@@ -16,8 +16,8 @@ define(function (require) {
 
         var x = e.offsetX;
         var y = e.offsetY;
-        var rect = this.rectProvider && this.rectProvider();
-        if (rect && rect.contain(x, y)) {
+
+        if (this.containsPoint && this.containsPoint(x, y)) {
             this._x = x;
             this._y = y;
             this._dragging = true;
@@ -40,8 +40,11 @@ define(function (require) {
             var x = e.offsetX;
             var y = e.offsetY;
 
-            var dx = x - this._x;
-            var dy = y - this._y;
+            var oldX = this._x;
+            var oldY = this._y;
+
+            var dx = x - oldX;
+            var dy = y - oldY;
 
             this._x = x;
             this._y = y;
@@ -56,7 +59,7 @@ define(function (require) {
             }
 
             eventTool.stop(e.event);
-            this.trigger('pan', dx, dy);
+            this.trigger('pan', dx, dy, oldX, oldY, x, y);
         }
     }
 
@@ -81,9 +84,7 @@ define(function (require) {
     }
 
     function zoom(e, zoomDelta, zoomX, zoomY) {
-        var rect = this.rectProvider && this.rectProvider();
-
-        if (rect && rect.contain(zoomX, zoomY)) {
+        if (this.containsPoint && this.containsPoint(zoomX, zoomY)) {
             // When mouse is out of roamController rect,
             // default befavoius should be be disabled, otherwise
             // page sliding is disabled, contrary to expectation.
@@ -128,9 +129,8 @@ define(function (require) {
      *
      * @param {module:zrender/zrender~ZRender} zr
      * @param {module:zrender/Element} target
-     * @param {Function} [rectProvider]
      */
-    function RoamController(zr, target, rectProvider) {
+    function RoamController(zr, target) {
 
         /**
          * @type {module:zrender/Element}
@@ -140,7 +140,7 @@ define(function (require) {
         /**
          * @type {Function}
          */
-        this.rectProvider = rectProvider;
+        this.containsPoint;
 
         /**
          * { min: 1, max: 2 }
@@ -166,6 +166,15 @@ define(function (require) {
         var pinchHandler = bind(pinch, this);
 
         Eventful.call(this);
+
+        /**
+         * @param {Function} containsPoint
+         *                   input: x, y
+         *                   output: boolean
+         */
+        this.setContainsPoint = function (containsPoint) {
+            this.containsPoint = containsPoint;
+        };
 
         /**
          * Notice: only enable needed types. For example, if 'zoom'
