@@ -155,6 +155,8 @@ define(function (require) {
                     if (toolboxModel.get('showTitle')) {
                         path.__title = titles[iconName];
                         path.on('mouseover', function () {
+                                // Should not reuse above hoverStyle, which might be modified.
+                                var hoverStyle = iconStyleModel.getModel('emphasis').getItemStyle();
                                 path.setStyle({
                                     text: titles[iconName],
                                     textPosition: hoverStyle.textPosition || 'bottom',

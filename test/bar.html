@@ -93,7 +93,8 @@
                         }
                     },
                     toolbox: {
-                        // y: 'bottom',
+                        top: 25,
+                        // right: 20,
                         feature: {
                             magicType: {
                                 type: ['line', 'bar', 'stack', 'tiled']
@@ -117,6 +118,13 @@
                                 onclick: function (){
                                     alert('myToolHandler2')
                                 }
+                            }
+                        },
+
+                        iconStyle: {
+                            emphasis: {
+                                textPosition: 'top'
+                                // textAlign: 'right'
                             }
                         }
                     },
