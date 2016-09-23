@@ -114,7 +114,7 @@ define(function(require) {
         toggleSelected: function (name) {
             var selected = this.option.selected;
             // Default is true
-            if (!(name in selected)) {
+            if (!selected.hasOwnProperty(name)) {
                 selected[name] = true;
             }
             this[selected[name] ? 'unSelect' : 'select'](name);
@@ -125,7 +125,7 @@ define(function(require) {
          */
         isSelected: function (name) {
             var selected = this.option.selected;
-            return !((name in selected) && !selected[name])
+            return !(selected.hasOwnProperty(name) && !selected[name])
                 && zrUtil.indexOf(this._availableNames, name) >= 0;
         },
 

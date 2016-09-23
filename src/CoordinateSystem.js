@@ -16,8 +16,10 @@ define(function(require) {
         create: function (ecModel, api) {
             var coordinateSystems = [];
             for (var type in coordinateSystemCreators) {
-                var list = coordinateSystemCreators[type].create(ecModel, api);
-                list && (coordinateSystems = coordinateSystems.concat(list));
+                if (coordinateSystemCreators.hasOwnProperty(type)) {
+                    var list = coordinateSystemCreators[type].create(ecModel, api);
+                    list && (coordinateSystems = coordinateSystems.concat(list));
+                }
             }
 
             this._coordinateSystems = coordinateSystems;

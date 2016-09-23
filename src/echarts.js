@@ -368,8 +368,8 @@ define(function (require) {
             var bottom = -MAX_NUMBER;
             var canvasList = [];
             var dpr = (opts && opts.pixelRatio) || 1;
-            for (var id in instances) {
-                var chart = instances[id];
+
+            zrUtil.each(instances, function (chart, id) {
                 if (chart.group === groupId) {
                     var canvas = chart.getRenderedCanvas(
                         zrUtil.clone(opts)
@@ -385,7 +385,7 @@ define(function (require) {
                         top: boundingRect.top
                     });
                 }
-            }
+            });
 
             left *= dpr;
             top *= dpr;
@@ -1218,12 +1218,13 @@ define(function (require) {
                 if (connectedGroups[chart.group] && chart[STATUS_KEY] !== STATUS_PENDING) {
                     var action = chart.makeActionFromEvent(event);
                     var otherCharts = [];
-                    for (var id in instances) {
-                        var otherChart = instances[id];
+
+                    zrUtil.each(instances, function (otherChart) {
                         if (otherChart !== chart && otherChart.group === chart.group) {
                             otherCharts.push(otherChart);
                         }
-                    }
+                    });
+
                     updateConnectedChartsStatus(otherCharts, STATUS_PENDING);
                     each(otherCharts, function (otherChart) {
                         if (otherChart[STATUS_KEY] !== STATUS_UPDATING) {

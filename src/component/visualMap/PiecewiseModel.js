@@ -117,7 +117,7 @@ define(function(require) {
             // Consider 'not specified' means true.
             zrUtil.each(pieceList, function (piece, index) {
                 var key = this.getSelectedMapKey(piece);
-                if (!(key in selected)) {
+                if (!selected.hasOwnProperty(key)) {
                     selected[key] = true;
                 }
             }, this);

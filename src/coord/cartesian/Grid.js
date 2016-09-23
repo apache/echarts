@@ -95,9 +95,11 @@ define(function(require, factory) {
         function ifAxisCanNotOnZero(otherAxisDim) {
             var axes = axesMap[otherAxisDim];
             for (var idx in axes) {
-                var axis = axes[idx];
-                if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
-                    return true;
+                if (axes.hasOwnProperty(idx)) {
+                    var axis = axes[idx];
+                    if (axis && (axis.type === 'category' || !ifAxisCrossZero(axis))) {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -191,7 +193,9 @@ define(function(require, factory) {
             if (axisIndex == null) {
                 // Find first axis
                 for (var name in axesMapOnDim) {
-                    return axesMapOnDim[name];
+                    if (axesMapOnDim.hasOwnProperty(name)) {
+                        return axesMapOnDim[name];
+                    }
                 }
             }
             return axesMapOnDim[axisIndex];

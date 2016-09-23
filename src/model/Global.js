@@ -564,21 +564,21 @@ define(function (require) {
      * @inner
      */
     function mergeTheme(option, theme) {
-        for (var name in theme) {
+        zrUtil.each(theme, function (themeItem, name) {
             // 如果有 component model 则把具体的 merge 逻辑交给该 model 处理
             if (!ComponentModel.hasClass(name)) {
-                if (typeof theme[name] === 'object') {
+                if (typeof themeItem === 'object') {
                     option[name] = !option[name]
-                        ? zrUtil.clone(theme[name])
-                        : zrUtil.merge(option[name], theme[name], false);
+                        ? zrUtil.clone(themeItem)
+                        : zrUtil.merge(option[name], themeItem, false);
                 }
                 else {
                     if (option[name] == null) {
-                        option[name] = theme[name];
+                        option[name] = themeItem;
                     }
                 }
             }
-        }
+        });
     }
 
     function initBase(baseOption) {

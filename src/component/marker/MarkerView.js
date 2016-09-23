@@ -16,7 +16,9 @@ define(function (require) {
         render: function (markerModel, ecModel, api) {
             var markerGroupMap = this.markerGroupMap;
             for (var name in markerGroupMap) {
-                markerGroupMap[name].__keep = false;
+                if (markerGroupMap.hasOwnProperty(name)) {
+                    markerGroupMap[name].__keep = false;
+                }
             }
 
             var markerModelKey = this.type + 'Model';
@@ -26,7 +28,7 @@ define(function (require) {
             }, this);
 
             for (var name in markerGroupMap) {
-                if (!markerGroupMap[name].__keep) {
+                if (markerGroupMap.hasOwnProperty(name) && !markerGroupMap[name].__keep) {
                     this.group.remove(markerGroupMap[name].group);
                 }
             }

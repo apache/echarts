@@ -233,7 +233,9 @@ define(function(require) {
 
     var symbolBuildProxies = {};
     for (var name in symbolCtors) {
-        symbolBuildProxies[name] = new symbolCtors[name]();
+        if (symbolCtors.hasOwnProperty(name)) {
+            symbolBuildProxies[name] = new symbolCtors[name]();
+        }
     }
 
     var Symbol = graphic.extendShape({

@@ -290,7 +290,7 @@ define(function (require) {
 
         if (!isCategory
             && visualArr.length === 1
-            && !(thisOption.type in doNotNeedPair)
+            && !doNotNeedPair.hasOwnProperty(thisOption.type)
         ) {
             // Do not care visualArr.length === 0, which is illegal.
             visualArr[1] = visualArr[0];
