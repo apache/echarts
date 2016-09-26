@@ -1,0 +1,117 @@
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <script src='esl.js'></script>
+        <script src='config.js'></script>
+        <script src='lib/jquery.min.js'></script>
+        <script src='http://api.map.baidu.com/api?v=2.0&ak=ZUONbpqGBsYGXNIYHicvbAbM'></script>
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
+    </head>
+    <body>
+        <style>
+            html, body, #main {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+            }
+        </style>
+        <div id='main'></div>
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/lines',
+                'echarts/chart/effectScatter',
+                'echarts/component/legend',
+                'echarts/component/geo'
+            ], function (echarts) {
+
+                $.get('../map/json/china.json', function (chinaJson) {
+                    echarts.registerMap('china', chinaJson);
+
+                    var myChart = echarts.init(document.getElementById('main'));
+
+                    var planePath = 'path://M1705.06,1318.313v-89.254l-319.9-221.799l0.073-208.063c0.521-84.662-26.629-121.796-63.961-121.491c-37.332-0.305-64.482,36.829-63.961,121.491l0.073,208.063l-319.9,221.799v89.254l330.343-157.288l12.238,241.308l-134.449,92.931l0.531,42.034l175.125-42.917l175.125,42.917l0.531-42.034l-134.449-92.931l12.238-241.308L1705.06,1318.313z';
+
+                    var option = {
+
+                        geo: {
+                            map: 'china',
+                            roam: true
+                        },
+
+                        series: [{
+                            type: 'lines',
+                            coordinateSystem: 'geo',
+                            polyline: true,
+                            effect: {
+                                show: true,
+                                period: 8,
+                                color: '#4433aa',
+                                symbolSize: 20,
+                                symbol: planePath
+                            },
+                            zlevel: 1,
+                            lineStyle: {
+                                normal: {
+                                    width: 4,
+                                    opacity: 0.2
+                                }
+                            },
+                            data: [{
+                                coords: [
+                                    [100.5107, 23.2196],
+                                    [120.5107, 23.2196]
+                                ],
+                                lineStyle: {
+                                    normal: {
+                                        curveness: 0.2
+                                    }
+                                }
+                            }, {
+                                coords: [
+                                    [100.5107, 30.2196],
+                                    [100.5107, 32.2196],
+                                    [110.5107, 34.2196],
+                                    [112.5107, 38.2196],
+                                    [104.5107, 30.2196],
+                                    [100.5107, 30.2196]
+                                ]
+                            }]
+                        },
+                        {
+                            type: 'lines',
+                            coordinateSystem: 'geo',
+                            effect: {
+                                show: true,
+                                period: 4,
+                                color: '#4433aa',
+                                symbolSize: 20,
+                                symbol: planePath
+                            },
+                            zlevel: 1,
+                            data: [{
+                                coords: [
+                                    [100.5107, 23.2196],
+                                    [120.5107, 23.2196]
+                                ],
+                                lineStyle: {
+                                    normal: {
+                                        curveness: 0.2,
+                                        width: 4,
+                                        opacity: 0.4
+                                    }
+                                }
+                            }]
+                        }]
+                    }
+
+                    myChart.setOption(option);
+
+                });
+
+            });
+
+        </script>
+    </body>
+</html>
