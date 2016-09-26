@@ -64,8 +64,14 @@ define(function (require) {
         var rippleGroup = this.childAt(1);
 
         for (var i = 0; i < EFFECT_RIPPLE_NUMBER; i++) {
+            // var ripplePath = symbolUtil.createSymbol(
+            //     symbolType, -0.5, -0.5, 1, 1, color
+            // );
+            // If width/height are set too small (e.g., set to 1) on ios10
+            // and macOS Sierra, a circle stroke become a rect, no matter what
+            // the scale is set. So we set width/height as 2. See #4136.
             var ripplePath = symbolUtil.createSymbol(
-                symbolType, -0.5, -0.5, 1, 1, color
+                symbolType, -1, -1, 2, 2, color
             );
             ripplePath.attr({
                 style: {
@@ -73,14 +79,14 @@ define(function (require) {
                 },
                 z2: 99,
                 silent: true,
-                scale: [1, 1]
+                scale: [0.5, 0.5]
             });
 
             var delay = -i / EFFECT_RIPPLE_NUMBER * effectCfg.period + effectCfg.effectOffset;
             // TODO Configurable effectCfg.period
             ripplePath.animate('', true)
                 .when(effectCfg.period, {
-                    scale: [effectCfg.rippleScale, effectCfg.rippleScale]
+                    scale: [effectCfg.rippleScale / 2, effectCfg.rippleScale / 2]
                 })
                 .delay(delay)
                 .start();
