@@ -406,11 +406,7 @@ define(function(require, factory) {
      */
     function findAxesModels(seriesModel, ecModel) {
         return zrUtil.map(axesTypes, function (axisType) {
-            var axisModel = ecModel.queryComponents({
-                mainType: axisType,
-                index: seriesModel.get(axisType + 'Index'),
-                id: seriesModel.get(axisType + 'Id')
-            })[0];
+            var axisModel = seriesModel.getReferringComponents(axisType)[0];
 
             if (__DEV__) {
                 if (!axisModel) {

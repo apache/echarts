@@ -417,6 +417,16 @@ define(function (require) {
         }
     };
 
+    /**
+     * Convert from coordinate system to pixel.
+     * See CoordinateSystem#convertToPixel.
+     * @param {string|Object} finder
+     * @param {Array|number} value
+     */
+    echartsProto.convertToPixel = function (finder, value) {
+        return this._coordSysMgr.convertToPixel(this._model, finder, value);
+    };
+
     var updateMethods = {
 
 

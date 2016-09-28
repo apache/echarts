@@ -140,6 +140,14 @@ define(function(require) {
                 this.__defaultOption = defaultOption;
             }
             return this.__defaultOption;
+        },
+
+        getReferringComponents: function (mainType) {
+            return this.ecModel.queryComponents({
+                mainType: mainType,
+                index: this.get(mainType + 'Index', true),
+                id: this.get(mainType + 'Id', true)
+            });
         }
 
     });

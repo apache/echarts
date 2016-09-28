@@ -262,9 +262,9 @@ define(function (require) {
          * @param {Object} condition
          * @param {string} condition.mainType
          * @param {string} [condition.subType] If ignore, only query by mainType
-         * @param {number} [condition.index] Either input index or id or name.
-         * @param {string} [condition.id] Either input index or id or name.
-         * @param {string} [condition.name] Either input index or id or name.
+         * @param {number|Array.<number>} [condition.index] Either input index or id or name.
+         * @param {string|Array.<string>} [condition.id] Either input index or id or name.
+         * @param {string|Array.<string>} [condition.name] Either input index or id or name.
          * @return {Array.<module:echarts/model/Component>}
          */
         queryComponents: function (condition) {

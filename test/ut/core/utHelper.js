@@ -135,6 +135,14 @@
             for (var i = 0; i < context.chartCount || 0; i++) {
                 var el = document.createElement('div');
                 document.body.appendChild(el);
+                el.style.cssText = [
+                    'width:200px',
+                    'height:150px',
+                    'position:absolute',
+                    'bottom:0',
+                    'right:0',
+                    'visibility:hidden'
+                ].join(';');
                 els.push(el);
                 charts.push(echarts.init(el, null, {renderer: 'canvas'}));
             }

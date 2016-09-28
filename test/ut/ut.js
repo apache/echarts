@@ -7,7 +7,9 @@ document.write('<script src="spec/util/number.js"><\/script>');
 document.write('<script src="spec/model/Component.js"><\/script>');
 document.write('<script src="spec/model/Global.js"><\/script>');
 document.write('<script src="spec/model/timelineOptions.js"><\/script>');
+document.write('<script src="spec/coord/converter.js"><\/script>');
 
 document.write('<script src="spec/data/List.js"><\/script>');
 
 document.write('<script src="spec/component/visualMap/setOption.js"><\/script>');
+document.write('<script src="spec/component/dataZoom/helper.js"><\/script>');

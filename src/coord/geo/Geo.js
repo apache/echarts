@@ -221,7 +221,30 @@ define(function (require) {
             if (data) {
                 return View.prototype.dataToPoint.call(this, data);
             }
+        },
+
+        /**
+         * @implements
+         * see {module:echarts/CoodinateSystem}
+         */
+        isTargetCoordinateSystem: function (ecModel, finder) {
+            var geoModel = finder.geo
+                ? finder.geo
+                : finder.series
+                ? finder.series.getReferringComponents('geo')[0]
+                : null;
+
+            return geoModel && geoModel.coordinateSystem === this;
+        },
+
+        /**
+         * @implements
+         * see {module:echarts/CoodinateSystem}
+         */
+        convertToPixel: function (ecModel, value) {
+            return this.dataToPoint(value);
         }
+
     };
 
     zrUtil.mixin(Geo, View);
