@@ -110,7 +110,8 @@ define(function (require) {
         if (precision == null) {
             precision = 10;
         }
-        // PENDING
+        // Avoid range error
+        precision = Math.min(Math.max(0, precision), 20);
         return +(+x).toFixed(precision);
     };
 
