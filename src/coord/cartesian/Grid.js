@@ -220,6 +220,49 @@ define(function(require, factory) {
     };
 
     /**
+     * @implements
+     * see {module:echarts/CoodinateSystem}
+     */
+    gridProto.convertToPixel = function (ecModel, finder, value) {
+        var seriesModel = finder.seriesModel;
+        var xAxisModel = finder.xAxisModel
+            || (seriesModel && seriesModel.getReferringComponents('xAxis')[0]);
+        var yAxisModel = finder.yAxisModel
+            || (seriesModel && seriesModel.getReferringComponents('yAxis')[0]);
+        var gridModel = finder.gridModel;
+        var coordsList = this._coordsList;
+        var cartesian;
+        var axis;
+
+        if (seriesModel) {
+            cartesian = seriesModel.coordinateSystem;
+            zrUtil.indexOf(coordsList, cartesian) < 0 && (cartesian = null);
+        }
+        else if (xAxisModel && yAxisModel) {
+            cartesian = this.getCartesian(xAxisModel.componentIndex, yAxisModel.componentIndex);
+        }
+        else if (xAxisModel) {
+            axis = this.getAxis('x', xAxisModel.componentIndex);
+        }
+        else if (yAxisModel) {
+            axis = this.getAxis('y', yAxisModel.componentIndex);
+        }
+        // Lowest priority.
+        else if (gridModel) {
+            var grid = gridModel.coordinateSystem;
+            if (grid === this) {
+                cartesian = this._coordsList[0];
+            }
+        }
+
+        return cartesian
+            ? cartesian.dataToPoint(value)
+            : axis
+            ? axis.dataToCoord(value)
+            : null;
+    };
+
+    /**
      * Initialize cartesian coordinate systems
      * @private
      */

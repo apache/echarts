@@ -253,6 +253,16 @@ define(function (require) {
             return invTransform
                 ? v2ApplyTransform([], point, invTransform)
                 : [point[0], point[1]];
+        },
+
+        /**
+         * @implements
+         * see {module:echarts/CoodinateSystem}
+         */
+        convertToPixel: function (ecModel, finder, value) {
+            var seriesModel = finder.seriesModel;
+            var coordSys = seriesModel ? seriesModel.coordinateSystem : null; // e.g., graph.
+            return coordSys === this ? coordSys.dataToPoint(value) : null;
         }
 
         /**

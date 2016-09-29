@@ -16,15 +16,14 @@ define(function(require) {
      *     @param {module:echarts/model/Global} ecModel
      *     @param {module:echarts/ExtensionAPI} api
      *
-     * isTargetCoordinate:
-     *     @param {module:echarts/model/Global} ecModel
-     *     @param {Object} finder key: mainType, value: component model
-     *                            e.g., {geo: geoModel, series: seriesModel}
-     *     @return {boolean}
-     *
      * convertToPixel:
+     *     This method is also responsible for determine whether this
+     *     coodinate system is applicable to the given `finder`.
+     *     Each coordinate system will be tried, util one returns none
+     *     null/undefined value.
      *     @param {module:echarts/model/Global} ecModel
      *     @param {Array|number} value
+     *     @param {Object} finder
      *     @return {Array|number} convert result.
      */
 
@@ -75,14 +74,15 @@ define(function(require) {
         convertToPixel: function (ecModel, finder, value) {
             finder = parseFinder(ecModel, finder);
 
+            var result;
             var coordSysList = this._coordinateSystems;
+
             for (var i = 0; i < coordSysList.length; i++) {
                 var coordSys = coordSysList[i];
-                if (coordSys.isTargetCoordinateSystem
-                    && coordSys.isTargetCoordinateSystem(ecModel, finder)
-                    && coordSys.convertToPixel
+                if (coordSys.convertToPixel
+                    && (result = coordSys.convertToPixel(ecModel, finder, value)) != null
                 ) {
-                    return coordSys.convertToPixel(ecModel, value);
+                    return result;
                 }
             }
         }
@@ -109,7 +109,7 @@ define(function(require) {
             key = key.match(/^(\w+)(Index|Id|Name)$/);
             var queryParam = {mainType: key[1]};
             queryParam[key[2].toLowerCase()] = value;
-            result[key[1]] = ecModel.queryComponents(queryParam)[0];
+            result[key[1] + 'Model'] = ecModel.queryComponents(queryParam)[0];
         });
 
         return result;

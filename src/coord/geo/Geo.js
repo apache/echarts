@@ -224,25 +224,24 @@ define(function (require) {
         },
 
         /**
+         * @override
          * @implements
          * see {module:echarts/CoodinateSystem}
          */
-        isTargetCoordinateSystem: function (ecModel, finder) {
-            var geoModel = finder.geo
-                ? finder.geo
-                : finder.series
-                ? finder.series.getReferringComponents('geo')[0]
+        convertToPixel: function (ecModel, finder, value) {
+            var geoModel = finder.geoModel;
+            var seriesModel = finder.seriesModel;
+
+            var coordSys = geoModel
+                ? geoModel.coordinateSystem
+                : seriesModel
+                ? (
+                    seriesModel.coordinateSystem // For map.
+                    || (seriesModel.getReferringComponents('geo')[0] || {}).coordinateSystem
+                )
                 : null;
 
-            return geoModel && geoModel.coordinateSystem === this;
-        },
-
-        /**
-         * @implements
-         * see {module:echarts/CoodinateSystem}
-         */
-        convertToPixel: function (ecModel, value) {
-            return this.dataToPoint(value);
+            return coordSys === this ? coordSys.dataToPoint(value) : null;
         }
 
     };
