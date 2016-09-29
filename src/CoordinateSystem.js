@@ -22,8 +22,8 @@ define(function(require) {
      *     Each coordinate system will be tried, util one returns none
      *     null/undefined value.
      *     @param {module:echarts/model/Global} ecModel
-     *     @param {Array|number} value
      *     @param {Object} finder
+     *     @param {Array|number} value
      *     @return {Array|number} convert result.
      */
 

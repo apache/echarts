@@ -258,7 +258,7 @@ define(function(require, factory) {
         return cartesian
             ? cartesian.dataToPoint(value)
             : axis
-            ? axis.dataToCoord(value)
+            ? axis.toGlobalCoord(axis.dataToCoord(value))
             : null;
     };
 

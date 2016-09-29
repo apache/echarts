@@ -102,18 +102,18 @@ describe('coord/converter', function() {
             geo: [
                 {
                     id: 'aa',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
+                    left: 10,
+                    right: 20,
+                    top: 30,
+                    bottom: 40,
                     map: 'test1'
                 },
                 {
                     id: 'bb',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0,
+                    left: 10,
+                    right: 20,
+                    top: 30,
+                    bottom: 40,
                     map: 'test2'
                 }
             ],
@@ -126,11 +126,11 @@ describe('coord/converter', function() {
         var width = chart.getWidth();
         var height = chart.getHeight();
 
-        expect(pointEquals(chart.convertToPixel('geo', [5000, 3000]), [width, height])).toEqual(true);
-        expect(pointEquals(chart.convertToPixel({geoIndex: 1}, [500, 800]), [width, 0])).toEqual(true);
-        expect(pointEquals(chart.convertToPixel({geoId: 'bb'}, [200, 300]), [0, height])).toEqual(true);
-        expect(pointEquals(chart.convertToPixel({seriesIndex: 0}, [200, 800]), [0, 0])).toEqual(true);
-        expect(pointEquals(chart.convertToPixel({seriesId: 'k2'}, [2000, 8000]), [0, 0])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel('geo', [5000, 3000]), [width - 20, height - 40])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({geoIndex: 1}, [500, 800]), [width - 20, 30])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({geoId: 'bb'}, [200, 300]), [10, height - 40])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({seriesIndex: 0}, [200, 800]), [10, 30])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({seriesId: 'k2'}, [2000, 8000]), [10, 30])).toEqual(true);
     });
 
 
@@ -145,25 +145,25 @@ describe('coord/converter', function() {
                     id: 'k1',
                     type: 'map',
                     map: 'test1',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0
+                    left: 10,
+                    right: 20,
+                    top: 30,
+                    bottom: 40
                 },
                 {
                     id: 'k2',
                     type: 'map',
                     map: 'test2',
-                    left: 0,
-                    right: 0,
-                    top: 0,
-                    bottom: 0
+                    left: 10,
+                    right: 20,
+                    top: 30,
+                    bottom: 40
                 }
             ]
         });
 
-        expect(pointEquals(chart.convertToPixel({seriesIndex: 0}, [2000, 8000]), [0, 0])).toEqual(true);
-        expect(pointEquals(chart.convertToPixel({seriesId: 'k2'}, [200, 800]), [0, 0])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({seriesIndex: 0}, [2000, 8000]), [10, 30])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({seriesId: 'k2'}, [200, 800]), [10, 30])).toEqual(true);
     });
 
 
@@ -180,17 +180,17 @@ describe('coord/converter', function() {
             grid: [
                 {
                     id: 'g0',
-                    left: 0,
-                    top: 0,
+                    left: 10,
                     right: '50%',
-                    bottom: 0
+                    top: 30,
+                    bottom: 40
                 },
                 {
                     id: 'g1',
                     left: '50%',
-                    top: 0,
-                    right: 0,
-                    bottom: 0
+                    right: 20,
+                    top: 30,
+                    bottom: 40
                 }
             ],
             xAxis: [
@@ -227,6 +227,7 @@ describe('coord/converter', function() {
                 {
                     id: 'y1',
                     type: 'value',
+                    inverse: true, // test inverse
                     min: 600,
                     max: 900,
                     gridId: 'g1'
@@ -278,15 +279,15 @@ describe('coord/converter', function() {
         var width = chart.getWidth();
         var height = chart.getHeight();
 
-        expect(pointEquals(chart.convertToPixel({seriesIndex: 1}, [-500, 6000]), [0, height])).toEqual(true);
-        expect(pointEquals(chart.convertToPixel({seriesId: 'i1'}, [300, 900]), [width, 0])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({seriesIndex: 1}, [-500, 6000]), [10, height - 40])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({seriesId: 'i1'}, [300, 900]), [width - 20, height - 40])).toEqual(true);
 
-        expect(pointEquals(chart.convertToPixel({xAxisIndex: 2, yAxisId: 'y1'}, [300, 900]), [width, 0]))
+        expect(pointEquals(chart.convertToPixel({xAxisIndex: 2, yAxisId: 'y1'}, [300, 900]), [width - 20, height - 40]))
             .toEqual(true);
-        expect(pointEquals(chart.convertToPixel({gridId: 'g1'}, [300, 900]), [width, 0])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({gridId: 'g1'}, [300, 900]), [width - 20, height - 40])).toEqual(true);
 
         expect(pointEquals(chart.convertToPixel({xAxisId: 'x0'}, 3000), width / 2)).toEqual(true);
-        expect(pointEquals(chart.convertToPixel({yAxisIndex: 1}, 600), 0)).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({yAxisIndex: 1}, 600), 30)).toEqual(true);
     });
 
 
@@ -304,10 +305,10 @@ describe('coord/converter', function() {
                 {
                     id: 'k1',
                     type: 'graph',
-                    left: 0,
-                    top: 0,
-                    right: 0,
-                    bottom: 0,
+                    left: 10,
+                    right: 20,
+                    top: 30,
+                    bottom: 40,
                     data: [
                         {x: 1000, y: 2000},
                         {x: 1000, y: 5000},
@@ -319,10 +320,10 @@ describe('coord/converter', function() {
                 {
                     id: 'k2',
                     type: 'graph',
-                    left: 0,
-                    top: 0,
-                    right: 0,
-                    bottom: 0,
+                    left: 10,
+                    right: 20,
+                    top: 30,
+                    bottom: 40,
                     data: [
                         {x: 100, y: 200},
                         {x: 100, y: 500},
@@ -337,8 +338,8 @@ describe('coord/converter', function() {
         var width = chart.getWidth();
         var height = chart.getHeight();
 
-        expect(pointEquals(chart.convertToPixel({seriesIndex: 0}, [2000, 3500]), [width / 2, height / 2])).toEqual(true);
-        expect(pointEquals(chart.convertToPixel({seriesId: 'k2'}, [100, 500]), [0, height])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({seriesIndex: 0}, [2000, 3500]), [10 + (width - 30) / 2, 30 + (height - 70) / 2])).toEqual(true);
+        expect(pointEquals(chart.convertToPixel({seriesId: 'k2'}, [100, 500]), [10, height - 40])).toEqual(true);
     });
 
 
