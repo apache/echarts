@@ -4,6 +4,7 @@
 define(function(require) {
 
     var echarts = require('../../echarts');
+    var zrUtil = require('zrender/core/util');
 
     echarts.registerAction(
 
@@ -20,7 +21,12 @@ define(function(require) {
                 }
             }
 
+            // Set normalized currentIndex to payload.
             ecModel.resetOption('timeline');
+
+            return zrUtil.defaults({
+                currentIndex: timelineModel.option.currentIndex
+            }, payload);
         }
     );
 
