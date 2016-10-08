@@ -32,6 +32,8 @@ define(function (require) {
             return this.group;
         },
 
+        dispose: zrUtil.noop,
+
         _renderOnCartesian: function (seriesModel, ecModel, api) {
             var group = this.group;
             var data = seriesModel.getData();

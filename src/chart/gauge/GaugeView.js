@@ -53,6 +53,8 @@ define(function (require) {
             );
         },
 
+        dispose: function () {},
+
         _renderMain: function (seriesModel, ecModel, api, colorList, posInfo) {
             var group = this.group;
 

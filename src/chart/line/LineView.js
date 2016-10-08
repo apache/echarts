@@ -495,6 +495,8 @@ define(function(require) {
             this._step = step;
         },
 
+        dispose: function () {},
+
         highlight: function (seriesModel, ecModel, api, payload) {
             var data = seriesModel.getData();
             var dataIndex = queryDataIndex(data, payload);

@@ -152,7 +152,9 @@ define(function (require) {
 
             this._layersSeries = layerSeries;
             this._layers = newLayersGroups;
-        }
+        },
+
+        dispose: function () {}
     });
 
     // add animation to the view

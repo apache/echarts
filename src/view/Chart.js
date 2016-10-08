@@ -132,7 +132,7 @@ define(function (require) {
     }
 
     // Enable Chart.extend.
-    clazzUtil.enableClassExtend(Chart);
+    clazzUtil.enableClassExtend(Chart, ['dispose']);
 
     // Add capability of registerClass, getClass, hasClass, registerSubTypeDefaulter and so on.
     clazzUtil.enableClassManagement(Chart, {registerWhenExtend: true});

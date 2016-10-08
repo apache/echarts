@@ -334,6 +334,8 @@ define(function (require) {
             this._data = data;
         },
 
+        dispose: function () {},
+
         _createClipPath: function (
             cx, cy, r, startAngle, clockwise, cb, seriesModel
         ) {

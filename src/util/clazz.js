@@ -21,10 +21,22 @@ define(function (require) {
     /**
      * @public
      */
-    clazz.enableClassExtend = function (RootClass) {
+    clazz.enableClassExtend = function (RootClass, mandatoryMethods) {
 
         RootClass.$constructor = RootClass;
         RootClass.extend = function (proto) {
+
+            if (__DEV__) {
+                zrUtil.each(mandatoryMethods, function (method) {
+                    if (!proto[method]) {
+                        console.warn(
+                            'Method `' + method + '` should be implemented'
+                            + (proto.type ? ' in ' + proto.type : '') + '.'
+                        );
+                    }
+                });
+            }
+
             var superClass = this;
             var ExtendedClass = function () {
                 if (!proto.$constructor) {

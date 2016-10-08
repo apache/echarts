@@ -70,6 +70,8 @@ define(function (require) {
                 });
                 group.add(ribbon);
             });
-        }
+        },
+
+        dispose: function () {}
     });
 });

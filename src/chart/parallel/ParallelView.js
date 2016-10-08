@@ -37,6 +37,8 @@ define(function (require) {
             // ](seriesModel);
         },
 
+        dispose: function () {},
+
         /**
          * @private
          */

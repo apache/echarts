@@ -87,6 +87,8 @@ define(function (require) {
             }
         },
 
+        dispose: function () {},
+
         _renderOnCartesian: function (cartesian, seriesModel, api) {
             var xAxis = cartesian.getAxis('x');
             var yAxis = cartesian.getAxis('y');
