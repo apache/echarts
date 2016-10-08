@@ -34,10 +34,6 @@ define(function (require) {
             this.group.silent = geoModel.get('silent');
         },
 
-        remove: function () {
-            this._mapDraw && this._mapDraw.remove();
-        },
-
         dispose: function () {
             this._mapDraw && this._mapDraw.remove();
         }
