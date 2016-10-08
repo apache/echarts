@@ -98,7 +98,11 @@ define(function (require) {
             //     scaleQuantity *= 10;
             // }
             extent = scale.getExtent();
-            scale.setExtent(intervalScale * extent[0], extent[1] * intervalScale);
+            var origin = (extent[1] + extent[0]) / 2;
+            scale.setExtent(
+                intervalScale * (extent[0] - origin) + origin,
+                intervalScale * (extent[1] - origin) + origin
+            );
             scale.niceExtent(splitNumber);
         }
 
