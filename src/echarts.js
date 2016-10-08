@@ -1013,7 +1013,11 @@ define(function (require) {
             this._zr.on(eveName, function (e) {
                 var ecModel = this.getModel();
                 var el = e.target;
-                if (el && el.dataIndex != null) {
+
+                if (eveName === 'globalout') {
+                    this.trigger(eveName, e); // no e.target when 'globalout'.
+                }
+                else if (el && el.dataIndex != null) {
                     var dataModel = el.dataModel || ecModel.getSeriesByIndex(el.seriesIndex);
                     var params = dataModel && dataModel.getDataParams(el.dataIndex, el.dataType) || {};
                     params.event = e;
