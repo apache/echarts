@@ -53,6 +53,11 @@ define(function (require) {
             this.group.removeAll();
         },
 
+        dispose: function () {
+            this._mapDraw && this._mapDraw.remove();
+            this._mapDraw = null;
+        },
+
         _renderSymbols: function (mapModel, ecModel, api) {
             var originalData = mapModel.originalData;
             var group = this.group;

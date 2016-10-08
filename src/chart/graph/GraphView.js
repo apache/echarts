@@ -142,6 +142,10 @@ define(function (require) {
             this._firstRender = false;
         },
 
+        dispose: function () {
+            this._controller && this._controller.dispose();
+        },
+
         _focusNodeAdjacency: function (e) {
             var data = this._model.getData();
             var graph = data.graph;

@@ -386,7 +386,7 @@
         _clearController: function () {
             var controller = this._controller;
             if (controller) {
-                controller.off('pan').off('zoom');
+                controller.dispose();
                 controller = null;
             }
         },

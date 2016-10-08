@@ -36,6 +36,7 @@ define(function(require) {
             var theCoordId = dataZoomInfo.coordId;
 
             // Do clean when a dataZoom changes its target coordnate system.
+            // Avoid memory leak, dispose all not-used-registered.
             zrUtil.each(store, function (record, coordId) {
                 var dataZoomInfos = record.dataZoomInfos;
                 if (dataZoomInfos[theDataZoomId]
@@ -49,7 +50,6 @@ define(function(require) {
             cleanStore(store);
 
             var record = store[theCoordId];
-
             // Create if needed.
             if (!record) {
                 record = store[theCoordId] = {
@@ -86,6 +86,7 @@ define(function(require) {
             var store = giveStore(api);
 
             zrUtil.each(store, function (record) {
+                record.controller.dispose();
                 var dataZoomInfos = record.dataZoomInfos;
                 if (dataZoomInfos[dataZoomId]) {
                     delete dataZoomInfos[dataZoomId];
@@ -141,7 +142,7 @@ define(function(require) {
     function cleanStore(store) {
         zrUtil.each(store, function (record, coordId) {
             if (!record.count) {
-                record.controller.off('pan').off('zoom');
+                record.controller.dispose();
                 delete store[coordId];
             }
         });
