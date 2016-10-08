@@ -23,14 +23,14 @@ define(function (require) {
         graph.eachNode(function (node) {
             var value = node.getValue('value');
 
-            angle += unitAngle * (sum ? value : 2) / 2;
+            angle += unitAngle * (sum ? value : 1) / 2;
 
             node.setLayout([
                 r * Math.cos(angle) + cx,
                 r * Math.sin(angle) + cy
             ]);
 
-            angle += unitAngle * (sum ? value : 2) / 2;
+            angle += unitAngle * (sum ? value : 1) / 2;
         });
 
         nodeData.setLayout({
