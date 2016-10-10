@@ -14,6 +14,9 @@ define(function (require) {
     var scaleProto = Scale.prototype;
     var intervalScaleProto = IntervalScale.prototype;
 
+    var getPrecisionSafe = numberUtil.getPrecisionSafe;
+    var roundingErrorFix = numberUtil.round;
+
     var mathFloor = Math.floor;
     var mathCeil = Math.ceil;
     var mathPow = Math.pow;
@@ -26,12 +29,31 @@ define(function (require) {
 
         base: 10,
 
+        $constructor: function () {
+            Scale.apply(this, arguments);
+            this._originalScale = new IntervalScale();
+        },
+
         /**
          * @return {Array.<number>}
          */
         getTicks: function () {
+            var originalScale = this._originalScale;
+            var extent = this._extent;
+            var originalExtent = originalScale.getExtent();
+
             return zrUtil.map(intervalScaleProto.getTicks.call(this), function (val) {
-                return numberUtil.round(mathPow(this.base, val));
+                var powVal = numberUtil.round(mathPow(this.base, val));
+
+                // Fix #4158
+                powVal = (val === extent[0] && originalScale.__fixMin)
+                    ? fixRoundingError(powVal, originalExtent[0])
+                    : powVal;
+                powVal = (val === extent[1] && originalScale.__fixMax)
+                    ? fixRoundingError(powVal, originalExtent[1])
+                    : powVal;
+
+                return powVal;
             }, this);
         },
 
@@ -69,6 +91,13 @@ define(function (require) {
             var extent = scaleProto.getExtent.call(this);
             extent[0] = mathPow(base, extent[0]);
             extent[1] = mathPow(base, extent[1]);
+
+            // Fix #4158
+            var originalScale = this._originalScale;
+            var originalExtent = originalScale.getExtent();
+            originalScale.__fixMin && (extent[0] = fixRoundingError(extent[0], originalExtent[0]));
+            originalScale.__fixMax && (extent[1] = fixRoundingError(extent[1], originalExtent[1]));
+
             return extent;
         },
 
@@ -76,6 +105,8 @@ define(function (require) {
          * @param  {Array.<number>} extent
          */
         unionExtent: function (extent) {
+            this._originalScale.unionExtent(extent);
+
             var base = this.base;
             extent[0] = mathLog(extent[0]) / mathLog(base);
             extent[1] = mathLog(extent[1]) / mathLog(base);
@@ -122,7 +153,14 @@ define(function (require) {
          * @param {boolean} [fixMin=false]
          * @param {boolean} [fixMax=false]
          */
-        niceExtent: intervalScaleProto.niceExtent
+        niceExtent: function (splitNumber, fixMin, fixMax) {
+            intervalScaleProto.niceExtent.call(this, splitNumber, fixMin, fixMax);
+
+            var originalScale = this._originalScale;
+            originalScale.__fixMin = fixMin;
+            originalScale.__fixMax = fixMax;
+        }
+
     });
 
     zrUtil.each(['contain', 'normalize'], function (methodName) {
@@ -135,6 +173,10 @@ define(function (require) {
     LogScale.create = function () {
         return new LogScale();
     };
+
+    function fixRoundingError(val, originalVal) {
+        return roundingErrorFix(val, getPrecisionSafe(originalVal));
+    }
 
     return LogScale;
 });
