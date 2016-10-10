@@ -224,6 +224,33 @@ define(function(require, factory) {
      * see {module:echarts/CoodinateSystem}
      */
     gridProto.convertToPixel = function (ecModel, finder, value) {
+        var target = this._findConvertTarget(ecModel, finder);
+
+        return target.cartesian
+            ? target.cartesian.dataToPoint(value)
+            : target.axis
+            ? target.axis.toGlobalCoord(target.axis.dataToCoord(value))
+            : null;
+    };
+
+    /**
+     * @implements
+     * see {module:echarts/CoodinateSystem}
+     */
+    gridProto.convertFromPixel = function (ecModel, finder, value) {
+        var target = this._findConvertTarget(ecModel, finder);
+
+        return target.cartesian
+            ? target.cartesian.pointToData(value)
+            : target.axis
+            ? target.axis.coordToData(target.axis.toLocalCoord(value))
+            : null;
+    };
+
+    /**
+     * @inner
+     */
+    gridProto._findConvertTarget = function (ecModel, finder) {
         var seriesModel = finder.seriesModel;
         var xAxisModel = finder.xAxisModel
             || (seriesModel && seriesModel.getReferringComponents('xAxis')[0]);
@@ -255,11 +282,7 @@ define(function(require, factory) {
             }
         }
 
-        return cartesian
-            ? cartesian.dataToPoint(value)
-            : axis
-            ? axis.toGlobalCoord(axis.dataToCoord(value))
-            : null;
+        return {cartesian: cartesian, axis: axis};
     };
 
     /**

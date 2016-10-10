@@ -17,7 +17,8 @@ define(function(require) {
      *     @param {module:echarts/ExtensionAPI} api
      *
      * convertToPixel:
-     *     This method is also responsible for determine whether this
+     * convertFromPixel:
+     *     These two methods is also responsible for determine whether this
      *     coodinate system is applicable to the given `finder`.
      *     Each coordinate system will be tried, util one returns none
      *     null/undefined value.
@@ -56,7 +57,7 @@ define(function(require) {
         },
 
         /**
-         * Convert from coordinate system to pixel.
+         * Convert from logical coordinate system to pixel coordinate system.
          * @param {string|Object} finder
          *        If string, e.g., 'geo', means {geoIndex: 0}.
          *        If Object, could contain some of these properties below:
@@ -70,22 +71,28 @@ define(function(require) {
          *            ... (can be extended)
          *        }
          * @param {Array|number} value
+         * @return {Array|number} result
          */
-        convertToPixel: function (ecModel, finder, value) {
-            finder = parseFinder(ecModel, finder);
+        convertToPixel: zrUtil.curry(doConvert, 'convertToPixel'),
 
-            var result;
-            var coordSysList = this._coordinateSystems;
-
-            for (var i = 0; i < coordSysList.length; i++) {
-                var coordSys = coordSysList[i];
-                if (coordSys.convertToPixel
-                    && (result = coordSys.convertToPixel(ecModel, finder, value)) != null
-                ) {
-                    return result;
-                }
-            }
-        }
+        /**
+         * Convert from pixel coordinate system to logical coordinate system.
+         * @param {string|Object} finder
+         *        If string, e.g., 'geo', means {geoIndex: 0}.
+         *        If Object, could contain some of these properties below:
+         *        {
+         *            seriesIndex, seriesId,
+         *            geoIndex, geoId,
+         *            bmapIndex, bmapId,
+         *            xAxisIndex, xAxisId,
+         *            yAxisIndex, yAxisId,
+         *            gridIndex, gridId,
+         *            ... (can be extended)
+         *        }
+         * @param {Array|number} value
+         * @return {Array|number} result
+         */
+        convertFromPixel: zrUtil.curry(doConvert, 'convertFromPixel')
     };
 
     CoordinateSystemManager.register = function (type, coordinateSystemCreator) {
@@ -113,6 +120,22 @@ define(function(require) {
         });
 
         return result;
+    }
+
+    function doConvert(methodName, ecModel, finder, value) {
+        finder = parseFinder(ecModel, finder);
+
+        var result;
+        var coordSysList = this._coordinateSystems;
+
+        for (var i = 0; i < coordSysList.length; i++) {
+            var coordSys = coordSysList[i];
+            if (coordSys[methodName]
+                && (result = coordSys[methodName](ecModel, finder, value)) != null
+            ) {
+                return result;
+            }
+        }
     }
 
     return CoordinateSystemManager;

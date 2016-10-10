@@ -259,11 +259,13 @@ define(function (require) {
          * @implements
          * see {module:echarts/CoodinateSystem}
          */
-        convertToPixel: function (ecModel, finder, value) {
-            var seriesModel = finder.seriesModel;
-            var coordSys = seriesModel ? seriesModel.coordinateSystem : null; // e.g., graph.
-            return coordSys === this ? coordSys.dataToPoint(value) : null;
-        }
+        convertToPixel: zrUtil.curry(doConvert, 'dataToPoint'),
+
+        /**
+         * @implements
+         * see {module:echarts/CoodinateSystem}
+         */
+        convertFromPixel: zrUtil.curry(doConvert, 'pointToData')
 
         /**
          * @return {number}
@@ -277,6 +279,12 @@ define(function (require) {
     };
 
     zrUtil.mixin(View, Transformable);
+
+    function doConvert(methodName, ecModel, finder, value) {
+        var seriesModel = finder.seriesModel;
+        var coordSys = seriesModel ? seriesModel.coordinateSystem : null; // e.g., graph.
+        return coordSys === this ? coordSys[methodName](value) : null;
+    }
 
     return View;
 });

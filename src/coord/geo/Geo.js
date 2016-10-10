@@ -228,25 +228,34 @@ define(function (require) {
          * @implements
          * see {module:echarts/CoodinateSystem}
          */
-        convertToPixel: function (ecModel, finder, value) {
-            var geoModel = finder.geoModel;
-            var seriesModel = finder.seriesModel;
+        convertToPixel: zrUtil.curry(doConvert, 'dataToPoint'),
 
-            var coordSys = geoModel
-                ? geoModel.coordinateSystem
-                : seriesModel
-                ? (
-                    seriesModel.coordinateSystem // For map.
-                    || (seriesModel.getReferringComponents('geo')[0] || {}).coordinateSystem
-                )
-                : null;
-
-            return coordSys === this ? coordSys.dataToPoint(value) : null;
-        }
+        /**
+         * @override
+         * @implements
+         * see {module:echarts/CoodinateSystem}
+         */
+        convertFromPixel: zrUtil.curry(doConvert, 'pointToData')
 
     };
 
     zrUtil.mixin(Geo, View);
+
+    function doConvert(methodName, ecModel, finder, value) {
+        var geoModel = finder.geoModel;
+        var seriesModel = finder.seriesModel;
+
+        var coordSys = geoModel
+            ? geoModel.coordinateSystem
+            : seriesModel
+            ? (
+                seriesModel.coordinateSystem // For map.
+                || (seriesModel.getReferringComponents('geo')[0] || {}).coordinateSystem
+            )
+            : null;
+
+        return coordSys === this ? coordSys[methodName](value) : null;
+    }
 
     return Geo;
 });

@@ -418,13 +418,25 @@ define(function (require) {
     };
 
     /**
-     * Convert from coordinate system to pixel.
+     * Convert from logical coordinate system to pixel coordinate system.
      * See CoordinateSystem#convertToPixel.
      * @param {string|Object} finder
      * @param {Array|number} value
+     * @return {Array|number} result
      */
     echartsProto.convertToPixel = function (finder, value) {
         return this._coordSysMgr.convertToPixel(this._model, finder, value);
+    };
+
+    /**
+     * Convert from pixel coordinate system to logical coordinate system.
+     * See CoordinateSystem#convertFromPixel.
+     * @param {string|Object} finder
+     * @param {Array|number} value
+     * @return {Array|number} result
+     */
+    echartsProto.convertFromPixel = function (finder, value) {
+        return this._coordSysMgr.convertFromPixel(this._model, finder, value);
     };
 
     var updateMethods = {
