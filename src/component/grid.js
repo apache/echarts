@@ -22,7 +22,8 @@ define(function(require) {
                     style: zrUtil.defaults({
                         fill: gridModel.get('backgroundColor')
                     }, gridModel.getItemStyle()),
-                    silent: true
+                    silent: true,
+                    z2: -1
                 }));
             }
         }
