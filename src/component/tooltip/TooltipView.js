@@ -256,14 +256,17 @@ define(function (require) {
             zr.off('mousemove', this._mousemove);
             zr.off('mouseout', this._hide);
             zr.off('globalout', this._hide);
-            if (tooltipModel.get('triggerOn') === 'click') {
+            var triggerOn = tooltipModel.get('triggerOn');
+            if (triggerOn === 'click') {
                 zr.on('click', this._tryShow, this);
             }
-            else {
+            else if (triggerOn === 'mousemove') {
                 zr.on('mousemove', this._mousemove, this);
                 zr.on('mouseout', this._hide, this);
                 zr.on('globalout', this._hide, this);
             }
+            // else triggerOn is 'none', which enable user
+            // to control tooltip totally using API.
         },
 
         _mousemove: function (e) {

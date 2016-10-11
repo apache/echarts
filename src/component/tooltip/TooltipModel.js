@@ -17,7 +17,7 @@ define(function (require) {
             // 触发类型，默认数据触发，见下图，可选为：'item' ¦ 'axis'
             trigger: 'item',
 
-            // 触发条件，支持 'click' | 'mousemove'
+            // 触发条件，支持 'click' | 'mousemove' | 'none'
             triggerOn: 'mousemove',
 
             // 是否永远显示 content
