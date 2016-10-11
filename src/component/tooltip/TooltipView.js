@@ -236,8 +236,16 @@ define(function (require) {
                 this.group.add(crossText);
             }
 
+            var triggerOn = tooltipModel.get('triggerOn');
+
             // Try to keep the tooltip show when refreshing
-            if (this._lastX != null && this._lastY != null) {
+            if (this._lastX != null
+                && this._lastY != null
+                // When user is willing to control tooltip totally using API,
+                // self._manuallyShowTip({x, y}) might cause tooltip hide,
+                // which is not expected.
+                && triggerOn !== 'none'
+            ) {
                 var self = this;
                 clearTimeout(this._refreshUpdateTimeout);
                 this._refreshUpdateTimeout = setTimeout(function () {
@@ -256,7 +264,7 @@ define(function (require) {
             zr.off('mousemove', this._mousemove);
             zr.off('mouseout', this._hide);
             zr.off('globalout', this._hide);
-            var triggerOn = tooltipModel.get('triggerOn');
+
             if (triggerOn === 'click') {
                 zr.on('click', this._tryShow, this);
             }
