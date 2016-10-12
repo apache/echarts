@@ -40,6 +40,7 @@ define(function (require) {
     var ComponentView = require('./view/Component');
     var ChartView = require('./view/Chart');
     var graphic = require('./util/graphic');
+    var modelUtil = require('./util/model');
 
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
@@ -439,8 +440,37 @@ define(function (require) {
         return this._coordSysMgr.convertFromPixel(this._model, finder, value);
     };
 
-    var updateMethods = {
+    /**
+     * Get computed layout info, i.e., {x, y, width, height}, or {cx, cy, r}
+     * (vary by components)
+     * @param {string|Object} finder
+     *        If string, e.g., 'geo', means {geoIndex: 0}.
+     *        If Object, properties can be xxxIndex, xxxId, xxxName, i.g.,
+     *        {gridIndex: 0}, {geoId: 'asdf'}, {polarName: 'xx'}
+     * @return {Object} layout
+     */
+    echartsProto.getComponentLayout = function (finder) {
+        var model = modelUtil.parseFinder(this._model, finder, {singleResult: true});
+        if (model) {
+            var view = this._componentsMap[model.__viewId];
+            !view && (view = this._chartsMap[model.__viewId]);
+            if (view && view.getComponentLayout) {
+                return view.getComponentLayout(model);
+            }
+            if (__DEV__) {
+                console.warn(
+                    view
+                        ? 'The found component do not support getComponentLayout.'
+                        : 'No view mapping to the found component.'
+                );
+            }
+        }
+        if (__DEV__) {
+            console.warn('No component found by the given finder.');
+        }
+    };
 
+    var updateMethods = {
 
         /**
          * @param {Object} payload

@@ -1,6 +1,6 @@
 /* jshint maxlen:200 */
 
-describe('coord/converter', function() {
+describe('api/converter', function() {
 
     var utHelper = window.utHelper;
 

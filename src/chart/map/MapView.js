@@ -58,6 +58,17 @@ define(function (require) {
             this._mapDraw = null;
         },
 
+        /**
+         * @implement
+         * @return {Object} {x, y, width, height}
+         */
+        getComponentLayout: function (model) {
+            var rect = model.coordinateSystem.getViewRect();
+            return {
+                x: rect.x, y: rect.y, width: rect.width, height: rect.height
+            };
+        },
+
         _renderSymbols: function (mapModel, ecModel, api) {
             var originalData = mapModel.originalData;
             var group = this.group;

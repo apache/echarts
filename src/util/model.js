@@ -367,5 +367,56 @@ define(function(require) {
         }
     };
 
+    /**
+     * @param {module:echarts/model/Global} ecModel
+     * @param {string|Object} finder
+     *        If string, e.g., 'geo', means {geoIndex: 0}.
+     *        If Object, could contain some of these properties below:
+     *        {
+     *            seriesIndex, seriesId,
+     *            geoIndex, geoId,
+     *            bmapIndex, bmapId,
+     *            xAxisIndex, xAxisId,
+     *            yAxisIndex, yAxisId,
+     *            gridIndex, gridId,
+     *            ... (can be extended)
+     *        }
+     * @param {Object} [opt]
+     * @param {boolean} [opt.singleResult=false]
+     * @return {Object} result like:
+     *        {
+     *            seriesModel: xxx,
+     *            geoModel: xxx
+     *            ...
+     *        }
+     *        If opt.singleResult, result in the first found model.
+     */
+    modelUtil.parseFinder = function (ecModel, finder, opt) {
+        if (zrUtil.isString(finder)) {
+            var obj = {};
+            obj[finder + 'Index'] = 0;
+            finder = obj;
+        }
+
+        var result = {};
+
+        for (var key in finder) {
+            if (finder.hasOwnProperty(key)) {
+                var value = finder[key];
+                key = key.match(/^(\w+)(Index|Id|Name)$/);
+                var queryParam = {mainType: key[1]};
+                queryParam[key[2].toLowerCase()] = value;
+                var model = ecModel.queryComponents(queryParam)[0];
+                result[key[1] + 'Model'] = model;
+
+                if (opt && opt.singleResult) {
+                    return model;
+                }
+            }
+        }
+
+        return result;
+    };
+
     return modelUtil;
 });

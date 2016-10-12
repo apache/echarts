@@ -18,7 +18,7 @@ define(function(require) {
             this.group.removeAll();
             if (gridModel.get('show')) {
                 this.group.add(new graphic.Rect({
-                    shape:gridModel.coordinateSystem.getRect(),
+                    shape: gridModel.coordinateSystem.getRect(),
                     style: zrUtil.defaults({
                         fill: gridModel.get('backgroundColor')
                     }, gridModel.getItemStyle()),
@@ -26,6 +26,18 @@ define(function(require) {
                     z2: -1
                 }));
             }
+        },
+
+        /**
+         * @implement
+         * @return {Object} {x, y, width, height}
+         */
+        getComponentLayout: function (gridModel) {
+            // Whatever grid.show is, layout should be returned.
+            var rect = gridModel.coordinateSystem.getRect();
+            return {
+                x: rect.x, y: rect.y, width: rect.width, height: rect.height
+            };
         }
     });
 

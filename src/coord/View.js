@@ -82,8 +82,6 @@ define(function (require) {
          * @param {number} height
          */
         setViewRect: function (x, y, width, height) {
-            width = width;
-            height = height;
             this.transformTo(x, y, width, height);
             this._viewRect = new BoundingRect(x, y, width, height);
         },

@@ -3,6 +3,7 @@ define(function(require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var modelUtil = require('./util/model');
 
     /**
      * Coordinate Interface
@@ -103,27 +104,8 @@ define(function(require) {
         return coordinateSystemCreators[type];
     };
 
-    function parseFinder(ecModel, finder) {
-        if (zrUtil.isString(finder)) {
-            var obj = {};
-            obj[finder + 'Index'] = 0;
-            finder = obj;
-        }
-
-        var result = {};
-
-        zrUtil.each(finder, function (value, key) {
-            key = key.match(/^(\w+)(Index|Id|Name)$/);
-            var queryParam = {mainType: key[1]};
-            queryParam[key[2].toLowerCase()] = value;
-            result[key[1] + 'Model'] = ecModel.queryComponents(queryParam)[0];
-        });
-
-        return result;
-    }
-
     function doConvert(methodName, ecModel, finder, value) {
-        finder = parseFinder(ecModel, finder);
+        finder = modelUtil.parseFinder(ecModel, finder);
 
         var result;
         var coordSysList = this._coordinateSystems;
@@ -135,6 +117,12 @@ define(function(require) {
             ) {
                 return result;
             }
+        }
+
+        if (__DEV__) {
+            console.warn(
+                'No coordinate system that supports ' + methodName + ' found by the given finder.'
+            );
         }
     }
 
