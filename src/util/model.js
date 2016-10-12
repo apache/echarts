@@ -373,12 +373,12 @@ define(function(require) {
      *        If string, e.g., 'geo', means {geoIndex: 0}.
      *        If Object, could contain some of these properties below:
      *        {
-     *            seriesIndex, seriesId,
-     *            geoIndex, geoId,
-     *            bmapIndex, bmapId,
-     *            xAxisIndex, xAxisId,
-     *            yAxisIndex, yAxisId,
-     *            gridIndex, gridId,
+     *            seriesIndex, seriesId, seriesName,
+     *            geoIndex, geoId, goeName,
+     *            bmapIndex, bmapId, bmapName,
+     *            xAxisIndex, xAxisId, xAxisName,
+     *            yAxisIndex, yAxisId, yAxisName,
+     *            gridIndex, gridId, gridName,
      *            ... (can be extended)
      *        }
      * @param {Object} [opt]
