@@ -77,13 +77,6 @@ define(function (require) {
          */
         dispose: function () {}
 
-        /**
-         * Would be implemented by sub-class if necessary.
-         * @param {module:echarts/model/Model} model seriesModel.
-         * @return {Object} {x, y, width, height}, or {cx, cy, r}.
-         *                  If invisible, return undefine/null
-         */
-        // getComponentLayout: function (model) {}
     };
 
     var chartProto = Chart.prototype;

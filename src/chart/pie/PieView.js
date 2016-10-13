@@ -358,20 +358,8 @@ define(function (require) {
             }, seriesModel, cb);
 
             return clipPath;
-        },
-
-        getComponentLayout: function (seriesModel) {
-            var data = seriesModel.getData();
-            var itemLayout = data.getItemLayout(0);
-            if (itemLayout) {
-                return {
-                    cx: itemLayout.cx,
-                    cy: itemLayout.cy,
-                    r: itemLayout.r,
-                    r0: itemLayout.r0
-                };
-            }
         }
+
     });
 
     return Pie;

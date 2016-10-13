@@ -36,17 +36,7 @@ define(function (require) {
 
         dispose: function () {
             this._mapDraw && this._mapDraw.remove();
-        },
-
-        /**
-         * @implement
-         * @return {Object} {x, y, width, height}
-         */
-        getComponentLayout: function (model) {
-            var rect = model.coordinateSystem.getViewRect();
-            return {
-                x: rect.x, y: rect.y, width: rect.width, height: rect.height
-            };
         }
+
     });
 });

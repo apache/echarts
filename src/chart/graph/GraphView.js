@@ -146,17 +146,6 @@ define(function (require) {
             this._controller && this._controller.dispose();
         },
 
-        /**
-         * @implement
-         * @return {Object} {x, y, width, height}
-         */
-        getComponentLayout: function (model) {
-            var rect = model.coordinateSystem.getViewRect();
-            return {
-                x: rect.x, y: rect.y, width: rect.width, height: rect.height
-            };
-        },
-
         _focusNodeAdjacency: function (e) {
             var data = this._model.getData();
             var graph = data.graph;

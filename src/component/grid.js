@@ -26,19 +26,8 @@ define(function(require) {
                     z2: -1
                 }));
             }
-        },
-
-        /**
-         * @implement
-         * @return {Object} {x, y, width, height}
-         */
-        getComponentLayout: function (gridModel) {
-            // Whatever grid.show is, layout should be returned.
-            var rect = gridModel.coordinateSystem.getRect();
-            return {
-                x: rect.x, y: rect.y, width: rect.width, height: rect.height
-            };
         }
+
     });
 
     echarts.registerPreprocessor(function (option) {
