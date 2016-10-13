@@ -77,6 +77,14 @@ define(function (require) {
          */
         dispose: function () {}
 
+        /**
+         * The view contains the given point.
+         * @interface
+         * @param {Array.<number>} point
+         * @return {boolean}
+         */
+        // containPoint: function () {}
+
     };
 
     var chartProto = Chart.prototype;

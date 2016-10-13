@@ -263,7 +263,15 @@ define(function (require) {
          * @implements
          * see {module:echarts/CoodinateSystem}
          */
-        convertFromPixel: zrUtil.curry(doConvert, 'pointToData')
+        convertFromPixel: zrUtil.curry(doConvert, 'pointToData'),
+
+        /**
+         * @implements
+         * see {module:echarts/CoodinateSystem}
+         */
+        containPoint: function (point) {
+            return this.getViewRect().contain(point[0], point[1]);
+        }
 
         /**
          * @return {number}

@@ -286,6 +286,17 @@ define(function(require, factory) {
     };
 
     /**
+     * @implements
+     * see {module:echarts/CoodinateSystem}
+     */
+    gridProto.containPoint = function (point) {
+        var coord = this._coordsList[0];
+        if (coord) {
+            return coord.containPoint(point);
+        }
+    };
+
+    /**
      * Initialize cartesian coordinate systems
      * @private
      */

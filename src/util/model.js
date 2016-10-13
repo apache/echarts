@@ -381,17 +381,23 @@ define(function(require) {
      *            gridIndex, gridId, gridName,
      *            ... (can be extended)
      *        }
-     * @param {Object} [opt]
-     * @param {boolean} [opt.singleResult=false]
+     *        Each properties can be number|string|Array.<number>|Array.<string>
+     *        For example, a finder could be
+     *        {
+     *            seriesIndex: 3,
+     *            geoId: ['aa', 'cc'],
+     *            gridName: ['xx', 'rr']
+     *        }
      * @return {Object} result like:
      *        {
-     *            seriesModel: xxx,
-     *            geoModel: xxx
+     *            seriesModels: [seriesModel1, seriesModel2],
+     *            seriesModel: seriesModel1, // The first model
+     *            geoModels: [geoModel1, geoModel2],
+     *            geoModel: geoModel1, // The first model
      *            ...
      *        }
-     *        If opt.singleResult, result in the first found model.
      */
-    modelUtil.parseFinder = function (ecModel, finder, opt) {
+    modelUtil.parseFinder = function (ecModel, finder) {
         if (zrUtil.isString(finder)) {
             var obj = {};
             obj[finder + 'Index'] = 0;
@@ -400,20 +406,15 @@ define(function(require) {
 
         var result = {};
 
-        for (var key in finder) {
-            if (finder.hasOwnProperty(key)) {
-                var value = finder[key];
-                key = key.match(/^(\w+)(Index|Id|Name)$/);
-                var queryParam = {mainType: key[1]};
-                queryParam[key[2].toLowerCase()] = value;
-                var model = ecModel.queryComponents(queryParam)[0];
-                result[key[1] + 'Model'] = model;
-
-                if (opt && opt.singleResult) {
-                    return model;
-                }
-            }
-        }
+        zrUtil.each(finder, function (value, key) {
+            var value = finder[key];
+            key = key.match(/^(\w+)(Index|Id|Name)$/);
+            var queryParam = {mainType: key[1]};
+            queryParam[key[2].toLowerCase()] = value;
+            var models = ecModel.queryComponents(queryParam);
+            result[key[1] + 'Models'] = models;
+            result[key[1] + 'Model'] = models[0];
+        });
 
         return result;
     };

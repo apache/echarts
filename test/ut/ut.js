@@ -8,6 +8,7 @@ document.write('<script src="spec/model/Component.js"><\/script>');
 document.write('<script src="spec/model/Global.js"><\/script>');
 document.write('<script src="spec/model/timelineOptions.js"><\/script>');
 document.write('<script src="spec/api/converter.js"><\/script>');
+document.write('<script src="spec/api/containPixel.js"><\/script>');
 
 document.write('<script src="spec/data/List.js"><\/script>');
 

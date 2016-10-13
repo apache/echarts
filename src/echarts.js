@@ -422,23 +422,119 @@ define(function (require) {
      * Convert from logical coordinate system to pixel coordinate system.
      * See CoordinateSystem#convertToPixel.
      * @param {string|Object} finder
+     *        If string, e.g., 'geo', means {geoIndex: 0}.
+     *        If Object, could contain some of these properties below:
+     *        {
+     *            seriesIndex, seriesId,
+     *            geoIndex, geoId,
+     *            bmapIndex, bmapId,
+     *            xAxisIndex, xAxisId,
+     *            yAxisIndex, yAxisId,
+     *            gridIndex, gridId,
+     *            ... (can be extended)
+     *        }
      * @param {Array|number} value
      * @return {Array|number} result
      */
-    echartsProto.convertToPixel = function (finder, value) {
-        return this._coordSysMgr.convertToPixel(this._model, finder, value);
-    };
+    echartsProto.convertToPixel = zrUtil.curry(doConvertPixel, 'convertToPixel');
 
     /**
      * Convert from pixel coordinate system to logical coordinate system.
      * See CoordinateSystem#convertFromPixel.
      * @param {string|Object} finder
+     *        If string, e.g., 'geo', means {geoIndex: 0}.
+     *        If Object, could contain some of these properties below:
+     *        {
+     *            seriesIndex, seriesId,
+     *            geoIndex, geoId,
+     *            bmapIndex, bmapId,
+     *            xAxisIndex, xAxisId,
+     *            yAxisIndex, yAxisId,
+     *            gridIndex, gridId,
+     *            ... (can be extended)
+     *        }
      * @param {Array|number} value
      * @return {Array|number} result
      */
-    echartsProto.convertFromPixel = function (finder, value) {
-        return this._coordSysMgr.convertFromPixel(this._model, finder, value);
+    echartsProto.convertFromPixel = zrUtil.curry(doConvertPixel, 'convertFromPixel');
+
+    function doConvertPixel(methodName, finder, value) {
+        var ecModel = this._model;
+        var coordSysList = this._coordSysMgr.getCoordinateSystems();
+        var result;
+
+        finder = modelUtil.parseFinder(ecModel, finder);
+
+        for (var i = 0; i < coordSysList.length; i++) {
+            var coordSys = coordSysList[i];
+            if (coordSys[methodName]
+                && (result = coordSys[methodName](ecModel, finder, value)) != null
+            ) {
+                return result;
+            }
+        }
+
+        if (__DEV__) {
+            console.warn(
+                'No coordinate system that supports ' + methodName + ' found by the given finder.'
+            );
+        }
+    }
+
+    /**
+     * Is the specified coordinate systems or components contain the given pixel point.
+     * @param {string|Object} finder
+     *        If string, e.g., 'geo', means {geoIndex: 0}.
+     *        If Object, could contain some of these properties below:
+     *        {
+     *            seriesIndex, seriesId,
+     *            geoIndex, geoId,
+     *            bmapIndex, bmapId,
+     *            xAxisIndex, xAxisId,
+     *            yAxisIndex, yAxisId,
+     *            gridIndex, gridId,
+     *            ... (can be extended)
+     *        }
+     * @param {Array|number} value
+     * @return {boolean} result
+     */
+    echartsProto.containPixel = function (finder, value) {
+        var ecModel = this._model;
+        var result;
+
+        finder = modelUtil.parseFinder(ecModel, finder);
+
+        zrUtil.each(finder, function (models, key) {
+            key.indexOf('Models') >= 0 && zrUtil.each(models, function (model) {
+                var coordSys = model.coordinateSystem;
+                if (coordSys && coordSys.containPoint) {
+                    result |= !!coordSys.containPoint(value);
+                }
+                else if (key === 'seriesModels') {
+                    var view = this._chartsMap[model.__viewId];
+                    if (view && view.containPoint) {
+                        result |= view.containPoint(value, model);
+                    }
+                    else {
+                        if (__DEV__) {
+                            console.warn(key + ': ' + (view
+                                ? 'The found component do not support containPoint.'
+                                : 'No view mapping to the found component.'
+                            ));
+                        }
+                    }
+                }
+                else {
+                    if (__DEV__) {
+                        console.warn(key + ': containPoint is not supported');
+                    }
+                }
+            }, this);
+        }, this);
+
+        return !!result;
     };
+
 
     var updateMethods = {
 
