@@ -1,0 +1,313 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css">
+    </head>
+    <body>
+        <style>
+            body {
+                position: relative;
+                min-height: 1500px;
+            }
+            .chart {
+                position: relative;
+                width: 500px;
+                height: 300px;
+                border: 10px solid rgba(0,0,0,0.5);
+                margin: 30px auto 30px auto;
+            }
+        </style>
+
+        <h3>Check whether tooltip behave correctly (in mouse position calculation).</h3>
+        <h3>Supported browser when using transfrom:</h3>
+        <ul>
+            <li>PC: Chrome, FireFox, IE6+, Edge, Safari, Opera</li>
+            <li>Mobild: Andriod (?)</li>
+        </ul>
+        <h3>Unsupported browser when using transfrom:</h3>
+        <ul>
+            <li>Mobild: IOS</li>
+        </ul>
+
+        <div class="chart" id="main0"
+            style="
+                -webkit-transform: scale(0.5, 0.5) rotate(15deg);
+                transform: scale(0.5, 0.5) rotate(15deg);
+            ">
+        </div>
+
+        <div style="perspective: 171px;">
+            <div class="chart" id="main1"
+                style="
+                    -webkit-transform: rotateY(18deg) rotateX(8deg);
+                    transform: rotateY(18deg) rotateX(8deg);
+                    -webkit-transform-style: preserve-3d;
+                    transform-style: preserve-3d;
+                ">
+            </div>
+        </div>
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoomInside'
+            ], function (echarts) {
+
+                var el = document.getElementById('main0');
+                if (!el) {
+                    return;
+                }
+                var chart = echarts.init(el);
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var itemStyle = {
+                    normal: {
+                        borderColor: 'white',
+                        borderWidth: 3,
+                        // shadowBlur: 10,
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 5,
+                        // shadowColor: 'rgba(0, 0, 0, 0.4)',
+                        lineStyle: {
+                            width: 1
+                            // shadowBlur: 10,
+                            // shadowOffsetX: 0,
+                            // shadowOffsetY: 5,
+                            // shadowColor: 'rgba(0, 0, 0, 0.4)'
+                        }
+                    }
+                };
+
+                chart.setOption({
+                    legend: {
+                        data: ['line', 'line2', 'line3']
+                    },
+                    visualMap: null, // 用于测试 option 中含有null的情况。
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    xAxis: {
+                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        data: xAxisData,
+                        boundaryGap: false,
+                        // inverse: true,
+                        splitArea: {
+                            show: false
+                        },
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    grid: {
+                        left: '10%',
+                        right: '10%'
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    dataZoom: {
+                        type: 'inside',
+                        start: 10,
+                        end: 30
+                    },
+                    // animation: false,
+                    series: [null,  // 用于测试 option 中含有null的情况。
+                    {
+                        name: 'line',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        data: data1,
+                        itemStyle: itemStyle,
+                        step: 'end'
+                    }, {
+                        name: 'line2',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        data: data2,
+                        itemStyle: itemStyle,
+                        step: 'end'
+                    }, {
+                        name: 'line3',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'triangle',
+                        symbolSize: 10,
+                        data: data3,
+                        itemStyle: itemStyle,
+                        step: 'end'
+                    }]
+                });
+            });
+        </script>
+
+
+
+
+
+
+        <script>
+            require([
+                'echarts',
+                'echarts/chart/line',
+                'echarts/component/legend',
+                'echarts/component/grid',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoomInside'
+            ], function (echarts) {
+
+                var el = document.getElementById('main1');
+                if (!el) {
+                    return;
+                }
+                var chart = echarts.init(el);
+
+                var xAxisData = [];
+                var data1 = [];
+                var data2 = [];
+                var data3 = [];
+
+                for (var i = 0; i < 100; i++) {
+                    xAxisData.push('类目' + i);
+                    if (i < 5 && i > 1) {
+                        data1.push(0);
+                    }
+                    else {
+                        data1.push(+(Math.random() + 0.5).toFixed(3));
+                    }
+                    data2.push(+(Math.random() + 0.5).toFixed(3));
+                    data3.push(+(Math.random() + 0.5).toFixed(3));
+                }
+
+                var itemStyle = {
+                    normal: {
+                        borderColor: 'white',
+                        borderWidth: 3,
+                        // shadowBlur: 10,
+                        // shadowOffsetX: 0,
+                        // shadowOffsetY: 5,
+                        // shadowColor: 'rgba(0, 0, 0, 0.4)',
+                        lineStyle: {
+                            width: 1
+                            // shadowBlur: 10,
+                            // shadowOffsetX: 0,
+                            // shadowOffsetY: 5,
+                            // shadowColor: 'rgba(0, 0, 0, 0.4)'
+                        }
+                    }
+                };
+
+                chart.setOption({
+                    legend: {
+                        data: ['line', 'line2', 'line3']
+                    },
+                    visualMap: null, // 用于测试 option 中含有null的情况。
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {
+                            type: 'line'
+                        }
+                    },
+                    xAxis: {
+                        // data: ['类目1', '类目2', '类目3', '类目4', '类目5',]
+                        data: xAxisData,
+                        boundaryGap: false,
+                        // inverse: true,
+                        splitArea: {
+                            show: false
+                        },
+                        splitLine: {
+                            show: false
+                        }
+                    },
+                    grid: {
+                        left: '10%',
+                        right: '10%'
+                    },
+                    yAxis: {
+                        splitArea: {
+                            show: true
+                        }
+                    },
+                    dataZoom: {
+                        type: 'inside',
+                        start: 10,
+                        end: 30
+                    },
+                    // animation: false,
+                    series: [null,  // 用于测试 option 中含有null的情况。
+                    {
+                        name: 'line',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        data: data1,
+                        itemStyle: itemStyle,
+                        step: 'end'
+                    }, {
+                        name: 'line2',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'circle',
+                        symbolSize: 10,
+                        data: data2,
+                        itemStyle: itemStyle,
+                        step: 'end'
+                    }, {
+                        name: 'line3',
+                        type: 'line',
+                        stack: 'all',
+                        symbol: 'triangle',
+                        symbolSize: 10,
+                        data: data3,
+                        itemStyle: itemStyle,
+                        step: 'end'
+                    }]
+                });
+            });
+        </script>
+
+
+
+
+    </body>
+</html>
