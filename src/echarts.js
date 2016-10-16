@@ -78,6 +78,7 @@ define(function (require) {
             Eventful.prototype[method].call(this, eventName, handler, context);
         };
     }
+
     /**
      * @module echarts~MessageCenter
      */
@@ -88,6 +89,7 @@ define(function (require) {
     MessageCenter.prototype.off = createRegisterEventWithLowercaseName('off');
     MessageCenter.prototype.one = createRegisterEventWithLowercaseName('one');
     zrUtil.mixin(MessageCenter, Eventful);
+
     /**
      * @module echarts~ECharts
      */
@@ -119,7 +121,9 @@ define(function (require) {
          */
         this._zr = zrender.init(dom, {
             renderer: opts.renderer || 'canvas',
-            devicePixelRatio: opts.devicePixelRatio
+            devicePixelRatio: opts.devicePixelRatio,
+            width: opts.width,
+            height: opts.height
         });
 
         /**
@@ -738,15 +742,18 @@ define(function (require) {
 
     /**
      * Resize the chart
+     * @param {Object} opts
+     * @param {number} [opts.width] Can be 'auto' (the same as null/undefined)
+     * @param {number} [opts.height] Can be 'auto' (the same as null/undefined)
      */
-    echartsProto.resize = function () {
+    echartsProto.resize = function (opts) {
         if (__DEV__) {
             zrUtil.assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
         }
 
         this[IN_MAIN_PROCESS] = true;
 
-        this._zr.resize();
+        this._zr.resize(opts);
 
         var optionChanged = this._model && this._model.resetOption('media');
         updateMethods[optionChanged ? 'prepareAndUpdate' : 'update'].call(this);
@@ -1363,6 +1370,12 @@ define(function (require) {
      * @param {HTMLDomElement} dom
      * @param {Object} [theme]
      * @param {Object} opts
+     * @param {number} [opts.devicePixelRatio] Use window.devicePixelRatio by default
+     * @param {string} [opts.renderer] Currently only 'canvas' is supported.
+     * @param {number} [opts.width] Use clientWidth of the input `dom` by default.
+     *                              Can be 'auto' (the same as null/undefined)
+     * @param {number} [opts.height] Use clientHeight of the input `dom` by default.
+     *                               Can be 'auto' (the same as null/undefined)
      */
     echarts.init = function (dom, theme, opts) {
         if (__DEV__) {
