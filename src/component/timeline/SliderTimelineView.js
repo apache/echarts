@@ -97,7 +97,6 @@ define(function (require) {
                 );
 
                 this._renderAxisLabel(layoutInfo, labelGroup, axis, timelineModel);
-
                 this._position(layoutInfo, timelineModel);
             }
 
@@ -631,35 +630,61 @@ define(function (require) {
 
     /**
      * Create symbol or update symbol
+     * opt: basic position and event handlers
      */
     function giveSymbol(hostModel, itemStyleModel, group, opt, symbol, callback) {
-        var symbolType = hostModel.get('symbol');
         var color = itemStyleModel.get('color');
-        var symbolSize = hostModel.get('symbolSize');
-        var halfSymbolSize = symbolSize / 2;
-        var itemStyle = itemStyleModel.getItemStyle(['color', 'symbol', 'symbolSize']);
 
         if (!symbol) {
-            symbol = symbolUtil.createSymbol(
-                symbolType, -halfSymbolSize, -halfSymbolSize, symbolSize, symbolSize, color
-            );
+            var symbolType = hostModel.get('symbol');
+            symbol = symbolUtil.createSymbol(symbolType, -1, -1, 2, 2, color);
+            symbol.setStyle('strokeNoScale', true);
             group.add(symbol);
             callback && callback.onCreate(symbol);
         }
         else {
-            symbol.setStyle(itemStyle);
             symbol.setColor(color);
             group.add(symbol); // Group may be new, also need to add.
             callback && callback.onUpdate(symbol);
         }
 
+        // Style
+        var itemStyle = itemStyleModel.getItemStyle(['color', 'symbol', 'symbolSize']);
+        symbol.setStyle(itemStyle);
+
+        // Transform and events.
         opt = zrUtil.merge({
             rectHover: true,
-            style: itemStyle,
             z2: 100
         }, opt, true);
 
+        var symbolSize = hostModel.get('symbolSize');
+        symbolSize = symbolSize instanceof Array
+            ? symbolSize.slice()
+            : [+symbolSize, +symbolSize];
+        symbolSize[0] /= 2;
+        symbolSize[1] /= 2;
+        opt.scale = symbolSize;
+
+        var symbolOffset = hostModel.get('symbolOffset');
+        if (symbolOffset) {
+            var pos = opt.position = opt.position || [0, 0];
+            pos[0] += numberUtil.parsePercent(symbolOffset[0], symbolSize[0]);
+            pos[1] += numberUtil.parsePercent(symbolOffset[1], symbolSize[1]);
+        }
+
+        var symbolRotate = hostModel.get('symbolRotate');
+        opt.rotation = (symbolRotate || 0) * Math.PI / 180 || 0;
+
         symbol.attr(opt);
+
+        // FIXME
+        // (1) When symbol.style.strokeNoScale is true and updateTransform is not performed,
+        // getBoundingRect will return wrong result.
+        // (This is supposed to be resolved in zrender, but it is a little difficult to
+        // leverage performance and auto updateTransform)
+        // (2) All of ancesters of symbol do not scale, so we can just updateTransform symbol.
+        symbol.updateTransform();
 
         return symbol;
     }
