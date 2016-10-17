@@ -287,13 +287,14 @@ define(function(require) {
                 });
             }
         }
+
         var gradient = new graphic.LinearGradient(
             0, 0, 0, 0, colorStops, true
         );
         var axis = coordSys.getAxis(dimName);
 
-        var start = Math.round(axis.toGlobalCoord(axis.dataToCoord(min)));
-        var end = Math.round(axis.toGlobalCoord(axis.dataToCoord(max)));
+        var start = axis.toGlobalCoord(axis.dataToCoord(min));
+        var end = axis.toGlobalCoord(axis.dataToCoord(max));
         // zrUtil.each(colorStops, function (colorStop) {
         //     // Make sure each offset has rounded px to avoid not sharp edge
         //     colorStop.offset = (Math.round(colorStop.offset * (end - start) + start) - start) / (end - start);
@@ -443,6 +444,7 @@ define(function(require) {
             }
 
             var visualColor = getVisualGradient(data, coordSys) || data.getVisual('color');
+
             polyline.useStyle(zrUtil.defaults(
                 // Use color in lineStyle first
                 lineStyleModel.getLineStyle(),
