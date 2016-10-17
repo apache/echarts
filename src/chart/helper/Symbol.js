@@ -9,9 +9,11 @@ define(function (require) {
     var numberUtil = require('../../util/number');
 
     function normalizeSymbolSize(symbolSize) {
-        if (!(symbolSize instanceof Array)) {
-            symbolSize = [+symbolSize / 2, +symbolSize / 2];
-        }
+        symbolSize = symbolSize instanceof Array
+            ? symbolSize.slice()
+            : [+symbolSize, +symbolSize];
+        symbolSize[0] /= 2;
+        symbolSize[1] /= 2;
         return symbolSize;
     }
 
@@ -195,7 +197,7 @@ define(function (require) {
 
         var elStyle = symbolPath.style;
 
-        symbolPath.rotation = (symbolRotate || 0) * Math.PI / 180 || 0;
+        symbolPath.attr('rotation', (symbolRotate || 0) * Math.PI / 180 || 0);
 
         if (symbolOffset) {
             symbolPath.attr('position', [
