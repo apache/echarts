@@ -53,7 +53,7 @@ define(function (require) {
             mlTo.coord[baseIndex] = Infinity;
 
             var precision = mlModel.get('precision');
-            if (precision >= 0) {
+            if (precision >= 0 && typeof value === 'number') {
                 value = +value.toFixed(precision);
             }
 
