@@ -269,10 +269,6 @@ define(function (require) {
             var valueExtent = [+seriesModel.get('min'), +seriesModel.get('max')];
             var angleExtent = [startAngle, endAngle];
 
-            if (!clockwise) {
-                angleExtent = angleExtent.reverse();
-            }
-
             var data = seriesModel.getData();
             var oldData = this._data;
 
