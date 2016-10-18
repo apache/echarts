@@ -532,8 +532,12 @@
          */
         _renderBreadcrumb: function (seriesModel, api, targetInfo) {
             if (!targetInfo) {
-                // Find breadcrumb tail on center of containerGroup.
-                targetInfo = this.findTarget(api.getWidth() / 2, api.getHeight() / 2);
+                targetInfo = seriesModel.get('leafDepth', true) != null
+                    ? {node: seriesModel.getViewRoot()}
+                    // FIXME
+                    // better way?
+                    // Find breadcrumb tail on center of containerGroup.
+                    : this.findTarget(api.getWidth() / 2, api.getHeight() / 2);
 
                 if (!targetInfo) {
                     targetInfo = {node: seriesModel.getData().tree.root};
