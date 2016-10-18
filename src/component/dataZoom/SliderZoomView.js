@@ -294,22 +294,38 @@ define(function (require) {
 
             // Optimize for large data shadow
             var stride = Math.round(data.count() / size[0]);
+            var lastIsEmpty;
             data.each([otherDim], function (value, index) {
                 if (stride > 0 && (index % stride)) {
                     thisCoord += step;
                     return;
                 }
+
                 // FIXME
-                // 应该使用统计的空判断？还是在list里进行空判断？
-                var otherCoord = (value == null || isNaN(value) || value === '')
-                    ? null
-                    : linearMap(value, otherDataExtent, otherShadowExtent, true);
-                if (otherCoord != null) {
-                    areaPoints.push([thisCoord, otherCoord]);
-                    linePoints.push([thisCoord, otherCoord]);
+                // Should consider axis.min/axis.max when drawing dataShadow.
+
+                // FIXME
+                // 应该使用统一的空判断？还是在list里进行空判断？
+                var isEmpty = value == null || isNaN(value) || value === '';
+                // See #4235.
+                var otherCoord = isEmpty
+                    ? 0 : linearMap(value, otherDataExtent, otherShadowExtent, true);
+
+                // Attempt to draw data shadow precisely when there are empty value.
+                if (isEmpty && !lastIsEmpty && index) {
+                    areaPoints.push([areaPoints[areaPoints.length - 1][0], 0]);
+                    linePoints.push([linePoints[linePoints.length - 1][0], 0]);
+                }
+                else if (!isEmpty && lastIsEmpty) {
+                    areaPoints.push([thisCoord, 0]);
+                    linePoints.push([thisCoord, 0]);
                 }
 
+                areaPoints.push([thisCoord, otherCoord]);
+                linePoints.push([thisCoord, otherCoord]);
+
                 thisCoord += step;
+                lastIsEmpty = isEmpty;
             });
 
             var dataZoomModel = this.dataZoomModel;
