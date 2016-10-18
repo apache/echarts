@@ -10,8 +10,8 @@ define(function (require) {
             var option = this.option;
             var min = option.rangeStart != null ? option.rangeStart : option.min;
             // In case of axis.type === 'time', Date should be converted to timestamp.
-            // In other cases, min/max should be a number or null/undefined.
-            if (min != null) {
+            // In other cases, min/max should be a number or null/undefined or 'dataMin/Max'.
+            if (min instanceof Date) {
                 min = +min;
             }
             return min;
@@ -25,8 +25,8 @@ define(function (require) {
             var option = this.option;
             var max = option.rangeEnd != null ? option.rangeEnd : option.max;
             // In case of axis.type === 'time', Date should be converted to timestamp.
-            // In other cases, min/max should be a number or null/undefined.
-            if (max != null) {
+            // In other cases, min/max should be a number or null/undefined or 'dataMin/Max'.
+            if (max instanceof Date) {
                 max = +max;
             }
             return max;
