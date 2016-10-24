@@ -22,10 +22,9 @@ define(function (require) {
                         var name = data.getName(idx);
                         var region = geo.getRegion(name);
 
-                        // No region or no value
-                        // In MapSeries data regions will be filled with NaN
-                        // If they are not in the series.data array.
-                        // So here must validate if value is NaN
+                        // If input series.data is [11, 22, '-'/null/undefined, 44],
+                        // it will be filled with NaN: [11, 22, NaN, 44] and NaN will
+                        // not be drawn. So here must validate if value is NaN.
                         if (!region || isNaN(value)) {
                             return;
                         }
