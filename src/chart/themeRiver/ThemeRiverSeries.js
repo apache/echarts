@@ -214,7 +214,7 @@ define(function (require) {
         /**
          * Get data indices for show tooltip content
          *
-         * @param {Array.<string>} dim  singel coordinate dimension
+         * @param {Array.<string>|string} dim  singel coordinate dimension
          * @param {Array.<number>} value  coordinate value
          * @param {module:echarts/coord/single/SingleAxis} baseAxis  single Axis used
          *     the themeRiver.

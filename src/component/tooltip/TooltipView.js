@@ -334,10 +334,16 @@ define(function (require) {
                         dataIndex = data.indexOfName(event.name);
                     }
                     var el = data.getItemGraphicEl(dataIndex);
-                    var cx, cy;
+                    var cx;
+                    var cy;
                     // Try to get the point in coordinate system
                     var coordSys = seriesModel.coordinateSystem;
-                    if (coordSys && coordSys.dataToPoint) {
+                    if (seriesModel.getTooltipPosition) {
+                        var point = seriesModel.getTooltipPosition(dataIndex) || [];
+                        cx = point[0];
+                        cy = point[1];
+                    }
+                    else if (coordSys && coordSys.dataToPoint) {
                         var point = coordSys.dataToPoint(
                             data.getValues(
                                 zrUtil.map(coordSys.dimensions, function (dim) {
@@ -359,6 +365,7 @@ define(function (require) {
                         this._tryShow({
                             offsetX: cx,
                             offsetY: cy,
+                            position: event.position,
                             target: el,
                             event: {}
                         });
@@ -370,6 +377,7 @@ define(function (require) {
                 this._tryShow({
                     offsetX: event.x,
                     offsetY: event.y,
+                    position: event.position,
                     target: el,
                     event: {}
                 });
@@ -487,7 +495,7 @@ define(function (require) {
                 this._showTooltipContent(
                     // TODO params
                     subTooltipModel, defaultHtml, subTooltipModel.get('formatterParams') || {},
-                    asyncTicket, e.offsetX, e.offsetY, el, api
+                    asyncTicket, e.offsetX, e.offsetY, e.position, el, api
                 );
             }
             else {
@@ -597,7 +605,7 @@ define(function (require) {
 
                 if (axisPointerType !== 'cross') {
                     this._dispatchAndShowSeriesTooltipContent(
-                        coordSys, seriesCoordSysSameAxis.series, point, value, contentNotChange
+                        coordSys, seriesCoordSysSameAxis.series, point, value, contentNotChange, e.position
                     );
                 }
             }, this);
@@ -923,10 +931,10 @@ define(function (require) {
          * @param {Array.<number>} point
          * @param {Array.<number>} value
          * @param {boolean} contentNotChange
-         * @param {Object} e
+         * @param {Array.<number>|string|Function} [positionExpr]
          */
         _dispatchAndShowSeriesTooltipContent: function (
-            coordSys, seriesList, point, value, contentNotChange
+            coordSys, seriesList, point, value, contentNotChange, positionExpr
         ) {
 
             var rootTooltipModel = this._tooltipModel;
@@ -998,12 +1006,12 @@ define(function (require) {
 
                     this._showTooltipContent(
                         rootTooltipModel, defaultHtml, paramsList, asyncTicket,
-                        point[0], point[1], null, api
+                        point[0], point[1], positionExpr, null, api
                     );
                 }
                 else {
                     updatePosition(
-                        rootTooltipModel.get('position'), point[0], point[1],
+                        positionExpr || rootTooltipModel.get('position'), point[0], point[1],
                         this._tooltipContent, paramsList, null, api
                     );
                 }
@@ -1048,12 +1056,12 @@ define(function (require) {
 
             this._showTooltipContent(
                 tooltipModel, defaultHtml, params, asyncTicket,
-                e.offsetX, e.offsetY, e.target, api
+                e.offsetX, e.offsetY, e.position, e.target, api
             );
         },
 
         _showTooltipContent: function (
-            tooltipModel, defaultHtml, params, asyncTicket, x, y, target, api
+            tooltipModel, defaultHtml, params, asyncTicket, x, y, positionExpr, target, api
         ) {
             // Reset ticket
             this._ticket = '';
@@ -1062,7 +1070,7 @@ define(function (require) {
                 var tooltipContent = this._tooltipContent;
 
                 var formatter = tooltipModel.get('formatter');
-                var positionExpr = tooltipModel.get('position');
+                positionExpr = positionExpr || tooltipModel.get('position');
                 var html = defaultHtml;
 
                 if (formatter) {

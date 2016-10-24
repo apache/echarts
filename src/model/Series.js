@@ -259,7 +259,23 @@ define(function(require) {
             return color;
         },
 
-        getAxisTooltipDataIndex: null
+        /**
+         * Get data indices for show tooltip content. See tooltip.
+         * @abstract
+         * @param {Array.<string>|string} dim
+         * @param {Array.<number>} value
+         * @param {module:echarts/coord/single/SingleAxis} baseAxis
+         * @return {Array.<number>} data indices.
+         */
+        getAxisTooltipDataIndex: null,
+
+        /**
+         * See tooltip.
+         * @abstract
+         * @param {number} dataIndex
+         * @return {Array.<number>} Point of tooltip. null/undefined can be returned.
+         */
+        getTooltipPosition: null
     });
 
     zrUtil.mixin(SeriesModel, modelUtil.dataFormatMixin);

@@ -112,6 +112,27 @@ define(function (require) {
                 + name + ' : ' + formattedValue;
         },
 
+        /**
+         * @implement
+         */
+        getTooltipPosition: function (dataIndex) {
+            if (dataIndex != null) {
+                var name = this.getData().getName(dataIndex);
+                var geo = this.coordinateSystem;
+                var region = geo.getRegion(name);
+
+                return region && geo.dataToPoint(region.center);
+            }
+        },
+
+        setZoom: function (zoom) {
+            this.option.zoom = zoom;
+        },
+
+        setCenter: function (center) {
+            this.option.center = center;
+        },
+
         defaultOption: {
             // 一级层叠
             zlevel: 0,
@@ -190,15 +211,8 @@ define(function (require) {
                     areaColor: 'rgba(255,215,0,0.8)'
                 }
             }
-        },
-
-        setZoom: function (zoom) {
-            this.option.zoom = zoom;
-        },
-
-        setCenter: function (center) {
-            this.option.center = center;
         }
+
     });
 
     zrUtil.mixin(MapSeries, dataSelectableMixin);
