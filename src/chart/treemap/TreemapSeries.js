@@ -5,6 +5,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var Model = require('../../model/Model');
     var formatUtil = require('../../util/format');
+    var helper = require('./helper');
     var encodeHTML = formatUtil.encodeHTML;
     var addCommas = formatUtil.addCommas;
 
@@ -189,21 +190,8 @@ define(function(require) {
         getDataParams: function (dataIndex) {
             var params = SeriesModel.prototype.getDataParams.apply(this, arguments);
 
-            var data = this.getData();
-            var node = data.tree.getNodeByDataIndex(dataIndex);
-            var treePathInfo = params.treePathInfo = [];
-
-            while (node) {
-                var nodeDataIndex = node.dataIndex;
-                treePathInfo.push({
-                    name: node.name,
-                    dataIndex: nodeDataIndex,
-                    value: this.getRawValue(nodeDataIndex)
-                });
-                node = node.parentNode;
-            }
-
-            treePathInfo.reverse();
+            var node = this.getData().tree.getNodeByDataIndex(dataIndex);
+            params.treePathInfo = helper.wrapTreePathInfo(node, this);
 
             return params;
         },
