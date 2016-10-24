@@ -120,7 +120,6 @@ define(function (require) {
                     else {
                         if (__DEV__) {
                             console.error('Can\'t draw value axis ' + i);
-                            continue;
                         }
                     }
                     if (showSplitLine) {

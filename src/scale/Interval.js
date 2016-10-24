@@ -85,6 +85,7 @@ define(function (require) {
                     ticks.push(extent[0]);
                 }
                 var tick = niceExtent[0];
+
                 while (tick <= niceExtent[1]) {
                     ticks.push(tick);
                     // Avoid rounding error
@@ -93,7 +94,9 @@ define(function (require) {
                         return [];
                     }
                 }
-                if (extent[1] > niceExtent[1]) {
+                // Consider this case: the last item of ticks is smaller
+                // than niceExtent[1] and niceExtent[1] === extent[1].
+                if (extent[1] > (ticks.length ? ticks[ticks.length - 1] : niceExtent[1])) {
                     ticks.push(extent[1]);
                 }
             }
