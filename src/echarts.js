@@ -1129,21 +1129,27 @@ define(function (require) {
             this._zr.on(eveName, function (e) {
                 var ecModel = this.getModel();
                 var el = e.target;
+                var params;
 
+                // no e.target when 'globalout'.
                 if (eveName === 'globalout') {
-                    this.trigger(eveName, e); // no e.target when 'globalout'.
+                    params = {};
                 }
                 else if (el && el.dataIndex != null) {
                     var dataModel = el.dataModel || ecModel.getSeriesByIndex(el.seriesIndex);
-                    var params = dataModel && dataModel.getDataParams(el.dataIndex, el.dataType) || {};
+                    params = dataModel && dataModel.getDataParams(el.dataIndex, el.dataType) || {};
+                }
+                // If element has custom eventData of components
+                else if (el && el.eventData) {
+                    params = zrUtil.extend({}, el.eventData);
+                }
+
+                if (params) {
                     params.event = e;
                     params.type = eveName;
                     this.trigger(eveName, params);
                 }
-                // If element has custom eventData of components
-                else if (el && el.eventData) {
-                    this.trigger(eveName, el.eventData);
-                }
+
             }, this);
         }, this);
 
