@@ -218,7 +218,8 @@ define(function(require) {
 
     function getVisualGradient(data, coordSys) {
         var visualMetaList = data.getVisual('visualMeta');
-        if (!visualMetaList || !visualMetaList.length) {
+        if (!visualMetaList || !visualMetaList.length || !data.count()) {
+            // When data.count() is 0, gradient range can not be calculated.
             return;
         }
 
@@ -236,6 +237,7 @@ define(function(require) {
             }
             return;
         }
+
         var dimension = visualMeta.dimension;
         var dimName = data.dimensions[dimension];
         var dataExtent = data.getDataExtent(dimName);
