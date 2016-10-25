@@ -155,6 +155,7 @@ define(function (require) {
                 ) + 2
             );
 
+            // See method `nice`, step will never bigger than 6.
             var precision = getPrecisionSafe(step) + 2;
             // Niced extent inside original extent
             var niceExtent = [

@@ -2,10 +2,22 @@
  * ECharts global model
  *
  * @module {echarts/model/Global}
- *
  */
 
 define(function (require) {
+
+    /**
+     * Caution: If the mechanism should be changed some day, these cases
+     * should be considered:
+     *
+     * (1) In `merge option` mode, if using the same option to call `setOption`
+     * many times, the result should be the same (try our best to ensure that).
+     * (2) In `merge option` mode, if a component has no id/name specified, it
+     * will be merged by index, and the result sequence of the components is
+     * consistent to the original sequence.
+     * (3) `reset` feature (in toolbox). Find detailed info in comments about
+     * `mergeOption` in module:echarts/model/OptionManager.
+     */
 
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../util/model');
