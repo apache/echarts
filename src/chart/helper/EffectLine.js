@@ -88,9 +88,9 @@ define(function (require) {
         var period = effectModel.get('period') * 1000;
         var loop = effectModel.get('loop');
         var constantSpeed = effectModel.get('constantSpeed');
-        var delayExpr = effectModel.get('delay') || function (idx) {
+        var delayExpr = zrUtil.retrieve(effectModel.get('delay'), function (idx) {
             return idx / lineData.count() * period / 3;
-        };
+        });
         var isDelayFunc = typeof delayExpr === 'function';
 
         // Ignore when updating

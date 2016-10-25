@@ -26,6 +26,8 @@ define(function (require) {
 
             effectType: 'ripple',
 
+            progressive: 0,
+
             // When to show the effect, option: 'render'|'emphasis'
             showEffectOn: 'render',
 
