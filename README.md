@@ -88,6 +88,10 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 + [EChartsSDK](https://github.com/idoku/EChartsSDK) by idoku
 
+#### PHP
+
++ [Echarts-PHP](https://github.com/hisune/Echarts-PHP) by hisune
+
 
 ## License
 Copyright (c) 2013, Baidu Inc.
