@@ -73,7 +73,7 @@ define(function (require) {
                 else {
                     lineData.hasItemOption = true;
                     var value = dataItem.value;
-                    if (value) {
+                    if (value != null) {
                         return value instanceof Array ? value[dimIndex] : value;
                     }
                 }
