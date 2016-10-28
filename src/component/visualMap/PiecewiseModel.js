@@ -36,6 +36,10 @@ define(function(require) {
                                         // When pieces and splitNumber: {'0': true, '5': true}
                                         // When categories: {'cate1': false, 'cate3': true}
                                         // When selected === false, means all unselected.
+
+            minOpen: false,             // Whether include values that smaller than `min`.
+            maxOpen: false,             // Whether include values that bigger than `max`.
+
             align: 'auto',              // 'auto', 'left', 'right'
             itemWidth: 20,              // When put the controller vertically, it is the length of
                                         // horizontal side of each item. Otherwise, vertical side.
@@ -290,13 +294,35 @@ define(function(require) {
             thisOption.precision = precision;
             splitStep = +splitStep.toFixed(precision);
 
-            for (var i = 0, curr = dataExtent[0]; i < splitNumber; i++, curr += splitStep) {
-                var max = i === splitNumber - 1 ? dataExtent[1] : (curr + splitStep);
+            var index = 0;
+
+            if (thisOption.minOpen) {
+                pieceList.push({
+                    index: index++,
+                    interval: [-Infinity, dataExtent[0]],
+                    close: [0, 0]
+                });
+            }
+
+            for (
+                var curr = dataExtent[0], len = index + splitNumber;
+                index < len;
+                curr += splitStep
+            ) {
+                var max = index === splitNumber - 1 ? dataExtent[1] : (curr + splitStep);
 
                 pieceList.push({
-                    index: i,
+                    index: index++,
                     interval: [curr, max],
                     close: [1, 1]
+                });
+            }
+
+            if (thisOption.maxOpen) {
+                pieceList.push({
+                    index: index++,
+                    interval: [dataExtent[1], Infinity],
+                    close: [0, 0]
                 });
             }
 
@@ -430,7 +456,6 @@ define(function(require) {
                 curr = interval[lg];
             }
         }
-        // console.log(JSON.stringify(pieceList.map(a => a.interval)));
 
         function littleThan(piece, standard, lg) {
             lg = lg || 0;
