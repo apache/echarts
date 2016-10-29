@@ -627,16 +627,13 @@ define(function (require) {
         _formatLabel: function (value, axis) {
             var dataZoomModel = this.dataZoomModel;
             var labelFormatter = dataZoomModel.get('labelFormatter');
-            if (zrUtil.isFunction(labelFormatter)) {
-                return labelFormatter(value);
-            }
 
             var labelPrecision = dataZoomModel.get('labelPrecision');
             if (labelPrecision == null || labelPrecision === 'auto') {
                 labelPrecision = axis.getPixelPrecision();
             }
 
-            value = (value == null && isNaN(value))
+            var valueStr = (value == null && isNaN(value))
                 ? ''
                 // FIXME Glue code
                 : (axis.type === 'category' || axis.type === 'time')
@@ -644,11 +641,11 @@ define(function (require) {
                     // param of toFixed should less then 20.
                     : value.toFixed(Math.min(labelPrecision, 20));
 
-            if (zrUtil.isString(labelFormatter)) {
-                value = labelFormatter.replace('{value}', value);
-            }
-
-            return value;
+            return zrUtil.isFunction(labelFormatter)
+                ? labelFormatter(value, valueStr)
+                : zrUtil.isString(labelFormatter)
+                ? labelFormatter.replace('{value}', valueStr)
+                : valueStr;
         },
 
         /**
