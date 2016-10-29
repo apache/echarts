@@ -9,7 +9,7 @@
     var ITEM_GAP = 8;
     var ARRAY_LENGTH = 5;
 
-    function Breadcrumb(containerGroup, onSelect) {
+    function Breadcrumb(containerGroup) {
         /**
          * @private
          * @type {module:zrender/container/Group}
@@ -17,19 +17,13 @@
         this.group = new graphic.Group();
 
         containerGroup.add(this.group);
-
-        /**
-         * @private
-         * @type {Function}
-         */
-        this._onSelect = onSelect || zrUtil.noop;
     }
 
     Breadcrumb.prototype = {
 
         constructor: Breadcrumb,
 
-        render: function (seriesModel, api, targetNode) {
+        render: function (seriesModel, api, targetNode, onSelect) {
             var model = seriesModel.getModel('breadcrumb');
             var thisGroup = this.group;
 
@@ -60,7 +54,7 @@
             };
 
             this._prepare(targetNode, layoutParam, textStyleModel);
-            this._renderContent(seriesModel, layoutParam, normalStyleModel, textStyleModel);
+            this._renderContent(seriesModel, layoutParam, normalStyleModel, textStyleModel, onSelect);
 
             layout.positionGroup(thisGroup, layoutParam.pos, layoutParam.box);
         },
@@ -86,7 +80,7 @@
          * @private
          */
         _renderContent: function (
-            seriesModel, layoutParam, normalStyleModel, textStyleModel
+            seriesModel, layoutParam, normalStyleModel, textStyleModel, onSelect
         ) {
             // Start rendering.
             var lastX = 0;
@@ -126,7 +120,7 @@
                         }
                     ),
                     z: 10,
-                    onclick: zrUtil.bind(this._onSelect, this, itemNode)
+                    onclick: zrUtil.curry(onSelect, itemNode)
                 });
                 this.group.add(el);
 

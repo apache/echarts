@@ -544,8 +544,8 @@
                 }
             }
 
-            (this._breadcrumb || (this._breadcrumb = new Breadcrumb(this.group, bind(onSelect, this))))
-                .render(seriesModel, api, targetInfo.node);
+            (this._breadcrumb || (this._breadcrumb = new Breadcrumb(this.group)))
+                .render(seriesModel, api, targetInfo.node, bind(onSelect, this));
 
             function onSelect(node) {
                 if (this._state !== 'animating') {
