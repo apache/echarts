@@ -110,11 +110,17 @@
                     ]
                 }]
             });
+
+            chart.on('click', function (params) {
+                console.log(params);
+            });
         }
 
         $(window).resize(function () {
             chart && chart.resize();
-        })
+        });
+
+
     </script>
 </body>
 </html>
