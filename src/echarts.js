@@ -429,12 +429,12 @@ define(function (require) {
      *        If string, e.g., 'geo', means {geoIndex: 0}.
      *        If Object, could contain some of these properties below:
      *        {
-     *            seriesIndex, seriesId,
-     *            geoIndex, geoId,
-     *            bmapIndex, bmapId,
-     *            xAxisIndex, xAxisId,
-     *            yAxisIndex, yAxisId,
-     *            gridIndex, gridId,
+     *            seriesIndex / seriesId / seriesName,
+     *            geoIndex / geoId, geoName,
+     *            bmapIndex / bmapId / bmapName,
+     *            xAxisIndex / xAxisId / xAxisName,
+     *            yAxisIndex / yAxisId / yAxisName,
+     *            gridIndex / gridId / gridName,
      *            ... (can be extended)
      *        }
      * @param {Array|number} value
@@ -449,12 +449,12 @@ define(function (require) {
      *        If string, e.g., 'geo', means {geoIndex: 0}.
      *        If Object, could contain some of these properties below:
      *        {
-     *            seriesIndex, seriesId,
-     *            geoIndex, geoId,
-     *            bmapIndex, bmapId,
-     *            xAxisIndex, xAxisId,
-     *            yAxisIndex, yAxisId,
-     *            gridIndex, gridId,
+     *            seriesIndex / seriesId / seriesName,
+     *            geoIndex / geoId / geoName,
+     *            bmapIndex / bmapId / bmapName,
+     *            xAxisIndex / xAxisId / xAxisName,
+     *            yAxisIndex / yAxisId / yAxisName
+     *            gridIndex / gridId / gridName,
      *            ... (can be extended)
      *        }
      * @param {Array|number} value
@@ -491,12 +491,12 @@ define(function (require) {
      *        If string, e.g., 'geo', means {geoIndex: 0}.
      *        If Object, could contain some of these properties below:
      *        {
-     *            seriesIndex, seriesId,
-     *            geoIndex, geoId,
-     *            bmapIndex, bmapId,
-     *            xAxisIndex, xAxisId,
-     *            yAxisIndex, yAxisId,
-     *            gridIndex, gridId,
+     *            seriesIndex / seriesId / seriesName,
+     *            geoIndex / geoId / geoName,
+     *            bmapIndex / bmapId / bmapName,
+     *            xAxisIndex / xAxisId / xAxisName,
+     *            yAxisIndex / yAxisId / yAxisName
+     *            gridIndex / gridId / gridName,
      *            ... (can be extended)
      *        }
      * @param {Array|number} value
@@ -537,6 +537,47 @@ define(function (require) {
         }, this);
 
         return !!result;
+    };
+
+    /**
+     * Get visual from series or data.
+     * @param {string|Object} finder
+     *        If string, e.g., 'series', means {seriesIndex: 0}.
+     *        If Object, could contain some of these properties below:
+     *        {
+     *            seriesIndex / seriesId / seriesName,
+     *            dataIndex / dataIndexInside
+     *        }
+     *        If dataIndex is not specified, series visual will be fetched,
+     *        but not data item visual.
+     *        If all of seriesIndex, seriesId, seriesName are not specified,
+     *        visual will be fetched from first series.
+     * @param {string} visualType 'color', 'symbol', 'symbolSize'
+     */
+    echartsProto.getVisual = function (finder, visualType) {
+        var ecModel = this._model;
+
+        finder = modelUtil.parseFinder(ecModel, finder, {defaultMainType: 'series'});
+
+        var seriesModel = finder.seriesModel;
+
+        if (__DEV__) {
+            if (!seriesModel) {
+                console.warn('There is no specified seires model');
+            }
+        }
+
+        var data = seriesModel.getData();
+
+        var dataIndexInside = finder.hasOwnProperty('dataIndexInside')
+            ? finder.dataIndexInside
+            : finder.hasOwnProperty('dataIndex')
+            ? data.indexOfRawIndex(finder.dataIndex)
+            : null;
+
+        return dataIndexInside != null
+            ? data.getItemVisual(dataIndexInside, visualType)
+            : data.getVisual(visualType);
     };
 
 

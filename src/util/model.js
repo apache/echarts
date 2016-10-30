@@ -419,13 +419,18 @@ define(function(require) {
 
         zrUtil.each(finder, function (value, key) {
             var value = finder[key];
-            key = key.match(/^(\w+)(Index|Id|Name)$/);
-
-            var mainType = key[1];
-            var queryType = key[2];
 
             // Exclude 'dataIndex' and other illgal keys.
-            if (mainType === 'data' || !mainType || !queryType) {
+            if (key === 'dataIndex' || key === 'dataIndexInside') {
+                result[key] = value;
+                return;
+            }
+
+            var parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
+            var mainType = parsedKey[1];
+            var queryType = parsedKey[2];
+
+            if (!mainType || !queryType) {
                 return;
             }
 
