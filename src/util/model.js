@@ -388,6 +388,8 @@ define(function(require) {
      *            geoId: ['aa', 'cc'],
      *            gridName: ['xx', 'rr']
      *        }
+     * @param {Object} [opt]
+     * @param {string} [opt.defaultMainType]
      * @return {Object} result like:
      *        {
      *            seriesModels: [seriesModel1, seriesModel2],
@@ -397,11 +399,20 @@ define(function(require) {
      *            ...
      *        }
      */
-    modelUtil.parseFinder = function (ecModel, finder) {
+    modelUtil.parseFinder = function (ecModel, finder, opt) {
         if (zrUtil.isString(finder)) {
             var obj = {};
             obj[finder + 'Index'] = 0;
             finder = obj;
+        }
+
+        var defaultMainType = opt && opt.defaultMainType;
+        if (defaultMainType
+            && !has(finder, defaultMainType + 'Index')
+            && !has(finder, defaultMainType + 'Id')
+            && !has(finder, defaultMainType + 'Name')
+        ) {
+            finder[defaultMainType + 'Index'] = 0;
         }
 
         var result = {};
@@ -409,15 +420,28 @@ define(function(require) {
         zrUtil.each(finder, function (value, key) {
             var value = finder[key];
             key = key.match(/^(\w+)(Index|Id|Name)$/);
-            var queryParam = {mainType: key[1]};
-            queryParam[key[2].toLowerCase()] = value;
+
+            var mainType = key[1];
+            var queryType = key[2];
+
+            // Exclude 'dataIndex' and other illgal keys.
+            if (mainType === 'data' || !mainType || !queryType) {
+                return;
+            }
+
+            var queryParam = {mainType: mainType};
+            queryParam[queryType.toLowerCase()] = value;
             var models = ecModel.queryComponents(queryParam);
-            result[key[1] + 'Models'] = models;
-            result[key[1] + 'Model'] = models[0];
+            result[mainType + 'Models'] = models;
+            result[mainType + 'Model'] = models[0];
         });
 
         return result;
     };
+
+    function has(obj, prop) {
+        return obj && obj.hasOwnProperty(prop);
+    }
 
     return modelUtil;
 });
