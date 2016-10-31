@@ -106,8 +106,8 @@ define(function (require) {
                     );
 
                     itemGroup.on('click', curry(dispatchSelectAction, name, api))
-                        .on('mouseover', curry(dispatchHighlightAction, seriesModel, '', api))
-                        .on('mouseout', curry(dispatchDownplayAction, seriesModel, '', api));
+                        .on('mouseover', curry(dispatchHighlightAction, seriesModel, null, api))
+                        .on('mouseout', curry(dispatchDownplayAction, seriesModel, null, api));
 
                     legendDrawedMap[name] = true;
                 }
