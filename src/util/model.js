@@ -368,6 +368,32 @@ define(function(require) {
     };
 
     /**
+     * @param {module:echarts/data/List} data
+     * @param {Object} payload Contains dataIndex (means rawIndex) / dataIndexInside / name
+     *                         each of which can be Array or primary type.
+     * @return {number|Array.<number>} dataIndex If not found, return undefined/null.
+     */
+    modelUtil.queryDataIndex = function (data, payload) {
+        if (payload.dataIndexInside != null) {
+            return payload.dataIndexInside;
+        }
+        else if (payload.dataIndex != null) {
+            return zrUtil.isArray(payload.dataIndex)
+                ? zrUtil.map(payload.dataIndex, function (value) {
+                    return data.indexOfRawIndex(value);
+                })
+                : data.indexOfRawIndex(payload.dataIndex);
+        }
+        else if (payload.name != null) {
+            return zrUtil.isArray(payload.name)
+                ? zrUtil.map(payload.name, function (value) {
+                    return data.indexOfName(value);
+                })
+                : data.indexOfName(payload.name);
+        }
+    };
+
+    /**
      * @param {module:echarts/model/Global} ecModel
      * @param {string|Object} finder
      *        If string, e.g., 'geo', means {geoIndex: 0}.

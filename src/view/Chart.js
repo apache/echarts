@@ -3,6 +3,8 @@ define(function (require) {
     var Group = require('zrender/container/Group');
     var componentUtil = require('../util/component');
     var clazzUtil = require('../util/clazz');
+    var modelUtil = require('../util/model');
+    var zrUtil = require('zrender/core/util');
 
     function Chart() {
 
@@ -117,21 +119,12 @@ define(function (require) {
      * @inner
      */
     function toggleHighlight(data, payload, state) {
-        var dataIndex = payload && payload.dataIndex;
-        var name = payload && payload.name;
+        var dataIndex = modelUtil.queryDataIndex(data, payload);
 
         if (dataIndex != null) {
-            var dataIndices = dataIndex instanceof Array ? dataIndex : [dataIndex];
-            for (var i = 0, len = dataIndices.length; i < len; i++) {
-                elSetState(data.getItemGraphicEl(dataIndices[i]), state);
-            }
-        }
-        else if (name) {
-            var names = name instanceof Array ? name : [name];
-            for (var i = 0, len = names.length; i < len; i++) {
-                var dataIndex = data.indexOfName(names[i]);
-                elSetState(data.getItemGraphicEl(dataIndex), state);
-            }
+            zrUtil.each(modelUtil.normalizeToArray(dataIndex), function (dataIdx) {
+                elSetState(data.getItemGraphicEl(dataIdx), state);
+            });
         }
         else {
             data.eachItemGraphicEl(function (el) {

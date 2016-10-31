@@ -5,6 +5,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var formatUtil = require('../../util/format');
     var numberUtil = require('../../util/number');
+    var modelUtil = require('../../util/model');
     var parsePercent = numberUtil.parsePercent;
     var env = require('zrender/core/env');
     var Model = require('../../model/Model');
@@ -293,17 +294,17 @@ define(function (require) {
 
         /**
          * Show tip manually by
-         *  dispatchAction({
-         *      type: 'showTip',
-         *      x: 10,
-         *      y: 10
-         *  });
+         * dispatchAction({
+         *     type: 'showTip',
+         *     x: 10,
+         *     y: 10
+         * });
          * Or
-         *  dispatchAction({
+         * dispatchAction({
          *      type: 'showTip',
          *      seriesIndex: 0,
-         *      dataIndex: 1
-         *  });
+         *      dataIndex or dataIndexInside or name
+         * });
          *
          *  TODO Batch
          */
@@ -315,7 +316,6 @@ define(function (require) {
 
             var ecModel = this._ecModel;
             var seriesIndex = event.seriesIndex;
-            var dataIndex = event.dataIndex;
             var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
             var api = this._api;
 
@@ -330,9 +330,12 @@ define(function (require) {
                 }
                 if (seriesModel) {
                     var data = seriesModel.getData();
-                    if (dataIndex == null) {
-                        dataIndex = data.indexOfName(event.name);
+                    var dataIndex = modelUtil.queryDataIndex(data, event);
+
+                    if (dataIndex == null || zrUtil.isArray(dataIndex)) {
+                        return;
                     }
+
                     var el = data.getItemGraphicEl(dataIndex);
                     var cx;
                     var cy;
@@ -361,6 +364,7 @@ define(function (require) {
                         cx = rect.x + rect.width / 2;
                         cy = rect.y + rect.height / 2;
                     }
+
                     if (cx != null && cy != null) {
                         this._tryShow({
                             offsetX: cx,
@@ -474,7 +478,7 @@ define(function (require) {
                 api.dispatchAction({
                     type: 'showTip',
                     from: this.uid,
-                    dataIndex: el.dataIndex,
+                    dataIndexInside: el.dataIndex,
                     seriesIndex: el.seriesIndex
                 });
             }
@@ -945,7 +949,7 @@ define(function (require) {
             var payloadBatch = zrUtil.map(seriesList, function (series) {
                 return {
                     seriesIndex: series.seriesIndex,
-                    dataIndex: series.getAxisTooltipDataIndex
+                    dataIndexInside: series.getAxisTooltipDataIndex
                         ? series.getAxisTooltipDataIndex(series.coordDimToDataDim(baseAxis.dim), value, baseAxis)
                         : series.getData().indexOfNearest(
                             series.coordDimToDataDim(baseAxis.dim)[0],
@@ -976,19 +980,19 @@ define(function (require) {
             // Dispatch showTip action
             api.dispatchAction({
                 type: 'showTip',
-                dataIndex: payloadBatch[0].dataIndex,
+                dataIndexInside: payloadBatch[0].dataIndexInside,
                 seriesIndex: payloadBatch[0].seriesIndex,
                 from: this.uid
             });
 
             if (baseAxis && rootTooltipModel.get('showContent') && rootTooltipModel.get('show')) {
                 var paramsList = zrUtil.map(seriesList, function (series, index) {
-                    return series.getDataParams(payloadBatch[index].dataIndex);
+                    return series.getDataParams(payloadBatch[index].dataIndexInside);
                 });
 
                 if (!contentNotChange) {
                     // Update html content
-                    var firstDataIndex = payloadBatch[0].dataIndex;
+                    var firstDataIndex = payloadBatch[0].dataIndexInside;
 
                     // Default tooltip content
                     // FIXME
@@ -999,7 +1003,7 @@ define(function (require) {
                         : seriesList[0].getData().getName(firstDataIndex);
                     var defaultHtml = (firstLine ? firstLine + '<br />' : '')
                         + zrUtil.map(seriesList, function (series, index) {
-                            return series.formatTooltip(payloadBatch[index].dataIndex, true);
+                            return series.formatTooltip(payloadBatch[index].dataIndexInside, true);
                         }).join('<br />');
 
                     var asyncTicket = 'axis_' + coordSys.name + '_' + firstDataIndex;

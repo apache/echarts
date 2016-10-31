@@ -686,8 +686,8 @@ define(function(require) {
             }
 
             var resultBatches = modelUtil.compressBatches(oldBatch, newBatch);
-            this._dispatchHighDown('downplay', resultBatches[0]);
-            this._dispatchHighDown('highlight', resultBatches[1]);
+            this._dispatchHighDown('downplay', helper.convertDataIndex(resultBatches[0]));
+            this._dispatchHighDown('highlight', helper.convertDataIndex(resultBatches[1]));
         },
 
         /**
@@ -727,7 +727,7 @@ define(function(require) {
 
             var indices = this._hoverLinkDataIndices;
 
-            this._dispatchHighDown('downplay', indices);
+            this._dispatchHighDown('downplay', helper.convertDataIndex(indices));
 
             indices.length = 0;
         },

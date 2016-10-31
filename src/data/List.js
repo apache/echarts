@@ -513,6 +513,13 @@ define(function (require) {
     listProto.indexOfRawIndex = function (rawIndex) {
         // Indices are ascending
         var indices = this.indices;
+
+        // If rawIndex === dataIndex
+        var rawDataIndex = indices[rawIndex];
+        if (rawDataIndex != null && rawDataIndex === rawIndex) {
+            return rawIndex;
+        }
+
         var left = 0;
         var right = indices.length - 1;
         while (left <= right) {

@@ -8,6 +8,7 @@ define(function(require) {
     var Symbol = require('../helper/Symbol');
     var lineAnimationDiff = require('./lineAnimationDiff');
     var graphic = require('../../util/graphic');
+    var modelUtil = require('../../util/model');
 
     var polyHelper = require('./poly');
 
@@ -79,15 +80,6 @@ define(function(require) {
 
             return coordSys.dataToPoint(stackedData);
         }, true);
-    }
-
-    function queryDataIndex(data, payload) {
-        if (payload.dataIndex != null) {
-            return payload.dataIndex;
-        }
-        else if (payload.name != null) {
-            return data.indexOfName(payload.name);
-        }
     }
 
     function createGridClipShape(cartesian, hasAnimation, seriesModel) {
@@ -503,7 +495,7 @@ define(function(require) {
 
         highlight: function (seriesModel, ecModel, api, payload) {
             var data = seriesModel.getData();
-            var dataIndex = queryDataIndex(data, payload);
+            var dataIndex = modelUtil.queryDataIndex(data, payload);
 
             if (!(dataIndex instanceof Array) && dataIndex != null && dataIndex >= 0) {
                 var symbol = data.getItemGraphicEl(dataIndex);
@@ -537,7 +529,7 @@ define(function(require) {
 
         downplay: function (seriesModel, ecModel, api, payload) {
             var data = seriesModel.getData();
-            var dataIndex = queryDataIndex(data, payload);
+            var dataIndex = modelUtil.queryDataIndex(data, payload);
             if (dataIndex != null && dataIndex >= 0) {
                 var symbol = data.getItemGraphicEl(dataIndex);
                 if (symbol) {
