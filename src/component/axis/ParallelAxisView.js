@@ -100,13 +100,19 @@ define(function (require) {
             });
 
             var extent = axis.getExtent();
-            var extra = 30; // Arbitrary value.
-            var rect = {
-                x: extent[0] - extra,
+            var extentLen = extent[1] - extent[0];
+            var extra = Math.min(30, Math.abs(extentLen) * 0.1); // Arbitrary value.
+
+            // width/height might be negative, which will be
+            // normalized in BoundingRect.
+            var rect = graphic.BoundingRect.create({
+                x: extent[0],
                 y: -areaWidth / 2,
-                width: extent[1] - extent[0] + 2 * extra,
+                width: extentLen,
                 height: areaWidth
-            };
+            });
+            rect.x -= extra;
+            rect.width += 2 * extra;
 
             this._brushController
                 .mount({

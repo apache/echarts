@@ -8,6 +8,7 @@ define(function (require) {
 
     var Eventful = require('zrender/mixin/Eventful');
     var zrUtil = require('zrender/core/util');
+    var BoundingRect = require('zrender/core/BoundingRect');
     var graphic = require('../../util/graphic');
     var interactionMutex = require('./interactionMutex');
     var DataDiffer = require('../../data/DataDiffer');
@@ -217,7 +218,14 @@ define(function (require) {
                     });
                     thisGroup.add(panel);
                 }
-                panel.attr('shape', panelOpt.rect);
+
+                var rect = panelOpt.rect;
+                // Using BoundingRect to normalize negative width/height.
+                if (!(rect instanceof BoundingRect)) {
+                    rect = BoundingRect.create(rect);
+                }
+
+                panel.attr('shape', rect.plain());
                 panel.__brushPanelId = panelId;
                 newPanels[panelId] = panel;
                 oldPanels[panelId] = null;
