@@ -34,6 +34,7 @@ define(function (require) {
             symbolType, -symbolSize[0] / 2, -symbolSize[1] / 2,
             symbolSize[0], symbolSize[1], color
         );
+
         symbolPath.name = name;
 
         return symbolPath;
@@ -268,10 +269,7 @@ define(function (require) {
             lineStyle.opacity,
             1
         );
-        if (isNaN(defaultText)) {
-            // Use name
-            defaultText = lineData.getName(idx);
-        }
+
         line.useStyle(zrUtil.defaults(
             {
                 strokeNoScale: true,
@@ -296,21 +294,25 @@ define(function (require) {
 
         var showLabel = labelModel.getShallow('show');
         var hoverShowLabel = hoverLabelModel.getShallow('show');
-        var defaultText;
+
         var label = this.childOfName('label');
         var defaultLabelColor;
+        var defaultText;
+
         if (showLabel || hoverShowLabel) {
-            defaultText = numberUtil.round(seriesModel.getRawValue(idx));
+            var rawVal = seriesModel.getRawValue(idx);
+            defaultText = isFinite(rawVal) ? numberUtil.round(rawVal) : rawVal;
             defaultLabelColor = visualColor || '#000';
         }
+
         // label.afterUpdate = lineAfterUpdate;
         if (showLabel) {
             var textStyleModel = labelModel.getModel('textStyle');
             label.setStyle({
                 text: zrUtil.retrieve(
-                        seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
-                        defaultText
-                    ),
+                    seriesModel.getFormattedLabel(idx, 'normal', lineData.dataType),
+                    defaultText
+                ),
                 textFont: textStyleModel.getFont(),
                 fill: textStyleModel.getTextColor() || defaultLabelColor
             });
@@ -327,9 +329,9 @@ define(function (require) {
 
             label.hoverStyle = {
                 text: zrUtil.retrieve(
-                        seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
-                        defaultText
-                    ),
+                    seriesModel.getFormattedLabel(idx, 'emphasis', lineData.dataType),
+                    defaultText
+                ),
                 textFont: textStyleHoverModel.getFont(),
                 fill: textStyleHoverModel.getTextColor() || defaultLabelColor
             };
