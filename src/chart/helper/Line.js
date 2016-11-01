@@ -301,7 +301,11 @@ define(function (require) {
 
         if (showLabel || hoverShowLabel) {
             var rawVal = seriesModel.getRawValue(idx);
-            defaultText = isFinite(rawVal) ? numberUtil.round(rawVal) : rawVal;
+            defaultText = rawVal == null
+                ? defaultText = lineData.getName(idx)
+                : isFinite(rawVal)
+                ? numberUtil.round(rawVal)
+                : rawVal;
             defaultLabelColor = visualColor || '#000';
         }
 
