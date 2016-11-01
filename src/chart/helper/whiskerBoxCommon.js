@@ -130,9 +130,7 @@ define(function(require) {
 
         remove: function (ecModel) {
             this._whiskerBoxDraw.remove();
-        },
-
-        dispose: zrUtil.noop
+        }
     };
 
     return {
