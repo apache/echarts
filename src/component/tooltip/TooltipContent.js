@@ -142,6 +142,7 @@ define(function (require) {
             self._inContent = true;
         };
         el.onmousemove = function (e) {
+            e = e || window.event;
             if (!self.enterable) {
                 // Try trigger zrender event to avoid mouse
                 // in and out shape too frequently

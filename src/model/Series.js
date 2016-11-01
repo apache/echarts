@@ -186,21 +186,27 @@ define(function(require) {
          */
         formatTooltip: function (dataIndex, multipleSeries, dataType) {
             function formatArrayValue(value) {
-                return zrUtil.map(value, function (val, idx) {
+                var result = [];
+
+                zrUtil.each(value, function (val, idx) {
                     var dimInfo = data.getDimensionInfo(idx);
                     var dimType = dimInfo && dimInfo.type;
+                    var valStr;
+
                     if (dimType === 'ordinal') {
-                        return val;
+                        valStr = val + '';
                     }
                     else if (dimType === 'time') {
-                        return multipleSeries ? '' : formatUtil.formatTime('yyyy/mm/dd hh:mm:ss', val);
+                        valStr = multipleSeries ? '' : formatUtil.formatTime('yyyy/mm/dd hh:mm:ss', val);
                     }
                     else {
-                        return addCommas(val);
+                        valStr = addCommas(val);
                     }
-                }).filter(function (val) {
-                    return !!val;
-                }).join(', ');
+
+                    valStr && result.push(valStr);
+                });
+
+                return result.join(', ');
             }
 
             var data = this._data;
