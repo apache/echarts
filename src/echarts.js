@@ -1372,9 +1372,9 @@ define(function (require) {
         /**
          * @type {number}
          */
-        version: '3.2.3',
+        version: '3.3.0',
         dependencies: {
-            zrender: '3.1.3'
+            zrender: '3.2.0'
         }
     };
 
