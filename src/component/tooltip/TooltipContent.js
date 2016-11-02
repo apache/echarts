@@ -147,7 +147,7 @@ define(function (require) {
                 // Try trigger zrender event to avoid mouse
                 // in and out shape too frequently
                 var handler = zr.handler;
-                eventUtil.normalizeEvent(container, e);
+                eventUtil.normalizeEvent(container, e, true);
                 handler.dispatch('mousemove', e);
             }
         };
