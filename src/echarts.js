@@ -320,6 +320,7 @@ define(function (require) {
      * @param {string} [opts.type='png']
      * @param {string} [opts.pixelRatio=1]
      * @param {string} [opts.backgroundColor]
+     * @param {string} [opts.excludeComponents]
      */
     echartsProto.getDataURL = function (opts) {
         opts = opts || {};
