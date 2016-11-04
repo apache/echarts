@@ -1687,7 +1687,7 @@ define(function (require) {
         if (superClass) {
             superClass = 'series.' + superClass.replace('series.', '');
             var classType = parseClassType(superClass);
-            Clazz = SeriesModel.getClass(classType.main, classType.sub, true);
+            Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
         }
         return Clazz.extend(opts);
     };
