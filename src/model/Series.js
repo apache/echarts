@@ -197,7 +197,7 @@ define(function(require) {
                         valStr = val + '';
                     }
                     else if (dimType === 'time') {
-                        valStr = multipleSeries ? '' : formatUtil.formatTime('yyyy/mm/dd hh:mm:ss', val);
+                        valStr = multipleSeries ? '' : formatUtil.formatTime('yyyy/MM/dd hh:mm:ss', val);
                     }
                     else {
                         valStr = addCommas(val);
