@@ -65,11 +65,9 @@ define(function (require) {
     // dispatchAction with updateMethod "none" in main process.
     // This flag is used to carry out this rule.
     // All events will be triggered out side main process (i.e. when !this[IN_MAIN_PROCESS]).
-    var IN_MAIN_PROCESS = '__flag_in_main_process';
-    var HAS_GRADIENT_OR_PATTERN_BG = '_hasGradientOrPatternBg';
-
-
-    var OPTION_UPDATED = '_optionUpdated';
+    var IN_MAIN_PROCESS = '__flagInMainProcess';
+    var HAS_GRADIENT_OR_PATTERN_BG = '__hasGradientOrPatternBg';
+    var OPTION_UPDATED = '__optionUpdated';
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -255,7 +253,7 @@ define(function (require) {
 
         this[IN_MAIN_PROCESS] = false;
 
-        this._flushPendingActions();
+        flushPendingActions.call(this);
     };
 
     /**
@@ -805,7 +803,7 @@ define(function (require) {
 
         this[IN_MAIN_PROCESS] = false;
 
-        this._flushPendingActions();
+        flushPendingActions.call(this);
     };
 
     /**
@@ -859,13 +857,9 @@ define(function (require) {
      * @param {boolean} [silent=false] Whether trigger event.
      */
     echartsProto.dispatchAction = function (payload, silent) {
-        var actionWrap = actions[payload.type];
-        if (!actionWrap) {
+        if (!actions[payload.type]) {
             return;
         }
-
-        var actionInfo = actionWrap.actionInfo;
-        var updateMethod = actionInfo.update || 'update';
 
         // if (__DEV__) {
         //     zrUtil.assert(
@@ -880,6 +874,16 @@ define(function (require) {
             this._pendingActions.push(payload);
             return;
         }
+
+        doDispatchAction.call(this, payload, silent);
+
+        flushPendingActions.call(this, silent);
+    };
+
+    function doDispatchAction(payload, silent) {
+        var actionWrap = actions[payload.type];
+        var actionInfo = actionWrap.actionInfo;
+        var updateMethod = actionInfo.update || 'update';
 
         this[IN_MAIN_PROCESS] = true;
 
@@ -938,18 +942,15 @@ define(function (require) {
         this[IN_MAIN_PROCESS] = false;
 
         !silent && this._messageCenter.trigger(eventObj.type, eventObj);
+    }
 
-        this._flushPendingActions();
-
-    };
-
-    echartsProto._flushPendingActions = function () {
+    function flushPendingActions(silent) {
         var pendingActions = this._pendingActions;
         while (pendingActions.length) {
             var payload = pendingActions.shift();
-            this.dispatchAction(payload);
+            doDispatchAction.call(this, payload, silent);
         }
-    };
+    }
 
     /**
      * Register event
