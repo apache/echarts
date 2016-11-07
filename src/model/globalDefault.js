@@ -47,6 +47,10 @@ define(function () {
         progressive: 400,
 
         // Threshold of if use single hover layer to optimize.
+        // It is recommended that `hoverLayerThreshold` is equivalent to or less than
+        // `progressiveThreshold`, otherwise hover will cause restart of progressive,
+        // which is unexpected.
+        // see example <echarts/test/heatmap-large.html>.
         hoverLayerThreshold: 3000
     };
 });
