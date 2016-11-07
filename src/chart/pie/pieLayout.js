@@ -112,7 +112,7 @@ define(function (require) {
                             ? minAngle : value * unitRadian;
                         layout.startAngle = currentAngle;
                         layout.endAngle = currentAngle + dir * angle;
-                        currentAngle += angle;
+                        currentAngle += dir * angle;
                     });
                 }
             }
