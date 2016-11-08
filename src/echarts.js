@@ -247,13 +247,15 @@ define(function (require) {
         }
         else {
             updateMethods.prepareAndUpdate.call(this);
-            this._zr.refreshImmediately();
+            // Ensure zr refresh sychronously, and then pixel in canvas can be
+            // fetched after `setOption`.
+            this._zr.flush();
             this[OPTION_UPDATED] = false;
         }
 
         this[IN_MAIN_PROCESS] = false;
 
-        flushPendingActions.call(this);
+        flushPendingActions.call(this, false);
     };
 
     /**
@@ -857,6 +859,7 @@ define(function (require) {
      * @param {boolean} [silent=false] Whether trigger event.
      */
     echartsProto.dispatchAction = function (payload, silent) {
+
         if (!actions[payload.type]) {
             return;
         }
@@ -876,6 +879,14 @@ define(function (require) {
         }
 
         doDispatchAction.call(this, payload, silent);
+
+        // Call zr refreshImmediately for these reasons:
+        // (1) Ensure zr refresh sychronously, and then pixel in canvas can be
+        // fetched after `dispatchAction`.
+        // (2) In WeChat embeded browser, `requestAnimationFrame` and `setInterval`
+        // hang when sliding page (on touch event), which cause that zr does not
+        // refresh util user interaction finished, which is not expected.
+        this._zr.flush();
 
         flushPendingActions.call(this, silent);
     };
