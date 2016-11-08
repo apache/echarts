@@ -11,7 +11,7 @@ define(function(require) {
          * @protected
          */
         defaultOption: {
-            silent: false,   // Whether disable this inside zoom.
+            disabled: false,   // Whether disable this inside zoom.
             zoomLock: false  // Whether disable zoom but only pan.
         }
     });

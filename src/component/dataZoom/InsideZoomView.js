@@ -81,7 +81,7 @@ define(function (require) {
          * @private
          */
         _onPan: function (coordInfo, coordSysName, controller, dx, dy, oldX, oldY, newX, newY) {
-            if (this.dataZoomModel.option.silent) {
+            if (this.dataZoomModel.option.disabled) {
                 return this._range;
             }
 
@@ -112,7 +112,7 @@ define(function (require) {
         _onZoom: function (coordInfo, coordSysName, controller, scale, mouseX, mouseY) {
             var option = this.dataZoomModel.option;
 
-            if (option.silent || option.zoomLock) {
+            if (option.disabled || option.zoomLock) {
                 return this._range;
             }
 
