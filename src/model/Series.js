@@ -215,7 +215,13 @@ define(function(require) {
             var formattedValue = zrUtil.isArray(value)
                 ? formatArrayValue(value) : addCommas(value);
             var name = data.getName(dataIndex);
+
             var color = data.getItemVisual(dataIndex, 'color');
+            if (zrUtil.isObject(color) && color.colorStops) {
+                color = (color.colorStops[0] || {}).color;
+            }
+            color = color || 'transparent';
+
             var colorEl = '<span style="display:inline-block;margin-right:5px;'
                 + 'border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
 

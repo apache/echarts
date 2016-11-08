@@ -10,7 +10,6 @@ define(function(require) {
     var colorTool = require('zrender/tool/color');
     var matrix = require('zrender/core/matrix');
     var vector = require('zrender/core/vector');
-    var Gradient = require('zrender/graphic/Gradient');
 
     var graphic = {};
 
