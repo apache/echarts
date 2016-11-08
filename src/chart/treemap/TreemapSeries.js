@@ -41,7 +41,7 @@ define(function(require) {
                                                 // Count from zero (zero represents only view root).
             drillDownIcon: '▶',                 // Use html character temporarily because it is complicated
                                                 // to align specialized icon. ▷▶❒❐▼✚
-            visualDimension: 0,                 // Can be 0, 1, 2, 3.
+
             zoomToNodeRatio: 0.32 * 0.32,       // Be effective when using zoomToNode. Specify the proportion of the
                                                 // target node area in the view area.
             roam: true,                         // true, false, 'scale' or 'zoom', 'move'.
@@ -104,6 +104,11 @@ define(function(require) {
 
                 }
             },
+
+            visualDimension: 0,                 // Can be 0, 1, 2, 3.
+            visualMin: null,
+            visualMax: null,
+
             color: [],                  // + treemapSeries.color should not be modified. Please only modified
                                         // level[n].color (if necessary).
                                         // + Specify color list of each level. level[0].color would be global
