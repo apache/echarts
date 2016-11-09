@@ -270,7 +270,7 @@ define(function (require) {
          * see {module:echarts/CoodinateSystem}
          */
         containPoint: function (point) {
-            return this.getViewRect().contain(point[0], point[1]);
+            return this.getViewRectAfterRoam().contain(point[0], point[1]);
         }
 
         /**
