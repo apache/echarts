@@ -528,7 +528,7 @@ define(function (require) {
         /**
          * @private
          */
-        _updateView: function () {
+        _updateView: function (nonRealtime) {
             var displaybles = this._displayables;
             var handleEnds = this._handleEnds;
             var handleInterval = asc(handleEnds.slice());
@@ -552,13 +552,13 @@ define(function (require) {
                 height: size[1]
             });
 
-            this._updateDataInfo();
+            this._updateDataInfo(nonRealtime);
         },
 
         /**
          * @private
          */
-        _updateDataInfo: function () {
+        _updateDataInfo: function (nonRealtime) {
             var dataZoomModel = this.dataZoomModel;
             var displaybles = this._displayables;
             var handleLabels = displaybles.handleLabels;
@@ -568,19 +568,20 @@ define(function (require) {
             // FIXME
             // date型，支持formatter，autoformatter（ec2 date.getAutoFormatter）
             if (dataZoomModel.get('showDetail')) {
-                var dataInterval;
-                var axis;
-                dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
-                    // Using dataInterval of the first axis.
-                    if (!dataInterval) {
-                        dataInterval = dataZoomModel
-                            .getAxisProxy(dimNames.name, axisIndex)
-                            .getDataValueWindow();
-                        axis = this.ecModel.getComponent(dimNames.axis, axisIndex).axis;
-                    }
-                }, this);
+                var axisProxy = dataZoomModel.findRepresentativeAxisProxy();
 
-                if (dataInterval) {
+                if (axisProxy) {
+                    var axis = axisProxy.getAxisModel().axis;
+                    var range = this._range;
+
+                    var dataInterval = nonRealtime
+                        // See #4434, data and axis are not processed and reset yet in non-realtime mode.
+                        ? axisProxy.calculateDataWindow(
+                            {start: range[0], end: range[1]},
+                            axisProxy.getDataExtent()
+                        ).valueWindow
+                        : axisProxy.getDataValueWindow();
+
                     labelTexts = [
                         this._formatLabel(dataInterval[0], axis),
                         this._formatLabel(dataInterval[1], axis)
@@ -668,10 +669,13 @@ define(function (require) {
             var vertex = this._applyBarTransform([dx, dy], true);
 
             this._updateInterval(handleIndex, vertex[0]);
-            this._updateView();
 
-            if (this.dataZoomModel.get('realtime')) {
-                this._dispatchZoomAction();
+            var realtime = this.dataZoomModel.get('realtime');
+
+            this._updateView(!realtime);
+
+            if (realtime) {
+                realtime && this._dispatchZoomAction();
             }
         },
 
