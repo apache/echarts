@@ -3,6 +3,7 @@ define(function(require) {
     var VisualMapModel = require('./VisualMapModel');
     var zrUtil = require('zrender/core/util');
     var VisualMapping = require('../../visual/VisualMapping');
+    var visualDefault = require('../../visual/visualDefault');
 
     var PiecewiseModel = VisualMapModel.extend({
 
@@ -108,6 +109,57 @@ define(function(require) {
                     });
                 }
             });
+        },
+
+        /**
+         * @protected
+         * @override
+         */
+        completeVisualOption: function () {
+            // Consider this case:
+            // visualMap: {
+            //      pieces: [{symbol: 'circle', lt: 0}, {symbol: 'rect', gte: 0}]
+            // }
+            // where no inRange/outOfRange set but only pieces. So we should make
+            // default inRange/outOfRange for this case, otherwise visuals that only
+            // appear in `pieces` will not be taken into account in visual encoding.
+
+            var option = this.option;
+            var visualTypesInPieces = {};
+            var visualTypes = VisualMapping.listVisualTypes();
+            var isCategory = this.isCategory();
+
+            zrUtil.each(option.pieces, function (piece) {
+                zrUtil.each(visualTypes, function (visualType) {
+                    if (piece.hasOwnProperty(visualType)) {
+                        visualTypesInPieces[visualType] = 1;
+                    }
+                });
+            });
+
+            zrUtil.each(visualTypesInPieces, function (v, visualType) {
+                var exists = 0;
+                zrUtil.each(this.stateList, function (state) {
+                    exists |= has(option, state, visualType)
+                        || has(option.target, state, visualType);
+                }, this);
+
+                !exists && zrUtil.each(this.stateList, function (state) {
+                    (option[state] || (option[state] = {}))[visualType] = visualDefault.get(
+                        visualType, state === 'inRange' ? 'active' : 'inactive', isCategory
+                    );
+                });
+            }, this);
+
+            function has(obj, state, visualType) {
+                return obj && obj[state] && (
+                    zrUtil.isObject(obj[state])
+                        ? obj[state].hasOwnProperty(visualType)
+                        : obj[state] === visualType // e.g., inRange: 'symbol'
+                );
+            }
+
+            VisualMapModel.prototype.completeVisualOption.apply(this, arguments);
         },
 
         _resetSelected: function (newOption, isInit) {

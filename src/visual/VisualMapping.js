@@ -136,7 +136,7 @@ define(function (require) {
                     thisOption.mappingMethod === 'category'
                         ? function (value, isNormalized) {
                             !isNormalized && (value = this._normalizeData(value));
-                            return doMapCategory(this, value);
+                            return doMapCategory.call(this, value);
                         }
                         : function (value, isNormalized, out) {
                             // If output rgb array
@@ -310,7 +310,7 @@ define(function (require) {
         };
     }
 
-    function doMapToArray(arr, normalized) {
+    function doMapToArray(normalized) {
         var visual = this.option.visual;
         return visual[
             Math.round(linearMap(normalized, [0, 1], [0, visual.length - 1], true))
@@ -394,6 +394,20 @@ define(function (require) {
     };
 
 
+
+    /**
+     * List available visual types.
+     *
+     * @public
+     * @return {Array.<string>}
+     */
+    VisualMapping.listVisualTypes = function () {
+        var visualTypes = [];
+        zrUtil.each(visualHandlers, function (handler, key) {
+            visualTypes.push(key);
+        });
+        return visualTypes;
+    };
 
     /**
      * @public
