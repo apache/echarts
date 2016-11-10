@@ -121,7 +121,16 @@ describe('api/converter', function() {
             ],
             series: [
                 {id: 'k1', type: 'scatter', coordinateSystem: 'geo', geoIndex: 1},
-                {id: 'k2', type: 'scatter', coordinateSystem: 'geo'}
+                {id: 'k2', type: 'scatter', coordinateSystem: 'geo'},
+                { // Should not be affected by map.
+                    id: 'm1',
+                    type: 'map',
+                    map: 'test1',
+                    left: 10,
+                    right: 20,
+                    top: 30,
+                    bottom: 40
+                }
             ]
         });
 
@@ -151,6 +160,16 @@ describe('api/converter', function() {
         var chart = this.chart;
 
         chart.setOption({
+            geo: [ // Should not be affected by geo
+                {
+                    id: 'aa',
+                    left: 10,
+                    right: 20,
+                    top: 30,
+                    bottom: 40,
+                    map: 'test1'
+                }
+            ],
             series: [
                 {
                     id: 'k1',
