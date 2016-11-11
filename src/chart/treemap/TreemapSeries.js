@@ -14,6 +14,8 @@ define(function(require) {
 
         type: 'series.treemap',
 
+        layoutMode: 'box',
+
         dependencies: ['grid', 'polar'],
 
         /**

@@ -8,6 +8,7 @@ define(function(require) {
     var ComponentModel = require('./Component');
     var colorPaletteMixin = require('./mixin/colorPalette');
     var env = require('zrender/core/env');
+    var layout = require('../util/layout');
 
     var encodeHTML = formatUtil.encodeHTML;
     var addCommas = formatUtil.addCommas;
@@ -42,6 +43,14 @@ define(function(require) {
          */
         visualColorAccessPath: 'itemStyle.normal.color',
 
+        /**
+         * Support merge layout params.
+         * Only support 'box' now (left/right/top/bottom/width/height).
+         * @type {string|Object} Object can be {ignoreSize: true}
+         * @readOnly
+         */
+        layoutMode: null,
+
         init: function (option, parentModel, ecModel, extraOpt) {
 
             /**
@@ -72,6 +81,10 @@ define(function(require) {
          * @param  {module:echarts/model/Global} ecModel
          */
         mergeDefaultAndTheme: function (option, ecModel) {
+            var layoutMode = this.layoutMode;
+            var inputPositionParams = layoutMode
+                ? layout.getLayoutParams(option) : {};
+
             zrUtil.merge(
                 option,
                 ecModel.getTheme().get(this.subType)
@@ -83,11 +96,20 @@ define(function(require) {
             modelUtil.defaultEmphasis(option.label, modelUtil.LABEL_OPTIONS);
 
             this.fillDataTextStyle(option.data);
+
+            if (layoutMode) {
+                layout.mergeLayoutParam(option, inputPositionParams, layoutMode);
+            }
         },
 
         mergeOption: function (newSeriesOption, ecModel) {
             newSeriesOption = zrUtil.merge(this.option, newSeriesOption, true);
             this.fillDataTextStyle(newSeriesOption.data);
+
+            var layoutMode = this.layoutMode;
+            if (layoutMode) {
+                layout.mergeLayoutParam(this.option, newSeriesOption, layoutMode);
+            }
 
             var data = this.getInitialData(newSeriesOption, ecModel);
             // TODO Merge data?
