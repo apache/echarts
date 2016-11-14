@@ -78,7 +78,7 @@ define(function (require) {
 
         /**
          * @protected
-         * @param {number} targetValue
+         * @param {number} targetValue can be Infinity or -Infinity
          * @param {string=} visualCluster Only can be 'color' 'opacity' 'symbol' 'symbolSize'
          * @param {Object} [opts]
          * @param {string=} [opts.forceState] Specify state, instead of using getValueState method.

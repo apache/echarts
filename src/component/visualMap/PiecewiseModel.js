@@ -4,6 +4,7 @@ define(function(require) {
     var zrUtil = require('zrender/core/util');
     var VisualMapping = require('../../visual/VisualMapping');
     var visualDefault = require('../../visual/visualDefault');
+    var reformIntervals = require('../../util/number').reformIntervals;
 
     var PiecewiseModel = VisualMapModel.extend({
 
@@ -271,6 +272,8 @@ define(function(require) {
 
         /**
          * @private
+         * @param {Object} piece piece.value or piece.interval is required.
+         * @return {number} Can be Infinity or -Infinity
          */
         getRepresentValue: function (piece) {
             var representValue;
@@ -283,41 +286,68 @@ define(function(require) {
                 }
                 else {
                     var pieceInterval = piece.interval || [];
-                    representValue = (pieceInterval[0] + pieceInterval[1]) / 2;
+                    representValue = (pieceInterval[0] === -Infinity && pieceInterval[1] === Infinity)
+                        ? 0
+                        : (pieceInterval[0] + pieceInterval[1]) / 2;
                 }
             }
             return representValue;
         },
 
-        getStops: function (seriesModel, getColorVisual) {
-            var result = [];
-            var model = this;
+        getVisualMeta: function (getColorVisual) {
+            // Do not support category. (category axis is ordinal, numerical)
+            if (this.isCategory()) {
+                return;
+            }
+
+            var stops = [];
+            var outerColors = [];
+            var visualMapModel = this;
+
+            function setStop(interval, valueState) {
+                var representValue = visualMapModel.getRepresentValue({interval: interval});
+                if (!valueState) {
+                    valueState = visualMapModel.getValueState(representValue);
+                }
+                var color = getColorVisual(representValue, valueState);
+                if (interval[0] === -Infinity) {
+                    outerColors[0] = color;
+                }
+                else if (interval[1] === Infinity) {
+                    outerColors[1] = color;
+                }
+                else {
+                    stops.push(
+                        {value: interval[0], color: color},
+                        {value: interval[1], color: color}
+                    );
+                }
+            }
+
+            // Suplement
+            var pieceList = this._pieceList.slice();
+            if (!pieceList.length) {
+                pieceList.push({interval: [-Infinity, Infinity]});
+            }
+            else {
+                var edge = pieceList[0].interval[0];
+                edge !== -Infinity && pieceList.unshift({interval: [-Infinity, edge]});
+                edge = pieceList[pieceList.length - 1].interval[1];
+                edge !== Infinity && pieceList.push({interval: [edge, Infinity]});
+            }
 
             var curr = -Infinity;
-            zrUtil.each(this._pieceList, function (piece) {
-                // Do not support category yet.
+            zrUtil.each(pieceList, function (piece) {
                 var interval = piece.interval;
                 if (interval) {
-                    interval[0] > curr && setPiece({
-                        interval: [curr, interval[0]],
-                        valueState: 'outOfRange'
-                    });
-                    setPiece({
-                        interval: interval.slice(),
-                        valueState: this.getValueState((interval[0] + interval[1]) / 2)
-                    });
+                    // Fulfill gap.
+                    interval[0] > curr && setStop([curr, interval[0]], 'outOfRange');
+                    setStop(interval.slice());
                     curr = interval[1];
                 }
             }, this);
 
-            return result;
-
-            function setPiece(piece) {
-                result.push(piece);
-                piece.color = getColorVisual(
-                    model, model.getRepresentValue(piece), piece.valueState
-                );
-            }
+            return {stops: stops, outerColors: outerColors};
         }
 
     });
@@ -378,7 +408,7 @@ define(function(require) {
                 });
             }
 
-            normalizePieces(pieceList);
+            reformIntervals(pieceList);
 
             zrUtil.each(pieceList, function (piece) {
                 piece.text = this.formatValueText(piece.interval);
@@ -468,7 +498,7 @@ define(function(require) {
             // See "Order Rule".
             normalizeReverse(thisOption, pieceList);
             // Only pieces
-            normalizePieces(pieceList);
+            reformIntervals(pieceList);
 
             zrUtil.each(pieceList, function (piece) {
                 var close = piece.close;
@@ -486,39 +516,6 @@ define(function(require) {
         var inverse = thisOption.inverse;
         if (thisOption.orient === 'vertical' ? !inverse : inverse) {
              pieceList.reverse();
-        }
-    }
-
-    // Reorder, remove duplicate, which are needed when using gradient.
-    // Not applicable for categories.
-    function normalizePieces(pieceList) {
-        pieceList.sort(function (a, b) {
-            return littleThan(a, b) ? -1 : 1;
-        });
-
-        var curr = -Infinity;
-        for (var i = 0; i < pieceList.length; i++) {
-            var interval = pieceList[i].interval;
-            var close = pieceList[i].close;
-            for (var lg = 0; lg < 2; lg++) {
-                if (interval[lg] < curr) {
-                    interval[lg] = curr;
-                    close[lg] = 1 - lg;
-                }
-                curr = interval[lg];
-            }
-        }
-
-        function littleThan(piece, standard, lg) {
-            lg = lg || 0;
-            return piece.interval[lg] < standard.interval[lg]
-                || (
-                    piece.interval[lg] === standard.interval[lg]
-                    && (
-                        +piece.close[lg] > standard.close[lg]
-                        || littleThan(piece, standard, 1)
-                    )
-                );
         }
     }
 

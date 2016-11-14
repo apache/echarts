@@ -9,9 +9,7 @@ define(function(require) {
     var lineAnimationDiff = require('./lineAnimationDiff');
     var graphic = require('../../util/graphic');
     var modelUtil = require('../../util/model');
-
     var polyHelper = require('./poly');
-
     var ChartView = require('../../view/Chart');
 
     function isPointsSame(points1, points2) {
@@ -204,10 +202,6 @@ define(function(require) {
         return stepPoints;
     }
 
-    function clamp(number, extent) {
-        return Math.max(Math.min(number, extent[1]), extent[0]);
-    }
-
     function getVisualGradient(data, coordSys) {
         var visualMetaList = data.getVisual('visualMeta');
         if (!visualMetaList || !visualMetaList.length || !data.count()) {
@@ -230,72 +224,61 @@ define(function(require) {
             return;
         }
 
+        // If the area to be rendered is bigger than area defined by LinearGradient,
+        // the canvas spec prescribes that the color of the first stop and the last
+        // stop should be used. But if two stops are added at offset 0, in effect
+        // browsers use the color of the second stop to render area outside
+        // LinearGradient. So we can only infinitesimally extend area defined in
+        // LinearGradient to render `outerColors`.
+
         var dimension = visualMeta.dimension;
         var dimName = data.dimensions[dimension];
-        var dataExtent = data.getDataExtent(dimName);
-
-        var stops = visualMeta.stops;
-
-        var colorStops = [];
-        if (stops[0].interval) {
-            stops.sort(function (a, b) {
-                return a.interval[0] - b.interval[0];
-            });
-        }
-
-        var firstStop = stops[0];
-        var lastStop = stops[stops.length - 1];
-        // Interval can be infinity in piecewise case
-        var min = firstStop.interval ? clamp(firstStop.interval[0], dataExtent) : firstStop.value;
-        var max = lastStop.interval ? clamp(lastStop.interval[1], dataExtent) : lastStop.value;
-        var stopsSpan = max - min;
-
-        // In the piecewise case data out of visual range
-        // ----dataMin----dataMax-----visualMin----visualMax
-        if (stopsSpan === 0) {
-            return data.getItemVisual(0, 'color');
-        }
-        for (var i = 0; i < stops.length; i++) {
-            // Piecewise
-            if (stops[i].interval) {
-                if (stops[i].interval[1] === stops[i].interval[0]) {
-                    continue;
-                }
-                colorStops.push({
-                    // Make sure offset is between 0 and 1
-                    offset: (clamp(stops[i].interval[0], dataExtent) - min) / stopsSpan,
-                    color: stops[i].color
-                }, {
-                    offset: (clamp(stops[i].interval[1], dataExtent) - min) / stopsSpan,
-                    color: stops[i].color
-                });
-            }
-            // Continous
-            else {
-                // if (i > 0 && stops[i].value === stops[i - 1].value) {
-                //     continue;
-                // }
-                colorStops.push({
-                    offset: (stops[i].value - min) / stopsSpan,
-                    color: stops[i].color
-                });
-            }
-        }
-
-        var gradient = new graphic.LinearGradient(
-            0, 0, 0, 0, colorStops, true
-        );
         var axis = coordSys.getAxis(dimName);
 
-        var start = axis.toGlobalCoord(axis.dataToCoord(min));
-        var end = axis.toGlobalCoord(axis.dataToCoord(max));
+        // dataToCoor mapping may not be linear, but must be monotonic.
+        var colorStops = zrUtil.map(visualMeta.stops, function (stop) {
+            return {
+                coord: axis.toGlobalCoord(axis.dataToCoord(stop.value)),
+                color: stop.color
+            };
+        });
+        var stopLen = colorStops.length;
+        var outerColors = visualMeta.outerColors.slice();
+
+        if (stopLen && colorStops[0].coord > colorStops[stopLen - 1].coord) {
+            colorStops.reverse();
+            outerColors.reverse();
+        }
+
+        var tinyExtent = 10; // Arbitrary value: 10px
+        var minCoord = colorStops[0].coord - tinyExtent;
+        var maxCoord = colorStops[stopLen - 1].coord + tinyExtent;
+        var coordSpan = maxCoord - minCoord;
+
+        if (coordSpan < 1e-3) {
+            return 'transparent';
+        }
+
+        zrUtil.each(colorStops, function (stop) {
+            stop.offset = (stop.coord - minCoord) / coordSpan;
+        });
+        colorStops.push({
+            offset: stopLen ? colorStops[stopLen - 1].offset : 0.5,
+            color: outerColors[1] || 'transparent'
+        });
+        colorStops.unshift({ // notice colorStops.length have been changed.
+            offset: stopLen ? colorStops[0].offset : 0.5,
+            color: outerColors[0] || 'transparent'
+        });
+
         // zrUtil.each(colorStops, function (colorStop) {
         //     // Make sure each offset has rounded px to avoid not sharp edge
         //     colorStop.offset = (Math.round(colorStop.offset * (end - start) + start) - start) / (end - start);
         // });
 
-        gradient[dimName] = start;
-        gradient[dimName + '2'] = end;
+        var gradient = new graphic.LinearGradient(0, 0, 0, 0, colorStops, true);
+        gradient[dimName] = minCoord;
+        gradient[dimName + '2'] = maxCoord;
 
         return gradient;
     }
