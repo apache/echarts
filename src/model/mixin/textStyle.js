@@ -34,12 +34,11 @@ define(function (require) {
         },
 
         getTextRect: function (text) {
-            var textStyle = this.get('textStyle') || {};
             return textContain.getBoundingRect(
                 text,
                 this.getFont(),
-                textStyle.align,
-                textStyle.baseline
+                this.getShallow('align'),
+                this.getShallow('baseline')
             );
         },
 
