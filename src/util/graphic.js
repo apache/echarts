@@ -311,7 +311,11 @@ define(function(require) {
     /**
      * @inner
      */
-    function onElementMouseOver() {
+    function onElementMouseOver(e) {
+        if (this.__hoverSilentOnTouch && e.zrByTouch) {
+            return;
+        }
+
         // Only if element is not in emphasis status
         !this.__isEmphasis && doEnterHover(this);
     }
@@ -319,7 +323,11 @@ define(function(require) {
     /**
      * @inner
      */
-    function onElementMouseOut() {
+    function onElementMouseOut(e) {
+        if (this.__hoverSilentOnTouch && e.zrByTouch) {
+            return;
+        }
+
         // Only if element is not in emphasis status
         !this.__isEmphasis && doLeaveHover(this);
     }
@@ -344,8 +352,21 @@ define(function(require) {
      * Set hover style of element
      * @param {module:zrender/Element} el
      * @param {Object} [hoverStyle]
+     * @param {Object} [opt]
+     * @param {boolean} [opt.hoverSilentOnTouch=false]
+     *        In touch device, mouseover event will be trigger on touchstart event
+     *        (see module:zrender/dom/HandlerProxy). By this mechanism, we can
+     *        conviniently use hoverStyle when tap on touch screen without additional
+     *        code for compatibility.
+     *        But if the chart/component has select feature, which usually also use
+     *        hoverStyle, there might be conflict between 'select-highlight' and
+     *        'hover-highlight' especially when roam is enabled (see geo for example).
+     *        In this case, hoverSilentOnTouch should be used to disable hover-highlight
+     *        on touch device.
      */
-    graphic.setHoverStyle = function (el, hoverStyle) {
+    graphic.setHoverStyle = function (el, hoverStyle, opt) {
+        el.__hoverSilentOnTouch = opt && opt.hoverSilentOnTouch;
+
         el.type === 'group'
             ? el.traverse(function (child) {
                 if (child.type !== 'group') {
@@ -353,7 +374,8 @@ define(function(require) {
                 }
             })
             : setElementHoverStl(el, hoverStyle);
-        // Remove previous bound handlers
+
+        // Duplicated function will be auto-ignored, see Eventful.js.
         el.on('mouseover', onElementMouseOver)
           .on('mouseout', onElementMouseOut);
 

@@ -41,7 +41,7 @@ define(function (require) {
                 if (visualMapModel.isTargetSeries(seriesModel)) {
                     var visualMeta = visualMapModel.getVisualMeta(
                         zrUtil.bind(getColorVisual, null, seriesModel, visualMapModel)
-                    );
+                    ) || {stops: [], outerColors: []};
                     visualMeta.dimension = visualMapModel.getDataDimension(data);
                     visualMetaList.push(visualMeta);
                 }

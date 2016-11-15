@@ -17,10 +17,22 @@ define(function (require) {
         return itemStyle;
     }
 
-    function updateMapSelectHandler(mapOrGeoModel, group, api, fromView) {
+    function updateMapSelectHandler(mapDraw, mapOrGeoModel, group, api, fromView) {
         group.off('click');
-        mapOrGeoModel.get('selectedMode')
-            && group.on('click', function (e) {
+        group.off('mousedown');
+
+        if (mapOrGeoModel.get('selectedMode')) {
+
+            group.on('mousedown', function () {
+                mapDraw._mouseDownFlag = true;
+            });
+
+            group.on('click', function (e) {
+                if (!mapDraw._mouseDownFlag) {
+                    return;
+                }
+                mapDraw._mouseDownFlag = false;
+
                 var el = e.target;
                 while (!el.__region) {
                     el = el.parent;
@@ -41,6 +53,7 @@ define(function (require) {
 
                 updateMapSelected(mapOrGeoModel, group);
             });
+        }
     }
 
     function updateMapSelected(mapOrGeoModel, group) {
@@ -80,6 +93,14 @@ define(function (require) {
          * @private
          */
         this._updateGroup = updateGroup;
+
+        /**
+         * This flag is used to make sure that only one among
+         * `pan`, `zoom`, `click` can occurs, otherwise 'selected'
+         * action may be triggered when `pan`, which is unexpected.
+         * @type {booelan}
+         */
+        this._mouseDownFlag;
     }
 
     MapDraw.prototype = {
@@ -224,14 +245,18 @@ define(function (require) {
 
                 regionGroup.__region = region;
 
-                graphic.setHoverStyle(regionGroup, hoverItemStyle);
+                graphic.setHoverStyle(
+                    regionGroup,
+                    hoverItemStyle,
+                    {hoverSilentOnTouch: !!mapOrGeoModel.get('selectedMode')}
+                );
 
                 group.add(regionGroup);
             });
 
             this._updateController(mapOrGeoModel, ecModel, api);
 
-            updateMapSelectHandler(mapOrGeoModel, group, api, fromView);
+            updateMapSelectHandler(this, mapOrGeoModel, group, api, fromView);
 
             updateMapSelected(mapOrGeoModel, group);
         },
@@ -259,31 +284,35 @@ define(function (require) {
                 action[mainType + 'Id'] = mapOrGeoModel.id;
                 return action;
             }
-            controller.off('pan')
-                .on('pan', function (dx, dy) {
-                    api.dispatchAction(zrUtil.extend(makeActionBase(), {
-                        dx: dx,
-                        dy: dy
-                    }));
-                });
-            controller.off('zoom')
-                .on('zoom', function (zoom, mouseX, mouseY) {
-                    api.dispatchAction(zrUtil.extend(makeActionBase(), {
-                        zoom: zoom,
-                        originX: mouseX,
-                        originY: mouseY
-                    }));
 
-                    if (this._updateGroup) {
-                        var group = this.group;
-                        var scale = group.scale;
-                        group.traverse(function (el) {
-                            if (el.type === 'text') {
-                                el.attr('scale', [1 / scale[0], 1 / scale[1]]);
-                            }
-                        });
-                    }
-                }, this);
+            controller.off('pan').on('pan', function (dx, dy) {
+                this._mouseDownFlag = false;
+
+                api.dispatchAction(zrUtil.extend(makeActionBase(), {
+                    dx: dx,
+                    dy: dy
+                }));
+            }, this);
+
+            controller.off('zoom').on('zoom', function (zoom, mouseX, mouseY) {
+                this._mouseDownFlag = false;
+
+                api.dispatchAction(zrUtil.extend(makeActionBase(), {
+                    zoom: zoom,
+                    originX: mouseX,
+                    originY: mouseY
+                }));
+
+                if (this._updateGroup) {
+                    var group = this.group;
+                    var scale = group.scale;
+                    group.traverse(function (el) {
+                        if (el.type === 'text') {
+                            el.attr('scale', [1 / scale[0], 1 / scale[1]]);
+                        }
+                    });
+                }
+            }, this);
 
             controller.setContainsPoint(function (x, y) {
                 return geo.getViewRectAfterRoam().contain(x, y);
