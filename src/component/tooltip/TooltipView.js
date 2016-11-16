@@ -319,14 +319,38 @@ define(function (require) {
             var seriesModel = ecModel.getSeriesByIndex(seriesIndex);
             var api = this._api;
 
+            var isTriggerAxis = this._tooltipModel.get('trigger') === 'axis';
+            function seriesHaveDataOnIndex(_series) {
+                var data = _series.getData();
+                var dataIndex = modelUtil.queryDataIndex(data, event);
+                // Have single dataIndex
+                if (dataIndex != null && !zrUtil.isArray(dataIndex)
+                    && data.hasValue(dataIndex)
+                ) {
+                    return true;
+                }
+            }
+
             if (event.x == null || event.y == null) {
-                if (!seriesModel) {
-                    // Find the first series can use axis trigger
-                    ecModel.eachSeries(function (_series) {
-                        if (ifSeriesSupportAxisTrigger(_series) && !seriesModel) {
-                            seriesModel = _series;
-                        }
-                    });
+                if (isTriggerAxis) {
+                    // Find another series.
+                    if (seriesModel && !seriesHaveDataOnIndex(seriesModel)) {
+                        seriesModel = null;
+                    }
+                    if (!seriesModel) {
+                        // Find the first series can use axis trigger And data is not null
+                        ecModel.eachSeries(function (_series) {
+                            if (ifSeriesSupportAxisTrigger(_series) && !seriesModel) {
+                                if (seriesHaveDataOnIndex(_series)) {
+                                    seriesModel = _series;
+                                }
+                            }
+                        });
+                    }
+                }
+                else {
+                    // Use the first series by default.
+                    seriesModel = seriesModel || ecModel.getSeriesByIndex(0);
                 }
                 if (seriesModel) {
                     var data = seriesModel.getData();
@@ -959,6 +983,14 @@ define(function (require) {
                         )
                 };
             });
+            var sampleSeriesIndex;
+            payloadBatch.forEach(function (payload, idx) {
+                if (seriesList[idx].getData().hasValue(payload.dataIndexInside)) {
+                    sampleSeriesIndex = idx;
+                }
+            });
+            // Fallback to 0.
+            sampleSeriesIndex = sampleSeriesIndex || 0;
 
             var lastHover = this._lastHover;
             var api = this._api;
@@ -980,8 +1012,8 @@ define(function (require) {
             // Dispatch showTip action
             api.dispatchAction({
                 type: 'showTip',
-                dataIndexInside: payloadBatch[0].dataIndexInside,
-                seriesIndex: payloadBatch[0].seriesIndex,
+                dataIndexInside: payloadBatch[sampleSeriesIndex].dataIndexInside,
+                seriesIndex: payloadBatch[sampleSeriesIndex].seriesIndex,
                 from: this.uid
             });
 
@@ -992,7 +1024,7 @@ define(function (require) {
 
                 if (!contentNotChange) {
                     // Update html content
-                    var firstDataIndex = payloadBatch[0].dataIndexInside;
+                    var firstDataIndex = payloadBatch[sampleSeriesIndex].dataIndexInside;
 
                     // Default tooltip content
                     // FIXME
@@ -1000,7 +1032,7 @@ define(function (require) {
                     // (2) themeRiver, firstDataIndex is array, and first line is unnecessary.
                     var firstLine = baseAxis.type === 'time'
                         ? baseAxis.scale.getLabel(value[baseDimIndex])
-                        : seriesList[0].getData().getName(firstDataIndex);
+                        : seriesList[sampleSeriesIndex].getData().getName(firstDataIndex);
                     var defaultHtml = (firstLine ? firstLine + '<br />' : '')
                         + zrUtil.map(seriesList, function (series, index) {
                             return series.formatTooltip(payloadBatch[index].dataIndexInside, true);
