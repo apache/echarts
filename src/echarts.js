@@ -1772,9 +1772,9 @@ define(function (require) {
 
     echarts.util = {};
     each([
-            'map', 'each', 'filter', 'indexOf', 'inherits',
-            'reduce', 'filter', 'bind', 'curry', 'isArray',
-            'isString', 'isObject', 'isFunction', 'extend', 'defaults'
+            'map', 'each', 'filter', 'indexOf', 'inherits', 'reduce', 'filter',
+            'bind', 'curry', 'isArray', 'isString', 'isObject', 'isFunction',
+            'extend', 'defaults', 'clone'
         ],
         function (name) {
             echarts.util[name] = zrUtil[name];
