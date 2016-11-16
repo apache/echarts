@@ -284,6 +284,11 @@
                     ],
                     series: [
                         {
+                            name: 'NaN',
+                            type: 'line',
+                            data: data.flow.map(function () { return null; })
+                        },
+                        {
                             name: '流量',
                             type: 'line',
                             data: data.flow,
