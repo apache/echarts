@@ -1,0 +1,149 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css">
+    </head>
+    <body>
+        <style>
+            body {
+            }
+            .chart {
+                height: 300px;
+            }
+            h1 {
+                font-size: 18px;
+                line-height: 40px;
+                text-align: center;
+                background: #ddd;
+            }
+
+        </style>
+        <h1>Check animation effect when xAxis.data has empty value.</h1>
+        <div class="chart" id="main1"></div>
+        <h1>Check animation effect when xAxis.data has number value and same value.</h1>
+        <div class="chart" id="main2"></div>
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/bar',
+                'echarts/chart/parallel',
+                'echarts/component/grid',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/toolbox',
+                'echarts/component/visualMap'
+            ], function (echarts) {
+                var main = document.getElementById('main1');
+                if (!main) {
+                    return;
+                }
+                var myChart = echarts.init(main);
+
+                setInterval(function () {
+                    var option = {
+                        xAxis: {
+                            data: ['1', '4', '2', '', '5', '', '', '']
+                        },
+                        yAxis: [
+                            {
+                                type: 'value',
+                                max: 100
+                            }
+                        ],
+                        series: {
+                            type: 'bar',
+                            data: []
+                        }
+                    };
+
+                    var seriesData = [];
+                    for (var i = 0; i < option.xAxis.data.length; i++) {
+                        option.series.data[i] = Math.random() * 80;
+                    }
+
+                    myChart.setOption(option);
+
+                }, 1000);
+
+            });
+
+        </script>
+
+
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/bar',
+                'echarts/chart/parallel',
+                'echarts/component/grid',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/toolbox',
+                'echarts/component/visualMap'
+            ], function (echarts) {
+                var main = document.getElementById('main2');
+                if (!main) {
+                    return;
+                }
+                var myChart = echarts.init(main);
+
+                setInterval(function () {
+                    var option = {
+                        xAxis: {
+                            data: [1, 3, 2, 5, 5, 6, 5, 7]
+                        },
+                        yAxis: [
+                            {
+                                type: 'value',
+                                max: 100
+                            }
+                        ],
+                        series: {
+                            type: 'bar',
+                            data: []
+                        }
+                    };
+
+                    var seriesData = [];
+                    for (var i = 0; i < option.xAxis.data.length; i++) {
+                        option.series.data[i] = Math.random() * 80;
+                    }
+
+                    myChart.setOption(option);
+
+                }, 1000);
+
+            });
+
+        </script>
+
+
+
+
+
+
+    </body>
+</html>

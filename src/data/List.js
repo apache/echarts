@@ -887,11 +887,19 @@ define(function (require) {
     listProto.diff = function (otherList) {
         var idList = this._idList;
         var otherIdList = otherList && otherList._idList;
+        var val;
+        // Use prefix to avoid index to be the same as otherIdList[idx],
+        // which will cause weird udpate animation.
+        var prefix = 'e\0\0';
+
         return new DataDiffer(
-            otherList ? otherList.indices : [], this.indices, function (idx) {
-                return otherIdList[idx] || (idx + '');
-            }, function (idx) {
-                return idList[idx] || (idx + '');
+            otherList ? otherList.indices : [],
+            this.indices,
+            function (idx) {
+                return (val = otherIdList[idx]) != null ? val : prefix + idx;
+            },
+            function (idx) {
+                return (val = idList[idx]) != null ? val : prefix + idx;
             }
         );
     };
