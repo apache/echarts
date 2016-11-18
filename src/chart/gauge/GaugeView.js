@@ -25,7 +25,7 @@ define(function (require) {
     function formatLabel(label, labelFormatter) {
         if (labelFormatter) {
             if (typeof labelFormatter === 'string') {
-                label = labelFormatter.replace('{value}', label);
+                label = labelFormatter.replace('{value}', label != null ? label : '');
             }
             else if (typeof labelFormatter === 'function') {
                 label = labelFormatter(label);

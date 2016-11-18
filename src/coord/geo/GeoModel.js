@@ -144,7 +144,8 @@ define(function (require) {
                 return formatter(params);
             }
             else if (typeof formatter === 'string') {
-                return formatter.replace('{a}', params.seriesName);
+                var serName = params.seriesName;
+                return formatter.replace('{a}', serName != null ? serName : '');
             }
         },
 

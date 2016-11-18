@@ -208,7 +208,7 @@ define(function (require) {
             var formatter = legendModel.get('formatter');
             var content = name;
             if (typeof formatter === 'string' && formatter) {
-                content = formatter.replace('{name}', name);
+                content = formatter.replace('{name}', name != null ? name : '');
             }
             else if (typeof formatter === 'function') {
                 content = formatter(name);

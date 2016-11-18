@@ -59,7 +59,8 @@ define(function (require) {
                     indicatorOpt.name = '';
                 }
                 if (typeof nameFormatter === 'string') {
-                    indicatorOpt.name = nameFormatter.replace('{value}', indicatorOpt.name);
+                    var indName = indicatorOpt.name;
+                    indicatorOpt.name = nameFormatter.replace('{value}', indName != null ? indName : '');
                 }
                 else if (typeof nameFormatter === 'function') {
                     indicatorOpt.name = nameFormatter(

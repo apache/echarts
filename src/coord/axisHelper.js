@@ -211,9 +211,10 @@ define(function (require) {
         if (typeof labelFormatter === 'string') {
             labelFormatter = (function (tpl) {
                 return function (val) {
-                    return tpl.replace('{value}', val);
+                    return tpl.replace('{value}', val != null ? val : '');
                 };
             })(labelFormatter);
+            // Consider empty array
             return zrUtil.map(labels, labelFormatter);
         }
         else if (typeof labelFormatter === 'function') {
