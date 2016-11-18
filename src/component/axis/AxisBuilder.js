@@ -265,34 +265,34 @@ define(function (require) {
             var silent = isSilent(axisModel);
             var triggerEvent = axisModel.get('triggerEvent');
 
-            for (var i = 0; i < ticks.length; i++) {
-                if (ifIgnoreOnTick(axis, i, opt.labelInterval)) {
-                     continue;
+            zrUtil.each(ticks, function (tickVal, index) {
+                if (ifIgnoreOnTick(axis, index, opt.labelInterval)) {
+                     return;
                 }
 
                 var itemTextStyleModel = textStyleModel;
-                if (categoryData && categoryData[i] && categoryData[i].textStyle) {
+                if (categoryData && categoryData[tickVal] && categoryData[tickVal].textStyle) {
                     itemTextStyleModel = new Model(
-                        categoryData[i].textStyle, textStyleModel, axisModel.ecModel
+                        categoryData[tickVal].textStyle, textStyleModel, axisModel.ecModel
                     );
                 }
                 var textColor = itemTextStyleModel.getTextColor()
                     || axisModel.get('axisLine.lineStyle.color');
 
-                var tickCoord = axis.dataToCoord(ticks[i]);
+                var tickCoord = axis.dataToCoord(tickVal);
                 var pos = [
                     tickCoord,
                     opt.labelOffset + opt.labelDirection * labelMargin
                 ];
-                var labelBeforeFormat = axis.scale.getLabel(ticks[i]);
+                var labelBeforeFormat = axis.scale.getLabel(tickVal);
 
                 var textEl = new graphic.Text({
 
                     // Id for animation
-                    anid: 'label_' + ticks[i],
+                    anid: 'label_' + tickVal,
 
                     style: {
-                        text: labels[i],
+                        text: labels[index],
                         textAlign: itemTextStyleModel.get('align', true) || labelLayout.textAlign,
                         textVerticalAlign: itemTextStyleModel.get('baseline', true) || labelLayout.verticalAlign,
                         textFont: itemTextStyleModel.getFont(),
@@ -311,7 +311,6 @@ define(function (require) {
                     textEl.eventData.value = labelBeforeFormat;
                 }
 
-
                 // FIXME
                 this._dumbGroup.add(textEl);
                 textEl.updateTransform();
@@ -320,7 +319,8 @@ define(function (require) {
                 this.group.add(textEl);
 
                 textEl.decomposeTransform();
-            }
+
+            }, this);
 
             function isTwoLabelOverlapped(current, next) {
                 var firstRect = current && current.getBoundingRect().clone();
