@@ -26,6 +26,7 @@
             require([
                 'echarts',
                 'echarts/chart/bar',
+                'echarts/chart/line',
                 'echarts/component/legend',
                 'echarts/component/grid',
                 'echarts/component/axis',
@@ -56,7 +57,7 @@
                     }
                     else {
                         data1Val = (Math.random() + 0.1).toFixed(2);
-                        data2Val = Math.random().toFixed(2);
+                        data2Val = (Math.random() + 1).toFixed(2);
                         data3Val = Math.random().toFixed(2);
                     }
 
@@ -81,7 +82,7 @@
                         data3.push(data3Val);
                     }
                     else {
-                        xAxisData.push('类目' + i);
+                        xAxisData.push(i);
                         data1.push(data1Val);
                         data2.push(data2Val);
                         data3.push(data3Val);
@@ -90,7 +91,7 @@
 
                 chart.setOption({
                     legend: {
-                        data: ['bar', 'bar2', 'bar3']
+                        data: ['bar', 'line', 'bar3']
                     },
                     tooltip: {
                         trigger: 'axis'
@@ -105,9 +106,9 @@
                     },
                     series: [
                         {
-                            name: 'bar2',
-                            type: 'bar',
-                            stack: 'all',
+                            name: 'line',
+                            type: 'line',
+                            // stack: 'all',
                             data: data2,
                             smooth: true
                         },

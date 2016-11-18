@@ -374,10 +374,36 @@
             function makeMap() {
                 var chart = makeChart();
                 chart.setOption({
+                    tooltip: {},
+                    legend: {
+                        data: ['a', 'b']
+                    },
                     series: [{
+                        name: 'a',
                         type: 'map',
                         map: 'china',
-                        data: []
+                        data: [
+                            {name: '北京',value: Math.round(Math.random()*1000)},
+                            {name: '天津',value: Math.round(Math.random()*1000)},
+                            {name: '上海',value: Math.round(Math.random()*1000)},
+                            {name: '重庆',value: Math.round(Math.random()*1000)},
+                            {name: '河北',value: Math.round(Math.random()*1000)},
+                            {name: '河南',value: Math.round(Math.random()*1000)},
+                            {name: '云南',value: Math.round(Math.random()*1000)}
+                        ]
+                    }, {
+                        name: 'b',
+                        type: 'map',
+                        map: 'china',
+                        data: [
+                            {name: '北京',value: Math.round(Math.random()*1000)},
+                            {name: '天津',value: Math.round(Math.random()*1000)},
+                            {name: '上海',value: Math.round(Math.random()*1000)},
+                            {name: '重庆',value: Math.round(Math.random()*1000)},
+                            {name: '河北',value: Math.round(Math.random()*1000)},
+                            {name: '河南',value: Math.round(Math.random()*1000)},
+                            {name: '云南',value: Math.round(Math.random()*1000)}
+                        ]
                     }]
                 });
             }
@@ -746,17 +772,6 @@
                             }
                         }
                     ]
-                });
-            }
-
-            function makeMap() {
-                var chart = makeChart();
-                chart.setOption({
-                    series: [{
-                        type: 'map',
-                        map: 'china',
-                        data: []
-                    }]
                 });
             }
 
