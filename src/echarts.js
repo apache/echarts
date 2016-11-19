@@ -41,6 +41,7 @@ define(function (require) {
     var ChartView = require('./view/Chart');
     var graphic = require('./util/graphic');
     var modelUtil = require('./util/model');
+    var throttle = require('./util/throttle');
 
     var zrender = require('zrender');
     var zrUtil = require('zrender/core/util');
@@ -117,12 +118,19 @@ define(function (require) {
          * @type {module:zrender/ZRender}
          * @private
          */
-        this._zr = zrender.init(dom, {
+        var zr = this._zr = zrender.init(dom, {
             renderer: opts.renderer || 'canvas',
             devicePixelRatio: opts.devicePixelRatio,
             width: opts.width,
             height: opts.height
         });
+
+        /**
+         * Expect 60 pfs.
+         * @type {Function}
+         * @private
+         */
+        this._throttledZrFlush = throttle.throttle(zrUtil.bind(zr.flush, zr), 17);
 
         /**
          * @type {Object}
@@ -189,7 +197,7 @@ define(function (require) {
         timsort(visualFuncs, prioritySortFunc);
         timsort(dataProcessorFuncs, prioritySortFunc);
 
-        this._zr.animation.on('frame', this._onframe, this);
+        zr.animation.on('frame', this._onframe, this);
     }
 
     var echartsProto = ECharts.prototype;
@@ -856,9 +864,18 @@ define(function (require) {
      * @pubilc
      * @param {Object} payload
      * @param {string} [payload.type] Action type
-     * @param {boolean} [silent=false] Whether trigger event.
+     * @param {Object|boolean} [opt] If pass boolean, means opt.silent
+     * @param {boolean} [opt.silent=false] Whether trigger events.
+     * @param {boolean} [opt.flush=undefined]
+     *                  true: Flush immediately, and then pixel in canvas can be fetched
+     *                      immediately. Caution: it might affect performance.
+     *                  false: Not not flush.
+     *                  undefined: Auto decide whether perform flush.
      */
-    echartsProto.dispatchAction = function (payload, silent) {
+    echartsProto.dispatchAction = function (payload, opt) {
+        if (!zrUtil.isObject(opt)) {
+            opt = {silent: !!opt};
+        }
 
         if (!actions[payload.type]) {
             return;
@@ -878,17 +895,21 @@ define(function (require) {
             return;
         }
 
-        doDispatchAction.call(this, payload, silent);
+        doDispatchAction.call(this, payload, opt.silent);
 
-        // Call zr refreshImmediately for these reasons:
-        // (1) Ensure zr refresh sychronously, and then pixel in canvas can be
-        // fetched after `dispatchAction`.
-        // (2) In WeChat embeded browser, `requestAnimationFrame` and `setInterval`
-        // hang when sliding page (on touch event), which cause that zr does not
-        // refresh util user interaction finished, which is not expected.
-        this._zr.flush();
+        if (opt.flush) {
+            this._zr.flush(true);
+        }
+        else if (opt.flush !== false && env.browser.weChat) {
+            // In WeChat embeded browser, `requestAnimationFrame` and `setInterval`
+            // hang when sliding page (on touch event), which cause that zr does not
+            // refresh util user interaction finished, which is not expected.
+            // But `dispatchAction` may be called too frequently when pan on touch
+            // screen, which impacts performance if do not throttle them.
+            this._throttledZrFlush();
+        }
 
-        flushPendingActions.call(this, silent);
+        flushPendingActions.call(this, opt.silent);
     };
 
     function doDispatchAction(payload, silent) {
