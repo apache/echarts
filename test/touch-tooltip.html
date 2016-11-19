@@ -83,8 +83,10 @@ var option = {
     tooltip: {
         trigger: 'axis',
         transitionDuration: 0,
+        confine: true,
         position: function (point, params, dom) {
-            return [point[0], 0];
+            var width = dom.clientWidth;
+            return [point[0] - width / 2, 0];
         }
     },
     xAxis: {
@@ -98,6 +100,7 @@ var option = {
         splitLine: { show: false }
     },
     grid: {
+        left: 50,
         top: 200,
     },
     animation: false,

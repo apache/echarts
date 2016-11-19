@@ -26,6 +26,9 @@ define(function (require) {
             // 位置 {Array} | {Function}
             // position: null
 
+            // 是否约束 content 在 viewRect 中。默认 false 是为了兼容以前版本。
+            confine: false,
+
             // 内容格式器：{string}（Template） ¦ {Function}
             // formatter: null
 

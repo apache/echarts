@@ -77,6 +77,18 @@ define(function (require) {
         return [x, y];
     }
 
+    function confineTooltipPosition(x, y, el, viewWidth, viewHeight) {
+        var width = el.clientWidth;
+        var height = el.clientHeight;
+
+        x = Math.min(x + width, viewWidth) - width;
+        y = Math.min(y + height, viewHeight) - height;
+        x = Math.max(x, 0);
+        y = Math.max(y, 0);
+
+        return [x, y];
+    }
+
     function calcTooltipPosition(position, rect, dom) {
         var domWidth = dom.clientWidth;
         var domHeight = dom.clientHeight;
@@ -113,13 +125,14 @@ define(function (require) {
      * @param  {string|Function|Array.<number>} positionExpr
      * @param  {number} x Mouse x
      * @param  {number} y Mouse y
+     * @param  {boolean} confine Whether confine tooltip content in view rect.
      * @param  {module:echarts/component/tooltip/TooltipContent} content
      * @param  {Object|<Array.<Object>} params
      * @param  {module:zrender/Element} el target element
      * @param  {module:echarts/ExtensionAPI} api
      * @return {Array.<number>}
      */
-    function updatePosition(positionExpr, x, y, content, params, el, api) {
+    function updatePosition(positionExpr, x, y, confine, content, params, el, api) {
         var viewWidth = api.getWidth();
         var viewHeight = api.getHeight();
 
@@ -144,6 +157,14 @@ define(function (require) {
         }
         else {
             var pos = refixTooltipPosition(
+                x, y, content.el, viewWidth, viewHeight
+            );
+            x = pos[0];
+            y = pos[1];
+        }
+
+        if (confine) {
+            var pos = confineTooltipPosition(
                 x, y, content.el, viewWidth, viewHeight
             );
             x = pos[0];
@@ -1054,7 +1075,9 @@ define(function (require) {
                 }
                 else {
                     updatePosition(
-                        positionExpr || rootTooltipModel.get('position'), point[0], point[1],
+                        positionExpr || rootTooltipModel.get('position'),
+                        point[0], point[1],
+                        rootTooltipModel.get('confine'),
                         this._tooltipContent, paramsList, null, api
                     );
                 }
@@ -1111,6 +1134,7 @@ define(function (require) {
 
             if (tooltipModel.get('showContent') && tooltipModel.get('show')) {
                 var tooltipContent = this._tooltipContent;
+                var confine = tooltipModel.get('confine');
 
                 var formatter = tooltipModel.get('formatter');
                 positionExpr = positionExpr || tooltipModel.get('position');
@@ -1128,7 +1152,7 @@ define(function (require) {
                                 tooltipContent.setContent(html);
 
                                 updatePosition(
-                                    positionExpr, x, y,
+                                    positionExpr, x, y, confine,
                                     tooltipContent, params, target, api
                                 );
                             }
@@ -1142,7 +1166,7 @@ define(function (require) {
                 tooltipContent.setContent(html);
 
                 updatePosition(
-                    positionExpr, x, y,
+                    positionExpr, x, y, confine,
                     tooltipContent, params, target, api
                 );
             }
