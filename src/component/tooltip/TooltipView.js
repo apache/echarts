@@ -615,19 +615,21 @@ define(function (require) {
                     lastHover.data = value[valIndex];
                 }
 
+                var enableAnimation = tooltipModel.get('animation');
+
                 if (coordSys.type === 'cartesian2d' && !contentNotChange) {
                     this._showCartesianPointer(
-                        axisPointerModel, coordSys, axisType, point
+                        axisPointerModel, coordSys, axisType, point, enableAnimation
                     );
                 }
                 else if (coordSys.type === 'polar' && !contentNotChange) {
                     this._showPolarPointer(
-                        axisPointerModel, coordSys, axisType, point
+                        axisPointerModel, coordSys, axisType, point, enableAnimation
                     );
                 }
                 else if (coordSys.type === 'singleAxis' && !contentNotChange) {
                     this._showSinglePointer(
-                        axisPointerModel, coordSys, axisType, point
+                        axisPointerModel, coordSys, axisType, point, enableAnimation
                     );
                 }
 
@@ -655,12 +657,13 @@ define(function (require) {
          * @param {Array.<number>} point
          * @private
          */
-        _showCartesianPointer: function (axisPointerModel, cartesian, axisType, point) {
+        _showCartesianPointer: function (axisPointerModel, cartesian, axisType, point, enableAnimation) {
             var self = this;
 
             var axisPointerType = axisPointerModel.get('type');
             var baseAxis = cartesian.getBaseAxis();
-            var moveAnimation = axisPointerType !== 'cross'
+            var moveAnimation = enableAnimation
+                && axisPointerType !== 'cross'
                 && baseAxis.type === 'category'
                 && baseAxis.getBandWidth() > 20;
 
@@ -730,10 +733,13 @@ define(function (require) {
             }
         },
 
-        _showSinglePointer: function (axisPointerModel, single, axisType, point) {
+        _showSinglePointer: function (axisPointerModel, single, axisType, point, enableAnimation) {
             var self = this;
             var axisPointerType = axisPointerModel.get('type');
-            var moveAnimation = axisPointerType !== 'cross' && single.getBaseAxis().type === 'category';
+            var moveAnimation =
+                enableAnimation
+                && axisPointerType !== 'cross'
+                && single.getBaseAxis().type === 'category';
             var rect = single.getRect();
             var otherExtent = [rect.y, rect.y + rect.height];
 
@@ -771,7 +777,7 @@ define(function (require) {
          * @param {string} axisType
          * @param {Array.<number>} point
          */
-        _showPolarPointer: function (axisPointerModel, polar, axisType, point) {
+        _showPolarPointer: function (axisPointerModel, polar, axisType, point, enableAnimation) {
             var self = this;
 
             var axisPointerType = axisPointerModel.get('type');
@@ -779,7 +785,8 @@ define(function (require) {
             var angleAxis = polar.getAngleAxis();
             var radiusAxis = polar.getRadiusAxis();
 
-            var moveAnimation = axisPointerType !== 'cross'
+            var moveAnimation = enableAnimation
+                && axisPointerType !== 'cross'
                 && polar.getBaseAxis().type === 'category';
 
             if (axisPointerType === 'cross') {
