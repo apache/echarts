@@ -247,12 +247,12 @@ define(function(require) {
     };
 
     /**
-     * Position group of component in viewport
+     * Position a zr element in viewport
      *  Group position is specified by either
      *  {left, top}, {right, bottom}
      *  If all properties exists, right and bottom will be igonred.
      *
-     * @param {module:zrender/container/Group} group
+     * @param {module:zrender/Element} el Should have `getBoundingRect` method.
      * @param {Object} positionInfo
      * @param {number|string} [positionInfo.left]
      * @param {number|string} [positionInfo.top]
@@ -261,23 +261,23 @@ define(function(require) {
      * @param {Object} containerRect
      * @param {string|number} margin
      */
-    layout.positionGroup = function (
-        group, positionInfo, containerRect, margin
+    layout.positionElement = function (
+        el, positionInfo, containerRect, margin
     ) {
-        var groupRect = group.getBoundingRect();
+        var elRect = el.getBoundingRect();
 
         positionInfo = zrUtil.extend(zrUtil.clone(positionInfo), {
-            width: groupRect.width,
-            height: groupRect.height
+            width: elRect.width,
+            height: elRect.height
         });
 
         positionInfo = layout.getLayoutRect(
             positionInfo, containerRect, margin
         );
 
-        group.attr('position', [
-            positionInfo.x - groupRect.x,
-            positionInfo.y - groupRect.y
+        el.attr('position', [
+            positionInfo.x - elRect.x,
+            positionInfo.y - elRect.y
         ]);
     };
 

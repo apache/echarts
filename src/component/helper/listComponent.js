@@ -5,7 +5,7 @@ define(function (require) {
     var graphic = require('../../util/graphic');
 
     function positionGroup(group, model, api) {
-        layout.positionGroup(
+        layout.positionElement(
             group, model.getBoxLayoutParams(),
             {
                 width: api.getWidth(),

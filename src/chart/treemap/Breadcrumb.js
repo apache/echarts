@@ -56,7 +56,7 @@
             this._prepare(targetNode, layoutParam, textStyleModel);
             this._renderContent(seriesModel, layoutParam, normalStyleModel, textStyleModel, onSelect);
 
-            layout.positionGroup(thisGroup, layoutParam.pos, layoutParam.box);
+            layout.positionElement(thisGroup, layoutParam.pos, layoutParam.box);
         },
 
         /**

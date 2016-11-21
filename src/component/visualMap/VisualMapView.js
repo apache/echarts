@@ -137,7 +137,7 @@ define(function (require) {
             var model = this.visualMapModel;
             var api = this.api;
 
-            layout.positionGroup(
+            layout.positionElement(
                 group,
                 model.getBoxLayoutParams(),
                 {width: api.getWidth(), height: api.getHeight()}
