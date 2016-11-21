@@ -4,6 +4,8 @@ define(function(require) {
     var nubmerUtil = require('./number');
     var Model = require('../model/Model');
     var zrUtil = require('zrender/core/util');
+    var each = zrUtil.each;
+    var isObject = zrUtil.isObject;
 
     var modelUtil = {};
 
@@ -44,7 +46,7 @@ define(function(require) {
             var normalOpt = opt.normal = opt.normal || {};
 
             // Default emphasis option from normal
-            zrUtil.each(subOpts, function (subOptName) {
+            each(subOpts, function (subOptName) {
                 var val = zrUtil.retrieve(emphasisOpt[subOptName], normalOpt[subOptName]);
                 if (val != null) {
                     emphasisOpt[subOptName] = val;
@@ -72,10 +74,10 @@ define(function(require) {
      * @param {string|number|Date|Array|Object} dataItem
      */
     modelUtil.isDataItemOption = function (dataItem) {
-        return zrUtil.isObject(dataItem)
+        return isObject(dataItem)
             && !(dataItem instanceof Array);
             // // markLine data can be array
-            // && !(dataItem[0] && zrUtil.isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
+            // && !(dataItem[0] && isObject(dataItem[0]) && !(dataItem[0] instanceof Array));
     };
 
     /**
@@ -200,7 +202,7 @@ define(function(require) {
             var data = this.getData(dataType);
             var dataItem = data.getRawDataItem(idx);
             if (dataItem != null) {
-                return (zrUtil.isObject(dataItem) && !(dataItem instanceof Array))
+                return (isObject(dataItem) && !(dataItem instanceof Array))
                     ? dataItem.value : dataItem;
             }
         },
@@ -222,7 +224,7 @@ define(function(require) {
      * @param {Array.<Object>|Array.<module:echarts/model/Component>} exists
      * @param {Object|Array.<Object>} newCptOptions
      * @return {Array.<Object>} Result, like [{exist: ..., option: ...}, {}],
-     *                          which order is the same as exists.
+     *                          index of which is the same as exists.
      */
     modelUtil.mappingToExists = function (exists, newCptOptions) {
         // Mapping by the order by original option (but not order of
@@ -238,8 +240,8 @@ define(function(require) {
         });
 
         // Mapping by id or name if specified.
-        zrUtil.each(newCptOptions, function (cptOption, index) {
-            if (!zrUtil.isObject(cptOption)) {
+        each(newCptOptions, function (cptOption, index) {
+            if (!isObject(cptOption)) {
                 return;
             }
 
@@ -273,8 +275,8 @@ define(function(require) {
         });
 
         // Otherwise mapping by index.
-        zrUtil.each(newCptOptions, function (cptOption, index) {
-            if (!zrUtil.isObject(cptOption)) {
+        each(newCptOptions, function (cptOption, index) {
+            if (!isObject(cptOption)) {
                 return;
             }
 
@@ -282,6 +284,10 @@ define(function(require) {
             for (; i < result.length; i++) {
                 var exist = result[i].exist;
                 if (!result[i].option
+                    // Existing model that already has id should be able to
+                    // mapped to (because after mapping performed model may
+                    // be assigned with a id, whish should not affect next
+                    // mapping), except those has inner id.
                     && !modelUtil.isIdInner(exist)
                     // Caution:
                     // Do not overwrite id. But name can be overwritten,
@@ -304,12 +310,96 @@ define(function(require) {
     };
 
     /**
+     * Make id and name for mapping result (result of mappingToExists)
+     * into `keyInfo` field.
+     *
+     * @public
+     * @param {Array.<Object>} Result, like [{exist: ..., option: ...}, {}],
+     *                          which order is the same as exists.
+     * @return {Array.<Object>} The input.
+     */
+    modelUtil.makeIdAndName = function (mapResult) {
+        // We use this id to hash component models and view instances
+        // in echarts. id can be specified by user, or auto generated.
+
+        // The id generation rule ensures new view instance are able
+        // to mapped to old instance when setOption are called in
+        // no-merge mode. So we generate model id by name and plus
+        // type in view id.
+
+        // name can be duplicated among components, which is convenient
+        // to specify multi components (like series) by one name.
+
+        // Ensure that each id is distinct.
+        var idMap = {};
+
+        each(mapResult, function (item, index) {
+            var existCpt = item.exist;
+            existCpt && (idMap[existCpt.id] = item);
+        });
+
+        each(mapResult, function (item, index) {
+            var opt = item.option;
+
+            zrUtil.assert(
+                !opt || opt.id == null || !idMap[opt.id] || idMap[opt.id] === item,
+                'id duplicates: ' + (opt && opt.id)
+            );
+
+            opt && opt.id != null && (idMap[opt.id] = item);
+            !item.keyInfo && (item.keyInfo = {});
+        });
+
+        // Make name and id.
+        each(mapResult, function (item, index) {
+            var existCpt = item.exist;
+            var opt = item.option;
+            var keyInfo = item.keyInfo;
+
+            if (!isObject(opt)) {
+                return;
+            }
+
+            // name can be overwitten. Consider case: axis.name = '20km'.
+            // But id generated by name will not be changed, which affect
+            // only in that case: setOption with 'not merge mode' and view
+            // instance will be recreated, which can be accepted.
+            keyInfo.name = opt.name != null
+                ? opt.name + ''
+                : existCpt
+                ? existCpt.name
+                : '\0-';
+
+            if (existCpt) {
+                keyInfo.id = existCpt.id;
+            }
+            else if (opt.id != null) {
+                keyInfo.id = opt.id + '';
+            }
+            else {
+                // Consider this situatoin:
+                //  optionA: [{name: 'a'}, {name: 'a'}, {..}]
+                //  optionB [{..}, {name: 'a'}, {name: 'a'}]
+                // Series with the same name between optionA and optionB
+                // should be mapped.
+                var idNum = 0;
+                do {
+                    keyInfo.id = '\0' + keyInfo.name + '\0' + idNum++;
+                }
+                while (idMap[keyInfo.id]);
+            }
+
+            idMap[keyInfo.id] = item;
+        });
+    };
+
+    /**
      * @public
      * @param {Object} cptOption
      * @return {boolean}
      */
     modelUtil.isIdInner = function (cptOption) {
-        return zrUtil.isObject(cptOption)
+        return isObject(cptOption)
             && cptOption.id
             && (cptOption.id + '').indexOf('\0_ec_\0') === 0;
     };
@@ -443,7 +533,7 @@ define(function(require) {
 
         var result = {};
 
-        zrUtil.each(finder, function (value, key) {
+        each(finder, function (value, key) {
             var value = finder[key];
 
             // Exclude 'dataIndex' and other illgal keys.

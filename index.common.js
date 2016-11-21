@@ -7,6 +7,7 @@ require('./lib/chart/line');
 require('./lib/chart/bar');
 require('./lib/chart/pie');
 require('./lib/chart/scatter');
+require('./lib/component/graphic');
 require('./lib/component/tooltip');
 require('./lib/component/legend');
 

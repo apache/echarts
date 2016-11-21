@@ -23,6 +23,7 @@ require('./lib/chart/effectScatter');
 require('./lib/chart/lines');
 require('./lib/chart/heatmap');
 
+require('./lib/component/graphic');
 require('./lib/component/grid');
 require('./lib/component/legend');
 require('./lib/component/tooltip');

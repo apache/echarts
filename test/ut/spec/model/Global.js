@@ -145,7 +145,7 @@ describe('modelAndOptionMapping', function() {
             var origins = saveOrigins(chart);
             chart.setOption({
                 series: [
-                    {type: 'line', data: [22222]}
+                    {data: [22222]}
                 ]
             });
 

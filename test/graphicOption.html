@@ -1,0 +1,387 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <script src="lib/facePrint.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css">
+    </head>
+    <body>
+        <style>
+            body {
+            }
+            .block {
+                overflow: hidden;
+                height: 200px;
+                margin-top: 50px;
+                background: #eee;
+            }
+            .chart {
+                height: 100%;
+                width: 400px;
+                float: left;
+                margin-left: 20px;
+            }
+            textarea {
+                margin: 0;
+                padding: 0;
+                float: right;
+                width: 140px;
+                height: 100%;
+            }
+            h3 {
+                text-align: center;
+            }
+        </style>
+
+        <script>
+            function getMain(id) {
+                var options = [];
+                $('#' + id + ' textarea').each(function (idx, textarea) {
+                    options.push((new Function('return (' + $(textarea).val() + ')'))());
+                });
+
+                return {
+                    dom: $('#' + id + ' .chart')[0],
+                    option: options[0],
+                    options: options
+                }
+            }
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <div class="block" id="main0">
+            <div class="chart"></div>
+            <textarea>
+{
+    graphic: {
+        type: 'circle',
+        shape: {
+            cx: 50,
+            cy: 50,
+            r: 20,
+        },
+        style: {
+            fill: 'green',
+            stroke: 'pink',
+            lineWidth: 3
+        }
+    }
+}
+            </textarea>
+            <script>
+                require([
+                    'echarts',
+                    'echarts/chart/line',
+                    'echarts/component/graphic',
+                    'echarts/component/grid',
+                    'echarts/component/legend',
+                    'echarts/component/tooltip'
+                ], function (echarts) {
+                    var main = getMain('main0');
+                    if (!main.dom) {
+                        return;
+                    }
+                    var chart = echarts.init(main.dom);
+                    chart.setOption(main.option);
+                    setTimeout(function () {
+                        chart.setOption(chart.getOption());
+                    }, 800);
+                });
+            </script>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <div class="block" id="main1">
+            <div class="chart"></div>
+            <textarea>
+{
+    graphic: [{
+        type: 'rect',
+        shape: {
+            x: 50,
+            y: 50,
+            width: 20,
+            height: 80
+        },
+        style: {
+            fill: 'green',
+            stroke: 'pink',
+            lineWidth: 3
+        }
+    }, {
+        type: 'ring',
+        shape: {
+            cx: 150,
+            cy: 150,
+            r: 20,
+            r0: 5
+        },
+        style: {
+            fill: 'green',
+            stroke: 'pink',
+            lineWidth: 3
+        }
+    }]
+}
+            </textarea>
+            <script>
+                require([
+                    'echarts',
+                    'echarts/chart/line',
+                    'echarts/component/graphic',
+                    'echarts/component/grid',
+                    'echarts/component/legend',
+                    'echarts/component/tooltip'
+                ], function (echarts) {
+                    var main = getMain('main1');
+                    if (!main.dom) {
+                        return;
+                    }
+                    var chart = echarts.init(main.dom);
+                    chart.setOption(main.option);
+                    setTimeout(function () {
+                        chart.setOption(chart.getOption());
+                    }, 800);
+                });
+            </script>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <div class="block" id="main2">
+            <div class="chart"></div>
+            <textarea>
+{
+    graphic: [{
+        type: 'text',
+        style: {
+            text: 'asdf哈呵',
+            font: '40px sans-serif',
+            x: 100,
+            y: 40
+        }
+    }, {
+        id: 'rrr',
+        type: 'ring',
+        shape: {
+            cx: 50,
+            cy: 150,
+            r: 20,
+            r0: 5
+        }
+    }, {
+        id: 'xxx',
+        type: 'rect',
+        shape: {
+            x: 250,
+            y: 50,
+            width: 20,
+            height: 80
+        }
+    }]
+}
+            </textarea>
+            <textarea>
+{
+    graphic: [{
+        id: 'xxx',
+        $action: 'remove'
+    }, {
+        id: 'rrr',
+        shape: {
+            cx: 250,
+            r: 30
+        },
+        style: {
+            fill: 'red'
+        }
+    }]
+}
+            </textarea>
+            <script>
+                require([
+                    'echarts',
+                    'echarts/chart/line',
+                    'echarts/component/graphic',
+                    'echarts/component/grid',
+                    'echarts/component/legend',
+                    'echarts/component/tooltip'
+                ], function (echarts) {
+                    var main = getMain('main2');
+                    if (!main.dom) {
+                        return;
+                    }
+                    var chart = echarts.init(main.dom);
+                    chart.setOption(main.option);
+                    setTimeout(function () {
+                        chart.setOption(main.options[1]);
+                    }, 1200);
+                });
+            </script>
+        </div>
+
+
+
+
+
+
+
+
+
+        <div class="block" id="main3">
+            <div class="chart"></div>
+            <textarea>
+{
+    title: {
+        text: 'Awesome Chart'
+    },
+    xAxis: {
+        data: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    },
+    yAxis: {},
+    series: [{
+        type: 'line',
+        data:[220, 182, 191, 234, 290, 330, 310]
+    }],
+    graphic: [{
+        type: 'text',
+        style: {
+            text: 'asdf哈呵',
+            font: '40px sans-serif',
+            x: 100,
+            y: 40
+        }
+    }, {
+        id: 'rrr',
+        type: 'ring',
+        shape: {
+            cx: 50,
+            cy: 150,
+            r: 20,
+            r0: 5
+        }
+    }, {
+        type: 'rect',
+        shape: {
+            x: 250,
+            y: 50,
+            width: 20,
+            height: 80
+        }
+    }, {
+        type: 'group',
+        children: [{
+            id: 'ing',
+            type: 'rect',
+            shape: {
+                x: 30,
+                y: 30,
+                width: 10,
+                height: 20
+            },
+            style: {
+                fill: 'yellow'
+            }
+        }]
+    }]
+}
+            </textarea>
+            <textarea>
+{
+    graphic: [{
+        style: {
+            font: '60px sans-serif',
+            x: 200
+        },
+        z: 222
+    }, {
+        shape: {
+            cx: 150
+        },
+        style: {
+            fill: 'green'
+        },
+        z: 222
+    }, {
+        shape: {
+            x: 350
+        },
+        z: 222
+    }, {
+        id: 'ing',
+        style: {
+            fill: 'pink'
+        },
+        z: 222
+    }]
+}
+            </textarea>
+            <script>
+                require([
+                    'echarts',
+                    'echarts/chart/line',
+                    'echarts/component/graphic',
+                    'echarts/component/grid',
+                    'echarts/component/legend',
+                    'echarts/component/tooltip'
+                ], function (echarts) {
+                    var main = getMain('main3');
+                    if (!main.dom) {
+                        return;
+                    }
+                    var chart = echarts.init(main.dom);
+                    chart.setOption(main.option);
+                    setTimeout(function () {
+                        chart.setOption(main.options[1]);
+                    }, 1200);
+                });
+            </script>
+        </div>
+
+
+
+
+
+
+
+
+    </body>
+</html>

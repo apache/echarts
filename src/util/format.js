@@ -20,12 +20,19 @@ define(function (require) {
 
     /**
      * @param {string} str
+     * @param {boolean} [upperCaseFirst=false]
      * @return {string} str
      */
-    formatUtil.toCamelCase = function (str) {
-        return str.toLowerCase().replace(/-(.)/g, function(match, group1) {
+    formatUtil.toCamelCase = function (str, upperCaseFirst) {
+        str = (str || '').toLowerCase().replace(/-(.)/g, function(match, group1) {
             return group1.toUpperCase();
         });
+
+        if (upperCaseFirst && str) {
+            str = str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        return str;
     };
 
     /**
