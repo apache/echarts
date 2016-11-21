@@ -59,8 +59,6 @@
 
 
 
-
-
         <div class="block" id="main0">
             <div class="chart"></div>
             <textarea>
@@ -101,7 +99,6 @@
                 });
             </script>
         </div>
-
 
 
 
@@ -270,9 +267,6 @@
             <div class="chart"></div>
             <textarea>
 {
-    title: {
-        text: 'Awesome Chart'
-    },
     xAxis: {
         data: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     },
@@ -378,6 +372,124 @@
 
 
 
+
+
+
+
+        Test group setOption(getOption) mapping.
+        Test left/right/top/bottom in group.
+        <div class="block" id="main4" style="height: 300px">
+            <div class="chart"></div>
+            <textarea>
+{
+    backgroundColor: '#bba',
+    graphic: [{
+        id: 'img',
+        type: 'image',
+        right: 0,
+        top: 'center',
+        style: {
+            image: 'http://echarts.baidu.com/images/favicon.png',
+            x: 10,
+            y: 30,
+            width: 50,
+            height: 50,
+            opacity: 0.5
+        }
+    }, {
+        type: 'text',
+        bottom: 0,
+        right: 0,
+        style: {
+            font: '18px sans-serif',
+            text: '全屏右下角'
+        },
+        z: 100
+    }, {
+        type: 'text',
+        bottom: 0,
+        left: 'center',
+        style: {
+            font: '18px sans-serif',
+            text: '全屏最下中间\n这是多行文字\n这是第三行'
+        },
+        z: 100
+    }, {
+        type: 'group',
+        id: 'gr',
+        position: [70, 90],
+        children: [{
+            type: 'rect',
+            shape: {
+                width: 230,
+                height: 80
+            },
+            style: {
+                stroke: 'red',
+                fill: 'transparent',
+                lineWidth: 2
+            },
+            z: 100
+        }, {
+            type: 'rect',
+            shape: {
+                width: 60,
+                height: 110
+            },
+            style: {
+                stroke: 'red',
+                fill: 'transparent',
+                lineWidth: 2
+            },
+            z: 100
+        }, {
+            type: 'text',
+            bottom: 0,
+            right: 0,
+            style: {
+                font: '18px sans-serif',
+                text: '文字在group最右下角',
+            },
+            z: 100
+        }]
+    }]
+}
+            </textarea>
+            <textarea>
+{
+    graphic: [{
+        id: 'img',
+        left: 0
+    }]
+}
+            </textarea>
+            <script>
+                require([
+                    'echarts',
+                    'echarts/chart/line',
+                    'echarts/component/graphic',
+                    'echarts/component/grid',
+                    'echarts/component/legend',
+                    'echarts/component/tooltip'
+                ], function (echarts) {
+                    var main = getMain('main4');
+                    if (!main.dom) {
+                        return;
+                    }
+                    var chart = echarts.init(main.dom);
+                    chart.setOption(main.option);
+
+                    setTimeout(function () {
+                        chart.setOption(chart.getOption());
+
+                        setTimeout(function () {
+                            chart.setOption(main.options[1]);
+                        }, 1200);
+
+                    }, 1200);
+                });
+            </script>
+        </div>
 
 
 

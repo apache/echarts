@@ -11,7 +11,9 @@ define(function(require) {
 
     var layout = {};
 
-    var LOCATION_PARAMS = ['left', 'right', 'top', 'bottom', 'width', 'height'];
+    var LOCATION_PARAMS = layout.LOCATION_PARAMS = [
+        'left', 'right', 'top', 'bottom', 'width', 'height'
+    ];
 
     function boxLayout(orient, group, gap, maxWidth, maxHeight) {
         var x = 0;
@@ -260,24 +262,28 @@ define(function(require) {
      * @param {number|string} [positionInfo.bottom]
      * @param {Object} containerRect
      * @param {string|number} margin
+     * @param {Array.<number>} [hv=[1,1]] Only horizontal or only vertical.
      */
     layout.positionElement = function (
-        el, positionInfo, containerRect, margin
+        el, positionInfo, containerRect, margin, hv
     ) {
         var elRect = el.getBoundingRect();
 
-        positionInfo = zrUtil.extend(zrUtil.clone(positionInfo), {
-            width: elRect.width,
-            height: elRect.height
-        });
-
         positionInfo = layout.getLayoutRect(
-            positionInfo, containerRect, margin
+            zrUtil.defaults(
+                {width: elRect.width, height: elRect.height},
+                positionInfo
+            ),
+            containerRect,
+            margin
         );
 
+        var position = el.position;
+        hv = hv || [1, 1];
+
         el.attr('position', [
-            positionInfo.x - elRect.x,
-            positionInfo.y - elRect.y
+            hv[0] ? positionInfo.x - elRect.x : position[0],
+            hv[1] ? positionInfo.y - elRect.y : position[1]
         ]);
     };
 

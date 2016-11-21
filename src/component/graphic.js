@@ -5,29 +5,25 @@ define(function(require) {
     var modelUtil = require('../util/model');
     var graphicUtil = require('../util/graphic');
     var formatUtil = require('../util/format');
+    var layoutUtil = require('../util/layout');
 
     // Preprocessor
     echarts.registerPreprocessor(function (option) {
         var graphicOption = option && option.graphic;
 
-        // Only one graphic instance can be instantiated. Convert
-        // {
-        //      graphic: [{type: 'circle'}, ...]
-        // }
+        // Only one graphic instance can be instantiated. (We dont
+        // want that too many views created in echarts._viewMap)
+
+        // Convert
+        // {graphic: [{left: 10, type: 'circle'}, ...]}
         // or
-        // {
-        //      graphic: {type: 'circle'}
-        // }
+        // {graphic: {left: 10, type: 'circle'}}
         // to
-        // {
-        //      graphic: [{
-        //          elements: [{type: 'circle'}, ...]
-        //      }]
-        // }
-        if (zrUtil.isArray(graphicOption)
-            && (!graphicOption[0] || !graphicOption[0].elements)
-        ) {
-            option.graphic = [{elements: graphicOption}];
+        // {graphic: [{elements: [{left: 10, type: 'circle'}, ...]}]}
+        if (zrUtil.isArray(graphicOption)) {
+            if (!graphicOption[0] || !graphicOption[0].elements) {
+                option.graphic = [{elements: graphicOption}];
+            }
         }
         else if (graphicOption && !graphicOption.elements) {
             option.graphic = [{elements: [graphicOption]}];
@@ -35,16 +31,26 @@ define(function(require) {
     });
 
     // Model
-    echarts.extendComponentModel({
+    var GraphicModel = echarts.extendComponentModel({
 
         type: 'graphic',
 
         defaultOption: {
-            elements: []
+            // Besides settings of graphic elements, each element
+            // can be set with: left, right, top, bottom, width, height.
+            // If left or rigth is set, final location X is totally decided by them.
+            // If top or bottom is set, final location Y is totally decided by them.
+            // Otherwise location is decided by shape setting.
+            // This mechanism is useful when you want position a group against the
+            // right side of this container, where you do not need to consider the
+            // settings of elements in this group.
+            elements: [],
+            parentId: null
         },
 
         /**
          * Save for performance (only update needed graphics).
+         * The order is the same as those in option. (ancesters -> descendants)
          * @private
          * @type {Array.<Object>}
          */
@@ -53,8 +59,14 @@ define(function(require) {
         /**
          * @override
          */
-        mergeOption: function () {
-            // Prevent default merge
+        mergeOption: function (option) {
+            // Prevent default merge to elements
+            var elements = this.option.elements;
+            this.option.elements = null;
+
+            GraphicModel.superApply(this, 'mergeOption', arguments);
+
+            this.option.elements = elements;
         },
 
         /**
@@ -91,20 +103,36 @@ define(function(require) {
 
                 // Set id and parent id after id assigned.
                 newElOption.id = resultItem.keyInfo.id;
-                newElOption.parent = newElOption.parent // parent specified
-                    ? newElOption.parent.id
-                    : (existElOption && existElOption.parent != null) // parent not specified
-                    ? existElOption.parent
+                var newElParentId = newElOption.parentId;
+                var newElParentOption = newElOption.parentOption;
+                var existElParentId = existElOption && existElOption.parentId;
+                !newElOption.type && existElOption && (newElOption.type = existElOption.type);
+                newElOption.parentId = newElParentId // parent id specified
+                    ? newElParentId
+                    : newElParentOption
+                    ? newElParentOption.id
+                    : existElParentId // parent not specified
+                    ? existElParentId
                     : null;
                 elOptionsToUpdate.push(newElOption);
+
+                delete newElOption.parentOption; // Clear
 
                 // Update existing options, for `getOption` feature.
                 var newElOptCopy = zrUtil.extend({}, newElOption); // Avoid modified.
                 var $action = newElOption.$action;
                 if (!$action || $action === 'merge') {
-                    existElOption
-                        ? zrUtil.merge(existElOption, newElOptCopy, true)
-                        : (existList[index] = newElOptCopy);
+                    if (existElOption) {
+                        // We can ensure that newElOptCopy and existElOption are not
+                        // the same object, so merge will not change newElOptCopy.
+                        zrUtil.merge(existElOption, newElOptCopy, true);
+                        layoutUtil.mergeLayoutParam(existElOption, newElOptCopy);
+                        // Will be used in render.
+                        layoutUtil.copyLayoutParams(newElOption, existElOption);
+                    }
+                    else {
+                        existList[index] = newElOptCopy;
+                    }
                 }
                 else if ($action === 'replace') {
                     existList[index] = newElOptCopy;
@@ -139,16 +167,16 @@ define(function(require) {
          * to
          * [
          *  {type: 'group', id: 'xx'},
-         *  {type: 'circle', parent: 'xx'},
-         *  {type: 'polygon', parent: 'xx'}
+         *  {type: 'circle', parentId: 'xx'},
+         *  {type: 'polygon', parentId: 'xx'}
          * ]
          * @private
          */
-        _flatten: function (optionList, result, parent) {
+        _flatten: function (optionList, result, parentOption) {
             zrUtil.each(optionList, function (option) {
                 if (option) {
-                    if (parent) {
-                        option.parent = parent;
+                    if (parentOption) {
+                        option.parentOption = parentOption;
                     }
 
                     result.push(option);
@@ -163,11 +191,13 @@ define(function(require) {
             }, this);
         },
 
-        /**
-         * @return {Object}
-         */
-        getElOptionsToUpdate: function () {
-            return this._elOptionsToUpdate;
+        // FIXME
+        // Pass to view using payload? setOption has a payload?
+        useElOptionsToUpdate: function () {
+            var els = this._elOptionsToUpdate;
+            // Clear to avoid render duplicately when zooming.
+            this._elOptionsToUpdate = null;
+            return els;
         }
     });
 
@@ -190,8 +220,8 @@ define(function(require) {
         /**
          * @override
          */
-        render: function (graphicModel) {
-            var elOptionsToUpdate = graphicModel.getElOptionsToUpdate();
+        render: function (graphicModel, ecModel, api) {
+            var elOptionsToUpdate = graphicModel.useElOptionsToUpdate();
             var elMap = this._elMap;
             var rootGroup = this.group;
 
@@ -199,33 +229,65 @@ define(function(require) {
                 var $action = elOption.$action;
                 var id = elOption.id;
                 var existEl = elMap[id];
-                var parentId = elOption.parent;
+                var parentId = elOption.parentId;
                 var targetElParent = parentId != null ? elMap[parentId] : rootGroup;
+                var hvLocUsed = [
+                    isSetLoc(elOption, 'left') || isSetLoc(elOption, 'right'),
+                    isSetLoc(elOption, 'top') || isSetLoc(elOption, 'bottom')
+                ];
+
+                // In top/bottom mode, textVertical should not be used. But
+                // textBaseline should not be 'alphabetic', which is not precise.
+                if (hvLocUsed[1] && elOption.type === 'text') {
+                    elOption.style = zrUtil.defaults({textBaseline: 'middle'}, elOption.style);
+                    elOption.style.textVerticalAlign = null;
+                }
 
                 // Remove unnecessary props to avoid potential problem.
-                elOption = zrUtil.extend({}, elOption);
-                delete elOption.id;
-                delete elOption.parent;
-                delete elOption.$action;
+                var elOptionCleaned = getCleanedElOption(elOption);
+                // Notice: the size of this rect is based on previous sibling. So if
+                // using left/right/top/bottom, it is based on the previous sibling.
+                // Although this mechanism is not perfect, but it is enable you set
+                // group rect by prevoius rect children.
+                var parentRect = targetElParent.getBoundingRect();
+                var currParentWidth = parentRect.width;
+                var currParentHeight = parentRect.height;
 
                 if (!$action || $action === 'merge') {
                     if (existEl) {
-                        existEl.attr(elOption);
+                        existEl.attr(elOptionCleaned);
                         if (targetElParent !== existEl.parent) {
                             removeEl(id, existEl, elMap);
                             targetElParent.add(existEl);
                         }
                     }
                     else {
-                        createEl(id, targetElParent, elOption, elMap);
+                        createEl(id, targetElParent, elOptionCleaned, elMap);
                     }
                 }
                 else if ($action === 'replace') {
                     removeEl(id, existEl, elMap);
-                    createEl(id, targetElParent, elOption, elMap);
+                    createEl(id, targetElParent, elOptionCleaned, elMap);
                 }
                 else if ($action === 'remove') {
                     removeEl(id, existEl, elMap);
+                }
+
+                if (elMap[id]) {
+                    elMap[id].__ecGraphicWidth = elOption.width;
+                    elMap[id].__ecGraphicHeight = elOption.height;
+
+                    var containerInfo = targetElParent === rootGroup
+                        ? {
+                            width: api.getWidth(),
+                            height: api.getHeight()
+                        }
+                        : {
+                            width: zrUtil.retrieve(targetElParent.__ecGraphicWidth, currParentWidth, 0),
+                            height: zrUtil.retrieve(targetElParent.__ecGraphicHeight, currParentHeight, 0)
+                        };
+
+                    layoutUtil.positionElement(elMap[id], elOption, containerInfo, null, hvLocUsed);
                 }
             });
         },
@@ -262,5 +324,21 @@ define(function(require) {
             existElParent.remove(existEl);
             delete elMap[id];
         }
+    }
+
+    // Remove unnecessary props to avoid potential problem.
+    function getCleanedElOption(elOption) {
+        elOption = zrUtil.extend({}, elOption);
+        zrUtil.each(
+            ['id', 'parentId', '$action'].concat(layoutUtil.LOCATION_PARAMS),
+            function (name) {
+                delete elOption[name];
+            }
+        );
+        return elOption;
+    }
+
+    function isSetLoc(obj, prop) {
+        return obj[prop] != null && obj[prop] !== 'auto';
     }
 });
