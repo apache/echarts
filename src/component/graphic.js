@@ -38,12 +38,16 @@ define(function(require) {
         defaultOption: {
             // Besides settings of graphic elements, each element
             // can be set with: left, right, top, bottom, width, height.
-            // If left or rigth is set, final location X is totally decided by them.
-            // If top or bottom is set, final location Y is totally decided by them.
+            // If left/rigth is set, final shape.x/cx is not used.
+            // If top/bottom is set, final shape.y/cy is not used.
             // Otherwise location is decided by shape setting.
             // This mechanism is useful when you want position a group against the
             // right side of this container, where you do not need to consider the
             // settings of elements in this group.
+            //
+            // Note: width/height setting only specify contianer(group) size, if
+            // needed. And percentage value (like '33%') is not supported in
+            // width/height. See the reason in the layout algorithm below.
             elements: [],
             parentId: null
         },
@@ -114,9 +118,12 @@ define(function(require) {
                     : existElParentId // parent not specified
                     ? existElParentId
                     : null;
+                newElOption.hv = [
+                    isSetLoc(newElOption, ['left', 'right']), // Rigid body, dont care `width`.
+                    isSetLoc(newElOption, ['top', 'bottom'])  // Rigid body, Dont care `height`.
+                ];
+                newElOption.parentOption = null; // Clear
                 elOptionsToUpdate.push(newElOption);
-
-                delete newElOption.parentOption; // Clear
 
                 // Update existing options, for `getOption` feature.
                 var newElOptCopy = zrUtil.extend({}, newElOption); // Avoid modified.
@@ -126,7 +133,8 @@ define(function(require) {
                         // We can ensure that newElOptCopy and existElOption are not
                         // the same object, so merge will not change newElOptCopy.
                         zrUtil.merge(existElOption, newElOptCopy, true);
-                        layoutUtil.mergeLayoutParam(existElOption, newElOptCopy);
+                        // Rigid body, use ignoreSize.
+                        layoutUtil.mergeLayoutParam(existElOption, newElOptCopy, {ignoreSize: true});
                         // Will be used in render.
                         layoutUtil.copyLayoutParams(newElOption, existElOption);
                     }
@@ -225,33 +233,23 @@ define(function(require) {
             var elMap = this._elMap;
             var rootGroup = this.group;
 
+            // Top-down tranverse to assign graphic settings to each elements.
             zrUtil.each(elOptionsToUpdate, function (elOption) {
                 var $action = elOption.$action;
                 var id = elOption.id;
                 var existEl = elMap[id];
                 var parentId = elOption.parentId;
                 var targetElParent = parentId != null ? elMap[parentId] : rootGroup;
-                var hvLocUsed = [
-                    isSetLoc(elOption, 'left') || isSetLoc(elOption, 'right'),
-                    isSetLoc(elOption, 'top') || isSetLoc(elOption, 'bottom')
-                ];
 
                 // In top/bottom mode, textVertical should not be used. But
                 // textBaseline should not be 'alphabetic', which is not precise.
-                if (hvLocUsed[1] && elOption.type === 'text') {
+                if (elOption.hv[1] && elOption.type === 'text') {
                     elOption.style = zrUtil.defaults({textBaseline: 'middle'}, elOption.style);
                     elOption.style.textVerticalAlign = null;
                 }
 
                 // Remove unnecessary props to avoid potential problem.
                 var elOptionCleaned = getCleanedElOption(elOption);
-                // Notice: the size of this rect is based on previous sibling. So if
-                // using left/right/top/bottom, it is based on the previous sibling.
-                // Although this mechanism is not perfect, but it is enable you set
-                // group rect by prevoius rect children.
-                var parentRect = targetElParent.getBoundingRect();
-                var currParentWidth = parentRect.width;
-                var currParentHeight = parentRect.height;
 
                 if (!$action || $action === 'merge') {
                     if (existEl) {
@@ -276,20 +274,37 @@ define(function(require) {
                 if (elMap[id]) {
                     elMap[id].__ecGraphicWidth = elOption.width;
                     elMap[id].__ecGraphicHeight = elOption.height;
-
-                    var containerInfo = targetElParent === rootGroup
-                        ? {
-                            width: api.getWidth(),
-                            height: api.getHeight()
-                        }
-                        : {
-                            width: zrUtil.retrieve(targetElParent.__ecGraphicWidth, currParentWidth, 0),
-                            height: zrUtil.retrieve(targetElParent.__ecGraphicHeight, currParentHeight, 0)
-                        };
-
-                    layoutUtil.positionElement(elMap[id], elOption, containerInfo, null, hvLocUsed);
                 }
             });
+
+            // A very simple layout mechanism is used, where the size(width/height) can
+            // not be determined by its parent(group) or its children, but the location
+            // can be determined by its parent(group) and its chilren.
+            // If enable size dependency, both top-down and bottom-up tranverse is needed
+            // and recursive dependency needs to be handle, which make it too complecated.
+
+            // Bottom-up tranvese to locate elements.
+            for (var i = elOptionsToUpdate.length - 1; i >= 0; i--) {
+                var elOption = elOptionsToUpdate[i];
+                var el = elMap[elOption.id];
+
+                if (!el) {
+                    continue;
+                }
+
+                var parentEl = el.parent;
+                var containerInfo = parentEl === rootGroup
+                    ? {
+                        width: api.getWidth(),
+                        height: api.getHeight()
+                    }
+                    : { // Like 'position:absolut' in css, default 0.
+                        width: parentEl.__ecGraphicWidth || 0,
+                        height: parentEl.__ecGraphicHeight || 0
+                    };
+
+                layoutUtil.positionElement(el, elOption, containerInfo, null, elOption.hv);
+            }
         },
 
         /**
@@ -330,7 +345,7 @@ define(function(require) {
     function getCleanedElOption(elOption) {
         elOption = zrUtil.extend({}, elOption);
         zrUtil.each(
-            ['id', 'parentId', '$action'].concat(layoutUtil.LOCATION_PARAMS),
+            ['id', 'parentId', '$action', 'hv'].concat(layoutUtil.LOCATION_PARAMS),
             function (name) {
                 delete elOption[name];
             }
@@ -338,7 +353,11 @@ define(function(require) {
         return elOption;
     }
 
-    function isSetLoc(obj, prop) {
-        return obj[prop] != null && obj[prop] !== 'auto';
+    function isSetLoc(obj, props) {
+        var isSet;
+        zrUtil.each(props, function (prop) {
+            obj[prop] != null && obj[prop] !== 'auto' && (isSet = true);
+        });
+        return isSet;
     }
 });

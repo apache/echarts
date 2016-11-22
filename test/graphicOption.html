@@ -16,7 +16,7 @@
             .block {
                 overflow: hidden;
                 height: 200px;
-                margin-top: 50px;
+                margin-bottom: 20px;
                 background: #eee;
             }
             .chart {
@@ -33,6 +33,7 @@
                 height: 100%;
             }
             h3 {
+                font-size: 16px;
                 text-align: center;
             }
         </style>
@@ -47,10 +48,16 @@
                 return {
                     dom: $('#' + id + ' .chart')[0],
                     option: options[0],
-                    options: options
-                }
+                    options: options,
+                    buttons: $('#' + id + ' button')
+                };
             }
         </script>
+
+
+
+
+
 
 
 
@@ -99,6 +106,8 @@
                 });
             </script>
         </div>
+
+
 
 
 
@@ -233,6 +242,7 @@
     }]
 }
             </textarea>
+            <button>delete</button>
             <script>
                 require([
                     'echarts',
@@ -251,9 +261,28 @@
                     setTimeout(function () {
                         chart.setOption(main.options[1]);
                     }, 1200);
+
+                    main.buttons.on('click', function () {
+                        chart.setOption({
+                            graphic: {
+                                id: 'rrr',
+                                $action: 'remove'
+                            }
+                        });
+                    });
                 });
             </script>
         </div>
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -376,8 +405,16 @@
 
 
 
-        Test group setOption(getOption) mapping.
-        Test left/right/top/bottom in group.
+
+
+
+
+
+
+
+
+        <h3>Test group setOption(getOption) mapping.</h3>
+        <h3>Test left/right/top/bottom in group.</h3>
         <div class="block" id="main4" style="height: 300px">
             <div class="chart"></div>
             <textarea>
@@ -417,6 +454,8 @@
     }, {
         type: 'group',
         id: 'gr',
+        width: 230,
+        height: 110,
         position: [70, 90],
         children: [{
             type: 'rect',
@@ -490,6 +529,124 @@
                 });
             </script>
         </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <h3>Width/height is determined by previous sibling.</h3>
+        <div class="block" id="main5" style="height: 400px">
+            <div class="chart"></div>
+            <textarea>
+{
+    legend: {
+        data:['高度(km)与气温(°C)变化关系']
+    },
+    tooltip: {
+        trigger: 'axis'
+    },
+    xAxis: {
+    },
+    yAxis: {
+        type: 'category',
+        data: ['0', '10', '20', '30', '40', '50', '60', '70', '80']
+    },
+    graphic: [{
+        type: 'image',
+        right: 0,
+        top: 0,
+        z: -10,
+        style: {
+            image: 'http://echarts.baidu.com/images/favicon.png',
+            width: 250,
+            height: 250,
+            opacity: 0.4
+        }
+    }, {
+        type: 'group',
+        left: '10%',
+        top: 'center',
+        width: 190,
+        height: 90,
+        children: [
+            {
+                type: 'rect',
+                z: 100,
+                shape: {
+                    width: 190,
+                    height: 90
+                },
+                style: {
+                    fill: '#fff',
+                    stroke: '#999',
+                    lineWidth: 2,
+                    shadowBlur: 8,
+                    shadowOffsetX: 3,
+                    shadowOffsetY: 3,
+                    shadowColor: 'rgba(0,0,0,0.3)'
+                }
+            },
+            {
+                type: 'text',
+                z: 100,
+                top: 'middle',
+                left: 'center',
+                style: {
+                    text: [
+                        '横轴表示温度，单位是°C',
+                        '纵轴表示高度，单位是km',
+                        '右上角有一个图片做的水印',
+                        '这个文本块可以放在图中各',
+                        '种位置'
+                    ].join('\n'),
+                    font: '14px Microsoft YaHei'
+                }
+            }
+        ]
+    }],
+    series: [
+        {
+            name: '高度(km)与气温(°C)变化关系',
+            type: 'line',
+            data:[15, -50, -56.5, -46.5, -22.1, -2.5, -27.7, -55.7, -76.5]
+        }
+    ]
+}
+        </textarea>
+            <script>
+                require([
+                    'echarts',
+                    'echarts/chart/line',
+                    'echarts/component/graphic',
+                    'echarts/component/grid',
+                    'echarts/component/legend',
+                    'echarts/component/tooltip'
+                ], function (echarts) {
+                    var main = getMain('main5');
+                    if (!main.dom) {
+                        return;
+                    }
+                    var chart = echarts.init(main.dom);
+                    chart.setOption(main.option);
+                });
+            </script>
+        </div>
+
 
 
 
