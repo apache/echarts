@@ -417,7 +417,7 @@ define(function(require) {
     function removeEl(existEl, elMap) {
         var existElParent = existEl && existEl.parent;
         if (existElParent) {
-            existEl.type === 'group' && existEl.tranvese(function (el) {
+            existEl.type === 'group' && existEl.traverse(function (el) {
                 removeEl(el, elMap);
             });
             delete elMap[existEl.__ecGraphicId];
