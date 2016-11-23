@@ -248,17 +248,36 @@ define(function(require) {
          * @override
          */
         init: function (ecModel, api) {
-
             /**
              * @type {Object}
              */
             this._elMap = {};
+            /**
+             * @type {module:echarts/graphic/GraphicModel}
+             */
+            this._lastGraphicModel;
         },
 
         /**
          * @override
          */
         render: function (graphicModel, ecModel, api) {
+
+            // Having leveraged use case and algorithm complexity, a very simple
+            // layout mechanism is used:
+            // The size(width/height) can be determined by itself or its parent (not
+            // implemented yet), but can not by its children. (Top-down travel)
+            // The location(x/y) can be determined by the bounding rect of itself
+            // (can including its descendants or not) and the size of its parent.
+            // (Bottom-up travel)
+
+            // When chart.clear() or chart.setOption({...}, true) with the same id,
+            // view will be reused.
+            if (graphicModel !== this._lastGraphicModel) {
+                this._clear();
+            }
+            this._lastGraphicModel = graphicModel;
+
             this._updateElements(graphicModel, api);
             this._relocate(graphicModel, api);
         },
@@ -326,11 +345,6 @@ define(function(require) {
          * @private
          */
         _relocate: function (graphicModel, api) {
-            // A very simple layout mechanism is used, where the size(width/height) can
-            // not be determined by its parent(group) or its children, but the location
-            // can be determined by its parent(group) and its chilren.
-            // If enable size dependency, both top-down and bottom-up tranverse is needed
-            // and recursive dependency needs to be handle, which make it too complecated.
             var elOptions = graphicModel.option.elements;
             var rootGroup = this.group;
             var elMap = this._elMap;
@@ -363,10 +377,21 @@ define(function(require) {
         },
 
         /**
+         * @private
+         */
+        _clear: function () {
+            var elMap = this._elMap;
+            zrUtil.each(elMap, function (el) {
+                removeEl(el, elMap);
+            });
+            this._elMap = {};
+        },
+
+        /**
          * @override
          */
         dispose: function () {
-            this._elMap = {};
+            this._clear();
         }
     });
 

@@ -62,8 +62,6 @@
 
 
 
-
-
         <h3>Test group setOption(getOption) mapping.</h3>
         <h3>Test left/right/top/bottom in group.</h3>
         <h3>Test resize.</h3>
@@ -195,7 +193,6 @@
                 });
             </script>
         </div>
-
 
 
 
@@ -389,7 +386,6 @@
 
 
 
-
         <div class="block" id="main0">
             <div class="chart"></div>
             <textarea>
@@ -539,7 +535,6 @@
 
 
 
-
         <div class="block" id="main2">
             <div class="chart"></div>
             <textarea>
@@ -573,24 +568,9 @@
     }]
 }
             </textarea>
-            <textarea>
-{
-    graphic: [{
-        id: 'xxx',
-        $action: 'remove'
-    }, {
-        id: 'rrr',
-        shape: {
-            cx: 250,
-            r: 30
-        },
-        style: {
-            fill: 'red'
-        }
-    }]
-}
-            </textarea>
-            <button>delete</button>
+            <button>delete by $action</button>
+            <button>delete by setOption({...}, true)</button>
+            <button>delete by clear</button>
             <script>
                 require([
                     'echarts',
@@ -606,11 +586,8 @@
                     }
                     var chart = echarts.init(main.dom);
                     chart.setOption(main.option);
-                    setTimeout(function () {
-                        chart.setOption(main.options[1]);
-                    }, 1200);
 
-                    main.buttons.on('click', function () {
+                    $(main.buttons[0]).on('click', function () {
                         chart.setOption({
                             graphic: {
                                 id: 'rrr',
@@ -618,14 +595,28 @@
                             }
                         });
                     });
+                    $(main.buttons[1]).on('click', function () {
+                        chart.setOption({
+                            graphic: {
+                                type: 'rect',
+                                shape: {
+                                    y: 100,
+                                    x: 250,
+                                    width: 40,
+                                    height: 140
+                                },
+                                style: {
+                                    fill: 'blue'
+                                }
+                            }
+                        }, true);
+                    });
+                    $(main.buttons[2]).on('click', function () {
+                        chart.clear();
+                    });
                 });
             </script>
         </div>
-
-
-
-
-
 
 
 
@@ -746,8 +737,6 @@
                 });
             </script>
         </div>
-
-
 
 
 
