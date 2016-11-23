@@ -29,8 +29,15 @@
             }
 
             var mainEl = $(mainEl);
+            var id = mainEl.attr('data-draggable-id');
 
-            $('.draggable-control').remove();
+            if (id == null) {
+                id = +Math.random();
+                mainEl.attr('data-draggable-id', id);
+            }
+            else {
+                $('.draggable-control[data-draggable-id=' + id + ']').remove();
+            }
 
             var controlEl = $(
                 '<div class="draggable-control">DRAG<span class="draggable-label"></span></div>'
