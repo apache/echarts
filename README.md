@@ -23,7 +23,7 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 + [Option Manual](http://echarts.baidu.com/option.html)
     + [中文](http://echarts.baidu.com/option.html)
-    + English (Under reviewing)
+    + [English](http://ecomfe.github.io/echarts-doc/public/option-en.html)
 
 ## Resources
 
