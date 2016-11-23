@@ -248,11 +248,15 @@ define(function(require) {
         return rect;
     };
 
+
     /**
      * Position a zr element in viewport
      *  Group position is specified by either
      *  {left, top}, {right, bottom}
      *  If all properties exists, right and bottom will be igonred.
+     *
+     * This method modified and only modified el.position.
+     * If be called repeatly with the same input el, the same result will be gotten.
      *
      * @param {module:zrender/Element} el Should have `getBoundingRect` method.
      * @param {Object} positionInfo
@@ -262,28 +266,58 @@ define(function(require) {
      * @param {number|string} [positionInfo.bottom]
      * @param {Object} containerRect
      * @param {string|number} margin
-     * @param {Array.<number>} [hv=[1,1]] Only horizontal or only vertical.
+     * @param {Object} [opt]
+     * @param {Array.<number>} [opt.hv=[1,1]] Only horizontal or only vertical.
+     * @param {Array.<number>} [opt.boundingMode='all']
+     *        Specify how to calculate boundingRect when locating.
+     *        'all': Get uioned and transformed boundingRect
+     *               from both itself and its descendants.
+     *               This mode simplies confine the elements in the bounding
+     *               of their container (e.g., using 'right: 0').
+     *        'raw': Only use not transformed boundingRect of itself.
+     *               This mode likes css behavior, useful when you want a
+     *               element can overflow its container. (Consider a rotated
+     *               circle needs to be located in a corner.)
+     *               In this mode positionInfo.width/height can only be number.
      */
-    layout.positionElement = function (
-        el, positionInfo, containerRect, margin, hv
-    ) {
-        var elRect = el.getBoundingRect();
+    layout.positionElement = function (el, positionInfo, containerRect, margin, opt) {
+        var h = !opt || !opt.hv || opt.hv[0];
+        var v = !opt || !opt.hv || opt.hv[1];
+        var boundingMode = opt && opt.boundingMode || 'all';
+
+        if (!h && !v) {
+            return;
+        }
+
+        var rect = (boundingMode === 'raw' && el.type === 'group')
+            ? (new BoundingRect(+positionInfo.width || 0, +positionInfo.height || 0))
+            : el.getBoundingRect();
+        var useTransform = boundingMode !== 'raw' && el.needLocalTransform();
+
+        if (useTransform) {
+            var transform = el.getLocalTransform();
+            // Notice: raw rect may be inner object of el,
+            // which should not be modified.
+            rect = rect.clone();
+            rect.applyTransform(transform);
+        }
 
         positionInfo = layout.getLayoutRect(
             zrUtil.defaults(
-                {width: elRect.width, height: elRect.height},
+                {width: rect.width, height: rect.height},
                 positionInfo
             ),
             containerRect,
             margin
         );
 
-        var position = el.position;
-        hv = hv || [1, 1];
-
+        // Because 'tranlate' is the last step in transform
+        // (see zrender/core/Transformable#getLocalTransfrom),
+        // we can just only modify el.position to get final result.
+        var elPos = el.position;
         el.attr('position', [
-            hv[0] ? positionInfo.x - elRect.x : position[0],
-            hv[1] ? positionInfo.y - elRect.y : position[1]
+            !h ? elPos[0] : useTransform ? elPos[0] + positionInfo.x - rect.x : positionInfo.x,
+            !v ? elPos[1] : useTransform ? elPos[1] + positionInfo.y - rect.y : positionInfo.y
         ]);
     };
 

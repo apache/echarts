@@ -6,6 +6,7 @@
         <script src="config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
+        <script src="lib/draggable.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="reset.css">
     </head>
@@ -63,6 +64,329 @@
 
 
 
+        <h3>Test group setOption(getOption) mapping.</h3>
+        <h3>Test left/right/top/bottom in group.</h3>
+        <h3>Test resize.</h3>
+        <div class="block" id="main4" style="height: 300px">
+            <div class="chart"></div>
+            <textarea>
+{
+    backgroundColor: '#bba',
+    graphic: [{
+        id: 'img',
+        type: 'image',
+        right: 20,
+        top: 'center',
+        style: {
+            image: 'http://echarts.baidu.com/images/favicon.png',
+            width: 50,
+            height: 50,
+            opacity: 0.5
+        }
+    }, {
+        type: 'text',
+        bottom: 0,
+        right: 0,
+        rotation: Math.PI / 4,
+        style: {
+            font: '24px Microsoft YaHei',
+            text: '全屏右下角'
+        },
+        z: 100
+    }, {
+        type: 'text',
+        bottom: 0,
+        left: 'center',
+        style: {
+            font: '18px sans-serif',
+            text: '全屏最下中间\n这是多行文字\n这是第三行'
+        },
+        z: 100
+    }, {
+        type: 'group',
+        id: 'gr',
+        width: 230,
+        height: 110,
+        position: [70, 90],
+        children: [{
+            type: 'rect',
+            shape: {
+                width: 230,
+                height: 80
+            },
+            style: {
+                stroke: 'red',
+                fill: 'transparent',
+                lineWidth: 2
+            },
+            z: 100
+        }, {
+            type: 'rect',
+            shape: {
+                width: 60,
+                height: 110
+            },
+            style: {
+                stroke: 'red',
+                fill: 'transparent',
+                lineWidth: 2
+            },
+            z: 100
+        }, {
+            id: 'grouptext',
+            type: 'text',
+            bottom: 0,
+            right: 0,
+            rotation: 0.5,
+            style: {
+                font: '14px Microsoft YaHei',
+                text: 'group最右下角'
+            },
+            z: 100
+        }]
+    }]
+}
+            </textarea>
+            <textarea>
+{
+    graphic: [{
+        id: 'img',
+        left: 'center',
+        top: 'middle'
+    }]
+}
+            </textarea>
+            <script>
+                require([
+                    'echarts',
+                    'echarts/chart/line',
+                    'echarts/component/graphic',
+                    'echarts/component/grid',
+                    'echarts/component/legend',
+                    'echarts/component/tooltip'
+                ], function (echarts) {
+                    var main = getMain('main4');
+                    if (!main.dom) {
+                        return;
+                    }
+                    var chart = echarts.init(main.dom);
+                    draggable.init(main.dom, chart, {throttle: 70});
+
+                    chart.setOption(main.option);
+
+                    setTimeout(function () {
+                        chart.setOption(chart.getOption());
+
+                        setTimeout(function () {
+                            chart.setOption(main.options[1]);
+                        }, 1200);
+
+                    }, 1200);
+
+                    var rotation = 0;
+                    setInterval(function () {
+                        chart.setOption({
+                            graphic: {
+                                id: 'img',
+                                rotation: (rotation += Math.PI / 360)
+                            }
+                        });
+                    }, 17);
+                });
+            </script>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
+        <h3>Width/height is determined by previous sibling.</h3>
+        <div class="block" id="main5" style="height: 400px">
+            <div class="chart"></div>
+            <textarea>
+{
+    backgroundColor: 'rgba(0,0,255,0.08)',
+    legend: {
+        data:['高度(km)与气温(°C)变化关系']
+    },
+    tooltip: {
+        trigger: 'axis'
+    },
+    xAxis: {
+    },
+    yAxis: {
+        type: 'category',
+        data: ['0', '10', '20', '30', '40', '50', '60', '70', '80']
+    },
+    graphic: [{
+        type: 'image',
+        id: 'img',
+        z: -10,
+        right: 0,
+        top: 0,
+        bounding: 'raw',
+        origin: [75, 75],
+        style: {
+            fill: '#000',
+            image: 'http://echarts.baidu.com/images/favicon.png',
+            width: 150,
+            height: 150,
+            opacity: 0.4
+        }
+    }, {
+        type: 'group',
+        id: 'rectgroup1',
+        bottom: 0,
+        right: 0,
+        bounding: 'raw',
+        children: [{
+            type: 'rect',
+            left: 'center',
+            top: 'center',
+            shape: {
+                width: 20,
+                height: 80
+            },
+            style: {
+                stroke: 'green',
+                fill: 'transparent'
+            }
+        }, {
+            type: 'rect',
+            left: 'center',
+            top: 'center',
+            shape: {
+                width: 80,
+                height: 20
+            },
+            style: {
+                stroke: 'green',
+                fill: 'transparent'
+            }
+        }]
+    }, {
+        type: 'rect',
+        id: 'rect2',
+        bottom: 0,
+        right: 'center',
+        shape: {
+            width: 50,
+            height: 80
+        },
+        style: {
+            stroke: 'green',
+            fill: 'transparent'
+        }
+    }, {
+        type: 'group',
+        id: 'textGroup1',
+        left: '10%',
+        top: 'center',
+        children: [
+            {
+                type: 'rect',
+                z: 100,
+                left: 'center',
+                top: 'center',
+                shape: {
+                    width: 170,
+                    height: 70
+                },
+                style: {
+                    fill: '#fff',
+                    stroke: '#999',
+                    lineWidth: 2,
+                    shadowBlur: 8,
+                    shadowOffsetX: 3,
+                    shadowOffsetY: 3,
+                    shadowColor: 'rgba(0,0,0,0.3)'
+                }
+            },
+            {
+                type: 'text',
+                z: 100,
+                top: 'middle',
+                left: 'center',
+                style: {
+                    text: [
+                        '横轴表示温度，单位是°C',
+                        '纵轴表示高度，单位是km',
+                        '右上角有一个图片做的水印'
+                    ].join('\n'),
+                    font: '12px Microsoft YaHei'
+                }
+            }
+        ]
+    }],
+    series: [
+        {
+            name: '高度(km)与气温(°C)变化关系',
+            type: 'line',
+            data:[15, -50, -56.5, -46.5, -22.1, -2.5, -27.7, -55.7, -76.5]
+        }
+    ]
+}
+        </textarea>
+            <script>
+                require([
+                    'echarts',
+                    'echarts/chart/line',
+                    'echarts/component/graphic',
+                    'echarts/component/grid',
+                    'echarts/component/legend',
+                    'echarts/component/tooltip'
+                ], function (echarts) {
+                    var main = getMain('main5');
+                    if (!main.dom) {
+                        return;
+                    }
+                    var chart = echarts.init(main.dom);
+                    draggable.init(main.dom, chart, {throttle: 70});
+                    chart.setOption(main.option);
+
+                    var rotation = 0;
+                    setInterval(function () {
+                        rotation += Math.PI / 60;
+                        chart.setOption({
+                            graphic: [{
+                                id: 'img',
+                                bounding: 'raw',
+                                origin: [75, 75],
+                                rotation: rotation
+                            }, {
+                                id: 'rectgroup1',
+                                rotation: rotation
+                            }, {
+                                id: 'rect2',
+                                rotation: rotation
+                            }, {
+                                id: 'textGroup1',
+                                rotation: rotation
+                            }]
+                        });
+                    }, 17);
+                });
+            </script>
+        </div>
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -76,6 +400,25 @@
             cx: 50,
             cy: 50,
             r: 20,
+        },
+        style: {
+            fill: 'green',
+            stroke: 'pink',
+            lineWidth: 3
+        }
+    }
+}
+            </textarea>
+            <textarea>
+{
+    graphic: {
+        type: 'rect',
+        $action: 'replace',
+        shape: {
+            x: 50,
+            y: 50,
+            width: 20,
+            height: 60
         },
         style: {
             fill: 'green',
@@ -102,6 +445,11 @@
                     chart.setOption(main.option);
                     setTimeout(function () {
                         chart.setOption(chart.getOption());
+
+                        setTimeout(function () {
+                            chart.setOption(main.options[1]);
+                        }, 1200);
+
                     }, 800);
                 });
             </script>
@@ -413,239 +761,11 @@
 
 
 
-        <h3>Test group setOption(getOption) mapping.</h3>
-        <h3>Test left/right/top/bottom in group.</h3>
-        <div class="block" id="main4" style="height: 300px">
-            <div class="chart"></div>
-            <textarea>
-{
-    backgroundColor: '#bba',
-    graphic: [{
-        id: 'img',
-        type: 'image',
-        right: 0,
-        top: 'center',
-        style: {
-            image: 'http://echarts.baidu.com/images/favicon.png',
-            x: 10,
-            y: 30,
-            width: 50,
-            height: 50,
-            opacity: 0.5
-        }
-    }, {
-        type: 'text',
-        bottom: 0,
-        right: 0,
-        style: {
-            font: '18px sans-serif',
-            text: '全屏右下角'
-        },
-        z: 100
-    }, {
-        type: 'text',
-        bottom: 0,
-        left: 'center',
-        style: {
-            font: '18px sans-serif',
-            text: '全屏最下中间\n这是多行文字\n这是第三行'
-        },
-        z: 100
-    }, {
-        type: 'group',
-        id: 'gr',
-        width: 230,
-        height: 110,
-        position: [70, 90],
-        children: [{
-            type: 'rect',
-            shape: {
-                width: 230,
-                height: 80
-            },
-            style: {
-                stroke: 'red',
-                fill: 'transparent',
-                lineWidth: 2
-            },
-            z: 100
-        }, {
-            type: 'rect',
-            shape: {
-                width: 60,
-                height: 110
-            },
-            style: {
-                stroke: 'red',
-                fill: 'transparent',
-                lineWidth: 2
-            },
-            z: 100
-        }, {
-            type: 'text',
-            bottom: 0,
-            right: 0,
-            style: {
-                font: '18px sans-serif',
-                text: '文字在group最右下角',
-            },
-            z: 100
-        }]
-    }]
-}
-            </textarea>
-            <textarea>
-{
-    graphic: [{
-        id: 'img',
-        left: 0
-    }]
-}
-            </textarea>
-            <script>
-                require([
-                    'echarts',
-                    'echarts/chart/line',
-                    'echarts/component/graphic',
-                    'echarts/component/grid',
-                    'echarts/component/legend',
-                    'echarts/component/tooltip'
-                ], function (echarts) {
-                    var main = getMain('main4');
-                    if (!main.dom) {
-                        return;
-                    }
-                    var chart = echarts.init(main.dom);
-                    chart.setOption(main.option);
-
-                    setTimeout(function () {
-                        chart.setOption(chart.getOption());
-
-                        setTimeout(function () {
-                            chart.setOption(main.options[1]);
-                        }, 1200);
-
-                    }, 1200);
-                });
-            </script>
-        </div>
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <h3>Width/height is determined by previous sibling.</h3>
-        <div class="block" id="main5" style="height: 400px">
-            <div class="chart"></div>
-            <textarea>
-{
-    legend: {
-        data:['高度(km)与气温(°C)变化关系']
-    },
-    tooltip: {
-        trigger: 'axis'
-    },
-    xAxis: {
-    },
-    yAxis: {
-        type: 'category',
-        data: ['0', '10', '20', '30', '40', '50', '60', '70', '80']
-    },
-    graphic: [{
-        type: 'image',
-        right: 0,
-        top: 0,
-        z: -10,
-        style: {
-            image: 'http://echarts.baidu.com/images/favicon.png',
-            width: 250,
-            height: 250,
-            opacity: 0.4
-        }
-    }, {
-        type: 'group',
-        left: '10%',
-        top: 'center',
-        width: 190,
-        height: 90,
-        children: [
-            {
-                type: 'rect',
-                z: 100,
-                shape: {
-                    width: 190,
-                    height: 90
-                },
-                style: {
-                    fill: '#fff',
-                    stroke: '#999',
-                    lineWidth: 2,
-                    shadowBlur: 8,
-                    shadowOffsetX: 3,
-                    shadowOffsetY: 3,
-                    shadowColor: 'rgba(0,0,0,0.3)'
-                }
-            },
-            {
-                type: 'text',
-                z: 100,
-                top: 'middle',
-                left: 'center',
-                style: {
-                    text: [
-                        '横轴表示温度，单位是°C',
-                        '纵轴表示高度，单位是km',
-                        '右上角有一个图片做的水印',
-                        '这个文本块可以放在图中各',
-                        '种位置'
-                    ].join('\n'),
-                    font: '14px Microsoft YaHei'
-                }
-            }
-        ]
-    }],
-    series: [
-        {
-            name: '高度(km)与气温(°C)变化关系',
-            type: 'line',
-            data:[15, -50, -56.5, -46.5, -22.1, -2.5, -27.7, -55.7, -76.5]
-        }
-    ]
-}
-        </textarea>
-            <script>
-                require([
-                    'echarts',
-                    'echarts/chart/line',
-                    'echarts/component/graphic',
-                    'echarts/component/grid',
-                    'echarts/component/legend',
-                    'echarts/component/tooltip'
-                ], function (echarts) {
-                    var main = getMain('main5');
-                    if (!main.dom) {
-                        return;
-                    }
-                    var chart = echarts.init(main.dom);
-                    chart.setOption(main.option);
-                });
-            </script>
-        </div>
 
 
 

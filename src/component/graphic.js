@@ -36,18 +36,31 @@ define(function(require) {
         type: 'graphic',
 
         defaultOption: {
-            // Besides settings of graphic elements, each element
-            // can be set with: left, right, top, bottom, width, height.
-            // If left/rigth is set, final shape.x/cx is not used.
-            // If top/bottom is set, final shape.y/cy is not used.
-            // Otherwise location is decided by shape setting.
-            // This mechanism is useful when you want position a group against the
-            // right side of this container, where you do not need to consider the
-            // settings of elements in this group.
+            // Extra properties for each elements:
             //
-            // Note: width/height setting only specify contianer(group) size, if
-            // needed. And percentage value (like '33%') is not supported in
-            // width/height. See the reason in the layout algorithm below.
+            // left/right/top/bottom: (like 12, '22%', 'center', default undefined)
+            //      If left/rigth is set, shape.x/shape.cx/position is not used.
+            //      If top/bottom is set, shape.y/shape.cy/position is not used.
+            //      This mechanism is useful when you want position a group/element
+            //      against the right side or center of this container.
+            //
+            // width/height: (can only pixel value, default 0)
+            //      Only be used to specify contianer(group) size, if needed. And
+            //      can not be percentage value (like '33%'). See the reason in the
+            //      layout algorithm below.
+            //
+            // bounding: (enum: 'all' (default) | 'raw')
+            //      Specify how to calculate boundingRect when locating.
+            //      'all': Get uioned and transformed boundingRect
+            //          from both itself and its descendants.
+            //          This mode simplies confine a group of elements in the bounding
+            //          of their ancester container (e.g., using 'right: 0').
+            //      'raw': Only use not transformed boundingRect of itself.
+            //          This mode likes css behavior, useful when you want a
+            //          element can overflow its container. (Consider a rotated
+            //          circle needs to be located in a corner.)
+
+            // Note: elements is always behind its ancestors in elements array.
             elements: [],
             parentId: null
         },
@@ -118,10 +131,6 @@ define(function(require) {
                     : existElParentId // parent not specified
                     ? existElParentId
                     : null;
-                newElOption.hv = [
-                    isSetLoc(newElOption, ['left', 'right']), // Rigid body, dont care `width`.
-                    isSetLoc(newElOption, ['top', 'bottom'])  // Rigid body, Dont care `height`.
-                ];
                 newElOption.parentOption = null; // Clear
                 elOptionsToUpdate.push(newElOption);
 
@@ -130,6 +139,15 @@ define(function(require) {
                 var $action = newElOption.$action;
                 if (!$action || $action === 'merge') {
                     if (existElOption) {
+
+                        if (__DEV__) {
+                            var newType = newElOption.type;
+                            zrUtil.assert(
+                                !newType || existElOption.type === newType,
+                                'Please set $action: "replace" to change `type`'
+                            );
+                        }
+
                         // We can ensure that newElOptCopy and existElOption are not
                         // the same object, so merge will not change newElOptCopy.
                         zrUtil.merge(existElOption, newElOptCopy, true);
@@ -148,6 +166,18 @@ define(function(require) {
                 else if ($action === 'remove') {
                     // null will be cleaned later.
                     existElOption && (existList[index] = null);
+                }
+
+                if (existList[index]) {
+                    existList[index].hv = newElOption.hv = [
+                        isSetLoc(newElOption, ['left', 'right']), // Rigid body, dont care `width`.
+                        isSetLoc(newElOption, ['top', 'bottom'])  // Rigid body, Dont care `height`.
+                    ];
+                    // Given defualt group size, otherwise may layout error.
+                    if (existList[index].type === 'group') {
+                        existList[index].width == null && (existList[index].width = newElOption.width = 0);
+                        existList[index].height == null && (existList[index].height = newElOption.height = 0);
+                    }
                 }
 
             }, this);
@@ -229,7 +259,20 @@ define(function(require) {
          * @override
          */
         render: function (graphicModel, ecModel, api) {
+            this._updateElements(graphicModel, api);
+            this._relocate(graphicModel, api);
+        },
+
+        /**
+         * @private
+         */
+        _updateElements: function (graphicModel, api) {
             var elOptionsToUpdate = graphicModel.useElOptionsToUpdate();
+
+            if (!elOptionsToUpdate) {
+                return;
+            }
+
             var elMap = this._elMap;
             var rootGroup = this.group;
 
@@ -243,7 +286,7 @@ define(function(require) {
 
                 // In top/bottom mode, textVertical should not be used. But
                 // textBaseline should not be 'alphabetic', which is not precise.
-                if (elOption.hv[1] && elOption.type === 'text') {
+                if (elOption.hv && elOption.hv[1] && elOption.type === 'text') {
                     elOption.style = zrUtil.defaults({textBaseline: 'middle'}, elOption.style);
                     elOption.style.textVerticalAlign = null;
                 }
@@ -251,24 +294,25 @@ define(function(require) {
                 // Remove unnecessary props to avoid potential problem.
                 var elOptionCleaned = getCleanedElOption(elOption);
 
+                // For simple, do not support parent change, otherwise reorder is needed.
+                if (__DEV__) {
+                    existEl && zrUtil.assert(
+                        targetElParent === existEl.parent,
+                        'Changing parent is not supported.'
+                    );
+                }
+
                 if (!$action || $action === 'merge') {
-                    if (existEl) {
-                        existEl.attr(elOptionCleaned);
-                        if (targetElParent !== existEl.parent) {
-                            removeEl(id, existEl, elMap);
-                            targetElParent.add(existEl);
-                        }
-                    }
-                    else {
-                        createEl(id, targetElParent, elOptionCleaned, elMap);
-                    }
+                    existEl
+                        ? existEl.attr(elOptionCleaned)
+                        : createEl(id, targetElParent, elOptionCleaned, elMap);
                 }
                 else if ($action === 'replace') {
-                    removeEl(id, existEl, elMap);
+                    removeEl(existEl, elMap);
                     createEl(id, targetElParent, elOptionCleaned, elMap);
                 }
                 else if ($action === 'remove') {
-                    removeEl(id, existEl, elMap);
+                    removeEl(existEl, elMap);
                 }
 
                 if (elMap[id]) {
@@ -276,16 +320,24 @@ define(function(require) {
                     elMap[id].__ecGraphicHeight = elOption.height;
                 }
             });
+        },
 
+        /**
+         * @private
+         */
+        _relocate: function (graphicModel, api) {
             // A very simple layout mechanism is used, where the size(width/height) can
             // not be determined by its parent(group) or its children, but the location
             // can be determined by its parent(group) and its chilren.
             // If enable size dependency, both top-down and bottom-up tranverse is needed
             // and recursive dependency needs to be handle, which make it too complecated.
+            var elOptions = graphicModel.option.elements;
+            var rootGroup = this.group;
+            var elMap = this._elMap;
 
-            // Bottom-up tranvese to locate elements.
-            for (var i = elOptionsToUpdate.length - 1; i >= 0; i--) {
-                var elOption = elOptionsToUpdate[i];
+            // Bottom-up tranvese all elements (consider when ec resize) to locate elements.
+            for (var i = elOptions.length - 1; i >= 0; i--) {
+                var elOption = elOptions[i];
                 var el = elMap[elOption.id];
 
                 if (!el) {
@@ -303,7 +355,10 @@ define(function(require) {
                         height: parentEl.__ecGraphicHeight || 0
                     };
 
-                layoutUtil.positionElement(el, elOption, containerInfo, null, elOption.hv);
+                layoutUtil.positionElement(
+                    el, elOption, containerInfo, null,
+                    {hv: elOption.hv, boundingMode: elOption.bounding}
+                );
             }
         },
 
@@ -331,13 +386,17 @@ define(function(require) {
         var el = new Clz(elOption);
         targetElParent.add(el);
         elMap[id] = el;
+        el.__ecGraphicId = id;
     }
 
-    function removeEl(id, existEl, elMap) {
+    function removeEl(existEl, elMap) {
         var existElParent = existEl && existEl.parent;
         if (existElParent) {
+            existEl.type === 'group' && existEl.tranvese(function (el) {
+                removeEl(el, elMap);
+            });
+            delete elMap[existEl.__ecGraphicId];
             existElParent.remove(existEl);
-            delete elMap[id];
         }
     }
 
@@ -345,7 +404,7 @@ define(function(require) {
     function getCleanedElOption(elOption) {
         elOption = zrUtil.extend({}, elOption);
         zrUtil.each(
-            ['id', 'parentId', '$action', 'hv'].concat(layoutUtil.LOCATION_PARAMS),
+            ['id', 'parentId', '$action', 'hv', 'bounding'].concat(layoutUtil.LOCATION_PARAMS),
             function (name) {
                 delete elOption[name];
             }
