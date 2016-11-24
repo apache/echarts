@@ -130,7 +130,7 @@ define(function (require) {
                 }
 
                 var hoverItemStyleModel = itemModel.getModel('itemStyle.emphasis');
-                var itemStyleModel = itemModel.getModel('itemStyle.nomral');
+                var itemStyleModel = itemModel.getModel('itemStyle.normal');
                 var textStyleModel = labelModel.getModel('textStyle');
 
                 text.setStyle({
