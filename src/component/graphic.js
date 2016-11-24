@@ -11,9 +11,6 @@ define(function(require) {
     echarts.registerPreprocessor(function (option) {
         var graphicOption = option && option.graphic;
 
-        // Only one graphic instance can be instantiated. (We dont
-        // want that too many views created in echarts._viewMap)
-
         // Convert
         // {graphic: [{left: 10, type: 'circle'}, ...]}
         // or
@@ -23,6 +20,11 @@ define(function(require) {
         if (zrUtil.isArray(graphicOption)) {
             if (!graphicOption[0] || !graphicOption[0].elements) {
                 option.graphic = [{elements: graphicOption}];
+            }
+            else {
+                // Only one graphic instance can be instantiated. (We dont
+                // want that too many views created in echarts._viewMap)
+                option.graphic = [option.graphic[0]];
             }
         }
         else if (graphicOption && !graphicOption.elements) {
@@ -402,7 +404,7 @@ define(function(require) {
             zrUtil.assert(graphicType, 'graphic type MUST be set');
         }
 
-        var Clz = graphicUtil[formatUtil.toCamelCase(graphicType, true)];
+        var Clz = graphicUtil[graphicType.charAt(0).toUpperCase() + graphicType.slice(1)];
 
         if (__DEV__) {
             zrUtil.assert(Clz, 'graphic type can not be found');
