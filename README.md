@@ -15,15 +15,15 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 + [Tutorial](http://echarts.baidu.com/tutorial.html)
     + [中文](http://echarts.baidu.com/tutorial.html)
-    + [English](http://ecomfe.github.io/echarts-doc/public/tutorial-en.html)
+    + [English](http://ecomfe.github.io/echarts-doc/public/en/tutorial.html)
 
 + [API](http://echarts.baidu.com/api.html)
     + [中文](http://echarts.baidu.com/api.html)
-    + [English](http://ecomfe.github.io/echarts-doc/public/api-en.html)
+    + [English](http://ecomfe.github.io/echarts-doc/public/en/api.html)
 
 + [Option Manual](http://echarts.baidu.com/option.html)
     + [中文](http://echarts.baidu.com/option.html)
-    + [English](http://ecomfe.github.io/echarts-doc/public/option-en.html)
+    + [English](http://ecomfe.github.io/echarts-doc/public/en/option.html)
 
 ## Resources
 
