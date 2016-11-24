@@ -30,7 +30,7 @@
         some text<br>
 
         <h3>This page should be able to scroll when sliding on pie!</h3>
-        <!-- <div class="main" id="main1"></div> -->
+        <div class="main" id="main1"></div>
 
         some text<br>
         some text<br>
@@ -57,7 +57,7 @@
 
         <h3>DataZoom should be smooth when sliding or pinching on line!</h3>
         <h3>This page should be able to scroll when sliding out of grid!</h3>
-        <!-- <div class="main" id="main3"></div> -->
+        <div class="main" id="main3"></div>
 
         some text<br>
         some text<br>
@@ -106,7 +106,9 @@
                         saveAsImage: {}
                     }
                 },
-                tooltip: {},
+                tooltip: {
+                    confine: true
+                },
                 series: [{
                     name: 'pie',
                     type: 'pie',
@@ -168,6 +170,7 @@
             chart.setOption({
                 tooltip: {
                     trigger: 'axis',
+                    confine: true,
                     axisPointer: {
                         animation: false
                     }
@@ -241,6 +244,7 @@
             chart.setOption({
                 tooltip: {
                     trigger: 'axis',
+                    confine: true,
                     axisPointer: {
                         animation: false
                     }
