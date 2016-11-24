@@ -5,6 +5,7 @@
 define(function (require) {
 
     var VisualMapping = require('../../visual/VisualMapping');
+    var zrUtil = require('zrender/core/util');
 
     return function (ecModel, payload) {
         ecModel.eachSeriesByType('sankey', function (seriesModel) {
@@ -18,7 +19,7 @@ define(function (require) {
             var minValue = nodes[0].getLayout().value;
             var maxValue = nodes[nodes.length - 1].getLayout().value;
 
-            nodes.forEach(function (node) {
+            zrUtil.each(nodes, function (node) {
                 var mapping = new VisualMapping({
                     type: 'color',
                     mappingMethod: 'linear',

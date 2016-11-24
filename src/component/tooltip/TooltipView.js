@@ -1012,7 +1012,7 @@ define(function (require) {
                 };
             });
             var sampleSeriesIndex;
-            payloadBatch.forEach(function (payload, idx) {
+            zrUtil.each(payloadBatch, function (payload, idx) {
                 if (seriesList[idx].getData().hasValue(payload.dataIndexInside)) {
                     sampleSeriesIndex = idx;
                 }
