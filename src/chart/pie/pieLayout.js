@@ -43,6 +43,7 @@ define(function (require) {
             var clockwise = seriesModel.get('clockwise');
 
             var roseType = seriesModel.get('roseType');
+            var stillShowZeroSum = seriesModel.get('stillShowZeroSum');
 
             // [0...max]
             var extent = data.getDataExtent('value');
@@ -57,9 +58,26 @@ define(function (require) {
             var dir = clockwise ? 1 : -1;
             data.each('value', function (value, idx) {
                 var angle;
+                if (isNaN(value)) {
+                    data.setItemLayout(idx, {
+                        angle: NaN,
+                        startAngle: NaN,
+                        endAngle: NaN,
+                        clockwise: clockwise,
+                        cx: cx,
+                        cy: cy,
+                        r0: r0,
+                        r: roseType
+                            ? NaN
+                            : r
+                    });
+                    return;
+                }
+
                 // FIXME 兼容 2.0 但是 roseType 是 area 的时候才是这样？
                 if (roseType !== 'area') {
-                    angle = sum === 0 ? unitRadian : (value * unitRadian);
+                    angle = (sum === 0 && stillShowZeroSum)
+                        ? unitRadian : (value * unitRadian);
                 }
                 else {
                     angle = PI2 / (data.count() || 1);

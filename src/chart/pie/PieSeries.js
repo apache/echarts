@@ -92,6 +92,9 @@ define(function(require) {
             // 南丁格尔玫瑰图模式，'radius'（半径） | 'area'（面积）
             // roseType: null,
 
+            // If still show when all data zero.
+            stillShowZeroSum: true,
+
             label: {
                 normal: {
                     // If rotate around circle
