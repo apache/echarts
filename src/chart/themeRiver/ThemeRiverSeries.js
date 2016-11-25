@@ -141,7 +141,12 @@ define(function (require) {
                 }
             ];
 
-            var data = this.fixData(option.data || []);
+            // filter the data item with the value of label is undefined
+            var filterData = zrUtil.filter(option.data, function (dataItem) {
+                return dataItem[2] !== undefined;
+            });
+
+            var data = this.fixData(filterData || []);
             var nameList = [];
             var nameMap = this.nameMap = {};
             var count = 0;
