@@ -69,9 +69,7 @@ define(function (require) {
                     points0.push([x, y0]);
                     points1.push([x, y0 + y]);
 
-                    color = rawData.getItemVisual(
-                        data.getRawIndex(indices[j]), 'color'
-                    );
+                    color = rawData.getItemVisual(indices[j], 'color');
                 }
 
                 var polygon;
