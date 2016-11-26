@@ -504,7 +504,8 @@ define(function (require) {
                 // In which case, the data is not main data in series.
                 var dataModel = el.dataModel || ecModel.getSeriesByIndex(el.seriesIndex);
                 var dataIndex = el.dataIndex;
-                var itemModel = dataModel.getData().getItemModel(dataIndex);
+                var data = dataModel.getData();
+                var itemModel = data.getItemModel(dataIndex);
                 // Series or single data may use item trigger when global is axis trigger
                 if ((itemModel.get('tooltip.trigger') || globalTrigger) === 'axis') {
                     this._showAxisTooltip(tooltipModel, ecModel, e);
@@ -523,7 +524,8 @@ define(function (require) {
                 api.dispatchAction({
                     type: 'showTip',
                     from: this.uid,
-                    dataIndexInside: el.dataIndex,
+                    dataIndexInside: dataIndex,
+                    dataIndex: data.getRawIndex(dataIndex), // expose to user.
                     seriesIndex: el.seriesIndex
                 });
             }
@@ -998,6 +1000,10 @@ define(function (require) {
             var baseAxis = coordSys.getBaseAxis();
             var baseDimIndex = baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1;
 
+            if (!seriesList.length) {
+                return;
+            }
+
             var payloadBatch = zrUtil.map(seriesList, function (series) {
                 return {
                     seriesIndex: series.seriesIndex,
@@ -1038,9 +1044,12 @@ define(function (require) {
                 lastHover.payloadBatch = payloadBatch;
             }
             // Dispatch showTip action
+            var dataIndex = payloadBatch[sampleSeriesIndex].dataIndexInside;
             api.dispatchAction({
                 type: 'showTip',
-                dataIndexInside: payloadBatch[sampleSeriesIndex].dataIndexInside,
+                dataIndexInside: dataIndex,
+                // expose to user.
+                dataIndex: seriesList[sampleSeriesIndex].getData().getRawIndex(dataIndex),
                 seriesIndex: payloadBatch[sampleSeriesIndex].seriesIndex,
                 from: this.uid
             });
