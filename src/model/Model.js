@@ -131,6 +131,7 @@ define(function (require) {
             clazzUtil.setReadOnly(this, properties);
         },
 
+        // If path is null/undefined, return null/undefined.
         parsePath: function(path) {
             if (typeof path === 'string') {
                 path = path.split('.');
@@ -140,6 +141,8 @@ define(function (require) {
 
         /**
          * @param {Function} getParent
+         *        param {Array.<string>|string} path
+         *        return {module:echarts/model/Model}
          */
         customizeGetParent: function (getParent) {
             this.__getParent = getParent;
