@@ -61,36 +61,20 @@ define(function (require) {
         },
 
         /**
-         * @param {string} path
+         * @param {string|Array.<string>} path
          * @param {boolean} [ignoreParent=false]
          * @return {*}
          */
         get: function (path, ignoreParent) {
-            if (!path) {
+            if (path == null) {
                 return this.option;
             }
 
-            if (typeof path === 'string') {
-                path = path.split('.');
-            }
-
-            var obj = this.option;
-            var parentModel = this.parentModel;
-            for (var i = 0; i < path.length; i++) {
-                // Ignore empty
-                if (!path[i]) {
-                    continue;
-                }
-                // obj could be number/string/... (like 0)
-                obj = (obj && typeof obj === 'object') ? obj[path[i]] : null;
-                if (obj == null) {
-                    break;
-                }
-            }
-            if (obj == null && parentModel && !ignoreParent) {
-                obj = parentModel.get(path);
-            }
-            return obj;
+            return doGet(
+                this.option,
+                this.parsePath(path),
+                !ignoreParent && getParent(this, path)
+            );
         },
 
         /**
@@ -102,26 +86,30 @@ define(function (require) {
             var option = this.option;
 
             var val = option == null ? option : option[key];
-            var parentModel = this.parentModel;
-            if (val == null && parentModel && !ignoreParent) {
+            var parentModel = !ignoreParent && getParent(this, key);
+            if (val == null && parentModel) {
                 val = parentModel.getShallow(key);
             }
             return val;
         },
 
         /**
-         * @param {string} path
+         * @param {string|Array.<string>} path
          * @param {module:echarts/model/Model} [parentModel]
          * @return {module:echarts/model/Model}
          */
         getModel: function (path, parentModel) {
-            var obj = this.get(path, true);
-            var thisParentModel = this.parentModel;
-            var model = new Model(
-                obj, parentModel || (thisParentModel && thisParentModel.getModel(path)),
-                this.ecModel
+            var obj = path == null
+                ? this.option
+                : doGet(this.option, path = this.parsePath(path));
+
+            var thisParentModel;
+            parentModel = parentModel || (
+                (thisParentModel = getParent(this, path))
+                    && thisParentModel.getModel(path)
             );
-            return model;
+
+            return new Model(obj, parentModel, this.ecModel);
         },
 
         /**
@@ -141,8 +129,44 @@ define(function (require) {
 
         setReadOnly: function (properties) {
             clazzUtil.setReadOnly(this, properties);
+        },
+
+        parsePath: function(path) {
+            if (typeof path === 'string') {
+                path = path.split('.');
+            }
+            return path;
+        },
+
+        /**
+         * @param {Function} getParent
+         */
+        customizeGetParent: function (getParent) {
+            this.__getParent = getParent;
         }
     };
+
+    function doGet(obj, pathArr, parentModel) {
+        for (var i = 0; i < pathArr.length; i++) {
+            // Ignore empty
+            if (!pathArr[i]) {
+                continue;
+            }
+            // obj could be number/string/... (like 0)
+            obj = (obj && typeof obj === 'object') ? obj[pathArr[i]] : null;
+            if (obj == null) {
+                break;
+            }
+        }
+        if (obj == null && parentModel) {
+            obj = parentModel.get(pathArr);
+        }
+        return obj;
+    }
+
+    function getParent(model, path) {
+        return model.__getParent ? model.__getParent(path) : model.parentModel;
+    }
 
     // Enable Model.extend.
     clazzUtil.enableClassExtend(Model);
