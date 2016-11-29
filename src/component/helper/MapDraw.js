@@ -230,7 +230,16 @@ define(function (require) {
                 // setItemGraphicEl, setHoverStyle after all polygons and labels
                 // are added to the rigionGroup
                 if (data) {
-                    data.setItemGraphicEl(dataIdx, regionGroup);
+                     var graph = data.getItemGraphicEl(dataIdx);
+                     if(graph  instanceof graphic.Group){
+                        regionGroup.eachChild(function(child){
+                            graphic.setHoverStyle(child, hoverItemStyle,
+                            {hoverSilentOnTouch: !!mapOrGeoModel.get('selectedMode')});
+                            graph.add(child);
+                        });
+                     }else{
+                        data.setItemGraphicEl(dataIdx, regionGroup);
+                     }
                 }
                 else {
                     var regionModel = mapOrGeoModel.getRegionModel(region.name);
