@@ -5,22 +5,20 @@
 
 
 
+
+
 #### Version & Environment [版本及环境]
 + ECharts version [ECharts 版本]:
 + Browser version [浏览器类型和版本]:
 + OS Version [操作系统类型和版本]:
 
 
-#### Steps to reproduce [重现步骤]
-1.
-2.
+
 
 
 #### Expected behaviour [期望结果]
 
 
-
-#### What went wrong [可能哪里有问题]
 
 
 
@@ -33,6 +31,8 @@ option = {
 }
 
 ```
+
+
 
 
 #### Other comments [其他信息]
