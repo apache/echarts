@@ -237,6 +237,7 @@ define(function (require) {
                             {hoverSilentOnTouch: !!mapOrGeoModel.get('selectedMode')});
                             graph.add(child);
                         });
+                        data.setItemGraphicEl(dataIdx, graph);
                      }else{
                         data.setItemGraphicEl(dataIdx, regionGroup);
                      }
