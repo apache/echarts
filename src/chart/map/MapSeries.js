@@ -73,7 +73,7 @@ define(function (require) {
         getRawValue: function (dataIndex) {
             // Use value stored in data instead because it is calculated from multiple series
             // FIXME Provide all value of multiple series ?
-            return this._data.get('value', dataIndex);
+            return this.getData().get('value', dataIndex);
         },
 
         /**

@@ -77,7 +77,7 @@ define(function(require) {
             // It rearly use mutiple candlestick series in one cartesian,
             // so only consider one series in this default tooltip.
             var valueHTMLArr = zrUtil.map(this.valueDimensions, function (dim) {
-                return dim + ': ' + addCommas(this._data.get(dim, dataIndex));
+                return dim + ': ' + addCommas(this.getData().get(dim, dataIndex));
             }, this);
 
             return encodeHTML(this.name) + '<br />' + valueHTMLArr.join('<br />');

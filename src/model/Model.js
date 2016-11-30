@@ -140,12 +140,12 @@ define(function (require) {
         },
 
         /**
-         * @param {Function} getParent
+         * @param {Function} getParentMethod
          *        param {Array.<string>|string} path
          *        return {module:echarts/model/Model}
          */
-        customizeGetParent: function (getParent) {
-            this.__getParent = getParent;
+        customizeGetParent: function (getParentMethod) {
+            clazzUtil.set(this, 'getParent', getParentMethod);
         }
     };
 
@@ -168,7 +168,8 @@ define(function (require) {
     }
 
     function getParent(model, path) {
-        return model.__getParent ? model.__getParent(path) : model.parentModel;
+        var getParentMethod = clazzUtil.get(model, 'getParent');
+        return getParentMethod ? getParentMethod.call(model, path) : model.parentModel;
     }
 
     // Enable Model.extend.

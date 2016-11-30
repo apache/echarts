@@ -38,7 +38,7 @@ define(function (require) {
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
             this.legendDataProvider = function () {
-                return this._dataBeforeProcessed;
+                return this.getRawData();
             };
         },
 

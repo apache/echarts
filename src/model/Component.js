@@ -124,7 +124,7 @@ define(function(require) {
         optionUpdated: function (newCptOption, isInit) {},
 
         getDefaultOption: function () {
-            if (!this.hasOwnProperty('__defaultOption')) {
+            if (!clazzUtil.hasOwn(this, '__defaultOption')) {
                 var optList = [];
                 var Class = this.constructor;
                 while (Class) {
@@ -137,9 +137,9 @@ define(function(require) {
                 for (var i = optList.length - 1; i >= 0; i--) {
                     defaultOption = zrUtil.merge(defaultOption, optList[i], true);
                 }
-                this.__defaultOption = defaultOption;
+                clazzUtil.set(this, '__defaultOption', defaultOption);
             }
-            return this.__defaultOption;
+            return clazzUtil.get(this, '__defaultOption');
         },
 
         getReferringComponents: function (mainType) {

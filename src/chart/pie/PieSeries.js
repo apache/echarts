@@ -20,7 +20,7 @@ define(function(require) {
             // Enable legend selection for each data item
             // Use a function instead of direct access because data reference may changed
             this.legendDataProvider = function () {
-                return this._dataBeforeProcessed;
+                return this.getRawData();
             };
 
             this.updateSelectedMap(option.data);
@@ -43,7 +43,7 @@ define(function(require) {
 
         // Overwrite
         getDataParams: function (dataIndex) {
-            var data = this._data;
+            var data = this.getData();
             var params = PieSeries.superCall(this, 'getDataParams', dataIndex);
             var sum = data.getSum('value');
             // FIXME toFixed?
