@@ -266,13 +266,22 @@ define(function (require) {
             seriesModel, ecModel, api, getColor, posInfo,
             startAngle, endAngle, clockwise
         ) {
+
+            var group = this.group;
+            var oldData = this._data;
+
+            if (!seriesModel.get('pointer.show')) {
+                // Remove old element
+                oldData.eachItemGraphicEl(function (el) {
+                    group.remove(el);
+                });
+                return;
+            }
+
             var valueExtent = [+seriesModel.get('min'), +seriesModel.get('max')];
             var angleExtent = [startAngle, endAngle];
 
             var data = seriesModel.getData();
-            var oldData = this._data;
-
-            var group = this.group;
 
             data.diff(oldData)
                 .add(function (idx) {
