@@ -116,9 +116,12 @@ define(function (require) {
 
             var dimensions = [];
 
-            var singleAxisModel = ecModel.getComponent(
-                'singleAxis', this.option.singleAxisIndex
-            );
+            var singleAxisModel = ecModel.queryComponents({
+                mainType: 'singleAxis',
+                index: this.get('singleAxisIndex'),
+                id: this.get('singleAxisId')
+            })[0];
+
             var axisType = singleAxisModel.get('type');
 
             dimensions = [
@@ -170,7 +173,7 @@ define(function (require) {
         /**
          * Used by single coordinate
          *
-         * @param {string} axisDim  the dimension for singel coordinate
+         * @param {string} axisDim  the dimension for single coordinate
          * @return {Array.<string> } specified dimensions on the axis.
          */
         coordDimToDataDim: function (axisDim) {
@@ -219,7 +222,7 @@ define(function (require) {
         /**
          * Get data indices for show tooltip content
          *
-         * @param {Array.<string>|string} dim  singel coordinate dimension
+         * @param {Array.<string>|string} dim  single coordinate dimension
          * @param {Array.<number>} value  coordinate value
          * @param {module:echarts/coord/single/SingleAxis} baseAxis  single Axis used
          *     the themeRiver.
