@@ -151,8 +151,8 @@ define(function (require) {
             var cy = posInfo.cy;
             var r = posInfo.r;
 
-            var minVal = seriesModel.get('min');
-            var maxVal = seriesModel.get('max');
+            var minVal = +seriesModel.get('min');
+            var maxVal = +seriesModel.get('max');
 
             var splitLineModel = seriesModel.getModel('splitLine');
             var tickModel = seriesModel.getModel('axisTick');
@@ -376,8 +376,8 @@ define(function (require) {
             seriesModel, ecModel, api, getColor, posInfo
         ) {
             var detailModel = seriesModel.getModel('detail');
-            var minVal = seriesModel.get('min');
-            var maxVal = seriesModel.get('max');
+            var minVal = +seriesModel.get('min');
+            var maxVal = +seriesModel.get('max');
             if (detailModel.get('show')) {
                 var textStyleModel = detailModel.getModel('textStyle');
                 var offsetCenter = detailModel.get('offsetCenter');
