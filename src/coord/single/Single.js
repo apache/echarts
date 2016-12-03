@@ -20,7 +20,7 @@ define(function (require) {
          * @type {string}
          * @readOnly
          */
-        this.dimension = 'x';
+        this.dimension = 'single';
 
         /**
          * Add it just for draw tooltip.
@@ -28,7 +28,7 @@ define(function (require) {
          * @type {Array.<string>}
          * @readOnly
          */
-        this.dimensions = ['x'];
+        this.dimensions = ['single'];
 
         /**
          * @private

@@ -280,6 +280,7 @@ define(function (require) {
         },
 
         /**
+         * If none of index and id and name used, return all components with mainType.
          * @param {Object} condition
          * @param {string} condition.mainType
          * @param {string} [condition.subType] If ignore, only query by mainType

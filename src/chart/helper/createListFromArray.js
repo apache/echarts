@@ -178,6 +178,43 @@ define(function(require) {
             };
         },
 
+        singleAxis: function (data, seriesModel, ecModel) {
+
+            var singleAxisModel = ecModel.queryComponents({
+                mainType: 'singleAxis',
+                index: seriesModel.get('singleAxisIndex'),
+                id: seriesModel.get('singleAxisId')
+            })[0];
+
+            if (__DEV__) {
+                if (!singleAxisModel) {
+                    throw new Error('singleAxis should be specified.');
+                }
+            }
+
+            var singleAxisType = singleAxisModel.get('type');
+            var isCategory = singleAxisType === 'category';
+
+            var dimensions = [{
+                name: 'single',
+                type: getDimTypeByAxis(singleAxisType),
+                stackable: isStackable(singleAxisType)
+            }];
+
+            completeDimensions(dimensions, data);
+
+            var categoryAxesModels = {};
+            if (isCategory) {
+                categoryAxesModels.single = singleAxisModel;
+            }
+
+            return {
+                dimensions: dimensions,
+                categoryIndex: isCategory ? 0 : -1,
+                categoryAxesModels: categoryAxesModels
+            };
+        },
+
         polar: function (data, seriesModel, ecModel) {
             var polarModel = ecModel.queryComponents({
                 mainType: 'polar',

@@ -1004,7 +1004,7 @@ define(function (require) {
             var rootTooltipModel = this._tooltipModel;
 
             var baseAxis = coordSys.getBaseAxis();
-            var baseDimIndex = baseAxis.dim === 'x' || baseAxis.dim === 'radius' ? 0 : 1;
+            var baseDimIndex = ({x: 1, radius: 1, single: 1})[baseAxis.dim] ? 0 : 1;
 
             if (!seriesList.length) {
                 return;

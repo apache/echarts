@@ -5,6 +5,7 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var numberUtil = require('../../util/number');
+    var helper = require('./helper');
     var each = zrUtil.each;
     var asc = numberUtil.asc;
 
@@ -100,8 +101,7 @@ define(function(require) {
             var ecModel = this.ecModel;
 
             ecModel.eachSeries(function (seriesModel) {
-                var coordSysName = seriesModel.get('coordinateSystem');
-                if (coordSysName === 'cartesian2d' || coordSysName === 'polar') {
+                if (helper.isCoordSupported(seriesModel.get('coordinateSystem'))) {
                     var dimName = this._dimName;
                     var axisModel = ecModel.queryComponents({
                         mainType: dimName + 'Axis',
