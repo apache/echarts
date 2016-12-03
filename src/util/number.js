@@ -154,19 +154,19 @@ define(function (require) {
     };
 
     /**
+     * Minimal dicernible data precisioin according to a single pixel.
      * @param {Array.<number>} dataExtent
      * @param {Array.<number>} pixelExtent
-     * @return {number}  precision
+     * @return {number} precision
      */
     number.getPixelPrecision = function (dataExtent, pixelExtent) {
         var log = Math.log;
         var LN10 = Math.LN10;
         var dataQuantity = Math.floor(log(dataExtent[1] - dataExtent[0]) / LN10);
         var sizeQuantity = Math.round(log(Math.abs(pixelExtent[1] - pixelExtent[0])) / LN10);
-        return Math.max(
-            -dataQuantity + sizeQuantity,
-            0
-        );
+        // toFixed() digits argument must be between 0 and 20.
+        var precision = Math.min(Math.max(-dataQuantity + sizeQuantity, 0), 20);
+        return !isFinite(precision) ? 20 : precision;
     };
 
     // Number.MAX_SAFE_INTEGER, ie do not support.
