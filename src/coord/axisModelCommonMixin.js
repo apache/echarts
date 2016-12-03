@@ -11,29 +11,86 @@ define(function (require) {
             return obj;
         }
     }
-    /**
-     * Get categories
-     */
-    function getCategories() {
-        return this.get('type') === 'category'
-            && zrUtil.map(this.get('data'), getName);
-    }
-
-    /**
-     * Format labels
-     * @return {Array.<string>}
-     */
-    function getFormattedLabels() {
-        return axisHelper.getFormattedLabels(
-            this.axis,
-            this.get('axisLabel.formatter')
-        );
-    }
 
     return {
 
-        getFormattedLabels: getFormattedLabels,
+        /**
+         * Format labels
+         * @return {Array.<string>}
+         */
+        getFormattedLabels: function () {
+            return axisHelper.getFormattedLabels(
+                this.axis,
+                this.get('axisLabel.formatter')
+            );
+        },
 
-        getCategories: getCategories
+        /**
+         * Get categories
+         */
+        getCategories: function () {
+            return this.get('type') === 'category'
+                && zrUtil.map(this.get('data'), getName);
+        },
+
+        /**
+         * @public
+         * @param {boolean} origin
+         * @return {number|string} min value or 'dataMin' or null/undefined (means auto) or NaN
+         */
+        getMin: function (origin) {
+            var option = this.option;
+            var min = (!origin && option.rangeStart != null)
+                ? option.rangeStart : option.min;
+
+            if (min != null && min !== 'dataMin' && !zrUtil.eqNaN(min)) {
+                min = this.axis.scale.parse(min);
+            }
+            return min;
+        },
+
+        /**
+         * @public
+         * @param {boolean} origin
+         * @return {number|string} max value or 'dataMax' or null/undefined (means auto) or NaN
+         */
+        getMax: function (origin) {
+            var option = this.option;
+            var max = (!origin && option.rangeEnd != null)
+                ? option.rangeEnd : option.max;
+
+            if (max != null && max !== 'dataMax' && !zrUtil.eqNaN(max)) {
+                max = this.axis.scale.parse(max);
+            }
+            return max;
+        },
+
+        /**
+         * @public
+         * @return {boolean}
+         */
+        getNeedCrossZero: function () {
+            var option = this.option;
+            return (option.rangeStart != null || option.rangeEnd != null)
+                ? false : !option.scale;
+        },
+
+        /**
+         * @public
+         * @param {number} rangeStart Can only be finite number or null/undefined or NaN.
+         * @param {number} rangeEnd Can only be finite number or null/undefined or NaN.
+         */
+        setRange: function (rangeStart, rangeEnd) {
+            this.option.rangeStart = rangeStart;
+            this.option.rangeEnd = rangeEnd;
+        },
+
+        /**
+         * @public
+         */
+        resetRange: function () {
+            // rangeStart and rangeEnd is readonly.
+            this.option.rangeStart = this.option.rangeEnd = null;
+        }
     };
 });

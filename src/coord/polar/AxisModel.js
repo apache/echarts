@@ -18,7 +18,6 @@ define(function(require) {
     });
 
     zrUtil.merge(PolarAxisModel.prototype, require('../axisModelCommonMixin'));
-    zrUtil.merge(PolarAxisModel.prototype, require('../axisModelZoomMixin'));
 
     var polarAxisDefaultExtendedOption = {
         angle: {

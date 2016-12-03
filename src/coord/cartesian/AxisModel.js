@@ -58,7 +58,6 @@ define(function(require) {
     }
 
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
-    zrUtil.merge(AxisModel.prototype, require('../axisModelZoomMixin'));
 
     var extraOption = {
         // gridIndex: 0,

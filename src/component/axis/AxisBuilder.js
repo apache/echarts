@@ -171,12 +171,12 @@ define(function (require) {
          */
         axisTick: function () {
             var axisModel = this.axisModel;
+            var axis = axisModel.axis;
 
-            if (!axisModel.get('axisTick.show')) {
+            if (!axisModel.get('axisTick.show') || axis.isBlank()) {
                 return;
             }
 
-            var axis = axisModel.axis;
             var tickModel = axisModel.getModel('axisTick');
             var opt = this.opt;
 
@@ -240,13 +240,13 @@ define(function (require) {
         axisLabel: function () {
             var opt = this.opt;
             var axisModel = this.axisModel;
+            var axis = axisModel.axis;
             var show = retrieve(opt.axisLabelShow, axisModel.get('axisLabel.show'));
 
-            if (!show) {
+            if (!show || axis.isBlank()) {
                 return;
             }
 
-            var axis = axisModel.axis;
             var labelModel = axisModel.getModel('axisLabel');
             var textStyleModel = labelModel.getModel('textStyle');
             var labelMargin = labelModel.get('margin');
@@ -331,23 +331,22 @@ define(function (require) {
                     return firstRect.intersect(nextRect);
                 }
             }
-            if (axis.type !== 'category') {
-                // If min or max are user set, we need to check
-                // If the tick on min(max) are overlap on their neighbour tick
-                // If they are overlapped, we need to hide the min(max) tick label
-                if (axisModel.getMin ? axisModel.getMin() : axisModel.get('min')) {
-                    var firstLabel = textEls[0];
-                    var nextLabel = textEls[1];
-                    if (isTwoLabelOverlapped(firstLabel, nextLabel)) {
-                        firstLabel.ignore = true;
-                    }
+
+            // If min or max are user set, we need to check
+            // If the tick on min(max) are overlap on their neighbour tick
+            // If they are overlapped, we need to hide the min(max) tick label
+            if (axisModel.getMin() != null) {
+                var firstLabel = textEls[0];
+                var nextLabel = textEls[1];
+                if (isTwoLabelOverlapped(firstLabel, nextLabel)) {
+                    firstLabel.ignore = true;
                 }
-                if (axisModel.getMax ? axisModel.getMax() : axisModel.get('max')) {
-                    var lastLabel = textEls[textEls.length - 1];
-                    var prevLabel = textEls[textEls.length - 2];
-                    if (isTwoLabelOverlapped(prevLabel, lastLabel)) {
-                        lastLabel.ignore = true;
-                    }
+            }
+            if (axisModel.getMax() != null) {
+                var lastLabel = textEls[textEls.length - 1];
+                var prevLabel = textEls[textEls.length - 2];
+                if (isTwoLabelOverlapped(prevLabel, lastLabel)) {
+                    lastLabel.ignore = true;
                 }
             }
         },

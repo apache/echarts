@@ -413,7 +413,7 @@ define(function(require) {
          *
          * @param {string} [axisDimName]
          * @param {number} [axisIndex]
-         * @return {Array.<number>} [startValue, endValue]
+         * @return {Array.<number>} [startValue, endValue] value can only be '-' or finite number.
          */
         getValueRange: function (axisDimName, axisIndex) {
             if (axisDimName == null && axisIndex == null) {

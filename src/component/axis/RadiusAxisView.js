@@ -36,7 +36,7 @@ define(function (require) {
             this.group.add(axisBuilder.getGroup());
 
             zrUtil.each(selfBuilderAttrs, function (name) {
-                if (radiusAxisModel.get(name +'.show')) {
+                if (radiusAxisModel.get(name +'.show') && !radiusAxis.isBlank()) {
                     this['_' + name](radiusAxisModel, polar, axisAngle, radiusExtent, ticksCoords);
                 }
             }, this);

@@ -37,6 +37,11 @@ define(function (require) {
 
         _splitLine: function(axisModel, labelInterval) {
             var axis = axisModel.axis;
+
+            if (axis.isBlank()) {
+                return;
+            }
+
             var splitLineModel = axisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
             var lineWidth = lineStyleModel.get('width');

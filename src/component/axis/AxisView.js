@@ -66,6 +66,10 @@ define(function (require) {
         _splitLine: function (axisModel, gridModel, labelInterval) {
             var axis = axisModel.axis;
 
+            if (axis.isBlank()) {
+                return;
+            }
+
             var splitLineModel = axisModel.getModel('splitLine');
             var lineStyleModel = splitLineModel.getModel('lineStyle');
             var lineColors = lineStyleModel.get('color');
@@ -135,6 +139,10 @@ define(function (require) {
          */
         _splitArea: function (axisModel, gridModel, labelInterval) {
             var axis = axisModel.axis;
+
+            if (axis.isBlank()) {
+                return;
+            }
 
             var splitAreaModel = axisModel.getModel('splitArea');
             var areaStyleModel = splitAreaModel.getModel('areaStyle');

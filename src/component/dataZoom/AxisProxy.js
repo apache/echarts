@@ -77,14 +77,7 @@ define(function(require) {
         },
 
         /**
-         * @return {Array.<number>}
-         */
-        getDataExtent: function () {
-            return this._dataExtent.slice();
-        },
-
-        /**
-         * @return {Array.<number>}
+         * @return {Array.<number>} Value can only be NaN or finite value.
          */
         getDataValueWindow: function () {
             return this._valueWindow.slice();
@@ -155,16 +148,16 @@ define(function(require) {
         },
 
         /**
-         * Only calculate by given range and dataExtent, do not change anything.
+         * Only calculate by given range and this._dataExtent, do not change anything.
          *
          * @param {Object} opt
          * @param {number} [opt.start]
          * @param {number} [opt.end]
          * @param {number} [opt.startValue]
          * @param {number} [opt.endValue]
-         * @param {Array.<number>} dataExtent
          */
-        calculateDataWindow: function (opt, dataExtent) {
+        calculateDataWindow: function (opt) {
+            var dataExtent = this._dataExtent;
             var axisModel = this.getAxisModel();
             var scale = axisModel.axis.scale;
             var percentExtent = [0, 100];
@@ -178,14 +171,10 @@ define(function(require) {
             // window should be based on min/max/0, but should not be
             // based on the extent of filtered data.
             dataExtent = dataExtent.slice();
-            fixExtendByAxis(dataExtent, axisModel, scale);
+            fixExtentByAxis(dataExtent, axisModel);
 
             each(['startValue', 'endValue'], function (prop) {
-                valueWindow.push(
-                    opt[prop] != null
-                        ? scale.parse(opt[prop])
-                        : null
-                );
+                valueWindow.push(opt[prop] != null ? scale.parse(opt[prop]) : null);
             });
 
             // Normalize bound.
@@ -236,10 +225,10 @@ define(function(require) {
             }
 
             // Culculate data window and data extent, and record them.
-            var dataExtent = this._dataExtent = calculateDataExtent(
+            this._dataExtent = calculateDataExtent(
                 this._dimName, this.getTargetSeriesModels()
             );
-            var dataWindow = this.calculateDataWindow(dataZoomModel.option, dataExtent);
+            var dataWindow = this.calculateDataWindow(dataZoomModel.option);
             this._valueWindow = dataWindow.valueWindow;
             this._percentWindow = dataWindow.percentWindow;
 
@@ -326,17 +315,22 @@ define(function(require) {
             }
         }, this);
 
+        if (dataExtent[1] < dataExtent[0]) {
+            dataExtent = [NaN, NaN];
+        }
+
         return dataExtent;
     }
 
-    function fixExtendByAxis(dataExtent, axisModel, scale) {
-        each(['min', 'max'], function (minMax, index) {
-            var axisMax = axisModel.get(minMax, true);
-            // Consider 'dataMin', 'dataMax'
-            if (axisMax != null && (axisMax + '').toLowerCase() !== 'data' + minMax) {
-                dataExtent[index] = scale.parse(axisMax);
-            }
-        });
+    function fixExtentByAxis(dataExtent, axisModel) {
+        var min = axisModel.getMin(true);
+        if (min != null && min !== 'dataMin') {
+            dataExtent[0] = min;
+        }
+        var max = axisModel.getMax(true);
+        if (max != null && max !== 'dataMax') {
+            dataExtent[1] = max;
+        }
 
         if (!axisModel.get('scale', true)) {
             dataExtent[0] > 0 && (dataExtent[0] = 0);
@@ -356,15 +350,12 @@ define(function(require) {
             return;
         }
 
-        var isFull = isRestore || (percentWindow[0] === 0 && percentWindow[1] === 100);
         // [0, 500]: arbitrary value, guess axis extent.
-        var precision = !isRestore && numberUtil.getPixelPrecision(valueWindow, [0, 500]);
-        // toFixed() digits argument must be between 0 and 20
-        var invalidPrecision = !isRestore && !(precision < 20 && precision >= 0);
+        var precision = numberUtil.getPixelPrecision(valueWindow, [0, 500]);
+        // isRestore or isFull
+        var useOrigin = isRestore || (percentWindow[0] === 0 && percentWindow[1] === 100);
 
-        var useOrigin = isRestore || isFull || invalidPrecision;
-
-        axisModel.setRange && axisModel.setRange(
+        axisModel.setRange(
             useOrigin ? null : +valueWindow[0].toFixed(precision),
             useOrigin ? null : +valueWindow[1].toFixed(precision)
         );

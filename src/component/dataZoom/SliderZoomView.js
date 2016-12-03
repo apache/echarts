@@ -576,10 +576,9 @@ define(function (require) {
 
                     var dataInterval = nonRealtime
                         // See #4434, data and axis are not processed and reset yet in non-realtime mode.
-                        ? axisProxy.calculateDataWindow(
-                            {start: range[0], end: range[1]},
-                            axisProxy.getDataExtent()
-                        ).valueWindow
+                        ? axisProxy.calculateDataWindow({
+                            start: range[0], end: range[1]
+                        }).valueWindow
                         : axisProxy.getDataValueWindow();
 
                     labelTexts = [
@@ -634,7 +633,7 @@ define(function (require) {
                 labelPrecision = axis.getPixelPrecision();
             }
 
-            var valueStr = (value == null && isNaN(value))
+            var valueStr = (value == null || isNaN(value))
                 ? ''
                 // FIXME Glue code
                 : (axis.type === 'category' || axis.type === 'time')

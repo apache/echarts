@@ -612,10 +612,16 @@ define(function (require) {
                 var dimensions = coordSys.dimensions;
                 var value = coordSys.pointToData(point, true);
                 point = coordSys.dataToPoint(value);
+
                 var baseAxis = coordSys.getBaseAxis();
                 var axisType = axisPointerModel.get('axis');
                 if (axisType === 'auto') {
                     axisType = baseAxis.dim;
+                }
+
+                if (baseAxis.isBlank() || zrUtil.eqNaN(point[0]) || zrUtil.eqNaN(point[1])) {
+                    this._hideAxisPointer(coordSys.name);
+                    return;
                 }
 
                 var contentNotChange = false;
