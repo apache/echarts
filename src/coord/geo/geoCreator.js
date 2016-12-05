@@ -144,11 +144,11 @@ define(function (require) {
             var mapModelGroupBySeries = {};
 
             ecModel.eachSeriesByType('map', function (seriesModel) {
-                var mapType = seriesModel.get('map');
-
-                mapModelGroupBySeries[mapType] = mapModelGroupBySeries[mapType] || [];
-
-                mapModelGroupBySeries[mapType].push(seriesModel);
+                if (!seriesModel.getHostGeoModel()) {
+                    var mapType = seriesModel.getMapType();
+                    mapModelGroupBySeries[mapType] = mapModelGroupBySeries[mapType] || [];
+                    mapModelGroupBySeries[mapType].push(seriesModel);
+                }
             });
 
             zrUtil.each(mapModelGroupBySeries, function (mapSeries, mapType) {
