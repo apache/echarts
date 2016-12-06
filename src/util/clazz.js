@@ -51,6 +51,16 @@ define(function (require) {
     /**
      * @public
      */
+    function checkClassType(componentType) {
+        zrUtil.assert(
+            /^[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)?$/.test(componentType),
+            'componentType "' + componentType + '" illegal'
+        );
+    }
+
+    /**
+     * @public
+     */
     clazz.enableClassExtend = function (RootClass, mandatoryMethods) {
 
         RootClass.$constructor = RootClass;
@@ -125,6 +135,7 @@ define(function (require) {
 
         entity.registerClass = function (Clazz, componentType) {
             if (componentType) {
+                checkClassType(componentType);
                 componentType = parseClassType(componentType);
 
                 if (!componentType.sub) {

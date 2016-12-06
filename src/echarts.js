@@ -50,6 +50,7 @@ define(function (require) {
     var timsort = require('zrender/core/timsort');
 
     var each = zrUtil.each;
+    var parseClassType = ComponentModel.parseClassType;
 
     var PRIORITY_PROCESSOR_FILTER = 1000;
     var PRIORITY_PROCESSOR_STATISTIC = 5000;
@@ -1071,7 +1072,7 @@ define(function (require) {
             var viewId = model.id + '_' + model.type;
             var view = viewMap[viewId];
             if (!view) {
-                var classType = ComponentModel.parseClassType(model.type);
+                var classType = parseClassType(model.type);
                 var Clazz = isComponent
                     ? ComponentView.getClass(classType.main, classType.sub)
                     : ChartView.getClass(classType.sub);
@@ -1705,60 +1706,58 @@ define(function (require) {
         loadingEffects[name] = loadingFx;
     };
 
-
-    var parseClassType = ComponentModel.parseClassType;
     /**
      * @param {Object} opts
      * @param {string} [superClass]
      */
-    echarts.extendComponentModel = function (opts, superClass) {
-        var Clazz = ComponentModel;
-        if (superClass) {
-            var classType = parseClassType(superClass);
-            Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
-        }
-        return Clazz.extend(opts);
+    echarts.extendComponentModel = function (opts/*, superClass*/) {
+        // var Clazz = ComponentModel;
+        // if (superClass) {
+        //     var classType = parseClassType(superClass);
+        //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
+        // }
+        return ComponentModel.extend(opts);
     };
 
     /**
      * @param {Object} opts
      * @param {string} [superClass]
      */
-    echarts.extendComponentView = function (opts, superClass) {
-        var Clazz = ComponentView;
-        if (superClass) {
-            var classType = parseClassType(superClass);
-            Clazz = ComponentView.getClass(classType.main, classType.sub, true);
-        }
-        return Clazz.extend(opts);
+    echarts.extendComponentView = function (opts/*, superClass*/) {
+        // var Clazz = ComponentView;
+        // if (superClass) {
+        //     var classType = parseClassType(superClass);
+        //     Clazz = ComponentView.getClass(classType.main, classType.sub, true);
+        // }
+        return ComponentView.extend(opts);
     };
 
     /**
      * @param {Object} opts
      * @param {string} [superClass]
      */
-    echarts.extendSeriesModel = function (opts, superClass) {
-        var Clazz = SeriesModel;
-        if (superClass) {
-            superClass = 'series.' + superClass.replace('series.', '');
-            var classType = parseClassType(superClass);
-            Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
-        }
-        return Clazz.extend(opts);
+    echarts.extendSeriesModel = function (opts/*, superClass*/) {
+        // var Clazz = SeriesModel;
+        // if (superClass) {
+        //     superClass = 'series.' + superClass.replace('series.', '');
+        //     var classType = parseClassType(superClass);
+        //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
+        // }
+        return SeriesModel.extend(opts);
     };
 
     /**
      * @param {Object} opts
      * @param {string} [superClass]
      */
-    echarts.extendChartView = function (opts, superClass) {
-        var Clazz = ChartView;
-        if (superClass) {
-            superClass.replace('series.', '');
-            var classType = parseClassType(superClass);
-            Clazz = ChartView.getClass(classType.main, true);
-        }
-        return Clazz.extend(opts);
+    echarts.extendChartView = function (opts/*, superClass*/) {
+        // var Clazz = ChartView;
+        // if (superClass) {
+        //     superClass = superClass.replace('series.', '');
+        //     var classType = parseClassType(superClass);
+        //     Clazz = ChartView.getClass(classType.main, true);
+        // }
+        return ChartView.extend(opts);
     };
 
     /**
