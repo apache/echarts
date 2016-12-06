@@ -719,7 +719,7 @@ define(function (require) {
                 seriesModel.getData().clearAllVisual();
             });
 
-            doVisualEncoding.call(this, ecModel, payload);
+            doVisualEncoding.call(this, ecModel, payload, true);
 
             invokeUpdateMethod.call(this, 'updateVisual', ecModel, payload);
         },
@@ -1158,16 +1158,19 @@ define(function (require) {
      * Encode visual infomation from data after data processing
      *
      * @param {module:echarts/model/Global} ecModel
+     * @param {object} layout
+     * @param {boolean} [excludesLayout]
      * @private
      */
-    function doVisualEncoding(ecModel, payload) {
+    function doVisualEncoding(ecModel, payload, excludesLayout) {
         var api = this._api;
         ecModel.clearColorPalette();
         ecModel.eachSeries(function (seriesModel) {
             seriesModel.clearColorPalette();
         });
         each(visualFuncs, function (visual) {
-            visual.func(ecModel, api, payload);
+            (!excludesLayout || !visual.isLayout)
+                && visual.func(ecModel, api, payload);
         });
     }
 
