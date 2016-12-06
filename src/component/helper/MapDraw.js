@@ -11,9 +11,9 @@ define(function (require) {
         var itemStyle = model.getItemStyle();
         var areaColor = model.get('areaColor');
 
-        // null can be used to override default areaColor,
-        // then it can remain original color when hover.
-        if (areaColor !== void 0) {
+        // If user want the color not to be changed when hover,
+        // they should both set areaColor and color to be null.
+        if (areaColor != null) {
             itemStyle.fill = areaColor;
         }
 
