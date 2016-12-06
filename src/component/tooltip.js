@@ -18,7 +18,7 @@ define(function (require) {
         {
             type: 'showTip',
             event: 'showTip',
-            update: 'none'
+            update: 'tooltip:manuallyShowTip'
         },
         // noop
         function () {}
@@ -28,7 +28,7 @@ define(function (require) {
         {
             type: 'hideTip',
             event: 'hideTip',
-            update: 'none'
+            update: 'tooltip:manuallyHideTip'
         },
         // noop
         function () {}

@@ -70,6 +70,7 @@ define(function (require) {
     var IN_MAIN_PROCESS = '__flagInMainProcess';
     var HAS_GRADIENT_OR_PATTERN_BG = '__hasGradientOrPatternBg';
     var OPTION_UPDATED = '__optionUpdated';
+    var ACTION_REG = /^[a-zA-Z0-9_]+$/;
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -681,7 +682,6 @@ define(function (require) {
             // console.time && console.timeEnd('update');
         },
 
-        // PENDING
         /**
          * @param {Object} payload
          * @private
@@ -745,22 +745,6 @@ define(function (require) {
          * @param {Object} payload
          * @private
          */
-        highlight: function (payload) {
-            toggleHighlight.call(this, 'highlight', payload);
-        },
-
-        /**
-         * @param {Object} payload
-         * @private
-         */
-        downplay: function (payload) {
-            toggleHighlight.call(this, 'downplay', payload);
-        },
-
-        /**
-         * @param {Object} payload
-         * @private
-         */
         prepareAndUpdate: function (payload) {
             var ecModel = this._model;
 
@@ -787,10 +771,9 @@ define(function (require) {
     };
 
     /**
-     * @param {Object} payload
      * @private
      */
-    function toggleHighlight(method, payload) {
+    function updateDirectly(method, payload, mainType, subType) {
         var ecModel = this._model;
 
         // dispatchAction before setOption
@@ -798,18 +781,16 @@ define(function (require) {
             return;
         }
 
-        ecModel.eachComponent(
-            {mainType: 'series', query: payload},
-            function (seriesModel, index) {
-                var chartView = this._chartsMap[seriesModel.__viewId];
-                if (chartView && chartView.__alive) {
-                    chartView[method](
-                        seriesModel, ecModel, this._api, payload
-                    );
-                }
-            },
-            this
-        );
+        var condition = {mainType: mainType, query: payload};
+        subType && (condition.subType = subType); // subType may be '' by parseClassType;
+        ecModel.eachComponent(condition, function (model, index) {
+            var view = this[
+                mainType === 'series' ? '_chartsMap' : '_componentsMap'
+            ][model.__viewId];
+            if (view && view.__alive) {
+                view[method](model, ecModel, this._api, payload);
+            }
+        }, this);
     }
 
     /**
@@ -935,9 +916,13 @@ define(function (require) {
     };
 
     function doDispatchAction(payload, silent) {
-        var actionWrap = actions[payload.type];
+        var payloadType = payload.type;
+        var actionWrap = actions[payloadType];
         var actionInfo = actionWrap.actionInfo;
-        var updateMethod = actionInfo.update || 'update';
+
+        var componentType = (actionInfo.update || 'update').split(':');
+        var updateMethod = componentType.pop();
+        componentType = componentType[0] && parseClassType(componentType[0]);
 
         this[IN_MAIN_PROCESS] = true;
 
@@ -955,7 +940,8 @@ define(function (require) {
 
         var eventObjBatch = [];
         var eventObj;
-        var isHighlightOrDownplay = payload.type === 'highlight' || payload.type === 'downplay';
+        var isHighDown = payloadType === 'highlight' || payloadType === 'downplay';
+
         for (var i = 0; i < payloads.length; i++) {
             var batchItem = payloads[i];
             // Action can specify the event by return it.
@@ -966,11 +952,17 @@ define(function (require) {
             eventObj.type = actionInfo.event || eventObj.type;
             eventObjBatch.push(eventObj);
 
-            // Highlight and downplay are special.
-            isHighlightOrDownplay && updateMethods[updateMethod].call(this, batchItem);
+            // light update does not perform data process, layout and visual.
+            if (isHighDown) {
+                // method, payload, mainType, subType
+                updateDirectly.call(this, updateMethod, batchItem, 'series');
+            }
+            else if (componentType) {
+                updateDirectly.call(this, updateMethod, batchItem, componentType.main, componentType.sub);
+            }
         }
 
-        if (updateMethod !== 'none' && !isHighlightOrDownplay) {
+        if (updateMethod !== 'none' && !isHighDown && !componentType) {
             // Still dirty
             if (this[OPTION_UPDATED]) {
                 // FIXME Pass payload ?
@@ -985,7 +977,7 @@ define(function (require) {
         // Follow the rule of action batch
         if (batched) {
             eventObj = {
-                type: actionInfo.event || payload.type,
+                type: actionInfo.event || payloadType,
                 batch: eventObjBatch
             };
         }
@@ -1642,6 +1634,9 @@ define(function (require) {
         // Event name is all lowercase
         actionInfo.event = (actionInfo.event || actionType).toLowerCase();
         eventName = actionInfo.event;
+
+        // Validate action type and event name.
+        zrUtil.assert(ACTION_REG.test(actionType) && ACTION_REG.test(eventName));
 
         if (!actions[actionType]) {
             actions[actionType] = {action: action, actionInfo: actionInfo};

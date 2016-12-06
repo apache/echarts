@@ -1,7 +1,10 @@
 <html>
     <head>
         <meta charset="utf-8">
-        <script src="//cdn.bootcss.com/echarts/3.2.3/echarts.common.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css"/>
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
     </head>
     <body>
         <style>
@@ -19,7 +22,19 @@
             <div id="chart1"></div>
             <div id="chart2"></div>
         </div>
-        <script>
+    <script>
+
+    require([
+        'echarts',
+        'echarts/chart/line',
+        'echarts/chart/scatter',
+        'echarts/component/title',
+        'echarts/component/legend',
+        'echarts/component/dataZoom',
+        'echarts/component/grid',
+        'echarts/component/tooltip'
+    ], function (echarts, rawData, prepareBoxplotData, env) {
+
 
         var chart1 = echarts.init(document.getElementById('chart1'));
         var chart2 = echarts.init(document.getElementById('chart2'));
@@ -109,30 +124,20 @@
 
         function bindAction(fromChart, toChart, toData) {
             fromChart.on('showTip', function (params) {
-                if (!fromChart.___showTip) {
-                    fromChart.___showTip = true;
-
-                    // Determine index overflow.
-                    var rawIndex = getRawIndex(fromChart, params.dataIndex);
-                    if (rawIndex < toData.length) {
-                        toChart.dispatchAction({
-                            type: 'showTip',
-                            seriesIndex: params.seriesIndex,
-                            dataIndex: params.dataIndex
-                        });
-                    }
-
-                    fromChart.___showTip = false;
+                // Determine index overflow.
+                var rawIndex = getRawIndex(fromChart, params.dataIndex);
+                if (rawIndex < toData.length) {
+                    toChart.dispatchAction({
+                        type: 'showTip',
+                        seriesIndex: params.seriesIndex,
+                        dataIndex: params.dataIndex
+                    }, true);
                 }
             });
             fromChart.on('hideTip', function (params) {
-                if (!fromChart.___hideTip) {
-                    fromChart.___hideTip = true;
-                    toChart.dispatchAction({
-                        type: 'hideTip'
-                    });
-                    fromChart.___hideTip = false;
-                }
+                toChart.dispatchAction({
+                    type: 'hideTip'
+                }, true);
             });
 
             fromChart.on('dataZoom', function (params) {
@@ -149,6 +154,7 @@
             return chart.getModel().getComponent('series').getData().indexOfRawIndex(dataIndex);
         }
 
-        </script>
+    });
+    </script>
     </body>
 </html>
