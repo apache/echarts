@@ -17,7 +17,7 @@ define(function (require) {
          *
          * @protected
          * @return {Object} {
-         *                   cartesian: [
+         *                   grid: [
          *                       {model: coord0, axisModels: [axis1, axis3], coordIndex: 1},
          *                       {model: coord1, axisModels: [axis0, axis2], coordIndex: 0},
          *                       ...
@@ -33,11 +33,7 @@ define(function (require) {
         getTargetCoordInfo: function () {
             var dataZoomModel = this.dataZoomModel;
             var ecModel = this.ecModel;
-            var coordSysLists = {
-                cartesian: [],
-                polar: [],
-                singleAxis: []
-            };
+            var coordSysLists = {};
 
             dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
                 var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
@@ -54,6 +50,9 @@ define(function (require) {
                     else if (axisName === 'singleAxis') {
                         coordSysName = 'singleAxis';
                     }
+                    else {
+                        return;
+                    }
 
                     var coordModel = coordSysName
                         ? ecModel.queryComponents({
@@ -67,7 +66,7 @@ define(function (require) {
                         save(
                             coordModel,
                             axisModel,
-                            coordSysLists[coordSysName] || [],
+                            coordSysLists[coordSysName] || (coordSysLists[coordSysName] = []),
                             coordModel.componentIndex
                         );
                     }

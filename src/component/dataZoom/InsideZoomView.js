@@ -45,16 +45,14 @@ define(function (require) {
 
                 zrUtil.each(coordInfoList, function (coordInfo) {
                     var coordModel = coordInfo.model;
-                    var coordinateSystem = coordModel.coordinateSystem;
 
                     roams.register(
                         api,
                         {
                             coordId: roams.generateCoordId(coordModel),
                             allCoordIds: allCoordIds,
-                            coordinateSystem: coordinateSystem,
                             containsPoint: function (x, y) {
-                                return coordinateSystem.containPoint([x, y]);
+                                return coordModel.coordinateSystem.containPoint([x, y]);
                             },
                             dataZoomId: dataZoomModel.id,
                             throttleRate: dataZoomModel.get('throttle', true),
@@ -140,7 +138,7 @@ define(function (require) {
 
     var getDirectionInfo = {
 
-        cartesian: function (oldPoint, newPoint, axisModel, controller, coordInfo) {
+        grid: function (oldPoint, newPoint, axisModel, controller, coordInfo) {
             var axis = axisModel.axis;
             var ret = {};
             var rect = coordInfo.model.coordinateSystem.getRect();

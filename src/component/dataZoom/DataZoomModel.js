@@ -214,7 +214,7 @@ define(function(require) {
 
             if (autoAxisIndex) {
                 // Find axis that parallel to dataZoom as default.
-                var dimName = orient === 'vertical' ? 'x' : 'y';
+                var dimName = orient === 'vertical' ? 'y' : 'x';
 
                 if (dependentModels[dimName + 'Axis'].length) {
                     thisOption[dimName + 'AxisIndex'] = [0];
