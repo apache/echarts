@@ -773,24 +773,29 @@ define(function (require) {
     /**
      * @private
      */
-    function updateDirectly(method, payload, mainType, subType) {
-        var ecModel = this._model;
+    function updateDirectly(ecIns, method, payload, mainType, subType, restrict) {
+        var ecModel = ecIns._model;
+        var query;
 
-        // dispatchAction before setOption
-        if (!ecModel) {
-            return;
+        if (restrict) {
+            query = {};
+            query[mainType + 'Id'] = payload[mainType + 'Id'];
+            query[mainType + 'Index'] = payload[mainType + 'Index'];
+            query[mainType + 'Name'] = payload[mainType + 'Name'];
         }
 
-        var condition = {mainType: mainType, query: payload};
+        var condition = {mainType: mainType, query: query};
         subType && (condition.subType = subType); // subType may be '' by parseClassType;
-        ecModel.eachComponent(condition, function (model, index) {
-            var view = this[
+
+        // If dispatchAction before setOption, do nothing.
+        ecModel && ecModel.eachComponent(condition, function (model, index) {
+            var view = ecIns[
                 mainType === 'series' ? '_chartsMap' : '_componentsMap'
             ][model.__viewId];
             if (view && view.__alive) {
-                view[method](model, ecModel, this._api, payload);
+                view[method](model, ecModel, ecIns._api, payload);
             }
-        }, this);
+        }, ecIns);
     }
 
     /**
@@ -920,9 +925,9 @@ define(function (require) {
         var actionWrap = actions[payloadType];
         var actionInfo = actionWrap.actionInfo;
 
-        var componentType = (actionInfo.update || 'update').split(':');
-        var updateMethod = componentType.pop();
-        componentType = componentType[0] && parseClassType(componentType[0]);
+        var cptType = (actionInfo.update || 'update').split(':');
+        var updateMethod = cptType.pop();
+        cptType = cptType[0] && parseClassType(cptType[0]);
 
         this[IN_MAIN_PROCESS] = true;
 
@@ -955,14 +960,14 @@ define(function (require) {
             // light update does not perform data process, layout and visual.
             if (isHighDown) {
                 // method, payload, mainType, subType
-                updateDirectly.call(this, updateMethod, batchItem, 'series');
+                updateDirectly(this, updateMethod, batchItem, 'series');
             }
-            else if (componentType) {
-                updateDirectly.call(this, updateMethod, batchItem, componentType.main, componentType.sub);
+            else if (cptType) {
+                updateDirectly(this, updateMethod, batchItem, cptType.main, cptType.sub, true);
             }
         }
 
-        if (updateMethod !== 'none' && !isHighDown && !componentType) {
+        if (updateMethod !== 'none' && !isHighDown && !cptType) {
             // Still dirty
             if (this[OPTION_UPDATED]) {
                 // FIXME Pass payload ?

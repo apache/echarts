@@ -102,12 +102,25 @@ define(function (require) {
                 }
                 el.setDraggable(draggable && forceLayout);
 
-                el.off('mouseover', this._focusNodeAdjacency);
-                el.off('mouseout', this._unfocusAll);
+                el.off('mouseover', el.__focusNodeAdjacency);
+                el.off('mouseout', el.__unfocusNodeAdjacency);
+
                 if (itemModel.get('focusNodeAdjacency')) {
-                    el.on('mouseover', this._focusNodeAdjacency, this);
-                    el.on('mouseout', this._unfocusAll, this);
+                    el.on('mouseover', el.__focusNodeAdjacency = function () {
+                        api.dispatchAction({
+                            type: 'focusNodeAdjacency',
+                            seriesId: seriesModel.id,
+                            dataIndex: el.dataIndex
+                        });
+                    });
+                    el.on('mouseout', el.__unfocusNodeAdjacency = function () {
+                        api.dispatchAction({
+                            type: 'unfocusNodeAdjacency',
+                            seriesId: seriesModel.id
+                        });
+                    });
                 }
+
             }, this);
 
             var circularRotateLabel = seriesModel.get('layout') === 'circular' && seriesModel.get('circular.rotateLabel');
@@ -146,11 +159,16 @@ define(function (require) {
             this._controller && this._controller.dispose();
         },
 
-        _focusNodeAdjacency: function (e) {
+        focusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
             var data = this._model.getData();
+            var dataIndex = payload.dataIndex;
+            var el = data.getItemGraphicEl(dataIndex);
+
+            if (!el) {
+                return;
+            }
+
             var graph = data.graph;
-            var el = e.target;
-            var dataIndex = el.dataIndex;
             var dataType = el.dataType;
 
             function fadeOutItem(item, opacityPath) {
@@ -200,9 +218,8 @@ define(function (require) {
             }
         },
 
-        _unfocusAll: function () {
-            var data = this._model.getData();
-            var graph = data.graph;
+        unfocusNodeAdjacency: function (seriesModel, ecModel, api, payload) {
+            var graph = this._model.getData().graph;
             graph.eachNode(function (node) {
                 var opacity = getItemOpacity(node, nodeOpacityPath);
                 node.getGraphicEl().traverse(function (child) {

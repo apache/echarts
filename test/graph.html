@@ -114,7 +114,21 @@
                     chart.setOption(option);
 
                     var config = {
-                        layout: 'none'
+                        layout: 'none',
+                        focusNodeAdjacency: true,
+                        manualFocusNodeAdjacency: function () {
+                            chart.dispatchAction({
+                                type: 'focusNodeAdjacency',
+                                seriesName: 'Les Miserables',
+                                dataIndex: 2
+                            });
+                        },
+                        manualUnfocusNodeAdjacency: function () {
+                            chart.dispatchAction({
+                                type: 'unfocusNodeAdjacency',
+                                seriesName: 'Les Miserables'
+                            });
+                        }
                     };
 
                     chart.on('click', function (params) {
@@ -131,6 +145,17 @@
                                 }]
                             });
                         });
+                    gui.add(config, 'focusNodeAdjacency')
+                        .onChange(function (value) {
+                            chart.setOption({
+                                series: [{
+                                    name: 'Les Miserables',
+                                    focusNodeAdjacency: value
+                                }]
+                            });
+                        });
+                    gui.add(config, 'manualFocusNodeAdjacency');
+                    gui.add(config, 'manualUnfocusNodeAdjacency');
                 });
             });
         </script>

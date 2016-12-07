@@ -383,9 +383,9 @@ define(function (require) {
                 var idAttr = mainType + 'Id';
                 var nameAttr = mainType + 'Name';
                 return q && (
-                        q.hasOwnProperty(indexAttr)
-                        || q.hasOwnProperty(idAttr)
-                        || q.hasOwnProperty(nameAttr)
+                        q[indexAttr] != null
+                        || q[idAttr] != null
+                        || q[nameAttr] != null
                     )
                     ? {
                         mainType: mainType,
