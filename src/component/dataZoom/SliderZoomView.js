@@ -723,7 +723,8 @@ define(function (require) {
             var rect;
             each(this.getTargetCoordInfo(), function (coordInfoList) {
                 if (!rect && coordInfoList.length) {
-                    rect = coordInfoList[0].model.coordinateSystem.getRect();
+                    var coordSys = coordInfoList[0].model.coordinateSystem;
+                    rect = coordSys.getRect && coordSys.getRect();
                 }
             });
             if (!rect) {

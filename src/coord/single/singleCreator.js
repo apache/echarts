@@ -27,24 +27,16 @@ define(function (require) {
 
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.get('coordinateSystem') === 'singleAxis') {
-                seriesModel.coordinateSystem = findSingleAxis(seriesModel, ecModel);
+                var singleAxisModel = ecModel.queryComponents({
+                    mainType: 'singleAxis',
+                    index: seriesModel.get('singleAxisIndex'),
+                    id: seriesModel.get('singleAxisId')
+                })[0];
+                seriesModel.coordinateSystem = singleAxisModel && singleAxisModel.coordinateSystem;
             }
         });
 
         return singles;
-    }
-
-    function findSingleAxis(seriesModel, ecModel) {
-        var query = {
-            mainType: 'singleAxis',
-            index: seriesModel.get('singleAxisIndex'),
-            id: seriesModel.get('singleAxisId')
-        };
-        if (query.id == null && query.index == null) {
-            query.index = 0;
-        }
-        var singleAxisModel = ecModel.queryComponents(query)[0];
-        return singleAxisModel && singleAxisModel.coordinateSystem;
     }
 
     require('../../CoordinateSystem').register('single', {

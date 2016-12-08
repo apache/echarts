@@ -38,38 +38,13 @@ define(function (require) {
             dataZoomModel.eachTargetAxis(function (dimNames, axisIndex) {
                 var axisModel = ecModel.getComponent(dimNames.axis, axisIndex);
                 if (axisModel) {
-                    var coordSysName;
-                    var axisName = dimNames.axis;
-
-                    if (axisName === 'xAxis' || axisName === 'yAxis') {
-                        coordSysName = 'grid';
-                    }
-                    else if (axisName === 'angleAxis' || axisName === 'radiusAxis') {
-                        coordSysName = 'polar';
-                    }
-                    else if (axisName === 'singleAxis') {
-                        coordSysName = 'singleAxis';
-                    }
-                    else {
-                        return;
-                    }
-
-                    var coordModel = coordSysName
-                        ? ecModel.queryComponents({
-                            mainType: coordSysName,
-                            index: axisModel.get(coordSysName + 'Index'),
-                            id: axisModel.get(coordSysName + 'Id')
-                        })[0]
-                        : null;
-
-                    if (coordModel != null) {
-                        save(
-                            coordModel,
-                            axisModel,
-                            coordSysLists[coordSysName] || (coordSysLists[coordSysName] = []),
-                            coordModel.componentIndex
-                        );
-                    }
+                    var coordModel = axisModel.getCoordSysModel();
+                    coordModel && save(
+                        coordModel,
+                        axisModel,
+                        coordSysLists[coordModel.mainType] || (coordSysLists[coordModel.mainType] = []),
+                        coordModel.componentIndex
+                    );
                 }
             }, this);
 

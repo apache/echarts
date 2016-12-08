@@ -34,7 +34,6 @@ define(function (require) {
         },
 
         /**
-         * @public
          * @param {boolean} origin
          * @return {number|string} min value or 'dataMin' or null/undefined (means auto) or NaN
          */
@@ -50,7 +49,6 @@ define(function (require) {
         },
 
         /**
-         * @public
          * @param {boolean} origin
          * @return {number|string} max value or 'dataMax' or null/undefined (means auto) or NaN
          */
@@ -66,7 +64,6 @@ define(function (require) {
         },
 
         /**
-         * @public
          * @return {boolean}
          */
         getNeedCrossZero: function () {
@@ -76,7 +73,12 @@ define(function (require) {
         },
 
         /**
-         * @public
+         * Should be implemented by each axis model if necessary.
+         * @return {module:echarts/model/Component} coordinate system model
+         */
+        getCoordSysModel: zrUtil.noop,
+
+        /**
          * @param {number} rangeStart Can only be finite number or null/undefined or NaN.
          * @param {number} rangeEnd Can only be finite number or null/undefined or NaN.
          */
@@ -86,7 +88,7 @@ define(function (require) {
         },
 
         /**
-         * @public
+         * Reset range
          */
         resetRange: function () {
             // rangeStart and rangeEnd is readonly.

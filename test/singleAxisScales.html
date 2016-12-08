@@ -29,6 +29,7 @@
                 'echarts/component/singleAxis',
                 'echarts/component/tooltip',
                 'echarts/component/toolbox',
+                'echarts/component/dataZoom',
                 'echarts/component/visualMap'
             ], function (ec, ct) {
                 echarts = ec;
@@ -71,6 +72,19 @@
             tooltip: {
                 trigger: 'axis'
             },
+            dataZoom: [{
+                type: 'inside',
+                singleAxisIndex: [0]
+            }, {
+                type: 'inside',
+                singleAxisIndex: [1]
+            }, {
+                type: 'inside',
+                singleAxisIndex: [2]
+            }, {
+                type: 'inside',
+                singleAxisIndex: [3]
+            }],
             singleAxis: [{
                 type: 'value',
                 id: 'a',

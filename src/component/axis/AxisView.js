@@ -38,7 +38,7 @@ define(function (require) {
                 return;
             }
 
-            var gridModel = axisModel.findGridModel();
+            var gridModel = axisModel.getCoordSysModel();
 
             var layout = layoutAxis(gridModel, axisModel);
 
