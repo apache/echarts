@@ -773,16 +773,12 @@ define(function (require) {
     /**
      * @private
      */
-    function updateDirectly(ecIns, method, payload, mainType, subType, restrict) {
+    function updateDirectly(ecIns, method, payload, mainType, subType) {
         var ecModel = ecIns._model;
-        var query;
-
-        if (restrict) {
-            query = {};
-            query[mainType + 'Id'] = payload[mainType + 'Id'];
-            query[mainType + 'Index'] = payload[mainType + 'Index'];
-            query[mainType + 'Name'] = payload[mainType + 'Name'];
-        }
+        var query = {};
+        query[mainType + 'Id'] = payload[mainType + 'Id'];
+        query[mainType + 'Index'] = payload[mainType + 'Index'];
+        query[mainType + 'Name'] = payload[mainType + 'Name'];
 
         var condition = {mainType: mainType, query: query};
         subType && (condition.subType = subType); // subType may be '' by parseClassType;
@@ -963,7 +959,7 @@ define(function (require) {
                 updateDirectly(this, updateMethod, batchItem, 'series');
             }
             else if (cptType) {
-                updateDirectly(this, updateMethod, batchItem, cptType.main, cptType.sub, true);
+                updateDirectly(this, updateMethod, batchItem, cptType.main, cptType.sub);
             }
         }
 
