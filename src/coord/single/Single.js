@@ -92,25 +92,15 @@ define(function (require) {
          * @param  {module:echarts/ExtensionAPI} api
          */
         update: function (ecModel, api) {
-            this._updateAxisFromSeries(ecModel);
-        },
-
-        /**
-         * Update the axis extent from series.
-         *
-         * @param  {module:echarts/model/Global} ecModel
-         * @private
-         */
-        _updateAxisFromSeries: function (ecModel) {
-
             ecModel.eachSeries(function (seriesModel) {
-
-                var data = seriesModel.getData();
-                var dim = this.dimension;
-                this._axis.scale.unionExtent(
-                    data.getDataExtent(seriesModel.coordDimToDataDim(dim))
-                );
-                axisHelper.niceScaleExtent(this._axis, this._axis.model);
+                if (seriesModel.coordinateSystem === this) {
+                    var data = seriesModel.getData();
+                    var dim = this.dimension;
+                    this._axis.scale.unionExtent(
+                        data.getDataExtent(seriesModel.coordDimToDataDim(dim))
+                    );
+                    axisHelper.niceScaleExtent(this._axis, this._axis.model);
+                }
             }, this);
         },
 
