@@ -26,22 +26,22 @@ define(function (require) {
             var ecHeight = api.getHeight();
             var seriesOption = seriesModel.option;
 
-            var size = seriesOption.size || []; // Compatible with ec2.
-            var containerWidth = parsePercent(
-                retrieveValue(seriesOption.width, size[0]),
-                ecWidth
-            );
-            var containerHeight = parsePercent(
-                retrieveValue(seriesOption.height, size[1]),
-                ecHeight
-            );
-
             var layoutInfo = layout.getLayoutRect(
                 seriesModel.getBoxLayoutParams(),
                 {
                     width: api.getWidth(),
                     height: api.getHeight()
                 }
+            );
+
+            var size = seriesOption.size || []; // Compatible with ec2.
+            var containerWidth = parsePercent(
+                retrieveValue(layoutInfo.width, size[0]),
+                ecWidth
+            );
+            var containerHeight = parsePercent(
+                retrieveValue(layoutInfo.height, size[1]),
+                ecHeight
             );
 
             // Fetch payload info.
