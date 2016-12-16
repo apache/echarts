@@ -92,7 +92,7 @@ define(function(require) {
                 rect.height = height;
             }
 
-            this.resizePath(path, rect);
+            graphic.resizePath(path, rect);
         }
         return path;
     };
