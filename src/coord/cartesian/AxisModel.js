@@ -40,13 +40,14 @@ define(function(require) {
         },
 
         /**
-         * @return {module:echarts/model/Model}
+         * @override
+         * @return {module:echarts/model/Component}
          */
-        findGridModel: function () {
+        getCoordSysModel: function () {
             return this.ecModel.queryComponents({
                 mainType: 'grid',
-                index: this.get('gridIndex'),
-                id: this.get('gridId')
+                index: this.option.gridIndex,
+                id: this.option.gridId
             })[0];
         }
 
@@ -58,7 +59,6 @@ define(function(require) {
     }
 
     zrUtil.merge(AxisModel.prototype, require('../axisModelCommonMixin'));
-    zrUtil.merge(AxisModel.prototype, require('../axisModelZoomMixin'));
 
     var extraOption = {
         // gridIndex: 0,

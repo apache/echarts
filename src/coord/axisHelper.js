@@ -13,49 +13,59 @@ define(function (require) {
 
     /**
      * Get axis scale extent before niced.
+     * Item of returned array can only be number (including Infinity and NaN).
      */
     axisHelper.getScaleExtent = function (axis, model) {
         var scale = axis.scale;
+        var scaleType = scale.type;
+
+        var min = model.getMin();
+        var max = model.getMax();
+        var fixMin = min != null;
+        var fixMax = max != null;
         var originalExtent = scale.getExtent();
-        var span = originalExtent[1] - originalExtent[0];
-        if (scale.type === 'ordinal') {
-            // If series has no data, scale extent may be wrong
-            if (!isFinite(span)) {
-                return [0, 0];
-            }
-            else {
-                return originalExtent;
-            }
+
+        var axisDataLen;
+        var boundaryGap;
+        var span;
+        if (scaleType === 'ordinal') {
+            axisDataLen = (model.get('data') || []).length;
         }
-        var min = model.getMin ? model.getMin() : model.get('min');
-        var max = model.getMax ? model.getMax() : model.get('max');
-        var crossZero = model.getNeedCrossZero
-            ? model.getNeedCrossZero() : !model.get('scale');
-        var boundaryGap = model.get('boundaryGap');
-        if (!zrUtil.isArray(boundaryGap)) {
-            boundaryGap = [boundaryGap || 0, boundaryGap || 0];
+        else {
+            boundaryGap = model.get('boundaryGap');
+            if (!zrUtil.isArray(boundaryGap)) {
+                boundaryGap = [boundaryGap || 0, boundaryGap || 0];
+            }
+            boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], 1);
+            boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], 1);
+            span = originalExtent[1] - originalExtent[0];
         }
-        boundaryGap[0] = numberUtil.parsePercent(boundaryGap[0], 1);
-        boundaryGap[1] = numberUtil.parsePercent(boundaryGap[1], 1);
-        var fixMin = true;
-        var fixMax = true;
-        // Add boundary gap
+
         if (min == null) {
-            min = originalExtent[0] - boundaryGap[0] * span;
-            fixMin = false;
+            min = scaleType === 'ordinal'
+                ? (axisDataLen ? 0 : NaN)
+                : originalExtent[0] - boundaryGap[0] * span;
         }
         if (max == null) {
-            max = originalExtent[1] + boundaryGap[1] * span;
-            fixMax = false;
+            max = scaleType === 'ordinal'
+                ? (axisDataLen ? axisDataLen - 1 : NaN)
+                : originalExtent[1] + boundaryGap[1] * span;
         }
+
         if (min === 'dataMin') {
             min = originalExtent[0];
         }
         if (max === 'dataMax') {
             max = originalExtent[1];
         }
+
+        (min == null || !isFinite(min)) && (min = NaN);
+        (max == null || !isFinite(max)) && (max = NaN);
+
+        axis.setBlank(zrUtil.eqNaN(min) || zrUtil.eqNaN(max));
+
         // Evaluate if axis needs cross zero
-        if (crossZero) {
+        if (model.getNeedCrossZero()) {
             // Axis is over zero and min is not set
             if (min > 0 && max > 0 && !fixMin) {
                 min = 0;
@@ -65,14 +75,15 @@ define(function (require) {
                 max = 0;
             }
         }
+
         return [min, max];
     };
 
     axisHelper.niceScaleExtent = function (axis, model) {
         var scale = axis.scale;
         var extent = axisHelper.getScaleExtent(axis, model);
-        var fixMin = (model.getMin ? model.getMin() : model.get('min')) != null;
-        var fixMax = (model.getMax ? model.getMax() : model.get('max')) != null;
+        var fixMin = model.getMin() != null;
+        var fixMax = model.getMax() != null;
         var splitNumber = model.get('splitNumber');
 
         if (scale.type === 'log') {

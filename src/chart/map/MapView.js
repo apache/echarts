@@ -19,11 +19,17 @@ define(function (require) {
 
             var group = this.group;
             group.removeAll();
+
+            if (mapModel.getHostGeoModel()) {
+                return;
+            }
+
             // Not update map if it is an roam action from self
             if (!(payload && payload.type === 'geoRoam'
-                && payload.componentType === 'series'
-                && payload.seriesId === mapModel.id)) {
-
+                    && payload.componentType === 'series'
+                    && payload.seriesId === mapModel.id
+                )
+            ) {
                 if (mapModel.needsDrawMap) {
                     var mapDraw = this._mapDraw || new MapDraw(api, true);
                     group.add(mapDraw.group);

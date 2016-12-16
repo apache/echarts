@@ -9,8 +9,8 @@ define(function (require) {
      * Complete the dimensions array guessed from the data structure.
      * @param  {Array.<string>} dimensions      Necessary dimensions, like ['x', 'y']
      * @param  {Array} data                     Data list. [[1, 2, 3], [2, 3, 4]]
-     * @param  {Array.<string>} defaultNames    Default names to fill not necessary dimensions, like ['value']
-     * @param  {string} extraPrefix             Prefix of name when filling the left dimensions.
+     * @param  {Array.<string>} [defaultNames]    Default names to fill not necessary dimensions, like ['value']
+     * @param  {string} [extraPrefix]             Prefix of name when filling the left dimensions.
      * @return {Array.<string>}
      */
     function completeDimensions(dimensions, data, defaultNames, extraPrefix) {

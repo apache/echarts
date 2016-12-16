@@ -50,6 +50,7 @@ define(function (require) {
     var timsort = require('zrender/core/timsort');
 
     var each = zrUtil.each;
+    var parseClassType = ComponentModel.parseClassType;
 
     var PRIORITY_PROCESSOR_FILTER = 1000;
     var PRIORITY_PROCESSOR_STATISTIC = 5000;
@@ -69,6 +70,7 @@ define(function (require) {
     var IN_MAIN_PROCESS = '__flagInMainProcess';
     var HAS_GRADIENT_OR_PATTERN_BG = '__hasGradientOrPatternBg';
     var OPTION_UPDATED = '__optionUpdated';
+    var ACTION_REG = /^[a-zA-Z0-9_]+$/;
 
     function createRegisterEventWithLowercaseName(method) {
         return function (eventName, handler, context) {
@@ -680,7 +682,6 @@ define(function (require) {
             // console.time && console.timeEnd('update');
         },
 
-        // PENDING
         /**
          * @param {Object} payload
          * @private
@@ -718,7 +719,7 @@ define(function (require) {
                 seriesModel.getData().clearAllVisual();
             });
 
-            doVisualEncoding.call(this, ecModel, payload);
+            doVisualEncoding.call(this, ecModel, payload, true);
 
             invokeUpdateMethod.call(this, 'updateVisual', ecModel, payload);
         },
@@ -738,22 +739,6 @@ define(function (require) {
             doLayout.call(this, ecModel, payload);
 
             invokeUpdateMethod.call(this, 'updateLayout', ecModel, payload);
-        },
-
-        /**
-         * @param {Object} payload
-         * @private
-         */
-        highlight: function (payload) {
-            toggleHighlight.call(this, 'highlight', payload);
-        },
-
-        /**
-         * @param {Object} payload
-         * @private
-         */
-        downplay: function (payload) {
-            toggleHighlight.call(this, 'downplay', payload);
         },
 
         /**
@@ -786,29 +771,27 @@ define(function (require) {
     };
 
     /**
-     * @param {Object} payload
      * @private
      */
-    function toggleHighlight(method, payload) {
-        var ecModel = this._model;
+    function updateDirectly(ecIns, method, payload, mainType, subType) {
+        var ecModel = ecIns._model;
+        var query = {};
+        query[mainType + 'Id'] = payload[mainType + 'Id'];
+        query[mainType + 'Index'] = payload[mainType + 'Index'];
+        query[mainType + 'Name'] = payload[mainType + 'Name'];
 
-        // dispatchAction before setOption
-        if (!ecModel) {
-            return;
-        }
+        var condition = {mainType: mainType, query: query};
+        subType && (condition.subType = subType); // subType may be '' by parseClassType;
 
-        ecModel.eachComponent(
-            {mainType: 'series', query: payload},
-            function (seriesModel, index) {
-                var chartView = this._chartsMap[seriesModel.__viewId];
-                if (chartView && chartView.__alive) {
-                    chartView[method](
-                        seriesModel, ecModel, this._api, payload
-                    );
-                }
-            },
-            this
-        );
+        // If dispatchAction before setOption, do nothing.
+        ecModel && ecModel.eachComponent(condition, function (model, index) {
+            var view = ecIns[
+                mainType === 'series' ? '_chartsMap' : '_componentsMap'
+            ][model.__viewId];
+            if (view && view.__alive) {
+                view[method](model, ecModel, ecIns._api, payload);
+            }
+        }, ecIns);
     }
 
     /**
@@ -934,9 +917,13 @@ define(function (require) {
     };
 
     function doDispatchAction(payload, silent) {
-        var actionWrap = actions[payload.type];
+        var payloadType = payload.type;
+        var actionWrap = actions[payloadType];
         var actionInfo = actionWrap.actionInfo;
-        var updateMethod = actionInfo.update || 'update';
+
+        var cptType = (actionInfo.update || 'update').split(':');
+        var updateMethod = cptType.pop();
+        cptType = cptType[0] && parseClassType(cptType[0]);
 
         this[IN_MAIN_PROCESS] = true;
 
@@ -954,7 +941,8 @@ define(function (require) {
 
         var eventObjBatch = [];
         var eventObj;
-        var isHighlightOrDownplay = payload.type === 'highlight' || payload.type === 'downplay';
+        var isHighDown = payloadType === 'highlight' || payloadType === 'downplay';
+
         for (var i = 0; i < payloads.length; i++) {
             var batchItem = payloads[i];
             // Action can specify the event by return it.
@@ -965,11 +953,17 @@ define(function (require) {
             eventObj.type = actionInfo.event || eventObj.type;
             eventObjBatch.push(eventObj);
 
-            // Highlight and downplay are special.
-            isHighlightOrDownplay && updateMethods[updateMethod].call(this, batchItem);
+            // light update does not perform data process, layout and visual.
+            if (isHighDown) {
+                // method, payload, mainType, subType
+                updateDirectly(this, updateMethod, batchItem, 'series');
+            }
+            else if (cptType) {
+                updateDirectly(this, updateMethod, batchItem, cptType.main, cptType.sub);
+            }
         }
 
-        if (updateMethod !== 'none' && !isHighlightOrDownplay) {
+        if (updateMethod !== 'none' && !isHighDown && !cptType) {
             // Still dirty
             if (this[OPTION_UPDATED]) {
                 // FIXME Pass payload ?
@@ -984,7 +978,7 @@ define(function (require) {
         // Follow the rule of action batch
         if (batched) {
             eventObj = {
-                type: actionInfo.event || payload.type,
+                type: actionInfo.event || payloadType,
                 batch: eventObjBatch
             };
         }
@@ -1071,7 +1065,7 @@ define(function (require) {
             var viewId = model.id + '_' + model.type;
             var view = viewMap[viewId];
             if (!view) {
-                var classType = ComponentModel.parseClassType(model.type);
+                var classType = parseClassType(model.type);
                 var Clazz = isComponent
                     ? ComponentView.getClass(classType.main, classType.sub)
                     : ChartView.getClass(classType.sub);
@@ -1157,16 +1151,19 @@ define(function (require) {
      * Encode visual infomation from data after data processing
      *
      * @param {module:echarts/model/Global} ecModel
+     * @param {object} layout
+     * @param {boolean} [excludesLayout]
      * @private
      */
-    function doVisualEncoding(ecModel, payload) {
+    function doVisualEncoding(ecModel, payload, excludesLayout) {
         var api = this._api;
         ecModel.clearColorPalette();
         ecModel.eachSeries(function (seriesModel) {
             seriesModel.clearColorPalette();
         });
         each(visualFuncs, function (visual) {
-            visual.func(ecModel, api, payload);
+            (!excludesLayout || !visual.isLayout)
+                && visual.func(ecModel, api, payload);
         });
     }
 
@@ -1639,6 +1636,9 @@ define(function (require) {
         actionInfo.event = (actionInfo.event || actionType).toLowerCase();
         eventName = actionInfo.event;
 
+        // Validate action type and event name.
+        zrUtil.assert(ACTION_REG.test(actionType) && ACTION_REG.test(eventName));
+
         if (!actions[actionType]) {
             actions[actionType] = {action: action, actionInfo: actionInfo};
         }
@@ -1705,60 +1705,58 @@ define(function (require) {
         loadingEffects[name] = loadingFx;
     };
 
-
-    var parseClassType = ComponentModel.parseClassType;
     /**
      * @param {Object} opts
      * @param {string} [superClass]
      */
-    echarts.extendComponentModel = function (opts, superClass) {
-        var Clazz = ComponentModel;
-        if (superClass) {
-            var classType = parseClassType(superClass);
-            Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
-        }
-        return Clazz.extend(opts);
+    echarts.extendComponentModel = function (opts/*, superClass*/) {
+        // var Clazz = ComponentModel;
+        // if (superClass) {
+        //     var classType = parseClassType(superClass);
+        //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
+        // }
+        return ComponentModel.extend(opts);
     };
 
     /**
      * @param {Object} opts
      * @param {string} [superClass]
      */
-    echarts.extendComponentView = function (opts, superClass) {
-        var Clazz = ComponentView;
-        if (superClass) {
-            var classType = parseClassType(superClass);
-            Clazz = ComponentView.getClass(classType.main, classType.sub, true);
-        }
-        return Clazz.extend(opts);
+    echarts.extendComponentView = function (opts/*, superClass*/) {
+        // var Clazz = ComponentView;
+        // if (superClass) {
+        //     var classType = parseClassType(superClass);
+        //     Clazz = ComponentView.getClass(classType.main, classType.sub, true);
+        // }
+        return ComponentView.extend(opts);
     };
 
     /**
      * @param {Object} opts
      * @param {string} [superClass]
      */
-    echarts.extendSeriesModel = function (opts, superClass) {
-        var Clazz = SeriesModel;
-        if (superClass) {
-            superClass = 'series.' + superClass.replace('series.', '');
-            var classType = parseClassType(superClass);
-            Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
-        }
-        return Clazz.extend(opts);
+    echarts.extendSeriesModel = function (opts/*, superClass*/) {
+        // var Clazz = SeriesModel;
+        // if (superClass) {
+        //     superClass = 'series.' + superClass.replace('series.', '');
+        //     var classType = parseClassType(superClass);
+        //     Clazz = ComponentModel.getClass(classType.main, classType.sub, true);
+        // }
+        return SeriesModel.extend(opts);
     };
 
     /**
      * @param {Object} opts
      * @param {string} [superClass]
      */
-    echarts.extendChartView = function (opts, superClass) {
-        var Clazz = ChartView;
-        if (superClass) {
-            superClass.replace('series.', '');
-            var classType = parseClassType(superClass);
-            Clazz = ChartView.getClass(classType.main, true);
-        }
-        return Clazz.extend(opts);
+    echarts.extendChartView = function (opts/*, superClass*/) {
+        // var Clazz = ChartView;
+        // if (superClass) {
+        //     superClass = superClass.replace('series.', '');
+        //     var classType = parseClassType(superClass);
+        //     Clazz = ChartView.getClass(classType.main, true);
+        // }
+        return ChartView.extend(opts);
     };
 
     /**
@@ -1808,6 +1806,7 @@ define(function (require) {
     echarts.graphic = require('./util/graphic');
     echarts.number = require('./util/number');
     echarts.format = require('./util/format');
+    echarts.throttle = throttle.throttle;
     echarts.matrix = require('zrender/core/matrix');
     echarts.vector = require('zrender/core/vector');
     echarts.color = require('zrender/tool/color');

@@ -426,6 +426,10 @@ define(function(require) {
             if (typeof animationDelay === 'function') {
                 animationDelay = animationDelay(dataIndex);
             }
+            if (typeof duration === 'function') {
+                duration = duration(dataIndex);
+            }
+
             duration > 0
                 ? el.animateTo(props, duration, animationDelay || 0, animationEasing, cb)
                 : (el.attr(props), cb && cb());

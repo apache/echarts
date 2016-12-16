@@ -276,6 +276,10 @@ define(function (require) {
                 ? seriesModel.getShadowDim() // @see candlestick
                 : info.otherDim;
 
+            if (otherDim == null) {
+                return;
+            }
+
             var otherDataExtent = data.getDataExtent(otherDim);
             // Nice extent.
             var otherOffset = (otherDataExtent[1] - otherDataExtent[0]) * 0.3;
@@ -376,17 +380,20 @@ define(function (require) {
                         return;
                     }
 
-                    var otherDim = getOtherDim(dimNames.name);
-
                     var thisAxis = ecModel.getComponent(dimNames.axis, axisIndex).axis;
+                    var otherDim = getOtherDim(dimNames.name);
+                    var otherAxisInverse;
+                    var coordSys = seriesModel.coordinateSystem;
+                    if (otherDim != null && coordSys.getOtherAxis) {
+                        otherAxisInverse = coordSys.getOtherAxis(thisAxis).inverse;
+                    }
 
                     result = {
                         thisAxis: thisAxis,
                         series: seriesModel,
                         thisDim: dimNames.name,
                         otherDim: otherDim,
-                        otherAxisInverse: seriesModel
-                            .coordinateSystem.getOtherAxis(thisAxis).inverse
+                        otherAxisInverse: otherAxisInverse
                     };
 
                 }, this);
@@ -576,10 +583,9 @@ define(function (require) {
 
                     var dataInterval = nonRealtime
                         // See #4434, data and axis are not processed and reset yet in non-realtime mode.
-                        ? axisProxy.calculateDataWindow(
-                            {start: range[0], end: range[1]},
-                            axisProxy.getDataExtent()
-                        ).valueWindow
+                        ? axisProxy.calculateDataWindow({
+                            start: range[0], end: range[1]
+                        }).valueWindow
                         : axisProxy.getDataValueWindow();
 
                     labelTexts = [
@@ -634,7 +640,7 @@ define(function (require) {
                 labelPrecision = axis.getPixelPrecision();
             }
 
-            var valueStr = (value == null && isNaN(value))
+            var valueStr = (value == null || isNaN(value))
                 ? ''
                 // FIXME Glue code
                 : (axis.type === 'category' || axis.type === 'time')
@@ -714,17 +720,14 @@ define(function (require) {
          */
         _findCoordRect: function () {
             // Find the grid coresponding to the first axis referred by dataZoom.
-            var targetInfo = this.getTargetInfo();
-
-            // FIXME
-            // 判断是catesian还是polar
             var rect;
-            if (targetInfo.cartesians.length) {
-                rect = targetInfo.cartesians[0].model.coordinateSystem.getRect();
-            }
-            else { // Polar
-                // FIXME
-                // 暂时随便写的
+            each(this.getTargetCoordInfo(), function (coordInfoList) {
+                if (!rect && coordInfoList.length) {
+                    var coordSys = coordInfoList[0].model.coordinateSystem;
+                    rect = coordSys.getRect && coordSys.getRect();
+                }
+            });
+            if (!rect) {
                 var width = this.api.getWidth();
                 var height = this.api.getHeight();
                 rect = {
@@ -743,7 +746,8 @@ define(function (require) {
     function getOtherDim(thisDim) {
         // FIXME
         // 这个逻辑和getOtherAxis里一致，但是写在这里是否不好
-        return thisDim === 'x' ? 'y' : 'x';
+        var map = {x: 'y', y: 'x', radius: 'angle', angle: 'radius'};
+        return map[thisDim];
     }
 
     return SliderZoomView;

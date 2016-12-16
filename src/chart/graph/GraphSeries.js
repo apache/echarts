@@ -62,21 +62,24 @@ define(function (require) {
                 });
 
                 var edgeLabelModel = self.getModel('edgeLabel');
-                var wrappedGetEdgeModel = function (path, parentModel) {
-                    var pathArr = (path || '').split('.');
-                    if (pathArr[0] === 'label') {
-                        parentModel = parentModel
-                            || edgeLabelModel.getModel(pathArr.slice(1));
-                    }
-                    var model = Model.prototype.getModel.call(this, pathArr, parentModel);
-                    model.getModel = wrappedGetEdgeModel;
-                    return model;
-                };
+                // For option `edgeLabel` can be found by label.xxx.xxx on item mode.
+                var fakeSeriesModel = new Model(
+                    {label: edgeLabelModel.option},
+                    edgeLabelModel.parentModel,
+                    ecModel
+                );
+
                 edgeData.wrapMethod('getItemModel', function (model) {
-                    // FIXME Wrap get method ?
-                    model.getModel = wrappedGetEdgeModel;
+                    model.customizeGetParent(edgeGetParent);
                     return model;
                 });
+
+                function edgeGetParent(path) {
+                    path = this.parsePath(path);
+                    return (path && path[0] === 'label')
+                        ? fakeSeriesModel
+                        : this.parentModel;
+                }
             }
         },
 

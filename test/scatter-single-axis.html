@@ -3,25 +3,53 @@
         <meta charset="utf-8">
         <script src="esl.js"></script>
         <script src="config.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css">
     </head>
     <body>
         <style>
-            html, body, #main {
+            .chart {
                 width: 100%;
-                height: 100%;
+                height: 300px;
+            }
+            h2 {
+                text-align: center;
+                font-size: 16px;
+                line-height: 30px;
+                font-weight: normal;
+                color: #eee;
+                background: #333;
             }
         </style>
-        <div id="main"></div>
+
+        <h2>value axis | series.data: [[x, y], [x, y], ...]</h2>
+        <div class="chart" id="main0"></div>
+
+        <h2>value axis | series.data: [x, x, ...]</h2>
+        <div class="chart" id="main1"></div>
+
+        <h2>category axis | series.data: [y, y, ...]</h2>
+        <div class="chart" id="main2"></div>
+
+
+
         <script>
 
             require([
                 'echarts',
                 'echarts/chart/scatter',
+                'echarts/component/legend',
                 'echarts/component/singleAxis',
-                'echarts/component/tooltip'
+                'echarts/component/toolbox',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom'
             ], function (echarts) {
 
-                var chart = echarts.init(document.getElementById('main'));
+                var main = document.getElementById('main0');
+                if (!main) {
+                    return;
+                }
+                var chart = echarts.init(main);
 
                 var data1 = [];
 
@@ -38,10 +66,25 @@
                     tooltip: {
                         trigger: 'axis'
                     },
-                    singleAxis: {
-                        bottom: '40%',
-                        top: '40%'
+                    legend: {
+                        data: ['scatter']
                     },
+                    // toolbox: {
+                    //     feature: {
+                    //         dataZoom: {show: true},
+                    //         restore: {show: true}
+                    //     }
+                    // },
+                    singleAxis: {
+                        bottom: '15%'
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                        type: 'slider',
+                        height: 20,
+                        bottom: 5
+                    }],
                     series: [{
                         name: 'scatter',
                         type: 'scatter',
@@ -61,5 +104,137 @@
             });
 
         </script>
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/component/singleAxis',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom'
+            ], function (echarts) {
+
+                var main = document.getElementById('main1');
+                if (!main) {
+                    return;
+                }
+                var chart = echarts.init(main);
+
+                var data1 = [];
+
+                var random = function (max) {
+                    return (Math.random() * max).toFixed(3);
+                };
+
+                for (var i = 0; i < 50; i++) {
+                    data1.push(random(5));
+                }
+
+                chart.setOption({
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['scatter']
+                    },
+                    singleAxis: {
+                        bottom: '15%'
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                        type: 'slider',
+                        height: 20,
+                        bottom: 5
+                    }],
+                    series: [{
+                        name: 'scatter',
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: 20,
+                        data: data1
+                    }]
+                });
+            });
+
+        </script>
+
+
+
+
+
+
+
+        <script>
+
+            require([
+                'echarts',
+                'echarts/chart/scatter',
+                'echarts/component/singleAxis',
+                'echarts/component/legend',
+                'echarts/component/tooltip',
+                'echarts/component/dataZoom'
+            ], function (echarts) {
+
+                var main = document.getElementById('main2');
+                if (!main) {
+                    return;
+                }
+                var chart = echarts.init(main);
+
+                var data1 = [];
+
+                var random = function (max) {
+                    return (Math.random() * max).toFixed(3);
+                };
+
+                for (var i = 0; i < 3; i++) {
+                    data1.push(random(5));
+                }
+
+                chart.setOption({
+                    tooltip: {
+                        trigger: 'axis'
+                    },
+                    legend: {
+                        data: ['scatter']
+                    },
+                    singleAxis: {
+                        type: 'category',
+                        data: ['类目1', '类目2', '类目3', '类目4', '类目5'],
+                        bottom: '15%'
+                    },
+                    dataZoom: [{
+                        type: 'inside'
+                    }, {
+                        type: 'slider',
+                        height: 20,
+                        bottom: 5
+                    }],
+                    series: [{
+                        name: 'scatter',
+                        type: 'scatter',
+                        coordinateSystem: 'singleAxis',
+                        symbolSize: 20,
+                        symbolSize: function (val) {
+                            return val * 40;
+                        },
+                        data: data1
+                    }]
+                });
+            });
+
+        </script>
+
+
+
     </body>
 </html>

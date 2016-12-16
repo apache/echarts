@@ -6,6 +6,35 @@ define(function (require) {
 
     var TYPE_DELIMITER = '.';
     var IS_CONTAINER = '___EC__COMPONENT__CONTAINER___';
+    var MEMBER_PRIFIX = '\0ec_\0';
+
+    /**
+     * Hide private class member.
+     * The same behavior as `host[name] = value;` (can be right-value)
+     * @public
+     */
+    clazz.set = function (host, name, value) {
+        return (host[MEMBER_PRIFIX + name] = value);
+    };
+
+    /**
+     * Hide private class member.
+     * The same behavior as `host[name];`
+     * @public
+     */
+    clazz.get = function (host, name) {
+        return host[MEMBER_PRIFIX + name];
+    };
+
+    /**
+     * For hidden private class member.
+     * The same behavior as `host.hasOwnProperty(name);`
+     * @public
+     */
+    clazz.hasOwn = function (host, name) {
+        return host.hasOwnProperty(MEMBER_PRIFIX + name);
+    };
+
     /**
      * @public
      */
@@ -18,6 +47,17 @@ define(function (require) {
         }
         return ret;
     };
+
+    /**
+     * @public
+     */
+    function checkClassType(componentType) {
+        zrUtil.assert(
+            /^[a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)?$/.test(componentType),
+            'componentType "' + componentType + '" illegal'
+        );
+    }
+
     /**
      * @public
      */
@@ -95,6 +135,7 @@ define(function (require) {
 
         entity.registerClass = function (Clazz, componentType) {
             if (componentType) {
+                checkClassType(componentType);
                 componentType = parseClassType(componentType);
 
                 if (!componentType.sub) {

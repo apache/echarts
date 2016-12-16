@@ -17,6 +17,8 @@ define(function (require) {
 
         type: 'series.map',
 
+        dependencies: ['geo'],
+
         layoutMode: 'box',
 
         /**
@@ -33,7 +35,7 @@ define(function (require) {
 
         init: function (option) {
 
-            option = this._fillOption(option, option.map);
+            option = this._fillOption(option, this.getMapType());
             this.option = option;
 
             MapSeries.superApply(this, 'init', arguments);
@@ -53,12 +55,27 @@ define(function (require) {
 
         mergeOption: function (newOption) {
             if (newOption.data) {
-                newOption = this._fillOption(newOption, this.option.map);
+                newOption = this._fillOption(newOption, this.getMapType());
             }
 
             MapSeries.superCall(this, 'mergeOption', newOption);
 
             this.updateSelectedMap(this.option.data);
+        },
+
+        /**
+         * If no host geo model, return null, which means using a
+         * inner exclusive geo model.
+         */
+        getHostGeoModel: function () {
+            var geoIndex = this.option.geoIndex;
+            return geoIndex != null
+                ? this.dependentModels.geo[geoIndex]
+                : null;
+        },
+
+        getMapType: function () {
+            return (this.getHostGeoModel() || this).option.map;
         },
 
         _fillOption: function (option, mapName) {
@@ -73,7 +90,7 @@ define(function (require) {
         getRawValue: function (dataIndex) {
             // Use value stored in data instead because it is calculated from multiple series
             // FIXME Provide all value of multiple series ?
-            return this._data.get('value', dataIndex);
+            return this.getData().get('value', dataIndex);
         },
 
         /**
@@ -138,9 +155,16 @@ define(function (require) {
             zlevel: 0,
             // 二级层叠
             z: 2,
+
             coordinateSystem: 'geo',
-            // 各省的 map 暂时都用中文
-            map: 'china',
+
+            // map should be explicitly specified since ec3.
+            map: '',
+
+            // If `geoIndex` is not specified, a exclusive geo will be
+            // created. Otherwise use the specified geo component, and
+            // `map` and `mapType` are ignored.
+            // geoIndex: 0,
 
             // 'center' | 'left' | 'right' | 'x%' | {number}
             left: 'center',

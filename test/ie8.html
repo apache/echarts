@@ -542,6 +542,40 @@
                 });
             }
 
+            function makeExtremePie() {
+                var chart = makeChart();
+                chart.setOption({
+                    "tooltip": {
+                        "trigger": "item",
+                        "formatter": "{b} : {c}吨 ({d}%)"
+                    },
+                    "series": [
+                        {
+                            "type": "pie",
+                            "radius": "60%",
+                            "center": ["50%", "50%" ],
+                            "data": [
+                                {
+                                    "value": "6000",
+                                    "name": "aaa"
+                                },
+                                {
+                                    "value": "123456790246912.12345",
+                                    "name": "bbb"
+                                }
+                            ],
+                            "itemStyle": {
+                                "emphasis": {
+                                    "shadowBlur": 10,
+                                    "shadowOffsetX": 0,
+                                    "shadowColor": "rgba(0, 0, 0, 0.5)"
+                                }
+                            }
+                        }
+                    ]
+                });
+            }
+
             function makeSinglePie() {
                 var chart = makeChart();
                 chart.setOption({
@@ -944,6 +978,9 @@
             setTimeout(function () {
                 makePie();
             }, 1500);
+            setTimeout(function () {
+                makeExtremePie();
+            }, 1600);
             setTimeout(function () {
                 makeSinglePie();
             }, 1800);

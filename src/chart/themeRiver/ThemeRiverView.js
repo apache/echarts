@@ -69,9 +69,7 @@ define(function (require) {
                     points0.push([x, y0]);
                     points1.push([x, y0 + y]);
 
-                    color = rawData.getItemVisual(
-                        data.getRawIndex(indices[j]), 'color'
-                    );
+                    color = rawData.getItemVisual(indices[j], 'color');
                 }
 
                 var polygon;
@@ -130,7 +128,7 @@ define(function (require) {
                 }
 
                 var hoverItemStyleModel = itemModel.getModel('itemStyle.emphasis');
-                var itemStyleModel = itemModel.getModel('itemStyle.nomral');
+                var itemStyleModel = itemModel.getModel('itemStyle.normal');
                 var textStyleModel = labelModel.getModel('textStyle');
 
                 text.setStyle({

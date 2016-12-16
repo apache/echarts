@@ -36,27 +36,24 @@ define(function (require) {
                 this._range = dataZoomModel.getPercentRange();
             }
 
-            var targetInfo = this.getTargetInfo();
-
             // Reset controllers.
-            zrUtil.each(['cartesians', 'polars'], function (coordSysName) {
+            zrUtil.each(this.getTargetCoordInfo(), function (coordInfoList, coordSysName) {
 
-                var coordInfoList = targetInfo[coordSysName];
                 var allCoordIds = zrUtil.map(coordInfoList, function (coordInfo) {
                     return roams.generateCoordId(coordInfo.model);
                 });
 
                 zrUtil.each(coordInfoList, function (coordInfo) {
                     var coordModel = coordInfo.model;
-                    var coordinateSystem = coordModel.coordinateSystem;
 
                     roams.register(
                         api,
                         {
                             coordId: roams.generateCoordId(coordModel),
                             allCoordIds: allCoordIds,
-                            coordinateSystem: coordinateSystem,
-                            containsPoint: bind(operations[coordSysName].containsPoint, this, coordinateSystem),
+                            containsPoint: function (x, y) {
+                                return coordModel.coordinateSystem.containPoint([x, y]);
+                            },
                             dataZoomId: dataZoomModel.id,
                             throttleRate: dataZoomModel.get('throttle', true),
                             panGetRange: bind(this._onPan, this, coordInfo, coordSysName),
@@ -93,7 +90,7 @@ define(function (require) {
                 return;
             }
 
-            var directionInfo = operations[coordSysName].getDirectionInfo(
+            var directionInfo = getDirectionInfo[coordSysName](
                 [oldX, oldY], [newX, newY], axisModel, controller, coordInfo
             );
 
@@ -124,7 +121,7 @@ define(function (require) {
                 return;
             }
 
-            var directionInfo = operations[coordSysName].getDirectionInfo(
+            var directionInfo = getDirectionInfo[coordSysName](
                 null, [mouseX, mouseY], axisModel, controller, coordInfo
             );
 
@@ -139,76 +136,81 @@ define(function (require) {
 
     });
 
-    var operations = {
+    var getDirectionInfo = {
 
-        cartesians: {
+        grid: function (oldPoint, newPoint, axisModel, controller, coordInfo) {
+            var axis = axisModel.axis;
+            var ret = {};
+            var rect = coordInfo.model.coordinateSystem.getRect();
+            oldPoint = oldPoint || [0, 0];
 
-            getDirectionInfo: function (oldPoint, newPoint, axisModel, controller, coordInfo) {
-                var axis = axisModel.axis;
-                var ret = {};
-                var rect = coordInfo.model.coordinateSystem.getRect();
-                oldPoint = oldPoint || [0, 0];
-
-                if (axis.dim === 'x') {
-                    ret.pixel = newPoint[0] - oldPoint[0];
-                    ret.pixelLength = rect.width;
-                    ret.pixelStart = rect.x;
-                    ret.signal = axis.inverse ? 1 : -1;
-                }
-                else { // axis.dim === 'y'
-                    ret.pixel = newPoint[1] - oldPoint[1];
-                    ret.pixelLength = rect.height;
-                    ret.pixelStart = rect.y;
-                    ret.signal = axis.inverse ? -1 : 1;
-                }
-
-                return ret;
-            },
-
-            containsPoint: function (coordinateSystem, x, y) {
-                return coordinateSystem.getRect().contain(x, y);
+            if (axis.dim === 'x') {
+                ret.pixel = newPoint[0] - oldPoint[0];
+                ret.pixelLength = rect.width;
+                ret.pixelStart = rect.x;
+                ret.signal = axis.inverse ? 1 : -1;
             }
+            else { // axis.dim === 'y'
+                ret.pixel = newPoint[1] - oldPoint[1];
+                ret.pixelLength = rect.height;
+                ret.pixelStart = rect.y;
+                ret.signal = axis.inverse ? -1 : 1;
+            }
+
+            return ret;
         },
 
-        polars: {
+        polar: function (oldPoint, newPoint, axisModel, controller, coordInfo) {
+            var axis = axisModel.axis;
+            var ret = {};
+            var polar = coordInfo.model.coordinateSystem;
+            var radiusExtent = polar.getRadiusAxis().getExtent();
+            var angleExtent = polar.getAngleAxis().getExtent();
 
-            getDirectionInfo: function (oldPoint, newPoint, axisModel, controller, coordInfo) {
-                var axis = axisModel.axis;
-                var ret = {};
-                var polar = coordInfo.model.coordinateSystem;
-                var radiusExtent = polar.getRadiusAxis().getExtent();
-                var angleExtent = polar.getAngleAxis().getExtent();
+            oldPoint = oldPoint ? polar.pointToCoord(oldPoint) : [0, 0];
+            newPoint = polar.pointToCoord(newPoint);
 
-                oldPoint = oldPoint ? polar.pointToCoord(oldPoint) : [0, 0];
-                newPoint = polar.pointToCoord(newPoint);
-
-                if (axisModel.mainType === 'radiusAxis') {
-                    ret.pixel = newPoint[0] - oldPoint[0];
-                    // ret.pixelLength = Math.abs(radiusExtent[1] - radiusExtent[0]);
-                    // ret.pixelStart = Math.min(radiusExtent[0], radiusExtent[1]);
-                    ret.pixelLength = radiusExtent[1] - radiusExtent[0];
-                    ret.pixelStart = radiusExtent[0];
-                    ret.signal = axis.inverse ? 1 : -1;
-                }
-                else { // 'angleAxis'
-                    ret.pixel = newPoint[1] - oldPoint[1];
-                    // ret.pixelLength = Math.abs(angleExtent[1] - angleExtent[0]);
-                    // ret.pixelStart = Math.min(angleExtent[0], angleExtent[1]);
-                    ret.pixelLength = angleExtent[1] - angleExtent[0];
-                    ret.pixelStart = angleExtent[0];
-                    ret.signal = axis.inverse ? -1 : 1;
-                }
-
-                return ret;
-            },
-
-            containsPoint: function (coordinateSystem, x, y) {
-                var radius = coordinateSystem.getRadiusAxis().getExtent()[1];
-                var cx = coordinateSystem.cx;
-                var cy = coordinateSystem.cy;
-
-                return Math.pow(x - cx, 2) + Math.pow(y - cy, 2) <= Math.pow(radius, 2);
+            if (axisModel.mainType === 'radiusAxis') {
+                ret.pixel = newPoint[0] - oldPoint[0];
+                // ret.pixelLength = Math.abs(radiusExtent[1] - radiusExtent[0]);
+                // ret.pixelStart = Math.min(radiusExtent[0], radiusExtent[1]);
+                ret.pixelLength = radiusExtent[1] - radiusExtent[0];
+                ret.pixelStart = radiusExtent[0];
+                ret.signal = axis.inverse ? 1 : -1;
             }
+            else { // 'angleAxis'
+                ret.pixel = newPoint[1] - oldPoint[1];
+                // ret.pixelLength = Math.abs(angleExtent[1] - angleExtent[0]);
+                // ret.pixelStart = Math.min(angleExtent[0], angleExtent[1]);
+                ret.pixelLength = angleExtent[1] - angleExtent[0];
+                ret.pixelStart = angleExtent[0];
+                ret.signal = axis.inverse ? -1 : 1;
+            }
+
+            return ret;
+        },
+
+        singleAxis: function (oldPoint, newPoint, axisModel, controller, coordInfo) {
+            var axis = axisModel.axis;
+            var rect = coordInfo.model.coordinateSystem.getRect();
+            var ret = {};
+
+            oldPoint = oldPoint || [0, 0];
+
+            if (axis.orient === 'horizontal') {
+                ret.pixel = newPoint[0] - oldPoint[0];
+                ret.pixelLength = rect.width;
+                ret.pixelStart = rect.x;
+                ret.signal = axis.inverse ? 1 : -1;
+            }
+            else { // 'vertical'
+                ret.pixel = newPoint[1] - oldPoint[1];
+                ret.pixelLength = rect.height;
+                ret.pixelStart = rect.y;
+                ret.signal = axis.inverse ? -1 : 1;
+            }
+
+            return ret;
         }
     };
 

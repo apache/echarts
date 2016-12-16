@@ -18,7 +18,14 @@ define(function (require) {
         /**
          * @type {module:echarts/coord/single/Single}
          */
-        coordinateSystem: null
+        coordinateSystem: null,
+
+        /**
+         * @override
+         */
+        getCoordSysModel: function () {
+            return this;
+        }
 
     });
 

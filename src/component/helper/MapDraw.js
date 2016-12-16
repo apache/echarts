@@ -10,7 +10,10 @@ define(function (require) {
     function getFixedItemStyle(model, scale) {
         var itemStyle = model.getItemStyle();
         var areaColor = model.get('areaColor');
-        if (areaColor) {
+
+        // If user want the color not to be changed when hover,
+        // they should both set areaColor and color to be null.
+        if (areaColor != null) {
             itemStyle.fill = areaColor;
         }
 
@@ -109,8 +112,16 @@ define(function (require) {
 
         draw: function (mapOrGeoModel, ecModel, api, fromView, payload) {
 
-            // geoModel has no data
+            var isGeo = mapOrGeoModel.mainType === 'geo';
+
+            // map series has data, geo model that controlled by map series
+            // has no data, otherwise data exists.
             var data = mapOrGeoModel.getData && mapOrGeoModel.getData();
+            isGeo && ecModel.eachComponent({mainType: 'series', subType: 'map'}, function (mapSeries) {
+                if (!data && mapSeries.getHostGeoModel() === mapOrGeoModel) {
+                    data = mapSeries.getData();
+                }
+            });
 
             var geo = mapOrGeoModel.coordinateSystem;
 
@@ -199,7 +210,7 @@ define(function (require) {
                 // 2. In geo component
                 // 4. Region has no series legendSymbol, which will be add a showLabel flag in mapSymbolLayout
                 if (
-                    (!data || isDataNaN && (showLabel || hoverShowLabel))
+                    (isGeo || isDataNaN && (showLabel || hoverShowLabel))
                  || (itemLayout && itemLayout.showLabel)
                  ) {
                     var query = data ? dataIdx : region.name;

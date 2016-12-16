@@ -17,7 +17,7 @@ define(function(require) {
         type: 'dataZoom',
 
         dependencies: [
-            'xAxis', 'yAxis', 'zAxis', 'radiusAxis', 'angleAxis', 'series'
+            'xAxis', 'yAxis', 'zAxis', 'radiusAxis', 'angleAxis', 'singleAxis', 'series'
         ],
 
         /**
@@ -210,16 +210,23 @@ define(function(require) {
             var autoAxisIndex = true;
             var orient = this.get('orient', true);
             var thisOption = this.option;
+            var dependentModels = this.dependentModels;
 
             if (autoAxisIndex) {
                 // Find axis that parallel to dataZoom as default.
-                var dimNames = orient === 'vertical'
-                    ? {dim: 'y', axisIndex: 'yAxisIndex', axis: 'yAxis'}
-                    : {dim: 'x', axisIndex: 'xAxisIndex', axis: 'xAxis'};
+                var dimName = orient === 'vertical' ? 'y' : 'x';
 
-                if (this.dependentModels[dimNames.axis].length) {
-                    thisOption[dimNames.axisIndex] = [0];
+                if (dependentModels[dimName + 'Axis'].length) {
+                    thisOption[dimName + 'AxisIndex'] = [0];
                     autoAxisIndex = false;
+                }
+                else {
+                    each(dependentModels.singleAxis, function (singleAxisModel) {
+                        if (autoAxisIndex && singleAxisModel.get('orient', true) === orient) {
+                            thisOption.singleAxisIndex = [singleAxisModel.componentIndex];
+                            autoAxisIndex = false;
+                        }
+                    });
                 }
             }
 
@@ -413,7 +420,7 @@ define(function(require) {
          *
          * @param {string} [axisDimName]
          * @param {number} [axisIndex]
-         * @return {Array.<number>} [startValue, endValue]
+         * @return {Array.<number>} [startValue, endValue] value can only be '-' or finite number.
          */
         getValueRange: function (axisDimName, axisIndex) {
             if (axisDimName == null && axisIndex == null) {

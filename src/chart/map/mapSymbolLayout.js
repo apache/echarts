@@ -7,8 +7,8 @@ define(function (require) {
         var processedMapType = {};
 
         ecModel.eachSeriesByType('map', function (mapSeries) {
-            var mapType = mapSeries.get('map');
-            if (processedMapType[mapType]) {
+            var mapType = mapSeries.getMapType();
+            if (mapSeries.getHostGeoModel() || processedMapType[mapType]) {
                 return;
             }
 

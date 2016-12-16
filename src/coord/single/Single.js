@@ -20,7 +20,7 @@ define(function (require) {
          * @type {string}
          * @readOnly
          */
-        this.dimension = 'x';
+        this.dimension = 'single';
 
         /**
          * Add it just for draw tooltip.
@@ -28,7 +28,7 @@ define(function (require) {
          * @type {Array.<string>}
          * @readOnly
          */
-        this.dimensions = ['x'];
+        this.dimensions = ['single'];
 
         /**
          * @private
@@ -92,25 +92,15 @@ define(function (require) {
          * @param  {module:echarts/ExtensionAPI} api
          */
         update: function (ecModel, api) {
-            this._updateAxisFromSeries(ecModel);
-        },
-
-        /**
-         * Update the axis extent from series.
-         *
-         * @param  {module:echarts/model/Global} ecModel
-         * @private
-         */
-        _updateAxisFromSeries: function (ecModel) {
-
             ecModel.eachSeries(function (seriesModel) {
-
-                var data = seriesModel.getData();
-                var dim = this.dimension;
-                this._axis.scale.unionExtent(
-                    data.getDataExtent(seriesModel.coordDimToDataDim(dim))
-                );
-                axisHelper.niceScaleExtent(this._axis, this._axis.model);
+                if (seriesModel.coordinateSystem === this) {
+                    var data = seriesModel.getData();
+                    var dim = this.dimension;
+                    this._axis.scale.unionExtent(
+                        data.getDataExtent(seriesModel.coordDimToDataDim(dim))
+                    );
+                    axisHelper.niceScaleExtent(this._axis, this._axis.model);
+                }
             }, this);
         },
 

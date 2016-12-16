@@ -32,7 +32,7 @@ define(function (require) {
                     index: seriesModel.get('singleAxisIndex'),
                     id: seriesModel.get('singleAxisId')
                 })[0];
-                seriesModel.coordinateSystem = singleAxisModel.coordinateSystem;
+                seriesModel.coordinateSystem = singleAxisModel && singleAxisModel.coordinateSystem;
             }
         });
 

@@ -13,12 +13,22 @@ define(function(require) {
         /**
          * @type {module:echarts/coord/polar/AngleAxis|module:echarts/coord/polar/RadiusAxis}
          */
-        axis: null
+        axis: null,
+
+        /**
+         * @override
+         */
+        getCoordSysModel: function () {
+            return this.ecModel.queryComponents({
+                mainType: 'polar',
+                index: this.option.polarIndex,
+                id: this.option.polarId
+            })[0];
+        }
 
     });
 
     zrUtil.merge(PolarAxisModel.prototype, require('../axisModelCommonMixin'));
-    zrUtil.merge(PolarAxisModel.prototype, require('../axisModelZoomMixin'));
 
     var polarAxisDefaultExtendedOption = {
         angle: {

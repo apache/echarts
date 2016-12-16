@@ -19,8 +19,18 @@
                 left: 10;
                 top: 10;
             }
+            #info {
+                position: fixed;
+                left: 0;
+                bottom: 0;
+                height: 30px;
+                line-height: 30px;
+                color: yellow;
+                font-size: 20px;
+            }
         </style>
-        <div id='main'></div>
+        <div id="main"></div>
+        <div id="info"></div>
         <button id="pause-resume">Pause/Resume</button>
         <script>
 
@@ -333,6 +343,14 @@
                             }
                         },
                         series: series
+                    });
+
+                    myChart.on('geoselectchanged', function (param) {
+                        var selected = [];
+                        echarts.util.each(param.selected, function (v, key) {
+                            v && selected.push(key);
+                        });
+                        document.getElementById('info').innerHTML = 'SELECTED: ' + selected.join(', ');
                     });
 
                     var isPaused = false;

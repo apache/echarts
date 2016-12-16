@@ -1,0 +1,158 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="esl.js"></script>
+        <script src="config.js"></script>
+        <script src="lib/jquery.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="reset.css">
+    </head>
+    <body>
+        <style>
+        </style>
+        <div id="main"></div>
+        <script>
+
+
+            var echarts;
+            var colorTool;
+            var chart;
+            var myChart;
+            var groupCategories = [];
+            var groupColors = [];
+
+            require([
+                'echarts',
+                'zrender/tool/color',
+                'echarts/chart/scatter',
+                'echarts/chart/graph',
+                'echarts/component/singleAxis',
+                'echarts/component/tooltip',
+                'echarts/component/toolbox',
+                'echarts/component/dataZoom',
+                'echarts/component/visualMap'
+            ], function (ec, ct) {
+                echarts = ec;
+                colorTool = ct;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        var myChart = echarts.init(document.getElementById('main'));
+        var xAxisData = [
+            'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra',
+            'Scorpio', 'Sagittarius', 'Capricornus', 'Aquarius', 'Pisces'
+        ];
+        var data0 = [];
+        var data1 = [];
+        var data2 = [];
+        var data3 = [];
+
+        for (var i = 0; i < xAxisData.length; i++) {
+            data0.push([Math.random() * 100, Math.random() * 30]);
+            data1.push(Math.random() * 30);
+            data2.push([Math.random() * (i % 2 === 0 ? 100 : 1000000), Math.random() * 30]);
+            data3.push([+new Date() + Math.round(Math.random() * 3600 * 24 * 30), Math.random() * 30]);
+        }
+
+        var height = '18%';
+
+        myChart.setOption({
+            backgroundColor: '#fff',
+            tooltip: {
+                trigger: 'axis'
+            },
+            dataZoom: [{
+                type: 'inside',
+                singleAxisIndex: [0]
+            }, {
+                type: 'inside',
+                singleAxisIndex: [1]
+            }, {
+                type: 'inside',
+                singleAxisIndex: [2]
+            }, {
+                type: 'inside',
+                singleAxisIndex: [3]
+            }],
+            singleAxis: [{
+                type: 'value',
+                id: 'a',
+                height: height
+            }, {
+                type: 'category',
+                    id: 'b',
+                data: xAxisData,
+                height: height,
+                top: '27%'
+            }, {
+                type: 'log',
+                id: 'c',
+                height: height,
+                top: '55%'
+            }, {
+                type: 'time',
+                id: 'd',
+                height: height,
+                top: '77%'
+            }],
+            series: [{
+                type: 'scatter',
+                coordinateSystem: 'singleAxis',
+                singleAxisId: 'a',
+                symbolSize: function (val) {
+                    return val[1];
+                },
+                data: data0
+            }, {
+                type: 'scatter',
+                coordinateSystem: 'singleAxis',
+                singleAxisId: 'b',
+                symbolSize: function (val) {
+                    return val;
+                },
+                data: data1
+            }, {
+                type: 'scatter',
+                coordinateSystem: 'singleAxis',
+                singleAxisId: 'c',
+                symbolSize: function (val) {
+                    return val[1];
+                },
+                data: data2
+            }, {
+                type: 'scatter',
+                coordinateSystem: 'singleAxis',
+                singleAxisId: 'd',
+                symbolSize: function (val) {
+                    return val[1];
+                },
+                data: data3
+            }]
+        });
+
+
+
+
+
+
+
+
+
+
+
+            });
+
+        </script>
+    </body>
+</html>

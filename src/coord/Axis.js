@@ -213,7 +213,24 @@ define(function (require) {
             var size = Math.abs(axisExtent[1] - axisExtent[0]);
 
             return Math.abs(size) / len;
+        },
+
+        /**
+         * When axis extent depends on data and no data exists,
+         * axis ticks should not be drawn, which is named 'blank'.
+         */
+        isBlank: function () {
+            return this._isBlank;
+        },
+
+        /**
+         * When axis extent depends on data and no data exists,
+         * axis ticks should not be drawn, which is named 'blank'.
+         */
+        setBlank: function (isBlank) {
+            this._isBlank = isBlank;
         }
+
     };
 
     return Axis;
