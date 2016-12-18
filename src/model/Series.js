@@ -269,7 +269,7 @@ define(function(require) {
         /**
          * @return {boolean}
          */
-        ifEnableAnimation: function () {
+        isAnimationEnabled: function () {
             if (env.node) {
                 return false;
             }

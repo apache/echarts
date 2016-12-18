@@ -409,8 +409,8 @@ define(function(require) {
         }
         var animationEnabled = animatableModel
             && (
-                animatableModel.ifEnableAnimation
-                ? animatableModel.ifEnableAnimation()
+                animatableModel.isAnimationEnabled
+                ? animatableModel.isAnimationEnabled()
                 // Directly use animation property
                 : animatableModel.getShallow('animation')
             );

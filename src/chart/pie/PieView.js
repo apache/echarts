@@ -177,7 +177,7 @@ define(function (require) {
             }, 300, 'elasticOut');
         }
         sector.off('mouseover').off('mouseout').off('emphasis').off('normal');
-        if (itemModel.get('hoverAnimation') && seriesModel.ifEnableAnimation()) {
+        if (itemModel.get('hoverAnimation') && seriesModel.isAnimationEnabled()) {
             sector
                 .on('mouseover', onEmphasis)
                 .on('mouseout', onNormal)

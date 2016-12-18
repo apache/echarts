@@ -36,13 +36,13 @@ define(function (require) {
         /**
          * @return {boolean}
          */
-        ifEnableAnimation: function () {
+        isAnimationEnabled: function () {
             if (env.node) {
                 return false;
             }
 
             var hostSeries = this.__hostSeries;
-            return this.getShallow('animation') && hostSeries && hostSeries.ifEnableAnimation();
+            return this.getShallow('animation') && hostSeries && hostSeries.isAnimationEnabled();
         },
 
         mergeOption: function (newOpt, ecModel, createdBySelf, isInit) {

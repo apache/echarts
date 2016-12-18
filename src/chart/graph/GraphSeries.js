@@ -150,8 +150,8 @@ define(function (require) {
             this.option.center = center;
         },
 
-        ifEnableAnimation: function () {
-            return GraphSeries.superCall(this, 'ifEnableAnimation')
+        isAnimationEnabled: function () {
+            return GraphSeries.superCall(this, 'isAnimationEnabled')
                 // Not enable animation when do force layout
                 && !(this.get('layout') === 'force' && this.get('force.layoutAnimation'));
         },

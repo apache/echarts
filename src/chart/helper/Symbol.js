@@ -259,7 +259,7 @@ define(function (require) {
 
         graphic.setHoverStyle(symbolPath);
 
-        if (hoverAnimation && seriesModel.ifEnableAnimation()) {
+        if (hoverAnimation && seriesModel.isAnimationEnabled()) {
             var onEmphasis = function() {
                 var ratio = size[1] / size[0];
                 this.animateTo({
