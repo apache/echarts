@@ -131,6 +131,9 @@ define(function(require) {
                 emphasis: {}
             },
 
+            // Animation type canbe expansion, scale
+            animationType: 'expansion',
+
             animationEasing: 'cubicOut',
 
             data: []
