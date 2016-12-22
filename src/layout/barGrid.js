@@ -178,10 +178,10 @@ define(function(require) {
             });
 
             data.each(valueAxis.dim, function (value, idx) {
-                // 空数据
                 if (isNaN(value)) {
                     return;
                 }
+
                 if (!lastStackCoords[stackId][idx]) {
                     lastStackCoords[stackId][idx] = {
                         p: valueAxisStart, // Positive stack
@@ -228,6 +228,7 @@ define(function(require) {
                 }
 
                 data.setItemLayout(idx, {
+                    valueSign: value > 0 ? 1 : value < 0 ? -1 : 0,
                     x: x,
                     y: y,
                     width: width,

@@ -8,13 +8,15 @@ define(function (require) {
     var graphic = require('../../util/graphic');
     var numberUtil = require('../../util/number');
 
-    function normalizeSymbolSize(symbolSize) {
-        symbolSize = symbolSize instanceof Array
+    function getSymbolSize(data, idx) {
+        var symbolSize = data.getItemVisual(idx, 'symbolSize');
+        return symbolSize instanceof Array
             ? symbolSize.slice()
             : [+symbolSize, +symbolSize];
-        symbolSize[0] /= 2;
-        symbolSize[1] /= 2;
-        return symbolSize;
+    }
+
+    function getScale(symbolSize) {
+        return [symbolSize[0] / 2, symbolSize[1] / 2];
     }
 
     /**
@@ -36,7 +38,7 @@ define(function (require) {
         this.parent.drift(dx, dy);
     }
 
-    symbolProto._createSymbol = function (symbolType, data, idx) {
+    symbolProto._createSymbol = function (symbolType, data, idx, symbolSize) {
         // Remove paths created before
         this.removeAll();
 
@@ -61,10 +63,8 @@ define(function (require) {
         // Rewrite drift method
         symbolPath.drift = driftSymbol;
 
-        var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
-
         graphic.initProps(symbolPath, {
-            scale: size
+            scale: getScale(symbolSize)
         }, seriesModel, idx);
         this._symbolType = symbolType;
 
@@ -134,14 +134,15 @@ define(function (require) {
 
         var symbolType = data.getItemVisual(idx, 'symbol') || 'circle';
         var seriesModel = data.hostModel;
-        var symbolSize = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
+        var symbolSize = getSymbolSize(data, idx);
+
         if (symbolType !== this._symbolType) {
-            this._createSymbol(symbolType, data, idx);
+            this._createSymbol(symbolType, data, idx, symbolSize);
         }
         else {
             var symbolPath = this.childAt(0);
             graphic.updateProps(symbolPath, {
-                scale: symbolSize
+                scale: getScale(symbolSize)
             }, seriesModel, idx);
         }
         this._updateCommon(data, idx, symbolSize, seriesScope);
@@ -248,8 +249,6 @@ define(function (require) {
             hoverItemStyle.text = '';
         }
 
-        var size = normalizeSymbolSize(data.getItemVisual(idx, 'symbolSize'));
-
         symbolPath.off('mouseover')
             .off('mouseout')
             .off('emphasis')
@@ -259,19 +258,21 @@ define(function (require) {
 
         graphic.setHoverStyle(symbolPath);
 
+        var scale = getScale(symbolSize);
+
         if (hoverAnimation && seriesModel.isAnimationEnabled()) {
             var onEmphasis = function() {
-                var ratio = size[1] / size[0];
+                var ratio = scale[1] / scale[0];
                 this.animateTo({
                     scale: [
-                        Math.max(size[0] * 1.1, size[0] + 3),
-                        Math.max(size[1] * 1.1, size[1] + 3 * ratio)
+                        Math.max(scale[0] * 1.1, scale[0] + 3),
+                        Math.max(scale[1] * 1.1, scale[1] + 3 * ratio)
                     ]
                 }, 400, 'elasticOut');
             };
             var onNormal = function() {
                 this.animateTo({
-                    scale: size
+                    scale: scale
                 }, 400, 'elasticOut');
             };
             symbolPath.on('mouseover', onEmphasis)
