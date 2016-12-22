@@ -417,12 +417,9 @@ define(function(require) {
 
         if (animationEnabled) {
             var postfix = isUpdate ? 'Update' : '';
-            var duration = animatableModel
-                && animatableModel.getShallow('animationDuration' + postfix);
-            var animationEasing = animatableModel
-                && animatableModel.getShallow('animationEasing' + postfix);
-            var animationDelay = animatableModel
-                && animatableModel.getShallow('animationDelay' + postfix);
+            var duration = animatableModel.getShallow('animationDuration' + postfix);
+            var animationEasing = animatableModel.getShallow('animationEasing' + postfix);
+            var animationDelay = animatableModel.getShallow('animationDelay' + postfix);
             if (typeof animationDelay === 'function') {
                 animationDelay = animationDelay(dataIndex);
             }

@@ -313,5 +313,16 @@ define(function (require) {
         }
     };
 
+    /**
+     * parseFloat NaNs numeric-cast false positives (null|true|false|"")
+     * ...but misinterprets leading-number strings, particularly hex literals ("0x...")
+     * subtraction forces infinities to NaN
+     * @param {*} v
+     * @return {boolean}
+     */
+    number.isNumeric = function (v) {
+        return v - parseFloat(v) >= 0;
+    };
+
     return number;
 });
