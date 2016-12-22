@@ -25,7 +25,7 @@ define(function (require) {
 
             var cartesian = seriesModel.coordinateSystem;
             var baseAxis = cartesian.getBaseAxis();
-            var isHorizontal = baseAxis.isHorizontal();
+            var isHorizontal = !!baseAxis.isHorizontal();
             var coordSysRect = cartesian.grid.getRect();
 
             var opt = {
@@ -137,6 +137,7 @@ define(function (require) {
             color: data.getItemVisual(dataIndex, 'color'),
             symbolClip: symbolClip,
             symbolRepeat: symbolRepeat,
+            symbolRepeatDirection: itemModel.get('symbolRepeatDirection'),
             rotation: (symbolRotate || 0) * Math.PI / 180 || 0
         };
 
@@ -242,7 +243,9 @@ define(function (require) {
 
         output.symbolMargin = symbolMargin;
 
-        var sizeFix = (barFullLength > 0 ? 1 : -1) * (pathLength / 2);
+        var pxSign = output.pxSign = barFullLength > 0 ? 1 : barFullLength < 0 ? -1 : 0;
+
+        var sizeFix = pxSign * (pathLength / 2);
         var pathPosition = output.pathPosition = [];
         pathPosition[categoryDim.index] = layout[categoryDim.wh] / 2;
         pathPosition[valueDim.index] = symbolPosition === 'start'
@@ -260,7 +263,9 @@ define(function (require) {
         bundlePosition[valueDim.index] = layout[valueDim.xy];
 
         var barRectShape = output.barRectShape = zrUtil.extend({}, layout);
-        barRectShape[valueDim.wh] = barFullLength;
+        barRectShape[valueDim.wh] = pxSign * Math.max(
+            Math.abs(layout[valueDim.wh]), Math.abs(pathPosition[valueDim.index] + sizeFix)
+        );
         barRectShape[categoryDim.wh] = layout[categoryDim.wh];
 
         var clipShape = output.clipShape = {x: 0, y: 0};
@@ -270,9 +275,7 @@ define(function (require) {
         // If x or y is less than zero, show reversed shape.
         var symbolScale = output.symbolScale = [symbolSize[0] / 2, symbolSize[1] / 2];
         // Follow convention, 'right' and 'top' is the normal scale.
-        symbolScale[valueDim.index] *= opt.isHorizontal
-            ? (barFullLength > 0 ? -1 : 1)
-            : (barFullLength >= 0 ? 1 : -1);
+        symbolScale[valueDim.index] *= (opt.isHorizontal ? -1 : 1) * pxSign;
     }
 
     function createPath(symbolMeta) {
@@ -325,7 +328,14 @@ define(function (require) {
 
         function makeTarget(index) {
             var position = pathPosition.slice();
-            position[valueDim.index] = unit * (index - repeatTimes / 2 + 0.5) + pathPosition[valueDim.index];
+            // (start && pxSign > 0) || (end && pxSign < 0): i = repeatTimes - index
+            // Otherwise: i = index;
+            var pxSign = symbolMeta.pxSign;
+            var i = index;
+            if (symbolMeta.symbolRepeatDirection === 'start' ? pxSign > 0 : pxSign < 0) {
+                i = repeatTimes - index;
+            }
+            position[valueDim.index] = unit * (i - repeatTimes / 2 + 0.5) + pathPosition[valueDim.index];
             return {
                 position: position,
                 scale: symbolMeta.symbolScale.slice(),
@@ -385,42 +395,48 @@ define(function (require) {
         bar.__pictorialBundle = bundle;
         bundle.attr('position', symbolMeta.bundlePosition.slice());
 
+        var updateMethod = isUpdate ? 'updateProps' : 'initProps';
+        var animationModel = opt.animationModel;
+
         if (symbolMeta.symbolRepeat) {
             updateRepeatSymbols(bar, dataIndex, opt, symbolMeta);
         }
         else {
-            var path = bar.__pictorialMainPath = createPath(symbolMeta);
-            bundle.add(path);
-            path.attr({
+            var mainPath = bar.__pictorialMainPath = createPath(symbolMeta);
+            bundle.add(mainPath);
+            mainPath.attr({
                 position: symbolMeta.pathPosition.slice(),
-                scale: symbolMeta.symbolScale.slice(),
+                scale: [0, 0],
                 rotation: symbolMeta.rotation
             });
+
+            graphic[updateMethod](
+                mainPath, {scale: symbolMeta.symbolScale.slice()}, animationModel, dataIndex
+            );
         }
 
         var clipPath;
         if (symbolMeta.symbolClip) {
+            var clipShape = zrUtil.extend({}, symbolMeta.clipShape);
+            clipShape[valueDim.wh] = 0;
+
             clipPath = new graphic.Rect({
-                shape: zrUtil.extend({}, symbolMeta.clipShape)
+                shape: clipShape
             });
             bundle.setClipPath(clipPath);
             bar.__pictorialClipPath = clipPath;
+
+            var target = {};
+            target[valueDim.wh] = symbolMeta.clipShape[valueDim.wh];
+            graphic[updateMethod](clipPath, {shape: target}, animationModel, dataIndex);
         }
 
         updateBarRect(bar, dataIndex, opt, symbolMeta);
 
         // Three animation types: clip, position, scale.
-        var animationModel = opt.animationModel;
-        var updateMethod = isUpdate ? 'updateProps' : 'initProps';
-        if (animationModel) {
             // clipPath animation
-            if (clipPath) {
-                var rectShape = clipPath.shape;
-                var target = {};
-                target[valueDim.wh] = rectShape[valueDim.wh];
-                rectShape[valueDim.wh] = 0;
-                graphic[updateMethod](clipPath, {shape: target}, animationModel, dataIndex);
-            }
+            // if (clipPath) {
+            // }
 
             // FIXME
             // animation clip path?
@@ -447,7 +463,7 @@ define(function (require) {
             //     // }
             //     graphic[updateMethod](path, target, animationModel, dataIndex);
             // });
-        }
+        // }
 
         return bar;
     }

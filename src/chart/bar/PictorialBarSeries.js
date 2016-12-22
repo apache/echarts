@@ -15,8 +15,10 @@ define(function(require) {
             symbolOffset: null,
             symbolMargin: null,   // start margin and end margin. Can be a number or a percent string.
                                   // Auto margin by defualt.
-            symbolRepeat: false,  // Can be a number, specifies repeat times.
-                                  // Or false/null/undefined, means no repeat.
+            symbolRepeat: false,  // false/null/undefined, means no repeat.
+                                  // Can be a number, specifies repeat times.
+            symbolRepeatDirection: 'end', // 'end' means from 'start' to 'end'.
+
             symbolClip: false,
             symbolBoundingData: null,
 
