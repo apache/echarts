@@ -154,8 +154,8 @@ define(function (require) {
             return Clazz;
         };
 
-        entity.getClass = function (componentTypeMain, subType, throwWhenNotFound) {
-            var Clazz = storage[componentTypeMain];
+        entity.getClass = function (componentMainType, subType, throwWhenNotFound) {
+            var Clazz = storage[componentMainType];
 
             if (Clazz && Clazz[IS_CONTAINER]) {
                 Clazz = subType ? Clazz[subType] : null;
@@ -163,7 +163,9 @@ define(function (require) {
 
             if (throwWhenNotFound && !Clazz) {
                 throw new Error(
-                    'Component ' + componentTypeMain + '.' + (subType || '') + ' not exists. Load it first.'
+                    !subType
+                        ? componentMainType + '.' + 'type should be specified.'
+                        : 'Component ' + componentMainType + '.' + (subType || '') + ' not exists. Load it first.'
                 );
             }
 
