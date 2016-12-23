@@ -5,6 +5,7 @@ define(function (require) {
     var SeriesModel = require('../../model/Series');
     var List = require('../../data/List');
     var zrUtil = require('zrender/core/util');
+    var formatUtil = require('../../util/format');
     var CoordinateSystem = require('../../CoordinateSystem');
 
     // Convert [ [{coord: []}, {coord: []}] ]
@@ -91,7 +92,11 @@ define(function (require) {
             }
             var fromName = itemModel.get('fromName');
             var toName = itemModel.get('toName');
-            return fromName + ' > ' + toName;
+            var html = [];
+            fromName != null && html.push(fromName);
+            toName != null && html.push(toName);
+
+            return formatUtil.encodeHTML(html.join(' > '));
         },
 
         defaultOption: {

@@ -6,6 +6,7 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../../util/model');
     var Model = require('../../model/Model');
+    var formatUtil = require('../../util/format');
 
     var createGraphFromNodeEdge = require('../helper/createGraphFromNodeEdge');
 
@@ -114,9 +115,14 @@ define(function (require) {
                 var edge = nodeData.graph.getEdgeByIndex(dataIndex);
                 var sourceName = nodeData.getName(edge.node1.dataIndex);
                 var targetName = nodeData.getName(edge.node2.dataIndex);
-                var html = sourceName + ' > ' + targetName;
+
+                var html = [];
+                sourceName != null && html.push(sourceName);
+                targetName != null && html.push(targetName);
+                html = formatUtil.encodeHTML(html.join(' > '));
+
                 if (params.value) {
-                    html += ' : ' + params.value;
+                    html += ' : ' + formatUtil.encodeHTML(params.value);
                 }
                 return html;
             }

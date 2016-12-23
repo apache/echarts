@@ -102,7 +102,7 @@ define(function (require) {
             var formattedValue = zrUtil.isArray(value)
                 ? zrUtil.map(value, addCommas).join(', ') : addCommas(value);
             var name = data.getName(dataIndex);
-            var html = this.name;
+            var html = encodeHTML(this.name);
             if (value != null || name) {
                 html += '<br />';
             }
@@ -113,7 +113,7 @@ define(function (require) {
                 }
             }
             if (value != null) {
-                html += formattedValue;
+                html += encodeHTML(formattedValue);
             }
             return html;
         },

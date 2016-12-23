@@ -76,11 +76,15 @@ define(function(require) {
         formatTooltip: function (dataIndex, mutipleSeries) {
             // It rearly use mutiple candlestick series in one cartesian,
             // so only consider one series in this default tooltip.
-            var valueHTMLArr = zrUtil.map(this.valueDimensions, function (dim) {
-                return dim + ': ' + addCommas(this.getData().get(dim, dataIndex));
-            }, this);
+            var valueHTML = zrUtil.map(this.valueDimensions, function (dim) {
+                return encodeHTML(dim + ': ' + addCommas(this.getData().get(dim, dataIndex)));
+            }, this).join('<br />');
 
-            return encodeHTML(this.name) + '<br />' + valueHTMLArr.join('<br />');
+            var html = [];
+            this.name != null && html.push(encodeHTML(this.name));
+            valueHTML != null && html.push(valueHTML);
+
+            return html.join('<br />');
         },
 
         brushSelector: function (itemLayout, selectors) {

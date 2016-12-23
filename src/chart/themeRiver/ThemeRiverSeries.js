@@ -277,14 +277,14 @@ define(function (require) {
                 time = formatUtil.formatTime('yyyy-MM-dd', time);
             }
 
-            var html = time + '<br />';
+            var html = encodeHTML(time) + '<br />';
             for (var i = 0; i < len; ++i) {
                 var htmlName = data.get('name', dataIndexs[i]);
                 var htmlValue = data.get('value', dataIndexs[i]);
                 if (isNaN(htmlValue) || htmlValue == null) {
                     htmlValue = '-';
                 }
-                html += encodeHTML(htmlName) + ' : ' + htmlValue + '<br />';
+                html += encodeHTML(htmlName + ' : ' + htmlValue) + '<br />';
             }
             return html;
         },

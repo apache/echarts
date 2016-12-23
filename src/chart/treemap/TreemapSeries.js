@@ -184,7 +184,7 @@ define(function(require) {
                 ? addCommas(value[0]) : addCommas(value);
             var name = data.getName(dataIndex);
 
-            return encodeHTML(name) + ': ' + formattedValue;
+            return encodeHTML(name + ': ' + formattedValue);
         },
 
         /**

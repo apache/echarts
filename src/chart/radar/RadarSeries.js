@@ -6,6 +6,7 @@ define(function(require) {
     var List = require('../../data/List');
     var completeDimensions = require('../../data/helper/completeDimensions');
     var zrUtil = require('zrender/core/util');
+    var encodeHTML = require('../../util/format').encodeHTML;
 
     var RadarSeries = SeriesModel.extend({
 
@@ -40,9 +41,9 @@ define(function(require) {
             var coordSys = this.coordinateSystem;
             var indicatorAxes = coordSys.getIndicatorAxes();
             var name = this.getData().getName(dataIndex);
-            return (name == '' ? this.name : name) + '<br/>'
+            return encodeHTML(name === '' ? this.name : name) + '<br/>'
                 + zrUtil.map(indicatorAxes, function (axis, idx) {
-                    return axis.name + ' : ' + value[idx];
+                    return encodeHTML(axis.name + ' : ' + value[idx]);
                 }).join('<br />');
         },
 

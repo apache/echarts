@@ -1073,7 +1073,7 @@ define(function (require) {
                     var firstLine = baseAxis.type === 'time'
                         ? baseAxis.scale.getLabel(value[baseDimIndex])
                         : seriesList[sampleSeriesIndex].getData().getName(firstDataIndex);
-                    var defaultHtml = (firstLine ? firstLine + '<br />' : '')
+                    var defaultHtml = (firstLine ? formatUtil.encodeHTML(firstLine) + '<br />' : '')
                         + zrUtil.map(seriesList, function (series, index) {
                             return series.formatTooltip(payloadBatch[index].dataIndexInside, true);
                         }).join('<br />');

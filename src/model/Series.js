@@ -238,8 +238,9 @@ define(function(require) {
             var data = get(this, 'data');
 
             var value = this.getRawValue(dataIndex);
-            var formattedValue = zrUtil.isArray(value)
-                ? formatArrayValue(value) : addCommas(value);
+            var formattedValue = encodeHTML(
+                zrUtil.isArray(value) ? formatArrayValue(value) : addCommas(value)
+            );
             var name = data.getName(dataIndex);
 
             var color = data.getItemVisual(dataIndex, 'color');
@@ -249,7 +250,7 @@ define(function(require) {
             color = color || 'transparent';
 
             var colorEl = '<span style="display:inline-block;margin-right:5px;'
-                + 'border-radius:10px;width:9px;height:9px;background-color:' + color + '"></span>';
+                + 'border-radius:10px;width:9px;height:9px;background-color:' + encodeHTML(color) + '"></span>';
 
             var seriesName = this.name;
             // FIXME
@@ -261,7 +262,8 @@ define(function(require) {
                 ? ((seriesName && encodeHTML(seriesName) + '<br />') + colorEl
                     + (name
                         ? encodeHTML(name) + ' : ' + formattedValue
-                        : formattedValue)
+                        : formattedValue
+                    )
                   )
                 : (colorEl + encodeHTML(this.name) + ' : ' + formattedValue);
         },

@@ -126,7 +126,7 @@ define(function (require) {
             }
 
             return seriesNames.join(', ') + '<br />'
-                + name + ' : ' + formattedValue;
+                + encodeHTML(name + ' : ' + formattedValue);
         },
 
         /**
