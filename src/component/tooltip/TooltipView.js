@@ -1154,7 +1154,7 @@ define(function (require) {
 
                 if (formatter) {
                     if (typeof formatter === 'string') {
-                        html = formatUtil.formatTpl(formatter, params);
+                        html = formatUtil.formatTpl(formatter, params, true);
                     }
                     else if (typeof formatter === 'function') {
                         var self = this;
