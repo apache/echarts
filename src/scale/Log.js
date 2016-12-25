@@ -114,6 +114,15 @@ define(function (require) {
         },
 
         /**
+         * @override
+         */
+        unionExtentFromData: function (data, dim) {
+            this.unionExtent(data.getDataExtent(dim, true, function (val) {
+                return val > 0;
+            }));
+        },
+
+        /**
          * Update interval and extent of intervals for nice ticks
          * @param  {number} [approxTickNum = 10] Given approx tick number
          */

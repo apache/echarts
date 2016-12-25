@@ -46,12 +46,8 @@ define(function (require) {
         ecModel.eachSeries(function (seriesModel) {
             if (seriesModel.coordinateSystem === polar) {
                 var data = seriesModel.getData();
-                radiusAxis.scale.unionExtent(
-                    data.getDataExtent('radius', radiusAxis.type !== 'category')
-                );
-                angleAxis.scale.unionExtent(
-                    data.getDataExtent('angle', angleAxis.type !== 'category')
-                );
+                radiusAxis.scale.unionExtentFromData(data, 'radius');
+                angleAxis.scale.unionExtentFromData(data, 'angle');
             }
         });
 

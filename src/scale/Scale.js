@@ -80,6 +80,15 @@ define(function (require) {
     };
 
     /**
+     * Set extent from data
+     * @param {module:echarts/data/List} data
+     * @param {string} dim
+     */
+    scaleProto.unionExtentFromData = function (data, dim) {
+        this.unionExtent(data.getDataExtent(dim, true));
+    };
+
+    /**
      * Get extent
      * @return {Array.<number>}
      */

@@ -131,7 +131,7 @@ define(function (require) {
             }
             var data = radarSeries.getData();
             zrUtil.each(indicatorAxes, function (indicatorAxis) {
-                indicatorAxis.scale.unionExtent(data.getDataExtent(indicatorAxis.dim));
+                indicatorAxis.scale.unionExtentFromData(data, indicatorAxis.dim);
             });
         }, this);
 

@@ -96,8 +96,8 @@ define(function (require) {
                 if (seriesModel.coordinateSystem === this) {
                     var data = seriesModel.getData();
                     var dim = this.dimension;
-                    this._axis.scale.unionExtent(
-                        data.getDataExtent(seriesModel.coordDimToDataDim(dim))
+                    this._axis.scale.unionExtentFromData(
+                        data, seriesModel.coordDimToDataDim(dim)
                     );
                     axisHelper.niceScaleExtent(this._axis, this._axis.model);
                 }
