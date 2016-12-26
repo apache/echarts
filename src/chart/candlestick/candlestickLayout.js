@@ -1,8 +1,7 @@
 define(function (require) {
 
-    var CANDLE_MIN_WIDTH = 2;
-    var CANDLE_MIN_NICE_WIDTH = 5;
-    var GPA_MIN = 4;
+    var retrieve = require('zrender/core/util').retrieve;
+    var parsePercent = require('../../util/number').parsePercent;
 
     return function (ecModel) {
 
@@ -104,16 +103,19 @@ define(function (require) {
                 Math.abs(extent[1] - extent[0]) / data.count()
             );
 
-        // Half band width is perfect when space is enouph, otherwise
-        // try not to be smaller than CANDLE_MIN_NICE_WIDTH (and only
-        // gap is compressed), otherwise ensure not to be smaller than
-        // CANDLE_MIN_WIDTH in spite of overlap.
-
-        return bandWidth / 2 - 2 > CANDLE_MIN_NICE_WIDTH // "- 2" is minus border width
-            ? bandWidth / 2 - 2
-            : bandWidth - CANDLE_MIN_NICE_WIDTH > GPA_MIN
-            ? CANDLE_MIN_NICE_WIDTH
-            : Math.max(bandWidth - GPA_MIN, CANDLE_MIN_WIDTH);
+        var barMaxWidth = parsePercent(
+            retrieve(seriesModel.get('barMaxWidth'), bandWidth),
+            bandWidth
+        );
+        var barMinWidth = parsePercent(
+            retrieve(seriesModel.get('barMinWidth'), 1),
+            bandWidth
+        );
+        var barWidth = seriesModel.get('barWidth');
+        return barWidth != null
+            ? parsePercent(barWidth, bandWidth)
+            // Put max outer to ensure bar visible in spite of overlap.
+            : Math.max(Math.min(bandWidth / 2, barMaxWidth), barMinWidth);
     }
 
 });

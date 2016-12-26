@@ -57,6 +57,10 @@ define(function(require) {
                 }
             },
 
+            barMaxWidth: null,
+            barMinWidth: null,
+            barWidth: null,
+
             animationUpdate: false,
             animationEasing: 'linear',
             animationDuration: 300
