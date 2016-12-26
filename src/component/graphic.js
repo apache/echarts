@@ -1,13 +1,15 @@
-define(function(require) {
+define(function (require) {
 
     var echarts = require('../echarts');
     var zrUtil = require('zrender/core/util');
     var modelUtil = require('../util/model');
     var graphicUtil = require('../util/graphic');
-    var formatUtil = require('../util/format');
     var layoutUtil = require('../util/layout');
 
+    // -------------
     // Preprocessor
+    // -------------
+
     echarts.registerPreprocessor(function (option) {
         var graphicOption = option && option.graphic;
 
@@ -23,7 +25,7 @@ define(function(require) {
             }
             else {
                 // Only one graphic instance can be instantiated. (We dont
-                // want that too many views created in echarts._viewMap)
+                // want that too many views are created in echarts._viewMap)
                 option.graphic = [option.graphic[0]];
             }
         }
@@ -32,21 +34,25 @@ define(function(require) {
         }
     });
 
+    // ------
     // Model
+    // ------
+
     var GraphicModel = echarts.extendComponentModel({
 
         type: 'graphic',
 
         defaultOption: {
+
             // Extra properties for each elements:
             //
             // left/right/top/bottom: (like 12, '22%', 'center', default undefined)
-            //      If left/rigth is set, shape.x/shape.cx/position is not used.
-            //      If top/bottom is set, shape.y/shape.cy/position is not used.
-            //      This mechanism is useful when you want position a group/element
-            //      against the right side or center of this container.
+            //      If left/rigth is set, shape.x/shape.cx/position will not be used.
+            //      If top/bottom is set, shape.y/shape.cy/position will not be used.
+            //      This mechanism is useful when you want to position a group/element
+            //      against the right side or the center of this container.
             //
-            // width/height: (can only pixel value, default 0)
+            // width/height: (can only be pixel value, default 0)
             //      Only be used to specify contianer(group) size, if needed. And
             //      can not be percentage value (like '33%'). See the reason in the
             //      layout algorithm below.
@@ -55,21 +61,22 @@ define(function(require) {
             //      Specify how to calculate boundingRect when locating.
             //      'all': Get uioned and transformed boundingRect
             //          from both itself and its descendants.
-            //          This mode simplies confine a group of elements in the bounding
+            //          This mode simplies confining a group of elements in the bounding
             //          of their ancester container (e.g., using 'right: 0').
-            //      'raw': Only use not transformed boundingRect of itself.
-            //          This mode likes css behavior, useful when you want a
-            //          element can overflow its container. (Consider a rotated
-            //          circle needs to be located in a corner.)
+            //      'raw': Only use the boundingRect of itself and before transformed.
+            //          This mode is similar to css behavior, which is useful when you
+            //          want an element to be able to overflow its container. (Consider
+            //          a rotated circle needs to be located in a corner.)
 
-            // Note: elements is always behind its ancestors in elements array.
+            // Note: elements is always behind its ancestors in this elements array.
             elements: [],
             parentId: null
         },
 
         /**
-         * Save for performance (only update needed graphics).
+         * Save el options for the sake of the performance (only update modified graphics).
          * The order is the same as those in option. (ancesters -> descendants)
+         *
          * @private
          * @type {Array.<Object>}
          */
@@ -137,7 +144,7 @@ define(function(require) {
                 elOptionsToUpdate.push(newElOption);
 
                 // Update existing options, for `getOption` feature.
-                var newElOptCopy = zrUtil.extend({}, newElOption); // Avoid modified.
+                var newElOptCopy = zrUtil.extend({}, newElOption);
                 var $action = newElOption.$action;
                 if (!$action || $action === 'merge') {
                     if (existElOption) {
@@ -151,7 +158,7 @@ define(function(require) {
                         }
 
                         // We can ensure that newElOptCopy and existElOption are not
-                        // the same object, so merge will not change newElOptCopy.
+                        // the same object, so `merge` will not change newElOptCopy.
                         zrUtil.merge(existElOption, newElOptCopy, true);
                         // Rigid body, use ignoreSize.
                         layoutUtil.mergeLayoutParam(existElOption, newElOptCopy, {ignoreSize: true});
@@ -172,10 +179,12 @@ define(function(require) {
 
                 if (existList[index]) {
                     existList[index].hv = newElOption.hv = [
-                        isSetLoc(newElOption, ['left', 'right']), // Rigid body, dont care `width`.
-                        isSetLoc(newElOption, ['top', 'bottom'])  // Rigid body, Dont care `height`.
+                        // Rigid body, dont care `width`.
+                        isSetLoc(newElOption, ['left', 'right']),
+                        // Rigid body, dont care `height`.
+                        isSetLoc(newElOption, ['top', 'bottom'])
                     ];
-                    // Given defualt group size, otherwise may layout error.
+                    // Give default group size. Otherwise layout error may occur.
                     if (existList[index].type === 'group') {
                         existList[index].width == null && (existList[index].width = newElOption.width = 0);
                         existList[index].height == null && (existList[index].height = newElOption.height = 0);
@@ -210,7 +219,11 @@ define(function(require) {
          *  {type: 'circle', parentId: 'xx'},
          *  {type: 'polygon', parentId: 'xx'}
          * ]
+         *
          * @private
+         * @param {Array.<Object>} optionList option list
+         * @param {Array.<Object>} result result of flatten
+         * @param {Object} parentOption parent option
          */
         _flatten: function (optionList, result, parentOption) {
             zrUtil.each(optionList, function (option) {
@@ -225,7 +238,7 @@ define(function(require) {
                     if (option.type === 'group' && children) {
                         this._flatten(children, result, option);
                     }
-                    // For JSON output, and do not affect group creation.
+                    // Deleting for JSON output, and for not affecting group creation.
                     delete option.children;
                 }
             }, this);
@@ -241,7 +254,10 @@ define(function(require) {
         }
     });
 
+    // -----
     // View
+    // -----
+
     echarts.extendComponentView({
 
         type: 'graphic',
@@ -250,11 +266,15 @@ define(function(require) {
          * @override
          */
         init: function (ecModel, api) {
+
             /**
+             * @private
              * @type {Object}
              */
             this._elMap = {};
+
             /**
+             * @private
              * @type {module:echarts/graphic/GraphicModel}
              */
             this._lastGraphicModel;
@@ -265,15 +285,15 @@ define(function(require) {
          */
         render: function (graphicModel, ecModel, api) {
 
-            // Having leveraged use case and algorithm complexity, a very simple
-            // layout mechanism is used:
+            // Having leveraged between use cases and algorithm complexity, a very
+            // simple layout mechanism is used:
             // The size(width/height) can be determined by itself or its parent (not
             // implemented yet), but can not by its children. (Top-down travel)
             // The location(x/y) can be determined by the bounding rect of itself
             // (can including its descendants or not) and the size of its parent.
             // (Bottom-up travel)
 
-            // When chart.clear() or chart.setOption({...}, true) with the same id,
+            // When `chart.clear()` or `chart.setOption({...}, true)` with the same id,
             // view will be reused.
             if (graphicModel !== this._lastGraphicModel) {
                 this._clear();
@@ -285,7 +305,11 @@ define(function(require) {
         },
 
         /**
+         * Update graphic elements.
+         *
          * @private
+         * @param {Object} graphicModel graphic model
+         * @param {module:echarts/ExtensionAPI} api extension API
          */
         _updateElements: function (graphicModel, api) {
             var elOptionsToUpdate = graphicModel.useElOptionsToUpdate();
@@ -305,14 +329,14 @@ define(function(require) {
                 var parentId = elOption.parentId;
                 var targetElParent = parentId != null ? elMap[parentId] : rootGroup;
 
-                // In top/bottom mode, textVertical should not be used. But
-                // textBaseline should not be 'alphabetic', which is not precise.
+                // In top/bottom mode, textVertical should not be used. And textBaseline
+                // should not be 'alphabetic', which cause inaccurately locating.
                 if (elOption.hv && elOption.hv[1] && elOption.type === 'text') {
                     elOption.style = zrUtil.defaults({textBaseline: 'middle'}, elOption.style);
                     elOption.style.textVerticalAlign = null;
                 }
 
-                // Remove unnecessary props to avoid potential problem.
+                // Remove unnecessary props to avoid potential problems.
                 var elOptionCleaned = getCleanedElOption(elOption);
 
                 // For simple, do not support parent change, otherwise reorder is needed.
@@ -344,14 +368,18 @@ define(function(require) {
         },
 
         /**
+         * Locate graphic elements.
+         *
          * @private
+         * @param {Object} graphicModel graphic model
+         * @param {module:echarts/ExtensionAPI} api extension API
          */
         _relocate: function (graphicModel, api) {
             var elOptions = graphicModel.option.elements;
             var rootGroup = this.group;
             var elMap = this._elMap;
 
-            // Bottom-up tranvese all elements (consider when ec resize) to locate elements.
+            // Bottom-up tranvese all elements (consider ec resize) to locate elements.
             for (var i = elOptions.length - 1; i >= 0; i--) {
                 var elOption = elOptions[i];
                 var el = elMap[elOption.id];
@@ -379,6 +407,8 @@ define(function(require) {
         },
 
         /**
+         * Clear all elements.
+         *
          * @private
          */
         _clear: function () {
@@ -427,7 +457,7 @@ define(function(require) {
         }
     }
 
-    // Remove unnecessary props to avoid potential problem.
+    // Remove unnecessary props to avoid potential problems.
     function getCleanedElOption(elOption) {
         elOption = zrUtil.extend({}, elOption);
         zrUtil.each(
