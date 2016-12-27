@@ -377,6 +377,12 @@ define(function (require) {
                 rotation: target.rotation
             }, animationModel, dataIndex);
 
+            // FIXME
+            // If all emphasis/normal through action.
+            path
+                .on('mouseover', onMouseOver)
+                .on('mouseout', onMouseOut);
+
             bundle.add(path);
         }
 
@@ -396,9 +402,23 @@ define(function (require) {
                 rotation: symbolMeta.rotation
             };
         }
+
+        function onMouseOver() {
+            var self = this;
+            eachPath(bar, function (path) {
+                path !== self && path.trigger('emphasis');
+            });
+        }
+
+        function onMouseOut() {
+            var self = this;
+            eachPath(bar, function (path) {
+                path !== self && path.trigger('normal');
+            });
+        }
     }
 
-    // bar rect is used for label and enlarge hover area.
+    // bar rect is used for label.
     function updateBarRect(bar, dataIndex, opt, symbolMeta) {
         var rectShape = zrUtil.extend({}, symbolMeta.barRectShape);
 
@@ -407,6 +427,7 @@ define(function (require) {
             barRect = bar.__pictorialBarRect = new graphic.Rect({
                 z2: 2,
                 shape: rectShape,
+                silent: true,
                 style: {
                     stroke: 'transparent',
                     fill: 'transparent',
@@ -414,27 +435,10 @@ define(function (require) {
                 }
             });
 
-            // FIXME
-            // If all emphasis/normal through action.
-            barRect
-                .on('mouseover', onMouseOver)
-                .on('mouseout', onMouseOut);
-
             bar.add(barRect);
         }
         else {
             graphic.updateProps(barRect, {shape: rectShape}, opt.animationModel, dataIndex);
-        }
-
-        function onMouseOver() {
-            eachPath(bar, function (path) {
-                path.trigger('emphasis');
-            });
-        }
-        function onMouseOut() {
-            eachPath(bar, function (path) {
-                path.trigger('normal');
-            });
         }
     }
 
