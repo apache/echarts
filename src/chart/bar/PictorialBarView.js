@@ -8,11 +8,15 @@ define(function (require) {
 
     var parsePercent = numberUtil.parsePercent;
 
+    var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'normal', 'borderWidth'];
+
     // index: +isHorizontal
     var LAYOUT_ATTRS = [
         {xy: 'x', wh: 'width', index: 0, posDesc: ['left', 'right']},
         {xy: 'y', wh: 'height', index: 1, posDesc: ['top', 'bottom']}
     ];
+
+    var pathForLineWidth = new graphic.Circle();
 
     var BarView = require('../../echarts').extendChartView({
 
@@ -29,6 +33,7 @@ define(function (require) {
             var coordSysRect = cartesian.grid.getRect();
 
             var opt = {
+                ecSize: {width: api.getWidth(), height: api.getHeight()},
                 seriesModel: seriesModel,
                 coordSys: cartesian,
                 coordSysExtent: [
@@ -125,27 +130,28 @@ define(function (require) {
         var layout = data.getItemLayout(dataIndex);
         var symbolRepeat = itemModel.get('symbolRepeat');
         var symbolClip = itemModel.get('symbolClip');
-        var lineWidth = helper.getLineWidth(itemModel, layout);
-        var symbolPosition = itemModel.get('symbolPosition')
-            || ((symbolRepeat || symbolClip) ? 'start' : 'center');
+        var symbolPosition = itemModel.get('symbolPosition') || 'start';
         var symbolRotate = itemModel.get('symbolRotate');
+        var rotation = (symbolRotate || 0) * Math.PI / 180 || 0;
 
         var symbolMeta = {
             layout: layout,
-            lineWidth: lineWidth,
             symbolType: data.getItemVisual(dataIndex, 'symbol') || 'circle',
             color: data.getItemVisual(dataIndex, 'color'),
             symbolClip: symbolClip,
             symbolRepeat: symbolRepeat,
             symbolRepeatDirection: itemModel.get('symbolRepeatDirection'),
-            rotation: (symbolRotate || 0) * Math.PI / 180 || 0
+            rotation: rotation
         };
 
         prepareBarLength(itemModel, symbolRepeat, layout, opt, symbolMeta);
+
         prepareSymbolSize(
-            data, dataIndex, layout, opt, symbolRepeat, symbolClip,
-            symbolMeta.barFullLength, symbolMeta
+            data, dataIndex, layout, symbolRepeat, symbolClip,
+            symbolMeta.barFullLength, symbolMeta.pxSign, opt, symbolMeta
         );
+
+        prepareLineWidth(itemModel, symbolMeta.symbolScale, rotation, opt, symbolMeta);
 
         var symbolSize = symbolMeta.symbolSize;
         var symbolOffset = itemModel.get('symbolOffset');
@@ -158,7 +164,7 @@ define(function (require) {
 
         prepareLayoutInfo(
             itemModel, symbolSize, layout, symbolRepeat, symbolClip, symbolOffset,
-            symbolPosition, lineWidth, symbolMeta.barFullLength, symbolMeta.repeatLength,
+            symbolPosition, symbolMeta.valueLineWidth, symbolMeta.barFullLength, symbolMeta.repeatLength,
             opt, symbolMeta
         );
 
@@ -179,22 +185,33 @@ define(function (require) {
             : layout[valueDim.wh];
 
         output.repeatLength = symbolBoundingData != null ? barFullLength : layout[valueDim.wh];
+
+        output.pxSign = barFullLength > 0 ? 1 : barFullLength < 0 ? -1 : 0;
     }
 
     // Support ['100%', '100%']
-    function prepareSymbolSize(data, dataIndex, layout, opt, symbolRepeat, symbolClip, barFullLength, output) {
+    function prepareSymbolSize(
+        data, dataIndex, layout, symbolRepeat, symbolClip, barFullLength, pxSign, opt, output
+    ) {
         var valueDim = opt.valueDim;
         var categoryDim = opt.categoryDim;
         var categorySize = Math.abs(layout[categoryDim.wh]);
 
-        var symbolSize = zrUtil.retrieve(
-            data.getItemVisual(dataIndex, 'symbolSize'),
-            ['100%', '100%']
-        );
-
-        if (!zrUtil.isArray(symbolSize)) {
+        var symbolSize = data.getItemVisual(dataIndex, 'symbolSize');
+        if (zrUtil.isArray(symbolSize)) {
+            symbolSize = symbolSize.slice();
+        }
+        else {
+            if (symbolSize == null) {
+                symbolSize = '100%';
+            }
             symbolSize = [symbolSize, symbolSize];
         }
+
+        // Note: percentage symbolSize (like '100%') do not consider lineWidth, because it is
+        // to complicated to calculate real percent value if considering scaled lineWidth.
+        // So the actual size will bigger than layout size if lineWidth is bigger than zero,
+        // which can be tolerated in pictorial chart.
 
         symbolSize[categoryDim.index] = parsePercent(
             symbolSize[categoryDim.index],
@@ -206,46 +223,82 @@ define(function (require) {
         );
 
         output.symbolSize = symbolSize;
+
+        // If x or y is less than zero, show reversed shape.
+        var symbolScale = output.symbolScale = [symbolSize[0] / 2, symbolSize[1] / 2];
+        // Follow convention, 'right' and 'top' is the normal scale.
+        symbolScale[valueDim.index] *= (opt.isHorizontal ? -1 : 1) * pxSign;
+    }
+
+    function prepareLineWidth(itemModel, symbolScale, rotation, opt, output) {
+        // In symbols are drawn with scale, so do not need to care about the case that width
+        // or height are too small. But symbol use strokeNoScale, where acture lineWidth should
+        // be calculated.
+        var valueLineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
+
+        if (valueLineWidth) {
+            pathForLineWidth.attr({
+                scale: symbolScale.slice(),
+                rotation: rotation
+            });
+            pathForLineWidth.updateTransform();
+            valueLineWidth /= pathForLineWidth.getLineScale();
+            valueLineWidth *= symbolScale[opt.valueDim.index];
+        }
+
+        output.valueLineWidth = valueLineWidth;
     }
 
     function prepareLayoutInfo(
         itemModel, symbolSize, layout, symbolRepeat, symbolClip, symbolOffset,
-        symbolPosition, lineWidth, barFullLength, repeatLength, opt, output
+        symbolPosition, valueLineWidth, barFullLength, repeatLength, opt, output
     ) {
         var categoryDim = opt.categoryDim;
         var valueDim = opt.valueDim;
+        var pxSign = output.pxSign;
 
         var symbolMargin = parsePercent(
             zrUtil.retrieve(itemModel.get('symbolMargin'), symbolRepeat ? '15%' : 0),
             symbolSize[valueDim.index]
         );
 
-        var unitLength = symbolSize[valueDim.index] + lineWidth;
-        var pathLength;
+        var unitLength = symbolSize[valueDim.index] + valueLineWidth;
+        var uLenWithMargin = Math.max(unitLength + symbolMargin * 2, 0);
+        var pathLenWithMargin = uLenWithMargin;
+
+        // Note: rotation will not effect the layout of symbols, because user may
+        // want symbols to rotate on its center, which should not be translated
+        // when rotating.
+
         if (symbolRepeat) {
-            var unitWithMargin = unitLength + symbolMargin * 2;
             var absBarFullLength = Math.abs(barFullLength);
+
+            // When symbol margin is less than 0, margin at both ends will be subtracted
+            // to ensure that all of the symbols will not be overflow the given area.
+            var endFix = symbolMargin >= 0 ? 0 : symbolMargin * 2;
+
             var repeatTimes = numberUtil.isNumeric(symbolRepeat)
-                ? symbolRepeat : Math.ceil(absBarFullLength / unitWithMargin);
+                ? symbolRepeat
+                : toIntTimes((absBarFullLength + endFix) / uLenWithMargin);
 
             // Adjust calculate margin, to ensure each symbol is displayed
             // entirely in the given layout area.
-            symbolMargin = (absBarFullLength / repeatTimes - unitLength) / 2;
+            var mDiff = absBarFullLength - repeatTimes * unitLength;
+            symbolMargin = mDiff / 2 / (mDiff >= 0 ? repeatTimes : repeatTimes - 1);
+            uLenWithMargin = unitLength + symbolMargin * 2;
+            endFix = mDiff >= 0 ? 0 : symbolMargin * 2;
 
-            // Update repeatTimes if symbolBoundingData not set.
+            // Update repeatTimes when not all symbol will be shown.
             repeatTimes = output.repeatTimes = numberUtil.isNumeric(symbolRepeat)
-                ? symbolRepeat : Math.ceil(Math.abs(repeatLength) / unitWithMargin);
-            pathLength = repeatTimes * (unitLength + symbolMargin * 2);
-        }
-        else {
-            pathLength = unitLength + symbolMargin * 2;
+                ? symbolRepeat
+                : toIntTimes((Math.abs(repeatLength) + endFix) / uLenWithMargin);
+
+            pathLenWithMargin = repeatTimes * uLenWithMargin - endFix;
         }
 
         output.symbolMargin = symbolMargin;
 
-        var pxSign = output.pxSign = barFullLength > 0 ? 1 : barFullLength < 0 ? -1 : 0;
-
-        var sizeFix = pxSign * (pathLength / 2);
+        var sizeFix = pxSign * (pathLenWithMargin / 2);
         var pathPosition = output.pathPosition = [];
         pathPosition[categoryDim.index] = layout[categoryDim.wh] / 2;
         pathPosition[valueDim.index] = symbolPosition === 'start'
@@ -268,14 +321,12 @@ define(function (require) {
         );
         barRectShape[categoryDim.wh] = layout[categoryDim.wh];
 
-        var clipShape = output.clipShape = {x: 0, y: 0};
+        var clipShape = output.clipShape = {};
+        // Consider that symbol may be overflow layout rect.
+        clipShape[categoryDim.xy] = -layout[categoryDim.xy];
+        clipShape[categoryDim.wh] = opt.ecSize[categoryDim.wh];
+        clipShape[valueDim.xy] = 0;
         clipShape[valueDim.wh] = layout[valueDim.wh];
-        clipShape[categoryDim.wh] = layout[categoryDim.wh];
-
-        // If x or y is less than zero, show reversed shape.
-        var symbolScale = output.symbolScale = [symbolSize[0] / 2, symbolSize[1] / 2];
-        // Follow convention, 'right' and 'top' is the normal scale.
-        symbolScale[valueDim.index] *= (opt.isHorizontal ? -1 : 1) * pxSign;
     }
 
     function createPath(symbolMeta) {
@@ -285,6 +336,9 @@ define(function (require) {
         path.attr({
             culling: true
         });
+        path.type !== 'image' && path.setStyle({
+            strokeNoScale: true
+        });
         return path;
     }
 
@@ -292,12 +346,12 @@ define(function (require) {
         var bundle = bar.__pictorialBundle;
         var animationModel = opt.animationModel;
         var symbolSize = symbolMeta.symbolSize;
-        var lineWidth = symbolMeta.lineWidth;
+        var valueLineWidth = symbolMeta.valueLineWidth;
         var pathPosition = symbolMeta.pathPosition;
         var valueDim = opt.valueDim;
 
         var repeatTimes = symbolMeta.repeatTimes || 0;
-        var unit = symbolSize[opt.valueDim.index] + lineWidth + symbolMeta.symbolMargin * 2;
+        var unit = symbolSize[opt.valueDim.index] + valueLineWidth + symbolMeta.symbolMargin * 2;
         var index = 0;
 
         eachPath(bar, function (path) {
@@ -333,7 +387,7 @@ define(function (require) {
             var pxSign = symbolMeta.pxSign;
             var i = index;
             if (symbolMeta.symbolRepeatDirection === 'start' ? pxSign > 0 : pxSign < 0) {
-                i = repeatTimes - index;
+                i = repeatTimes - 1 - index;
             }
             position[valueDim.index] = unit * (i - repeatTimes / 2 + 0.5) + pathPosition[valueDim.index];
             return {
@@ -433,44 +487,10 @@ define(function (require) {
 
         updateBarRect(bar, dataIndex, opt, symbolMeta);
 
-        // Three animation types: clip, position, scale.
-            // clipPath animation
-            // if (clipPath) {
-            // }
-
-            // FIXME
-            // animation clip path?
-            // bar.position[valueDim.index] = layout[valueDim.xy];
-            // eachPath(bar, function (path) {
-            //     var target;
-            //     // scale ainmation
-            //     if (symbolMeta.symbolRepeat) {
-            //         target = {scale: path.scale.slice()};
-            //         path.attr({
-            //             position: path.position.slice(),
-            //             scale: [0, 0]
-            //         });
-            //     }
-            //     // // position ainmation
-            //     // else {
-            //     //     target = {position: position};
-            //     //     path.attr({
-            //     //         scale: scale
-            //     //     });
-            //     //     // FIXME
-            //     //     // start pos?
-            //     //     path.position[valueDim.index] = layout[valueDim.xy];
-            //     // }
-            //     graphic[updateMethod](path, target, animationModel, dataIndex);
-            // });
-        // }
-
         return bar;
     }
 
     function updateBar(data, dataIndex, itemModel, opt, symbolMeta, bar) {
-        var clipPath = bar.__pictorialClipPath;
-        var mainPath;
         var animationModel = opt.animationModel;
         var bundle = bar.__pictorialBundle;
 
@@ -482,11 +502,22 @@ define(function (require) {
             updateRepeatSymbols(bar, dataIndex, opt, symbolMeta);
         }
         else {
-            mainPath = bar.__pictorialMainPath;
+            var mainPath = bar.__pictorialMainPath;
+            mainPath && graphic.updateProps(
+                mainPath,
+                {
+                    position: symbolMeta.pathPosition.slice(),
+                    scale: symbolMeta.symbolScale.slice(),
+                    rotation: symbolMeta.rotation
+                },
+                animationModel,
+                dataIndex
+            );
         }
 
         updateBarRect(bar, dataIndex, opt, symbolMeta);
 
+        var clipPath = bar.__pictorialClipPath;
         if (clipPath) {
             graphic.updateProps(
                 clipPath,
@@ -495,16 +526,6 @@ define(function (require) {
                 dataIndex
             );
         }
-        mainPath && graphic.updateProps(
-            mainPath,
-            {
-                position: symbolMeta.pathPosition.slice(),
-                scale: symbolMeta.symbolScale.slice(),
-                rotation: symbolMeta.rotation
-            },
-            animationModel,
-            dataIndex
-        );
     }
 
     function removeBar(dataIndex, opt, bar) {
@@ -571,6 +592,14 @@ define(function (require) {
         );
 
         graphic.setHoverStyle(barRect, barRectHoverStyle);
+    }
+
+    function toIntTimes(times) {
+        var roundedTimes = Math.round(times);
+        // Escapse accurate error
+        return Math.abs(times - roundedTimes) < 1e-4
+            ? roundedTimes
+            : Math.ceil(times);
     }
 
     return BarView;

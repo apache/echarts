@@ -6,6 +6,8 @@ define(function (require) {
     var graphic = require('../../util/graphic');
     var helper = require('./helper');
 
+    var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'normal', 'barBorderWidth'];
+
     // FIXME
     // Just for compatible with ec2.
     zrUtil.extend(require('../../model/Model').prototype, require('./barItemStyle'));
@@ -131,7 +133,7 @@ define(function (require) {
 
     function getRectItemLayout(data, dataIndex, itemModel) {
         var layout = data.getItemLayout(dataIndex);
-        var fixedLineWidth = helper.getLineWidth(itemModel, layout);
+        var fixedLineWidth = getLineWidth(itemModel, layout);
 
         // fix layout with lineWidth
         var signX = layout.width > 0 ? 1 : -1;
@@ -170,6 +172,12 @@ define(function (require) {
         );
 
         graphic.setHoverStyle(el, hoverStyle);
+    }
+
+    // In case width or height are too small.
+    function getLineWidth(itemModel, rawLayout) {
+        var lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
+        return Math.min(lineWidth, Math.abs(rawLayout.width), Math.abs(rawLayout.height));
     }
 
     return BarView;

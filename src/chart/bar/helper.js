@@ -3,8 +3,6 @@ define(function (require) {
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
 
-    var BAR_BORDER_WIDTH_QUERY = ['itemStyle', 'normal', 'barBorderWidth'];
-
     var helper = {};
 
     helper.setLabel = function (
@@ -49,12 +47,6 @@ define(function (require) {
             style.textPosition = labelPositionOutside;
         }
     }
-
-    // In case width or height are too small.
-    helper.getLineWidth = function (itemModel, rawLayout) {
-        var lineWidth = itemModel.get(BAR_BORDER_WIDTH_QUERY) || 0;
-        return Math.min(lineWidth, Math.abs(rawLayout.width), Math.abs(rawLayout.height));
-    };
 
     return helper;
 });

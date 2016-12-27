@@ -6,6 +6,7 @@
         <script src="config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
+        <script src="data/symbols.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="reset.css">
     </head>
@@ -24,7 +25,7 @@
                 font-size: 16px;
                 line-height: 30px;
                 font-weight: normal;
-                background: #A3AEFF;
+                background: #dde;
             }
         </style>
 
@@ -32,10 +33,14 @@
         <div class="chart" id="main1"></div>
         <h2>vertical | clip | fixed repeatTimes</h2>
         <div class="chart" id="main1.1"></div>
+        <h2>dataURI | symbolSize responsive (<strong>TRY RESIZE</strong>)</h2>
+        <div class="chart" id="symbolSize"></div>
         <h2>horizontal | clip | positive | rotate</h2>
         <div class="chart" id="main2"></div>
         <h2>horizontal | clip | negative | no animation</h2>
         <div class="chart" id="main3"></div>
+        <h2>negative symbolMargin | symbolPosition (check whether overflow)</h2>
+        <div class="chart" id="main4"></div>
 
         <script>
 
@@ -63,12 +68,6 @@
 
                 });
             }
-
-            var pumpkin = 'path://M237.062,81.761L237.062,81.761c-12.144-14.24-25.701-20.1-40.68-19.072 c-10.843,0.747-20.938,5.154-30.257,13.127c-9.51-5.843-19.8-9.227-30.859-10.366c0.521-3.197,1.46-6.306,2.85-9.363 c3.458-7.038,8.907-12.741,16.331-17.296c-5.609-3.384-11.227-6.799-16.854-10.279c-16.257,8.104-25.06,20.601-26.463,38.417 c-7.599,1.705-14.685,4.486-21.247,8.437c-9.164-7.677-18.996-11.917-29.496-12.632c-14.819-0.998-28.467,4.787-40.938,18.827 C6.445,96.182,0,114.867,0,136.242c-0.007,6.371,0.674,12.646,2.053,18.738c4.593,22.785,15.398,41.367,32.558,55.344 c15.43,12.773,29.901,18.023,43.362,16.981c7.074-0.561,13.624-3.977,19.685-10.192c10.534,5.49,20.391,8.217,29.561,8.203 c9.856-0.012,20.236-2.953,31.125-8.898c6.227,6.692,12.966,10.346,20.211,10.933c13.795,1.073,28.614-4.111,44.377-16.84 c17.49-14.104,28.043-32.79,31.796-55.485c0.836-5.624,1.272-11.292,1.272-16.966C255.998,115.814,249.707,96.601,237.062,81.761z  M54.795,97.7l40.661,14.496c-4.402,8.811-10.766,13.219-19.06,13.219c-2.542,0-4.917-0.419-7.122-1.274 C58.103,118.38,53.263,109.572,54.795,97.7z M150.613,185.396l-9.156-8.389l-7.619,12.951c-3.391,0.341-6.615,0.514-9.665,0.514 c-4.401,0-8.635-0.263-12.708-0.777l-8.634-14.973l-9.151,9.909c-4.91-2.717-9.15-5.856-12.708-9.413 c-8.81-8.295-13.384-17.959-13.727-28.97c2.877,1.692,7.427,3.461,13.675,5.308l10.636,13.629l9.44-9.852 c4.734,0.702,9.234,1.12,13.466,1.275l10.689,11.498l9.671-11.949c3.559-0.173,7.285-0.515,11.182-1.01l9.924,10.159l10.933-14.227 c5.931-1.351,11.196-2.798,15.771-4.323C179.747,163.538,169.068,176.414,150.613,185.396z M175.258,124.907 c-2.209,0.849-4.66,1.273-7.369,1.273c-8.134,0-14.489-4.415-19.052-13.224l40.905-14.477 C191.105,110.331,186.273,119.141,175.258,124.907z';
-
-            var shoppingCart = 'path://M12 29c0 1.657-1.343 3-3 3s-3-1.343-3-3c0-1.657 1.343-3 3-3s3 1.343 3 3zM32 29c0 1.657-1.343 3-3 3s-3-1.343-3-3c0-1.657 1.343-3 3-3s3 1.343 3 3zM32 16v-12h-24c0-1.105-0.895-2-2-2h-6v2h4l1.502 12.877c-0.915 0.733-1.502 1.859-1.502 3.123 0 2.209 1.791 4 4 4h24v-2h-24c-1.105 0-2-0.895-2-2 0-0.007 0-0.014 0-0.020l26-3.98z';
-
-            var pentagram = 'path://M100,0 L41.22,180.90 L195.10,69.09 L4.89,69.09 L158.77,180.90 z';
 
         </script>
 
@@ -115,7 +114,7 @@
                             position: 'outside'
                         },
                     },
-                    symbol: shoppingCart,
+                    symbol: pathSymbols.plane,
                     symbolRepeat: true,
                     symbolMargin: '40%',
                     symbolSize: ['100%', '80%'],
@@ -124,7 +123,7 @@
                 }, {
                     name: 'data2',
                     type: 'pictorialBar',
-                    symbol: shoppingCart,
+                    symbol: pathSymbols.plane,
                     symbolRepeat: true,
                     symbolMargin: '40%',
                     symbolSize: ['100%', '80%'],
@@ -143,6 +142,72 @@
                 }]
             });
         </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            makeChart('symbolSize', {
+                color: ['#e54035'],
+                xAxis: {
+                    splitLine: {show: false},
+                    axisTick: {show: false},
+                    axisLine: {show: false},
+                    axisLabel: {show: false}
+                },
+                yAxis: {
+                    data: ['a', 'b', 'c'],
+                    axisTick: {show: false},
+                    axisLine: {show: false},
+                    axisLabel: {show: false}
+                },
+                grid: {
+                    height: 80
+                },
+                series: [{
+                    name: 'glyph',
+                    type: 'pictorialBar',
+                    symbol: imageSymbols.spirit,
+                    symbolRepeat: 10,
+                    symbolSize: [20, 20],
+                    data: [100, 100, 100]
+                }, {
+                    name: 'glyph',
+                    type: 'pictorialBar',
+                    symbol: 'rect',
+                    barGap: '-100%',
+                    symbolSize: ['20%', 24],
+                    itemStyle: {
+                        normal: {
+                            color: '#e54035'
+                        }
+                    },
+                    label: {
+                        normal: {
+                            show: true,
+                            formatter: '16 亿',
+                            textStyle: {
+                                color: '#fff',
+                                fontSize: 18,
+                                fontFamily: 'Arial',
+                                fontWeight: 'bold'
+                            }
+                        }
+                    },
+                    data: ['-', 100, '-'],
+                    z: 100
+                }]
+            });
+        </script>
+
 
 
 
@@ -178,7 +243,7 @@
                 series: [{
                     name: 'bg',
                     type: 'pictorialBar',
-                    symbol: pentagram,
+                    symbol: pathSymbols.pentagram,
                     symbolRepeat: 5,
                     itemStyle: {
                         normal: {
@@ -190,7 +255,7 @@
                 }, {
                     name: 'data',
                     type: 'pictorialBar',
-                    symbol: pentagram,
+                    symbol: pathSymbols.pentagram,
                     symbolRepeat: 5,
                     symbolClip: true,
                     z: 10,
@@ -235,7 +300,7 @@
                     name: 'bg',
                     type: 'pictorialBar',
                     barGap: '-100%',
-                    symbol: pumpkin,
+                    symbol: pathSymbols.pumpkin,
                     symbolRotate: 30,
                     itemStyle: {
                         normal: {
@@ -254,12 +319,13 @@
                     },
                     silent: true,
                     symbolRepeat: true,
+                    // symbolRepeatDirection: 'start',
                     symbolBoundingData: 60,
                     data: [12, 60, 54, '-', 23, 2, 0, 25]
                 }, {
                     name: 'data',
                     type: 'pictorialBar',
-                    symbol: pumpkin,
+                    symbol: pathSymbols.pumpkin,
                     symbolRotate: 30,
                     symbolRepeat: true,
                     symbolClip: true,
@@ -318,7 +384,7 @@
                     name: 'bg',
                     type: 'pictorialBar',
                     barGap: '-100%',
-                    symbol: pumpkin,
+                    symbol: pathSymbols.pumpkin,
                     itemStyle: {
                         normal: {
                             color: '#ddd'
@@ -348,7 +414,7 @@
                             color: 'blue'
                         }
                     },
-                    symbol: pumpkin,
+                    symbol: pathSymbols.pumpkin,
                     symbolRepeat: true,
                     symbolClip: true,
                     symbolRotate: 30,
@@ -367,6 +433,167 @@
                 }]
             });
         </script>
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            makeChart('main4', {
+                color: ['#bb0004', 'orange'],
+                xAxis: {
+                    data: [],
+                    axisTick: {show: false},
+                    axisLabel: {show: false}
+                },
+                yAxis: {
+                    splitLine: {show: false},
+                    axisTick: {show: false},
+                    axisLine: {show: false},
+                    axisLabel: {show: false}
+                },
+                grid: {
+                    bottom: 100
+                },
+                animationEasing: 'elasticOut',
+                series: [{
+                    name: 'all',
+                    type: 'pictorialBar',
+                    barCategoryGap: '40%',
+                    label: {
+                        normal: {
+                            show: true,
+                            position: 'outside'
+                        }
+                    },
+                    itemStyle: {
+                        normal: {
+                            borderColor: 'rgba(0,0,0,0.5)',
+                            borderWidth: 6
+                        }
+                    },
+                    symbol: 'circle',
+                    data: [{
+                        value: 29000,
+                        symbolBoundingData: 29000,
+                        symbolRepeat: true,
+                        label: {normal: {formatter: 'start'}}
+                    }, {
+                        value: 29000,
+                        symbolBoundingData: 29000,
+                        symbolRepeat: true,
+                        symbolSize: ['80%', '20%'],
+                        label: {normal: {formatter: 'start'}}
+                    }, {
+                        value: 29000,
+                        symbolBoundingData: 29000,
+                        symbolRepeat: true,
+                        symbolMargin: 10,
+                        label: {normal: {formatter: 'start'}}
+                    }, {
+                        value: 29000,
+                        symbolBoundingData: 29000,
+                        symbolRepeat: true,
+                        symbolMargin: 30,
+                        symbolSize: ['100%', 160],
+                        label: {normal: {formatter: 'start'}}
+                    }, {
+                        value: 29000,
+                        symbolBoundingData: 29000,
+                        symbolRepeat: true,
+                        symbolMargin: 30,
+                        symbolSize: ['100%', 160],
+                        symbolPosition: 'center',
+                        label: {normal: {formatter: 'center'}}
+                    }, {
+                        value: 29000,
+                        symbolBoundingData: 29000,
+                        symbolRepeat: true,
+                        symbolMargin: 30,
+                        symbolSize: ['100%', 160],
+                        symbolPosition: 'end',
+                        label: {normal: {formatter: 'end'}}
+                    }, {
+                        value: 29000,
+                        symbolBoundingData: 29000,
+                        symbolRepeat: true,
+                        symbolSize: ['80%', '120%'],
+                        symbolMargin: '-30%',
+                        label: {normal: {formatter: 'start'}}
+                    }, {
+                        value: 29000,
+                        symbolBoundingData: 29000,
+                        symbolRepeat: true,
+                        symbolSize: ['80%', '120%'],
+                        symbolMargin: '-30%',
+                        symbolPosition: 'center',
+                        label: {normal: {formatter: 'center'}}
+                    }, {
+                        value: 29000,
+                        symbolBoundingData: 29000,
+                        symbolRepeat: true,
+                        symbolRotate: 80,
+                        symbolSize: ['80%', '120%'],
+                        symbolMargin: '-30%',
+                        symbolPosition: 'end',
+                        label: {normal: {formatter: 'end'}}
+                    }, {
+                        value: 19000,
+                        symbolPosition: 'start',
+                        label: {normal: {formatter: 'start'}}
+                    }, {
+                        value: 19000,
+                        symbolSize: ['60%', '20%'],
+                        symbolPosition: 'start',
+                        label: {normal: {formatter: 'start'}}
+                    }, {
+                        value: 19000,
+                        symbolSize: ['60%', '20%'],
+                        symbolPosition: 'center',
+                        label: {normal: {formatter: 'center'}}
+                    }, {
+                        value: 19000,
+                        symbolSize: ['60%', '20%'],
+                        symbolPosition: 'end',
+                        label: {normal: {formatter: 'end'}}
+                    }, {
+                        value: 19000,
+                        symbolSize: ['60%', '150%'],
+                        symbolPosition: 'start',
+                        label: {normal: {formatter: 'start'}}
+                    }, {
+                        value: 19000,
+                        symbolSize: ['60%', '150%'],
+                        symbolPosition: 'center',
+                        label: {normal: {formatter: 'center'}}
+                    }, {
+                        value: 19000,
+                        symbolSize: ['60%', '150%'],
+                        symbolPosition: 'end',
+                        label: {normal: {formatter: 'end'}}
+                    }, {
+                        value: 190,
+                        symbolPosition: 'end',
+                        label: {normal: {formatter: 'min'}}
+                    }],
+                    z: 10
+                }, {
+                    name: 'shadow2',
+                    type: 'bar',
+                    barGap: '-100%',
+                    data: [29000, 29000, 29000, 29000, 29000, 29000, 29000, 29000, 29000, 19000, 19000, 19000, 19000, 19000, 19000, 19000, 19]
+                }]
+            });
+        </script>
+
+
 
 
 
