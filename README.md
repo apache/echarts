@@ -27,6 +27,10 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 ## Resources
 
+### Awesome ECharts 
+
+[https://github.com/ecomfe/awesome-echarts](https://github.com/ecomfe/awesome-echarts)
+
 ### Extensions
 
 + [百度地图扩展](https://github.com/ecomfe/echarts/tree/master/extension/bmap)
