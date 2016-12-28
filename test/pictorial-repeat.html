@@ -41,16 +41,19 @@
         <div class="chart" id="main3"></div>
         <h2>negative symbolMargin | symbolPosition (check whether overflow)</h2>
         <div class="chart" id="main4"></div>
+        <h2>repeat strategy | dynamic data</h2>
+        <div class="chart" id="dynamic-data"></div>
 
         <script>
 
-            function makeChart(id, option, noDataZoom) {
+            function makeChart(id, option, cb) {
                 require([
                     'echarts',
                     'echarts/chart/pictorialBar',
                     'echarts/chart/bar',
                     'echarts/chart/scatter',
                     'echarts/component/grid',
+                    'echarts/component/markLine',
                     'echarts/component/legend',
                     'echarts/component/tooltip',
                     'echarts/component/dataZoom'
@@ -64,6 +67,8 @@
                         chart.setOption(option);
 
                         window.addEventListener('resize', chart.resize);
+
+                        cb && cb(echarts, chart);
                     }
 
                 });
@@ -185,6 +190,7 @@
                     symbol: 'rect',
                     barGap: '-100%',
                     symbolSize: ['20%', 24],
+                    symbolPosition: 'center',
                     itemStyle: {
                         normal: {
                             color: '#e54035'
@@ -590,6 +596,172 @@
                     barGap: '-100%',
                     data: [29000, 29000, 29000, 29000, 29000, 29000, 29000, 29000, 29000, 19000, 19000, 19000, 19000, 19000, 19000, 19000, 19]
                 }]
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var startData = 13000;
+            var maxData = 18000;
+            var minData = 5000;
+
+            makeChart('dynamic-data', {
+                backgroundColor: '#0f375f',
+                tooltip: {},
+                legend: {
+                    data: ['all'],
+                    textStyle: {color: '#ddd'}
+                },
+                grid: {
+                    bottom: 80
+                },
+                xAxis: [{
+                    data: [
+                        'standard',
+                        'fix symbol margin\n(not accurate)\n(but more comparable)',
+                        'use symbolBoundingData\n(accurate)\n(but symbolMargin not fixed)',
+                        'fix repeat times\n(accurate)\n(but less responsive)'
+                    ],
+                    axisTick: {show: false},
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ddd'
+                        }
+                    },
+                    axisLabel: {
+                        margin: 20,
+                        interval: 0,
+                        textStyle: {
+                            color: '#ddd',
+                            fontSize: 14
+                        }
+                    }
+                }],
+                yAxis: {
+                    splitLine: {show: false},
+                    axisTick: {
+                        lineStyle: {
+                            color: '#ddd'
+                        }
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            color: '#ddd'
+                        }
+                    },
+                    axisLabel: {
+                        textStyle: {
+                            color: '#ddd'
+                        }
+                    }
+                },
+                animationEasing: 'cubicOut',
+                animationDuration: 100,
+                animationDurationUpdate: 2000,
+                series: [{
+                    type: 'pictorialBar',
+                    name: 'all',
+                    id: 'paper',
+                    hoverAnimation: true,
+                    label: {
+                        normal: {
+                            show: true,
+                            position: 'top',
+                            formatter: '{c} km',
+                            textStyle: {
+                                fontSize: 16,
+                                color: '#e54035'
+                            }
+                        }
+                    },
+                    symbol: imageSymbols.paper,
+                    symbolSize: ['70%', 50],
+                    symbolMargin: '-25%',
+                    data: [{
+                        value: maxData,
+                        symbolRepeat: true
+                    }, {
+                        value: startData,
+                        symbolRepeat: true
+                    }, {
+                        value: startData,
+                        symbolBoundingData: startData,
+                        symbolRepeat: true
+                    }, {
+                        value: startData,
+                        symbolRepeat: 20
+                    }],
+                    markLine: {
+                        symbol: ['none', 'none'],
+                        label: {
+                            normal: {show: false}
+                        },
+                        lineStyle: {
+                            normal: {
+                                color: '#e54035'
+                            }
+                        },
+                        data: [{
+                            yAxis: startData
+                        }]
+                    }
+                }, {
+                    name: 'all',
+                    type: 'pictorialBar',
+                    barGap: '-100%',
+                    symbol: 'circle',
+                    itemStyle: {
+                        normal: {
+                            color: '#185491'
+                        }
+                    },
+                    silent: true,
+                    symbolSize: ['150%', 50],
+                    symbolOffset: [0, 20],
+                    z: -10,
+                    data: [1, 1, 1, 1]
+                }]
+            }, function (echarts, chart) {
+
+                setInterval(function () {
+                    var dynamicData = Math.round(Math.random() * (maxData - minData) + minData);
+
+                    chart.setOption({
+                        series: [{
+                            id: 'paper',
+                            data: [{
+                                value: maxData,
+                                symbolRepeat: true
+                            }, {
+                                value: dynamicData,
+                                symbolRepeat: true
+                            }, {
+                                value: dynamicData,
+                                symbolBoundingData: dynamicData,
+                                symbolRepeat: true
+                            }, {
+                                value: dynamicData,
+                                symbolRepeat: 20
+                            }],
+                            markLine: {
+                                data: [{
+                                    yAxis: dynamicData
+                                }]
+                            }
+                        }]
+                    });
+                }, 3000);
             });
         </script>
 

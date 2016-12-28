@@ -21,10 +21,13 @@ define(function(require) {
 
             symbolClip: false,
             symbolBoundingData: null,
+            symbolPatternSize: 400, // 400 * 400 px
+
+            // z2 can be set in data item.
 
             // Disable progressive
             progressive: 0,
-            hoverAnimation: true
+            hoverAnimation: false // Open only when needed.
 
             // cases:
             // repeat: bg:Y, clip:Y, ani:cliprect, size:symbolSize and calc by gridSize.

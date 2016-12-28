@@ -5,6 +5,7 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var clazzUtil = require('../util/clazz');
+    var env = require('zrender/core/env');
 
     /**
      * @alias module:echarts/model/Model
@@ -146,6 +147,17 @@ define(function (require) {
          */
         customizeGetParent: function (getParentMethod) {
             clazzUtil.set(this, 'getParent', getParentMethod);
+        },
+
+        isAnimationEnabled: function () {
+            if (!env.node) {
+                if (this.option.animation != null) {
+                    return !!this.option.animation;
+                }
+                else if (this.parentModel) {
+                    return this.parentModel.isAnimationEnabled();
+                }
+            }
         }
     };
 

@@ -6,6 +6,7 @@
         <script src="config.js"></script>
         <script src="lib/jquery.min.js"></script>
         <script src="lib/facePrint.js"></script>
+        <script src="data/pie-texture.js"></script>
         <script src="data/symbols.js"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="stylesheet" href="reset.css">
@@ -26,20 +27,23 @@
                 line-height: 30px;
                 font-weight: normal;
                 background: #dde;
+                margin: 0;
             }
             strong {
                 color: #971f3c;
             }
         </style>
 
-        <h2>repeatDirection | dynamic | texture</h2>
+        <h2>repeatDirection | dynamic</h2>
         <div class="chart" id="paper-and-hill"></div>
+        <h2>texture</h2>
+        <div class="chart" id="texture"></div>
         <h2>horizontal | no clip | symbolOffset</h2>
         <div class="chart" id="velocity"></div>
 
         <script>
 
-            function makeChart(id, option, noDataZoom) {
+            function makeChart(id, option, cb) {
                 require([
                     'echarts',
                     'echarts/chart/pictorialBar',
@@ -60,6 +64,8 @@
                         chart.setOption(option);
 
                         window.addEventListener('resize', chart.resize);
+
+                        cb && cb(echarts, chart);
                     }
 
                 });
@@ -89,18 +95,25 @@
 
         <script>
 
-            var img = new Image();
-            img.src = './data/hill.jpg';
-
             makeChart('paper-and-hill', {
-                backgroundColor: '#13978b',
+                backgroundColor: '#0f375f',
                 tooltip: {},
-                xAxis: {
-                    data: ['a', 'b'],
+                legend: {
+                    data: ['all'],
+                    textStyle: {color: '#ddd'}
+                },
+                xAxis: [{
+                    data: ['圣诞节儿童愿望清单', '', '珠穆朗玛', '乞力马扎罗'],
                     axisTick: {show: false},
                     axisLine: {show: false},
-                    axisLabel: {show: false}
-                },
+                    axisLabel: {
+                        margin: 20,
+                        textStyle: {
+                            color: '#ddd',
+                            fontSize: 14
+                        }
+                    }
+                }],
                 yAxis: {
                     splitLine: {show: false},
                     axisTick: {show: false},
@@ -108,13 +121,13 @@
                     axisLabel: {show: false}
                 },
                 markLine: {
-                    z: 20
+                    z: -1
                 },
                 animationEasing: 'elasticOut',
                 series: [{
-                    name: 'all',
                     type: 'pictorialBar',
-                    barCategoryGap: '40%',
+                    name: 'all',
+                    hoverAnimation: true,
                     label: {
                         normal: {
                             show: true,
@@ -130,22 +143,27 @@
                         value: 13000,
                         symbol: imageSymbols.paper,
                         symbolRepeat: true,
-                        symbolSize: ['80%', '20%'],
+                        symbolSize: ['130%', '20%'],
                         symbolOffset: [0, 10],
-                        symbolMargin: '-30%'
+                        symbolMargin: '-30%',
+                        animationDelay: function (dataIndex, params) {
+                            return params.index * 30;
+                        }
+                    }, {
+                        value: '-',
+                        symbol: 'none',
                     }, {
                         value: 8844,
-                        symbol: 'path://M0,10 L10,10 L5,0 L0,10 z',
-                        itemStyle: {
-                            normal: {
-                                color: {
-                                    image: img,
-                                    repeat: 'repeat'
-                                }
-                            }
-                        }
+                        symbol: 'image://./data/hill-Qomolangma.png',
+                        symbolSize: ['200%', '105%'],
+                        symbolPosition: 'end',
+                        z2: 10
+                    }, {
+                        value: 5895,
+                        symbol: 'image://./data/hill-Kilimanjaro.png',
+                        symbolSize: ['200%', '105%'],
+                        symbolPosition: 'end'
                     }],
-                    z: 10,
                     markLine: {
                         symbol: ['none', 'none'],
                         label: {
@@ -161,23 +179,141 @@
                             yAxis: 8844
                         }]
                     }
-                // }, {
-                    // name: 'shadow',
-                    // type: 'pictorialBar',
-                    // barGap: '-100%',
-                    // symbol: 'circle',
-                    // itemStyle: {
-                    //     normal: {
-                    //         color: '#13887c'
-                    //     }
-                    // },
-                    // silent: true,
-                    // symbolSize: ['120%', 50],
-                    // symbolOffset: [0, '50%'],
-                    // data: [1, 1]
+                }, {
+                    name: 'all',
+                    type: 'pictorialBar',
+                    barGap: '-100%',
+                    symbol: 'circle',
+                    itemStyle: {
+                        normal: {
+                            color: '#185491'
+                        }
+                    },
+                    silent: true,
+                    symbolOffset: [0, '50%'],
+                    z: -10,
+                    data: [{
+                        value: 1,
+                        symbolSize: ['150%', 50]
+                    }, {
+                        value: '-'
+                    }, {
+                        value: 1,
+                        symbolSize: ['200%', 50]
+                    }, {
+                        value: 1,
+                        symbolSize: ['200%', 50]
+                    }]
                 }]
             });
         </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <script>
+
+            var img = new Image();
+            img.src = window.pieTexture;
+
+            makeChart('texture', {
+                backgroundColor: '#13978b',
+                tooltip: {},
+                xAxis: {
+                    data: ['a', 'b', 'c'],
+                    axisTick: {show: false}
+                },
+                yAxis: {
+                    splitLine: {show: false},
+                    axisTick: {show: false}
+                },
+                animationEasing: 'elasticOut',
+                series: [{
+                    name: 'all',
+                    type: 'pictorialBar',
+                    barCategoryGap: '40%',
+                    label: {
+                        normal: {
+                            show: true,
+                            position: 'top',
+                            textStyle: {
+                                color: '#e54035'
+                            }
+                        }
+                    },
+                    hoverAnimation: true,
+                    data: [{
+                        value: 8844,
+                        symbol: 'circle',
+                        label: {
+                            normal: {formatter: 'symbolPatternSize: default'}
+                        },
+                        itemStyle: {
+                            normal: {
+                                color: {
+                                    image: img,
+                                    repeat: 'repeat'
+                                }
+                            }
+                        }
+                    }, {
+                        value: 8844,
+                        symbol: 'path://M0,10 L10,10 L5,0 L0,10 z',
+                        label: {
+                            normal: {formatter: 'symbolPatternSize: 800'}
+                        },
+                        symbolPatternSize: 800,
+                        itemStyle: {
+                            normal: {
+                                color: {
+                                    image: img,
+                                    repeat: 'repeat'
+                                }
+                            }
+                        }
+                    }, {
+                        value: 8844,
+                        symbol: 'path://M0,10 L10,10 L5,0 L0,10 z',
+                        label: {
+                            normal: {formatter: 'symbolPatternSize: 50'}
+                        },
+                        symbolPatternSize: 50,
+                        itemStyle: {
+                            normal: {
+                                color: {
+                                    image: img,
+                                    repeat: 'repeat'
+                                }
+                            }
+                        }
+                    }]
+                }]
+            });
+        </script>
+
+
+
+
+
 
 
 

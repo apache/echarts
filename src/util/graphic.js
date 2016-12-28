@@ -407,13 +407,10 @@ define(function(require) {
             cb = dataIndex;
             dataIndex = null;
         }
-        var animationEnabled = animatableModel
-            && (
-                animatableModel.isAnimationEnabled
-                ? animatableModel.isAnimationEnabled()
-                // Directly use animation property
-                : animatableModel.getShallow('animation')
-            );
+        // Do not check 'animation' property directly here. Consider this case:
+        // animation model is an `itemModel`, whose does not have `isAnimationEnabled`
+        // but its parent model (`seriesModel`) does.
+        var animationEnabled = animatableModel && animatableModel.isAnimationEnabled();
 
         if (animationEnabled) {
             var postfix = isUpdate ? 'Update' : '';
@@ -421,7 +418,12 @@ define(function(require) {
             var animationEasing = animatableModel.getShallow('animationEasing' + postfix);
             var animationDelay = animatableModel.getShallow('animationDelay' + postfix);
             if (typeof animationDelay === 'function') {
-                animationDelay = animationDelay(dataIndex);
+                animationDelay = animationDelay(
+                    dataIndex,
+                    animatableModel.getAnimationDelayParams
+                        ? animatableModel.getAnimationDelayParams(el, dataIndex)
+                        : null
+                );
             }
             if (typeof duration === 'function') {
                 duration = duration(dataIndex);
@@ -436,6 +438,7 @@ define(function(require) {
             cb && cb();
         }
     }
+
     /**
      * Update graphic element properties with or without animation according to the configuration in series
      * @param {module:zrender/Element} el

@@ -40,11 +40,9 @@ define(function (require) {
                     [coordSysRect.x, coordSysRect.x + coordSysRect.width],
                     [coordSysRect.y, coordSysRect.y + coordSysRect.height]
                 ],
-                animationModel: seriesModel.isAnimationEnabled() ? seriesModel : null,
                 isHorizontal: isHorizontal,
                 valueDim: LAYOUT_ATTRS[+isHorizontal],
-                categoryDim: LAYOUT_ATTRS[1 - isHorizontal],
-                hoverAnimation: seriesModel.get('hoverAnimation')
+                categoryDim: LAYOUT_ATTRS[1 - isHorizontal]
             };
 
             data.diff(oldData)
@@ -53,16 +51,15 @@ define(function (require) {
                         return;
                     }
 
-                    var itemModel = data.getItemModel(dataIndex);
+                    var itemModel = getItemModel(data, dataIndex);
                     var symbolMeta = getSymbolMeta(data, dataIndex, itemModel, opt);
 
                     var bar = createBar(data, dataIndex, itemModel, opt, symbolMeta);
-                    bar.__pictorialShapeStr = getShapeStr(data, dataIndex, symbolMeta);
 
                     data.setItemGraphicEl(dataIndex, bar);
                     group.add(bar);
 
-                    updateStyle(bar, dataIndex, itemModel, opt, symbolMeta);
+                    updateCommon(bar, dataIndex, itemModel, opt, symbolMeta);
                 })
                 .update(function (newIndex, oldIndex) {
                     var bar = oldData.getItemGraphicEl(oldIndex);
@@ -72,12 +69,13 @@ define(function (require) {
                         return;
                     }
 
-                    var itemModel = data.getItemModel(newIndex);
+                    var itemModel = getItemModel(data, newIndex);
                     var symbolMeta = getSymbolMeta(data, newIndex, itemModel, opt);
 
                     var pictorialShapeStr = getShapeStr(data, newIndex, symbolMeta);
-                    if (pictorialShapeStr !== bar.__pictorialShapeStr) {
+                    if (bar && pictorialShapeStr !== bar.__pictorialShapeStr) {
                         group.remove(bar);
+                        data.setItemGraphicEl(newIndex, null);
                         bar = null;
                     }
 
@@ -89,14 +87,15 @@ define(function (require) {
                     }
 
                     data.setItemGraphicEl(newIndex, bar);
+                    bar.__pictorialSymbolMeta = symbolMeta;
                     // Add back
                     group.add(bar);
 
-                    updateStyle(bar, newIndex, itemModel, opt, symbolMeta);
+                    updateCommon(bar, newIndex, itemModel, opt, symbolMeta);
                 })
                 .remove(function (dataIndex) {
                     var bar = oldData.getItemGraphicEl(dataIndex);
-                    bar && removeBar(dataIndex, opt, bar);
+                    bar && removeBar(oldData, dataIndex, bar.__pictorialSymbolMeta.animationModel, bar);
                 })
                 .execute();
 
@@ -112,9 +111,8 @@ define(function (require) {
             var data = this._data;
             if (ecModel.get('animation')) {
                 if (data) {
-                    var opt = {animationModel: ecModel};
                     data.eachItemGraphicEl(function (bar) {
-                        removeBar(bar.dataIndex, opt, bar);
+                        removeBar(data, bar.dataIndex, ecModel, bar);
                     });
                 }
             }
@@ -133,22 +131,29 @@ define(function (require) {
         var symbolPosition = itemModel.get('symbolPosition') || 'start';
         var symbolRotate = itemModel.get('symbolRotate');
         var rotation = (symbolRotate || 0) * Math.PI / 180 || 0;
+        var symbolPatternSize = itemModel.get('symbolPatternSize') || 2;
+        var isAnimationEnabled = itemModel.isAnimationEnabled();
 
         var symbolMeta = {
             layout: layout,
+            itemModel: itemModel,
             symbolType: data.getItemVisual(dataIndex, 'symbol') || 'circle',
             color: data.getItemVisual(dataIndex, 'color'),
             symbolClip: symbolClip,
             symbolRepeat: symbolRepeat,
             symbolRepeatDirection: itemModel.get('symbolRepeatDirection'),
-            rotation: rotation
+            symbolPatternSize: symbolPatternSize,
+            rotation: rotation,
+            animationModel: isAnimationEnabled ? itemModel : null,
+            hoverAnimation: isAnimationEnabled && itemModel.get('hoverAnimation'),
+            z2: itemModel.get('z2') || 0
         };
 
         prepareBarLength(itemModel, symbolRepeat, layout, opt, symbolMeta);
 
         prepareSymbolSize(
-            data, dataIndex, layout, symbolRepeat, symbolClip,
-            symbolMeta.barFullLength, symbolMeta.pxSign, opt, symbolMeta
+            data, dataIndex, layout, symbolRepeat, symbolClip, symbolMeta.barFullLength,
+            symbolMeta.pxSign, symbolPatternSize, opt, symbolMeta
         );
 
         prepareLineWidth(itemModel, symbolMeta.symbolScale, rotation, opt, symbolMeta);
@@ -191,7 +196,8 @@ define(function (require) {
 
     // Support ['100%', '100%']
     function prepareSymbolSize(
-        data, dataIndex, layout, symbolRepeat, symbolClip, barFullLength, pxSign, opt, output
+        data, dataIndex, layout, symbolRepeat, symbolClip, barFullLength,
+        pxSign, symbolPatternSize, opt, output
     ) {
         var valueDim = opt.valueDim;
         var categoryDim = opt.categoryDim;
@@ -225,7 +231,10 @@ define(function (require) {
         output.symbolSize = symbolSize;
 
         // If x or y is less than zero, show reversed shape.
-        var symbolScale = output.symbolScale = [symbolSize[0] / 2, symbolSize[1] / 2];
+        var symbolScale = output.symbolScale = [
+            symbolSize[0] / symbolPatternSize,
+            symbolSize[1] / symbolPatternSize
+        ];
         // Follow convention, 'right' and 'top' is the normal scale.
         symbolScale[valueDim.index] *= (opt.isHorizontal ? -1 : 1) * pxSign;
     }
@@ -272,28 +281,34 @@ define(function (require) {
 
         if (symbolRepeat) {
             var absBarFullLength = Math.abs(barFullLength);
+            var absRepeatLength = Math.abs(repeatLength);
 
             // When symbol margin is less than 0, margin at both ends will be subtracted
             // to ensure that all of the symbols will not be overflow the given area.
             var endFix = symbolMargin >= 0 ? 0 : symbolMargin * 2;
 
-            var repeatTimes = numberUtil.isNumeric(symbolRepeat)
+            // If repeat times is fixed, symbolMargin will be calculated by repeat times.
+            // Otherwise, both repeat times and symbolMargin will be calculated acooding to
+            // the given symbolMargin.
+            var repeatTimesFixed = numberUtil.isNumeric(symbolRepeat);
+            var repeatTimes = repeatTimesFixed
                 ? symbolRepeat
                 : toIntTimes((absBarFullLength + endFix) / uLenWithMargin);
 
             // Adjust calculate margin, to ensure each symbol is displayed
             // entirely in the given layout area.
-            var mDiff = absBarFullLength - repeatTimes * unitLength;
+            var mDiff = (repeatTimesFixed ? absRepeatLength : absBarFullLength) - repeatTimes * unitLength;
             symbolMargin = mDiff / 2 / (mDiff >= 0 ? repeatTimes : repeatTimes - 1);
             uLenWithMargin = unitLength + symbolMargin * 2;
             endFix = mDiff >= 0 ? 0 : symbolMargin * 2;
 
-            // Update repeatTimes when not all symbol will be shown.
-            repeatTimes = output.repeatTimes = numberUtil.isNumeric(symbolRepeat)
-                ? symbolRepeat
-                : toIntTimes((Math.abs(repeatLength) + endFix) / uLenWithMargin);
+            if (!repeatTimesFixed) {
+                // Update repeatTimes when not all symbol will be shown.
+                repeatTimes = toIntTimes((absRepeatLength + endFix) / uLenWithMargin);
+            }
 
             pathLenWithMargin = repeatTimes * uLenWithMargin - endFix;
+            output.repeatTimes = repeatTimes;
         }
 
         output.symbolMargin = symbolMargin;
@@ -330,8 +345,15 @@ define(function (require) {
     }
 
     function createPath(symbolMeta) {
+        var symbolPatternSize = symbolMeta.symbolPatternSize;
         var path = symbolUtil.createSymbol(
-            symbolMeta.symbolType, -1, -1, 2, 2, symbolMeta.color
+            // Consider texture img, make a big size.
+            symbolMeta.symbolType,
+            -symbolPatternSize / 2,
+            -symbolPatternSize / 2,
+            symbolPatternSize,
+            symbolPatternSize,
+            symbolMeta.color
         );
         path.attr({
             culling: true
@@ -339,40 +361,49 @@ define(function (require) {
         path.type !== 'image' && path.setStyle({
             strokeNoScale: true
         });
+
         return path;
     }
 
-    function updateRepeatSymbols(bar, dataIndex, opt, symbolMeta) {
+    function createOrUpdateRepeatSymbols(bar, dataIndex, opt, symbolMeta, isUpdate) {
         var bundle = bar.__pictorialBundle;
-        var animationModel = opt.animationModel;
         var symbolSize = symbolMeta.symbolSize;
         var valueLineWidth = symbolMeta.valueLineWidth;
         var pathPosition = symbolMeta.pathPosition;
         var valueDim = opt.valueDim;
-
         var repeatTimes = symbolMeta.repeatTimes || 0;
-        var unit = symbolSize[opt.valueDim.index] + valueLineWidth + symbolMeta.symbolMargin * 2;
+        var animationModel = symbolMeta.animationModel;
+
         var index = 0;
+        var method = isUpdate ? 'updateProps' : 'initProps';
+        var unit = symbolSize[opt.valueDim.index] + valueLineWidth + symbolMeta.symbolMargin * 2;
 
         eachPath(bar, function (path) {
+            path.__pictorialAnimationIndex = index;
+            path.__pictorialRepeatTimes = repeatTimes;
             if (index < repeatTimes) {
-                graphic.updateProps(path, makeTarget(index), animationModel, dataIndex);
+                graphic[method](path, makeTarget(index), animationModel, dataIndex);
             }
             else {
-                graphic.updateProps(path, {scale: [0, 0]}, animationModel, dataIndex, function () {
+                graphic[method](path, {scale: [0, 0]}, animationModel, dataIndex, function () {
                     bundle.remove(path);
                 });
             }
+
+            updateHoverAnimation(path, symbolMeta);
+
             index++;
         });
 
         for (; index < repeatTimes; index++) {
             var path = createPath(symbolMeta);
+            path.__pictorialAnimationIndex = index;
+            path.__pictorialRepeatTimes = repeatTimes;
+            bundle.add(path);
+
             var target = makeTarget(index, true);
-            // FIXME
-            // start position?
             path.attr({position: target.position, scale: [0, 0]});
-            graphic.initProps(path, {
+            graphic[method](path, {
                 scale: target.scale,
                 rotation: target.rotation
             }, animationModel, dataIndex);
@@ -383,7 +414,7 @@ define(function (require) {
                 .on('mouseover', onMouseOver)
                 .on('mouseout', onMouseOut);
 
-            bundle.add(path);
+            updateHoverAnimation(path, symbolMeta);
         }
 
         function makeTarget(index) {
@@ -404,17 +435,64 @@ define(function (require) {
         }
 
         function onMouseOver() {
-            var self = this;
             eachPath(bar, function (path) {
-                path !== self && path.trigger('emphasis');
+                path.trigger('emphasis');
             });
         }
 
         function onMouseOut() {
-            var self = this;
             eachPath(bar, function (path) {
-                path !== self && path.trigger('normal');
+                path.trigger('normal');
             });
+        }
+    }
+
+    function createOrUpdateSingleSymbol(bar, dataIndex, opt, symbolMeta, isUpdate) {
+        var bundle = bar.__pictorialBundle;
+        var mainPath = bar.__pictorialMainPath;
+        var animationModel = symbolMeta.animationModel;
+        var method = isUpdate ? 'updateProps' : 'initProps';
+
+        if (!mainPath) {
+            mainPath = bar.__pictorialMainPath = createPath(symbolMeta);
+            bundle.add(mainPath);
+            mainPath.attr({
+                position: symbolMeta.pathPosition.slice(),
+                scale: [0, 0],
+                rotation: symbolMeta.rotation
+            });
+            graphic[method](
+                mainPath, {
+                    scale: symbolMeta.symbolScale.slice()
+                },
+                animationModel,
+                dataIndex
+            );
+            mainPath
+                .on('mouseover', onMouseOver)
+                .on('mouseout', onMouseOut);
+        }
+        else {
+            graphic[method](
+                mainPath,
+                {
+                    position: symbolMeta.pathPosition.slice(),
+                    scale: symbolMeta.symbolScale.slice(),
+                    rotation: symbolMeta.rotation
+                },
+                animationModel,
+                dataIndex
+            );
+        }
+
+        updateHoverAnimation(mainPath, symbolMeta);
+
+        function onMouseOver() {
+            this.trigger('emphasis');
+        }
+
+        function onMouseOut() {
+            this.trigger('normal');
         }
     }
 
@@ -438,8 +516,46 @@ define(function (require) {
             bar.add(barRect);
         }
         else {
-            graphic.updateProps(barRect, {shape: rectShape}, opt.animationModel, dataIndex);
+            graphic.updateProps(barRect, {shape: rectShape}, symbolMeta.animationModel, dataIndex);
         }
+    }
+
+    function getItemModel(data, dataIndex) {
+        var itemModel = data.getItemModel(dataIndex);
+        itemModel.getAnimationDelayParams = getAnimationDelayParams;
+        itemModel.isAnimationEnabled = isAnimationEnabled;
+        return itemModel;
+    }
+
+    function getAnimationDelayParams(path) {
+        // The order is the same as the z-order, see `symbolRepeatDiretion`.
+        return {
+            index: path.__pictorialAnimationIndex,
+            count: path.__pictorialRepeatTimes
+        };
+    }
+
+    function isAnimationEnabled() {
+        // `animation` prop can be set on itemModel in pictorial bar chart.
+        return this.parentModel.isAnimationEnabled() && !!this.getShallow('animation');
+    }
+
+    function updateHoverAnimation(path, symbolMeta) {
+        path.off('emphasis').off('normal');
+
+        var scale = symbolMeta.symbolScale.slice();
+
+        symbolMeta.hoverAnimation && path
+            .on('emphasis', function() {
+                this.animateTo({
+                    scale: [scale[0] * 1.1, scale[1] * 1.1]
+                }, 400, 'elasticOut');
+            })
+            .on('normal', function() {
+                this.animateTo({
+                    scale: scale.slice()
+                }, 400, 'elasticOut');
+            });
     }
 
     function createBar(data, dataIndex, itemModel, opt, symbolMeta, isUpdate) {
@@ -454,23 +570,13 @@ define(function (require) {
         bundle.attr('position', symbolMeta.bundlePosition.slice());
 
         var updateMethod = isUpdate ? 'updateProps' : 'initProps';
-        var animationModel = opt.animationModel;
+        var animationModel = symbolMeta.animationModel;
 
         if (symbolMeta.symbolRepeat) {
-            updateRepeatSymbols(bar, dataIndex, opt, symbolMeta);
+            createOrUpdateRepeatSymbols(bar, dataIndex, opt, symbolMeta);
         }
         else {
-            var mainPath = bar.__pictorialMainPath = createPath(symbolMeta);
-            bundle.add(mainPath);
-            mainPath.attr({
-                position: symbolMeta.pathPosition.slice(),
-                scale: [0, 0],
-                rotation: symbolMeta.rotation
-            });
-
-            graphic[updateMethod](
-                mainPath, {scale: symbolMeta.symbolScale.slice()}, animationModel, dataIndex
-            );
+            createOrUpdateSingleSymbol(bar, dataIndex, opt, symbolMeta);
         }
 
         var clipPath;
@@ -491,11 +597,14 @@ define(function (require) {
 
         updateBarRect(bar, dataIndex, opt, symbolMeta);
 
+        bar.__pictorialShapeStr = getShapeStr(data, dataIndex, symbolMeta);
+        bar.__pictorialSymbolMeta = symbolMeta;
+
         return bar;
     }
 
     function updateBar(data, dataIndex, itemModel, opt, symbolMeta, bar) {
-        var animationModel = opt.animationModel;
+        var animationModel = symbolMeta.animationModel;
         var bundle = bar.__pictorialBundle;
 
         graphic.updateProps(
@@ -503,20 +612,10 @@ define(function (require) {
         );
 
         if (symbolMeta.symbolRepeat) {
-            updateRepeatSymbols(bar, dataIndex, opt, symbolMeta);
+            createOrUpdateRepeatSymbols(bar, dataIndex, opt, symbolMeta, true);
         }
         else {
-            var mainPath = bar.__pictorialMainPath;
-            mainPath && graphic.updateProps(
-                mainPath,
-                {
-                    position: symbolMeta.pathPosition.slice(),
-                    scale: symbolMeta.symbolScale.slice(),
-                    rotation: symbolMeta.rotation
-                },
-                animationModel,
-                dataIndex
-            );
+            createOrUpdateSingleSymbol(bar, dataIndex, opt, symbolMeta, true);
         }
 
         updateBarRect(bar, dataIndex, opt, symbolMeta);
@@ -532,23 +631,27 @@ define(function (require) {
         }
     }
 
-    function removeBar(dataIndex, opt, bar) {
+    function removeBar(data, dataIndex, animationModel, bar) {
         // Not show text when animating
         var labelRect = bar.__pictorialBarRect;
         labelRect && (labelRect.style.text = '');
 
-        var clipPath = bar.__pictorialClipPath;
-        var targetEl = clipPath || bar.__pictorialBundle;
-        var targetObj = clipPath
-            ? {shape: {width: 0}}
-            : {style: {opacity: 0}};
+        var pathes = [];
+        eachPath(bar, function (path) {
+            pathes.push(path);
+        });
+        bar.__pictorialMainPath && pathes.push(bar.__pictorialMainPath);
 
-        graphic.updateProps(
-            targetEl, targetObj, opt.animationModel, dataIndex,
-            function () {
-                bar.parent && bar.parent.remove(bar);
-            }
-        );
+        zrUtil.each(pathes, function (path) {
+            graphic.updateProps(
+                path, {scale: [0, 0]}, animationModel, dataIndex,
+                function () {
+                    bar.parent && bar.parent.remove(bar);
+                }
+            );
+        });
+
+        data.setItemGraphicEl(dataIndex, null);
     }
 
     function getShapeStr(data, dataIndex, symbolMeta) {
@@ -566,7 +669,7 @@ define(function (require) {
         });
     }
 
-    function updateStyle(bar, dataIndex, itemModel, opt, symbolMeta) {
+    function updateCommon(bar, dataIndex, itemModel, opt, symbolMeta) {
         var color = symbolMeta.color;
         // Color must be excluded.
         // Because symbol provide setColor individually to set fill and stroke
@@ -584,6 +687,8 @@ define(function (require) {
                 normalStyle
             ));
             graphic.setHoverStyle(path, hoverStyle);
+
+            path.z2 = symbolMeta.z2;
         });
 
         var barRectHoverStyle = {};
