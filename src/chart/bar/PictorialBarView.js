@@ -54,12 +54,12 @@ define(function (require) {
                     var itemModel = getItemModel(data, dataIndex);
                     var symbolMeta = getSymbolMeta(data, dataIndex, itemModel, opt);
 
-                    var bar = createBar(data, dataIndex, itemModel, opt, symbolMeta);
+                    var bar = createBar(data, opt, symbolMeta);
 
                     data.setItemGraphicEl(dataIndex, bar);
                     group.add(bar);
 
-                    updateCommon(bar, dataIndex, itemModel, opt, symbolMeta);
+                    updateCommon(bar, opt, symbolMeta);
                 })
                 .update(function (newIndex, oldIndex) {
                     var bar = oldData.getItemGraphicEl(oldIndex);
@@ -72,7 +72,7 @@ define(function (require) {
                     var itemModel = getItemModel(data, newIndex);
                     var symbolMeta = getSymbolMeta(data, newIndex, itemModel, opt);
 
-                    var pictorialShapeStr = getShapeStr(data, newIndex, symbolMeta);
+                    var pictorialShapeStr = getShapeStr(data, symbolMeta);
                     if (bar && pictorialShapeStr !== bar.__pictorialShapeStr) {
                         group.remove(bar);
                         data.setItemGraphicEl(newIndex, null);
@@ -80,10 +80,10 @@ define(function (require) {
                     }
 
                     if (bar) {
-                        updateBar(data, newIndex, itemModel, opt, symbolMeta, bar);
+                        updateBar(bar, opt, symbolMeta);
                     }
                     else {
-                        bar = createBar(data, newIndex, itemModel, opt, symbolMeta, true);
+                        bar = createBar(data, opt, symbolMeta, true);
                     }
 
                     data.setItemGraphicEl(newIndex, bar);
@@ -91,7 +91,7 @@ define(function (require) {
                     // Add back
                     group.add(bar);
 
-                    updateCommon(bar, newIndex, itemModel, opt, symbolMeta);
+                    updateCommon(bar, opt, symbolMeta);
                 })
                 .remove(function (dataIndex) {
                     var bar = oldData.getItemGraphicEl(dataIndex);
@@ -135,6 +135,7 @@ define(function (require) {
         var isAnimationEnabled = itemModel.isAnimationEnabled();
 
         var symbolMeta = {
+            dataIndex: dataIndex,
             layout: layout,
             itemModel: itemModel,
             symbolType: data.getItemVisual(dataIndex, 'symbol') || 'circle',
@@ -152,7 +153,7 @@ define(function (require) {
         prepareBarLength(itemModel, symbolRepeat, layout, opt, symbolMeta);
 
         prepareSymbolSize(
-            data, dataIndex, layout, symbolRepeat, symbolClip, symbolMeta.barFullLength,
+            data, dataIndex, layout, symbolRepeat, symbolClip, symbolMeta.boundingLength,
             symbolMeta.pxSign, symbolPatternSize, opt, symbolMeta
         );
 
@@ -169,7 +170,7 @@ define(function (require) {
 
         prepareLayoutInfo(
             itemModel, symbolSize, layout, symbolRepeat, symbolClip, symbolOffset,
-            symbolPosition, symbolMeta.valueLineWidth, symbolMeta.barFullLength, symbolMeta.repeatLength,
+            symbolPosition, symbolMeta.valueLineWidth, symbolMeta.boundingLength, symbolMeta.repeatCutLength,
             opt, symbolMeta
         );
 
@@ -183,20 +184,22 @@ define(function (require) {
         var valueAxis = opt.coordSys.getOtherAxis(opt.coordSys.getBaseAxis());
         var zeroPx = valueAxis.toGlobalCoord(valueAxis.dataToCoord(0));
 
-        var barFullLength = output.barFullLength = symbolBoundingData != null
-            ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(symbolBoundingData)) - zeroPx
+        var boundingLength = output.boundingLength = symbolBoundingData != null
+            ? valueAxis.toGlobalCoord(valueAxis.dataToCoord(valueAxis.scale.parse(symbolBoundingData))) - zeroPx
             : symbolRepeat
             ? opt.coordSysExtent[valueDim.index][1 - +(layout[valueDim.wh] <= 0)] - zeroPx
             : layout[valueDim.wh];
 
-        output.repeatLength = symbolBoundingData != null ? barFullLength : layout[valueDim.wh];
+        if (symbolRepeat) {
+            output.repeatCutLength = layout[valueDim.wh];
+        }
 
-        output.pxSign = barFullLength > 0 ? 1 : barFullLength < 0 ? -1 : 0;
+        output.pxSign = boundingLength > 0 ? 1 : boundingLength < 0 ? -1 : 0;
     }
 
     // Support ['100%', '100%']
     function prepareSymbolSize(
-        data, dataIndex, layout, symbolRepeat, symbolClip, barFullLength,
+        data, dataIndex, layout, symbolRepeat, symbolClip, boundingLength,
         pxSign, symbolPatternSize, opt, output
     ) {
         var valueDim = opt.valueDim;
@@ -225,7 +228,7 @@ define(function (require) {
         );
         symbolSize[valueDim.index] = parsePercent(
             symbolSize[valueDim.index],
-            symbolRepeat ? categorySize : Math.abs(barFullLength)
+            symbolRepeat ? categorySize : Math.abs(boundingLength)
         );
 
         output.symbolSize = symbolSize;
@@ -260,7 +263,7 @@ define(function (require) {
 
     function prepareLayoutInfo(
         itemModel, symbolSize, layout, symbolRepeat, symbolClip, symbolOffset,
-        symbolPosition, valueLineWidth, barFullLength, repeatLength, opt, output
+        symbolPosition, valueLineWidth, boundingLength, repeatCutLength, opt, output
     ) {
         var categoryDim = opt.categoryDim;
         var valueDim = opt.valueDim;
@@ -280,31 +283,29 @@ define(function (require) {
         // when rotating.
 
         if (symbolRepeat) {
-            var absBarFullLength = Math.abs(barFullLength);
-            var absRepeatLength = Math.abs(repeatLength);
+            var absBoundingLength = Math.abs(boundingLength);
 
             // When symbol margin is less than 0, margin at both ends will be subtracted
             // to ensure that all of the symbols will not be overflow the given area.
             var endFix = symbolMargin >= 0 ? 0 : symbolMargin * 2;
 
-            // If repeat times is fixed, symbolMargin will be calculated by repeat times.
-            // Otherwise, both repeat times and symbolMargin will be calculated acooding to
-            // the given symbolMargin.
-            var repeatTimesFixed = numberUtil.isNumeric(symbolRepeat);
-            var repeatTimes = repeatTimesFixed
+            // Both final repeatTimes and final symbolMargin area calculated based on
+            // boundingLength.
+            var repeatSpecified = numberUtil.isNumeric(symbolRepeat);
+            var repeatTimes = repeatSpecified
                 ? symbolRepeat
-                : toIntTimes((absBarFullLength + endFix) / uLenWithMargin);
+                : toIntTimes((absBoundingLength + endFix) / uLenWithMargin);
 
             // Adjust calculate margin, to ensure each symbol is displayed
             // entirely in the given layout area.
-            var mDiff = (repeatTimesFixed ? absRepeatLength : absBarFullLength) - repeatTimes * unitLength;
+            var mDiff = absBoundingLength - repeatTimes * unitLength;
             symbolMargin = mDiff / 2 / (mDiff >= 0 ? repeatTimes : repeatTimes - 1);
             uLenWithMargin = unitLength + symbolMargin * 2;
             endFix = mDiff >= 0 ? 0 : symbolMargin * 2;
 
-            if (!repeatTimesFixed) {
-                // Update repeatTimes when not all symbol will be shown.
-                repeatTimes = toIntTimes((absRepeatLength + endFix) / uLenWithMargin);
+            // Update repeatTimes when not all symbol will be shown.
+            if (!repeatSpecified && symbolRepeat !== 'fixed') {
+                repeatTimes = toIntTimes((Math.abs(repeatCutLength) + endFix) / uLenWithMargin);
             }
 
             pathLenWithMargin = repeatTimes * uLenWithMargin - endFix;
@@ -319,8 +320,8 @@ define(function (require) {
         pathPosition[valueDim.index] = symbolPosition === 'start'
             ? sizeFix
             : symbolPosition === 'end'
-            ? barFullLength - sizeFix
-            : barFullLength / 2; // 'center'
+            ? boundingLength - sizeFix
+            : boundingLength / 2; // 'center'
         if (symbolOffset) {
             pathPosition[0] += symbolOffset[0];
             pathPosition[1] += symbolOffset[1];
@@ -365,27 +366,25 @@ define(function (require) {
         return path;
     }
 
-    function createOrUpdateRepeatSymbols(bar, dataIndex, opt, symbolMeta, isUpdate) {
+    function createOrUpdateRepeatSymbols(bar, opt, symbolMeta, isUpdate) {
         var bundle = bar.__pictorialBundle;
         var symbolSize = symbolMeta.symbolSize;
         var valueLineWidth = symbolMeta.valueLineWidth;
         var pathPosition = symbolMeta.pathPosition;
         var valueDim = opt.valueDim;
         var repeatTimes = symbolMeta.repeatTimes || 0;
-        var animationModel = symbolMeta.animationModel;
 
         var index = 0;
-        var method = isUpdate ? 'updateProps' : 'initProps';
         var unit = symbolSize[opt.valueDim.index] + valueLineWidth + symbolMeta.symbolMargin * 2;
 
         eachPath(bar, function (path) {
             path.__pictorialAnimationIndex = index;
             path.__pictorialRepeatTimes = repeatTimes;
             if (index < repeatTimes) {
-                graphic[method](path, makeTarget(index), animationModel, dataIndex);
+                updateAttr(path, null, makeTarget(index), symbolMeta, isUpdate);
             }
             else {
-                graphic[method](path, {scale: [0, 0]}, animationModel, dataIndex, function () {
+                updateAttr(path, null, {scale: [0, 0]}, symbolMeta, isUpdate, function () {
                     bundle.remove(path);
                 });
             }
@@ -402,11 +401,20 @@ define(function (require) {
             bundle.add(path);
 
             var target = makeTarget(index, true);
-            path.attr({position: target.position, scale: [0, 0]});
-            graphic[method](path, {
-                scale: target.scale,
-                rotation: target.rotation
-            }, animationModel, dataIndex);
+
+            updateAttr(
+                path,
+                {
+                    position: target.position,
+                    scale: [0, 0]
+                },
+                {
+                    scale: target.scale,
+                    rotation: target.rotation
+                },
+                symbolMeta,
+                isUpdate
+            );
 
             // FIXME
             // If all emphasis/normal through action.
@@ -427,6 +435,7 @@ define(function (require) {
                 i = repeatTimes - 1 - index;
             }
             position[valueDim.index] = unit * (i - repeatTimes / 2 + 0.5) + pathPosition[valueDim.index];
+
             return {
                 position: position,
                 scale: symbolMeta.symbolScale.slice(),
@@ -447,41 +456,43 @@ define(function (require) {
         }
     }
 
-    function createOrUpdateSingleSymbol(bar, dataIndex, opt, symbolMeta, isUpdate) {
+    function createOrUpdateSingleSymbol(bar, opt, symbolMeta, isUpdate) {
         var bundle = bar.__pictorialBundle;
         var mainPath = bar.__pictorialMainPath;
-        var animationModel = symbolMeta.animationModel;
-        var method = isUpdate ? 'updateProps' : 'initProps';
 
         if (!mainPath) {
             mainPath = bar.__pictorialMainPath = createPath(symbolMeta);
             bundle.add(mainPath);
-            mainPath.attr({
-                position: symbolMeta.pathPosition.slice(),
-                scale: [0, 0],
-                rotation: symbolMeta.rotation
-            });
-            graphic[method](
-                mainPath, {
+
+            updateAttr(
+                mainPath,
+                {
+                    position: symbolMeta.pathPosition.slice(),
+                    scale: [0, 0],
+                    rotation: symbolMeta.rotation
+                },
+                {
                     scale: symbolMeta.symbolScale.slice()
                 },
-                animationModel,
-                dataIndex
+                symbolMeta,
+                isUpdate
             );
+
             mainPath
                 .on('mouseover', onMouseOver)
                 .on('mouseout', onMouseOut);
         }
         else {
-            graphic[method](
+            updateAttr(
                 mainPath,
+                null,
                 {
                     position: symbolMeta.pathPosition.slice(),
                     scale: symbolMeta.symbolScale.slice(),
                     rotation: symbolMeta.rotation
                 },
-                animationModel,
-                dataIndex
+                symbolMeta,
+                isUpdate
             );
         }
 
@@ -497,7 +508,7 @@ define(function (require) {
     }
 
     // bar rect is used for label.
-    function updateBarRect(bar, dataIndex, opt, symbolMeta) {
+    function createOrUpdateBarRect(bar, symbolMeta, isUpdate) {
         var rectShape = zrUtil.extend({}, symbolMeta.barRectShape);
 
         var barRect = bar.__pictorialBarRect;
@@ -516,7 +527,37 @@ define(function (require) {
             bar.add(barRect);
         }
         else {
-            graphic.updateProps(barRect, {shape: rectShape}, symbolMeta.animationModel, dataIndex);
+            updateAttr(barRect, null, {shape: rectShape}, symbolMeta, isUpdate);
+        }
+    }
+
+    function createOrUpdateClip(bar, opt, symbolMeta, isUpdate) {
+        // If not clip, symbol will be remove and rebuilt.
+        if (symbolMeta.symbolClip) {
+            var clipPath = bar.__pictorialClipPath;
+            var clipShape = zrUtil.extend({}, symbolMeta.clipShape);
+            var valueDim = opt.valueDim;
+            var animationModel = symbolMeta.animationModel;
+            var dataIndex = symbolMeta.dataIndex;
+
+            if (clipPath) {
+                graphic.updateProps(
+                    clipPath, {shape: clipShape}, animationModel, dataIndex
+                );
+            }
+            else {
+                clipShape[valueDim.wh] = 0;
+                clipPath = new graphic.Rect({shape: clipShape});
+                bar.__pictorialBundle.setClipPath(clipPath);
+                bar.__pictorialClipPath = clipPath;
+
+                var target = {};
+                target[valueDim.wh] = symbolMeta.clipShape[valueDim.wh];
+
+                graphic[isUpdate ? 'updateProps' : 'initProps'](
+                    clipPath, {shape: target}, animationModel, dataIndex
+                );
+            }
         }
     }
 
@@ -558,9 +599,7 @@ define(function (require) {
             });
     }
 
-    function createBar(data, dataIndex, itemModel, opt, symbolMeta, isUpdate) {
-        var valueDim = opt.valueDim;
-
+    function createBar(data, opt, symbolMeta, isUpdate) {
         // bar is the main element for each data.
         var bar = new graphic.Group();
         // bundle is used for location and clip.
@@ -569,42 +608,26 @@ define(function (require) {
         bar.__pictorialBundle = bundle;
         bundle.attr('position', symbolMeta.bundlePosition.slice());
 
-        var updateMethod = isUpdate ? 'updateProps' : 'initProps';
-        var animationModel = symbolMeta.animationModel;
-
         if (symbolMeta.symbolRepeat) {
-            createOrUpdateRepeatSymbols(bar, dataIndex, opt, symbolMeta);
+            createOrUpdateRepeatSymbols(bar, opt, symbolMeta);
         }
         else {
-            createOrUpdateSingleSymbol(bar, dataIndex, opt, symbolMeta);
+            createOrUpdateSingleSymbol(bar, opt, symbolMeta);
         }
 
-        var clipPath;
-        if (symbolMeta.symbolClip) {
-            var clipShape = zrUtil.extend({}, symbolMeta.clipShape);
-            clipShape[valueDim.wh] = 0;
+        createOrUpdateBarRect(bar, symbolMeta, isUpdate);
 
-            clipPath = new graphic.Rect({
-                shape: clipShape
-            });
-            bundle.setClipPath(clipPath);
-            bar.__pictorialClipPath = clipPath;
+        createOrUpdateClip(bar, opt, symbolMeta, isUpdate);
 
-            var target = {};
-            target[valueDim.wh] = symbolMeta.clipShape[valueDim.wh];
-            graphic[updateMethod](clipPath, {shape: target}, animationModel, dataIndex);
-        }
-
-        updateBarRect(bar, dataIndex, opt, symbolMeta);
-
-        bar.__pictorialShapeStr = getShapeStr(data, dataIndex, symbolMeta);
+        bar.__pictorialShapeStr = getShapeStr(data, symbolMeta);
         bar.__pictorialSymbolMeta = symbolMeta;
 
         return bar;
     }
 
-    function updateBar(data, dataIndex, itemModel, opt, symbolMeta, bar) {
+    function updateBar(bar, opt, symbolMeta) {
         var animationModel = symbolMeta.animationModel;
+        var dataIndex = symbolMeta.dataIndex;
         var bundle = bar.__pictorialBundle;
 
         graphic.updateProps(
@@ -612,23 +635,15 @@ define(function (require) {
         );
 
         if (symbolMeta.symbolRepeat) {
-            createOrUpdateRepeatSymbols(bar, dataIndex, opt, symbolMeta, true);
+            createOrUpdateRepeatSymbols(bar, opt, symbolMeta, true);
         }
         else {
-            createOrUpdateSingleSymbol(bar, dataIndex, opt, symbolMeta, true);
+            createOrUpdateSingleSymbol(bar, opt, symbolMeta, true);
         }
 
-        updateBarRect(bar, dataIndex, opt, symbolMeta);
+        createOrUpdateBarRect(bar, symbolMeta, true);
 
-        var clipPath = bar.__pictorialClipPath;
-        if (clipPath) {
-            graphic.updateProps(
-                clipPath,
-                {shape: zrUtil.extend({}, symbolMeta.clipShape)},
-                animationModel,
-                dataIndex
-            );
-        }
+        createOrUpdateClip(bar, opt, symbolMeta, true);
     }
 
     function removeBar(data, dataIndex, animationModel, bar) {
@@ -642,6 +657,9 @@ define(function (require) {
         });
         bar.__pictorialMainPath && pathes.push(bar.__pictorialMainPath);
 
+        // I do not find proper remove animation for clip yet.
+        bar.__pictorialClipPath && (animationModel = null);
+
         zrUtil.each(pathes, function (path) {
             graphic.updateProps(
                 path, {scale: [0, 0]}, animationModel, dataIndex,
@@ -654,9 +672,9 @@ define(function (require) {
         data.setItemGraphicEl(dataIndex, null);
     }
 
-    function getShapeStr(data, dataIndex, symbolMeta) {
+    function getShapeStr(data, symbolMeta) {
         return [
-            data.getItemVisual(dataIndex, 'symbol') || 'none',
+            data.getItemVisual(symbolMeta.dataIndex, 'symbol') || 'none',
             !!symbolMeta.symbolRepeat,
             !!symbolMeta.symbolClip
         ].join(':');
@@ -669,8 +687,22 @@ define(function (require) {
         });
     }
 
-    function updateCommon(bar, dataIndex, itemModel, opt, symbolMeta) {
+    function updateAttr(el, immediateAttrs, animationAttrs, symbolMeta, isUpdate, cb) {
+        immediateAttrs && el.attr(immediateAttrs);
+        if (symbolMeta.symbolClip) {
+            animationAttrs && el.attr(animationAttrs);
+        }
+        else {
+            animationAttrs && graphic[isUpdate ? 'updateProps' : 'initProps'](
+                el, animationAttrs, symbolMeta.animationModel, symbolMeta.dataIndex, cb
+            );
+        }
+    }
+
+    function updateCommon(bar, opt, symbolMeta) {
         var color = symbolMeta.color;
+        var dataIndex = symbolMeta.dataIndex;
+        var itemModel = symbolMeta.itemModel;
         // Color must be excluded.
         // Because symbol provide setColor individually to set fill and stroke
         var normalStyle = itemModel.getModel('itemStyle.normal').getItemStyle(['color']);
@@ -692,7 +724,7 @@ define(function (require) {
         });
 
         var barRectHoverStyle = {};
-        var barPositionOutside = opt.valueDim.posDesc[+(symbolMeta.barFullLength > 0)];
+        var barPositionOutside = opt.valueDim.posDesc[+(symbolMeta.boundingLength > 0)];
         var barRect = bar.__pictorialBarRect;
 
         helper.setLabel(

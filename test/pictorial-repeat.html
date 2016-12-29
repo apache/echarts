@@ -117,7 +117,7 @@
                         normal: {
                             show: true,
                             position: 'outside'
-                        },
+                        }
                     },
                     symbol: pathSymbols.plane,
                     symbolRepeat: true,
@@ -144,6 +144,66 @@
                     type: 'bar',
                     color: ['rgba(0,0,0,0.5)'],
                     data: [60, 60, 60, '-', 60, -30, 60, 60]
+                }]
+            });
+        </script>
+
+
+
+
+
+
+
+
+
+
+        <script>
+            makeChart('main1.1', {
+                legend: {
+                    data: ['data'],
+                    selected: {
+                        'original bar': false,
+                        'original bg': false
+                    }
+                },
+                tooltip: {
+                },
+                yAxis: {
+                    data: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
+                    axisTick: {show: false},
+                    axisLine: {show: false}
+                },
+                xAxis: {
+                    splitLine: {show: false},
+                    axisTick: {show: false},
+                    axisLabel: {show: false},
+                    axisLine: {show: false}
+                },
+                // animationDuration: 2000,
+                // animationDurationUpdate: 2000,
+                series: [{
+                    name: 'data',
+                    type: 'pictorialBar',
+                    symbol: pathSymbols.pentagram,
+                    symbolRepeat: 5,
+                    itemStyle: {
+                        normal: {
+                            color: '#ddd'
+                        }
+                    },
+                    animation: false,
+                    silent: true,
+                    barGap: '-100%',
+                    data: [12, 60, 54, 25, 23, 16, 1, 25],
+                    z: -1
+                }, {
+                    name: 'data',
+                    type: 'pictorialBar',
+                    symbol: pathSymbols.pentagram,
+                    symbolRepeat: 5,
+                    symbolClip: true,
+                    z: 10,
+                    data: [12, 60, 54, 25, 23, 16, 1, 25]
                 }]
             });
         </script>
@@ -223,67 +283,9 @@
 
 
         <script>
-            makeChart('main1.1', {
-                legend: {
-                    data: ['data', 'bg'],
-                    selected: {
-                        'original bar': false,
-                        'original bg': false
-                    }
-                },
-                tooltip: {
-                },
-                yAxis: {
-                    data: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
-                    axisTick: {show: false},
-                    axisLine: {show: false}
-                },
-                xAxis: {
-                    splitLine: {show: false},
-                    axisTick: {show: false},
-                    axisLabel: {show: false},
-                    axisLine: {show: false}
-                },
-                // animationDuration: 2000,
-                // animationDurationUpdate: 2000,
-                series: [{
-                    name: 'bg',
-                    type: 'pictorialBar',
-                    symbol: pathSymbols.pentagram,
-                    symbolRepeat: 5,
-                    itemStyle: {
-                        normal: {
-                            color: '#ddd'
-                        }
-                    },
-                    barGap: '-100%',
-                    data: [12, 60, 54, 25, 23, 16, 1, 25]
-                }, {
-                    name: 'data',
-                    type: 'pictorialBar',
-                    symbol: pathSymbols.pentagram,
-                    symbolRepeat: 5,
-                    symbolClip: true,
-                    z: 10,
-                    data: [12, 60, 54, 25, 23, 16, 1, 25]
-                }]
-            });
-        </script>
-
-
-
-
-
-
-
-
-
-
-
-        <script>
             makeChart('main2', {
                 legend: {
-                    data: ['data', 'bg', 'original bar', 'original bg'],
+                    data: ['data', 'original bar', 'original bg'],
                     selected: {
                         'original bar': false,
                         'original bg': false
@@ -303,7 +305,7 @@
                     splitLine: {show: false}
                 },
                 series: [{
-                    name: 'bg',
+                    name: 'data',
                     type: 'pictorialBar',
                     barGap: '-100%',
                     symbol: pathSymbols.pumpkin,
@@ -324,8 +326,8 @@
                         }
                     },
                     silent: true,
-                    symbolRepeat: true,
-                    // symbolRepeatDirection: 'start',
+                    symbolRepeat: 'fixed',
+                    animation: false,
                     symbolBoundingData: 60,
                     data: [12, 60, 54, '-', 23, 2, 0, 25]
                 }, {
@@ -407,10 +409,11 @@
                         }
                     },
                     silent: true,
-                    symbolRepeat: true,
+                    symbolRepeat: 'fixed',
                     symbolClip: false,
                     symbolBoundingData: -60,
                     symbolRotate: 30,
+                    z: -1,
                     data: [-12, -60, -54, '-', -23, -2, 0, -25]
                 }, {
                     name: 'data',
@@ -624,14 +627,14 @@
                     textStyle: {color: '#ddd'}
                 },
                 grid: {
-                    bottom: 80
+                    bottom: 100
                 },
                 xAxis: [{
                     data: [
                         'standard',
                         'fix symbol margin\n(not accurate)\n(but more comparable)',
-                        'use symbolBoundingData\n(accurate)\n(but symbolMargin not fixed)',
-                        'fix repeat times\n(accurate)\n(but less responsive)'
+                        'use symbolBoundingData\nauto repeat times\n(accurate)\n(but symbolMargin not fixed)',
+                        'use symbolBoundingData\nfix repeat times\n(accurate)\n(but less responsive)'
                     ],
                     axisTick: {show: false},
                     axisLine: {
@@ -700,6 +703,7 @@
                         symbolRepeat: true
                     }, {
                         value: startData,
+                        symbolBoundingData: startData,
                         symbolRepeat: 20
                     }],
                     markLine: {
@@ -752,6 +756,7 @@
                                 symbolRepeat: true
                             }, {
                                 value: dynamicData,
+                                symbolBoundingData: dynamicData,
                                 symbolRepeat: 20
                             }],
                             markLine: {

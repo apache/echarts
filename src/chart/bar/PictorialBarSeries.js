@@ -1,6 +1,6 @@
 define(function(require) {
 
-    return require('./BaseBarSeries').extend({
+    var PictorialBarSeries = require('./BaseBarSeries').extend({
 
         type: 'series.pictorialBar',
 
@@ -16,7 +16,8 @@ define(function(require) {
             symbolMargin: null,   // start margin and end margin. Can be a number or a percent string.
                                   // Auto margin by defualt.
             symbolRepeat: false,  // false/null/undefined, means no repeat.
-                                  // Can be a number, specifies repeat times.
+                                  // Can be a number, specifies repeat times, and do not cut by data.
+                                  // Can be 'fixed', means auto calculate repeat times but do not cut by data.
             symbolRepeatDirection: 'end', // 'end' means from 'start' to 'end'.
 
             symbolClip: false,
@@ -34,6 +35,14 @@ define(function(require) {
             // fixed size: bg:Y, clip:Y, ani:cliprect, size:symbolSize.
             // stretch: bg:N, clip:Y, ani:position(by layout), size:byRect
             // img: bg:N, clip:Y, ani:position(include clip), size:byRect or bySymbolSize.
+        },
+
+        getInitialData: function (option) {
+            // Disable stack.
+            option.stack = null;
+            return PictorialBarSeries.superApply(this, 'getInitialData', arguments);
         }
     });
+
+    return PictorialBarSeries;
 });

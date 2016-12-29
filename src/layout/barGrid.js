@@ -228,7 +228,6 @@ define(function(require) {
                 }
 
                 data.setItemLayout(idx, {
-                    valueSign: value > 0 ? 1 : value < 0 ? -1 : 0,
                     x: x,
                     y: y,
                     width: width,
