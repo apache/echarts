@@ -110,6 +110,8 @@ define(function (require) {
             xAxisIndex: 0,
             yAxisIndex: 0,
 
+            symbol: ['none', 'none'],
+            symbolSize: [10, 10],
             // Geo coordinate system
             geoIndex: 0,
 
