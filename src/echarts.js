@@ -207,6 +207,7 @@ define(function (require) {
     echartsProto._onframe = function () {
         // Lazy update
         if (this[OPTION_UPDATED]) {
+            var silent = this[OPTION_UPDATED].silent;
 
             this[IN_MAIN_PROCESS] = true;
 
@@ -215,6 +216,10 @@ define(function (require) {
             this[IN_MAIN_PROCESS] = false;
 
             this[OPTION_UPDATED] = false;
+
+            flushPendingActions.call(this, silent);
+
+            triggerUpdatedEvent.call(this, silent);
         }
     };
     /**
@@ -232,13 +237,29 @@ define(function (require) {
     };
 
     /**
+     * Usage:
+     * chart.setOption(option, notMerge, lazyUpdate);
+     * chart.setOption(option, {
+     *     notMerge: ...,
+     *     lazyUpdate: ...,
+     *     silent: ...
+     * });
+     *
      * @param {Object} option
-     * @param {boolean} notMerge
-     * @param {boolean} [lazyUpdate=false] Useful when setOption frequently.
+     * @param {Object|boolean} [opts] opts or notMerge.
+     * @param {boolean} [opts.notMerge=false]
+     * @param {boolean} [opts.lazyUpdate=false] Useful when setOption frequently.
      */
     echartsProto.setOption = function (option, notMerge, lazyUpdate) {
         if (__DEV__) {
             zrUtil.assert(!this[IN_MAIN_PROCESS], '`setOption` should not be called during main process.');
+        }
+
+        var silent;
+        if (zrUtil.isObject(notMerge)) {
+            lazyUpdate = notMerge.lazyUpdate;
+            silent = notMerge.silent;
+            notMerge = notMerge.notMerge;
         }
 
         this[IN_MAIN_PROCESS] = true;
@@ -260,19 +281,21 @@ define(function (require) {
         this._model.setOption(option, optionPreprocessorFuncs);
 
         if (lazyUpdate) {
-            this[OPTION_UPDATED] = true;
+            this[OPTION_UPDATED] = {silent: silent};
+            this[IN_MAIN_PROCESS] = false;
         }
         else {
             updateMethods.prepareAndUpdate.call(this);
             // Ensure zr refresh sychronously, and then pixel in canvas can be
             // fetched after `setOption`.
             this._zr.flush();
+
             this[OPTION_UPDATED] = false;
+            this[IN_MAIN_PROCESS] = false;
+
+            flushPendingActions.call(this, silent);
+            triggerUpdatedEvent.call(this, silent);
         }
-
-        this[IN_MAIN_PROCESS] = false;
-
-        flushPendingActions.call(this, false);
     };
 
     /**
@@ -799,6 +822,7 @@ define(function (require) {
      * @param {Object} opts
      * @param {number} [opts.width] Can be 'auto' (the same as null/undefined)
      * @param {number} [opts.height] Can be 'auto' (the same as null/undefined)
+     * @param {boolean} [opts.silent=false]
      */
     echartsProto.resize = function (opts) {
         if (__DEV__) {
@@ -810,14 +834,20 @@ define(function (require) {
         this._zr.resize(opts);
 
         var optionChanged = this._model && this._model.resetOption('media');
-        updateMethods[optionChanged ? 'prepareAndUpdate' : 'update'].call(this);
+        var updateMethod = optionChanged ? 'prepareAndUpdate' : 'update';
+
+        updateMethods[updateMethod].call(this);
 
         // Resize loading effect
         this._loadingFX && this._loadingFX.resize();
 
         this[IN_MAIN_PROCESS] = false;
 
-        flushPendingActions.call(this);
+        var silent = opts && opts.silent;
+
+        flushPendingActions.call(this, silent);
+
+        triggerUpdatedEvent.call(this, silent);
     };
 
     /**
@@ -914,6 +944,8 @@ define(function (require) {
         }
 
         flushPendingActions.call(this, opt.silent);
+
+        triggerUpdatedEvent.call(this, opt.silent);
     };
 
     function doDispatchAction(payload, silent) {
@@ -997,6 +1029,10 @@ define(function (require) {
             var payload = pendingActions.shift();
             doDispatchAction.call(this, payload, silent);
         }
+    }
+
+    function triggerUpdatedEvent(silent) {
+        !silent && this.trigger('updated');
     }
 
     /**
