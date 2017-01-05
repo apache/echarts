@@ -147,7 +147,7 @@ define(function (require) {
             rotation: rotation,
             animationModel: isAnimationEnabled ? itemModel : null,
             hoverAnimation: isAnimationEnabled && itemModel.get('hoverAnimation'),
-            z2: itemModel.get('z2') || 0
+            z2: itemModel.getShallow('z', true) || 0
         };
 
         prepareBarLength(itemModel, symbolRepeat, layout, opt, symbolMeta);
@@ -689,7 +689,8 @@ define(function (require) {
 
     function updateAttr(el, immediateAttrs, animationAttrs, symbolMeta, isUpdate, cb) {
         immediateAttrs && el.attr(immediateAttrs);
-        if (symbolMeta.symbolClip) {
+        // when symbolCip used, only clip path has init animation, otherwise it would be weird effect.
+        if (symbolMeta.symbolClip && !isUpdate) {
             animationAttrs && el.attr(animationAttrs);
         }
         else {
