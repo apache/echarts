@@ -269,14 +269,8 @@ define(function (require) {
         var valueDim = opt.valueDim;
         var pxSign = output.pxSign;
 
-        var symbolMargin = parsePercent(
-            zrUtil.retrieve(itemModel.get('symbolMargin'), symbolRepeat ? '15%' : 0),
-            symbolSize[valueDim.index]
-        );
-
-        var unitLength = symbolSize[valueDim.index] + valueLineWidth;
-        var uLenWithMargin = Math.max(unitLength + symbolMargin * 2, 0);
-        var pathLenWithMargin = uLenWithMargin;
+        var unitLength = Math.max(symbolSize[valueDim.index] + valueLineWidth, 0);
+        var pathLen = unitLength;
 
         // Note: rotation will not effect the layout of symbols, because user may
         // want symbols to rotate on its center, which should not be translated
@@ -285,9 +279,19 @@ define(function (require) {
         if (symbolRepeat) {
             var absBoundingLength = Math.abs(boundingLength);
 
+            var symbolMargin = zrUtil.retrieve(itemModel.get('symbolMargin'), '15%') + '';
+            var hasEndGap = false;
+            if (symbolMargin.lastIndexOf('!') === symbolMargin.length - 1) {
+                hasEndGap = true;
+                symbolMargin = symbolMargin.slice(0, symbolMargin.length - 1);
+            }
+            symbolMargin = parsePercent(symbolMargin, symbolSize[valueDim.index]);
+
+            var uLenWithMargin = Math.max(unitLength + symbolMargin * 2, 0);
+
             // When symbol margin is less than 0, margin at both ends will be subtracted
             // to ensure that all of the symbols will not be overflow the given area.
-            var endFix = symbolMargin >= 0 ? 0 : symbolMargin * 2;
+            var endFix = hasEndGap ? 0 : symbolMargin * 2;
 
             // Both final repeatTimes and final symbolMargin area calculated based on
             // boundingLength.
@@ -299,22 +303,23 @@ define(function (require) {
             // Adjust calculate margin, to ensure each symbol is displayed
             // entirely in the given layout area.
             var mDiff = absBoundingLength - repeatTimes * unitLength;
-            symbolMargin = mDiff / 2 / (mDiff >= 0 ? repeatTimes : repeatTimes - 1);
+            symbolMargin = mDiff / 2 / (hasEndGap ? repeatTimes : repeatTimes - 1);
             uLenWithMargin = unitLength + symbolMargin * 2;
-            endFix = mDiff >= 0 ? 0 : symbolMargin * 2;
+            endFix = hasEndGap ? 0 : symbolMargin * 2;
 
             // Update repeatTimes when not all symbol will be shown.
             if (!repeatSpecified && symbolRepeat !== 'fixed') {
-                repeatTimes = toIntTimes((Math.abs(repeatCutLength) + endFix) / uLenWithMargin);
+                repeatTimes = repeatCutLength
+                    ? toIntTimes((Math.abs(repeatCutLength) + endFix) / uLenWithMargin)
+                    : 0;
             }
 
-            pathLenWithMargin = repeatTimes * uLenWithMargin - endFix;
+            pathLen = repeatTimes * uLenWithMargin - endFix;
             output.repeatTimes = repeatTimes;
+            output.symbolMargin = symbolMargin;
         }
 
-        output.symbolMargin = symbolMargin;
-
-        var sizeFix = pxSign * (pathLenWithMargin / 2);
+        var sizeFix = pxSign * (pathLen / 2);
         var pathPosition = output.pathPosition = [];
         pathPosition[categoryDim.index] = layout[categoryDim.wh] / 2;
         pathPosition[valueDim.index] = symbolPosition === 'start'
