@@ -57,6 +57,12 @@ define(function(require) {
             );
             var barGap = seriesModel.get('barGap');
             var barCategoryGap = seriesModel.get('barCategoryGap');
+
+            // Caution: In a single coordinate system, these barGrid attributes
+            // will be shared by series. Consider that they have default values,
+            // only the attributes set on the last series will work.
+            // Do not change this fact unless there will be a break change.
+
             // TODO
             if (barWidth && !stacks[stackId].width) {
                 barWidth = Math.min(columnsOnAxis.remainedWidth, barWidth);

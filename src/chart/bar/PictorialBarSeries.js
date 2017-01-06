@@ -25,6 +25,8 @@ define(function(require) {
             symbolBoundingData: null,
             symbolPatternSize: 400, // 400 * 400 px
 
+            barGap: '-100%',      // In most case, overlap is needed.
+
             // z can be set in data item, which is z2 actually.
 
             // Disable progressive
