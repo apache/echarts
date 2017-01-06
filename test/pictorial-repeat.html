@@ -116,7 +116,8 @@
                     label: {
                         normal: {
                             show: true,
-                            position: 'outside'
+                            position: 'outside',
+                            offset: [40, 0]
                         }
                     },
                     symbol: pathSymbols.plane,
@@ -129,6 +130,7 @@
                     name: 'data2',
                     type: 'pictorialBar',
                     symbol: pathSymbols.plane,
+                    barGap: '20%',
                     symbolRepeat: true,
                     symbolMargin: '40%',
                     symbolSize: ['100%', '80%'],
@@ -193,7 +195,6 @@
                     },
                     animation: false,
                     silent: true,
-                    barGap: '-100%',
                     data: [12, 60, 54, 25, 23, 16, 1, 25],
                     z: -1
                 }, {
@@ -248,7 +249,6 @@
                     name: 'glyph',
                     type: 'pictorialBar',
                     symbol: 'rect',
-                    barGap: '-100%',
                     symbolSize: ['20%', 24],
                     symbolPosition: 'center',
                     itemStyle: {
@@ -307,7 +307,6 @@
                 series: [{
                     name: 'data',
                     type: 'pictorialBar',
-                    barGap: '-100%',
                     symbol: pathSymbols.pumpkin,
                     symbolRotate: 30,
                     itemStyle: {
@@ -391,7 +390,6 @@
                 series: [{
                     name: 'bg',
                     type: 'pictorialBar',
-                    barGap: '-100%',
                     symbol: pathSymbols.pumpkin,
                     itemStyle: {
                         normal: {
@@ -596,7 +594,6 @@
                 }, {
                     name: 'shadow2',
                     type: 'bar',
-                    barGap: '-100%',
                     data: [29000, 29000, 29000, 29000, 29000, 29000, 29000, 29000, 29000, 19000, 19000, 19000, 19000, 19000, 19000, 19000, 19]
                 }]
             });
@@ -723,7 +720,6 @@
                 }, {
                     name: 'all',
                     type: 'pictorialBar',
-                    barGap: '-100%',
                     symbol: 'circle',
                     itemStyle: {
                         normal: {

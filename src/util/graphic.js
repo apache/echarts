@@ -392,12 +392,14 @@ define(function(require) {
      */
     graphic.setText = function (textStyle, labelModel, color) {
         var labelPosition = labelModel.getShallow('position') || 'inside';
+        var labelOffset = labelModel.getShallow('offset');
         var labelColor = labelPosition.indexOf('inside') >= 0 ? 'white' : color;
         var textStyleModel = labelModel.getModel('textStyle');
         zrUtil.extend(textStyle, {
             textDistance: labelModel.getShallow('distance') || 5,
             textFont: textStyleModel.getFont(),
             textPosition: labelPosition,
+            textOffset: labelOffset,
             textFill: textStyleModel.getTextColor() || labelColor
         });
     };
