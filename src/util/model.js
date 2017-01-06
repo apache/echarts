@@ -55,7 +55,7 @@ define(function(require) {
         }
     };
 
-    modelUtil.LABEL_OPTIONS = ['position', 'show', 'textStyle', 'distance', 'formatter'];
+    modelUtil.LABEL_OPTIONS = ['position', 'offset', 'show', 'textStyle', 'distance', 'formatter'];
 
     /**
      * data could be [12, 2323, {value: 223}, [1221, 23], {value: [2, 23]}]
