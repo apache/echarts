@@ -61,7 +61,10 @@ define(function(require) {
                                         // compatibility, see echarts/component/visualMap/typeDefaulter)
             selectedMode: 'multiple',   // Can be 'multiple' or 'single'.
             itemGap: 10,                // The gap between two items, in px.
-            hoverLink: true             // Enable hover highlight.
+            hoverLink: true,            // Enable hover highlight.
+
+            showLabel: null             // By default, when text is used, label will hide (the logic
+                                        // is remained for compatibility reason)
         },
 
         /**
@@ -104,6 +107,8 @@ define(function(require) {
                     mappingOption.pieceList = zrUtil.map(this._pieceList, function (piece) {
                         var piece = zrUtil.clone(piece);
                         if (state !== 'inRange') {
+                            // FIXME
+                            // outOfRange do not support special visual in pieces.
                             piece.visual = null;
                         }
                         return piece;

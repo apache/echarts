@@ -27,16 +27,19 @@ define(function(require) {
             var textFill = textStyleModel.getTextColor();
             var itemAlign = this._getItemAlign();
             var itemSize = visualMapModel.itemSize;
-
             var viewData = this._getViewData();
-            var showLabel = !viewData.endsText;
-            var showEndsText = !showLabel;
+            var endsText = viewData.endsText;
+            var showLabel = zrUtil.retrieve(visualMapModel.get('showLabel', true), !endsText);
 
-            showEndsText && this._renderEndsText(thisGroup, viewData.endsText[0], itemSize);
+            endsText && this._renderEndsText(
+                thisGroup, endsText[0], itemSize, showLabel, itemAlign
+            );
 
             zrUtil.each(viewData.viewPieceList, renderItem, this);
 
-            showEndsText && this._renderEndsText(thisGroup, viewData.endsText[1], itemSize);
+            endsText && this._renderEndsText(
+                thisGroup, endsText[1], itemSize, showLabel, itemAlign
+            );
 
             layout.box(
                 visualMapModel.get('orient'), thisGroup, visualMapModel.get('itemGap')
@@ -125,7 +128,7 @@ define(function(require) {
         /**
          * @private
          */
-        _renderEndsText: function (group, text, itemSize) {
+        _renderEndsText: function (group, text, itemSize, showLabel, itemAlign) {
             if (!text) {
                 return;
             }
@@ -135,10 +138,10 @@ define(function(require) {
 
             itemGroup.add(new graphic.Text({
                 style: {
-                    x: itemSize[0] / 2,
+                    x: showLabel ? (itemAlign === 'right' ? itemSize[0] : 0) : itemSize[0] / 2,
                     y: itemSize[1] / 2,
                     textVerticalAlign: 'middle',
-                    textAlign: 'center',
+                    textAlign: showLabel ? itemAlign : 'center',
                     text: text,
                     textFont: textStyleModel.getFont(),
                     fill: textStyleModel.getTextColor()
