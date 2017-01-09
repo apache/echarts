@@ -60,6 +60,8 @@ define(function (require) {
     var PRIORITY_VISUAL_GLOBAL = 2000;
     var PRIORITY_VISUAL_CHART = 3000;
     var PRIORITY_VISUAL_COMPONENT = 4000;
+    // FIXME
+    // necessary?
     var PRIORITY_VISUAL_BRUSH = 5000;
 
     // Main process have three entries: `setOption`, `dispatchAction` and `resize`,

@@ -1,4 +1,6 @@
-// Pick color from palette for each data item
+// Pick color from palette for each data item.
+// Applicable for charts that require applying color palette
+// in data level (like pie, funnel, chord).
 define(function (require) {
 
     return function (seriesType, ecModel) {
@@ -14,8 +16,6 @@ define(function (require) {
                     idxMap[rawIdx] = idx;
                 });
                 dataAll.each(function (rawIdx) {
-                    // FIXME Performance
-                    var itemModel = dataAll.getItemModel(rawIdx);
                     var filteredIdx = idxMap[rawIdx];
 
                     // If series.itemStyle.normal.color is a function. itemVisual may be encoded
@@ -23,6 +23,8 @@ define(function (require) {
                         && data.getItemVisual(filteredIdx, 'color', true);
 
                     if (!singleDataColor) {
+                        // FIXME Performance
+                        var itemModel = dataAll.getItemModel(rawIdx);
                         var color = itemModel.get('itemStyle.normal.color')
                             || seriesModel.getColorFromPalette(dataAll.getName(rawIdx), paletteScope);
                         // Legend may use the visual info in data before processed
