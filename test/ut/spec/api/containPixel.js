@@ -85,7 +85,7 @@ describe('api/containPixel', function() {
     };
 
 
-    testCase.createChart()('geo', function () {
+    testCase.createChart(1, 200, 150)('geo', function () {
         this.echarts.registerMap('test1', testGeoJson1);
         this.echarts.registerMap('test2', testGeoJson2);
         var chart = this.chart;
@@ -135,7 +135,7 @@ describe('api/containPixel', function() {
     });
 
 
-    testCase.createChart()('map', function () {
+    testCase.createChart(1, 200, 150)('map', function () {
         this.echarts.registerMap('test1', testGeoJson1);
         this.echarts.registerMap('test2', testGeoJson2);
         var chart = this.chart;

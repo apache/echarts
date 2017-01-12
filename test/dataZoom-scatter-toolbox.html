@@ -156,6 +156,10 @@
                         }
                     ]
                 });
+
+                chart.on('dataZoom', function (params) {
+                    console.log(chart.getOption().dataZoom);
+                });
                 // console.profileEnd('setOption');
             })
 
