@@ -6,6 +6,8 @@
 
 ECharts is a free, powerful charting and visualization library offering an easy way of adding intuitive, interactive, and highly customizable charts to your commercial products. It is written in pure JavaScript and based on <a href="https://github.com/ecomfe/zrender">zrender</a>, which is a whole new lightweight canvas library.
 
+**[HOMEPAGE CN](http://echarts.baidu.com)** | **[HOMEPAGE EN](http://ecomfe.github.io/echarts-doc/public/index.html)**
+
 ## Get ECharts
 
 + Download on [echarts.baidu.com](http://echarts.baidu.com/download.html)
@@ -27,7 +29,7 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 ## Resources
 
-### Awesome ECharts 
+### Awesome ECharts
 
 [https://github.com/ecomfe/awesome-echarts](https://github.com/ecomfe/awesome-echarts)
 
