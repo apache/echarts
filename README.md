@@ -54,12 +54,14 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 + [vue-echarts](https://github.com/Justineo/vue-echarts) by Justineo
 + [vue-echarts](https://github.com/panteng/vue-echarts) by panteng
++ [vue-echarts-v3](https://github.com/xlsdg/vue-echarts-v3) by xlsdg
 
 #### React Component
 
 + [echarts-for-react](https://github.com/hustcc/echarts-for-react) by hustcc
 + [react-echarts](https://github.com/somonus/react-echarts) by somonus
 + [re-echarts](https://github.com/liekkas/re-echarts) by liekkas
++ [react-echarts-v3](https://github.com/xlsdg/react-echarts-v3) by xlsdg
 
 
 ### Other Languages
