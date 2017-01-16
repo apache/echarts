@@ -62,6 +62,7 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 + [react-echarts](https://github.com/somonus/react-echarts) by somonus
 + [re-echarts](https://github.com/liekkas/re-echarts) by liekkas
 + [react-echarts-v3](https://github.com/xlsdg/react-echarts-v3) by xlsdg
++ [d2recharts](https://github.com/leungwensen/d2recharts) by leungwensen
 
 
 ### Other Languages
