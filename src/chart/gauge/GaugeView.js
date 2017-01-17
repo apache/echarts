@@ -272,7 +272,7 @@ define(function (require) {
 
             if (!seriesModel.get('pointer.show')) {
                 // Remove old element
-                oldData.eachItemGraphicEl(function (el) {
+                oldData && oldData.eachItemGraphicEl(function (el) {
                     group.remove(el);
                 });
                 return;
