@@ -11,7 +11,7 @@ define(function (require) {
     // -------------
 
     echarts.registerPreprocessor(function (option) {
-        var graphicOption = option && option.graphic;
+        var graphicOption = option.graphic;
 
         // Convert
         // {graphic: [{left: 10, type: 'circle'}, ...]}
@@ -113,12 +113,11 @@ define(function (require) {
             var elOptionsToUpdate = this._elOptionsToUpdate = [];
 
             zrUtil.each(mappingResult, function (resultItem, index) {
-                var existElOption = resultItem.exist;
                 var newElOption = resultItem.option;
 
                 if (__DEV__) {
                     zrUtil.assert(
-                        zrUtil.isObject(newElOption) || existElOption,
+                        zrUtil.isObject(newElOption) || resultItem.exist,
                         'Empty graphic option definition'
                     );
                 }
@@ -127,69 +126,13 @@ define(function (require) {
                     return;
                 }
 
-                // Set id and parent id after id assigned.
-                newElOption.id = resultItem.keyInfo.id;
-                var newElParentId = newElOption.parentId;
-                var newElParentOption = newElOption.parentOption;
-                var existElParentId = existElOption && existElOption.parentId;
-                !newElOption.type && existElOption && (newElOption.type = existElOption.type);
-                newElOption.parentId = newElParentId // parent id specified
-                    ? newElParentId
-                    : newElParentOption
-                    ? newElParentOption.id
-                    : existElParentId // parent not specified
-                    ? existElParentId
-                    : null;
-                newElOption.parentOption = null; // Clear
                 elOptionsToUpdate.push(newElOption);
 
-                // Update existing options, for `getOption` feature.
-                var newElOptCopy = zrUtil.extend({}, newElOption);
-                var $action = newElOption.$action;
-                if (!$action || $action === 'merge') {
-                    if (existElOption) {
+                setKeyInfoToNewElOption(resultItem, newElOption);
 
-                        if (__DEV__) {
-                            var newType = newElOption.type;
-                            zrUtil.assert(
-                                !newType || existElOption.type === newType,
-                                'Please set $action: "replace" to change `type`'
-                            );
-                        }
+                mergeNewElOptionToExist(existList, index, newElOption);
 
-                        // We can ensure that newElOptCopy and existElOption are not
-                        // the same object, so `merge` will not change newElOptCopy.
-                        zrUtil.merge(existElOption, newElOptCopy, true);
-                        // Rigid body, use ignoreSize.
-                        layoutUtil.mergeLayoutParam(existElOption, newElOptCopy, {ignoreSize: true});
-                        // Will be used in render.
-                        layoutUtil.copyLayoutParams(newElOption, existElOption);
-                    }
-                    else {
-                        existList[index] = newElOptCopy;
-                    }
-                }
-                else if ($action === 'replace') {
-                    existList[index] = newElOptCopy;
-                }
-                else if ($action === 'remove') {
-                    // null will be cleaned later.
-                    existElOption && (existList[index] = null);
-                }
-
-                if (existList[index]) {
-                    existList[index].hv = newElOption.hv = [
-                        // Rigid body, dont care `width`.
-                        isSetLoc(newElOption, ['left', 'right']),
-                        // Rigid body, dont care `height`.
-                        isSetLoc(newElOption, ['top', 'bottom'])
-                    ];
-                    // Give default group size. Otherwise layout error may occur.
-                    if (existList[index].type === 'group') {
-                        existList[index].width == null && (existList[index].width = newElOption.width = 0);
-                        existList[index].height == null && (existList[index].height = newElOption.height = 0);
-                    }
-                }
+                setLayoutInfoToExist(existList[index], newElOption);
 
             }, this);
 
@@ -227,20 +170,22 @@ define(function (require) {
          */
         _flatten: function (optionList, result, parentOption) {
             zrUtil.each(optionList, function (option) {
-                if (option) {
-                    if (parentOption) {
-                        option.parentOption = parentOption;
-                    }
-
-                    result.push(option);
-
-                    var children = option.children;
-                    if (option.type === 'group' && children) {
-                        this._flatten(children, result, option);
-                    }
-                    // Deleting for JSON output, and for not affecting group creation.
-                    delete option.children;
+                if (!option) {
+                    return;
                 }
+
+                if (parentOption) {
+                    option.parentOption = parentOption;
+                }
+
+                result.push(option);
+
+                var children = option.children;
+                if (option.type === 'group' && children) {
+                    this._flatten(children, result, option);
+                }
+                // Deleting for JSON output, and for not affecting group creation.
+                delete option.children;
             }, this);
         },
 
@@ -475,5 +420,82 @@ define(function (require) {
             obj[prop] != null && obj[prop] !== 'auto' && (isSet = true);
         });
         return isSet;
+    }
+
+    function setKeyInfoToNewElOption(resultItem, newElOption) {
+        var existElOption = resultItem.exist;
+
+        // Set id and type after id assigned.
+        newElOption.id = resultItem.keyInfo.id;
+        !newElOption.type && existElOption && (newElOption.type = existElOption.type);
+
+        // Set parent id if not specified
+        if (newElOption.parentId == null) {
+            var newElParentOption = newElOption.parentOption;
+            if (newElParentOption) {
+                newElOption.parentId = newElParentOption.id;
+            }
+            else if (existElOption) {
+                newElOption.parentId = existElOption.parentId;
+            }
+        }
+
+        // Clear
+        newElOption.parentOption = null;
+    }
+
+    function mergeNewElOptionToExist(existList, index, newElOption) {
+        // Update existing options, for `getOption` feature.
+        var newElOptCopy = zrUtil.extend({}, newElOption);
+        var existElOption = existList[index];
+
+        var $action = newElOption.$action || 'merge';
+        if ($action === 'merge') {
+            if (existElOption) {
+
+                if (__DEV__) {
+                    var newType = newElOption.type;
+                    zrUtil.assert(
+                        !newType || existElOption.type === newType,
+                        'Please set $action: "replace" to change `type`'
+                    );
+                }
+
+                // We can ensure that newElOptCopy and existElOption are not
+                // the same object, so `merge` will not change newElOptCopy.
+                zrUtil.merge(existElOption, newElOptCopy, true);
+                // Rigid body, use ignoreSize.
+                layoutUtil.mergeLayoutParam(existElOption, newElOptCopy, {ignoreSize: true});
+                // Will be used in render.
+                layoutUtil.copyLayoutParams(newElOption, existElOption);
+            }
+            else {
+                existList[index] = newElOptCopy;
+            }
+        }
+        else if ($action === 'replace') {
+            existList[index] = newElOptCopy;
+        }
+        else if ($action === 'remove') {
+            // null will be cleaned later.
+            existElOption && (existList[index] = null);
+        }
+    }
+
+    function setLayoutInfoToExist(existItem, newElOption) {
+        if (!existItem) {
+            return;
+        }
+        existItem.hv = newElOption.hv = [
+            // Rigid body, dont care `width`.
+            isSetLoc(newElOption, ['left', 'right']),
+            // Rigid body, dont care `height`.
+            isSetLoc(newElOption, ['top', 'bottom'])
+        ];
+        // Give default group size. Otherwise layout error may occur.
+        if (existItem.type === 'group') {
+            existItem.width == null && (existItem.width = newElOption.width = 0);
+            existItem.height == null && (existItem.height = newElOption.height = 0);
+        }
     }
 });
