@@ -64,6 +64,9 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 + [react-echarts-v3](https://github.com/xlsdg/react-echarts-v3) by xlsdg
 + [d2recharts](https://github.com/leungwensen/d2recharts) by leungwensen
 
+#### React Native Component
+
++ [react-native-echarts](https://github.com/somonus/react-native-echarts) by somonus
 
 ### Other Languages
 #### Python
