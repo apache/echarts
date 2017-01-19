@@ -536,7 +536,14 @@ define(function (require) {
         for (var i = 0, len = pieceList.length; i < len; i++) {
             var pieceValue = pieceList[i].value;
             if (pieceValue != null) {
-                if (pieceValue === value) {
+                if (pieceValue === value
+                    // FIXME
+                    // It is supposed to compare value according to value type of dimension,
+                    // but currently value type can exactly be string or number.
+                    // Compromise for numeric-like string (like '12'), especially
+                    // in the case that visualMap.categories is ['22', '33'].
+                    || (typeof pieceValue === 'string' && pieceValue === value + '')
+                ) {
                     return i;
                 }
                 findClosestWhenOutside && updatePossible(pieceValue, i);
