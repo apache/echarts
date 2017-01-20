@@ -538,7 +538,7 @@ define(function (require) {
      *            geoIndex / geoId / geoName,
      *            bmapIndex / bmapId / bmapName,
      *            xAxisIndex / xAxisId / xAxisName,
-     *            yAxisIndex / yAxisId / yAxisName
+     *            yAxisIndex / yAxisId / yAxisName,
      *            gridIndex / gridId / gridName,
      *            ... (can be extended)
      *        }
@@ -828,7 +828,9 @@ define(function (require) {
      */
     echartsProto.resize = function (opts) {
         if (__DEV__) {
-            zrUtil.assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
+            // In case that user resize window before echarts initialized.
+            console.warn(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
+            return;
         }
 
         this[IN_MAIN_PROCESS] = true;
