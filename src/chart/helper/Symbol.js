@@ -285,7 +285,7 @@ define(function (require) {
     symbolProto.fadeOut = function (cb) {
         var symbolPath = this.childAt(0);
         // Avoid mistaken hover when fading out
-        this.silent = true;
+        this.silent = symbolPath.silent = true;
         // Not show text when animating
         symbolPath.style.text = '';
         graphic.updateProps(symbolPath, {
