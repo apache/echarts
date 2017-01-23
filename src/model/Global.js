@@ -333,7 +333,7 @@ define(function (require) {
             }
             else {
                 // Return all components with mainType
-                result = cpts;
+                result = cpts.slice();
             }
 
             return filterBySubType(result, condition);

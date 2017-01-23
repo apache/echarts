@@ -3,7 +3,7 @@ define(function(require) {
 
     var zrUtil = require('zrender/core/util');
     var BrushController = require('../../helper/BrushController');
-    var brushHelper = require('../../helper/brushHelper');
+    var BrushTargetManager = require('../../helper/BrushTargetManager');
     var history = require('../../dataZoom/history');
 
     var each = zrUtil.each;
@@ -99,57 +99,44 @@ define(function(require) {
 
         this._brushController.updateCovers([]); // remove cover
 
-        var coordInfoList = brushHelper.makeCoordInfoList(
-            retrieveAxisSetting(this.model.option), ecModel
+        var brushTargetManager = new BrushTargetManager(
+            retrieveAxisSetting(this.model.option), ecModel, {include: ['grid']}
         );
-        var rangesCoordInfoList = [];
-        brushHelper.parseOutputRanges(areas, coordInfoList, ecModel, rangesCoordInfoList);
+        brushTargetManager.matchOutputRanges(areas, ecModel, function (area, coordRange, coordSys) {
+            if (coordSys.type !== 'cartesian2d') {
+                return;
+            }
 
-        var area = areas[0]; // dataZoom can not multiple area.
-        var coordInfo = rangesCoordInfoList[0];
-        var coordRange = area.coordRange;
-        var brushType = area.brushType;
-
-        if (coordInfo && coordRange) {
+            var brushType = area.brushType;
             if (brushType === 'rect') {
-                setBatch('xAxis', coordRange[0], coordInfo);
-                setBatch('yAxis', coordRange[1], coordInfo);
+                setBatch('x', coordSys, coordRange[0]);
+                setBatch('y', coordSys, coordRange[1]);
             }
             else {
-                var axisNames = {lineX: 'xAxis', lineY: 'yAxis'};
-                setBatch(axisNames[brushType], coordRange, coordInfo);
+                setBatch(({lineX: 'x', lineY: 'y'})[brushType], coordSys, coordRange);
             }
-        }
+        });
 
         history.push(ecModel, snapshot);
 
         this._dispatchZoomAction(snapshot);
 
-        function setBatch(axisName, minMax, coordInfo) {
-            var dataZoomModel = findDataZoom(axisName, coordInfo[axisName], ecModel);
-            if (dataZoomModel) {
-                snapshot[dataZoomModel.id] = {
-                    dataZoomId: dataZoomModel.id,
-                    startValue: minMax[0],
-                    endValue: minMax[1]
-                };
-            }
+        function setBatch(dimName, coordSys, minMax) {
+            var dataZoomModel = findDataZoom(dimName, coordSys.getAxis(dimName).model, ecModel);
+            dataZoomModel && (snapshot[dataZoomModel.id] = {
+                dataZoomId: dataZoomModel.id,
+                startValue: minMax[0],
+                endValue: minMax[1]
+            });
         }
 
-        function findDataZoom(axisName, axisModel, ecModel) {
-            var dataZoomModel;
-            ecModel.eachComponent(
-                {mainType: 'dataZoom', subType: 'select'},
-                function (dzModel, dataZoomIndex) {
-                    var axisIndex = dzModel.get(axisName + 'Index');
-                    if (axisIndex != null
-                        && ecModel.getComponent(axisName, axisIndex) === axisModel
-                    ) {
-                        dataZoomModel = dzModel;
-                    }
-                }
-            );
-            return dataZoomModel;
+        function findDataZoom(dimName, axisModel, ecModel) {
+            var found;
+            ecModel.eachComponent({mainType: 'dataZoom', subType: 'select'}, function (dzModel) {
+                var has = dzModel.getAxisModel(dimName, axisModel.componentIndex);
+                has && (found = dzModel);
+            });
+            return found;
         }
     };
 
@@ -201,24 +188,25 @@ define(function(require) {
 
         featureModel.setIconStatus('zoom', zoomActive ? 'emphasis' : 'normal');
 
-        var coordInfoList = brushHelper.makeCoordInfoList(
-            retrieveAxisSetting(featureModel.option), ecModel
+        var brushTargetManager = new BrushTargetManager(
+            retrieveAxisSetting(featureModel.option), ecModel, {include: ['grid']}
         );
-        var brushType = (coordInfoList.xAxisHas && !coordInfoList.yAxisHas)
-            ? 'lineX'
-            : (!coordInfoList.xAxisHas && coordInfoList.yAxisHas)
-            ? 'lineY'
-            : 'rect';
 
         view._brushController
-            .setPanels(brushHelper.makePanelOpts(coordInfoList))
+            .setPanels(brushTargetManager.makePanelOpts(function (targetInfo) {
+                return (targetInfo.xAxisDeclared && !targetInfo.yAxisDeclared)
+                    ? 'lineX'
+                    : (!targetInfo.xAxisDeclared && targetInfo.yAxisDeclared)
+                    ? 'lineY'
+                    : 'rect';
+            }))
             .enableBrush(
                 zoomActive
                 ? {
-                    brushType: brushType,
-                    brushStyle: { // FIXME user customized?
+                    brushType: 'auto',
+                    brushStyle: {
+                        // FIXME user customized?
                         lineWidth: 0,
-                        // stroke: '#333',
                         fill: 'rgba(0,0,0,0.2)'
                     }
                 }

@@ -490,7 +490,7 @@ define(function(require) {
      *        If Object, could contain some of these properties below:
      *        {
      *            seriesIndex, seriesId, seriesName,
-     *            geoIndex, geoId, goeName,
+     *            geoIndex, geoId, geoName,
      *            bmapIndex, bmapId, bmapName,
      *            xAxisIndex, xAxisId, xAxisName,
      *            yAxisIndex, yAxisId, yAxisName,
@@ -504,8 +504,11 @@ define(function(require) {
      *            geoId: ['aa', 'cc'],
      *            gridName: ['xx', 'rr']
      *        }
+     *        xxxIndex can be set as 'all' (means all xxx) or 'none' (means not specify)
+     *        If nothing or null/undefined specified, return nothing.
      * @param {Object} [opt]
      * @param {string} [opt.defaultMainType]
+     * @param {Array.<string>} [opt.includeMainTypes]
      * @return {Object} result like:
      *        {
      *            seriesModels: [seriesModel1, seriesModel2],
@@ -544,14 +547,22 @@ define(function(require) {
 
             var parsedKey = key.match(/^(\w+)(Index|Id|Name)$/) || [];
             var mainType = parsedKey[1];
-            var queryType = parsedKey[2];
+            var queryType = (parsedKey[2] || '').toLowerCase();
 
-            if (!mainType || !queryType) {
+            if (!mainType
+                || !queryType
+                || value == null
+                || (queryType === 'index' && value === 'none')
+                || (opt.includeMainTypes && zrUtil.indexOf(opt.includeMainTypes, mainType) < 0)
+            ) {
                 return;
             }
 
             var queryParam = {mainType: mainType};
-            queryParam[queryType.toLowerCase()] = value;
+            if (queryType !== 'index' || value !== 'all') {
+                queryParam[queryType] = value;
+            }
+
             var models = ecModel.queryComponents(queryParam);
             result[mainType + 'Models'] = models;
             result[mainType + 'Model'] = models[0];

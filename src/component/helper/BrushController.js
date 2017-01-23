@@ -91,6 +91,9 @@ define(function (require) {
 
         /**
          * Only for drawing (after enabledBrush).
+         *     'line', 'rect', 'polygon' or false
+         *     If passing false/null/undefined, disable brush.
+         *     If passing 'auto', determined by panel.defaultBrushType
          * @private
          * @type {string}
          */
@@ -98,6 +101,7 @@ define(function (require) {
 
         /**
          * Only for drawing (after enabledBrush).
+         *
          * @private
          * @type {Object}
          */
@@ -178,7 +182,9 @@ define(function (require) {
          * If set to null/undefined/false, select disabled.
          * @param {Object} brushOption
          * @param {string|boolean} brushOption.brushType 'line', 'rect', 'polygon' or false
-         *                          If pass false/null/undefined, disable brush.
+         *                          If passing false/null/undefined, disable brush.
+         *                          If passing 'auto', determined by panel.defaultBrushType.
+         *                              ('auto' can not be used in global panel)
          * @param {number} [brushOption.brushMode='single'] 'single' or 'multiple'
          * @param {boolean} [brushOption.transformable=true]
          * @param {boolean} [brushOption.removeOnClick=false]
@@ -201,7 +207,11 @@ define(function (require) {
 
         /**
          * @param {Array.<Object>} panelOpts If not pass, it is global brush.
-         *        Each items: {panelId, rect}
+         *        Each items: {
+         *            panelId, // mandatory.
+         *            rect, // mandatory.
+         *            defaultBrushType // optional, only used when brushType is 'auto'.
+         *        }
          */
         setPanels: function (panelOpts) {
             var oldPanels = this._panels || {};
@@ -227,6 +237,7 @@ define(function (require) {
 
                 panel.attr('shape', rect.plain());
                 panel.__brushPanelId = panelId;
+                panel.__defaultBrushType = panelOpt.defaultBrushType;
                 newPanels[panelId] = panel;
                 oldPanels[panelId] = null;
             });
@@ -278,7 +289,7 @@ define(function (require) {
          *            {id: 'yy', brushType: 'rect', range: [[23, 44], [23, 54]]},
          *            ...
          *        ]
-         *        `brushType` is required in each cover info.
+         *        `brushType` is required in each cover info. (can not be 'auto')
          *        `id` is not mandatory.
          *        `brushStyle`, `transformable` is not mandatory, use DEFAULT_BRUSH_OPT by default.
          *        If brushOptionList is null/undefined, all covers removed.
@@ -764,13 +775,14 @@ define(function (require) {
             if (panel && !creatingCover) {
                 thisBrushOption.brushMode === 'single' && clearCovers(controller);
                 var brushOption = zrUtil.clone(thisBrushOption);
+                brushOption.brushType = determineBrushType(brushOption.brushType, panel);
                 brushOption.panelId = panel === true ? null : panel.__brushPanelId;
                 creatingCover = controller._creatingCover = createCover(controller, brushOption);
                 controller._covers.push(creatingCover);
             }
 
             if (creatingCover) {
-                var coverRenderer = coverRenderers[controller._brushType];
+                var coverRenderer = coverRenderers[determineBrushType(controller._brushType, panel)];
                 var coverBrushOption = creatingCover.__brushOption;
 
                 coverBrushOption.range = coverRenderer.getCreatingRange(
@@ -803,6 +815,19 @@ define(function (require) {
         }
 
         return eventParams;
+    }
+
+    function determineBrushType(brushType, panel) {
+        if (brushType === 'auto') {
+            if (__DEV__) {
+                zrUtil.assert(
+                    panel && panel.__defaultBrushType,
+                    'MUST have defaultBrushType when brushType is "atuo"'
+                );
+            }
+            return panel.__defaultBrushType;
+        }
+        return brushType;
     }
 
     var mouseHandlers = {

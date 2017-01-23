@@ -83,6 +83,12 @@ define(function(require) {
              */
             this._autoThrottle = true;
 
+            /**
+             * 'percent' or 'value'
+             * @private
+             */
+            this._rangePropMode = ['percent', 'percent'];
+
             var rawOption = retrieveRaw(option);
 
             this.mergeDefaultAndTheme(option, ecModel);
@@ -115,8 +121,17 @@ define(function(require) {
 
             this._setDefaultThrottle(rawOption);
 
-            processRangeProp('start', 'startValue', rawOption, thisOption);
-            processRangeProp('end', 'endValue', rawOption, thisOption);
+            updateRangeUse(this, rawOption);
+
+            each([['start', 'startValue'], ['end', 'endValue']], function (names, index) {
+                // start/end has higher priority over startValue/endValue if they
+                // both set, but we should make chart.setOption({endValue: 1000})
+                // effective, rather than chart.setOption({endValue: 1000, end: null}).
+                if (this._rangePropMode[index] === 'value') {
+                    thisOption[names[0]] = null;
+                }
+                // Otherwise do nothing and use the merge result.
+            }, this);
 
             this.textStyleModel = this.getModel('textStyle');
 
@@ -380,8 +395,23 @@ define(function(require) {
             }, this);
         },
 
+        /**
+         * @param {string} dimName
+         * @param {number} axisIndex
+         * @return {module:echarts/component/dataZoom/AxisProxy} If not found, return null/undefined.
+         */
         getAxisProxy: function (dimName, axisIndex) {
             return this._axisProxies[dimName + '_' + axisIndex];
+        },
+
+        /**
+         * @param {string} dimName
+         * @param {number} axisIndex
+         * @return {module:echarts/model/Model} If not found, return null/undefined.
+         */
+        getAxisModel: function (dimName, axisIndex) {
+            var axisProxy = this.getAxisProxy(dimName, axisIndex);
+            return axisProxy && axisProxy.getAxisModel();
         },
 
         /**
@@ -393,14 +423,17 @@ define(function(require) {
          * @param {number} [opt.end]
          * @param {number} [opt.startValue]
          * @param {number} [opt.endValue]
+         * @param {boolean} [ignoreUpdateRangeUsg=false]
          */
-        setRawRange: function (opt) {
+        setRawRange: function (opt, ignoreUpdateRangeUsg) {
             each(['start', 'end', 'startValue', 'endValue'], function (name) {
                 // If any of those prop is null/undefined, we should alos set
                 // them, because only one pair between start/end and
                 // startValue/endValue can work.
                 this.option[name] = opt[name];
             }, this);
+
+            !ignoreUpdateRangeUsg && updateRangeUse(this, opt);
         },
 
         /**
@@ -457,8 +490,14 @@ define(function(require) {
                     return axisProxies[key];
                 }
             }
-        }
+        },
 
+        /**
+         * @return {Array.<string>}
+         */
+        getRangePropMode: function () {
+            return this._rangePropMode.slice();
+        }
     });
 
     function retrieveRaw(option) {
@@ -472,14 +511,17 @@ define(function(require) {
         return ret;
     }
 
-    function processRangeProp(percentProp, valueProp, rawOption, thisOption) {
-        // start/end has higher priority over startValue/endValue,
-        // but we should make chart.setOption({endValue: 1000}) effective,
-        // rather than chart.setOption({endValue: 1000, end: null}).
-        if (rawOption[valueProp] != null && rawOption[percentProp] == null) {
-            thisOption[percentProp] = null;
-        }
-        // Otherwise do nothing and use the merge result.
+    function updateRangeUse(dataZoomModel, rawOption) {
+        each([['start', 'startValue'], ['end', 'endValue']], function (names, index) {
+            var rangePropMode = dataZoomModel._rangePropMode;
+            if (rawOption[names[0]] != null) {
+                rangePropMode[index] = 'percent';
+            }
+            else if (rawOption[names[1]] != null) {
+                rangePropMode[index] = 'value';
+            }
+            // else remain its original setting.
+        });
     }
 
     return DataZoomModel;

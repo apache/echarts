@@ -87,6 +87,10 @@ define(function(require, factory) {
         return this._rect;
     };
 
+    gridProto.getModel = function () {
+        return this._model;
+    };
+
     gridProto.update = function (ecModel, api) {
 
         var axesMap = this._axesMap;
@@ -218,6 +222,10 @@ define(function(require, factory) {
                 }
             }
         }
+    };
+
+    gridProto.getCartesians = function () {
+        return this._coordsList.slice();
     };
 
     /**

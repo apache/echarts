@@ -160,6 +160,7 @@ define(function(require) {
             var dataExtent = this._dataExtent;
             var axisModel = this.getAxisModel();
             var scale = axisModel.axis.scale;
+            var rangePropMode = this._dataZoomModel.getRangePropMode();
             var percentExtent = [0, 100];
             var percentWindow = [
                 opt.start,
@@ -182,11 +183,19 @@ define(function(require) {
                 var boundValue = valueWindow[idx];
                 var boundPercent = percentWindow[idx];
 
-                // start/end has higher priority over startValue/endValue,
-                // because start/end can be consistent among different type
-                // of axis but startValue/endValue not.
+                // Notice: dataZoom is based either on `percentProp` ('start', 'end') or
+                // on `valueProp` ('startValue', 'endValue'). The former one is suitable
+                // for cases that a dataZoom component controls multiple axes with different
+                // unit or extent, and the latter one is suitable for accurate zoom by pixel
+                // (e.g., in dataZoomSelect). `valueProp` can be calculated from `percentProp`,
+                // but it is awkward that `percentProp` can not be obtained from `valueProp`
+                // accurately (because all of values that are overflow the `dataExtent` will
+                // be calculated to percent '100%'). So we have to use
+                // `dataZoom.getRangePropMode()` to mark which prop is used.
+                // `rangePropMode` is updated only when setOption or dispatchAction, otherwise
+                // it remains its original value.
 
-                if (boundPercent != null || boundValue == null) {
+                if (rangePropMode[idx] === 'percent') {
                     if (boundPercent == null) {
                         boundPercent = percentExtent[idx];
                     }
@@ -195,11 +204,15 @@ define(function(require) {
                         boundPercent, percentExtent, dataExtent, true
                     ));
                 }
-                else { // boundPercent == null && boundValue != null
+                else {
+                    // Calculating `percent` from `value` may be not accurate, because
+                    // This calculation can not be inversed, because all of values that
+                    // are overflow the `dataExtent` will be calculated to percent '100%'
                     boundPercent = numberUtil.linearMap(
                         boundValue, dataExtent, percentExtent, true
                     );
                 }
+
                 // valueWindow[idx] = round(boundValue);
                 // percentWindow[idx] = round(boundPercent);
                 valueWindow[idx] = boundValue;
@@ -228,7 +241,9 @@ define(function(require) {
             this._dataExtent = calculateDataExtent(
                 this._dimName, this.getTargetSeriesModels()
             );
+
             var dataWindow = this.calculateDataWindow(dataZoomModel.option);
+
             this._valueWindow = dataWindow.valueWindow;
             this._percentWindow = dataWindow.percentWindow;
 
