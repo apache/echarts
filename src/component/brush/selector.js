@@ -29,8 +29,6 @@ define(function(require) {
                     && polygonContain(area.range, itemLayout[0], itemLayout[1]);
             },
             rect: function (itemLayout, selectors, area) {
-                // FIXME
-                // 随意写的，没有考察过效率。
                 var points = area.range;
 
                 if (points.length <= 1) {
@@ -81,8 +79,6 @@ define(function(require) {
         return range[0] <= p && p <= range[1];
     }
 
-    // FIXME
-    // 随意写的，没考察过效率。
     function lineIntersectPolygon(lx, ly, l2x, l2y, points) {
         for (var i = 0, p2 = points[points.length - 1]; i < points.length; i++) {
             var p = points[i];

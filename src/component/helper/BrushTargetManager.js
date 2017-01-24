@@ -6,6 +6,7 @@ define(function(require) {
 
     var each = zrUtil.each;
     var indexOf = zrUtil.indexOf;
+    var curry = zrUtil.curry;
 
     var COORD_CONVERTS = ['dataToPoint', 'pointToData'];
 
@@ -94,10 +95,21 @@ define(function(require) {
 
     proto.setOutputRanges = function (areas, ecModel) {
         this.matchOutputRanges(areas, ecModel, function (area, coordRange, coordSys) {
-            var coordRange = coordConvert[area.brushType](1, coordSys, area.range);
             (area.coordRanges || (area.coordRanges = [])).push(coordRange);
             // area.coordRange is the first of area.coordRanges
-            !area.coordRange && (area.coordRange = coordRange);
+            if (!area.coordRange) {
+                area.coordRange = coordRange;
+                // In 'category' axis, coord to pixel is not reversible, so we can not
+                // rebuild range by coordRange accrately, which may bring trouble when
+                // brushing only one item. So we use __rangeOffset to rebuilding range
+                // by coordRange. And this it only used in brush component so it is no
+                // need to be adapted to coordRanges.
+                var result = coordConvert[area.brushType](0, coordSys, coordRange);
+                area.__rangeOffset = {
+                    offset: diffProcessor[area.brushType](result.values, area.range, [1, 1]),
+                    xyMinMax: result.xyMinMax
+                };
+            }
         });
     };
 
@@ -109,8 +121,8 @@ define(function(require) {
                 zrUtil.each(
                     targetInfo.coordSyses,
                     function (coordSys) {
-                        var coordRange = coordConvert[area.brushType](1, coordSys, area.range);
-                        cb(area, coordRange, coordSys, ecModel);
+                        var result = coordConvert[area.brushType](1, coordSys, area.range);
+                        cb(area, result.values, coordSys, ecModel);
                     }
                 );
             }
@@ -136,12 +148,22 @@ define(function(require) {
 
             // convert coordRange to global range and set panelId.
             if (targetInfo && targetInfo !== true) {
-                // Only support converting one coordRange to pixel range
-                // in brush component. So do not consider `coordRanges`.
-                area.range = coordConvert[area.brushType](
-                    0, targetInfo.coordSys, area.coordRange
-                );
                 area.panelId = targetInfo.panelId;
+                // (1) area.range shoule always be calculate from coordRange but does
+                // not keep its original value, for the sake of the dataZoom scenario,
+                // where area.coordRange remains unchanged but area.range may be changed.
+                // (2) Only support converting one coordRange to pixel range in brush
+                // component. So do not consider `coordRanges`.
+                // (3) About __rangeOffset, see comment above.
+                var result = coordConvert[area.brushType](0, targetInfo.coordSys, area.coordRange);
+                var rangeOffset = area.__rangeOffset;
+                area.range = rangeOffset
+                    ? diffProcessor[area.brushType](
+                        result.values,
+                        rangeOffset.offset,
+                        getScales(result.xyMinMax, rangeOffset.xyMinMax)
+                    )
+                    : result.values;
             }
         }, this);
     };
@@ -317,25 +339,35 @@ define(function(require) {
 
     var coordConvert = {
 
-        lineX: zrUtil.curry(axisConvert, 'x'),
+        lineX: curry(axisConvert, 0),
 
-        lineY: zrUtil.curry(axisConvert, 'y'),
+        lineY: curry(axisConvert, 1),
 
-        rect: function (to, coordSys, coordRange) {
-            var xminymin = coordSys[COORD_CONVERTS[to]]([coordRange[0][0], coordRange[1][0]]);
-            var xmaxymax = coordSys[COORD_CONVERTS[to]]([coordRange[0][1], coordRange[1][1]]);
-            return [
+        rect: function (to, coordSys, rangeOrCoordRange) {
+            var xminymin = coordSys[COORD_CONVERTS[to]]([rangeOrCoordRange[0][0], rangeOrCoordRange[1][0]]);
+            var xmaxymax = coordSys[COORD_CONVERTS[to]]([rangeOrCoordRange[0][1], rangeOrCoordRange[1][1]]);
+            var values = [
                 formatMinMax([xminymin[0], xmaxymax[0]]),
                 formatMinMax([xminymin[1], xmaxymax[1]])
             ];
+            return {values: values, xyMinMax: values};
         },
 
-        polygon: function (to, coordSys, coordRange) {
-            return zrUtil.map(coordRange, coordSys[COORD_CONVERTS[to]], coordSys);
+        polygon: function (to, coordSys, rangeOrCoordRange) {
+            var xyMinMax = [[Infinity, -Infinity], [Infinity, -Infinity]];
+            var values = zrUtil.map(rangeOrCoordRange, function (item) {
+                var p = coordSys[COORD_CONVERTS[to]](item);
+                xyMinMax[0][0] = Math.min(xyMinMax[0][0], p[0]);
+                xyMinMax[1][0] = Math.min(xyMinMax[1][0], p[1]);
+                xyMinMax[0][1] = Math.max(xyMinMax[0][1], p[0]);
+                xyMinMax[1][1] = Math.max(xyMinMax[1][1], p[1]);
+                return p;
+            });
+            return {values: values, xyMinMax: xyMinMax};
         }
     };
 
-    function axisConvert(axisName, to, coordSys, coordRange) {
+    function axisConvert(axisNameIndex, to, coordSys, rangeOrCoordRange) {
         if (__DEV__) {
             zrUtil.assert(
                 coordSys.type === 'cartesian2d',
@@ -343,13 +375,60 @@ define(function(require) {
             );
         }
 
-        var axis = coordSys.getAxis(axisName);
-
-        return formatMinMax(zrUtil.map([0, 1], function (i) {
+        var axis = coordSys.getAxis(['x', 'y'][axisNameIndex]);
+        var values = formatMinMax(zrUtil.map([0, 1], function (i) {
             return to
-                ? axis.coordToData(axis.toLocalCoord(coordRange[i]))
-                : axis.toGlobalCoord(axis.dataToCoord(coordRange[i]));
+                ? axis.coordToData(axis.toLocalCoord(rangeOrCoordRange[i]))
+                : axis.toGlobalCoord(axis.dataToCoord(rangeOrCoordRange[i]));
         }));
+        var xyMinMax = [];
+        xyMinMax[axisNameIndex] = values;
+        xyMinMax[1 - axisNameIndex] = [NaN, NaN];
+
+        return {values: values, xyMinMax: xyMinMax};
+    }
+
+    var diffProcessor = {
+        lineX: curry(axisDiffProcessor, 0),
+
+        lineY: curry(axisDiffProcessor, 1),
+
+        rect: function (values, refer, scales) {
+            return [
+                [values[0][0] - scales[0] * refer[0][0], values[0][1] - scales[0] * refer[0][1]],
+                [values[1][0] - scales[1] * refer[1][0], values[1][1] - scales[1] * refer[1][1]]
+            ];
+        },
+
+        polygon: function (values, refer, scales) {
+            return zrUtil.map(values, function (item, idx) {
+                return [item[0] - scales[0] * refer[idx][0], item[1] - scales[1] * refer[idx][1]];
+            });
+        }
+    };
+
+    function axisDiffProcessor(axisNameIndex, values, refer, scales) {
+        return [
+            values[0] - scales[axisNameIndex] * refer[0],
+            values[1] - scales[axisNameIndex] * refer[1]
+        ];
+    }
+
+    // We have to process scale caused by dataZoom manually,
+    // although it might be not accurate.
+    function getScales(xyMinMaxCurr, xyMinMaxOrigin) {
+        var sizeCurr = getSize(xyMinMaxCurr);
+        var sizeOrigin = getSize(xyMinMaxOrigin);
+        var scales = [sizeCurr[0] / sizeOrigin[0], sizeCurr[1] / sizeOrigin[1]];
+        isNaN(scales[0]) && (scales[0] = 1);
+        isNaN(scales[1]) && (scales[1] = 1);
+        return scales;
+    }
+
+    function getSize(xyMinMax) {
+        return xyMinMax
+            ? [xyMinMax[0][1] - xyMinMax[0][0], xyMinMax[1][1] - xyMinMax[1][0]]
+            : [NaN, NaN];
     }
 
     return BrushTargetManager;

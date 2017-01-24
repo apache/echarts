@@ -111,7 +111,7 @@ define(function(require) {
             }
 
             this.areas = zrUtil.map(areas, function (area) {
-                return this._mergeBrushOption(area);
+                return generateBrushOption(this.option, area);
             }, this);
         },
 
@@ -120,29 +120,25 @@ define(function(require) {
          * @param {Object} brushOption
          */
         setBrushOption: function (brushOption) {
-            this.brushOption = this._mergeBrushOption(brushOption);
+            this.brushOption = generateBrushOption(this.option, brushOption);
             this.brushType = this.brushOption.brushType;
-        },
-
-        /**
-         * @private
-         */
-        _mergeBrushOption: function (brushOption) {
-            var option = this.option;
-            return zrUtil.merge(
-                {
-                    brushType: option.brushType,
-                    brushMode: option.brushMode,
-                    transformable: option.transformable,
-                    brushStyle: new Model(option.brushStyle).getItemStyle(),
-                    removeOnClick: option.removeOnClick
-                },
-                brushOption,
-                true
-            );
         }
 
     });
+
+    function generateBrushOption(option, brushOption) {
+        return zrUtil.merge(
+            {
+                brushType: option.brushType,
+                brushMode: option.brushMode,
+                transformable: option.transformable,
+                brushStyle: new Model(option.brushStyle).getItemStyle(),
+                removeOnClick: option.removeOnClick
+            },
+            brushOption,
+            true
+        );
+    }
 
     return BrushModel;
 
