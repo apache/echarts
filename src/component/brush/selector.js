@@ -69,8 +69,15 @@ define(function(require) {
             },
             rect: function (itemLayout, selectors, area) {
                 var range = area.range;
-                return inLineRange(itemLayout[xy[xyIndex]], range)
-                    || inLineRange(itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]], range);
+                var layoutRange = [
+                    itemLayout[xy[xyIndex]],
+                    itemLayout[xy[xyIndex]] + itemLayout[wh[xyIndex]]
+                ];
+                layoutRange[1] < layoutRange[0] && layoutRange.reverse();
+                return inLineRange(layoutRange[0], range)
+                    || inLineRange(layoutRange[1], range)
+                    || inLineRange(range[0], layoutRange)
+                    || inLineRange(range[1], layoutRange);
             }
         };
     }
