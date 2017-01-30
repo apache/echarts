@@ -37,6 +37,8 @@ ECharts is a free, powerful charting and visualization library offering an easy 
 
 + [百度地图扩展](https://github.com/ecomfe/echarts/tree/master/extension/bmap)
 
++ [水球图 liquidfill](https://github.com/ecomfe/echarts-liquidfill)
+
 + [字符云 wordcloud](https://github.com/ecomfe/echarts-wordcloud)
 
 + [Graph Modularity](https://github.com/ecomfe/echarts-graph-modularity) Graph modularity extension for community detection
