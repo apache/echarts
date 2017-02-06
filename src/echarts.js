@@ -623,6 +623,24 @@ define(function (require) {
             : data.getVisual(visualType);
     };
 
+    /**
+     * Get view of corresponding component model
+     * @param  {module:echarts/model/Component} componentModel
+     * @return {module:echarts/view/Component}
+     */
+    echartsProto.getViewOfComponentModel = function (componentModel) {
+        return this._componentsMap[componentModel.__viewId];
+    };
+
+    /**
+     * Get view of corresponding series model
+     * @param  {module:echarts/model/Series} seriesModel
+     * @return {module:echarts/view/Chart}
+     */
+    echartsProto.getViewOfSeriesModel = function (seriesModel) {
+        return this._chartsMap[seriesModel.__viewId];
+    };
+
 
     var updateMethods = {
 
@@ -703,6 +721,10 @@ define(function (require) {
                     this._dom.style.background = backgroundColor;
                 }
             }
+
+            each(postUpdateFuncs, function (func) {
+                func(ecModel, api);
+            });
 
             // console.time && console.timeEnd('update');
         },
@@ -828,9 +850,7 @@ define(function (require) {
      */
     echartsProto.resize = function (opts) {
         if (__DEV__) {
-            // In case that user resize window before echarts initialized.
-            console.warn(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
-            return;
+            zrUtil.assert(!this[IN_MAIN_PROCESS], '`resize` should not be called during main process.');
         }
 
         this[IN_MAIN_PROCESS] = true;
@@ -918,14 +938,6 @@ define(function (require) {
         if (!actions[payload.type]) {
             return;
         }
-
-        // if (__DEV__) {
-        //     zrUtil.assert(
-        //         !this[IN_MAIN_PROCESS],
-        //         '`dispatchAction` should not be called during main process.'
-        //         + 'unless updateMathod is "none".'
-        //     );
-        // }
 
         // May dispatchAction in rendering procedure
         if (this[IN_MAIN_PROCESS]) {
@@ -1074,6 +1086,11 @@ define(function (require) {
 
         // If use hover layer
         updateHoverLayerStatus(this._zr, ecModel);
+
+        // Post render
+        each(postUpdateFuncs, function (func) {
+            func(ecModel, api);
+        });
     }
 
     /**
@@ -1435,6 +1452,12 @@ define(function (require) {
     var optionPreprocessorFuncs = [];
 
     /**
+     * @type {Array.<Function>}
+     * @inner
+     */
+    var postUpdateFuncs = [];
+
+    /**
      * Visual encoding functions of each stage
      * @type {Array.<Object.<string, Function>>}
      * @inner
@@ -1643,6 +1666,14 @@ define(function (require) {
             prio: priority,
             func: processorFunc
         });
+    };
+
+    /**
+     * Register postUpdater
+     * @param {Function} postUpdateFunc
+     */
+    echarts.registerPostUpdate = function (postUpdateFunc) {
+        postUpdateFuncs.push(postUpdateFunc);
     };
 
     /**

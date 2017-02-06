@@ -6,7 +6,8 @@ define(function(require) {
 
     var echartsAPIList = [
         'getDom', 'getZr', 'getWidth', 'getHeight', 'dispatchAction', 'isDisposed',
-        'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getModel', 'getOption'
+        'on', 'off', 'getDataURL', 'getConnectedDataURL', 'getModel', 'getOption',
+        'getViewOfComponentModel', 'getViewOfSeriesModel'
     ];
 
     function ExtensionAPI(chartInstance) {
