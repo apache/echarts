@@ -66,7 +66,7 @@ define(function (require) {
         _splitLine: function (axisModel, gridModel, labelInterval) {
             var axis = axisModel.axis;
 
-            if (axis.isBlank()) {
+            if (axis.scale.isBlank()) {
                 return;
             }
 
@@ -140,7 +140,7 @@ define(function (require) {
         _splitArea: function (axisModel, gridModel, labelInterval) {
             var axis = axisModel.axis;
 
-            if (axis.isBlank()) {
+            if (axis.scale.isBlank()) {
                 return;
             }
 

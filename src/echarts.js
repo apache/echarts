@@ -649,7 +649,7 @@ define(function (require) {
          * @private
          */
         update: function (payload) {
-            // console.time && console.time('update');
+            // console.profile && console.profile('update');
 
             var ecModel = this._model;
             var api = this._api;
@@ -726,7 +726,7 @@ define(function (require) {
                 func(ecModel, api);
             });
 
-            // console.time && console.timeEnd('update');
+            // console.profile && console.profileEnd('update');
         },
 
         /**
@@ -1892,6 +1892,8 @@ define(function (require) {
             echarts.util[name] = zrUtil[name];
         }
     );
+
+    echarts.helper = require('./helper');
 
     // PRIORITY
     echarts.PRIORITY = {

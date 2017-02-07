@@ -123,6 +123,23 @@ define(function (require) {
         return labels;
     };
 
+    /**
+     * When axis extent depends on data and no data exists,
+     * axis ticks should not be drawn, which is named 'blank'.
+     */
+    scaleProto.isBlank = function () {
+        return this._isBlank;
+    },
+
+    /**
+     * When axis extent depends on data and no data exists,
+     * axis ticks should not be drawn, which is named 'blank'.
+     */
+    scaleProto.setBlank = function (isBlank) {
+        this._isBlank = isBlank;
+    };
+
+
     clazzUtil.enableClassExtend(Scale);
     clazzUtil.enableClassManagement(Scale, {
         registerWhenExtend: true

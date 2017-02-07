@@ -117,7 +117,7 @@ define(function(require) {
                 each(this.dimensions, function (dim) {
                     var axis = this._axesMap[dim];
                     axis.scale.unionExtentFromData(data, dim);
-                    axisHelper.niceScaleExtent(axis, axis.model);
+                    axisHelper.niceScaleExtent(axis.scale, axis.model);
                 }, this);
             }, this);
         },

@@ -41,7 +41,7 @@ define(function (require) {
 
             zrUtil.each(elementList, function (name) {
                 if (angleAxisModel.get(name +'.show')
-                    && (!angleAxis.isBlank() || name === 'axisLine')
+                    && (!angleAxis.scale.isBlank() || name === 'axisLine')
                 ) {
                     this['_' + name](angleAxisModel, polar, ticksAngles, radiusExtent);
                 }

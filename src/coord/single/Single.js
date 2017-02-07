@@ -99,7 +99,7 @@ define(function (require) {
                     this._axis.scale.unionExtentFromData(
                         data, seriesModel.coordDimToDataDim(dim)
                     );
-                    axisHelper.niceScaleExtent(this._axis, this._axis.model);
+                    axisHelper.niceScaleExtent(this._axis.scale, this._axis.model);
                 }
             }, this);
         },

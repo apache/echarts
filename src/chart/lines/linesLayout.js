@@ -8,7 +8,7 @@ define(function (require) {
             // FIXME Use data dimensions ?
             lineData.each(function (idx) {
                 var itemModel = lineData.getItemModel(idx);
-                // TODO Support pure array
+
                 var coords = (itemModel.option instanceof Array) ?
                     itemModel.option : itemModel.get('coords');
 

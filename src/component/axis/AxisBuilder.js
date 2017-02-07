@@ -173,7 +173,7 @@ define(function (require) {
             var axisModel = this.axisModel;
             var axis = axisModel.axis;
 
-            if (!axisModel.get('axisTick.show') || axis.isBlank()) {
+            if (!axisModel.get('axisTick.show') || axis.scale.isBlank()) {
                 return;
             }
 
@@ -243,7 +243,7 @@ define(function (require) {
             var axis = axisModel.axis;
             var show = retrieve(opt.axisLabelShow, axisModel.get('axisLabel.show'));
 
-            if (!show || axis.isBlank()) {
+            if (!show || axis.scale.isBlank()) {
                 return;
             }
 

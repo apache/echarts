@@ -111,10 +111,10 @@ define(function(require, factory) {
         }
 
         each(axesMap.x, function (xAxis) {
-            niceScaleExtent(xAxis, xAxis.model);
+            niceScaleExtent(xAxis.scale, xAxis.model);
         });
         each(axesMap.y, function (yAxis) {
-            niceScaleExtent(yAxis, yAxis.model);
+            niceScaleExtent(yAxis.scale, yAxis.model);
         });
         // Fix configuration
         each(axesMap.x, function (xAxis) {

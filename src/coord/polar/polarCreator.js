@@ -51,8 +51,8 @@ define(function (require) {
             }
         });
 
-        niceScaleExtent(angleAxis, angleAxis.model);
-        niceScaleExtent(radiusAxis, radiusAxis.model);
+        niceScaleExtent(angleAxis.scale, angleAxis.model);
+        niceScaleExtent(radiusAxis.scale, radiusAxis.model);
 
         // Fix extent of category angle axis
         if (angleAxis.type === 'category' && !angleAxis.onBand) {

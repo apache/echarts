@@ -15,8 +15,7 @@ define(function (require) {
      * Get axis scale extent before niced.
      * Item of returned array can only be number (including Infinity and NaN).
      */
-    axisHelper.getScaleExtent = function (axis, model) {
-        var scale = axis.scale;
+    axisHelper.getScaleExtent = function (scale, model) {
         var scaleType = scale.type;
 
         var min = model.getMin();
@@ -62,7 +61,7 @@ define(function (require) {
         (min == null || !isFinite(min)) && (min = NaN);
         (max == null || !isFinite(max)) && (max = NaN);
 
-        axis.setBlank(zrUtil.eqNaN(min) || zrUtil.eqNaN(max));
+        scale.setBlank(zrUtil.eqNaN(min) || zrUtil.eqNaN(max));
 
         // Evaluate if axis needs cross zero
         if (model.getNeedCrossZero()) {
@@ -79,9 +78,8 @@ define(function (require) {
         return [min, max];
     };
 
-    axisHelper.niceScaleExtent = function (axis, model) {
-        var scale = axis.scale;
-        var extent = axisHelper.getScaleExtent(axis, model);
+    axisHelper.niceScaleExtent = function (scale, model) {
+        var extent = axisHelper.getScaleExtent(scale, model);
         var fixMin = model.getMin() != null;
         var fixMax = model.getMax() != null;
         var splitNumber = model.get('splitNumber');

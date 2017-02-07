@@ -38,7 +38,7 @@ define(function (require) {
         _splitLine: function(axisModel, labelInterval) {
             var axis = axisModel.axis;
 
-            if (axis.isBlank()) {
+            if (axis.scale.isBlank()) {
                 return;
             }
 

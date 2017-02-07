@@ -64,11 +64,15 @@ define(function(require) {
 
             this.mergeDefaultAndTheme(option, ecModel);
 
+            var data = this.getInitialData(option, ecModel);
+            if (__DEV__) {
+                zrUtil.assert(data, 'getInitialData returned invalid data.');
+            }
             /**
              * @type {module:echarts/data/List|module:echarts/data/Tree|module:echarts/data/Graph}
              * @private
              */
-            set(this, 'dataBeforeProcessed', this.getInitialData(option, ecModel));
+            set(this, 'dataBeforeProcessed', data);
 
             // If we reverse the order (make data firstly, and then make
             // dataBeforeProcessed by cloneShallow), cloneShallow will
