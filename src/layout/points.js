@@ -8,13 +8,13 @@ define(function (require) {
             if (coordSys) {
                 var dims = coordSys.dimensions;
 
-                if (coordSys.type === 'singleAxis') {
+                if (dims.length === 1) {
                     data.each(dims[0], function (x, idx) {
                         // Also {Array.<number>}, not undefined to avoid if...else... statement
                         data.setItemLayout(idx, isNaN(x) ? [NaN, NaN] : coordSys.dataToPoint(x));
                     });
                 }
-                else {
+                else if (dims.length === 2) {
                     data.each(dims, function (x, y, idx) {
                         // Also {Array.<number>}, not undefined to avoid if...else... statement
                         data.setItemLayout(
