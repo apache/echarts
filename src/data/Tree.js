@@ -414,10 +414,14 @@ define(function(require) {
 
         var tree = new Tree(hostModel, levelOptions);
         var listData = [];
+        var dimMax = 1;
 
         buildHierarchy(dataRoot);
 
         function buildHierarchy(dataNode, parentNode) {
+            var value = dataNode.value;
+            dimMax = Math.max(dimMax, zrUtil.isArray(value) ? value.length : 1);
+
             listData.push(dataNode);
 
             var node = new TreeNode(dataNode.name, tree);
@@ -437,7 +441,7 @@ define(function(require) {
 
         tree.root.updateDepthAndHeight(0);
 
-        var dimensions = completeDimensions([{name: 'value'}], listData);
+        var dimensions = completeDimensions([{name: 'value'}], listData, {dimCount: dimMax});
         var list = new List(dimensions, hostModel);
         list.initData(listData);
 

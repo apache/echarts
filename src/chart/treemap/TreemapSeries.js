@@ -146,18 +146,14 @@ define(function(require) {
          * @override
          */
         getInitialData: function (option, ecModel) {
-            var data = option.data || [];
             var rootName = option.name;
             rootName == null && (rootName = option.name);
 
             // Create a virtual root.
             var root = {name: rootName, children: option.data};
-            var value0 = (data[0] || {}).value;
 
-            completeTreeValue(root, zrUtil.isArray(value0) ? value0.length : -1);
+            completeTreeValue(root);
 
-            // FIXME
-            // sereis.mergeOption 的 getInitData是否放在merge后，从而能直接获取merege后的结果而非手动判断。
             var levels = option.levels || [];
 
             levels = option.levels = setDefault(levels, ecModel);
@@ -282,7 +278,7 @@ define(function(require) {
     /**
      * @param {Object} dataNode
      */
-    function completeTreeValue(dataNode, arrValueLength) {
+    function completeTreeValue(dataNode) {
         // Postorder travel tree.
         // If value of none-leaf node is not set,
         // calculate it by suming up the value of all children.
@@ -290,7 +286,7 @@ define(function(require) {
 
         zrUtil.each(dataNode.children, function (child) {
 
-            completeTreeValue(child, arrValueLength);
+            completeTreeValue(child);
 
             var childValue = child.value;
             zrUtil.isArray(childValue) && (childValue = childValue[0]);
@@ -299,14 +295,8 @@ define(function(require) {
         });
 
         var thisValue = dataNode.value;
-
-        if (arrValueLength >= 0) {
-            if (!zrUtil.isArray(thisValue)) {
-                dataNode.value = new Array(arrValueLength);
-            }
-            else {
-                thisValue = thisValue[0];
-            }
+        if (zrUtil.isArray(thisValue)) {
+            thisValue = thisValue[0];
         }
 
         if (thisValue == null || isNaN(thisValue)) {
@@ -317,7 +307,7 @@ define(function(require) {
             thisValue = 0;
         }
 
-        arrValueLength >= 0
+        zrUtil.isArray(dataNode.value)
             ? (dataNode.value[0] = thisValue)
             : (dataNode.value = thisValue);
     }

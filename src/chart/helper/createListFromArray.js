@@ -44,7 +44,7 @@ define(function(require) {
         if (!dimensions) {
             // Get dimensions from registered coordinate system
             dimensions = (registeredCoordSys && registeredCoordSys.dimensions) || ['x', 'y'];
-            dimensions = completeDimensions(dimensions, data, dimensions.concat(['value']));
+            dimensions = completeDimensions(dimensions, data, {defaultNames: dimensions.concat(['value'])});
         }
         var categoryIndex = axesInfo ? axesInfo.categoryIndex : -1;
 
@@ -162,7 +162,7 @@ define(function(require) {
             var isXAxisCateogry = xAxisType === 'category';
             var isYAxisCategory = yAxisType === 'category';
 
-            completeDimensions(dimensions, data, ['x', 'y', 'z']);
+            completeDimensions(dimensions, data, {defaultNames: ['x', 'y', 'z']});
 
             var categoryAxesModels = {};
             if (isXAxisCateogry) {
@@ -252,7 +252,7 @@ define(function(require) {
             var isAngleAxisCateogry = angleAxisType === 'category';
             var isRadiusAxisCateogry = radiusAxisType === 'category';
 
-            completeDimensions(dimensions, data, ['radius', 'angle', 'value']);
+            completeDimensions(dimensions, data, {defaultNames: ['radius', 'angle', 'value']});
 
             var categoryAxesModels = {};
             if (isRadiusAxisCateogry) {
@@ -275,7 +275,7 @@ define(function(require) {
                 dimensions: completeDimensions([
                     {name: 'lng'},
                     {name: 'lat'}
-                ], data, ['lng', 'lat', 'value'])
+                ], data, {defaultNames: ['lng', 'lat', 'value']})
             };
         }
     };

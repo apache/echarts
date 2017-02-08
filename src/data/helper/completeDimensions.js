@@ -7,23 +7,30 @@ define(function (require) {
 
     /**
      * Complete the dimensions array guessed from the data structure.
-     * @param  {Array.<string>} dimensions      Necessary dimensions, like ['x', 'y']
-     * @param  {Array} data                     Data list. [[1, 2, 3], [2, 3, 4]]
-     * @param  {Array.<string>} [defaultNames]    Default names to fill not necessary dimensions, like ['value']
-     * @param  {string} [extraPrefix]             Prefix of name when filling the left dimensions.
+     * @param  {Array.<string>} dimensions Necessary dimensions, like ['x', 'y']
+     * @param  {Array} data Data list. [[1, 2, 3], [2, 3, 4]]
+     * @param  {Object} [opt]
+     * @param  {Array.<string>} [opt.defaultNames] Default names to fill not necessary dimensions, like ['value']
+     * @param  {string} [opt.extraPrefix] Prefix of name when filling the left dimensions.
+     * @param  {number} [opt.dimCount] If not specified, guess by the first data item.
      * @return {Array.<string>}
      */
-    function completeDimensions(dimensions, data, defaultNames, extraPrefix) {
+    function completeDimensions(dimensions, data, opt) {
         if (!data) {
             return dimensions;
         }
 
-        var value0 = retrieveValue(data[0]);
-        var dimSize = zrUtil.isArray(value0) && value0.length || 1;
+        opt = opt || {};
 
-        defaultNames = defaultNames || [];
-        extraPrefix = extraPrefix || 'extra';
-        for (var i = 0; i < dimSize; i++) {
+        var dimCount = opt.dimCount;
+        if (dimCount == null) {
+            var value0 = retrieveValue(data[0]);
+            dimCount = zrUtil.isArray(value0) && value0.length || 1;
+        }
+
+        var defaultNames = opt.defaultNames || [];
+        var extraPrefix = opt.extraPrefix || 'extra';
+        for (var i = 0; i < dimCount; i++) {
             if (!dimensions[i]) {
                 var name = defaultNames[i] || (extraPrefix + (i - defaultNames.length));
                 dimensions[i] = guessOrdinal(data, i)

@@ -29,7 +29,7 @@ define(function(require) {
         getInitialData: function (option, ecModel) {
             var data = option.data || [];
             var dimensions = completeDimensions(
-                [], data, [], 'indicator_'
+                [], data, {extraPrefix: 'indicator_'}
             );
             var list = new List(dimensions, this);
             list.initData(data);
