@@ -68,6 +68,10 @@ define(function (require) {
     }
 
     function mousewheel(e) {
+        // wheelDelta maybe -0 in chrome mac.
+        if (e.wheelDelta === 0) {
+            return;
+        }
         // Convenience:
         // Mac and VM Windows on Mac: scroll up: zoom out.
         // Windows: scroll up: zoom in.
