@@ -37,18 +37,21 @@ define(function (require) {
                 mapDraw._mouseDownFlag = false;
 
                 var el = e.target;
-                while (!el.__region) {
+                while (!el.__regions) {
                     el = el.parent;
                 }
                 if (!el) {
                     return;
                 }
 
-                var region = el.__region;
                 var action = {
                     type: (mapOrGeoModel.mainType === 'geo' ? 'geo' : 'map') + 'ToggleSelect',
-                    name: region.name,
-                    from: fromView.uid
+                    batch: zrUtil.map(el.__regions, function (region) {
+                        return {
+                            name: region.name,
+                            from: fromView.uid
+                        };
+                    })
                 };
                 action[mapOrGeoModel.mainType + 'Id'] = mapOrGeoModel.id;
 
@@ -62,9 +65,9 @@ define(function (require) {
     function updateMapSelected(mapOrGeoModel, group) {
         // FIXME
         group.eachChild(function (otherRegionEl) {
-            if (otherRegionEl.__region) {
-                otherRegionEl.trigger(mapOrGeoModel.isSelected(otherRegionEl.__region.name) ? 'emphasis' : 'normal');
-            }
+            zrUtil.each(otherRegionEl.__regions, function (region) {
+                otherRegionEl.trigger(mapOrGeoModel.isSelected(region.name) ? 'emphasis' : 'normal');
+            });
         });
     }
 
@@ -147,10 +150,18 @@ define(function (require) {
             var hoverItemStyleAccessPath = ['itemStyle', 'emphasis'];
             var labelAccessPath = ['label', 'normal'];
             var hoverLabelAccessPath = ['label', 'emphasis'];
+            var nameMap = {};
 
             zrUtil.each(geo.regions, function (region) {
 
-                var regionGroup = new graphic.Group();
+                // Consider in GeoJson properties.name may be duplicated, for example,
+                // there is multiple region named "United Kindom" or "France" (so many
+                // colonies). And it is not appropriate to merge them in geo, which
+                // will make them share the same label and bring trouble in label
+                // location calculation.
+                var regionGroup = nameMap[region.name]
+                    || (nameMap[region.name] = new graphic.Group());
+
                 var compoundPath = new graphic.CompoundPath({
                     shape: {
                         paths: []
@@ -254,7 +265,8 @@ define(function (require) {
                     };
                 }
 
-                regionGroup.__region = region;
+                var groupRegions = regionGroup.__regions || (regionGroup.__regions = []);
+                groupRegions.push(region);
 
                 graphic.setHoverStyle(
                     regionGroup,

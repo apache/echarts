@@ -349,7 +349,8 @@ define(function(require) {
     }
 
     /**
-     * Set hover style of element
+     * Set hover style of element.
+     * This method can be called repeatly without side-effects.
      * @param {module:zrender/Element} el
      * @param {Object} [hoverStyle]
      * @param {Object} [opt]
