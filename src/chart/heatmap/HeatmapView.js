@@ -85,9 +85,81 @@ define(function (require) {
                     coordSys, seriesModel, visualMapOfThisSeries, api
                 );
             }
+            else if (coordSys.type === 'calendar') {
+                this._renderOnCalendar(coordSys, seriesModel, api);
+            }
         },
 
         dispose: function () {},
+
+        _renderOnCalendar: function (calendar, seriesModel, api) {
+
+            var group = this.group;
+
+            var width = calendar.getswidth();
+            var height = calendar.getsheight();
+
+            var data = seriesModel.getData();
+
+            var itemStyleQuery = 'itemStyle.normal';
+            var hoverItemStyleQuery = 'itemStyle.emphasis';
+            var labelQuery = 'label.normal';
+            var hoverLabelQuery = 'label.emphasis';
+            var style = seriesModel.getModel(itemStyleQuery).getItemStyle(['color']);
+            var hoverStl = seriesModel.getModel(hoverItemStyleQuery).getItemStyle();
+            var labelModel = seriesModel.getModel('label.normal');
+            var hoverLabelModel = seriesModel.getModel('label.emphasis');
+
+            data.each(['time', 'value'], function (time, value, idx) {
+                var itemModel = data.getItemModel(idx);
+                var point = calendar.dataToPoint([time, value]);
+                // Ignore empty data
+                if (isNaN(value)) {
+                    return;
+                }
+                var rect = new graphic.Rect({
+                    shape: {
+                        x: point[0] - width / 2,
+                        y: point[1] - height / 2,
+                        width: width,
+                        height: height
+                    },
+                    style: {
+                        fill: data.getItemVisual(idx, 'color'),
+                        opacity: data.getItemVisual(idx, 'opacity'),
+                        stroke: '#ccc'
+                    }
+                });
+                // Optimization for large datset
+                if (data.hasItemOption) {
+                    style = itemModel.getModel(itemStyleQuery).getItemStyle(['color']);
+                    hoverStl = itemModel.getModel(hoverItemStyleQuery).getItemStyle();
+                    labelModel = itemModel.getModel(labelQuery);
+                    hoverLabelModel = itemModel.getModel(hoverLabelQuery);
+                }
+
+                var rawValue = seriesModel.getRawValue(idx);
+                var defaultText = '-';
+                if (rawValue && rawValue[2] != null) {
+                    defaultText = rawValue[2];
+                }
+                if (labelModel.getShallow('show')) {
+                    graphic.setText(style, labelModel);
+                    style.text = seriesModel.getFormattedLabel(idx, 'normal') || defaultText;
+                }
+                if (hoverLabelModel.getShallow('show')) {
+                    graphic.setText(hoverStl, hoverLabelModel);
+                    hoverStl.text = seriesModel.getFormattedLabel(idx, 'emphasis') || defaultText;
+                }
+
+                rect.setStyle(style);
+
+                graphic.setHoverStyle(rect, data.hasItemOption ? hoverStl : zrUtil.extend({}, hoverStl));
+
+                group.add(rect);
+                data.setItemGraphicEl(idx, rect);
+            });
+        },
 
         _renderOnCartesian: function (cartesian, seriesModel, api) {
             var xAxis = cartesian.getAxis('x');
