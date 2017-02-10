@@ -201,6 +201,11 @@ define(function (require) {
             // 是否开启缩放及漫游模式
             // roam: false,
 
+            // Define left-top, right-bottom coords to control view
+            // For example, [ [180, 90], [-180, -90] ],
+            // higher priority than center and zoom
+            boundingCoords: null,
+
             // Default on center of map
             center: null,
 
