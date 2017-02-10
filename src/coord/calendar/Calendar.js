@@ -75,6 +75,14 @@ define(function (require) {
         dataToPoint: function (data) {
             var obj = time.getWdwByDays(data[0]);
 
+            // 获得年份
+            var year = new Date(data[0]).getFullYear();
+
+            // 如果数据年份 和设置范围不等 则返回空
+            if (+this._model.option.range !== +year) {
+                return [NaN, NaN];
+            }
+
             return [
                 (obj.weeks - 1) * (this._swidth) + this._rect.x + this._swidth / 2,
                 obj.weekDay * (this._sheight) + this._rect.y + this._sheight / 2,
@@ -89,6 +97,7 @@ define(function (require) {
          * @return {string}       data
          */
         pointToData: function (point) {
+
             // 知道是第几周
             var week = (point[0] - this._rect.x) / (this._swidth) + 1;
 

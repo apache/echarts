@@ -11,6 +11,7 @@ define(function (require) {
      * @type {Object}
      */
     var time = {
+
         /**
          * 一天是某年的第几周第几天星期几
          *
@@ -121,29 +122,29 @@ define(function (require) {
             }
 
             console.log('参数错误:第', period, '周，星期', week);
+            return;
 
         },
 
         /**
          * 是不是闰年
          *
+         * 年份除以400可整除，为闰年。
+         * 年份除以4可整除但除以100不可整除，为闰年。
+         * 年份除以4不可整除，为平年。
+         * 年份除以100可整除但除以400不可整除，为平年
+         *
          * @param  {number}  year 年份
          * @return {boolean}      是否是闰年
          */
         isLeapYear: function (year) {
 
-            // 条件1：年份必须要能被4整除
             var cond1 = year % 4 === 0;
 
-            // 条件2：年份不能是整百数
             var cond2 = year % 100 !== 0;
 
-            // 条件3：年份是400的倍数
             var cond3 = year % 400 === 0;
 
-            // 当条件1和条件2同时成立时，就肯定是闰年，所以条件1和条件2之间为“与”的关系。
-            // 如果条件1和条件2不能同时成立，但如果条件3能成立，则仍然是闰年。所以条件3与前2项为“或”的关系。
-            // 所以得出判断闰年的表达式：
             var cond = cond1 && cond2 || cond3;
 
             return !!cond;

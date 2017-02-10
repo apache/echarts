@@ -60,10 +60,9 @@
                         min: 0,
                         max: 1000,
                         calculable: true,
-                        seriesIndex: 1,
                         orient: 'horizontal',
                         left: 'center',
-                        top: 450
+                        top: 'top'
                     },
 
                     calendar: [
@@ -73,20 +72,27 @@
                     {
                         top: 260,
                         range: '2001'
+                    },
+                    {
+                        top: 460,
+                        range: '2002'
                     }],
 
                     series: [{
-                        type: 'scatter',
+                        type: 'heatmap',
                         coordinateSystem: 'calendar',
-                        symbolSize: function (val) {
-                            return val[1] / 100;
-                        },
+                        calendarIndex: 0,
                         data: getVirtulData(2000)
                     }, {
                         type: 'heatmap',
                         coordinateSystem: 'calendar',
                         calendarIndex: 1,
                         data: getVirtulData(2001)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 2,
+                        data: getVirtulData(2002)
                     }]
 
                 });

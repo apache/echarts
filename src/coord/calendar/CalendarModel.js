@@ -26,6 +26,7 @@ define(function (require) {
             top: 60,
             right: 80,
             bottom: 60,
+            // 不同粒度可选
             granulatity: 'date'
 
         }

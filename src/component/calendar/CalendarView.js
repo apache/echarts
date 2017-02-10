@@ -16,26 +16,6 @@ define(function (require) {
 
         render: function (calendarModel, ecModel, api) {
 
-            var self = this;
-            var group = self.group;
-
-            group.removeAll();
-
-            var wrapRect =  calendarModel.coordinateSystem.getRect();
-            var width =  calendarModel.coordinateSystem.getswidth();
-            var height =  width;
-
-            var year = calendarModel.option.range;
-
-            // 第一天是星期几
-            var fweek = time.getWdwByDays(year).weekDay;
-
-            // 最后一天是星期几
-            var lastday = time.getWdwByDays(year + '-12-31');
-            var lweek = lastday.weekDay;
-
-            var allweek = lastday.weeks;
-
             var WEEK = ['Sun', 'Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon'];
             var MOUTH = [
                     'Jan', 'Feb', 'Mar',
@@ -44,10 +24,35 @@ define(function (require) {
                     'Oct', 'Nov', 'Dec'
                 ];
 
+            var self = this;
+            var group = self.group;
+
+            var coordSys = calendarModel.coordinateSystem;
+
+            group.removeAll();
+
+            var wrapRect =  coordSys.getRect();
+            var width =  coordSys.getswidth();
+            var height =  width;
+
+            // 当前年所有周数
+            var allweek = coordSys.getAllWeek();
+
+            var curYear = calendarModel.option.range;
+
+            // 第一天是星期几
+            var fweek = time.getWdwByDays(curYear).weekDay;
+
+            // 最后一天是星期几
+            var lastday = time.getWdwByDays(curYear + '-12-31');
+            var lweek = lastday.weekDay;
+
+
+
             // 年信息
             var yearText = new graphic.Text({
                 style: {
-                    text: year,
+                    text: curYear,
                     x: wrapRect.x - width / 2,
                     y: wrapRect.y,
                     textAlign: 'right',
@@ -57,11 +62,13 @@ define(function (require) {
             });
             group.add(yearText);
 
+            var i;
+            var j;
 
             // 日网格
-            for (var i = 0; i < allweek; i++) {
+            for (i = 0; i < allweek; i++) {
 
-                for (var j = 0; j < 7; j++) {
+                for (j = 0; j < 7; j++) {
 
                     // 第一列 星期文字坐标
                     if (i === 0) {
@@ -81,7 +88,7 @@ define(function (require) {
                         continue;
                     }
 
-                    // 小方格
+                    // 每个方格
                     group.add(self._renderRect(
                         i, j,
                         width, height,
@@ -94,13 +101,16 @@ define(function (require) {
             }
 
             // 月文字坐标 && 月分隔线
-            for (var i = 0; i < 12; i++) {
-                var yd = year + '-' + (i + 1) + '-1';
+            for (i = 0; i < 12; i++) {
 
+                // 当前年每月第一天
+                var yd = curYear + '-' + (i + 1) + '-1';
                 var info = time.getWdwByDays(yd);
+
                 var w = info.weeks - 1;
                 var d = info.weekDay;
                 var start = d > 0 ? 1 : 0;
+
                 var mouthText = new graphic.Text({
                     style: {
                         text: MOUTH[i],
@@ -121,8 +131,8 @@ define(function (require) {
                 );
             }
 
-            // 12月最后一栏
-            var info12 = time.getWdwByDays(year + '-12-31');
+            // ---- 12月最后一栏 ----
+            var info12 = time.getWdwByDays(curYear + '-12-31');
             var w12 = info12.weeks - 1;
             var d12 = info12.weekDay + 1;
 
@@ -150,6 +160,9 @@ define(function (require) {
                 );
             }
 
+            // ---- 12月最后一栏 end ----
+
+
             var firstx = fweek > 0 ? 1 : 0;
 
             // 上横线
@@ -164,8 +177,8 @@ define(function (require) {
 
             group.add(tickLine);
 
-            var lastx = d12 === 7 ? (w12 + 1) : w12;
 
+            var lastx = d12 === 7 ? (w12 + 1) : w12;
             // 下横线
             tickLine = new graphic.Line({
                 shape: {
@@ -212,13 +225,13 @@ define(function (require) {
 
         /**
          * 以某天为准的 竖分隔线  这里主要用作画月分隔线
-         * @param  {[type]} group  [description]
-         * @param  {[type]} i      [description]
-         * @param  {[type]} j      [description]
-         * @param  {[type]} width  [description]
-         * @param  {[type]} height [description]
-         * @param  {[type]} offset [description]
-         * @return {[type]}        [description]
+         *
+         * @param  {Object} group  this group
+         * @param  {number} i       数值i
+         * @param  {number} j       数值j
+         * @param  {number} width   宽度
+         * @param  {number} height  高度
+         * @param  {Object} offset  偏移配置
          */
         _renderMouthLine: function (group, i, j, width, height, offset) {
             var tickLine;
