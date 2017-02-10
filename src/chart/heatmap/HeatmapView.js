@@ -119,15 +119,14 @@ define(function (require) {
                 }
                 var rect = new graphic.Rect({
                     shape: {
-                        x: point[0] - width / 2,
-                        y: point[1] - height / 2,
-                        width: width,
-                        height: height
+                        x: point[0] - (width - 1) / 2,
+                        y: point[1] - (height - 1) / 2,
+                        width: width - 1,
+                        height: height - 1
                     },
                     style: {
                         fill: data.getItemVisual(idx, 'color'),
-                        opacity: data.getItemVisual(idx, 'opacity'),
-                        stroke: '#ccc'
+                        opacity: data.getItemVisual(idx, 'opacity')
                     }
                 });
                 // Optimization for large datset

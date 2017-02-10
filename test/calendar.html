@@ -64,9 +64,7 @@
                         left: 100,
                         top: 20,
                         granulatity: 'date',
-                        range: '2015',
-                        bgcolor: '#fff',
-
+                        range: '2015'
                     },
                     {
                         right: 100,
@@ -74,6 +72,13 @@
                         top: 400,
                         granulatity: 'date',
                         range: '2016'
+                    },
+                    {
+                        right: 100,
+                        left: 100,
+                        top: 900,
+                        granulatity: 'date',
+                        range: '2017'
                     }],
 
                     visualMap: {
@@ -98,6 +103,16 @@
                         coordinateSystem: 'calendar',
                         calendarIndex: 1,
                         data: getVirtulData(2016)
+                    },
+                    {
+                        type: 'scatter',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 3,
+                        symbolSize: function (val) {
+                            console.log(val);
+                            return val[1] / 100;
+                        },
+                        data: getVirtulData(2017)
                     }]
 
                     /*calendar: {
@@ -113,7 +128,7 @@
                         symbolSize: function (val) {
                             return val[1] / 100;
                         },
-                        data: datas
+                        data: getVirtulData(2015)
                     }*/
                 });
 
