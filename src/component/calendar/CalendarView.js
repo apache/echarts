@@ -38,12 +38,13 @@ define(function (require) {
 
             var WEEK = ['Sun', 'Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon'];
             var MOUTH = [
-                            'Jan', 'Feb', 'Mar',
-                            'Apr', 'May', 'June',
-                            'Jul', 'Aug', 'Sep',
-                            'Oct', 'Nov', 'Dec'
-                        ];
+                    'Jan', 'Feb', 'Mar',
+                    'Apr', 'May', 'June',
+                    'Jul', 'Aug', 'Sep',
+                    'Oct', 'Nov', 'Dec'
+                ];
 
+            // 年信息
             var yearText = new graphic.Text({
                 style: {
                     text: year,

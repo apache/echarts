@@ -56,39 +56,17 @@
                 var chart = echarts.init(document.getElementById('main'));
 
                 chart.setOption({
-                    visualMap: {
-                        min: 0,
-                        max: 1000,
-                        calculable: true,
-                        seriesIndex: 1,
-                        orient: 'horizontal',
-                        left: 'center',
-                        top: 450
+                    calendar: {
+                        range: '2015'
                     },
-
-                    calendar: [
-                    {
-                        range: '2000'
-                    },
-                    {
-                        top: 260,
-                        range: '2001'
-                    }],
-
-                    series: [{
+                    series: {
                         type: 'scatter',
                         coordinateSystem: 'calendar',
-                        calendarIndex: 0,
                         symbolSize: function (val) {
                             return val[1] / 100;
                         },
-                        data: getVirtulData(2000)
-                    }, {
-                        type: 'heatmap',
-                        coordinateSystem: 'calendar',
-                        calendarIndex: 1,
-                        data: getVirtulData(2001)
-                    }]
+                        data: getVirtulData(2015)
+                    }
 
                 });
 

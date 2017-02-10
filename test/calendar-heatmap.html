@@ -57,39 +57,23 @@
 
                 chart.setOption({
                     visualMap: {
+                        show: false,
                         min: 0,
                         max: 1000,
                         calculable: true,
-                        seriesIndex: 1,
                         orient: 'horizontal',
                         left: 'center',
-                        top: 450
+                        top: 'top'
                     },
 
-                    calendar: [
-                    {
-                        range: '2000'
+                    calendar: {
+                        range: '2016'
                     },
-                    {
-                        top: 260,
-                        range: '2001'
-                    }],
-
-                    series: [{
-                        type: 'scatter',
-                        coordinateSystem: 'calendar',
-                        calendarIndex: 0,
-                        symbolSize: function (val) {
-                            return val[1] / 100;
-                        },
-                        data: getVirtulData(2000)
-                    }, {
+                    series: {
                         type: 'heatmap',
                         coordinateSystem: 'calendar',
-                        calendarIndex: 1,
-                        data: getVirtulData(2001)
-                    }]
-
+                        data: getVirtulData(2016)
+                    }
                 });
 
                 $(window).resize(function() {

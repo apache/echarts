@@ -19,10 +19,12 @@ define(function (require) {
          */
         getWdwByDays: function (date) {
 
+            var datey = new Date(date);
+
             // 获得年份
-            var year = new Date(date).getFullYear();
-            var month = new Date(date).getMonth() + 1;
-            var day = new Date(date).getDate();
+            var year = datey.getFullYear();
+            var month = datey.getMonth() + 1;
+            var day = datey.getDate();
 
             // 表示改日期为当年的第几天
             var days = 0;

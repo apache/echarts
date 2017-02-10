@@ -73,9 +73,7 @@ define(function (require) {
          * @return {string}       point
          */
         dataToPoint: function (data) {
-            var self = this;
-            var obj = {};
-            obj = time.getWdwByDays(data[0]);
+            var obj = time.getWdwByDays(data[0]);
 
             return [
                 (obj.weeks - 1) * (this._swidth) + this._rect.x + this._swidth / 2,

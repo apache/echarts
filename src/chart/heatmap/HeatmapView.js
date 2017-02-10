@@ -117,6 +117,9 @@ define(function (require) {
                 if (isNaN(value)) {
                     return;
                 }
+
+                // todo
+                // 这里需要考虑日历坐标默认的宽度
                 var rect = new graphic.Rect({
                     shape: {
                         x: point[0] - (width - 1) / 2,
