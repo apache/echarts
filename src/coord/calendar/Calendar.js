@@ -62,6 +62,8 @@ define(function (require) {
 
             this._swidth = (this._rect.width - (this._allweeks - 1)) / this._allweeks;
             this._sheight = this._swidth;
+
+            this._lineWidth = this._model.getModel('itemStyle.normal').getItemStyle().lineWidth || 1;
         },
 
 
@@ -88,6 +90,27 @@ define(function (require) {
                 obj.weekDay * (this._sheight) + this._rect.y + this._sheight / 2,
                 data[1]
             ];
+        },
+
+        /**
+         * Convert a time data(time, value) item to rect shape option.
+         *
+         * @override
+         * @param  {string} data  data
+         * @return {Object}      obj
+         */
+        pointToRectShape: function (data) {
+
+            var point = this.dataToPoint(data);
+
+            var shape = {
+                x: point[0] - (this._swidth - this._lineWidth) / 2,
+                y: point[1] - (this._sheight - this._lineWidth) / 2,
+                width: this._swidth - this._lineWidth,
+                height: this._sheight - this._lineWidth
+            };
+
+            return shape;
         },
 
         /**

@@ -96,9 +96,6 @@ define(function (require) {
 
             var group = this.group;
 
-            var width = calendar.getswidth();
-            var height = calendar.getsheight();
-
             var data = seriesModel.getData();
 
             var itemStyleQuery = 'itemStyle.normal';
@@ -112,21 +109,15 @@ define(function (require) {
 
             data.each(['time', 'value'], function (time, value, idx) {
                 var itemModel = data.getItemModel(idx);
-                var point = calendar.dataToPoint([time, value]);
+
                 // Ignore empty data
                 if (isNaN(value)) {
                     return;
                 }
 
-                // todo
-                // 这里需要考虑日历坐标默认的宽度
                 var rect = new graphic.Rect({
-                    shape: {
-                        x: point[0] - (width - 1) / 2,
-                        y: point[1] - (height - 1) / 2,
-                        width: width - 1,
-                        height: height - 1
-                    },
+                    z2: 1,
+                    shape: calendar.pointToRectShape([time, value]),
                     style: {
                         fill: data.getItemVisual(idx, 'color'),
                         opacity: data.getItemVisual(idx, 'opacity')

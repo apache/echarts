@@ -16,7 +16,7 @@ define(function (require) {
 
         render: function (calendarModel, ecModel, api) {
 
-            var WEEK = ['Sun', 'Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon'];
+            var WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             var MOUTH = [
                     'Jan', 'Feb', 'Mar',
                     'Apr', 'May', 'June',
@@ -29,6 +29,12 @@ define(function (require) {
 
             var coordSys = calendarModel.coordinateSystem;
 
+            var itemRectStyleModel = calendarModel.getModel('itemStyle.normal').getItemStyle();
+            var lineStyleModel = calendarModel.getModel('lineStyle').getLineStyle();
+            var dayLabelStyleModel = calendarModel.getModel('dayLabel.textStyle');
+            var mouthLabelStyleModel = calendarModel.getModel('mouthLabel.textStyle');
+            var yearLabelStyleModel = calendarModel.getModel('yearLabel.textStyle');
+            var lineWidth = lineStyleModel.lineWidth / 2 || 0;
             group.removeAll();
 
             var wrapRect =  coordSys.getRect();
@@ -50,20 +56,24 @@ define(function (require) {
 
 
             // 年信息
-            var yearText = new graphic.Text({
-                style: {
-                    text: curYear,
-                    x: wrapRect.x - width / 2,
-                    y: wrapRect.y,
-                    textAlign: 'right',
-                    textVerticalAlign: 'bottom',
-                    font: 'bolder 1em "Microsoft YaHei", sans-serif'
-                }
-            });
-            group.add(yearText);
+            if (calendarModel.getModel('yearLabel').get('show')) {
+                var yearText = new graphic.Text({
+                    style: {
+                        text: curYear,
+                        x: wrapRect.x - width / 2,
+                        y: wrapRect.y,
+                        textAlign: 'right',
+                        textVerticalAlign: 'bottom',
+                        font: yearLabelStyleModel.getFont(),
+                        fill: yearLabelStyleModel.getTextColor()
+                    }
+                });
+                group.add(yearText);
+            }
 
             var i;
             var j;
+
 
             // 日网格
             for (i = 0; i < allweek; i++) {
@@ -71,16 +81,22 @@ define(function (require) {
                 for (j = 0; j < 7; j++) {
 
                     // 第一列 星期文字坐标
-                    if (i === 0) {
+                    if (calendarModel.getModel('dayLabel').get('show') && i === 0) {
                         var y = j * height + wrapRect.y + height;
+
+
                         var weekText = new graphic.Text({
                             style: {
                                 text: WEEK[j],
-                                x: wrapRect.x - width / 2,
+                                x: wrapRect.x - width / 2 - lineWidth,
                                 y: y,
-                                textAlign: 'right'
+                                textAlign: 'right',
+                                font: dayLabelStyleModel.getFont(),
+                                fill: dayLabelStyleModel.getTextColor()
                             }
                         });
+
+
                         group.add(weekText);
                     }
 
@@ -89,14 +105,21 @@ define(function (require) {
                     }
 
                     // 每个方格
-                    group.add(self._renderRect(
+                    var rects = self._renderRect(
                         i, j,
                         width, height,
                         {
                             x: wrapRect.x,
                             y: wrapRect.y
-                        }
-                    ));
+                        }, itemRectStyleModel
+                    );
+
+                    /*graphic.setHoverStyle(rects, {
+                        fill: 'red',
+                        stroke: '#000'
+                    });*/
+                    group.add(rects);
+
                 }
             }
 
@@ -109,17 +132,21 @@ define(function (require) {
 
                 var w = info.weeks - 1;
                 var d = info.weekDay;
-                var start = d > 0 ? 1 : 0;
 
-                var mouthText = new graphic.Text({
-                    style: {
-                        text: MOUTH[i],
-                        x: w * width + wrapRect.x + start * width,
-                        y: wrapRect.y,
-                        textVerticalAlign: 'bottom'
-                    }
-                });
-                group.add(mouthText);
+                if (calendarModel.getModel('mouthLabel').get('show')) {
+                    var start = d > 0 ? 1 : 0;
+                    var mouthText = new graphic.Text({
+                        style: {
+                            text: MOUTH[i],
+                            x: w * width + wrapRect.x + start * width,
+                            y: wrapRect.y - lineWidth,
+                            textVerticalAlign: 'bottom',
+                            font: mouthLabelStyleModel.getFont(),
+                            fill: mouthLabelStyleModel.getTextColor()
+                        }
+                    });
+                    group.add(mouthText);
+                }
 
                 self._renderMouthLine(
                     self.group, w, d,
@@ -127,7 +154,8 @@ define(function (require) {
                     {
                         x: wrapRect.x,
                         y: wrapRect.y
-                    }
+                    },
+                    lineStyleModel
                 );
             }
 
@@ -139,12 +167,15 @@ define(function (require) {
             if (d12 === 7) {
                 // 竖线
                 var tickLine = new graphic.Line({
+                    z2: 20,
                     shape: {
                         x1: wrapRect.x + (w12 + 1) * width,
                         y1: wrapRect.y,
                         x2: wrapRect.x + (w12 + 1) * width,
                         y2: wrapRect.y + d12 * height
-                    }
+                    },
+
+                    style: lineStyleModel
                 });
 
                 group.add(tickLine);
@@ -156,7 +187,8 @@ define(function (require) {
                     {
                         x: wrapRect.x,
                         y: wrapRect.y
-                    }
+                    },
+                    lineStyleModel
                 );
             }
 
@@ -167,26 +199,33 @@ define(function (require) {
 
             // 上横线
             tickLine = new graphic.Line({
+                z2: 20,
                 shape: {
-                    x1: wrapRect.x + firstx * width,
+                    x1: wrapRect.x + firstx * width - lineWidth,
                     y1: wrapRect.y,
-                    x2: wrapRect.x + allweek * width,
+                    x2: wrapRect.x + allweek * width + lineWidth,
                     y2: wrapRect.y
-                }
+                },
+
+                style: lineStyleModel
             });
 
             group.add(tickLine);
 
 
             var lastx = d12 === 7 ? (w12 + 1) : w12;
+
             // 下横线
             tickLine = new graphic.Line({
+                z2: 20,
                 shape: {
-                    x1: wrapRect.x,
+                    x1: wrapRect.x - lineWidth,
                     y1: wrapRect.y + 7 * height,
-                    x2: wrapRect.x + lastx * width,
+                    x2: wrapRect.x + lastx * width + lineWidth,
                     y2: wrapRect.y + 7 * height
-                }
+                },
+
+                style: lineStyleModel
             });
 
             group.add(tickLine);
@@ -201,12 +240,10 @@ define(function (require) {
          * @param  {number} width   宽度
          * @param  {number} height  高度
          * @param  {Object} offset  偏移配置
-         * @param  {string} bgcolor     背景颜色
-         * @param  {string} bordercolor 边框颜色
-         * @param  {number} opacity 透明度
+         * @param  {string} itemRectStyle  样式
          * @return {Object}         {}
          */
-        _renderRect: function (i, j, width, height, offset, bgcolor, bordercolor, opacity) {
+        _renderRect: function (i, j, width, height, offset, itemRectStyle) {
 
             return new graphic.Rect({
                 shape: {
@@ -215,11 +252,7 @@ define(function (require) {
                     width: width,
                     height: height
                 },
-                style: {
-                    fill: bgcolor || '#fff',
-                    stroke: bordercolor || '#ccc',
-                    opacity: opacity || 1
-                }
+                style: itemRectStyle
             });
         },
 
@@ -232,18 +265,23 @@ define(function (require) {
          * @param  {number} width   宽度
          * @param  {number} height  高度
          * @param  {Object} offset  偏移配置
+         * @param  {Object} lineStyleModel  样式
          */
-        _renderMouthLine: function (group, i, j, width, height, offset) {
+        _renderMouthLine: function (group, i, j, width, height, offset, lineStyleModel) {
             var tickLine;
+            var lineWidth = lineStyleModel.lineWidth / 2 || 0;
 
             // 当前竖线
             tickLine = new graphic.Line({
+                z2: 20,
                 shape: {
                     x1: offset.x + i * width,
                     y1: offset.y + j * height,
                     x2: offset.x + i * width,
                     y2: offset.y + 7 * height
-                }
+                },
+
+                style: lineStyleModel
             });
 
             group.add(tickLine);
@@ -251,24 +289,30 @@ define(function (require) {
             if (j !== 0) {
                 // 横线
                 tickLine = new graphic.Line({
+                    z2: 20,
                     shape: {
-                        x1: offset.x + i * width,
+                        x1: offset.x + i * width - lineWidth,
                         y1: offset.y + j * height,
-                        x2: offset.x + (i + 1) * width,
+                        x2: offset.x + (i + 1) * width + lineWidth,
                         y2: offset.y + j * height
-                    }
+                    },
+
+                    style: lineStyleModel
                 });
 
                 group.add(tickLine);
 
                 // 往上的竖线
                 tickLine = new graphic.Line({
+                    z2: 20,
                     shape: {
                         x1: offset.x + (i + 1) * width,
                         y1: offset.y,
                         x2: offset.x + (i + 1) * width,
                         y2: offset.y + j * height
-                    }
+                    },
+
+                    style: lineStyleModel
                 });
 
                 group.add(tickLine);
