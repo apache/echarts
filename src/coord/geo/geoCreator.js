@@ -14,6 +14,21 @@ define(function (require) {
      * @param {module:echarts/ExtensionAPI} api
      */
     function resizeGeo (geoModel, api) {
+
+        var boundingCoords = geoModel.get('boundingCoords');
+        if (boundingCoords != null) {
+            var leftTop = boundingCoords[0];
+            var rightBottom = boundingCoords[1];
+            if (isNaN(leftTop[0]) || isNaN(leftTop[1]) || isNaN(rightBottom[0]) || isNaN(rightBottom[1])) {
+                if (__DEV__) {
+                    console.error('Invalid boundingCoords');
+                }
+            }
+            else {
+                this.setBoundingRect(leftTop[0], leftTop[1], rightBottom[0] - leftTop[0], rightBottom[1] - leftTop[1]);
+            }
+        }
+
         var rect = this.getBoundingRect();
 
         var boxLayoutOption;
@@ -28,6 +43,7 @@ define(function (require) {
         var aspect = rect.width / rect.height * aspectScale;
 
         var useCenterAndSize = false;
+
         if (center && size) {
             center = [
                 numberUtil.parsePercent(center[0], viewWidth),
