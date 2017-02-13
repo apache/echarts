@@ -80,6 +80,10 @@ define(function (require) {
             // Map type
             map: '',
 
+            // Define left-top, right-bottom coords to control view
+            // For example, [ [180, 90], [-180, -90] ]
+            boundingCoords: null,
+
             // Default on center of map
             center: null,
 

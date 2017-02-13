@@ -202,6 +202,9 @@ define(function (require) {
         timsort(dataProcessorFuncs, prioritySortFunc);
 
         zr.animation.on('frame', this._onframe, this);
+
+        // ECharts instance can be used as value.
+        zrUtil.setAsPrimitive(this);
     }
 
     var echartsProto = ECharts.prototype;
@@ -333,6 +336,13 @@ define(function (require) {
      */
     echartsProto.getHeight = function () {
         return this._zr.getHeight();
+    };
+
+    /**
+     * @return {number}
+     */
+    echartsProto.getDevicePixelRatio = function () {
+        return this._zr.painter.dpr || window.devicePixelRatio || 1;
     };
 
     /**
@@ -1886,7 +1896,7 @@ define(function (require) {
     each([
             'map', 'each', 'filter', 'indexOf', 'inherits', 'reduce', 'filter',
             'bind', 'curry', 'isArray', 'isString', 'isObject', 'isFunction',
-            'extend', 'defaults', 'clone'
+            'extend', 'defaults', 'clone', 'merge'
         ],
         function (name) {
             echarts.util[name] = zrUtil[name];
