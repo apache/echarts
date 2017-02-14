@@ -15,14 +15,8 @@ define(function (require) {
         type: 'calendar',
 
         render: function (calendarModel, ecModel, api) {
-
-            var WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-            var MOUTH = [
-                    'Jan', 'Feb', 'Mar',
-                    'Apr', 'May', 'June',
-                    'Jul', 'Aug', 'Sep',
-                    'Oct', 'Nov', 'Dec'
-                ];
+            var WEEK = calendarModel.getModel('dayLabel').get('data');
+            var MOUTH = calendarModel.getModel('mouthLabel').get('data');
 
             var self = this;
             var group = self.group;
@@ -44,7 +38,7 @@ define(function (require) {
             // 当前年所有周数
             var allweek = coordSys.getAllWeek();
 
-            var curYear = calendarModel.option.range;
+            var curYear = calendarModel.get('range');
 
             // 第一天是星期几
             var fweek = time.getWdwByDays(curYear).weekDay;
@@ -57,38 +51,60 @@ define(function (require) {
 
             // 年信息
             if (calendarModel.getModel('yearLabel').get('show')) {
-                var yearText = new graphic.Text({
-                    style: {
-                        text: curYear,
-                        x: wrapRect.x - width / 2,
-                        y: wrapRect.y,
-                        textAlign: 'right',
-                        textVerticalAlign: 'bottom',
-                        font: yearLabelStyleModel.getFont(),
-                        fill: yearLabelStyleModel.getTextColor()
-                    }
-                });
+
+                var yearText;
+                var yearLabel = calendarModel.getModel('yearLabel');
+                var padding = yearLabel.get('padding') || 0;
+
+                if (yearLabel.get('position') === 'center') {
+                    yearText = new graphic.Text({
+                        style: {
+                            text: curYear,
+                            x: wrapRect.x - width / 2 + allweek * width / 2,
+                            y: wrapRect.y - padding,
+                            textAlign: 'right',
+                            textVerticalAlign: 'bottom',
+                            font: yearLabelStyleModel.getFont(),
+                            fill: yearLabelStyleModel.getTextColor()
+                        }
+                    });
+                }
+                else {
+                    yearText = new graphic.Text({
+                        style: {
+                            text: curYear,
+                            x: wrapRect.x - width / 2 - padding,
+                            y: wrapRect.y,
+                            textAlign: 'right',
+                            textVerticalAlign: 'bottom',
+                            font: yearLabelStyleModel.getFont(),
+                            fill: yearLabelStyleModel.getTextColor()
+                        }
+                    });
+                }
                 group.add(yearText);
             }
 
             var i;
             var j;
 
+            var dayLabel = calendarModel.getModel('dayLabel');
 
+            padding = dayLabel.get('padding') || 0;
             // 日网格
             for (i = 0; i < allweek; i++) {
 
                 for (j = 0; j < 7; j++) {
 
                     // 第一列 星期文字坐标
-                    if (calendarModel.getModel('dayLabel').get('show') && i === 0) {
+                    if (dayLabel.get('show') && i === 0) {
                         var y = j * height + wrapRect.y + height;
 
 
                         var weekText = new graphic.Text({
                             style: {
                                 text: WEEK[j],
-                                x: wrapRect.x - width / 2 - lineWidth,
+                                x: wrapRect.x - width / 2 - lineWidth - padding,
                                 y: y,
                                 textAlign: 'right',
                                 font: dayLabelStyleModel.getFont(),
@@ -123,6 +139,9 @@ define(function (require) {
                 }
             }
 
+            var mouthLabel = calendarModel.getModel('mouthLabel');
+            padding = mouthLabel.get('padding');
+
             // 月文字坐标 && 月分隔线
             for (i = 0; i < 12; i++) {
 
@@ -133,18 +152,36 @@ define(function (require) {
                 var w = info.weeks - 1;
                 var d = info.weekDay;
 
-                if (calendarModel.getModel('mouthLabel').get('show')) {
+                if (mouthLabel.get('show')) {
                     var start = d > 0 ? 1 : 0;
-                    var mouthText = new graphic.Text({
-                        style: {
-                            text: MOUTH[i],
-                            x: w * width + wrapRect.x + start * width,
-                            y: wrapRect.y - lineWidth,
-                            textVerticalAlign: 'bottom',
-                            font: mouthLabelStyleModel.getFont(),
-                            fill: mouthLabelStyleModel.getTextColor()
-                        }
-                    });
+                    var mouthText;
+
+                    if (mouthLabel.get('position') === 'bottom') {
+                        mouthText = new graphic.Text({
+                            style: {
+                                text: MOUTH[i],
+                                x: w * width + wrapRect.x,
+                                y: wrapRect.y + lineWidth + 7 * width + padding,
+                                textVerticalAlign: 'top',
+                                font: mouthLabelStyleModel.getFont(),
+                                fill: mouthLabelStyleModel.getTextColor()
+                            }
+                        });
+                    }
+                    else {
+                        mouthText = new graphic.Text({
+                            style: {
+                                text: MOUTH[i],
+                                x: w * width + wrapRect.x + start * width,
+                                y: wrapRect.y - lineWidth - padding,
+                                textVerticalAlign: 'bottom',
+                                font: mouthLabelStyleModel.getFont(),
+                                fill: mouthLabelStyleModel.getTextColor()
+                            }
+                        });
+                    }
+
+
                     group.add(mouthText);
                 }
 

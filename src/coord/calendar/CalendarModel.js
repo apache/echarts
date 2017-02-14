@@ -27,7 +27,7 @@ define(function (require) {
             right: 80,
             bottom: 60,
 
-            // 月分割线
+            // 月分割线样式
             lineStyle: {
                 color: '#000',
                 width: 2,
@@ -45,6 +45,8 @@ define(function (require) {
             // 星期坐标样式
             dayLabel: {
                 show: true,
+                padding: 0, // 向左偏移
+                data: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
                 textStyle: {
                     color: '#000'
                 }
@@ -53,7 +55,14 @@ define(function (require) {
             // 月坐标样式
             mouthLabel: {
                 show: true,
+                data: [
+                    'Jan', 'Feb', 'Mar',
+                    'Apr', 'May', 'June',
+                    'Jul', 'Aug', 'Sep',
+                    'Oct', 'Nov', 'Dec'
+                ],
                 position: 'top', // top bottom
+                padding: 0, // 偏移的一方 top 上 bottom下偏移
                 textStyle: {
                     color: '#000',
                     fontSize: 14
@@ -65,6 +74,7 @@ define(function (require) {
             yearLabel: {
                 show: true,
                 position: 'left', // center left
+                padding: 0, // 偏移的一方  center 上 left 左偏移
                 textStyle: {
                     color: '#000',
                     fontFamily: '"Microsoft YaHei", sans-serif',
