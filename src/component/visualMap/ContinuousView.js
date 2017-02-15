@@ -695,14 +695,20 @@ define(function(require) {
          */
         _hoverLinkFromSeriesMouseOver: function (e) {
             var el = e.target;
+            var visualMapModel = this.visualMapModel;
 
             if (!el || el.dataIndex == null) {
                 return;
             }
 
-            var dataModel = el.dataModel || this.ecModel.getSeriesByIndex(el.seriesIndex);
+            var dataModel = this.ecModel.getSeriesByIndex(el.seriesIndex);
+
+            if (!visualMapModel.isTargetSeries(dataModel)) {
+                return;
+            }
+
             var data = dataModel.getData(el.dataType);
-            var dim = data.getDimension(this.visualMapModel.getDataDimension(data));
+            var dim = data.getDimension(visualMapModel.getDataDimension(data));
             var value = data.get(dim, el.dataIndex, true);
 
             if (!isNaN(value)) {
