@@ -42,7 +42,7 @@ define(function (require) {
             var min = (!origin && option.rangeStart != null)
                 ? option.rangeStart : option.min;
 
-            if (min != null && min !== 'dataMin' && !zrUtil.eqNaN(min)) {
+            if (this.axis && min != null && min !== 'dataMin' && !zrUtil.eqNaN(min)) {
                 min = this.axis.scale.parse(min);
             }
             return min;
@@ -57,7 +57,7 @@ define(function (require) {
             var max = (!origin && option.rangeEnd != null)
                 ? option.rangeEnd : option.max;
 
-            if (max != null && max !== 'dataMax' && !zrUtil.eqNaN(max)) {
+            if (this.axis && max != null && max !== 'dataMax' && !zrUtil.eqNaN(max)) {
                 max = this.axis.scale.parse(max);
             }
             return max;

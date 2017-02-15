@@ -1884,6 +1884,8 @@ define(function (require) {
     echarts.List = require('./data/List');
     echarts.Model = require('./model/Model');
 
+    echarts.Axis = require('./coord/Axis');
+
     echarts.graphic = require('./util/graphic');
     echarts.number = require('./util/number');
     echarts.format = require('./util/format');
@@ -1904,6 +1906,7 @@ define(function (require) {
     );
 
     echarts.helper = require('./helper');
+
 
     // PRIORITY
     echarts.PRIORITY = {
