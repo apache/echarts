@@ -42,7 +42,7 @@ define(function (require) {
 
             this._renderYearText(calendarModel, rangeData, infoData, group);
 
-            this._renderMouthText(calendarModel, rangeData, infoData, group);
+            this._renderMonthText(calendarModel, rangeData, infoData, group);
 
             this._renderWeekText(calendarModel, infoData, group);
         },
@@ -53,9 +53,9 @@ define(function (require) {
             // range 2015
             // range 2015-1
             // range [2015-01, 2015-12]
-            // rqnge [2015-11, 2016-03]
+            // range [2015-11, 2016-03]
             return {
-                year: curYear,
+                year: new Date(curYear + '').getFullYear(),
                 fweek: new Date(curYear + '').getDay(),
                 lweek: new Date(curYear + '-12-31').getDay(),
                 allweeks: time.getWdwByDays(curYear + '-12-31').weeks
@@ -116,7 +116,7 @@ define(function (require) {
                 var w = info.weeks - 1;
                 var d = info.weekDay;
 
-                this._renderMouthLine(
+                this._renderMonthLine(
                     w, d,
                     lineStyleModel,
                     infoData,
@@ -146,7 +146,7 @@ define(function (require) {
                 group.add(tickLine);
             }
             else {
-                this._renderMouthLine(
+                this._renderMonthLine(
                     w12, d12,
                     lineStyleModel,
                     infoData,
@@ -194,7 +194,7 @@ define(function (require) {
         },
 
         // 绘制月分隔线
-        _renderMouthLine: function (i, j, lineStyleModel, infoData, group) {
+        _renderMonthLine: function (i, j, lineStyleModel, infoData, group) {
             var tickLine;
             var wx = infoData.wrapRect.x;
             var wy = infoData.wrapRect.y;
@@ -288,19 +288,19 @@ define(function (require) {
         },
 
         // 绘制月
-        _renderMouthText: function (calendarModel, rangeData, infoData, group) {
-            var mouthLabel = calendarModel.getModel('mouthLabel');
+        _renderMonthText: function (calendarModel, rangeData, infoData, group) {
+            var monthLabel = calendarModel.getModel('monthLabel');
 
-            if (mouthLabel.get('show')) {
-                var mouthLabelStyleModel = calendarModel.getModel('mouthLabel.textStyle');
-                var MOUTH = mouthLabel.get('data');
-                var padding = mouthLabel.get('padding');
+            if (monthLabel.get('show')) {
+                var monthLabelStyleModel = calendarModel.getModel('monthLabel.textStyle');
+                var MONTH = monthLabel.get('data');
+                var padding = monthLabel.get('padding');
 
                 var yd;
                 var info;
                 var w;
                 var d;
-                var mouthText;
+                var monthText;
                 var start = 0;
 
                 for (var i = 0; i < 12; i++) {
@@ -314,32 +314,32 @@ define(function (require) {
 
                     start = d > 0 ? 1 : 0;
 
-                    if (mouthLabel.get('position') === 'bottom') {
-                        mouthText = new graphic.Text({
+                    if (monthLabel.get('position') === 'bottom') {
+                        monthText = new graphic.Text({
                             style: {
-                                text: MOUTH[i],
+                                text: MONTH[i],
                                 x: w * infoData.width + infoData.wrapRect.x,
                                 y: infoData.wrapRect.y + infoData.lineWidth + 7 * infoData.width + padding,
                                 textVerticalAlign: 'top',
-                                font: mouthLabelStyleModel.getFont(),
-                                fill: mouthLabelStyleModel.getTextColor()
+                                font: monthLabelStyleModel.getFont(),
+                                fill: monthLabelStyleModel.getTextColor()
                             }
                         });
                     }
                     else {
-                        mouthText = new graphic.Text({
+                        monthText = new graphic.Text({
                             style: {
-                                text: MOUTH[i],
+                                text: MONTH[i],
                                 x: w * infoData.width + infoData.wrapRect.x + start * infoData.width,
                                 y: infoData.wrapRect.y - infoData.lineWidth - padding,
                                 textVerticalAlign: 'bottom',
-                                font: mouthLabelStyleModel.getFont(),
-                                fill: mouthLabelStyleModel.getTextColor()
+                                font: monthLabelStyleModel.getFont(),
+                                fill: monthLabelStyleModel.getTextColor()
                             }
                         });
                     }
 
-                    group.add(mouthText);
+                    group.add(monthText);
                 }
             }
         },

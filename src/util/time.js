@@ -32,7 +32,7 @@ define(function (require) {
             // 当前年的第几天
             var nthOfDays = 0;
             for (var i = 1; i < month; i++) {
-                nthOfDays += this.getMouthDays(i, year);
+                nthOfDays += this.getMonthDays(i, year);
             }
             nthOfDays += day;
 
@@ -67,13 +67,13 @@ define(function (require) {
                 var ymd = new Date(year, 0, 1);
                 ymd.setDate(1 + (period - 1) * 7 - ymd.getDay() + week);
 
-                var mouth = ymd.getMonth() + 1;
-                mouth = mouth < 10 ? '0' + mouth : mouth;
+                var month = ymd.getMonth() + 1;
+                month = month < 10 ? '0' + month : month;
 
                 var day = ymd.getDate();
                 day = day < 10 ? '0' + day : day;
 
-                return year + '-' + mouth + '-' + day;
+                return year + '-' + month + '-' + day;
             }
 
             console.log('参数错误:第', period, '周，星期', week);
@@ -110,7 +110,7 @@ define(function (require) {
          * @param  {number} year 年份
          * @return {number}   当前月的天数
          */
-        getMouthDays: function (m, year) {
+        getMonthDays: function (m, year) {
 
             var days = 0;
 

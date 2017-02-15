@@ -17,15 +17,21 @@ define(function (require) {
          */
         coordinateSystem: null,
 
-        layoutMode: 'box',
+        layoutMode: {
+            type: 'box',
+            ignoreSize: true
+        },
 
         defaultOption: {
             zlevel: 0,
             z: 2,
             left: 80,
             top: 60,
-            right: 80,
-            bottom: 60,
+            // right: 80,
+            // bottom: 60,
+
+            cellSize: 20,
+            orient: 'horizontal', // horizontal vertical
 
             // 月分割线样式
             lineStyle: {
@@ -53,7 +59,7 @@ define(function (require) {
             },
 
             // 月坐标样式
-            mouthLabel: {
+            monthLabel: {
                 show: true,
                 data: [
                     'Jan', 'Feb', 'Mar',

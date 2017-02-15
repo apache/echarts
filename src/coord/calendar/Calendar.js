@@ -57,10 +57,13 @@ define(function (require) {
                 }
             );
 
-            this._allweeks = time.getWdwByDays(this._model.option.range + '-12-31').weeks;
+            this._year = new Date(this._model.get('range')).getFullYear();
+
+            this._allweeks = time.getWdwByDays(this._year + '-12-31').weeks;
             this._rect = calendarRect;
 
-            this._swidth = (this._rect.width - (this._allweeks - 1)) / this._allweeks;
+            // this._swidth = (this._rect.width - (this._allweeks - 1)) / this._allweeks;
+            this._swidth = this._model.get('cellSize');
             this._sheight = this._swidth;
 
             this._lineWidth = this._model.getModel('itemStyle.normal').getItemStyle().lineWidth || 1;
@@ -81,7 +84,7 @@ define(function (require) {
             var year = new Date(data[0]).getFullYear();
 
             // 如果数据年份 和设置范围不等 则返回空
-            if (+this._model.option.range !== +year) {
+            if (+this._year !== +year) {
                 return [NaN, NaN];
             }
 
@@ -99,7 +102,7 @@ define(function (require) {
          * @param  {string} data  data
          * @return {Object}      obj
          */
-        pointToRectShape: function (data) {
+        dataToRectShape: function (data) {
 
             var point = this.dataToPoint(data);
 
@@ -127,7 +130,7 @@ define(function (require) {
             // 星期几
             var weekDay = (point[1] - this._rect.y) / (this._sheight);
 
-            return new Date(time.getDateByWdw(this._model.option.range, week, weekDay));
+            return new Date(time.getDateByWdw(this._year, week, weekDay));
 
         }
     };

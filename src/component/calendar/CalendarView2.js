@@ -16,7 +16,7 @@ define(function (require) {
 
         render: function (calendarModel, ecModel, api) {
             var WEEK = calendarModel.getModel('dayLabel').get('data');
-            var MOUTH = calendarModel.getModel('mouthLabel').get('data');
+            var MONTH = calendarModel.getModel('monthLabel').get('data');
 
             var self = this;
             var group = self.group;
@@ -26,7 +26,7 @@ define(function (require) {
             var itemRectStyleModel = calendarModel.getModel('itemStyle.normal').getItemStyle();
             var lineStyleModel = calendarModel.getModel('lineStyle').getLineStyle();
             var dayLabelStyleModel = calendarModel.getModel('dayLabel.textStyle');
-            var mouthLabelStyleModel = calendarModel.getModel('mouthLabel.textStyle');
+            var monthLabelStyleModel = calendarModel.getModel('monthLabel.textStyle');
             var yearLabelStyleModel = calendarModel.getModel('yearLabel.textStyle');
             var lineWidth = lineStyleModel.lineWidth / 2 || 0;
             group.removeAll();
@@ -139,8 +139,8 @@ define(function (require) {
                 }
             }
 
-            var mouthLabel = calendarModel.getModel('mouthLabel');
-            padding = mouthLabel.get('padding');
+            var monthLabel = calendarModel.getModel('monthLabel');
+            padding = monthLabel.get('padding');
 
             // 月文字坐标 && 月分隔线
             for (i = 0; i < 12; i++) {
@@ -152,40 +152,40 @@ define(function (require) {
                 var w = info.weeks - 1;
                 var d = info.weekDay;
 
-                if (mouthLabel.get('show')) {
+                if (monthLabel.get('show')) {
                     var start = d > 0 ? 1 : 0;
-                    var mouthText;
+                    var monthText;
 
-                    if (mouthLabel.get('position') === 'bottom') {
-                        mouthText = new graphic.Text({
+                    if (monthLabel.get('position') === 'bottom') {
+                        monthText = new graphic.Text({
                             style: {
-                                text: MOUTH[i],
+                                text: MONTH[i],
                                 x: w * width + wrapRect.x,
                                 y: wrapRect.y + lineWidth + 7 * width + padding,
                                 textVerticalAlign: 'top',
-                                font: mouthLabelStyleModel.getFont(),
-                                fill: mouthLabelStyleModel.getTextColor()
+                                font: monthLabelStyleModel.getFont(),
+                                fill: monthLabelStyleModel.getTextColor()
                             }
                         });
                     }
                     else {
-                        mouthText = new graphic.Text({
+                        monthText = new graphic.Text({
                             style: {
-                                text: MOUTH[i],
+                                text: MONTH[i],
                                 x: w * width + wrapRect.x + start * width,
                                 y: wrapRect.y - lineWidth - padding,
                                 textVerticalAlign: 'bottom',
-                                font: mouthLabelStyleModel.getFont(),
-                                fill: mouthLabelStyleModel.getTextColor()
+                                font: monthLabelStyleModel.getFont(),
+                                fill: monthLabelStyleModel.getTextColor()
                             }
                         });
                     }
 
 
-                    group.add(mouthText);
+                    group.add(monthText);
                 }
 
-                self._renderMouthLine(
+                self._renderMonthLine(
                     self.group, w, d,
                     width, height,
                     {
@@ -218,7 +218,7 @@ define(function (require) {
                 group.add(tickLine);
             }
             else {
-                self._renderMouthLine(
+                self._renderMonthLine(
                     self.group, w12, d12,
                     width, height,
                     {
@@ -304,7 +304,7 @@ define(function (require) {
          * @param  {Object} offset  偏移配置
          * @param  {Object} lineStyleModel  样式
          */
-        _renderMouthLine: function (group, i, j, width, height, offset, lineStyleModel) {
+        _renderMonthLine: function (group, i, j, width, height, offset, lineStyleModel) {
             var tickLine;
             var lineWidth = lineStyleModel.lineWidth / 2 || 0;
 
