@@ -8,7 +8,6 @@ define(function (require) {
     'use strict';
 
     var graphic = require('../../util/graphic');
-    var time = require('../../util/time');
 
     return require('../../echarts').extendComponentView({
 
@@ -20,350 +19,284 @@ define(function (require) {
             var group = self.group;
             group.removeAll();
 
-            // 当前年所有周数
-            var rangeData = this._handlerRangeData(calendarModel);
-
             var coordSys = calendarModel.coordinateSystem;
+
+            // range info
+            var rangeData = coordSys.getRangeInfo();
+            var orient = coordSys.getOrient();
+
             var lineStyleModel = calendarModel.getModel('lineStyle').getLineStyle();
 
             var infoData = {
                 wrapRect: coordSys.getRect(),
-                width: coordSys.getswidth(),
-                height: coordSys.getsheight(),
+                sw: coordSys.getswidth(),
+                sh: coordSys.getsheight(),
 
-                // 分隔线
-                lineWidth: lineStyleModel.lineWidth / 2 || 0
+                // separate line
+                lw: lineStyleModel.lineWidth || 1
             };
 
 
-            this._renderDayRect(calendarModel, rangeData, infoData, group);
+            this._renderDayRect(calendarModel, rangeData, infoData, orient, group);
 
-            this._renderLines(calendarModel, rangeData, infoData, lineStyleModel, group);
+            this._renderLines(calendarModel, orient, lineStyleModel, group);
 
-            this._renderYearText(calendarModel, rangeData, infoData, group);
+            // this._renderYearText(calendarModel, rangeData, infoData, orient, group);
 
-            this._renderMonthText(calendarModel, rangeData, infoData, group);
+            this._renderMonthText(calendarModel, rangeData, infoData, orient, group);
 
-            this._renderWeekText(calendarModel, infoData, group);
+            this._renderWeekText(calendarModel, infoData, orient, group);
         },
 
-        // 获取range中的数据信息
-        _handlerRangeData: function (calendarModel) {
-            var curYear = calendarModel.get('range');
-            // range 2015
-            // range 2015-1
-            // range [2015-01, 2015-12]
-            // range [2015-11, 2016-03]
-            return {
-                year: new Date(curYear + '').getFullYear(),
-                fweek: new Date(curYear + '').getDay(),
-                lweek: new Date(curYear + '-12-31').getDay(),
-                allweeks: time.getWdwByDays(curYear + '-12-31').weeks
-            };
-        },
-
-        // 绘制日网格
-        _renderDayRect: function (calendarModel, rangeData, infoData, group) {
-
-            var me = this;
-            var allweeks = rangeData.allweeks;
-            var fweek = rangeData.fweek;
-            var lweek = rangeData.lweek;
-            var rect;
-
+        // render day rect
+        _renderDayRect: function (calendarModel, rangeData, infoData, orient, group) {
+            var start = rangeData.start.time;
+            var end = rangeData.end.time;
+            var coordSys = calendarModel.coordinateSystem;
             var itemRectStyleModel = calendarModel.getModel('itemStyle.normal').getItemStyle();
 
-            for (var i = 0; i < allweeks; i++) {
+            var rect;
+            var point = [];
 
-                for (var j = 0; j < 7; j++) {
+            for (var i = start; i <= end; i = i + 86400000) {
+                point = coordSys.dateToPonitFour(i).TL;
 
-                    if ((i === 0 && j < fweek) || (i === allweeks - 1 && j > lweek)) {
-                        continue;
-                    }
-
-                    // 每个方格
-                    rect = new graphic.Rect({
-                        shape: {
-                            x: i * infoData.width + infoData.wrapRect.x,
-                            y: j * infoData.height + infoData.wrapRect.y,
-                            width: infoData.width,
-                            height: infoData.height
-                        },
-                        style: itemRectStyleModel
-                    });
-
-                    group.add(rect);
-
-                }
-            }
-        },
-
-        // 绘制分隔线
-        _renderLines: function (calendarModel, rangeData, infoData, lineStyleModel, group) {
-            var year = rangeData.year;
-            var width = infoData.width;
-            var height = infoData.height;
-            var wx = infoData.wrapRect.x;
-            var wy = infoData.wrapRect.y;
-
-            // 月分隔线
-            for (var i = 0; i < 12; i++) {
-
-                // 当前年每月第一天
-                var yd = year + '-' + (i + 1) + '-1';
-                var info = time.getWdwByDays(yd);
-
-                var w = info.weeks - 1;
-                var d = info.weekDay;
-
-                this._renderMonthLine(
-                    w, d,
-                    lineStyleModel,
-                    infoData,
-                    group
-                );
-            }
-
-            // ---- 12月最后一栏 ----
-            var info12 = time.getWdwByDays(year + '-12-31');
-            var w12 = info12.weeks - 1;
-            var d12 = info12.weekDay + 1;
-
-            if (d12 === 7) {
-                // 竖线
-                var tickLine = new graphic.Line({
-                    z2: 20,
+                // every rect
+                rect = new graphic.Rect({
                     shape: {
-                        x1: wx + (w12 + 1) * width,
-                        y1: wy,
-                        x2: wx + (w12 + 1) * width,
-                        y2: wy + d12 * height
+                        x: point[0],
+                        y: point[1],
+                        width: infoData.sw,
+                        height: infoData.sh
                     },
-
-                    style: lineStyleModel
+                    style: itemRectStyleModel
                 });
 
-                group.add(tickLine);
-            }
-            else {
-                this._renderMonthLine(
-                    w12, d12,
-                    lineStyleModel,
-                    infoData,
-                    group
-                );
-            }
-
-            // ---- 12月最后一栏 end ----
-
-
-            var firstx = rangeData.fweek > 0 ? 1 : 0;
-
-            // 上横线
-            tickLine = new graphic.Line({
-                z2: 20,
-                shape: {
-                    x1: wx + firstx * width - infoData.lineWidth,
-                    y1: wy,
-                    x2: wx + rangeData.allweeks * width + infoData.lineWidth,
-                    y2: wy
-                },
-
-                style: lineStyleModel
-            });
-
-            group.add(tickLine);
-
-
-            var lastx = d12 === 7 ? (w12 + 1) : w12;
-
-            // 下横线
-            tickLine = new graphic.Line({
-                z2: 20,
-                shape: {
-                    x1: wx - infoData.lineWidth,
-                    y1: wy + 7 * height,
-                    x2: wx + lastx * width + infoData.lineWidth,
-                    y2: wy + 7 * height
-                },
-
-                style: lineStyleModel
-            });
-
-            group.add(tickLine);
-        },
-
-        // 绘制月分隔线
-        _renderMonthLine: function (i, j, lineStyleModel, infoData, group) {
-            var tickLine;
-            var wx = infoData.wrapRect.x;
-            var wy = infoData.wrapRect.y;
-            var h = infoData.height;
-            var w = infoData.width;
-
-            // 当前竖线
-            tickLine = new graphic.Line({
-                z2: 20,
-                shape: {
-                    x1: wx + i * w,
-                    y1: wy + j * h,
-                    x2: wx + i * w,
-                    y2: wy + 7 * h
-                },
-
-                style: lineStyleModel
-            });
-
-            group.add(tickLine);
-
-            if (j !== 0) {
-                // 横线
-                tickLine = new graphic.Line({
-                    z2: 20,
-                    shape: {
-                        x1: wx + i * w - infoData.lineWidth,
-                        y1: wy + j * h,
-                        x2: wx + (i + 1) * w + infoData.lineWidth,
-                        y2: wy + j * h
-                    },
-
-                    style: lineStyleModel
-                });
-
-                group.add(tickLine);
-
-                // 往上的竖线
-                tickLine = new graphic.Line({
-                    z2: 20,
-                    shape: {
-                        x1: wx + (i + 1) * w,
-                        y1: wy,
-                        x2: wx + (i + 1) * w,
-                        y2: wy + j * h
-                    },
-
-                    style: lineStyleModel
-                });
-
-                group.add(tickLine);
+                group.add(rect);
             }
 
         },
 
-        // 绘制年
-        _renderYearText: function (calendarModel, rangeData, infoData, group) {
-            var yearLabel = calendarModel.getModel('yearLabel');
+        // render separate line
+        _renderLines: function (calendarModel, orient, lineStyleModel, group) {
 
-            if (yearLabel.get('show')) {
+            var coordSys = calendarModel.coordinateSystem;
 
-                var yearText;
-                var yearLabelStyleModel = calendarModel.getModel('yearLabel.textStyle');
-                var padding = yearLabel.get('padding') || 0;
-                var opt = {
-                    x: infoData.wrapRect.x - infoData.width / 2 - padding,
-                    y: infoData.wrapRect.y
-                };
+            var points = [];
 
-                if (yearLabel.get('position') === 'center') {
-                    opt = {
-                        x: infoData.wrapRect.x - infoData.width / 2 + rangeData.allweeks * infoData.width / 2,
-                        y: infoData.wrapRect.y - padding
-                    };
+            var ms = coordSys.getRangeMonths();
+
+            this.tlpoints = [];
+            this.blpoints = [];
+
+            for (var i = 0; i < ms.num; i++) {
+
+                if (i === ms.num - 1) {
+                    ms.months[i] = new Date(new Date(ms.months[i]).getTime() + 86400000);
                 }
 
+                points = this._getLinePointsOfSeven(calendarModel, ms.months[i], orient);
 
-                yearText = new graphic.Text({
-                    style: {
-                        text: rangeData.year,
-                        x: opt.x,
-                        y: opt.y,
-                        textAlign: 'right',
-                        textVerticalAlign: 'bottom',
-                        font: yearLabelStyleModel.getFont(),
-                        fill: yearLabelStyleModel.getTextColor()
-                    }
-                });
-                group.add(yearText);
+                this.tlpoints.push(points[0]);
+                this.blpoints.push(points[points.length - 1]);
+
+                this._renderPolyline(points, lineStyleModel, group);
             }
+
+            // render top line
+            this._renderPolyline(this.tlpoints, lineStyleModel, group);
+
+            // render bottom line
+            this._renderPolyline(this.blpoints, lineStyleModel, group);
+
         },
 
-        // 绘制月
-        _renderMonthText: function (calendarModel, rangeData, infoData, group) {
+        // render polyline
+        _renderPolyline: function (points, lineStyleModel, group) {
+
+            var poyline = new graphic.Polyline({
+                z2: 20,
+                shape: {
+                    points: points
+                },
+                style: lineStyleModel
+            });
+
+            group.add(poyline);
+        },
+
+        // render month line of seven day points
+        _getLinePointsOfSeven: function (calendarModel, date, orient) {
+
+            date = new Date(date);
+
+            var time = date.getTime();
+
+            var pos1 = orient === 'horizontal' ? 'BL' : 'TR';
+
+            var coordSys = calendarModel.coordinateSystem;
+
+            var points = [];
+            var point;
+            var tmpD = date;
+            var idx = 0;
+
+            // note: there need to use =
+            for (var i = 0; i <= 7; i++) {
+
+                if (i === 7 && tmpD.getDay() === 6) {
+                    continue;
+                }
+
+                tmpD = new Date(time + 86400000 * i);
+
+                point = coordSys.dateToPonitFour(tmpD);
+
+                points.push(point.TL);
+
+                if (i !== 7 && tmpD.getDay() === 6) {
+                    points.push(point[pos1]);
+                    idx = points.length;
+                }
+
+            }
+
+            Array.prototype.unshift.apply(points, points.splice(idx));
+
+            return points;
+
+        },
+
+        // render year
+        _renderYearText: function (calendarModel, rangeData, infoData, orient, group) {
+            // ...
+        },
+
+        // render month and year text
+        _renderMonthText: function (calendarModel, rangeData, infoData, orient, group) {
             var monthLabel = calendarModel.getModel('monthLabel');
+            var yearLabel = calendarModel.getModel('yearLabel');
 
             if (monthLabel.get('show')) {
                 var monthLabelStyleModel = calendarModel.getModel('monthLabel.textStyle');
                 var MONTH = monthLabel.get('data');
                 var padding = monthLabel.get('padding');
-
-                var yd;
-                var info;
-                var w;
-                var d;
+                var yearLabelStyleModel = calendarModel.getModel('yearLabel.textStyle');
+                var yearpadding = yearLabel.get('padding');
                 var monthText;
-                var start = 0;
+                var yearText;
+                var monthPoints = this.tlpoints;
+                var vAlign = 'top';
+                var align = 'left';
+                var vAlignY = 'top';
+                var alignY = 'right';
+                var x;
+                var y;
 
-                for (var i = 0; i < 12; i++) {
+                var coordSys = calendarModel.coordinateSystem;
+                if (monthLabel.get('position') === 'bottom') {
+                    monthPoints = this.blpoints;
+                }
 
-                    // 当前年每月第一天
-                    yd = rangeData.year + '-' + (i + 1) + '-1';
-                    info = time.getWdwByDays(yd);
+                if (monthLabel.get('position') === 'top') {
 
-                    w = info.weeks - 1;
-                    d = info.weekDay;
+                    if (orient === 'horizontal') {
+                        vAlign = 'bottom';
+                        vAlignY = 'bottom';
 
-                    start = d > 0 ? 1 : 0;
-
-                    if (monthLabel.get('position') === 'bottom') {
-                        monthText = new graphic.Text({
-                            style: {
-                                text: MONTH[i],
-                                x: w * infoData.width + infoData.wrapRect.x,
-                                y: infoData.wrapRect.y + infoData.lineWidth + 7 * infoData.width + padding,
-                                textVerticalAlign: 'top',
-                                font: monthLabelStyleModel.getFont(),
-                                fill: monthLabelStyleModel.getTextColor()
-                            }
-                        });
                     }
                     else {
-                        monthText = new graphic.Text({
+                        align = 'right';
+                        alignY = 'left';
+                    }
+                }
+
+                for (var i = 0; i < monthPoints.length - 1; i++) {
+                    var month = new Date(coordSys.pointToData(monthPoints[i])).getMonth();
+                    var year = new Date(coordSys.pointToData(monthPoints[i])).getFullYear();
+
+                    if (orient === 'horizontal') {
+                        x = monthPoints[i][0];
+                        y = monthPoints[i][1] + padding;
+                    }
+                    else {
+                        x = monthPoints[i][0] + padding;
+                        y = monthPoints[i][1];
+                    }
+                    if (month === 0 && yearLabel.get('show')) {
+
+                        yearText = new graphic.Text({
                             style: {
-                                text: MONTH[i],
-                                x: w * infoData.width + infoData.wrapRect.x + start * infoData.width,
-                                y: infoData.wrapRect.y - infoData.lineWidth - padding,
-                                textVerticalAlign: 'bottom',
-                                font: monthLabelStyleModel.getFont(),
-                                fill: monthLabelStyleModel.getTextColor()
+                                text: year,
+                                x: x,
+                                y: y,
+                                textAlign: align,
+                                textVerticalAlign: vAlign,
+                                font: yearLabelStyleModel.getFont(),
+                                fill: yearLabelStyleModel.getTextColor()
                             }
                         });
+
+                        group.add(yearText);
                     }
+
+                    monthText = new graphic.Text({
+                        style: {
+                            text: MONTH[+month],
+                            x: x,
+                            y: y,
+                            textAlign: align,
+                            textVerticalAlign: vAlign,
+                            font: monthLabelStyleModel.getFont(),
+                            fill: monthLabelStyleModel.getTextColor()
+                        }
+                    });
 
                     group.add(monthText);
                 }
             }
         },
 
-        // 绘制星期
-        _renderWeekText: function (calendarModel, infoData, group) {
+        // render weeks
+        _renderWeekText: function (calendarModel, infoData, orient, group) {
             var dayLabel = calendarModel.getModel('dayLabel');
-
+            var coordSys = calendarModel.coordinateSystem;
             if (dayLabel.get('show')) {
                 var dayLabelStyleModel = calendarModel.getModel('dayLabel.textStyle');
                 var WEEK = dayLabel.get('data');
                 var padding = dayLabel.get('padding') || 0;
                 var weekText;
 
-                for (var j = 0; j < 7; j++) {
+                var start = coordSys.pointToData([infoData.wrapRect.x, infoData.wrapRect.y]);
+                var date = new Date(start);
+                var time = date.getTime();
 
-                    var y = j * infoData.height + infoData.wrapRect.y + infoData.height;
+                var tmpD;
+                var point;
+                var x;
+                var y;
+
+                for (var i = 0; i < 7; i++) {
+
+                    tmpD = new Date(time + 86400000 * i);
+                    point = coordSys.dateToPonitFour(tmpD).TL;
+
+                    if (orient === 'horizontal') {
+                        x = point[0] - infoData.sw / 2 - padding;
+                        y = point[1] + infoData.sh * 0.8;
+                    }
+                    else {
+                        x = point[0] + infoData.sw * 0.8 - padding;
+                        y = point[1] - infoData.sh / 2;
+                    }
 
                     weekText = new graphic.Text({
                         style: {
-                            text: WEEK[j],
-                            x: infoData.wrapRect.x - infoData.width / 2 - infoData.lineWidth - padding,
+                            text: WEEK[i],
+                            x: x,
                             y: y,
                             textAlign: 'right',
+                            textVeticalAlign: 'middle',
                             font: dayLabelStyleModel.getFont(),
                             fill: dayLabelStyleModel.getTextColor()
                         }

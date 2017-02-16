@@ -33,14 +33,14 @@ define(function (require) {
             cellSize: 20,
             orient: 'horizontal', // horizontal vertical
 
-            // 月分割线样式
+            // month separate line style
             lineStyle: {
                 color: '#000',
-                width: 2,
+                width: 1,
                 type: 'solid'
             },
 
-            // rect样式  暂时不用emphasis
+            // rect style  temporarily unused emphasis
             itemStyle: {
                 normal: {
                     color: '#fff',
@@ -48,17 +48,17 @@ define(function (require) {
                 }
             },
 
-            // 星期坐标样式
+            // week text style
             dayLabel: {
                 show: true,
-                padding: 0, // 向左偏移
-                data: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+                padding: 0,
+                data: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
                 textStyle: {
                     color: '#000'
                 }
             },
 
-            // 月坐标样式
+            // month text style
             monthLabel: {
                 show: true,
                 data: [
@@ -67,8 +67,8 @@ define(function (require) {
                     'Jul', 'Aug', 'Sep',
                     'Oct', 'Nov', 'Dec'
                 ],
-                position: 'top', // top bottom
-                padding: 0, // 偏移的一方 top 上 bottom下偏移
+                position: 'top', // top = left bottom = right
+                padding: 0,
                 textStyle: {
                     color: '#000',
                     fontSize: 14
@@ -76,22 +76,18 @@ define(function (require) {
                 }
             },
 
-            // 年样式
+            // year text style
             yearLabel: {
                 show: true,
                 position: 'left', // center left
-                padding: 0, // 偏移的一方  center 上 left 左偏移
+                padding: 0,
                 textStyle: {
-                    color: '#000',
+                    color: '#ccc',
                     fontFamily: '"Microsoft YaHei", sans-serif',
                     fontWeight: 'bolder',
-                    fontSize: 16
+                    fontSize: 25
                 }
-            },
-
-            // 不同粒度可选
-            granulatity: 'date'
-
+            }
         }
     });
 

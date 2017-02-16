@@ -8,10 +8,10 @@ define(function (require) {
     'use strict';
 
     var layout = require('../../util/layout');
-    var time = require('../../util/time');
+    var calendarTime = require('./time');
 
     /**
-     *  Calendar
+     * Calendar
      *
      * @constructor
      */
@@ -27,12 +27,19 @@ define(function (require) {
 
         dimensions: ['time'],
 
-        getAllWeek: function () {
-            return this._allweeks;
+        getRangeInfo: function () {
+            return this._rangeInfo;
         },
 
         getModel: function () {
             return this._model;
+        },
+
+        getRangeMonths: function () {
+            var rs =  calendarTime.getMonthOfRange(this._rangeInfo.range);
+            Array.prototype.push.apply(rs.months, this._rangeInfo.range);
+            rs.num = rs.num + 2;
+            return rs;
         },
 
         getRect: function () {
@@ -40,12 +47,20 @@ define(function (require) {
         },
 
         getswidth: function () {
-            return this._swidth;
+            return this._sw;
         },
 
         getsheight: function () {
-            return this._sheight;
+            return this._sh;
         },
+
+        getOrient: function () {
+            return this._orient;
+        },
+
+        /*handlerRangeOption: function () {
+            this._range = this._model.get('range');
+        },*/
 
         update: function (ecModel, api) {
             var calendarRect = layout.getLayoutRect(
@@ -57,14 +72,17 @@ define(function (require) {
                 }
             );
 
-            this._year = new Date(this._model.get('range')).getFullYear();
-
-            this._allweeks = time.getWdwByDays(this._year + '-12-31').weeks;
             this._rect = calendarRect;
 
-            // this._swidth = (this._rect.width - (this._allweeks - 1)) / this._allweeks;
-            this._swidth = this._model.get('cellSize');
-            this._sheight = this._swidth;
+            this._range = this._model.get('range');
+
+            this._rangeInfo = calendarTime.getRangeInfo(this._range);
+
+            this._sw = this._model.get('cellSize');
+
+            this._sh = this._sw;
+
+            this._orient = this._model.get('orient');
 
             this._lineWidth = this._model.getModel('itemStyle.normal').getItemStyle().lineWidth || 1;
         },
@@ -78,27 +96,39 @@ define(function (require) {
          * @return {string}       point
          */
         dataToPoint: function (data) {
-            var obj = time.getWdwByDays(data[0]);
 
-            // 获得年份
-            var year = new Date(data[0]).getFullYear();
+            var dayInfo = calendarTime.getYMDInfo(data[0]);
+            var range = this._rangeInfo.range;
+            var date = dayInfo.format;
 
-            // 如果数据年份 和设置范围不等 则返回空
-            if (+this._year !== +year) {
-                return [NaN, NaN];
+            // if not in range return [NaN, NaN]
+            if (!calendarTime.isInRangeOfDate(date, range) && data[1] !== 'NONE') {
+                return [NaN, NaN, data[1]];
+            }
+
+            var week = dayInfo.day;
+            var nthWeek = calendarTime.getRangeInfo([range[0], date]).weeks;
+
+            if (this._orient === 'vertical') {
+                return [
+                    this._rect.x + week * this._sw + this._sw / 2,
+                    this._rect.y + (nthWeek - 1) * this._sh + this._sh / 2,
+                    data[1]
+                ];
+
             }
 
             return [
-                (obj.weeks - 1) * (this._swidth) + this._rect.x + this._swidth / 2,
-                obj.weekDay * (this._sheight) + this._rect.y + this._sheight / 2,
+                this._rect.x + (nthWeek - 1) * this._sw + this._sw / 2,
+                this._rect.y + week * this._sh + this._sh / 2,
                 data[1]
             ];
+
         },
 
         /**
          * Convert a time data(time, value) item to rect shape option.
          *
-         * @override
          * @param  {string} data  data
          * @return {Object}      obj
          */
@@ -107,10 +137,10 @@ define(function (require) {
             var point = this.dataToPoint(data);
 
             var shape = {
-                x: point[0] - (this._swidth - this._lineWidth) / 2,
-                y: point[1] - (this._sheight - this._lineWidth) / 2,
-                width: this._swidth - this._lineWidth,
-                height: this._sheight - this._lineWidth
+                x: point[0] - (this._sw - this._lineWidth) / 2,
+                y: point[1] - (this._sh - this._lineWidth) / 2,
+                width: this._sw - this._lineWidth,
+                height: this._sh - this._lineWidth
             };
 
             return shape;
@@ -124,14 +154,54 @@ define(function (require) {
          */
         pointToData: function (point) {
 
-            // 知道是第几周
-            var week = (point[0] - this._rect.x) / (this._swidth) + 1;
+            var nthX = Math.floor((point[0] - this._rect.x) / this._sw) + 1;
+            var nthY = Math.floor((point[1] - this._rect.y) / this._sh) + 1;
+            var range = this._rangeInfo.range;
 
-            // 星期几
-            var weekDay = (point[1] - this._rect.y) / (this._sheight);
+            if (this._orient === 'vertical') {
+                return calendarTime.getRangeDateOfWeek(nthY, nthX - 1, range);
+            }
 
-            return new Date(time.getDateByWdw(this._year, week, weekDay));
+            return calendarTime.getRangeDateOfWeek(nthX, nthY - 1, range);
 
+        },
+
+        /**
+         * Convert a time date item to (x, y) four point.
+         *
+         * @param  {string} date  date
+         * @return {Object}       point
+         */
+        dateToPonitFour: function (date) {
+
+            // use 'NONE' to making a distinction
+            var point = this.dataToPoint([date, 'NONE']);
+
+            return {
+
+                CENTER: point,
+
+                TL: [
+                    point[0] - this._sw / 2,
+                    point[1] - this._sh / 2
+                ],
+
+                TR: [
+                    point[0] + this._sw / 2,
+                    point[1] - this._sh / 2
+                ],
+
+                BR: [
+                    point[0] + this._sw / 2,
+                    point[1] + this._sh / 2
+                ],
+
+                BL: [
+                    point[0] - this._sw / 2,
+                    point[1] + this._sh / 2
+                ]
+
+            };
         }
     };
     Calendar.dimensions =  Calendar.prototype.dimensions,
