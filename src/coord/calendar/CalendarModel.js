@@ -34,10 +34,13 @@ define(function (require) {
             orient: 'horizontal', // horizontal vertical
 
             // month separate line style
-            lineStyle: {
-                color: '#000',
-                width: 1,
-                type: 'solid'
+            separateline: {
+                show: true,
+                lineStyle: {
+                    color: '#000',
+                    width: 1,
+                    type: 'solid'
+                }
             },
 
             // rect style  temporarily unused emphasis
@@ -51,7 +54,8 @@ define(function (require) {
             // week text style
             dayLabel: {
                 show: true,
-                padding: 0,
+                padding: 0, // left top
+                position: 'top', // top = left bottom = right
                 data: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
                 textStyle: {
                     color: '#000'
@@ -72,15 +76,14 @@ define(function (require) {
                 textStyle: {
                     color: '#000',
                     fontSize: 14
-
                 }
             },
 
             // year text style
             yearLabel: {
                 show: true,
-                position: 'left', // center left
-                padding: 0,
+                position: 'top', // top = left bottom = right
+                padding: -10,
                 textStyle: {
                     color: '#ccc',
                     fontFamily: '"Microsoft YaHei", sans-serif',

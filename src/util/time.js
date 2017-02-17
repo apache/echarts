@@ -52,7 +52,6 @@ define(function (require) {
             if (nthWeek > rangeInfo.weeks
                 || (nthWeek === 0 && day < rangeInfo.fweek)
                 || (nthWeek === rangeInfo.weeks && day > rangeInfo.lweek)) {
-
                 return false;
             }
 
@@ -60,7 +59,7 @@ define(function (require) {
 
             var time = this.getYMDInfo(rangeInfo.range[0]).time + nthDay * 86400000;
 
-            return this.getYMDInfo(time).format;
+            return this.getYMDInfo(time);
 
         },
 
@@ -113,6 +112,17 @@ define(function (require) {
                 time: time,
                 format: format
             };
+        },
+
+        getNextNDay: function (date, n) {
+            n = n || 0;
+            if (n === 0) {
+                return this.getYMDInfo(date);
+            }
+
+            var time = this.getYMDInfo(date).time;
+
+            return this.getYMDInfo(time + 86400000 * n);
         },
 
         /**

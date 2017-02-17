@@ -40,7 +40,7 @@
                 for (var i = 1; i <= 29; i++) {
                     datas.push([(new Date(year + '-2-' + i)), Math.floor(Math.random() * 1000)]);
                 }
-                return datas;
+                return [];
             }
             require([
                 'echarts',
@@ -71,17 +71,13 @@
                     },
 
                     calendar: {
-                        range: ['2009-08-20', '2010-01-23']
+                        range: '2010-07'
                     },
                     series: {
                         type: 'heatmap',
                         coordinateSystem: 'calendar',
                         data: getVirtulData(2009)
                     }
-                });
-
-                $(window).resize(function() {
-                    chart.resize();
                 });
             });
         </script>

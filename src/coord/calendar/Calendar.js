@@ -8,7 +8,7 @@ define(function (require) {
     'use strict';
 
     var layout = require('../../util/layout');
-    var calendarTime = require('./time');
+    var calendarTime = require('../../util/time');
 
     /**
      * Calendar
@@ -58,9 +58,21 @@ define(function (require) {
             return this._orient;
         },
 
-        /*handlerRangeOption: function () {
+        handlerRangeOption: function () {
             this._range = this._model.get('range');
-        },*/
+
+            var rg = this._range;
+
+            if (/^\d{4}$/.test(rg)) {
+                this._range = [rg + '-01-01', rg + '-12-31'];
+            }
+
+            if (/^\d{4}[\/|-]\d{1,2}$/.test(rg)) {
+                var cur = calendarTime.getYMDInfo(rg);
+                var days = calendarTime.getMonthDays(cur.m, cur.y);
+                this._range = [cur.format, cur.y + '-' + cur.m + '-' + days];
+            }
+        },
 
         update: function (ecModel, api) {
             var calendarRect = layout.getLayoutRect(
@@ -74,7 +86,7 @@ define(function (require) {
 
             this._rect = calendarRect;
 
-            this._range = this._model.get('range');
+            this.handlerRangeOption();
 
             this._rangeInfo = calendarTime.getRangeInfo(this._range);
 
@@ -154,6 +166,18 @@ define(function (require) {
          */
         pointToData: function (point) {
 
+            var date = this.pointToDate(point);
+
+            return date && date.format;
+        },
+
+        /**
+         * Convert a (x, y) point to time date
+         *
+         * @param  {string} point point
+         * @return {string}       data
+         */
+        pointToDate: function (point) {
             var nthX = Math.floor((point[0] - this._rect.x) / this._sw) + 1;
             var nthY = Math.floor((point[1] - this._rect.y) / this._sh) + 1;
             var range = this._rangeInfo.range;
@@ -163,7 +187,6 @@ define(function (require) {
             }
 
             return calendarTime.getRangeDateOfWeek(nthX, nthY - 1, range);
-
         },
 
         /**
