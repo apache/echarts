@@ -56,28 +56,23 @@
                 var chart = echarts.init(document.getElementById('main'));
 
                 chart.setOption({
-                    tooltip: {
-                        position: 'top'
-                    },
-                    visualMap: {
-                        type: 'piecewise',
-                        // show: false,
-                        min: 0,
-                        max: 1000,
-                        calculable: true,
-                        orient: 'horizontal',
-                        left: 'center',
-                        top: 'top'
-                    },
-
                     calendar: {
-                        range: '2009'
+                        range: '2015',
+                        orient: 'vertical'
                     },
                     series: {
-                        type: 'heatmap',
+                        type: 'scatter',
                         coordinateSystem: 'calendar',
-                        data: getVirtulData(2009)
+                        symbolSize: function (val) {
+                            return val[1] / 100;
+                        },
+                        data: getVirtulData(2015)
                     }
+
+                });
+
+                $(window).resize(function() {
+                    chart.resize();
                 });
             });
         </script>

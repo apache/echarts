@@ -69,15 +69,38 @@
                         left: 'center',
                         top: 'top'
                     },
-
-                    calendar: {
-                        range: '2009'
+                    calendar: [
+                    {
+                        orient: 'vertical',
+                        range: '2000-01-01'
                     },
-                    series: {
+                    {
+                        left: 300,
+                        orient: 'vertical',
+                        range: ['2001-02-20', '2001-2-23']
+                    },
+                    {
+                        left: 530,
+                        orient: 'vertical',
+                        range: '2002-4'
+                    }],
+
+                    series: [{
                         type: 'heatmap',
                         coordinateSystem: 'calendar',
-                        data: getVirtulData(2009)
-                    }
+                        calendarIndex: 0,
+                        data: getVirtulData(2000)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 1,
+                        data: getVirtulData(2001)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 2,
+                        data: getVirtulData(2002)
+                    }]
                 });
             });
         </script>

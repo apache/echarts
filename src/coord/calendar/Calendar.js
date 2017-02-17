@@ -72,6 +72,16 @@ define(function (require) {
                 var days = calendarTime.getMonthDays(cur.m, cur.y);
                 this._range = [cur.format, cur.y + '-' + cur.m + '-' + days];
             }
+
+            if (/^\d{4}[\/|-]\d{1,2}[\/|-]\d{1,2}$/.test(rg)) {
+                this._range = [rg, rg];
+            }
+
+            var tmp = calendarTime.getRangeInfo(this._range);
+
+            if (tmp.start.time > tmp.end.time) {
+                this._range.reverse();
+            }
         },
 
         update: function (ecModel, api) {

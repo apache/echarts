@@ -67,7 +67,7 @@ define(function (require) {
                 show: true,
                 data: [
                     'Jan', 'Feb', 'Mar',
-                    'Apr', 'May', 'June',
+                    'Apr', 'May', 'Jun',
                     'Jul', 'Aug', 'Sep',
                     'Oct', 'Nov', 'Dec'
                 ],
@@ -83,7 +83,7 @@ define(function (require) {
             yearLabel: {
                 show: true,
                 position: 'top', // top = left bottom = right
-                padding: -10,
+                padding: 0,
                 textStyle: {
                     color: '#ccc',
                     fontFamily: '"Microsoft YaHei", sans-serif',

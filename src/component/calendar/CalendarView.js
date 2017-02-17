@@ -27,31 +27,25 @@ define(function (require) {
             var rangeData = coordSys.getRangeInfo();
             var orient = coordSys.getOrient();
 
-            var infoData = {
-                wrapRect: coordSys.getRect(),
-                sw: coordSys.getswidth(),
-                sh: coordSys.getsheight()
-            };
-
-
-            this._renderDayRect(calendarModel, rangeData, infoData, group);
+            this._renderDayRect(calendarModel, rangeData, group);
 
             this._renderLines(calendarModel, orient, group);
 
-            this._renderYearText(calendarModel, rangeData, infoData, orient, group);
+            this._renderYearText(calendarModel, orient, group);
 
-            this._renderMonthText(calendarModel, rangeData, infoData, orient, group);
+            this._renderMonthText(calendarModel, orient, group);
 
-            this._renderWeekText(calendarModel, rangeData, infoData, orient, group);
+            this._renderWeekText(calendarModel, rangeData, orient, group);
         },
 
         // render day rect
-        _renderDayRect: function (calendarModel, rangeData, infoData, group) {
+        _renderDayRect: function (calendarModel, rangeData, group) {
             var start = rangeData.start.time;
             var end = rangeData.end.time;
             var coordSys = calendarModel.coordinateSystem;
             var itemRectStyleModel = calendarModel.getModel('itemStyle.normal').getItemStyle();
-
+            var sw = coordSys.getswidth();
+            var sh = coordSys.getsheight();
             var rect;
             var point = [];
 
@@ -63,8 +57,8 @@ define(function (require) {
                     shape: {
                         x: point[0],
                         y: point[1],
-                        width: infoData.sw,
-                        height: infoData.sh
+                        width: sw,
+                        height: sh
                     },
                     style: itemRectStyleModel
                 });
@@ -165,7 +159,7 @@ define(function (require) {
         },
 
         // render year
-        _renderYearText: function (calendarModel, rangeData, infoData, orient, group) {
+        _renderYearText: function (calendarModel, orient, group) {
             var yearLabel = calendarModel.getModel('yearLabel');
 
             if (yearLabel.get('show')) {
@@ -233,7 +227,7 @@ define(function (require) {
         },
 
         // render month and year text
-        _renderMonthText: function (calendarModel, rangeData, infoData, orient, group) {
+        _renderMonthText: function (calendarModel, orient, group) {
             var monthLabel = calendarModel.getModel('monthLabel');
 
             if (monthLabel.get('show')) {
@@ -297,7 +291,7 @@ define(function (require) {
         },
 
         // render weeks
-        _renderWeekText: function (calendarModel, rangeData, infoData, orient, group) {
+        _renderWeekText: function (calendarModel, rangeData, orient, group) {
             var dayLabel = calendarModel.getModel('dayLabel');
 
             if (dayLabel.get('show')) {

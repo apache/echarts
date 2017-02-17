@@ -56,28 +56,51 @@
                 var chart = echarts.init(document.getElementById('main'));
 
                 chart.setOption({
-                    tooltip: {
-                        position: 'top'
-                    },
                     visualMap: {
-                        type: 'piecewise',
-                        // show: false,
                         min: 0,
                         max: 1000,
                         calculable: true,
-                        orient: 'horizontal',
+                        seriesIndex: 1,
+                        orient: 'vertical',
                         left: 'center',
-                        top: 'top'
+                        top: 450
                     },
 
-                    calendar: {
-                        range: '2009'
+                    calendar: [
+                    {
+                        orient: 'vertical',
+                        range: '2000',
+                        yearLabel: {
+                            show: false
+                        }
                     },
-                    series: {
+                    {
+                        left: 260,
+                        orient: 'vertical',
+                        range: '2001',
+                        yearLabel: {
+                            show: false
+                        }
+                    }],
+
+                    series: [{
+                        type: 'scatter',
+                        coordinateSystem: 'calendar',
+                        symbolSize: function (val) {
+                            return val[1] / 100;
+                        },
+                        data: getVirtulData(2000)
+                    }, {
                         type: 'heatmap',
                         coordinateSystem: 'calendar',
-                        data: getVirtulData(2009)
-                    }
+                        calendarIndex: 1,
+                        data: getVirtulData(2001)
+                    }]
+
+                });
+
+                $(window).resize(function() {
+                    chart.resize();
                 });
             });
         </script>
