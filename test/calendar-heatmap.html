@@ -46,6 +46,7 @@
                 'echarts',
                 'echarts/chart/heatmap',
                 'echarts/chart/scatter',
+                'echarts/chart/effectScatter',
                 'echarts/component/title',
                 'echarts/component/legend',
                 'echarts/component/calendar',
@@ -71,10 +72,11 @@
                     },
 
                     calendar: {
-                        range: '2009'
+                        cellSize: 40,
+                        range: '2009-05'
                     },
                     series: {
-                        type: 'heatmap',
+                        type: 'effectScatter',
                         coordinateSystem: 'calendar',
                         data: getVirtulData(2009)
                     }

@@ -35,22 +35,15 @@ define(function (require) {
             return this._model;
         },
 
-        getRangeMonths: function () {
-            var rs =  calendarTime.getMonthOfRange(this._rangeInfo.range);
-            Array.prototype.push.apply(rs.months, this._rangeInfo.range);
-            rs.num = rs.num + 2;
-            return rs;
-        },
-
         getRect: function () {
             return this._rect;
         },
 
-        getswidth: function () {
+        getCellWidth: function () {
             return this._sw;
         },
 
-        getsheight: function () {
+        getCellHeight: function () {
             return this._sh;
         },
 
@@ -68,9 +61,13 @@ define(function (require) {
             }
 
             if (/^\d{4}[\/|-]\d{1,2}$/.test(rg)) {
-                var cur = calendarTime.getYMDInfo(rg);
-                var days = calendarTime.getMonthDays(cur.m, cur.y);
-                this._range = [cur.format, cur.y + '-' + cur.m + '-' + days];
+
+                var start = calendarTime.getYMDInfo(rg);
+                var firstDay = start.date;
+                firstDay.setMonth(firstDay.getMonth() + 1);
+
+                var end = calendarTime.getNextNDay(firstDay, -1);
+                this._range = [start.format, end.format];
             }
 
             if (/^\d{4}[\/|-]\d{1,2}[\/|-]\d{1,2}$/.test(rg)) {
@@ -115,16 +112,17 @@ define(function (require) {
          *
          * @override
          * @param  {string} data  data
+         * @param  {string} noClip  out of range
          * @return {string}       point
          */
-        dataToPoint: function (data) {
+        dataToPoint: function (data, noClip) {
 
             var dayInfo = calendarTime.getYMDInfo(data[0]);
             var range = this._rangeInfo.range;
             var date = dayInfo.format;
 
             // if not in range return [NaN, NaN]
-            if (!calendarTime.isInRangeOfDate(date, range) && data[1] !== 'NONE') {
+            if (!noClip && !calendarTime.isInRangeOfDate(date, range)) {
                 return [NaN, NaN, data[1]];
             }
 
@@ -185,7 +183,7 @@ define(function (require) {
          * Convert a (x, y) point to time date
          *
          * @param  {string} point point
-         * @return {string}       data
+         * @return {Object}       date
          */
         pointToDate: function (point) {
             var nthX = Math.floor((point[0] - this._rect.x) / this._sw) + 1;
@@ -207,8 +205,7 @@ define(function (require) {
          */
         dateToPonitFour: function (date) {
 
-            // use 'NONE' to making a distinction
-            var point = this.dataToPoint([date, 'NONE']);
+            var point = this.dataToPoint([date, 0], true);
 
             return {
 

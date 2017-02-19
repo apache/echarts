@@ -34,7 +34,7 @@ define(function (require) {
             orient: 'horizontal', // horizontal vertical
 
             // month separate line style
-            separateline: {
+            splitLine: {
                 show: true,
                 lineStyle: {
                     color: '#000',
@@ -54,7 +54,7 @@ define(function (require) {
             // week text style
             dayLabel: {
                 show: true,
-                padding: 0, // left top
+                padding: 0,
                 position: 'top', // top = left bottom = right
                 data: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
                 textStyle: {

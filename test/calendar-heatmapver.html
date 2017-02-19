@@ -46,6 +46,7 @@
                 'echarts',
                 'echarts/chart/heatmap',
                 'echarts/chart/scatter',
+                'echarts/chart/effectScatter',
                 'echarts/component/title',
                 'echarts/component/legend',
                 'echarts/component/calendar',
@@ -81,8 +82,65 @@
                     },
                     {
                         left: 530,
+                        cellSize: 30,
                         orient: 'vertical',
                         range: '2002-4'
+                    },
+                    {
+                        left: 800,
+                        orient: 'vertical',
+                        range: ['2001-02-20', '2001-04-23']
+                    },
+                    {
+                        top: 300,
+                        orient: 'horizontal',
+                        range: ['2001-02-12', '2001-04-23']
+                    },
+                    {
+                        top: 300,
+                        left: 400,
+                        orient: 'horizontal',
+                        range: ['2009-12-20', '2010-04-23'],
+                        yearLabel: {
+                            position: 'top', // top = left bottom = right
+                            padding: 0
+                        }
+                    },
+                    {
+                        top: 300,
+                        left: 820,
+                        orient: 'horizontal',
+                        range: '2010-02-09'
+                    },
+                    {
+                        top: 300,
+                        left: 910,
+                        orient: 'horizontal',
+                        range: ['2010-02-07', '2010-02-11']
+                    },
+                    {
+                        top: 300,
+                        left: 1000,
+                        orient: 'horizontal',
+                        range: ['2010-02-11', '2010-02-13']
+                    },
+                    {
+                        top: 300,
+                        left: 1100,
+                        orient: 'horizontal',
+                        range: ['2010-02-11', '2010-02-14']
+                    },
+
+                    {
+                        top: 300,
+                        left: 1200,
+                        orient: 'horizontal',
+                        range: ['2010-02-11', '2010-02-16']
+                    },
+                    {
+                        top: 500,
+                        orient: 'horizontal',
+                        range: 2010
                     }],
 
                     series: [{
@@ -100,6 +158,51 @@
                         coordinateSystem: 'calendar',
                         calendarIndex: 2,
                         data: getVirtulData(2002)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 3,
+                        data: getVirtulData(2001)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 4,
+                        data: getVirtulData(2001)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 5,
+                        data: getVirtulData(2010)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 6,
+                        data: getVirtulData(2010)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 7,
+                        data: getVirtulData(2010)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 8,
+                        data: getVirtulData(2010)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 9,
+                        data: getVirtulData(2010)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 10,
+                        data: getVirtulData(2010)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 11,
+                        data: getVirtulData(2010)
                     }]
                 });
             });
