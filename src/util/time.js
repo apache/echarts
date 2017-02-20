@@ -63,7 +63,7 @@ define(function (require) {
 
             var nthDay = (nthWeek - 1) * 7 - rangeInfo.fweek + day;
 
-            var time = this.getYMDInfo(rangeInfo.range[0]).time + nthDay * 86400000;
+            var time = this.getYMDInfo(rangeInfo.range[0]).time + nthDay * ONEDAY;
 
             return this.getYMDInfo(time);
 
@@ -107,6 +107,9 @@ define(function (require) {
             d = d < 10 ? '0' + d : d;
 
             var day = date.getDay();
+
+            // day = Math.abs((day + 7 - 1) % 7);
+
             var time = date.getTime();
 
             var format = y + '-' + m + '-' + d;
@@ -130,7 +133,7 @@ define(function (require) {
 
             var time = this.getYMDInfo(date).time;
 
-            return this.getYMDInfo(time + 86400000 * n);
+            return this.getYMDInfo(time + ONEDAY * n);
         }
     };
 

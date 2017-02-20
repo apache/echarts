@@ -55,6 +55,7 @@ define(function (require) {
             dayLabel: {
                 show: true,
                 padding: 0,
+                firstDay: 1,
                 position: 'top', // top = left bottom = right
                 data: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
                 textStyle: {
@@ -72,7 +73,7 @@ define(function (require) {
                     'Oct', 'Nov', 'Dec'
                 ],
                 position: 'top', // top = left bottom = right
-                padding: 0,
+                padding: 5,
                 textStyle: {
                     color: '#000',
                     fontSize: 14
