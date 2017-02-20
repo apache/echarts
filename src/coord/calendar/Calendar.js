@@ -8,7 +8,10 @@ define(function (require) {
     'use strict';
 
     var layout = require('../../util/layout');
-    var calendarTime = require('../../util/time');
+    var number = require('../../util/number');
+
+    // (24*60*60*1000)
+    var ONEDAY = 86400000;
 
     /**
      * Calendar
@@ -27,7 +30,7 @@ define(function (require) {
 
         dimensions: ['time'],
 
-        getRangeInfo: function () {
+        getHandledRangeInfo: function () {
             return this._rangeInfo;
         },
 
@@ -51,6 +54,10 @@ define(function (require) {
             return this._orient;
         },
 
+        getFirstDayWeek: function () {
+            return this._firstDayWeek;
+        },
+
         handlerRangeOption: function () {
             this._range = this._model.get('range');
 
@@ -62,11 +69,11 @@ define(function (require) {
 
             if (/^\d{4}[\/|-]\d{1,2}$/.test(rg)) {
 
-                var start = calendarTime.getYMDInfo(rg);
+                var start = this.getYMDInfo(rg);
                 var firstDay = start.date;
                 firstDay.setMonth(firstDay.getMonth() + 1);
 
-                var end = calendarTime.getNextNDay(firstDay, -1);
+                var end = this.getNextNDay(firstDay, -1);
                 this._range = [start.format, end.format];
             }
 
@@ -74,7 +81,7 @@ define(function (require) {
                 this._range = [rg, rg];
             }
 
-            var tmp = calendarTime.getRangeInfo(this._range);
+            var tmp = this.getRangeInfo(this._range);
 
             if (tmp.start.time > tmp.end.time) {
                 this._range.reverse();
@@ -93,9 +100,11 @@ define(function (require) {
 
             this._rect = calendarRect;
 
+            this._firstDayWeek = this._model.getModel('dayLabel').get('firstDay');
+
             this.handlerRangeOption();
 
-            this._rangeInfo = calendarTime.getRangeInfo(this._range);
+            this._rangeInfo = this.getRangeInfo(this._range);
 
             this._sw = this._model.get('cellSize');
 
@@ -117,17 +126,17 @@ define(function (require) {
          */
         dataToPoint: function (data, noClip) {
 
-            var dayInfo = calendarTime.getYMDInfo(data[0]);
+            var dayInfo = this.getYMDInfo(data[0]);
             var range = this._rangeInfo.range;
             var date = dayInfo.format;
 
             // if not in range return [NaN, NaN]
-            if (!noClip && !calendarTime.isInRangeOfDate(date, range)) {
+            if (!noClip && !this.isInRangeOfDate(date, range)) {
                 return [NaN, NaN, data[1]];
             }
 
             var week = dayInfo.day;
-            var nthWeek = calendarTime.getRangeInfo([range[0], date]).weeks;
+            var nthWeek = this.getRangeInfo([range[0], date]).weeks;
 
             if (this._orient === 'vertical') {
                 return [
@@ -191,10 +200,10 @@ define(function (require) {
             var range = this._rangeInfo.range;
 
             if (this._orient === 'vertical') {
-                return calendarTime.getRangeDateOfWeek(nthY, nthX - 1, range);
+                return this.getRangeDateOfWeek(nthY, nthX - 1, range);
             }
 
-            return calendarTime.getRangeDateOfWeek(nthX, nthY - 1, range);
+            return this.getRangeDateOfWeek(nthX, nthY - 1, range);
         },
 
         /**
@@ -232,6 +241,123 @@ define(function (require) {
                 ]
 
             };
+        },
+        /**
+         * range info
+         *
+         * @param  {Array} range range ['2017-01-01', '2017-07-08']
+         * @return {Object}       obj
+         */
+        getRangeInfo: function (range) {
+
+            var start = this.getYMDInfo(range[0]);
+            var end = this.getYMDInfo(range[1]);
+
+            var allDay = Math.floor(end.time / ONEDAY) - Math.floor(start.time / ONEDAY) + 1;
+
+            var weeks = Math.floor((allDay + start.day + 6) / 7);
+
+            return {
+                range: [start.format, end.format],
+                start: start,
+                end: end,
+                allDay: allDay,
+                weeks: weeks,
+                fweek: start.day,
+                lweek: end.day
+            };
+        },
+
+        /**
+         * According to nthWeeks and week day  get date
+         *
+         * @param  {number} nthWeek the week
+         * @param  {[number]} day   the week day
+         * @param  {Array} range [d1, d2]
+         * @return {string}         'YYYY-MM-DD'
+         */
+        getRangeDateOfWeek: function (nthWeek, day, range) {
+            var rangeInfo = this.getRangeInfo(range);
+
+            if (nthWeek > rangeInfo.weeks
+                || (nthWeek === 0 && day < rangeInfo.fweek)
+                || (nthWeek === rangeInfo.weeks && day > rangeInfo.lweek)) {
+                return false;
+            }
+
+            var nthDay = (nthWeek - 1) * 7 - rangeInfo.fweek + day;
+
+            var time = this.getYMDInfo(rangeInfo.range[0]).time + nthDay * ONEDAY;
+
+            return this.getYMDInfo(time);
+
+        },
+
+        /**
+         * judge the date within range
+         *
+         * @param  {string|number}  date  date
+         * @param  {Array} range [d1, d2]
+         * @return {Boolean}       true | false
+         */
+        isInRangeOfDate: function (date, range) {
+            var start = this.getYMDInfo(range[0]).time;
+            var end = this.getYMDInfo(range[1]).time;
+            var cur = this.getYMDInfo(date).time;
+
+            if (cur >= start && cur <= end) {
+                return true;
+            }
+
+            return false;
+        },
+
+        /**
+         * get date info
+         *
+         * @param  {string|number} date date
+         * @return {Object}      info
+         */
+        getYMDInfo: function (date) {
+
+            date = number.parseDate(date);
+
+            var y = date.getFullYear();
+
+            var m = date.getMonth() + 1;
+            m = m < 10 ? '0' + m : m;
+
+            var d = date.getDate();
+            d = d < 10 ? '0' + d : d;
+
+            var day = date.getDay();
+
+            day = Math.abs((day + 7 - this._firstDayWeek) % 7);
+
+            var time = date.getTime();
+
+            var format = y + '-' + m + '-' + d;
+
+            return {
+                y: y,
+                m: +m,
+                d: +d,
+                day: day,
+                time: time,
+                format: format,
+                date: date
+            };
+        },
+
+        getNextNDay: function (date, n) {
+            n = n || 0;
+            if (n === 0) {
+                return this.getYMDInfo(date);
+            }
+
+            var time = this.getYMDInfo(date).time;
+
+            return this.getYMDInfo(time + ONEDAY * n);
         }
     };
     Calendar.dimensions =  Calendar.prototype.dimensions,

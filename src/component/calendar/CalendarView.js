@@ -9,7 +9,6 @@ define(function (require) {
 
     var zrUtil = require('zrender/core/util');
     var graphic = require('../../util/graphic');
-    var calendarTime = require('../../util/time');
 
     return require('../../echarts').extendComponentView({
 
@@ -24,7 +23,7 @@ define(function (require) {
             var coordSys = calendarModel.coordinateSystem;
 
             // range info
-            var rangeData = coordSys.getRangeInfo();
+            var rangeData = coordSys.getHandledRangeInfo();
             var orient = coordSys.getOrient();
 
             this._renderDayRect(calendarModel, rangeData, group);
@@ -47,7 +46,7 @@ define(function (require) {
 
             for (var i = rangeData.start.time;
                 i <= rangeData.end.time;
-                i = calendarTime.getNextNDay(i, 1).time
+                i = coordSys.getNextNDay(i, 1).time
             ) {
 
                 var point = coordSys.dateToPonitFour(i).TL;
@@ -73,6 +72,8 @@ define(function (require) {
 
             var self = this;
 
+            var coordSys = calendarModel.coordinateSystem;
+
             var lineStyleModel = calendarModel.getModel('splitLine.lineStyle').getLineStyle();
             var show = calendarModel.getModel('splitLine').get('show');
 
@@ -80,25 +81,25 @@ define(function (require) {
             this._blpoints = [];
             this._firstDayPoints = [];
 
-            var firstDay = calendarTime.getYMDInfo(rangeData.range[0]);
+            var firstDay = coordSys.getYMDInfo(rangeData.range[0]);
 
             for (var i = 0; firstDay.time <= rangeData.end.time; i++) {
                 addPoints(firstDay.format);
 
                 if (i === 0) {
-                    firstDay = calendarTime.getYMDInfo(rangeData.start.y + '-' + rangeData.start.m);
+                    firstDay = coordSys.getYMDInfo(rangeData.start.y + '-' + rangeData.start.m);
                 }
 
                 var date = firstDay.date;
                 date.setMonth(date.getMonth() + 1);
-                firstDay = calendarTime.getYMDInfo(date);
+                firstDay = coordSys.getYMDInfo(date);
             }
 
-            addPoints(calendarTime.getNextNDay(rangeData.range[1], 1).format);
+            addPoints(coordSys.getNextNDay(rangeData.range[1], 1).format);
 
             function addPoints(date) {
 
-                self._firstDayPoints.push(calendarModel.coordinateSystem.dateToPonitFour(date).TL);
+                self._firstDayPoints.push(coordSys.dateToPonitFour(date).TL);
 
                 var points = self._getLinePointsOfSeven(calendarModel, date, orient);
 
@@ -133,17 +134,17 @@ define(function (require) {
         // render month line of seven day points
         _getLinePointsOfSeven: function (calendarModel, date, orient) {
 
-            date = calendarTime.getYMDInfo(date);
+            var coordSys = calendarModel.coordinateSystem;
+
+            date = coordSys.getYMDInfo(date);
 
             var pos = orient === 'horizontal' ? 'BL' : 'TR';
-
-            var coordSys = calendarModel.coordinateSystem;
 
             var points = [];
 
             for (var i = 0; i < 7; i++) {
 
-                var tmpD = calendarTime.getNextNDay(date.time, i);
+                var tmpD = coordSys.getNextNDay(date.time, i);
 
                 var point = coordSys.dateToPonitFour(tmpD.time);
 
@@ -352,19 +353,19 @@ define(function (require) {
             var pos = dayLabel.get('position');
             var WEEK = dayLabel.get('data');
             var padding = dayLabel.get('padding');
-            var firstDay = dayLabel.get('firstDay');
+            var firstDay = coordSys.getFirstDayWeek();
 
 
             if (pos === 'left') {
                 pos = 'top';
             }
 
-            var start = calendarTime.getNextNDay(
+            var start = coordSys.getNextNDay(
                 rangeData.end.time, (7 - rangeData.lweek)
             ).time;
 
             if (pos === 'top') {
-                start = calendarTime.getNextNDay(
+                start = coordSys.getNextNDay(
                     rangeData.start.time, -(7 + rangeData.fweek)
                 ).time;
                 padding = -padding;
@@ -372,10 +373,10 @@ define(function (require) {
 
             for (var i = 0; i < 7; i++) {
 
-                var tmpD = calendarTime.getNextNDay(start, i);
+                var tmpD = coordSys.getNextNDay(start, i);
                 var point = coordSys.dateToPonitFour(tmpD.time).CENTER;
                 var day = i;
-                // day = Math.abs((i + firstDay) % 7);
+                day = Math.abs((i + firstDay) % 7);
                 var weekText = new graphic.Text({
                     style: zrUtil.extend({
                         z2: 30,
