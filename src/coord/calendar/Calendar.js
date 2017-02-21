@@ -120,8 +120,7 @@ define(function (require) {
 
 
             this._orient = this._model.get('orient');
-
-            this._lineWidth = this._model.getModel('itemStyle.normal').getItemStyle().lineWidth || 1;
+            this._lineWidth = this._model.getModel('itemStyle.normal').getItemStyle().lineWidth || 0;
         },
 
 

@@ -27,8 +27,6 @@ define(function (require) {
             z: 2,
             left: 80,
             top: 60,
-            // right: 80,
-            // bottom: 60,
 
             cellSize: 20,
             orient: 'horizontal', // horizontal vertical
@@ -47,6 +45,7 @@ define(function (require) {
             itemStyle: {
                 normal: {
                     color: '#fff',
+                    borderWidth: 1,
                     borderColor: '#ccc'
                 }
             },
@@ -80,12 +79,12 @@ define(function (require) {
             // year text style
             yearLabel: {
                 show: true,
-                position: 'top', // top bottom left right
-                padding: 0,
+                position: null, // top bottom left right
+                padding: 30,
                 formatter: null,
                 textStyle: {
                     color: '#ccc',
-                    fontFamily: '"Microsoft YaHei", sans-serif',
+                    fontFamily: 'sans-serif',
                     fontWeight: 'bolder',
                     fontSize: 20
                 }

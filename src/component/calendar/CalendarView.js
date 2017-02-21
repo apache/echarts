@@ -8,7 +8,6 @@ define(function (require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
-    var matrix = require('zrender/core/matrix');
     var graphic = require('../../util/graphic');
     var formatUtil = require('../../util/format');
 
@@ -99,6 +98,8 @@ define(function (require) {
             var lineStyleModel = calendarModel.getModel('splitLine.lineStyle').getLineStyle();
             var show = calendarModel.getModel('splitLine').get('show');
 
+            var lineWidth = lineStyleModel.lineWidth;
+
             this._tlpoints = [];
             this._blpoints = [];
             this._firstDayOfMonth = [];
@@ -132,12 +133,23 @@ define(function (require) {
                 show && self._renderPolyline(points, lineStyleModel, group);
             }
 
+
             // render top/left line
-            show && this._renderPolyline(self._tlpoints, lineStyleModel, group);
+            show && this._renderPolyline(self._addLinePoints(self._tlpoints, lineWidth, orient), lineStyleModel, group);
 
             // render bottom/right line
-            show && this._renderPolyline(self._blpoints, lineStyleModel, group);
+            show && this._renderPolyline(self._addLinePoints(self._blpoints, lineWidth, orient), lineStyleModel, group);
 
+        },
+
+        _addLinePoints: function (points, lineWidth, orient) {
+            var rs = [points[0].slice(), points[points.length - 1].slice()];
+            var idx = orient === 'horizontal' ? 0 : 1;
+
+            rs[0][idx] = rs[0][idx] - lineWidth / 2;
+            rs[1][idx] = rs[1][idx] + lineWidth / 2;
+
+            return rs;
         },
 
         // render polyline
@@ -195,11 +207,11 @@ define(function (require) {
             }
             if (position === 'left') {
                 point[0] -= padding;
-                aligns = ['right', 'middle'];
+                aligns = ['center', 'bottom'];
             }
             if (position === 'right') {
                 point[0] += padding;
-                aligns = ['left', 'middle'];
+                aligns = ['center', 'top'];
             }
 
             return {
@@ -221,6 +233,10 @@ define(function (require) {
             var yearLabelStyleModel = calendarModel.getModel('yearLabel.textStyle');
             var padding = yearLabel.get('padding');
             var pos = yearLabel.get('position');
+
+            if (!pos) {
+                pos = orient !== 'horizontal' ? 'top' : 'left';
+            }
 
             var points = [this._tlpoints[this._tlpoints.length - 1], this._blpoints[0]];
             var xc = (points[0][0] + points[1][0]) / 2;
@@ -249,26 +265,37 @@ define(function (require) {
             var params = {
                 start: rangeData.start.y,
                 end: rangeData.end.y,
-                nameMap: content,
-                $vars: ['start', 'end', 'nameMap']
+                nameMap: content
             };
 
             if (typeof formatter === 'string' && formatter) {
-                content = formatUtil.formatTpl(formatter, params);
+                content = formatUtil.formatTplSimple(formatter, params);
             }
             else if (typeof formatter === 'function') {
                 content = formatter(params);
             }
 
-            var yearText = new graphic.Text({
-                // rotation: Math.PI / 2,
-                z2: 30,
-                style: zrUtil.extend({
-                    text: content,
-                    font: yearLabelStyleModel.getFont(),
-                    fill: yearLabelStyleModel.getTextColor()
-                }, this._yearTextPositionControl(posPoints[pos], orient, pos, padding))
-            });
+            var rotateOpt = {};
+
+            var loc = this._yearTextPositionControl(posPoints[pos], orient, pos, padding);
+
+            if (pos === 'left' || pos === 'right') {
+                rotateOpt = {
+                    rotation: Math.PI / 2,
+                    origin: [loc.x, loc.y]
+                };
+            }
+
+            var yearText = new graphic.Text(
+                zrUtil.extend({
+                    z2: 30,
+                    style: zrUtil.extend({
+                        text: content,
+                        font: yearLabelStyleModel.getFont(),
+                        fill: yearLabelStyleModel.getTextColor()
+                    }, loc)
+                }, rotateOpt)
+            );
 
 
             group.add(yearText);
@@ -353,12 +380,11 @@ define(function (require) {
                 var params = {
                     yyyy: firstDay.y,
                     MM: +firstDay.m,
-                    nameMap: content,
-                    $vars: ['yyyy', 'MM', 'nameMap']
+                    nameMap: content
                 };
 
                 if (typeof formatter === 'string' && formatter) {
-                    content = formatUtil.formatTpl(formatter, params);
+                    content = formatUtil.formatTplSimple(formatter, params);
                 }
                 else if (typeof formatter === 'function') {
                     content = formatter(params);

@@ -109,6 +109,28 @@ define(function (require) {
         return tpl;
     };
 
+    /**
+     * simple Template formatter
+     *
+     * @param {string} tpl
+     * @param {Object} param
+     * @param {boolean} [encode=false]
+     * @return {string}
+     */
+    formatUtil.formatTplSimple = function (tpl, param, encode) {
+
+        for (var i in param) {
+            if (param.hasOwnProperty(i)) {
+                tpl = tpl.replace(
+                    '{' + i + '}',
+                    encode ? encodeHTML(param[i]) : param[i]
+                );
+            }
+        }
+
+        return tpl;
+    };
+
 
     /**
      * @param {string} str
