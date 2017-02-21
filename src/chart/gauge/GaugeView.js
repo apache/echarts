@@ -335,7 +335,7 @@ define(function (require) {
 
                 if (pointer.style.fill === 'auto') {
                     pointer.setStyle('fill', getColor(
-                        (data.get('value', idx) - valueExtent[0]) / (valueExtent[1] - valueExtent[0])
+                        numberUtil.linearMap(data.get('value', idx), valueExtent, [0, 1], true)
                     ));
                 }
 
@@ -356,6 +356,7 @@ define(function (require) {
                 var offsetCenter = titleModel.get('offsetCenter');
                 var x = posInfo.cx + parsePercent(offsetCenter[0], posInfo.r);
                 var y = posInfo.cy + parsePercent(offsetCenter[1], posInfo.r);
+
                 var text = new graphic.Text({
                     style: {
                         x: x,
@@ -368,6 +369,16 @@ define(function (require) {
                         textVerticalAlign: 'middle'
                     }
                 });
+
+                if (text.style.fill === 'auto') {
+                    var minVal = +seriesModel.get('min');
+                    var maxVal = +seriesModel.get('max');
+                    var value = seriesModel.getData().get('value', 0);
+                    text.setStyle('fill', getColor(
+                        numberUtil.linearMap(value, [minVal, maxVal], [0, 1], true)
+                    ));
+                }
+
                 this.group.add(text);
             }
         },
