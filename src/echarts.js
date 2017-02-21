@@ -1880,7 +1880,8 @@ define(function (require) {
     // --------
     // Exports
     // --------
-    //
+    echarts.zrender = zrender;
+
     echarts.List = require('./data/List');
     echarts.Model = require('./model/Model');
 
