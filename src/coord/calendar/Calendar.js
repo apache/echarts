@@ -9,6 +9,7 @@ define(function (require) {
 
     var layout = require('../../util/layout');
     var number = require('../../util/number');
+    var zrUtil = require('zrender/core/util');
 
     // (24*60*60*1000)
     var ONEDAY = 86400000;
@@ -106,9 +107,17 @@ define(function (require) {
 
             this._rangeInfo = this.getRangeInfo(this._range);
 
-            this._sw = this._model.get('cellSize');
+            var size = this._model.get('cellSize');
 
-            this._sh = this._sw;
+            if (zrUtil.isArray(size)) {
+                this._sw = size[0];
+                this._sh = size[1] || this._sw;
+            }
+            else {
+                this._sw = size;
+                this._sh = this._sw;
+            }
+
 
             this._orient = this._model.get('orient');
 
@@ -340,8 +349,8 @@ define(function (require) {
 
             return {
                 y: y,
-                m: +m,
-                d: +d,
+                m: m,
+                d: d,
                 day: day,
                 time: time,
                 format: format,

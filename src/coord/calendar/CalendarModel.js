@@ -57,7 +57,7 @@ define(function (require) {
                 padding: 0,
                 firstDay: 0,
                 position: 'top', // top = left bottom = right
-                data: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+                nameMap: 'en',
                 textStyle: {
                     color: '#000'
                 }
@@ -66,14 +66,11 @@ define(function (require) {
             // month text style
             monthLabel: {
                 show: true,
-                data: [
-                    'Jan', 'Feb', 'Mar',
-                    'Apr', 'May', 'Jun',
-                    'Jul', 'Aug', 'Sep',
-                    'Oct', 'Nov', 'Dec'
-                ],
+                nameMap: 'en',
                 position: 'top', // top = left bottom = right
+                posAlign: 'center', // center or left
                 padding: 5,
+                formatter: null,
                 textStyle: {
                     color: '#000',
                     fontSize: 14
@@ -83,13 +80,14 @@ define(function (require) {
             // year text style
             yearLabel: {
                 show: true,
-                position: 'top', // top = left bottom = right
+                position: 'top', // top bottom left right
                 padding: 0,
+                formatter: null,
                 textStyle: {
                     color: '#ccc',
                     fontFamily: '"Microsoft YaHei", sans-serif',
                     fontWeight: 'bolder',
-                    fontSize: 25
+                    fontSize: 20
                 }
             }
         }

@@ -27,26 +27,70 @@
 
                 var arr31 = [1, 3, 5, 7, 8, 10, 12];
                 var arr30 = [4, 6, 9, 11];
-                for (var i = 1; i <= 31; i++) {
-                    for (var j = arr31.length - 1; j >= 0; j--) {
-                        datas.push([(new Date(year + '-' + arr31[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
-                    }
-                }
-                for (var i = 1; i <= 30; i++) {
-                    for (var j = arr30.length - 1; j >= 0; j--) {
-                        datas.push([(new Date(year + '-' + arr30[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
-                    }
-                }
+                // for (var i = 1; i <= 31; i++) {
+                //     for (var j = arr31.length - 1; j >= 0; j--) {
+                //         datas.push([(+new Date(year + '-' + arr31[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
+                //     }
+                // }
+                // for (var i = 1; i <= 30; i++) {
+                //     for (var j = arr30.length - 1; j >= 0; j--) {
+                //         datas.push([(+new Date(year + '-' + arr30[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
+                //     }
+                // }
                 for (var i = 1; i <= 29; i++) {
-                    datas.push([(new Date(year + '-2-' + i)), Math.floor(Math.random() * 1000)]);
+                    datas.push([(+new Date(year + '-2-' + i)), Math.floor(Math.random() * 1000)]);
                 }
-                return [];
+                return datas;
             }
+
+            var graphData = getVirtulData(2017);
+
+            graphData = [
+                [
+                    1485878400000,
+                    260
+                ],
+                [
+                    1486137600000,
+                    200
+                ],
+                [
+                    1486569600000,
+                    279
+                ],
+                [
+                    1486915200000,
+                    847
+                ],
+                [
+                    1487347200000,
+                    241
+                ],
+                [
+                    1487779200000,
+                    411
+                ],
+                [
+                    1488124800000,
+                    985
+                ]
+            ];
+
+            var links = graphData.map(function (item, idx) {
+                return {
+                    source: idx,
+                    target: idx + 1
+                };
+            });
+            links.pop();
+
+
             require([
                 'echarts',
                 'echarts/chart/heatmap',
                 'echarts/chart/scatter',
                 'echarts/chart/effectScatter',
+                'echarts/chart/graph',
                 'echarts/component/title',
                 'echarts/component/legend',
                 'echarts/component/calendar',
@@ -72,14 +116,17 @@
                     },
 
                     calendar: {
-                        orient: 'horizontal',
-                       // cellSize: 20,
-                        range: ['2017-12-20', '2018-01-31']
+                        orient: 'vertical',
+                        cellSize: 40,
+                        range: '2017-02'
                     },
                     series: {
-                        type: 'heatmap',
+                        type: 'graph',
+                        edgeSymbol: ['none', 'arrow'],
                         coordinateSystem: 'calendar',
-                        data: getVirtulData(2017)
+                        links: links,
+                        symbolSize: 10,
+                        data: graphData
                     }
                 });
             });

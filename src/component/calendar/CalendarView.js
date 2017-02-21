@@ -8,7 +8,29 @@ define(function (require) {
     'use strict';
 
     var zrUtil = require('zrender/core/util');
+    var matrix = require('zrender/core/matrix');
     var graphic = require('../../util/graphic');
+    var formatUtil = require('../../util/format');
+
+    var MONTHTEXT = {
+        EN: [
+                'Jan', 'Feb', 'Mar',
+                'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep',
+                'Oct', 'Nov', 'Dec'
+            ],
+        CN: [
+                '一月', '二月', '三月',
+                '四月', '五月', '六月',
+                '七月', '八月', '九月',
+                '十月', '十一月', '十二月'
+            ]
+    };
+
+    var WEEKTEXT = {
+        EN: ['S', 'M', 'T', 'W', 'T', 'F', 'S'],
+        CN: ['日', '一', '二', '三', '四', '五', '六']
+    };
 
     return require('../../echarts').extendComponentView({
 
@@ -30,7 +52,7 @@ define(function (require) {
 
             this._renderLines(calendarModel, rangeData, orient, group);
 
-            this._renderYearText(calendarModel, orient, group);
+            this._renderYearText(calendarModel, rangeData, orient, group);
 
             this._renderMonthText(calendarModel, orient, group);
 
@@ -79,7 +101,8 @@ define(function (require) {
 
             this._tlpoints = [];
             this._blpoints = [];
-            this._firstDayPoints = [];
+            this._firstDayOfMonth = [];
+
 
             var firstDay = coordSys.getYMDInfo(rangeData.range[0]);
 
@@ -99,7 +122,7 @@ define(function (require) {
 
             function addPoints(date) {
 
-                self._firstDayPoints.push(coordSys.dateToPonitFour(date).TL);
+                self._firstDayOfMonth.push(coordSys.getYMDInfo(date));
 
                 var points = self._getLinePointsOfSeven(calendarModel, date, orient);
 
@@ -158,36 +181,37 @@ define(function (require) {
         },
 
         _yearTextPositionControl: function (point, orient, position, padding) {
-            var align = 'left';
-            var vAlign = 'top';
-            var x = point[0];
-            var y = point[1];
 
-            if (orient === 'horizontal') {
-                y = y + padding;
+            point = point.slice();
+            var aligns = ['center', 'middle'];
 
-                if (position === 'top') {
-                    vAlign = 'bottom';
-                }
+            if (position === 'top') {
+                point[1] -= padding;
+                aligns = ['center', 'bottom'];
             }
-            else {
-                x = x + padding;
-
-                if (position === 'top') {
-                    align = 'right';
-                }
+            if (position === 'bottom') {
+                point[1] += padding;
+                aligns = ['center', 'top'];
+            }
+            if (position === 'left') {
+                point[0] -= padding;
+                aligns = ['right', 'middle'];
+            }
+            if (position === 'right') {
+                point[0] += padding;
+                aligns = ['left', 'middle'];
             }
 
             return {
-                x: x,
-                y: y,
-                textAlign: align,
-                textVerticalAlign: vAlign
+                x: point[0],
+                y: point[1],
+                textAlign: aligns[0],
+                textVerticalAlign: aligns[1]
             };
         },
 
         // render year
-        _renderYearText: function (calendarModel, orient, group) {
+        _renderYearText: function (calendarModel, rangeData, orient, group) {
             var yearLabel = calendarModel.getModel('yearLabel');
 
             if (!yearLabel.get('show')) {
@@ -197,40 +221,60 @@ define(function (require) {
             var yearLabelStyleModel = calendarModel.getModel('yearLabel.textStyle');
             var padding = yearLabel.get('padding');
             var pos = yearLabel.get('position');
-            var monthPoints = this._blpoints;
+
+            var points = [this._tlpoints[this._tlpoints.length - 1], this._blpoints[0]];
+            var xc = (points[0][0] + points[1][0]) / 2;
+            var yc = (points[0][1] + points[1][1]) / 2;
+
+            var idx = orient === 'horizontal' ? 0 : 1;
+
+
+            var posPoints = {
+                top: [xc, points[idx][1]],
+                bottom: [xc, points[1 - idx][1]],
+                left: [points[1 - idx][0], yc],
+                right: [points[idx][0], yc]
+            };
 
             var coordSys = calendarModel.coordinateSystem;
 
-            if (pos === 'left') {
-                pos = 'top';
+            var content = rangeData.start.y;
+
+            if (+rangeData.end.y > +rangeData.start.y) {
+                content = rangeData.start.y + '-' + rangeData.end.y;
             }
 
-            if (pos === 'top') {
-                monthPoints = this._tlpoints;
-                padding = -padding;
+            var formatter = yearLabel.get('formatter');
+
+            var params = {
+                start: rangeData.start.y,
+                end: rangeData.end.y,
+                nameMap: content,
+                $vars: ['start', 'end', 'nameMap']
+            };
+
+            if (typeof formatter === 'string' && formatter) {
+                content = formatUtil.formatTpl(formatter, params);
+            }
+            else if (typeof formatter === 'function') {
+                content = formatter(params);
             }
 
-            for (var i = 0; i < monthPoints.length - 1; i++) {
-                var mdate = coordSys.pointToDate(monthPoints[i]);
+            var yearText = new graphic.Text({
+                // rotation: Math.PI / 2,
+                z2: 30,
+                style: zrUtil.extend({
+                    text: content,
+                    font: yearLabelStyleModel.getFont(),
+                    fill: yearLabelStyleModel.getTextColor()
+                }, this._yearTextPositionControl(posPoints[pos], orient, pos, padding))
+            });
 
-                if (!mdate || mdate.m !== 1) {
-                    continue;
-                }
 
-                var yearText = new graphic.Text({
-                    style: zrUtil.extend({
-                        z2: 30,
-                        text: mdate.y,
-                        font: yearLabelStyleModel.getFont(),
-                        fill: yearLabelStyleModel.getTextColor()
-                    }, this._yearTextPositionControl(monthPoints[i], orient, pos, padding))
-                });
-
-                group.add(yearText);
-            }
+            group.add(yearText);
         },
 
-        _monthTextPositionControl: function (point, orient, position, padding) {
+        _monthTextPositionControl: function (point, isCenter, orient, position, padding) {
             var align = 'left';
             var vAlign = 'top';
             var x = point[0];
@@ -239,7 +283,9 @@ define(function (require) {
             if (orient === 'horizontal') {
                 y = y + padding;
 
-                align = 'center';
+                if (isCenter) {
+                    align = 'center';
+                }
 
                 if (position === 'top') {
                     vAlign = 'bottom';
@@ -248,7 +294,9 @@ define(function (require) {
             else {
                 x = x + padding;
 
-                vAlign = 'middle';
+                if (isCenter) {
+                    vAlign = 'middle';
+                }
 
                 if (position === 'top') {
                     align = 'right';
@@ -272,42 +320,57 @@ define(function (require) {
             }
 
             var monthLabelStyleModel = calendarModel.getModel('monthLabel.textStyle');
-            var MONTH = monthLabel.get('data');
+            var nameMap = monthLabel.get('nameMap');
             var padding = monthLabel.get('padding');
             var pos = monthLabel.get('position');
-            var monthPoints = this._blpoints;
-            var firstDay = this._firstDayPoints;
+            var posAlign = monthLabel.get('posAlign');
+
+            var termPoints = [this._tlpoints, this._blpoints];
+
+            // var coordSys = calendarModel.coordinateSystem;
+
+            if (zrUtil.isString(nameMap)) {
+                nameMap = MONTHTEXT[nameMap.toUpperCase()] || [];
+            }
+
+            pos = pos === 'left' ? 'top' : pos;
+            var idx = pos === 'top' ? 0 : 1;
             var axis = orient === 'horizontal' ? 0 : 1;
+            padding = pos === 'top' ? -padding : padding;
+            var isCenter = posAlign === 'center' ? true : false;
 
-            var coordSys = calendarModel.coordinateSystem;
+            for (var i = 0; i < termPoints[idx].length - 1; i++) {
 
-            if (pos === 'left') {
-                pos = 'top';
-            }
+                var tmp = termPoints[idx][i].slice();
+                var firstDay = this._firstDayOfMonth[i];
 
-            if (pos === 'top') {
-                monthPoints = this._tlpoints;
-                padding = -padding;
-            }
-
-            for (var i = 0; i < monthPoints.length - 1; i++) {
-                var mdate = coordSys.pointToDate(monthPoints[i]);
-
-                if (!mdate) {
-                    continue;
+                if (isCenter) {
+                    tmp[axis] = (tmp[axis] + termPoints[1 - idx][i + 1][axis]) / 2;
                 }
 
-                var tmp = monthPoints[i].concat();
+                var formatter = monthLabel.get('formatter');
+                var content = nameMap[+firstDay.m - 1];
+                var params = {
+                    yyyy: firstDay.y,
+                    MM: +firstDay.m,
+                    nameMap: content,
+                    $vars: ['yyyy', 'MM', 'nameMap']
+                };
 
-                tmp[axis] = (firstDay[i][axis] + monthPoints[i + 1][axis]) / 2;
+                if (typeof formatter === 'string' && formatter) {
+                    content = formatUtil.formatTpl(formatter, params);
+                }
+                else if (typeof formatter === 'function') {
+                    content = formatter(params);
+                }
 
                 var monthText = new graphic.Text({
+                    z2: 30,
                     style: zrUtil.extend({
-                        z2: 30,
-                        text: MONTH[+mdate.m - 1],
+                        text: content,
                         font: monthLabelStyleModel.getFont(),
                         fill: monthLabelStyleModel.getTextColor()
-                    }, this._monthTextPositionControl(tmp, orient, pos, padding))
+                    }, this._monthTextPositionControl(tmp, isCenter, orient, pos, padding))
                 });
 
                 group.add(monthText);
@@ -351,13 +414,14 @@ define(function (require) {
             var coordSys = calendarModel.coordinateSystem;
             var dayLabelStyleModel = calendarModel.getModel('dayLabel.textStyle');
             var pos = dayLabel.get('position');
-            var WEEK = dayLabel.get('data');
+            var nameMap = dayLabel.get('nameMap');
             var padding = dayLabel.get('padding');
             var firstDay = coordSys.getFirstDayWeek();
 
+            pos = (pos === 'left') ? 'top' : pos;
 
-            if (pos === 'left') {
-                pos = 'top';
+            if (zrUtil.isString(nameMap)) {
+                nameMap = WEEKTEXT[nameMap.toUpperCase()] || [];
             }
 
             var start = coordSys.getNextNDay(
@@ -378,9 +442,9 @@ define(function (require) {
                 var day = i;
                 day = Math.abs((i + firstDay) % 7);
                 var weekText = new graphic.Text({
+                    z2: 30,
                     style: zrUtil.extend({
-                        z2: 30,
-                        text: WEEK[day],
+                        text: nameMap[day],
                         font: dayLabelStyleModel.getFont(),
                         fill: dayLabelStyleModel.getTextColor()
                     }, this._weekTextPositionControl(point, orient, pos, padding))

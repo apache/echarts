@@ -42,11 +42,51 @@
                 }
                 return datas;
             }
+
+            var graphData = [
+                [
+                    1485878400000,
+                    260
+                ],
+                [
+                    1486137600000,
+                    200
+                ],
+                [
+                    1486569600000,
+                    279
+                ],
+                [
+                    1486915200000,
+                    847
+                ],
+                [
+                    1487347200000,
+                    241
+                ],
+                [
+                    1487779200000,
+                    411
+                ],
+                [
+                    1488124800000,
+                    985
+                ]
+            ];
+
+            var links = graphData.map(function (item, idx) {
+                return {
+                    source: idx,
+                    target: idx + 1
+                };
+            });
+            links.pop();
             require([
                 'echarts',
                 'echarts/chart/heatmap',
                 'echarts/chart/scatter',
                 'echarts/chart/effectScatter',
+                'echarts/chart/graph',
                 'echarts/component/title',
                 'echarts/component/legend',
                 'echarts/component/calendar',
@@ -76,18 +116,19 @@
                         range: '2000-01-01'
                     },
                     {
+                        cellSize: 35,
                         left: 300,
                         orient: 'vertical',
                         range: ['2001-02-20', '2001-02-23']
                     },
                     {
-                        left: 530,
+                        left: 600,
                         cellSize: 30,
                         orient: 'vertical',
-                        range: '2002-4'
+                        range: '2017-02'
                     },
                     {
-                        left: 800,
+                        left: 900,
                         orient: 'vertical',
                         range: ['2001-02-20', '2001-04-23']
                     },
@@ -100,11 +141,7 @@
                         top: 300,
                         left: 400,
                         orient: 'horizontal',
-                        range: ['2009-12-20', '2010-04-23'],
-                        yearLabel: {
-                            position: 'top', // top = left bottom = right
-                            padding: 0
-                        }
+                        range: ['2009-12-20', '2010-04-23']
                     },
                     {
                         top: 300,
@@ -140,7 +177,7 @@
                     {
                         top: 500,
                         orient: 'horizontal',
-                        range: 2010
+                        range: ['2010-01-01', '2010-08-07']
                     }],
 
                     series: [{
@@ -154,14 +191,20 @@
                         calendarIndex: 1,
                         data: getVirtulData(2001)
                     }, {
-                        type: 'heatmap',
+                        type: 'graph',
                         coordinateSystem: 'calendar',
                         calendarIndex: 2,
-                        data: getVirtulData(2002)
+                        edgeSymbol: ['none', 'arrow'],
+                        links: links,
+                        symbolSize: 10,
+                        data: graphData
                     }, {
-                        type: 'heatmap',
+                        type: 'scatter',
                         coordinateSystem: 'calendar',
                         calendarIndex: 3,
+                        symbolSize: function (val) {
+                            return val[1] / 70;
+                        },
                         data: getVirtulData(2001)
                     }, {
                         type: 'heatmap',
