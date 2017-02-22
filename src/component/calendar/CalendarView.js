@@ -103,6 +103,7 @@ define(function (require) {
             this._tlpoints = [];
             this._blpoints = [];
             this._firstDayOfMonth = [];
+            this._firstDayPoints = [];
 
 
             var firstDay = coordSys.getYMDInfo(rangeData.range[0]);
@@ -124,6 +125,7 @@ define(function (require) {
             function addPoints(date) {
 
                 self._firstDayOfMonth.push(coordSys.getYMDInfo(date));
+                self._firstDayPoints.push(coordSys.dateToPonitFour(date).TL);
 
                 var points = self._getLinePointsOfSeven(calendarModel, date, orient);
 
@@ -252,7 +254,7 @@ define(function (require) {
                 right: [points[idx][0], yc]
             };
 
-            var coordSys = calendarModel.coordinateSystem;
+            // var coordSys = calendarModel.coordinateSystem;
 
             var content = rangeData.start.y;
 
@@ -275,12 +277,10 @@ define(function (require) {
                 content = formatter(params);
             }
 
-            var rotateOpt = {};
-
             var loc = this._yearTextPositionControl(posPoints[pos], orient, pos, padding);
 
             if (pos === 'left' || pos === 'right') {
-                rotateOpt = {
+                var rotateOpt = {
                     rotation: Math.PI / 2,
                     origin: [loc.x, loc.y]
                 };
@@ -314,7 +314,7 @@ define(function (require) {
                     align = 'center';
                 }
 
-                if (position === 'top') {
+                if (position === 'start') {
                     vAlign = 'bottom';
                 }
             }
@@ -325,7 +325,7 @@ define(function (require) {
                     vAlign = 'middle';
                 }
 
-                if (position === 'top') {
+                if (position === 'start') {
                     align = 'right';
                 }
             }
@@ -360,10 +360,9 @@ define(function (require) {
                 nameMap = MONTHTEXT[nameMap.toUpperCase()] || [];
             }
 
-            pos = pos === 'left' ? 'top' : pos;
-            var idx = pos === 'top' ? 0 : 1;
+            var idx = pos === 'start' ? 0 : 1;
             var axis = orient === 'horizontal' ? 0 : 1;
-            padding = pos === 'top' ? -padding : padding;
+            padding = pos === 'start' ? -padding : padding;
             var isCenter = posAlign === 'center' ? true : false;
 
             for (var i = 0; i < termPoints[idx].length - 1; i++) {
@@ -372,14 +371,17 @@ define(function (require) {
                 var firstDay = this._firstDayOfMonth[i];
 
                 if (isCenter) {
-                    tmp[axis] = (tmp[axis] + termPoints[1 - idx][i + 1][axis]) / 2;
+                    var firstDayPoints = this._firstDayPoints[i];
+                    tmp[axis] = (firstDayPoints[axis] + termPoints[0][i + 1][axis]) / 2;
                 }
 
                 var formatter = monthLabel.get('formatter');
                 var content = nameMap[+firstDay.m - 1];
                 var params = {
                     yyyy: firstDay.y,
-                    MM: +firstDay.m,
+                    yy: (firstDay.y + '').slice(2),
+                    MM: firstDay.m,
+                    M: +firstDay.m,
                     nameMap: content
                 };
 
@@ -412,7 +414,7 @@ define(function (require) {
             if (orient === 'horizontal') {
                 x = x + padding;
 
-                if (position === 'top') {
+                if (position === 'start') {
                     align = 'right';
                 }
             }
@@ -444,8 +446,6 @@ define(function (require) {
             var padding = dayLabel.get('padding');
             var firstDay = coordSys.getFirstDayWeek();
 
-            pos = (pos === 'left') ? 'top' : pos;
-
             if (zrUtil.isString(nameMap)) {
                 nameMap = WEEKTEXT[nameMap.toUpperCase()] || [];
             }
@@ -454,7 +454,7 @@ define(function (require) {
                 rangeData.end.time, (7 - rangeData.lweek)
             ).time;
 
-            if (pos === 'top') {
+            if (pos === 'start') {
                 start = coordSys.getNextNDay(
                     rangeData.start.time, -(7 + rangeData.fweek)
                 ).time;

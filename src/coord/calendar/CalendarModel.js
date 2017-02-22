@@ -29,7 +29,9 @@ define(function (require) {
             top: 60,
 
             cellSize: 20,
-            orient: 'horizontal', // horizontal vertical
+
+            // horizontal vertical
+            orient: 'horizontal',
 
             // month separate line style
             splitLine: {
@@ -55,7 +57,9 @@ define(function (require) {
                 show: true,
                 padding: 0,
                 firstDay: 0,
-                position: 'top', // top = left bottom = right
+
+                // start end
+                position: 'start',
                 nameMap: 'en',
                 textStyle: {
                     color: '#000'
@@ -65,21 +69,28 @@ define(function (require) {
             // month text style
             monthLabel: {
                 show: true,
+
+                // cn en []
                 nameMap: 'en',
-                position: 'top', // top = left bottom = right
-                posAlign: 'center', // center or left
+
+                // start end
+                position: 'start',
+
+                // center or left
+                posAlign: 'center',
                 padding: 5,
                 formatter: null,
                 textStyle: {
-                    color: '#000',
-                    fontSize: 14
+                    color: '#000'
                 }
             },
 
             // year text style
             yearLabel: {
                 show: true,
-                position: null, // top bottom left right
+
+                // top bottom left right
+                position: null,
                 padding: 30,
                 formatter: null,
                 textStyle: {

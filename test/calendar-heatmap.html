@@ -40,7 +40,7 @@
                 for (var i = 1; i <= 29; i++) {
                     datas.push([(new Date(year + '-2-' + i)), Math.floor(Math.random() * 1000)]);
                 }
-                return [];
+                return datas;
             }
             require([
                 'echarts',
@@ -73,11 +73,11 @@
 
                     calendar: {
                         orient: 'horizontal',
-                       // cellSize: 20,
-                        range: ['2017-12-20', '2018-01-31']
+                        cellSize: 50,
+                        range: '2017-12'
                     },
                     series: {
-                        type: 'heatmap',
+                        type: 'effectScatter',
                         coordinateSystem: 'calendar',
                         data: getVirtulData(2017)
                     }
