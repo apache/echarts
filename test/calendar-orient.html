@@ -67,32 +67,55 @@
 
                     calendar: [
                     {
-                        range: '2000'
+                        range: '2017'
                     },
                     {
                         top: 260,
-                        range: '2001'
+                        range: '2016'
                     },
                     {
-                        top: 460,
-                        range: '2002'
+                        orient: 'vertical',
+                        top: 500,
+                        range: '2015-03'
+                    },
+                    {
+                        orient: 'vertical',
+                        top: 500,
+                        left: 400,
+                        range: '2015-04'
+                    },
+                    {
+                        orient: 'vertical',
+                        top: 500,
+                        left: 800,
+                        range: '2015-05'
                     }],
 
                     series: [{
                         type: 'heatmap',
                         coordinateSystem: 'calendar',
                         calendarIndex: 0,
-                        data: getVirtulData(2000)
+                        data: getVirtulData(2017)
                     }, {
                         type: 'heatmap',
                         coordinateSystem: 'calendar',
                         calendarIndex: 1,
-                        data: getVirtulData(2001)
+                        data: getVirtulData(2016)
                     }, {
                         type: 'heatmap',
                         coordinateSystem: 'calendar',
                         calendarIndex: 2,
-                        data: getVirtulData(2002)
+                        data: getVirtulData(2015)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 3,
+                        data: getVirtulData(2015)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 4,
+                        data: getVirtulData(2015)
                     }]
 
                 });

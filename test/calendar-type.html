@@ -27,16 +27,16 @@
 
                 var arr31 = [1, 3, 5, 7, 8, 10, 12];
                 var arr30 = [4, 6, 9, 11];
-                // for (var i = 1; i <= 31; i++) {
-                //     for (var j = arr31.length - 1; j >= 0; j--) {
-                //         datas.push([(+new Date(year + '-' + arr31[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
-                //     }
-                // }
-                // for (var i = 1; i <= 30; i++) {
-                //     for (var j = arr30.length - 1; j >= 0; j--) {
-                //         datas.push([(+new Date(year + '-' + arr30[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
-                //     }
-                // }
+                for (var i = 1; i <= 31; i++) {
+                    for (var j = arr31.length - 1; j >= 0; j--) {
+                        datas.push([(+new Date(year + '-' + arr31[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
+                    }
+                }
+                for (var i = 1; i <= 30; i++) {
+                    for (var j = arr30.length - 1; j >= 0; j--) {
+                        datas.push([(+new Date(year + '-' + arr30[j] + '-' + i)), Math.floor(Math.random() * 1000)]);
+                    }
+                }
                 for (var i = 1; i <= 29; i++) {
                     datas.push([(+new Date(year + '-2-' + i)), Math.floor(Math.random() * 1000)]);
                 }
@@ -84,7 +84,6 @@
             });
             links.pop();
 
-
             require([
                 'echarts',
                 'echarts/chart/heatmap',
@@ -104,32 +103,83 @@
                     tooltip: {
                         position: 'top'
                     },
+
                     visualMap: {
-                        type: 'piecewise',
-                        // show: false,
                         min: 0,
                         max: 1000,
                         calculable: true,
+                        seriesIndex: [1, 2, 3],
                         orient: 'horizontal',
-                        left: 'center',
-                        top: 'top'
+                        left: 950,
+                        top: 400
                     },
 
-                    calendar: {
-                        orient: 'vertical',
+                    calendar: [
+                    {
+                        yearLabel: {
+                            padding: 40
+                        },
                         cellSize: 40,
                         range: '2017-02'
                     },
-                    series: {
+                    {
+                        yearLabel: {
+                            padding: 40
+                        },
+                        cellSize: 40,
+                        left: 350,
+                        range: '2017-01'
+                    },
+                    {
+                        yearLabel: {
+                            padding: 40
+                        },
+                        cellSize: 40,
+                        left: 650,
+                        range: '2017-03'
+                    },
+                    {
+                        yearLabel: {
+                            padding: 40
+                        },
+                        cellSize: 40,
+                        left: 950,
+                        range: '2017-04'
+                    }],
+
+                    series: [{
                         type: 'graph',
                         edgeSymbol: ['none', 'arrow'],
                         coordinateSystem: 'calendar',
                         links: links,
                         symbolSize: 10,
+                        calendarIndex: 0,
                         data: graphData
-                    }
+                    }, {
+                        type: 'effectScatter',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 1,
+                        symbolSize: function (val) {
+                            return val[1] / 40;
+                        },
+                        data: getVirtulData(2017)
+                    }, {
+                        type: 'scatter',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 2,
+                        symbolSize: function (val) {
+                            return val[1] / 60;
+                        },
+                        data: getVirtulData(2017)
+                    }, {
+                        type: 'heatmap',
+                        coordinateSystem: 'calendar',
+                        calendarIndex: 3,
+                        data: getVirtulData(2017)
+                    }]
                 });
             });
+
         </script>
     </body>
 </html>

@@ -64,6 +64,10 @@ define(function (require) {
 
             var rg = this._range;
 
+            if (zrUtil.isArray(rg) && rg.length === 1) {
+                rg = rg[0];
+            }
+
             if (/^\d{4}$/.test(rg)) {
                 this._range = [rg + '-01-01', rg + '-12-31'];
             }
